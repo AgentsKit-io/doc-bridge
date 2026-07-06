@@ -165,7 +165,14 @@ Ecosystem extras (Playbook patterns, Registry agents like `docs-chat` and `knowl
 
 ## Status
 
-Early design. Track work in [Issues](https://github.com/AgentsKit-io/doc-bridge/issues) · Epic [#1](https://github.com/AgentsKit-io/doc-bridge/issues/1).
+**v0.1.0-alpha.0** — schemas + `ak-docs validate-config` / `validate-handoff` shipped. Index builder and `query` next.
+
+Track work in [Issues](https://github.com/AgentsKit-io/doc-bridge/issues) · Epic [#1](https://github.com/AgentsKit-io/doc-bridge/issues/1).
+
+```bash
+pnpm install && pnpm build && pnpm test
+ak-docs validate-config --config tests/fixtures/minimal.config.json
+```
 
 Reference architecture: [AgentsKit OS RFC-0056](https://github.com/AgentsKit-io/agentskit-os/blob/main/docs/rfc/0056-doc-bridge-ecosystem-dogfood.md).
 
