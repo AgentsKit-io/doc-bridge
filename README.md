@@ -98,6 +98,21 @@ Your repo
 
 **Trust model:** Layer 0 is merge-blocking truth. Layer 1 proposes drafts; CI gates decide.
 
+## Configuration
+
+One file drives everything: `doc-bridge.config.ts`
+
+**Required:** `schemaVersion: 1` + `corpus.agent.root`. Everything else is optional.
+
+| Profile | Config example |
+|---------|----------------|
+| Solo markdown | [`examples/minimal-plain-markdown.config.ts`](examples/minimal-plain-markdown.config.ts) |
+| pnpm monorepo | [`examples/pnpm-monorepo.config.ts`](examples/pnpm-monorepo.config.ts) |
+| + Fumadocs + chat | [`examples/fumadocs-with-chat.config.ts`](examples/fumadocs-with-chat.config.ts) |
+| + Docusaurus + memory | [`examples/docusaurus-with-memory.config.ts`](examples/docusaurus-with-memory.config.ts) |
+
+Full contract: **[`docs/spec/config-v1.md`](docs/spec/config-v1.md)**
+
 ## Quick start (sketch)
 
 ```bash

@@ -81,6 +81,10 @@ Agents should prefer handoffs for *action* and chat/RAG for *explanation*.
 4. Issues label `ecosystem` vs `core` — core must not depend on AKOS repos
 5. Competitive framing: vs **wiki+RAG pattern**, not vs LangChain the company
 
+## Config contract
+
+Public spec: [`docs/spec/config-v1.md`](spec/config-v1.md). Examples use generic module names. AKOS-scale config lives in `examples/akos-consumer.appendix.config.ts` only.
+
 ## Success metrics
 
 - Zero-key path: init → index → `query --agent` in &lt; 2 minutes
