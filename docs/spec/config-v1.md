@@ -2,6 +2,8 @@
 
 `doc-bridge.config.ts` (or `.js`, `.mjs`, `.json`, `.yaml`) is the single integration point for any project. Layer 0 fields are sufficient to run `index`, `query`, and MCP without an LLM.
 
+**CLI binary:** `ak-docs` (npm package `doc-bridge`). Standalone — not merged into `@agentskit/cli` or `agentskit-os`.
+
 ## Design rules
 
 1. **Progressive** — only `schemaVersion` + `corpus.agent` required; everything else defaults sensibly.
@@ -269,8 +271,8 @@ type GateId =
 ```ts
 type SurfacesConfig = {
   cli?: {
-    /** Command name in package.json bin */
-    bin?: string                    // default: 'doc-bridge'
+    /** Published binary name (package.json bin) */
+    bin?: string                    // default: 'ak-docs'
     /** Default output: json | text */
     defaultFormat?: 'json' | 'text'
   }
@@ -378,7 +380,7 @@ type FederationSource = {
 
 ## `AgentHandoff` emission rules
 
-When `doc-bridge query <target> --agent` runs:
+When `ak-docs query <target> --agent` runs:
 
 ```ts
 type AgentHandoffV1 = {
@@ -530,20 +532,20 @@ export default defineConfig({
 
 | Command | Config sections used |
 |---------|---------------------|
-| `doc-bridge init` | scaffolds minimal `corpus.agent` + optional plugin prompt |
-| `doc-bridge index` | `corpus`, `routing`, `index`, plugins |
-| `doc-bridge query <t> --agent` | `index` + `routing` + handoff merge |
-| `doc-bridge search <q>` | `index` |
-| `doc-bridge gate run` | `gates` |
-| `doc-bridge mcp` | `surfaces.mcp` |
-| `doc-bridge chat` | `intelligence.*` (fails friendly if disabled) |
-| `doc-bridge memory ingest` | `intelligence.memory` |
+| `ak-docs init` | scaffolds minimal `corpus.agent` + optional plugin prompt |
+| `ak-docs index` | `corpus`, `routing`, `index`, plugins |
+| `ak-docs query <t> --agent` | `index` + `routing` + handoff merge |
+| `ak-docs search <q>` | `index` |
+| `ak-docs gate run` | `gates` |
+| `ak-docs mcp` | `surfaces.mcp` |
+| `ak-docs chat` | `intelligence.*` (fails friendly if disabled) |
+| `ak-docs memory ingest` | `intelligence.memory` |
 
 ---
 
 ## Validation
 
-- Config validated with **Zod** at CLI startup (`doc-bridge validate-config`).
+- Config validated with **Zod** at CLI startup (`ak-docs validate-config`).
 - Unknown `schemaVersion` → hard error with migration link.
 - Unknown plugin id → hard error listing built-in + `custom` path.
 - `intelligence.enabled: true` without `adapter` → warn + chat/memory subcommands disabled.

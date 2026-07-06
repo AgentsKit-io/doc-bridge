@@ -47,7 +47,7 @@ Install only what you need. **No feature requires a paid provider.**
 | Surface | Purpose |
 |---------|---------|
 | **Index builder** | `DocBridgeIndex` + `contentHash` from your repo layout |
-| **CLI** | `doc-bridge query`, `search`, `list` — `--agent` emits JSON handoff |
+| **CLI** | `ak-docs query`, `search`, `list` — `--agent` emits JSON handoff (standalone bin) |
 | **MCP** | `handoff.resolve`, `doc.search`, `doc.get` for IDE agents |
 | **Gates** | Link rot, index freshness, human-guide validation (CI) |
 
@@ -98,6 +98,15 @@ Your repo
 
 **Trust model:** Layer 0 is merge-blocking truth. Layer 1 proposes drafts; CI gates decide.
 
+## CLI
+
+Standalone binary **`ak-docs`** — not part of `agentskit` or `agentskit-os` CLIs. Same package (`doc-bridge`), separate entrypoint so any project can install without the full AgentsKit toolchain.
+
+```bash
+npm install doc-bridge
+ak-docs --help
+```
+
 ## Configuration
 
 One file drives everything: `doc-bridge.config.ts`
@@ -111,15 +120,15 @@ One file drives everything: `doc-bridge.config.ts`
 | + Fumadocs + chat | [`examples/fumadocs-with-chat.config.ts`](examples/fumadocs-with-chat.config.ts) |
 | + Docusaurus + memory | [`examples/docusaurus-with-memory.config.ts`](examples/docusaurus-with-memory.config.ts) |
 
-Full contract: **[`docs/spec/config-v1.md`](docs/spec/config-v1.md)**
+Full contract: **[`docs/spec/config-v1.md`](docs/spec/config-v1.md)** · CLI reference: **[`docs/spec/cli.md`](docs/spec/cli.md)**
 
 ## Quick start (sketch)
 
 ```bash
 npm install doc-bridge
-npx doc-bridge init          # config + INDEX stub
-npx doc-bridge index         # build DocBridgeIndex
-npx doc-bridge query module auth --agent
+ak-docs init                 # config + INDEX stub
+ak-docs index                # build DocBridgeIndex
+ak-docs query module auth --agent
 ```
 
 ```json
@@ -132,7 +141,7 @@ npx doc-bridge query module auth --agent
 }
 ```
 
-MCP: add `doc-bridge mcp` to Cursor / Claude Desktop — same index, no cloud.
+MCP: `ak-docs mcp` for Cursor / Claude Desktop — same index, no cloud.
 
 ## Profiles
 
