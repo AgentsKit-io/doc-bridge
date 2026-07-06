@@ -1,4 +1,4 @@
-import { defineConfig } from 'doc-bridge'
+import { defineConfig } from '@agentskit/doc-bridge'
 
 /** Solo project — Layer 0 only, no LLM, no monorepo plugin */
 export default defineConfig({

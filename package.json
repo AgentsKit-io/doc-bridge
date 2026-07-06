@@ -1,0 +1,37 @@
+{
+  "name": "@agentskit/doc-bridge",
+  "version": "0.0.0",
+  "description": "Agent-first documentation bridge for any project — OKF knowledge, AgentHandoff routing, doc site plugins.",
+  "type": "module",
+  "bin": {
+    "ak-docs": "./dist/bin/ak-docs.js"
+  },
+  "exports": {
+    ".": "./dist/index.js",
+    "./config": "./dist/config.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "agentskit",
+    "documentation",
+    "mcp",
+    "for-agents",
+    "llms.txt",
+    "agent-handoff"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AgentsKit-io/doc-bridge.git"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

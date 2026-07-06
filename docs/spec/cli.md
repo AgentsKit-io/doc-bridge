@@ -1,27 +1,38 @@
 # ak-docs CLI
 
-Standalone command-line interface for doc-bridge. Published as the `ak-docs` binary from the `doc-bridge` npm package.
+Command-line interface for **`@agentskit/doc-bridge`**. The npm package is scoped; the **only published binary** is `ak-docs`.
+
+## Naming
+
+| What | Name |
+|------|------|
+| npm package | `@agentskit/doc-bridge` |
+| CLI binary | `ak-docs` |
+| Config file | `doc-bridge.config.ts` |
+| GitHub repo | `AgentsKit-io/doc-bridge` |
+
+Install the package, run `ak-docs` — not `doc-bridge` on the shell.
 
 ## Why a separate binary
 
 | Choice | Rationale |
 |--------|-----------|
-| **`ak-docs`**, not `agentskit docs` | Any project can `npm install doc-bridge` without `@agentskit/cli` |
-| **`ak-docs`**, not `agentskit-os docs` | OS CLI implies sidecar, runs, pipelines — wrong mental model for doc routing |
-| Package name `doc-bridge` | Describes the library; `ak` prefix matches ecosystem shorthand without branding the whole tool as OS-only |
-
-AgentsKit remains the **engine** for optional `ak-docs chat` and memory features (`intelligence.runtime: 'agentskit'`).
+| **`ak-docs`**, not `agentskit docs` | Dedicated tool; no need for full `@agentskit/cli` |
+| **`ak-docs`**, not `agentskit-os docs` | OS CLI implies sidecar / runs / pipelines |
+| **`@agentskit/doc-bridge` package** | Part of AgentsKit npm scope; engine + first consumer alignment |
+| **`ak-docs` bin name** | Short, memorable CLI; avoids colliding with package import path |
 
 ## Install
 
 ```bash
-npm install doc-bridge
+npm install @agentskit/doc-bridge
 # or
-pnpm add -D doc-bridge
+pnpm add -D @agentskit/doc-bridge
 ```
 
 ```json
 {
+  "name": "@agentskit/doc-bridge",
   "bin": {
     "ak-docs": "./dist/bin/ak-docs.js"
   }
@@ -66,7 +77,7 @@ ak-docs index
 ak-docs query ownership auth --agent
 ak-docs search "sidecar transport" --agent
 ak-docs gate run
-ak-docs mcp   # add to Cursor MCP config
+ak-docs mcp
 ```
 
 ## MCP server config (Cursor)
@@ -84,26 +95,21 @@ ak-docs mcp   # add to Cursor MCP config
 
 ## Programmatic API
 
-Prefer the library when embedding in CI scripts:
-
 ```ts
-import { buildIndex, query } from 'doc-bridge'
+import { buildIndex, query, defineConfig } from '@agentskit/doc-bridge'
 
-await buildIndex(config)
-const handoff = await query(config, { kind: 'package', id: 'auth', agent: true })
+export default defineConfig({ schemaVersion: 1, corpus: { agent: { root: 'docs' } } })
 ```
 
-CLI is a thin wrapper over the same functions.
+CLI is a thin wrapper over the same exports.
 
 ## AKOS migration alias
 
-AgentsKit OS may ship a **deprecated alias** during migration:
-
 ```bash
-pnpm docs:internal:query …   # → ak-docs query … (same JSON)
+pnpm docs:internal:query …   # deprecated → ak-docs query …
 ```
 
-`agentskit-os docs export` stays separate (runtime capability catalog, not doc-bridge handoff).
+`agentskit-os docs export` stays separate (runtime capability catalog).
 
 ## See also
 

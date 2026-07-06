@@ -2,7 +2,11 @@
 
 `doc-bridge.config.ts` (or `.js`, `.mjs`, `.json`, `.yaml`) is the single integration point for any project. Layer 0 fields are sufficient to run `index`, `query`, and MCP without an LLM.
 
-**CLI binary:** `ak-docs` (npm package `doc-bridge`). Standalone — not merged into `@agentskit/cli` or `agentskit-os`.
+| npm package | `@agentskit/doc-bridge` |
+| CLI binary | `ak-docs` |
+| Config file | `doc-bridge.config.ts` |
+
+Standalone CLI — not merged into `@agentskit/cli` or `agentskit-os`.
 
 ## Design rules
 
@@ -26,7 +30,7 @@ package.json → "docBridge" field (subset, JSON only)
 ## TypeScript shape (authoritative)
 
 ```ts
-import type { DocBridgeConfigV1 } from 'doc-bridge/config'
+import type { DocBridgeConfigV1 } from '@agentskit/doc-bridge/config'
 
 export default {
   schemaVersion: 1,
@@ -419,7 +423,7 @@ type TargetType =
 
 ```ts
 // doc-bridge.config.ts
-import { defineConfig } from 'doc-bridge'
+import { defineConfig } from '@agentskit/doc-bridge'
 
 export default defineConfig({
   schemaVersion: 1,
@@ -435,7 +439,7 @@ export default defineConfig({
 ### 2. pnpm monorepo + ownership
 
 ```ts
-import { defineConfig } from 'doc-bridge'
+import { defineConfig } from '@agentskit/doc-bridge'
 
 export default defineConfig({
   schemaVersion: 1,
@@ -455,7 +459,7 @@ export default defineConfig({
 ### 3. Monorepo + Fumadocs (standard profile)
 
 ```ts
-import { defineConfig } from 'doc-bridge'
+import { defineConfig } from '@agentskit/doc-bridge'
 
 export default defineConfig({
   schemaVersion: 1,
@@ -482,7 +486,7 @@ export default defineConfig({
 ### 4. Docusaurus + optional memory
 
 ```ts
-import { defineConfig } from 'doc-bridge'
+import { defineConfig } from '@agentskit/doc-bridge'
 
 export default defineConfig({
   schemaVersion: 1,

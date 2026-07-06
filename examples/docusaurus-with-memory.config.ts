@@ -1,4 +1,4 @@
-import { defineConfig } from 'doc-bridge'
+import { defineConfig } from '@agentskit/doc-bridge'
 
 /** Assisted profile: Docusaurus + memory ingest + classification (opt-in, HITL) */
 export default defineConfig({

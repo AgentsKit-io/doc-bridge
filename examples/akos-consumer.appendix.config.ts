@@ -2,7 +2,7 @@
  * Appendix: AgentsKit OS consumer profile (reference scale).
  * Not the default quick start — see minimal-plain-markdown.config.ts first.
  */
-import { defineConfig } from 'doc-bridge'
+import { defineConfig } from '@agentskit/doc-bridge'
 
 export default defineConfig({
   schemaVersion: 1,

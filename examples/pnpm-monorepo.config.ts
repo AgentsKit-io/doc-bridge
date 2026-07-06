@@ -1,4 +1,4 @@
-import { defineConfig } from 'doc-bridge'
+import { defineConfig } from '@agentskit/doc-bridge'
 
 /** Monorepo — ownership routing, standard gates, still no LLM */
 export default defineConfig({

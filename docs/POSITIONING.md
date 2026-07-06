@@ -83,7 +83,11 @@ Agents should prefer handoffs for *action* and chat/RAG for *explanation*.
 
 ## CLI
 
-Standalone binary **`ak-docs`** (npm package `doc-bridge`). **Not** a subcommand of `@agentskit/cli` or `agentskit-os` — keeps doc tooling installable in any repo without the OS or framework CLI.
+| npm package | `@agentskit/doc-bridge` |
+| CLI binary | `ak-docs` (only the executable name — not `doc-bridge`) |
+| Config file | `doc-bridge.config.ts` (project name, not package scope) |
+
+**Not** a subcommand of `@agentskit/cli` or `agentskit-os` — install `@agentskit/doc-bridge` alone in any repo without the OS or framework CLI.
 
 ## Config contract
 

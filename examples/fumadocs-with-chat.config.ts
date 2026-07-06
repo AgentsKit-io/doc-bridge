@@ -1,4 +1,4 @@
-import { defineConfig } from 'doc-bridge'
+import { defineConfig } from '@agentskit/doc-bridge'
 
 /** Standard profile: monorepo + Fumadocs human bridge + optional chat (any provider) */
 export default defineConfig({

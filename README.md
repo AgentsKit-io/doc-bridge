@@ -1,6 +1,8 @@
 # doc-bridge
 
-**Agent-first documentation for any project** — not a wiki, not a framework doc site.
+**npm:** [`@agentskit/doc-bridge`](https://www.npmjs.com/package/@agentskit/doc-bridge) · **CLI:** `ak-docs`
+
+Agent-first documentation for any project — not a wiki, not a framework doc site.
 
 doc-bridge helps coding agents (Cursor, Claude Code, Codex, Copilot, …) **find the right file, run the right checks, and bridge agent docs to human docs** — with a deterministic layer that works **without any LLM or API key**.
 
@@ -100,10 +102,10 @@ Your repo
 
 ## CLI
 
-Standalone binary **`ak-docs`** — not part of `agentskit` or `agentskit-os` CLIs. Same package (`doc-bridge`), separate entrypoint so any project can install without the full AgentsKit toolchain.
+Standalone binary **`ak-docs`** — not part of `agentskit` or `agentskit-os` CLIs. Install the **`@agentskit/doc-bridge`** package; only the runnable command is `ak-docs`.
 
 ```bash
-npm install doc-bridge
+npm install @agentskit/doc-bridge
 ak-docs --help
 ```
 
@@ -125,7 +127,7 @@ Full contract: **[`docs/spec/config-v1.md`](docs/spec/config-v1.md)** · CLI ref
 ## Quick start (sketch)
 
 ```bash
-npm install doc-bridge
+npm install @agentskit/doc-bridge
 ak-docs init                 # config + INDEX stub
 ak-docs index                # build DocBridgeIndex
 ak-docs query module auth --agent
