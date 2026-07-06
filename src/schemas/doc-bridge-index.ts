@@ -35,6 +35,52 @@ export const CapabilityRefSchema = z
   })
   .strict()
 
+export const OwnershipRecordSchema = z
+  .object({
+    id: z.string().min(1).max(256),
+    path: z.string().min(1).max(512),
+    group: z.string().min(1).max(128).optional(),
+    layer: z.string().min(1).max(32).optional(),
+    purpose: z.string().max(1024).optional(),
+    checks: z.array(z.string().min(1).max(256)).max(32),
+    agentDoc: z.string().min(1).max(512).optional(),
+    humanDoc: z.string().min(1).max(512).optional(),
+    readme: z.string().min(1).max(512).optional(),
+  })
+  .strict()
+
+export const IndexLookupSchema = z
+  .object({
+    packages: z.array(z.string().min(1).max(256)).max(2_000),
+    ownership: z.record(z.string().min(1).max(256), OwnershipRecordSchema).optional(),
+    intents: z
+      .record(
+        z.string().min(1).max(128),
+        z
+          .object({
+            id: z.string().min(1).max(128),
+            title: z.string().min(1).max(256),
+            paths: z.array(z.string().min(1).max(512)).max(32),
+          })
+          .strict(),
+      )
+      .optional(),
+    changes: z
+      .record(
+        z.string().min(1).max(128),
+        z
+          .object({
+            id: z.string().min(1).max(128),
+            title: z.string().min(1).max(256),
+            startHere: z.string().min(1).max(512),
+            relatedPackages: z.array(z.string().min(1).max(256)).max(32).optional(),
+          })
+          .strict(),
+      )
+      .optional(),
+  })
+  .strict()
+
 export const DocBridgeIndexV1Schema = z
   .object({
     schemaVersion: z.literal(INDEX_SCHEMA_VERSION),
@@ -52,6 +98,7 @@ export const DocBridgeIndexV1Schema = z
     knowledge: z.array(KnowledgeEntrySchema).max(10_000),
     capabilities: z.array(CapabilityRefSchema).max(5_000).optional(),
     handoffs: z.record(z.string().min(1).max(256), AgentHandoffLegacySchema).optional(),
+    lookup: IndexLookupSchema.optional(),
   })
   .strict()
 

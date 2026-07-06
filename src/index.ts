@@ -51,4 +51,10 @@ export {
   type ParseResult,
 } from './validate.js'
 
+export { buildDocBridgeIndex, type BuildIndexOptions, type BuildIndexResult } from './index-builder/build-index.js'
+export { sha256NormalizedV1 } from './index-builder/content-hash.js'
+export { IndexNotFoundError, indexFilePath, loadDocBridgeIndex, resolveRoot } from './query/load-index.js'
+export { runQuery, type QueryKind, type QueryRequest, type QueryResult } from './query/query.js'
+export { searchIndex, type SearchMatch } from './query/search.js'
+
 export { PACKAGE_VERSION } from './version.js'

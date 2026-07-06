@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "corpus": {
+    "agent": {
+      "root": "docs/for-agents",
+      "index": "docs/for-agents/INDEX.md"
+    }
+  },
+  "routing": {
+    "plugin": "pnpm-monorepo",
+    "options": {
+      "ownership": {
+        "os-core": {
+          "path": "packages/os-core",
+          "group": "Contracts",
+          "layer": "L1",
+          "purpose": "Zod schemas + event bus + error model",
+          "checks": ["pnpm --filter os-core lint", "pnpm --filter os-core test"]
+        }
+      },
+      "intents": [
+        {
+          "id": "find-package",
+          "title": "Find the owning package or app",
+          "paths": ["docs/for-agents/INDEX.md", "AGENTS.md"]
+        }
+      ],
+      "changes": [
+        {
+          "id": "zod-schema",
+          "title": "Change a Zod schema contract or error code",
+          "startHere": "packages/os-core/src/errors/codes.ts"
+        }
+      ]
+    }
+  }
+}

@@ -1,6 +1,6 @@
 {
   "name": "@agentskit/doc-bridge",
-  "version": "0.1.0-alpha.0",
+  "version": "0.1.0-alpha.1",
   "description": "Agent-first documentation bridge for any project — OKF knowledge, AgentHandoff routing, doc site plugins.",
   "type": "module",
   "bin": {
