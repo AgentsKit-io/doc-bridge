@@ -2,8 +2,28 @@ import type { DocBridgeConfigV1 } from '../config/schema.js'
 import type { DocBridgeIndexV1 } from '../schemas/doc-bridge-index.js'
 import { runQuery } from '../query/query.js'
 import { resolveIntelligenceRuntime } from './adapter.js'
-import { importPeer } from './peers.js'
+import {
+  PeerMissingError,
+  importPeer,
+  isPeerResolutionFailure,
+  layer1InstallHint,
+} from './peers.js'
 import { createDocBridgeRag } from './rag.js'
+
+const wrapIntelligenceError = (error: unknown): Error => {
+  if (error instanceof PeerMissingError) return error
+  if (isPeerResolutionFailure(error)) {
+    return new PeerMissingError('@agentskit/*', layer1InstallHint())
+  }
+  const message = error instanceof Error ? error.message : String(error)
+  if (/fetch failed|econnrefused|enotfound|network|socket/i.test(message)) {
+    return new Error(
+      `Intelligence provider request failed (${message}).\n` +
+        `Check the model server (e.g. \`ollama serve\`) and Layer 1 peers:\n  ${layer1InstallHint()}`,
+    )
+  }
+  return error instanceof Error ? error : new Error(message)
+}
 
 const handoffFirstHint = (
   index: DocBridgeIndexV1,
@@ -58,24 +78,28 @@ export const runChatOnce = async (
   index: DocBridgeIndexV1,
   question: string,
 ): Promise<{ content: string; handoffPrefixed: boolean }> => {
-  const { adapter, provider, model } = await resolveIntelligenceRuntime(config)
-  const core = await importPeer<typeof import('@agentskit/core')>('@agentskit/core')
-  const rag = await createDocBridgeRag(root, config, index)
-  await rag.ingest()
+  try {
+    const { adapter, provider, model } = await resolveIntelligenceRuntime(config)
+    const core = await importPeer<typeof import('@agentskit/core')>('@agentskit/core')
+    const rag = await createDocBridgeRag(root, config, index)
+    await rag.ingest()
 
-  const controller = core.createChatController({
-    adapter,
-    retriever: rag.retriever,
-    system: systemPrompt(index, config, provider, model, question),
-  })
+    const controller = core.createChatController({
+      adapter,
+      retriever: rag.retriever,
+      system: systemPrompt(index, config, provider, model, question),
+    })
 
-  const result = await controller.send(question)
-  const content =
-    typeof result?.content === 'string' ? result.content : JSON.stringify(result, null, 2)
+    const result = await controller.send(question)
+    const content =
+      typeof result?.content === 'string' ? result.content : JSON.stringify(result, null, 2)
 
-  return {
-    content,
-    handoffPrefixed: Boolean(handoffFirstHint(index, config, question)),
+    return {
+      content,
+      handoffPrefixed: Boolean(handoffFirstHint(index, config, question)),
+    }
+  } catch (error) {
+    throw wrapIntelligenceError(error)
   }
 }
 
@@ -84,37 +108,41 @@ export const startInkChat = async (
   config: DocBridgeConfigV1,
   index: DocBridgeIndexV1,
 ): Promise<void> => {
-  const { adapter, provider, model } = await resolveIntelligenceRuntime(config)
-  const rag = await createDocBridgeRag(root, config, index)
-  await rag.ingest()
+  try {
+    const { adapter, provider, model } = await resolveIntelligenceRuntime(config)
+    const rag = await createDocBridgeRag(root, config, index)
+    await rag.ingest()
 
-  const React = await importPeer<typeof import('react')>('react')
-  const ink = await importPeer<typeof import('ink')>('ink')
-  const agentskitInk = await importPeer<typeof import('@agentskit/ink')>('@agentskit/ink')
+    const React = await importPeer<typeof import('react')>('react')
+    const ink = await importPeer<typeof import('ink')>('ink')
+    const agentskitInk = await importPeer<typeof import('@agentskit/ink')>('@agentskit/ink')
 
-  const App = () => {
-    const chat = agentskitInk.useChat({
-      adapter,
-      retriever: rag.retriever,
-      system: systemPrompt(index, config, provider, model),
-    })
+    const App = () => {
+      const chat = agentskitInk.useChat({
+        adapter,
+        retriever: rag.retriever,
+        system: systemPrompt(index, config, provider, model),
+      })
 
-    return React.createElement(
-      agentskitInk.ChatContainer as never,
-      null,
-      ...chat.messages.map((msg) =>
-        React.createElement(agentskitInk.Message as never, {
-          key: msg.id,
-          message: msg,
+      return React.createElement(
+        agentskitInk.ChatContainer as never,
+        null,
+        ...chat.messages.map((msg) =>
+          React.createElement(agentskitInk.Message as never, {
+            key: msg.id,
+            message: msg,
+          } as never),
+        ),
+        React.createElement(agentskitInk.InputBar as never, {
+          chat,
+          placeholder: 'Ask about project docs (handoff-first RAG)…',
         } as never),
-      ),
-      React.createElement(agentskitInk.InputBar as never, {
-        chat,
-        placeholder: 'Ask about project docs (handoff-first RAG)…',
-      } as never),
-    )
-  }
+      )
+    }
 
-  const instance = ink.render(React.createElement(App))
-  await instance.waitUntilExit()
+    const instance = ink.render(React.createElement(App))
+    await instance.waitUntilExit()
+  } catch (error) {
+    throw wrapIntelligenceError(error)
+  }
 }

@@ -631,7 +631,7 @@ describe('ak-docs CLI', () => {
     expect(result.err).toContain('Chat mode requires intelligence.enabled')
   })
 
-  it('prints peer install hint when chat is configured without AgentsKit peers', async () => {
+  it('prints actionable intelligence errors for chat when peers or provider fail', async () => {
     const root = mkdtempSync(join(tmpdir(), 'ak-docs-chat-'))
     try {
       process.chdir(root)
@@ -656,7 +656,9 @@ describe('ak-docs CLI', () => {
       try {
         const code = await runCli(['ask', '--chat', 'who owns schemas'])
         expect(code).toBe(1)
-        expect(err.toLowerCase()).toMatch(/peer|install|@agentskit\/(rag|adapters|core)/)
+        // Peers may be missing (CI clean) or present but Ollama down (local/dev):
+        // both paths must include the Layer 1 install hint.
+        expect(err).toMatch(/Install Layer 1 intelligence peers|Optional peer/)
       } finally {
         process.stderr.write = write
       }
