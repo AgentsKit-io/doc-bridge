@@ -33,7 +33,7 @@ const install = () => {
   rmSync(runner, { recursive: true, force: true })
   rmSync(tarball, { force: true })
   mkdirSync(runner, { recursive: true })
-  run('pnpm', ['build'])
+  run('npm', ['run', 'build'])
   run('npm', ['pack', '--json'])
   run('npm', ['init', '-y'], runner)
   run('npm', ['install', tarball], runner)

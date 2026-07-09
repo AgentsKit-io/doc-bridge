@@ -9,6 +9,12 @@ import { applyConfigDefaults } from '../src/config/defaults.js'
 import { DocBridgeConfigV1Schema } from '../src/config/schema.js'
 import { buildDocBridgeIndex } from '../src/index-builder/build-index.js'
 import { scanHumanDocRecords } from '../src/index-builder/human-adapters/index.js'
+import {
+  guessAgentDocForPackage,
+  ownershipFromCorpus,
+  ownershipFromFrontmatter,
+  scanAgentCorpus,
+} from '../src/index-builder/scan-corpus.js'
 import { parseDocBridgeIndex } from '../src/validate.js'
 
 const fixtureRoot = join(fileURLToPath(new URL('.', import.meta.url)), 'fixtures', 'sample-project')
@@ -168,5 +174,126 @@ describe('buildDocBridgeIndex', () => {
     expect(result.index.handoffs?.['open-knowledge-format-pattern']?.startHere).toContain(
       'open-knowledge-format-pattern.md',
     )
+  })
+
+  it('scans agent corpus and resolves package docs by frontmatter, path, and index files', () => {
+    const root = mkdtempSync(join(tmpdir(), 'ak-docs-scan-corpus-'))
+    mkdirSync(join(root, 'docs/for-agents/packages/auth'), { recursive: true })
+    mkdirSync(join(root, 'docs/for-agents/packages/billing'), { recursive: true })
+    writeFileSync(
+      join(root, 'docs/for-agents/packages/auth/index.mdx'),
+      [
+        '---',
+        'type: package',
+        'package: auth',
+        'editRoot: services/auth',
+        'checks: [pnpm --filter auth test]',
+        'humanDoc: /docs/auth',
+        'purpose: Auth package.',
+        '---',
+        '',
+        '# Auth',
+        '',
+        'Auth owns login.',
+      ].join('\n'),
+    )
+    writeFileSync(join(root, 'docs/for-agents/packages/billing.mdx'), '# Billing\n\nBilling owns invoices.\n')
+    writeFileSync(join(root, 'docs/for-agents/core.md'), '---\ntype: module\nid: core\n---\n\n# Core\n\nCore package.\n')
+
+    const config = applyConfigDefaults(
+      DocBridgeConfigV1Schema.parse({
+        schemaVersion: 1,
+        corpus: { agent: { root: 'docs/for-agents' } },
+      }),
+    )
+    const corpus = scanAgentCorpus(root, config)
+
+    expect(corpus.map((doc) => doc.id)).toEqual(expect.arrayContaining(['auth', 'billing', 'core']))
+    expect(guessAgentDocForPackage(corpus, 'auth')).toBe('docs/for-agents/packages/auth/index.mdx')
+    expect(guessAgentDocForPackage(corpus, 'billing')).toBe('docs/for-agents/packages/billing.mdx')
+    expect(guessAgentDocForPackage(corpus, 'core')).toBe('docs/for-agents/core.md')
+    expect(guessAgentDocForPackage(corpus, 'missing')).toBeUndefined()
+
+    expect(ownershipFromFrontmatter(corpus)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: 'auth',
+          path: 'services/auth',
+          checks: ['pnpm --filter auth test'],
+          humanDoc: '/docs/auth',
+        }),
+        expect.objectContaining({ id: 'core', path: 'packages/core' }),
+      ]),
+    )
+  })
+
+  it('infers ownership from registry, pattern, top-level, and package index corpus paths once', () => {
+    const docs = [
+      {
+        id: 'auth',
+        type: 'agent-doc',
+        title: 'Auth',
+        path: 'docs/for-agents/packages/auth/index.md',
+        absPath: '/repo/docs/for-agents/packages/auth/index.md',
+        relPath: 'docs/for-agents/packages/auth/index.md',
+        frontmatter: {},
+      },
+      {
+        id: 'auth-dupe',
+        type: 'agent-doc',
+        title: 'Auth duplicate',
+        path: 'docs/for-agents/packages/auth/extra.md',
+        absPath: '/repo/docs/for-agents/packages/auth/extra.md',
+        relPath: 'docs/for-agents/packages/auth/extra.md',
+        frontmatter: {},
+      },
+      {
+        id: 'connector',
+        type: 'agent-doc',
+        title: 'Connector',
+        path: 'docs/for-agents/registry/connector/README.md',
+        absPath: '/repo/docs/for-agents/registry/connector/README.md',
+        relPath: 'docs/for-agents/registry/connector/README.md',
+        frontmatter: { purpose: 'Connector registry.' },
+      },
+      {
+        id: 'session-pattern',
+        type: 'agent-doc',
+        title: 'Session Pattern',
+        path: 'docs/for-agents/pillars/runtime/session-pattern.md',
+        absPath: '/repo/docs/for-agents/pillars/runtime/session-pattern.md',
+        relPath: 'docs/for-agents/pillars/runtime/session-pattern.md',
+        frontmatter: { humanDoc: '/docs/session-pattern' },
+      },
+      {
+        id: 'worker',
+        type: 'agent-doc',
+        title: 'Worker',
+        path: 'docs/for-agents/worker.mdx',
+        absPath: '/repo/docs/for-agents/worker.mdx',
+        relPath: 'docs/for-agents/worker.mdx',
+        frontmatter: {},
+      },
+      {
+        id: 'already-frontmatter',
+        type: 'agent-doc',
+        title: 'Already',
+        path: 'docs/for-agents/packages/already.md',
+        absPath: '/repo/docs/for-agents/packages/already.md',
+        relPath: 'docs/for-agents/packages/already.md',
+        frontmatter: { package: 'already', editRoot: 'src/already' },
+      },
+    ]
+
+    expect(ownershipFromCorpus(docs)).toEqual([
+      expect.objectContaining({ id: 'auth', path: 'packages/auth' }),
+      expect.objectContaining({ id: 'connector', path: 'registry/connector', purpose: 'Connector registry.' }),
+      expect.objectContaining({
+        id: 'session-pattern',
+        path: 'docs/for-agents/pillars/runtime/session-pattern.md',
+        humanDoc: '/docs/session-pattern',
+      }),
+      expect.objectContaining({ id: 'worker', path: 'packages/worker' }),
+    ])
   })
 })

@@ -8,6 +8,7 @@ import { describe, expect, it } from 'vitest'
 import { applyConfigDefaults } from '../src/config/defaults.js'
 import { DocBridgeConfigV1Schema } from '../src/config/schema.js'
 import { buildDocBridgeIndex } from '../src/index-builder/build-index.js'
+import { installMcpConfig, mcpSnippet } from '../src/mcp/install.js'
 import { MCP_TOOLS, handleMcpRequest, startMcpStdioServer } from '../src/mcp/server.js'
 import { runQuery } from '../src/query/query.js'
 
@@ -21,6 +22,39 @@ const loadFixtureConfig = () => {
 }
 
 describe('MCP tools', () => {
+  it('installs Cursor MCP config while preserving existing servers', () => {
+    const root = mkdtempSync(join(tmpdir(), 'ak-docs-mcp-install-'))
+    mkdirSync(join(root, '.cursor'), { recursive: true })
+    writeFileSync(
+      join(root, '.cursor/mcp.json'),
+      JSON.stringify({ mcpServers: { existing: { command: 'node' } }, other: true }),
+    )
+
+    const result = installMcpConfig(root, 'cursor')
+    const config = JSON.parse(readFileSync(result.configPath, 'utf8')) as {
+      mcpServers: Record<string, { command: string; args?: string[]; cwd?: string }>
+      other: boolean
+    }
+
+    expect(result).toMatchObject({ ok: true, target: 'cursor', created: false, serverName: 'ak-docs' })
+    expect(config.other).toBe(true)
+    expect(config.mcpServers.existing?.command).toBe('node')
+    expect(config.mcpServers['ak-docs']).toEqual({ command: 'npx', args: ['ak-docs', 'mcp'], cwd: root })
+    expect(mcpSnippet(root)).toContain('"ak-docs"')
+  })
+
+  it('creates Cursor MCP config from scratch when the existing file is invalid', () => {
+    const root = mkdtempSync(join(tmpdir(), 'ak-docs-mcp-invalid-'))
+    mkdirSync(join(root, '.cursor'), { recursive: true })
+    writeFileSync(join(root, '.cursor/mcp.json'), '{nope')
+
+    const result = installMcpConfig(root, 'cursor')
+    const config = JSON.parse(readFileSync(result.configPath, 'utf8')) as { mcpServers: Record<string, unknown> }
+
+    expect(result.created).toBe(false)
+    expect(Object.keys(config.mcpServers)).toEqual(['ak-docs'])
+  })
+
   it('lists deterministic tools', () => {
     const config = loadFixtureConfig()
     const result = handleMcpRequest(

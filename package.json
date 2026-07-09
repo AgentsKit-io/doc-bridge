@@ -49,9 +49,9 @@
     "changeset": "changeset",
     "version-packages": "changeset version",
     "release": "pnpm build && pnpm test && changeset publish",
-    "prepublishOnly": "pnpm build && pnpm test",
+    "prepublishOnly": "npm run build && npm test",
     "prepare": "node scripts/prepare.mjs",
-    "prepack": "pnpm build"
+    "prepack": "npm run build"
   },
   "keywords": [
     "agentskit",

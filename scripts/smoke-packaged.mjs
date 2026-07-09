@@ -24,7 +24,7 @@ const frame = (req) => {
 
 try {
   rmSync(tarball, { force: true })
-  run('pnpm', ['build'])
+  run('npm', ['run', 'build'])
   run('npm', ['pack', '--json'])
 
   run('npm', ['init', '-y'], tmp)
@@ -79,7 +79,9 @@ try {
   run(bin, ['validate-config'], market)
   run(bin, ['index'], market)
   const ask = run(bin, ['ask', 'who owns token validation'], market)
-  if (!ask.includes('Best match: knowledge auth')) throw new Error(`ask smoke failed:\n${ask}`)
+  if (!ask.includes('Best match: ownership auth') || !ask.includes('ak-docs query ownership auth --agent')) {
+    throw new Error(`ask smoke failed:\n${ask}`)
+  }
   const retrieve = run(bin, ['retrieve', 'Self-Describe discovery'], market)
   if (!retrieve.includes('self-describe-pattern')) throw new Error('retrieve did not find Self-Describe Pattern')
   if (/akos/i.test(retrieve)) throw new Error('retrieve crawled an unrelated origin')

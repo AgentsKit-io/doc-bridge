@@ -9,6 +9,19 @@ const readEnv = (name: string | undefined): string | undefined => {
   return value && value.length > 0 ? value : undefined
 }
 
+const providerDefaultApiKeyEnv = (provider: string): string | undefined => {
+  switch (provider) {
+    case 'openai':
+      return 'OPENAI_API_KEY'
+    case 'anthropic':
+      return 'ANTHROPIC_API_KEY'
+    case 'openrouter':
+      return 'OPENROUTER_API_KEY'
+    default:
+      return undefined
+  }
+}
+
 export type ResolvedIntelligence = {
   readonly adapter: unknown
   readonly embed: unknown
@@ -30,7 +43,7 @@ export const resolveIntelligenceRuntime = async (
   const adapters = await importPeer<typeof import('@agentskit/adapters')>('@agentskit/adapters')
   const provider = adapterCfg.provider
   const model = adapterCfg.model
-  const apiKey = readEnv(adapterCfg.apiKeyEnv) ?? readEnv('OPENAI_API_KEY') ?? readEnv('ANTHROPIC_API_KEY')
+  const apiKey = readEnv(adapterCfg.apiKeyEnv) ?? readEnv(providerDefaultApiKeyEnv(provider))
   const baseUrl = adapterCfg.baseUrl
 
   let adapter: unknown

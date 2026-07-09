@@ -19,7 +19,7 @@ const write = (path, value) => {
 
 const install = () => {
   rmSync(tarball, { force: true })
-  run('pnpm', ['build'])
+  run('npm', ['run', 'build'])
   run('npm', ['pack', '--json'])
   run('npm', ['init', '-y'], tmp)
   run('npm', ['install', tarball], tmp)

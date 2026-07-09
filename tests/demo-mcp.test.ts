@@ -1,4 +1,4 @@
-import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
@@ -33,6 +33,21 @@ describe('demo and mcp install', () => {
     expect(result.handoff.target.id).toBe('auth')
     expect(result.handoff.checks.length).toBeGreaterThan(0)
     expect(formatDemoText(result).join('\n')).toContain('Gate:')
+  })
+
+  it('copies bundled fixture files into an existing workspace for in-project demos', () => {
+    const root = mkdtempSync(join(tmpdir(), 'ak-docs-demo-copy-'))
+    tempDirs.push(root)
+    mkdirSync(join(root, 'scratch'), { recursive: true })
+
+    const result = withDemoWorkspace('example', (_fixtureRoot, config) =>
+      runDemo(root, config, 'example', { copyFixture: true }),
+    )
+
+    expect(result.ok).toBe(true)
+    expect(existsSync(join(root, 'doc-bridge.config.json'))).toBe(true)
+    expect(existsSync(join(root, 'docs'))).toBe(true)
+    expect(existsSync(join(root, 'package.json'))).toBe(true)
   })
 
   it('installs cursor MCP config into project', () => {
