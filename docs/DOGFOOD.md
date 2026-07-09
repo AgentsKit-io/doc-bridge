@@ -1,6 +1,9 @@
 # Ecosystem dogfood — `@agentskit/doc-bridge`
 
-Validated **2026-07-09** against four consumers (local `file:` install of `0.1.0-alpha.1` while npm scope visibility was flaky).
+Validated **2026-07-09** against four consumers.
+
+- First pass: `0.1.0-alpha.1` (local `file:`)
+- Second pass after polish: **`0.1.0-alpha.2`** (`v0.1.0-alpha.2`)
 
 ## Standard integration (all repos)
 
