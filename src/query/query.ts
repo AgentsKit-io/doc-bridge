@@ -32,6 +32,18 @@ const handoffForPackage = (
   const owner = index.lookup?.ownership?.[id]
   if (!owner) throw new Error(`Unknown package/ownership id "${id}". Try: ak-docs list packages`)
 
+  const bridge = owner.humanDoc
+    ? /^https?:\/\//.test(owner.humanDoc)
+      ? { humanDoc: 'external' as const }
+      : { humanDoc: 'linked' as const }
+    : config.corpus.human
+      ? {
+          humanDoc: 'missing' as const,
+          action: 'ak-docs bootstrap agent-docs',
+          bootstrap: `docs/for-agents/human/${id}.md`,
+        }
+      : undefined
+
   return normalizeAgentHandoff({
     type: 'agent-handoff',
     source: config.index?.outFile ?? '.doc-bridge/index.json',
@@ -47,7 +59,13 @@ const handoffForPackage = (
     editRoots: [owner.path],
     checks: [...owner.checks],
     ...(owner.humanDoc ? { humanDoc: owner.humanDoc } : {}),
-    notes: owner.purpose ? [owner.purpose] : [],
+    ...(bridge ? { bridge } : {}),
+    notes: [
+      ...(owner.purpose ? [owner.purpose] : []),
+      ...(!owner.humanDoc && config.corpus.human
+        ? [`Human guide missing for ${id}. Run: ak-docs bootstrap agent-docs`]
+        : []),
+    ],
   })
 }
 

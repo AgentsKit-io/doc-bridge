@@ -29,6 +29,8 @@ ak-docs ask "<question>" --chat
 
 Missing peers produce an install hint instead of a silent no-op.
 
+**Ollama walkthrough:** [ollama-demo.md](./ollama-demo.md) · `pnpm smoke:ollama`
+
 ## Providers
 
 | provider | Notes |

@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>doc-bridge — AgentHandoff for your monorepo</title>
+  <meta name="description" content="Deterministic routing for coding agents: edit the right package, run the right checks, bridge to human docs. No API key required." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0b0f14;
+      --surface: #121820;
+      --border: #1e2a38;
+      --text: #e8eef6;
+      --muted: #8fa3b8;
+      --accent: #3d9cf5;
+      --accent-dim: #2563a8;
+      --green: #3ecf8e;
+      --red: #f07178;
+      --amber: #e6c07b;
+      --mono: "IBM Plex Mono", ui-monospace, monospace;
+      --sans: "IBM Plex Sans", system-ui, sans-serif;
+      --radius: 12px;
+      --max: 1080px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .wrap { max-width: var(--max); margin: 0 auto; padding: 0 1.25rem; }
+    header {
+      padding: 1.25rem 0;
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 10;
+      background: rgba(11, 15, 20, 0.92);
+      backdrop-filter: blur(8px);
+    }
+    .nav { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+    .logo { font-weight: 700; font-size: 1.05rem; letter-spacing: -0.02em; }
+    .logo span { color: var(--muted); font-weight: 500; }
+    .nav-links { display: flex; gap: 1.25rem; font-size: 0.9rem; }
+    .nav-links a { color: var(--muted); }
+    .nav-links a:hover { color: var(--text); text-decoration: none; }
+    .hero { padding: 4.5rem 0 3rem; }
+    .eyebrow {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 1rem;
+    }
+    h1 {
+      font-size: clamp(2rem, 5vw, 3.25rem);
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      max-width: 16ch;
+      margin-bottom: 1.25rem;
+    }
+    .lead {
+      font-size: 1.15rem;
+      color: var(--muted);
+      max-width: 52ch;
+      margin-bottom: 2rem;
+    }
+    .cta-row { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 3rem; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      padding: 0.7rem 1.15rem;
+      border-radius: 8px;
+      font-weight: 600; font-size: 0.95rem;
+      border: 1px solid transparent;
+      cursor: pointer;
+      text-decoration: none !important;
+    }
+    .btn-primary { background: var(--accent); color: #041018; }
+    .btn-primary:hover { background: #5aadf7; }
+    .btn-ghost { border-color: var(--border); color: var(--text); background: var(--surface); }
+    .btn-ghost:hover { border-color: var(--muted); }
+    .terminal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      line-height: 1.65;
+    }
+    .terminal-bar {
+      display: flex; gap: 6px; padding: 0.65rem 1rem;
+      border-bottom: 1px solid var(--border);
+      background: #0d1219;
+    }
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot-r { background: var(--red); }
+    .dot-y { background: var(--amber); }
+    .dot-g { background: var(--green); }
+    .terminal-body { padding: 1.25rem 1.5rem; overflow-x: auto; }
+    .t-dim { color: var(--muted); }
+    .t-ok { color: var(--green); }
+    .t-bad { color: var(--red); }
+    .t-hi { color: var(--accent); }
+    section { padding: 3.5rem 0; border-top: 1px solid var(--border); }
+    h2 { font-size: 1.5rem; letter-spacing: -0.02em; margin-bottom: 0.5rem; }
+    .section-lead { color: var(--muted); margin-bottom: 2rem; max-width: 60ch; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+    @media (max-width: 720px) { .grid-2 { grid-template-columns: 1fr; } .nav-links { display: none; } }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem 1.35rem;
+    }
+    .card h3 { font-size: 1rem; margin-bottom: 0.35rem; }
+    .card p { color: var(--muted); font-size: 0.92rem; }
+    .card code { font-family: var(--mono); font-size: 0.8rem; color: var(--accent); }
+    .loops { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+    @media (max-width: 900px) { .loops { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 480px) { .loops { grid-template-columns: 1fr; } }
+    .loop-tag {
+      font-size: 0.7rem; font-weight: 700; letter-spacing: 0.06em;
+      text-transform: uppercase; color: var(--accent); margin-bottom: 0.4rem;
+    }
+    .used-by {
+      display: flex; flex-wrap: wrap; gap: 1rem; align-items: center;
+    }
+    .used-by a {
+      display: flex; align-items: center; gap: 0.5rem;
+      padding: 0.65rem 1rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-weight: 500;
+      font-size: 0.9rem;
+      text-decoration: none;
+    }
+    .used-by a:hover { border-color: var(--accent-dim); }
+    .badge-row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1.5rem; }
+    .badge-row img { height: 22px; }
+    footer {
+      padding: 2.5rem 0 3rem;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+    footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 1rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap nav">
+      <div class="logo">doc-bridge <span>/ ak-docs</span></div>
+      <nav class="nav-links">
+        <a href="#demo">Demo</a>
+        <a href="#loops">Loops</a>
+        <a href="#used-by">Used by</a>
+        <a href="https://github.com/AgentsKit-io/doc-bridge">GitHub</a>
+      </nav>
+      <a class="btn btn-primary" href="https://www.npmjs.com/package/@agentskit/doc-bridge">npm install</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="wrap">
+        <div class="eyebrow">AgentHandoff for your monorepo</div>
+        <h1>Your agent never edits the wrong package again.</h1>
+        <p class="lead">
+          Deterministic handoffs: <strong>startHere</strong>, <strong>editRoots</strong>, <strong>checks</strong>, and a bridge to human docs.
+          Layer 0 works without any LLM or API key.
+        </p>
+        <div class="cta-row">
+          <a class="btn btn-primary" href="#demo">See 60s demo</a>
+          <a class="btn btn-ghost" href="https://github.com/AgentsKit-io/doc-bridge#readme">Read README</a>
+        </div>
+        <div class="grid-2" id="demo">
+          <div class="terminal">
+            <div class="terminal-bar"><span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span></div>
+            <div class="terminal-body">
+              <div class="t-dim"># Before — agent guesses</div>
+              <div class="t-bad">✗ edits packages/billing when task says "auth"</div>
+              <div class="t-bad">✗ runs repo-wide test instead of package checks</div>
+              <br />
+              <div class="t-dim">$ npx ak-docs demo --text</div>
+              <br />
+              <div class="t-dim"># After — handoff.resolve</div>
+              <div class="t-ok">✓ target: auth (packages/auth)</div>
+              <div class="t-ok">✓ edit: packages/auth</div>
+              <div class="t-ok">✓ checks: pnpm --filter @demo/auth test</div>
+              <div class="t-ok">✓ human guide: /docs/guides/auth</div>
+              <div class="t-hi">Gate: red → green</div>
+            </div>
+          </div>
+          <div class="terminal">
+            <div class="terminal-bar"><span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span></div>
+            <div class="terminal-body">
+              <div class="t-dim">$ npm i -D @agentskit/doc-bridge</div>
+              <div class="t-dim">$ npx ak-docs init && npx ak-docs index</div>
+              <div class="t-dim">$ ak-docs mcp install --cursor</div>
+              <div class="t-dim">$ ak-docs doctor --text</div>
+              <br />
+              <div>Score: <span class="t-ok">82/100 (B)</span></div>
+              <div>Agent docs: 8/10 <span class="t-dim">(80% handoff-ready)</span></div>
+              <div>Human guides: 6/10 <span class="t-dim">(60% bridged)</span></div>
+              <div>Gates: <span class="t-ok">3/3 passing</span></div>
+              <br />
+              <div class="t-dim">→ ak-docs query package auth --agent</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="loops">
+      <div class="wrap">
+        <h2>Four loops, one bridge</h2>
+        <p class="section-lead">Act, bridge, learn, explain — each loop has a CLI command and real output, not a concept table.</p>
+        <div class="loops">
+          <div class="card">
+            <div class="loop-tag">Act</div>
+            <h3>Handoff routing</h3>
+            <p><code>query --agent</code> · MCP <code>handoff.resolve</code></p>
+          </div>
+          <div class="card">
+            <div class="loop-tag">Bridge</div>
+            <h3>Human ↔ agent</h3>
+            <p><code>bootstrap agent-docs</code> · <code>bridge.humanDoc</code></p>
+          </div>
+          <div class="card">
+            <div class="loop-tag">Learn</div>
+            <h3>Memory → docs</h3>
+            <p><code>memory promote --pr</code> · HITL draft PR</p>
+          </div>
+          <div class="card">
+            <div class="loop-tag">Explain</div>
+            <h3>Local consult</h3>
+            <p><code>ask</code> · optional Ollama chat</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="used-by">
+      <div class="wrap">
+        <h2>Used by AgentsKit (public)</h2>
+        <p class="section-lead">Dogfooded on open surfaces — not private monorepo claims.</p>
+        <div class="used-by">
+          <a href="https://www.agentskit.io/docs/for-agents">AgentsKit for-agents</a>
+          <a href="https://registry.agentskit.io/">AgentsKit Registry</a>
+          <a href="https://playbook.agentskit.io/llms.txt">Agents Playbook</a>
+          <a href="https://github.com/AgentsKit-io/doc-bridge">doc-bridge (this repo)</a>
+        </div>
+        <div class="badge-row">
+          <img src="https://img.shields.io/npm/v/@agentskit/doc-bridge?style=flat-square&color=3d9cf5" alt="npm version" />
+          <img src="https://img.shields.io/badge/Layer%200-no%20API%20key-3ecf8e?style=flat-square" alt="no api key" />
+          <img src="https://img.shields.io/badge/handoff_coverage-ready-2ea44f?style=flat-square" alt="handoff coverage" />
+          <img src="https://img.shields.io/github/actions/workflow/status/AgentsKit-io/doc-bridge/ci.yml?branch=master&style=flat-square&label=CI" alt="CI" />
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <h2>CI on every PR</h2>
+        <p class="section-lead">Stale handoffs fail the build — same gate locally and in GitHub Actions.</p>
+        <div class="terminal">
+          <div class="terminal-bar"><span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span></div>
+          <div class="terminal-body">
+            <div class="t-dim"># .github/workflows/pr.yml</div>
+            <div>- uses: <span class="t-hi">AgentsKit-io/doc-bridge@v1.0.0</span></div>
+            <div>&nbsp;&nbsp;with:</div>
+            <div>&nbsp;&nbsp;&nbsp;&nbsp;config-path: doc-bridge.config.json</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <div>MIT · <a href="https://github.com/AgentsKit-io/doc-bridge">AgentsKit-io/doc-bridge</a></div>
+      <div>
+        <a href="https://github.com/AgentsKit-io/doc-bridge/blob/master/docs/playbook/doc-bridge-pattern.md">Playbook pattern</a>
+        · <a href="https://github.com/AgentsKit-io/doc-bridge/blob/master/docs/skills/doc-bridge.md">Agent skill</a>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

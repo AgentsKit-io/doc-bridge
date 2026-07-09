@@ -21,7 +21,7 @@ pnpm changeset          # if new entry needed
 pnpm version-packages   # bumps package.json + CHANGELOG from .changeset/*
 ```
 
-Current track: `0.1.0-alpha.x`.
+Current track: **`1.0.0` stable** (alpha series ended at `0.1.0-alpha.5`).
 
 ## Publish (npm)
 
@@ -49,10 +49,12 @@ npx ak-docs@0.1.0-alpha.x --version
 ## GitHub
 
 ```bash
-git tag v0.1.0-alpha.x
+git tag v1.0.0
 git push origin master --tags
-gh release create v0.1.0-alpha.x --title "v0.1.0-alpha.x" --notes-file CHANGELOG.md
+gh release create v1.0.0 --title "v1.0.0 — AgentHandoff stable" --notes-file CHANGELOG.md
 ```
+
+Enable GitHub Pages (Settings → Pages → GitHub Actions) for landing deploy from `.github/workflows/pages.yml`.
 
 ## Post-publish smoke (fresh machine)
 

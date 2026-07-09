@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "corpus": {
+    "agent": {
+      "root": "docs",
+      "index": "docs/getting-started.md"
+    }
+  },
+  "routing": {
+    "options": {
+      "ownership": {
+        "doc-bridge": {
+          "path": "src",
+          "purpose": "CLI, index builder, MCP, gates, and doctor",
+          "checks": ["pnpm test", "pnpm typecheck"],
+          "agentDoc": "docs/POSITIONING.md"
+        }
+      }
+    }
+  },
+  "gates": {
+    "preset": "minimal"
+  }
+}

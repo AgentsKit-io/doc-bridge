@@ -1,0 +1,7 @@
+{
+  "name": "ak-docs-demo-monorepo",
+  "private": true,
+  "scripts": {
+    "test": "pnpm -r test"
+  }
+}

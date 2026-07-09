@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "corpus": {
+    "agent": {
+      "root": "docs/for-agents"
+    }
+  },
+  "routing": {
+    "options": {
+      "ownership": {
+        "example": {
+          "path": "src",
+          "purpose": "Starter ownership target — replace with your real modules",
+          "checks": ["npm test"],
+          "agentDoc": "docs/for-agents/packages/example.md"
+        }
+      }
+    }
+  },
+  "gates": {
+    "preset": "minimal"
+  }
+}

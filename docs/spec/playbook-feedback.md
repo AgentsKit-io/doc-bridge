@@ -66,12 +66,20 @@ mergePolicy:
   autoMerge: false
 ```
 
-## Doc Bridge Pattern Stub
+## Doc Bridge Pattern (published)
 
-The public pattern should describe the trilogy:
+Full pattern: [`docs/playbook/doc-bridge-pattern.md`](../playbook/doc-bridge-pattern.md)
+
+Export for Playbook PR:
+
+```bash
+ak-docs playbook pattern --text > doc-bridge-pattern.md
+```
+
+The pattern describes the trilogy:
 
 - `AgentHandoff`: precise editing route for coding agents.
 - OKF docs: knowledge files that can be linted and indexed.
-- Self-Describe artifacts: `llms.txt`, `capabilities.json`, and content hashes for discovery.
+- Self-describe artifacts: `llms.txt`, `capabilities.json`, and content hashes for discovery.
 
-The first automated implementation should only open a draft PR. Human review owns merge, licensing, and final wording.
+Memory-sourced findings still use `ak-docs memory promote --pr` — human review owns merge, licensing, and final wording.

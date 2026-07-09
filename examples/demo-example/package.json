@@ -1,0 +1,7 @@
+{
+  "name": "ak-docs-demo-example",
+  "private": true,
+  "scripts": {
+    "test": "node -e \"process.exit(0)\""
+  }
+}

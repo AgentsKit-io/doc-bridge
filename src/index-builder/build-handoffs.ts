@@ -183,6 +183,18 @@ export const buildLookup = (
     }
     ownership[pkg.id] = record
 
+    const bridge = record.humanDoc
+      ? /^https?:\/\//.test(record.humanDoc)
+        ? { humanDoc: 'external' as const }
+        : { humanDoc: 'linked' as const }
+      : config.corpus.human
+        ? {
+            humanDoc: 'missing' as const,
+            action: 'ak-docs bootstrap agent-docs',
+            bootstrap: `docs/for-agents/human/${pkg.id}.md`,
+          }
+        : undefined
+
     handoffs[pkg.id] = {
       type: 'agent-handoff',
       schemaVersion: 1,
@@ -201,7 +213,13 @@ export const buildLookup = (
       editRoots: [record.path],
       checks: [...record.checks],
       ...(record.humanDoc ? { humanDoc: record.humanDoc } : {}),
-      notes: record.purpose ? [record.purpose] : [],
+      ...(bridge ? { bridge } : {}),
+      notes: [
+        ...(record.purpose ? [record.purpose] : []),
+        ...(!record.humanDoc && config.corpus.human
+          ? [`Human guide missing for ${pkg.id}. Run: ak-docs bootstrap agent-docs`]
+          : []),
+      ],
     }
   }
 

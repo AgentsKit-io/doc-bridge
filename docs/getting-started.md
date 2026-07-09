@@ -10,15 +10,28 @@ pnpm add -D @agentskit/doc-bridge
 
 CLI binary: **`ak-docs`**.
 
+## 60-second demo (zero setup)
+
+```bash
+npx ak-docs demo --text
+npx ak-docs demo --fixture monorepo --text   # auth + billing monorepo
+```
+
+Prints before/after, a real handoff, gate red→green, and the MCP snippet.
+
 ## Two-minute path (no API key)
 
 ```bash
 ak-docs init          # config + demo ownership + AGENTS.md snippet
 ak-docs index
 ak-docs query package example --agent
+ak-docs doctor --text
+ak-docs doctor --badge
+ak-docs mcp install --cursor
+ak-docs index --watch          # optional — dev loop
 ```
 
-You should see an **AgentHandoff** with `startHere`, `editRoots`, and `checks`.
+You should see an **AgentHandoff** with `startHere`, `editRoots`, `checks`, and optional `bridge`.
 
 Useful follow-ups:
 

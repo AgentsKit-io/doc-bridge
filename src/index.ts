@@ -20,7 +20,9 @@ export {
   HandoffTargetTypeSchema,
   HANDOFF_SCHEMA_VERSION,
   normalizeAgentHandoff,
+  HandoffBridgeSchema,
   type AgentHandoffV1,
+  type HandoffBridge,
   type AgentSearchV1,
   type HandoffTarget,
   type HandoffTargetType,
@@ -74,6 +76,22 @@ export {
   type GateRunResult,
 } from './gates/run-gates.js'
 export { MCP_TOOLS, handleMcpRequest, startMcpStdioServer } from './mcp/server.js'
+export { installMcpConfig, mcpSnippet, type McpInstallResult, type McpInstallTarget } from './mcp/install.js'
+export { runDoctor, formatDoctorText, type DoctorReport, type DoctorIssue, type DoctorCoverage } from './doctor/run-doctor.js'
+export {
+  doctorBadgeMetrics,
+  formatDoctorBadgeJson,
+  formatDoctorBadgeMarkdown,
+  type DoctorBadgeMetrics,
+} from './doctor/badge.js'
+export { watchDocBridgeIndex, type WatchIndexOptions } from './index-builder/watch-index.js'
+export {
+  promoteMemoryToGithubPr,
+  writePromotionDraft,
+  defaultPromotionDraftPath,
+  type GithubPrOptions,
+  type GithubPrResult,
+} from './memory/github-pr.js'
 export { sha256NormalizedV1 } from './index-builder/content-hash.js'
 export { IndexNotFoundError, indexFilePath, loadDocBridgeIndex, resolveRoot } from './query/load-index.js'
 export { runQuery, type QueryKind, type QueryRequest, type QueryResult } from './query/query.js'
@@ -118,3 +136,9 @@ export { projectRootFromConfigPath } from './config/load-config.js'
 export { createDocBridgeRag } from './intelligence/rag.js'
 export { runChatOnce, startInkChat } from './intelligence/chat.js'
 export { PeerMissingError, layer1InstallHint } from './intelligence/peers.js'
+export {
+  DOC_BRIDGE_PATTERN_ID,
+  DOC_BRIDGE_PATTERN_META,
+  docBridgePatternMarkdown,
+  docBridgePatternPayload,
+} from './playbook/doc-bridge-pattern.js'

@@ -15,6 +15,16 @@ import { createDocBridgeRag } from '../intelligence/rag.js'
 import { firstHeading, firstParagraph } from '../lib/markdown.js'
 import { ingestMemoryCandidates } from '../memory/ingest.js'
 import { classifyMemoryCandidates, draftMemoryPromotion } from '../memory/pipeline.js'
+import { promoteMemoryToGithubPr } from '../memory/github-pr.js'
+import { watchDocBridgeIndex } from '../index-builder/watch-index.js'
+import {
+  formatDoctorBadgeJson,
+  formatDoctorBadgeMarkdown,
+} from '../doctor/badge.js'
+import { docBridgePatternMarkdown, docBridgePatternPayload } from '../playbook/doc-bridge-pattern.js'
+import { formatDemoText, runDemo, withDemoWorkspace, type DemoFixture } from './demo.js'
+import { formatDoctorText, runDoctor } from '../doctor/run-doctor.js'
+import { installMcpConfig, mcpSnippet } from '../mcp/install.js'
 import { startMcpStdioServer } from '../mcp/server.js'
 import { IndexNotFoundError, loadDocBridgeIndex } from '../query/load-index.js'
 import { runQuery, type QueryKind } from '../query/query.js'
@@ -36,6 +46,8 @@ type Command =
   | 'index'
   | 'gate'
   | 'mcp'
+  | 'doctor'
+  | 'demo'
   | 'query'
   | 'search'
   | 'retrieve'
@@ -48,14 +60,17 @@ const usage = `ak-docs — human↔agent documentation bridge (@agentskit/doc-br
 
 Core (no API key):
   ak-docs init [--demo] [--scaffold-workspaces]
-  ak-docs index
+  ak-docs demo [--fixture example|monorepo] [--text] [--in-project]
+  ak-docs doctor [--text] [--badge] [--write-badge]
+  ak-docs index [--watch]
   ak-docs query <package|ownership|intent|change> <id> [--agent] [--text]
   ak-docs search <term> [--agent] [--text]
   ak-docs list <packages|intents|changes|knowledge> [--text]
   ak-docs ask [question]          local consult (no LLM)
   ak-docs gate run [gate-id]
   ak-docs mcp
-  ak-docs memory ingest|classify|promote
+  ak-docs mcp install --cursor | --claude
+  ak-docs memory ingest|classify|promote [--pr] [--dry-run]
   ak-docs bootstrap agent-docs
   ak-docs validate-config | validate-handoff <file>
 
@@ -67,7 +82,7 @@ Intelligence (optional AgentsKit peers):
 Advanced / ecosystem:
   ak-docs retrieve <query>
   ak-docs registry topology
-  ak-docs playbook draft
+  ak-docs playbook draft | pattern [--text]
 
 Global flags:
   -h, --help   --version
@@ -112,6 +127,8 @@ const parseArgs = (argv: readonly string[]) => {
   else if (positional[0] === 'index') command = 'index'
   else if (positional[0] === 'gate') command = 'gate'
   else if (positional[0] === 'mcp') command = 'mcp'
+  else if (positional[0] === 'doctor') command = 'doctor'
+  else if (positional[0] === 'demo') command = 'demo'
   else if (positional[0] === 'query') command = 'query'
   else if (positional[0] === 'search') command = 'search'
   else if (positional[0] === 'retrieve') command = 'retrieve'
@@ -201,23 +218,60 @@ const writeTextSearch = (
   ])
 }
 
+const handoffSummaryLines = (
+  index: DocBridgeIndexV1,
+  config: DocBridgeConfigV1,
+  ownerId: string,
+): string[] => {
+  try {
+    const handoff = runQuery(index, config, { kind: 'ownership', id: ownerId, agent: true })
+    if (!handoff || typeof handoff !== 'object' || !('editRoots' in handoff)) return []
+    const payload = handoff as {
+      startHere?: string
+      editRoots?: string[]
+      checks?: string[]
+      humanDoc?: string | null
+      bridge?: { humanDoc?: string; action?: string }
+    }
+    const bridgeLine =
+      payload.bridge?.humanDoc === 'missing'
+        ? `Bridge: human guide missing → ${payload.bridge.action ?? 'ak-docs bootstrap agent-docs'}`
+        : payload.humanDoc
+          ? `Bridge: ${payload.humanDoc}`
+          : 'Bridge: (no human plugin configured)'
+    return [
+      '',
+      'Handoff preview',
+      `  start:  ${payload.startHere ?? '(unknown)'}`,
+      `  edit:   ${(payload.editRoots ?? []).join(', ') || '(none)'}`,
+      `  checks: ${(payload.checks ?? []).join(' · ') || '(none)'}`,
+      `  ${bridgeLine}`,
+    ]
+  } catch {
+    return []
+  }
+}
+
 const writeAsk = (
   question: string,
   matches: ReturnType<typeof searchIndex>,
   index: DocBridgeIndexV1,
+  config: DocBridgeConfigV1,
 ): void => {
   // Prefer ownership match for routing questions
   const owner =
     matches.find((match) => match.type === 'ownership') ??
     matches.find((match) => Boolean(index.lookup?.ownership?.[match.id]))
   const best = owner ?? matches[0]
-  const bestQuery =
-    best && (best.type === 'ownership' || index.lookup?.ownership?.[best.id])
-      ? `ak-docs query ownership ${best.id} --agent`
-      : 'ak-docs list knowledge --text'
+  const ownerId =
+    best && (best.type === 'ownership' || index.lookup?.ownership?.[best.id]) ? best.id : undefined
+  const bestQuery = ownerId
+    ? `ak-docs query ownership ${ownerId} --agent`
+    : 'ak-docs list knowledge --text'
   writeLines([
     `Question: ${question}`,
     best ? `Best match: ${best.type} ${best.id} (${best.path})` : 'Best match: none',
+    ...(ownerId ? handoffSummaryLines(index, config, ownerId) : []),
     '',
     'Matches:',
     ...(
@@ -231,8 +285,9 @@ const writeAsk = (
       ? [
           `ak-docs search "${question}" --agent`,
           bestQuery,
+          ...(ownerId ? [`ak-docs doctor --text`] : []),
         ]
-      : ['ak-docs list knowledge --text']),
+      : ['ak-docs list knowledge --text', 'ak-docs doctor --text']),
   ])
 }
 
@@ -271,7 +326,7 @@ const runAskRepl = async (root: string, config: DocBridgeConfigV1): Promise<numb
           const gateId = value || undefined
           writeJson(runGates(root, config, gateId ? [gateId as GateId] : undefined))
         } else {
-          writeAsk(line, searchIndex(index, line, 8), index)
+          writeAsk(line, searchIndex(index, line, 8), index, config)
         }
       } catch (error) {
         process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`)
@@ -605,7 +660,9 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
 
   if (command === 'memory') {
     if (!['ingest', 'classify', 'promote'].includes(positional[1] ?? '')) {
-      process.stderr.write('Usage: ak-docs memory <ingest|classify|promote> [--config <path>]\n')
+      process.stderr.write(
+        'Usage: ak-docs memory <ingest|classify|promote> [--pr] [--dry-run] [--force] [--config <path>]\n',
+      )
       return 1
     }
     try {
@@ -622,6 +679,23 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
         return 0
       }
       const draft = draftMemoryPromotion(classifications)
+      if (flags.has('--pr') || flags.has('--github')) {
+        const pr = promoteMemoryToGithubPr(root, draft, {
+          dryRun: flags.has('--dry-run'),
+          force: flags.has('--force'),
+        })
+        if (flags.has('--text')) {
+          writeLines([
+            pr.message,
+            ...(pr.draftPath ? [`Draft: ${pr.draftPath}`] : []),
+            ...(pr.prUrl ? [`PR: ${pr.prUrl}`] : []),
+            ...(pr.commands.length ? ['', 'Commands:', ...pr.commands.map((cmd) => `  ${cmd}`)] : []),
+          ])
+        } else {
+          writeJson({ ...draft, pr })
+        }
+        return pr.ok ? 0 : 1
+      }
       writeJson(draft)
       return draft.ok ? 0 : 1
     } catch (error) {
@@ -640,8 +714,18 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
   }
 
   if (command === 'playbook') {
-    if (positional[1] !== 'draft') {
-      process.stderr.write('Usage: ak-docs playbook draft [--config <path>]\n')
+    const action = positional[1]
+    if (action === 'pattern') {
+      const payload = docBridgePatternPayload()
+      if (flags.has('--text') || wantsTextOutput(flags, { schemaVersion: 1, corpus: { agent: { root: 'docs' } } } as DocBridgeConfigV1)) {
+        process.stdout.write(`${docBridgePatternMarkdown()}\n`)
+      } else {
+        writeJson(payload)
+      }
+      return 0
+    }
+    if (action !== 'draft') {
+      process.stderr.write('Usage: ak-docs playbook draft | pattern [--text] [--config <path>]\n')
       return 1
     }
     try {
@@ -652,6 +736,8 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
         ...draft,
         title: 'Draft Playbook feedback promotion',
         pattern: 'Doc Bridge Pattern',
+        patternDoc: 'docs/playbook/doc-bridge-pattern.md',
+        exportCommand: 'ak-docs playbook pattern --text',
       })
       return 0
     } catch (error) {
@@ -662,7 +748,14 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
 
   if (command === 'index') {
     try {
-      const { config, root } = loadProject(configPath)
+      const { config, root, configPath: loadedConfigPath } = loadProject(configPath)
+      if (flags.has('--watch')) {
+        return watchDocBridgeIndex({
+          root,
+          config,
+          configPath: loadedConfigPath,
+        })
+      }
       const result = buildDocBridgeIndex({ root, config })
       const diagnostics = indexDiagnostics(config, result)
       const handoffCount = Object.keys(result.index.handoffs ?? {}).length
@@ -710,10 +803,97 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
   }
 
   if (command === 'mcp') {
+    if (positional[1] === 'install') {
+      const target = flags.has('--claude') ? 'claude' : flags.has('--cursor') ? 'cursor' : undefined
+      if (!target) {
+        process.stderr.write('Usage: ak-docs mcp install --cursor | --claude\n')
+        return 1
+      }
+      try {
+        const { config, root } = loadProject(configPath)
+        const result = installMcpConfig(root, target)
+        if (wantsTextOutput(flags, config)) {
+          writeLines([
+            `Installed MCP server "${result.serverName}" for ${result.target}`,
+            `Config: ${result.configPath}`,
+            ...(result.created ? ['Created new config file'] : ['Merged into existing config']),
+            '',
+            'Next steps:',
+            ...result.nextSteps.map((step) => `  → ${step}`),
+          ])
+        } else {
+          writeJson({ ...result, snippet: mcpSnippet(root) })
+        }
+        return 0
+      } catch (error) {
+        process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`)
+        return 1
+      }
+    }
+
     try {
       const { config, root } = loadProject(configPath)
       startMcpStdioServer({ root, config })
       return undefined
+    } catch (error) {
+      process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`)
+      return 1
+    }
+  }
+
+  if (command === 'doctor') {
+    try {
+      const { config, root } = loadProject(configPath)
+      const report = runDoctor(root, config)
+      if (flags.has('--write-badge')) {
+        const badgePath = resolve(root, '.doc-bridge', 'coverage-badge.json')
+        mkdirSync(dirname(badgePath), { recursive: true })
+        writeFileSync(badgePath, `${formatDoctorBadgeJson(report.badge)}\n`, 'utf8')
+      }
+      if (flags.has('--badge')) {
+        writeLines([formatDoctorBadgeMarkdown(report.badge)])
+        return 0
+      }
+      if (wantsTextOutput(flags, config)) writeLines(formatDoctorText(report))
+      else writeJson(report)
+      return report.ok ? 0 : 1
+    } catch (error) {
+      process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`)
+      return 1
+    }
+  }
+
+  if (command === 'demo') {
+    const resolveDemoFixture = (): DemoFixture => {
+      const fixtureFlagIndex = positional.indexOf('--fixture')
+      if (fixtureFlagIndex >= 0) {
+        const value = positional[fixtureFlagIndex + 1]
+        if (value === 'monorepo' || value === 'example') return value
+      }
+      if (flags.has('--monorepo') || positional.includes('monorepo')) return 'monorepo'
+      if (positional[1] === 'monorepo') return 'monorepo'
+      return 'example'
+    }
+    const resolvedFixture = resolveDemoFixture()
+
+    try {
+      const useProject = flags.has('--in-project') || flags.has('--copy-fixture')
+      if (!useProject) {
+        const result = withDemoWorkspace(resolvedFixture, (root, config) =>
+          runDemo(root, config, resolvedFixture),
+        )
+        const textMode =
+          flags.has('--text') || (!flags.has('--json') && !flags.has('--agent'))
+        if (textMode) writeLines(formatDemoText(result))
+        else writeJson(result)
+        return result.ok ? 0 : 1
+      }
+
+      const { config, root } = loadProject(configPath)
+      const result = runDemo(root, config, resolvedFixture, { copyFixture: flags.has('--copy-fixture') })
+      if (wantsTextOutput(flags, config)) writeLines(formatDemoText(result))
+      else writeJson(result)
+      return result.ok ? 0 : 1
     } catch (error) {
       process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`)
       return 1
@@ -889,7 +1069,7 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
         return 1
       }
       const index = loadDocBridgeIndex(root, config)
-      writeAsk(question, searchIndex(index, question, 8), index)
+      writeAsk(question, searchIndex(index, question, 8), index, config)
       return 0
     } catch (error) {
       process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`)

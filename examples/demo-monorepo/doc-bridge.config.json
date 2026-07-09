@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "corpus": {
+    "agent": {
+      "root": "docs/for-agents",
+      "index": "docs/for-agents/INDEX.md"
+    },
+    "human": {
+      "plugin": "plain-markdown",
+      "options": {
+        "contentDir": "docs/human",
+        "urlPrefix": "/docs"
+      }
+    }
+  },
+  "routing": {
+    "plugin": "pnpm-monorepo",
+    "options": {
+      "ownership": {
+        "auth": {
+          "path": "packages/auth",
+          "purpose": "Authentication, sessions, and token validation",
+          "checks": ["pnpm --filter @demo/auth test", "pnpm --filter @demo/auth lint"],
+          "humanDoc": "/docs/guides/auth"
+        },
+        "billing": {
+          "path": "packages/billing",
+          "purpose": "Subscriptions, invoices, and payment webhooks",
+          "checks": ["pnpm --filter @demo/billing test"]
+        }
+      }
+    }
+  },
+  "gates": {
+    "preset": "minimal"
+  }
+}

@@ -1,6 +1,6 @@
 {
   "name": "@agentskit/doc-bridge",
-  "version": "0.1.0-alpha.3",
+  "version": "1.0.0",
   "description": "Human↔agent documentation bridge — deterministic handoffs, doc-site links, memory→docs, optional AgentsKit RAG/chat.",
   "type": "module",
   "bin": {
@@ -21,6 +21,7 @@
   "files": [
     "dist",
     "bin",
+    "action.yml",
     "scripts/prepare.mjs",
     "docs",
     "examples",
@@ -43,6 +44,8 @@
     "smoke:packaged": "node scripts/smoke-packaged.mjs",
     "smoke:docsites": "node scripts/smoke-docsites.mjs",
     "smoke:real-docsites": "node scripts/smoke-real-docsites.mjs",
+    "smoke:ollama": "node scripts/smoke-ollama.mjs",
+    "coverage:badge": "node scripts/update-coverage-badge.mjs",
     "changeset": "changeset",
     "version-packages": "changeset version",
     "release": "pnpm build && pnpm test && changeset publish",
@@ -119,5 +122,5 @@
   "bugs": {
     "url": "https://github.com/AgentsKit-io/doc-bridge/issues"
   },
-  "homepage": "https://github.com/AgentsKit-io/doc-bridge#readme"
+  "homepage": "https://agentskit-io.github.io/doc-bridge/"
 }

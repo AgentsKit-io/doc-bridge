@@ -49,7 +49,10 @@ pnpm add -D @agentskit/doc-bridge
 | `ak-docs init --scaffold-workspaces` | Also create draft `docs/for-agents/packages/*.md` from discovered pnpm workspaces; never overwrites existing docs |
 | `ak-docs bootstrap agent-docs` | Create draft `docs/for-agents/human/*.md` from configured human-doc adapters; never overwrites existing docs |
 | `ak-docs validate-config` | Zod-validate config file |
+| `ak-docs demo [--fixture example\|monorepo] [--text]` | Bundled 60s wow path: handoff, gate red→green, MCP snippet |
+| `ak-docs doctor [--text] [--badge] [--write-badge]` | Coverage score, gaps, gates, shields.io badge |
 | `ak-docs index` | Build `DocBridgeIndex` + optional `llms.txt` |
+| `ak-docs index --watch` | Debounced rebuild on agent/human doc changes |
 | `ak-docs query <target> [--agent] [--text]` | Resolve package/module/intent/change → handoff JSON or text |
 | `ak-docs search <term> [--agent] [--text]` | Full-text search over index |
 | `ak-docs ask <question>` | Human-readable local consult mode: search + best match + next handoff commands; no LLM |
@@ -60,11 +63,14 @@ pnpm add -D @agentskit/doc-bridge
 | `ak-docs memory ingest` | Normalize local memory files (`.agent-memory/**/*.md`, `.cursor/rules/*.mdc`) into `MemoryCandidate[]` |
 | `ak-docs memory classify` | Deterministically route candidates to agent/human/playbook/discard |
 | `ak-docs memory promote` | Build draft-only promotion body with safety scan; never auto-merges |
+| `ak-docs memory promote --pr [--dry-run] [--force]` | Write draft + open GitHub draft PR via `gh` |
 | `ak-docs registry topology` | Print the `doc-curator` topology for AgentsKit/Registry composition |
 | `ak-docs playbook draft` | Build a draft Playbook feedback payload from local memory candidates |
+| `ak-docs playbook pattern [--text]` | Export published Doc Bridge Playbook pattern (OKF markdown / JSON) |
 | `ak-docs list <kind> [--text]` | List packages, apps, intents, … |
 | `ak-docs gate run [index-freshness]` | Check generated index freshness |
 | `ak-docs mcp` | Start MCP server (stdio default) |
+| `ak-docs mcp install --cursor \| --claude` | Write MCP server config for Cursor or Claude Desktop |
 
 ### Layer 1 — optional AgentsKit peers (`intelligence.enabled`)
 

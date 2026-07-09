@@ -746,6 +746,9 @@ describe('ak-docs CLI', () => {
   it('prints command usage for registry, playbook, and memory mistakes', () => {
     expect(captureStderr(() => runCli(['registry'])).err).toContain('registry topology')
     expect(captureStderr(() => runCli(['playbook'])).err).toContain('playbook draft')
+    expect(captureStdout(() => runCli(['playbook', 'pattern', '--text'])).out).toContain(
+      'Doc Bridge Pattern',
+    )
     expect(captureStderr(() => runCli(['memory', 'nope'])).err).toContain('memory <ingest|classify|promote>')
   })
 

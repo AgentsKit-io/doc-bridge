@@ -1,5 +1,51 @@
 # Changelog
 
+## 1.0.0
+
+**Stable** — doctor, CI gate, MCP install, and agent skill are boring-reliable. Tier C polish ships.
+
+### Features
+- **Landing** — `docs/landing/index.html` deployed to GitHub Pages (`https://agentskit-io.github.io/doc-bridge/`)
+- **Playbook pattern** — published `docs/playbook/doc-bridge-pattern.md` + `ak-docs playbook pattern [--text]`
+- **Used by** — public AgentsKit surfaces cited on landing (for-agents, Registry, Playbook)
+
+### Stable criteria met
+- 60s demo path (`ak-docs demo`)
+- Doctor coverage score + badges
+- GitHub Action `doc-bridge-gate` + repo dogfood CI
+- Cursor skill + `mcp install --cursor`
+- Memory promote → draft PR, index `--watch`, Ollama smoke (optional)
+
+### Breaking changes from alpha
+- None intended for Layer 0 config/handoff schemas (still `schemaVersion: 1`)
+- Pin `@v1.0.0` for GitHub Action instead of alpha tags
+
+## 0.1.0-alpha.5
+
+Tier B — power-user workflows and production pipeline polish.
+
+### Features
+- **`ak-docs memory promote --pr`** — draft file + `gh pr create --draft` (with `--dry-run`, `--force`)
+- **`ak-docs index --watch`** — debounced rebuild on agent/human doc changes
+- **`ak-docs doctor --badge`** / **`--write-badge`** — shields.io markdown + `.doc-bridge/coverage-badge.json`
+- **Ollama demo** — `examples/ollama-chat.config.ts`, `docs/ollama-demo.md`, `pnpm smoke:ollama`
+- **Index pipeline recipes** — pre-commit, Turborepo, CI (`docs/recipes/index-pipeline.md`)
+- **`pnpm coverage:badge`** — CI-friendly badge updater script
+
+## 0.1.0-alpha.4
+
+Activation and agent-adoption polish — from "works" to "wow in 60s".
+
+### Features
+- **`ak-docs demo`** — bundled example/monorepo fixtures; before/after handoff, gate red→green, MCP snippet (no local config)
+- **`ak-docs doctor`** — coverage score 0–100, missing agentDoc/humanDoc, gate status, next actions
+- **`ak-docs mcp install --cursor | --claude`** — writes MCP server config
+- **Handoff `bridge`** — `linked` / `missing` / `external` humanDoc status with bootstrap action
+- **`ak-docs ask`** — handoff preview (start, edit, checks, bridge) when ownership matches
+- **GitHub Action** — `action.yml` (`doc-bridge-gate`) for PR gates + doctor annotation
+- **Agent skill** — `docs/skills/doc-bridge.md` for Cursor/Claude one-shot routing rules
+- **Demo fixtures** — `examples/demo-example`, `examples/demo-monorepo` (auth + billing)
+
 ## 0.1.0-alpha.3
 
 Dogfood round-2 fixes (search ranking, full-text body, peers, federation soft-fail).

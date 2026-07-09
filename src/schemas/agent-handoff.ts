@@ -28,6 +28,16 @@ export const HandoffTargetSchema = z
 
 export type HandoffTarget = z.infer<typeof HandoffTargetSchema>
 
+export const HandoffBridgeSchema = z
+  .object({
+    humanDoc: z.enum(['linked', 'missing', 'external']),
+    action: z.string().min(1).max(256).optional(),
+    bootstrap: z.string().min(1).max(256).optional(),
+  })
+  .strict()
+
+export type HandoffBridge = z.infer<typeof HandoffBridgeSchema>
+
 /** v1 — canonical AgentHandoff. Legacy payloads may omit schemaVersion. */
 export const AgentHandoffV1Schema = z
   .object({
@@ -40,6 +50,7 @@ export const AgentHandoffV1Schema = z
     editRoots: z.array(z.string().min(1).max(512)).max(32),
     checks: z.array(z.string().min(1).max(256)).max(32),
     humanDoc: z.string().min(1).max(512).nullable().optional(),
+    bridge: HandoffBridgeSchema.optional(),
     playbookPatterns: z.array(z.string().url()).max(16).optional(),
     notes: z.array(z.string().min(1).max(1024)).max(16),
   })

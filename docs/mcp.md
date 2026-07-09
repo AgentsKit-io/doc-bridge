@@ -1,6 +1,15 @@
 # MCP setup
 
-## Cursor / Claude Desktop / Codex-style
+## One command (recommended)
+
+```bash
+ak-docs mcp install --cursor    # writes .cursor/mcp.json in repo root
+ak-docs mcp install --claude    # merges into Claude Desktop config (macOS)
+```
+
+Then add the agent skill: [skills/doc-bridge.md](./skills/doc-bridge.md)
+
+## Manual — Cursor / Claude Desktop / Codex-style
 
 ```json
 {

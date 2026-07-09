@@ -1,12 +1,45 @@
 # doc-bridge
 
-**npm:** [`@agentskit/doc-bridge`](https://www.npmjs.com/package/@agentskit/doc-bridge) · **CLI:** `ak-docs`
+**npm:** [`@agentskit/doc-bridge`](https://www.npmjs.com/package/@agentskit/doc-bridge) · **CLI:** `ak-docs` · **Landing:** [agentskit-io.github.io/doc-bridge](https://agentskit-io.github.io/doc-bridge/)
 
-**Human↔agent documentation bridge** for any project — not a wiki, not a hosted RAG chat.
+**AgentHandoff for your monorepo** — deterministic routing so coding agents edit the right package, run the right checks, and stay linked to human docs.
 
-doc-bridge helps coding agents **find the right file, edit the right roots, run the right checks**, keeps **agent docs linked to human docs**, and turns **agent memory into project documentation** (with human approval). The core is deterministic and works **without any LLM or API key**.
+Not a wiki. Not a hosted RAG chat. Layer 0 works **without any LLM or API key**.
 
-Optional intelligence (RAG + terminal chat) uses public AgentsKit packages — install only when you want them.
+## 60-second wow path
+
+```bash
+npm i -D @agentskit/doc-bridge
+npx ak-docs demo --text
+```
+
+No config, no docs to read first. Output shows before/after, a real handoff, gate red→green, and the MCP snippet:
+
+```
+After (handoff.resolve / query --agent)
+  ✓ target:  auth (packages/auth)
+  ✓ start:   docs/for-agents/packages/auth.md
+  ✓ edit:    packages/auth
+  ✓ checks:  pnpm --filter @demo/auth test · pnpm --filter @demo/auth lint
+  ✓ human guide: /docs/guides/auth
+
+Gate: red → green
+```
+
+Monorepo fixture with auth + billing:
+
+```bash
+npx ak-docs demo --fixture monorepo --text
+```
+
+Full setup in your repo:
+
+```bash
+npx ak-docs init
+npx ak-docs index
+npx ak-docs query package example --agent
+ak-docs mcp install --cursor   # wires MCP into .cursor/mcp.json
+```
 
 ## Why this exists
 
@@ -21,41 +54,90 @@ doc-bridge ships **AgentHandoff** JSON:
 ```json
 {
   "type": "agent-handoff",
-  "startHere": "docs/for-agents/packages/example.md",
-  "editRoots": ["src"],
-  "checks": ["npm test"],
-  "humanDoc": "/docs/guides/example"
+  "startHere": "docs/for-agents/packages/auth.md",
+  "editRoots": ["packages/auth"],
+  "checks": ["pnpm --filter @demo/auth test"],
+  "humanDoc": "/docs/guides/auth",
+  "bridge": { "humanDoc": "linked" }
 }
 ```
 
-## Four loops
+When a human guide is missing, handoffs surface it as a feature:
 
-| Loop | What you get |
-|------|----------------|
-| **Act** | CLI + MCP handoffs (`query`, `handoff.resolve`) |
-| **Bridge** | Fumadocs / Docusaurus / plain-markdown ↔ agent corpus + gates |
-| **Learn** | `memory ingest → classify → promote` drafts (HITL) |
-| **Explain** | Optional `@agentskit/rag` + `@agentskit/ink` chat (`handoffFirst`) |
-
-## Quick start (&lt; 2 minutes, no key)
-
-```bash
-npm i -D @agentskit/doc-bridge
-npx ak-docs init
-npx ak-docs index
-npx ak-docs query package example --agent
+```json
+{
+  "bridge": {
+    "humanDoc": "missing",
+    "action": "ak-docs bootstrap agent-docs"
+  },
+  "notes": ["Human guide missing for billing. Run: ak-docs bootstrap agent-docs"]
+}
 ```
 
-`init` scaffolds config, a demo ownership target, and an `AGENTS.md` snippet.
+## Four loops (with real commands)
+
+| Loop | Command | What you see |
+|------|---------|--------------|
+| **Act** | `ak-docs query package auth --agent` | `editRoots`, `checks`, `startHere` |
+| **Bridge** | `ak-docs bootstrap agent-docs` | Draft agent docs from human site; `bridge.humanDoc` in handoff |
+| **Learn** | `ak-docs memory classify` → `promote` | HITL draft for agent corpus |
+| **Explain** | `ak-docs ask "auth is broken in staging"` | Ownership match + handoff preview + next commands |
 
 ```bash
-npx ak-docs list packages --text
-npx ak-docs ask "where do I change example?"
-npx ak-docs gate run
-npx ak-docs mcp
+ak-docs ask "who owns schemas"
+# Best match: ownership os-core
+# Handoff preview
+#   start:  docs/for-agents/packages/os-core.md
+#   edit:   packages/os-core
+#   checks: pnpm --filter os-core lint · pnpm --filter os-core test
 ```
 
-Full guide: **[docs/getting-started.md](docs/getting-started.md)**.
+## Coverage your team checks daily
+
+```bash
+ak-docs doctor --text
+ak-docs doctor --badge          # shields.io markdown for README
+ak-docs index --watch           # keep index fresh while editing docs
+```
+
+```
+Score: 82/100 (B)
+  Agent docs:      8/10 (80% handoff-ready)
+  Human guides:    6/10 (60% bridged)
+  Gates:           3/3 passing
+
+Next actions
+  → ak-docs bootstrap agent-docs
+  → ak-docs query package billing --agent
+```
+
+## Agent uses it alone
+
+1. **MCP auto-wire:** `ak-docs mcp install --cursor`
+2. **Skill/rule:** paste [docs/skills/doc-bridge.md](docs/skills/doc-bridge.md) into Cursor rules — agents call `handoff.resolve` before editing `packages/*`
+3. **Handoff is the next step:** `startHere`, `checks`, and `bridge` are in the JSON/MCP response
+
+## CI as first-class citizen
+
+Reuse the bundled GitHub Action on every PR:
+
+```yaml
+- uses: AgentsKit-io/doc-bridge@v1.0.0
+  with:
+    config-path: doc-bridge.config.json
+```
+
+![handoff coverage](https://img.shields.io/badge/handoff_coverage-100%25-2ea44f?style=flat-square) ![human bridge](https://img.shields.io/badge/human_bridge-0%25-cb2431?style=flat-square)
+
+Run `ak-docs doctor --badge` locally to refresh — or `pnpm coverage:badge` in CI.
+
+Or locally:
+
+```bash
+ak-docs index && ak-docs gate run
+```
+
+Gate fails with `Index is stale. Run: ak-docs index` — same check in CI annotations.
 
 ## Surfaces
 
@@ -63,50 +145,38 @@ Full guide: **[docs/getting-started.md](docs/getting-started.md)**.
 
 | Surface | Purpose |
 |---------|---------|
+| **Demo** | `ak-docs demo` — bundled fixture, no setup |
+| **Doctor** | Coverage score, missing humanDoc/agent doc, next actions |
 | **Index** | `DocBridgeIndex` + `contentHash` + `llms.txt` + capabilities |
 | **CLI** | `query` / `search` / `list` / `ask` / `gate` / `memory` / `bootstrap` |
-| **MCP** | `handoff.resolve`, `doc.search`, `doc.get`, … |
+| **MCP** | `handoff.resolve`, `doc.search`, `doc.get`, `gate.status`, … |
 | **Gates** | Freshness, human-link validation, optional OKF style |
 | **Plugins** | `pnpm-monorepo`, `fumadocs`, `docusaurus`, `plain-markdown` |
-
-Ownership can come from **config**, **frontmatter** (`package` + `editRoot`), or **workspace discovery**.
 
 ### Layer 1 — optional AgentsKit peers
 
 ```bash
 npm i -D @agentskit/rag @agentskit/ink @agentskit/adapters @agentskit/memory react
-```
-
-```bash
-ak-docs rag ingest
-ak-docs chat
-ak-docs ask "how does auth work?" --chat
+ak-docs rag ingest && ak-docs chat
 ```
 
 See **[docs/chat-and-rag.md](docs/chat-and-rag.md)**.
 
-## Architecture
-
-```
-Your repo
-├── docs/for-agents/     agent corpus
-├── docs/ or content/    human site (plugin)
-├── AGENTS.md
-└── doc-bridge.config.*
-
-Layer 0 — Index · CLI · MCP · Gates · Memory pipeline
-Layer 1 — @agentskit/rag · adapters · ink chat   (opt-in)
-```
-
-**Trust model:** Layer 0 is merge-blocking truth. Layer 1 explains and drafts; humans and gates decide.
-
 ## Who uses it (public)
+
+[![npm](https://img.shields.io/npm/v/@agentskit/doc-bridge?style=flat-square)](https://www.npmjs.com/package/@agentskit/doc-bridge)
+[![CI](https://img.shields.io/github/actions/workflow/status/AgentsKit-io/doc-bridge/ci.yml?branch=master&style=flat-square)](https://github.com/AgentsKit-io/doc-bridge/actions)
 
 Designed for and dogfooded on open AgentsKit surfaces:
 
-- [for-agents docs](https://www.agentskit.io/docs/for-agents)
-- [Registry](https://registry.agentskit.io/)
-- [Playbook `llms.txt`](https://playbook.agentskit.io/llms.txt)
+| Surface | Link |
+|---------|------|
+| **for-agents** | [agentskit.io/docs/for-agents](https://www.agentskit.io/docs/for-agents) |
+| **Registry** | [registry.agentskit.io](https://registry.agentskit.io/) |
+| **Playbook** | [playbook.agentskit.io](https://playbook.agentskit.io/llms.txt) |
+| **This repo** | CI green · `ak-docs gate run` on every PR |
+
+**Playbook pattern:** [`docs/playbook/doc-bridge-pattern.md`](docs/playbook/doc-bridge-pattern.md) — export with `ak-docs playbook pattern --text`
 
 ## Configuration examples
 
@@ -114,18 +184,30 @@ Designed for and dogfooded on open AgentsKit surfaces:
 |---------|---------|
 | Solo markdown | [`examples/minimal-plain-markdown.config.ts`](examples/minimal-plain-markdown.config.ts) |
 | pnpm monorepo | [`examples/pnpm-monorepo.config.ts`](examples/pnpm-monorepo.config.ts) |
+| Demo monorepo | [`examples/demo-monorepo/`](examples/demo-monorepo/) |
 | Fumadocs + chat | [`examples/fumadocs-with-chat.config.ts`](examples/fumadocs-with-chat.config.ts) |
-| Docusaurus + memory | [`examples/docusaurus-with-memory.config.ts`](examples/docusaurus-with-memory.config.ts) |
 
-Contract: [`docs/spec/config-v1.md`](docs/spec/config-v1.md) · CLI: [`docs/spec/cli.md`](docs/spec/cli.md) · MCP: [`docs/mcp.md`](docs/mcp.md)
+Contract: [`docs/spec/config-v1.md`](docs/spec/config-v1.md) · CLI: [`docs/spec/cli.md`](docs/spec/cli.md) · MCP: [`docs/mcp.md`](docs/mcp.md) · Skill: [`docs/skills/doc-bridge.md`](docs/skills/doc-bridge.md) · Pattern: [`docs/playbook/doc-bridge-pattern.md`](docs/playbook/doc-bridge-pattern.md) · Recipes: [`docs/recipes/index-pipeline.md`](docs/recipes/index-pipeline.md)
+
+## Learn loop — memory → draft PR
+
+```bash
+ak-docs memory ingest
+ak-docs memory classify
+ak-docs memory promote --pr --dry-run   # preview gh commands
+ak-docs memory promote --pr              # opens draft PR via gh
+```
 
 ## Status
 
-**v0.1.0-alpha.3** — Dogfood polish (pnpm-aware checks, corpus ownership inference, playbook gate preset, git prepare build). Layer 1 RAG/chat via optional peers.
+**v1.0.0 stable** — doctor + CI + skill boring-reliable. Landing, Playbook pattern, full Tier A/B/C shipped.
 
 ```bash
 pnpm install && pnpm build && pnpm test
+pnpm smoke:ollama    # optional — skips if Ollama/peers unavailable
 ```
+
+**Landing:** https://agentskit-io.github.io/doc-bridge/
 
 ## Contributing
 
