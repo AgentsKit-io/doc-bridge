@@ -43,6 +43,39 @@ describe('query + search', () => {
     expect(matches.some((m) => m.id === 'os-core')).toBe(true)
   })
 
+  it('ranks exact package id above mentions in other summaries', () => {
+    const config = loadFixtureConfig()
+    const index = buildDocBridgeIndex({ root: fixtureRoot, config, write: false }).index
+    // Inject a decoy ownership that mentions os-core in purpose (like angular mentioning @agentskit/core)
+    const poisoned = {
+      ...index,
+      lookup: {
+        ...index.lookup!,
+        packages: [...(index.lookup?.packages ?? []), 'decoy'],
+        ownership: {
+          ...index.lookup?.ownership,
+          decoy: {
+            id: 'decoy',
+            path: 'packages/decoy',
+            purpose: 'Binding that uses @agentskit/os-core contracts',
+            checks: ['npm test'],
+            agentDoc: 'docs/for-agents/packages/decoy.md',
+          },
+        },
+      },
+    }
+    const matches = searchIndex(poisoned, 'os-core')
+    expect(matches[0]?.id).toBe('os-core')
+  })
+
+  it('dedupes knowledge and ownership rows for the same path', () => {
+    const config = loadFixtureConfig()
+    const index = buildDocBridgeIndex({ root: fixtureRoot, config, write: false }).index
+    const matches = searchIndex(index, 'os-core')
+    const paths = matches.map((m) => m.path)
+    expect(new Set(paths).size).toBe(paths.length)
+  })
+
   it('searches useful markdown body text after frontmatter', () => {
     const config = loadFixtureConfig()
     const index = buildDocBridgeIndex({ root: fixtureRoot, config, write: false }).index

@@ -121,7 +121,7 @@ Contract: [`docs/spec/config-v1.md`](docs/spec/config-v1.md) · CLI: [`docs/spec
 
 ## Status
 
-**v0.1.0-alpha.2** — Dogfood polish (pnpm-aware checks, corpus ownership inference, playbook gate preset, git prepare build). Layer 1 RAG/chat via optional peers.
+**v0.1.0-alpha.3** — Dogfood polish (pnpm-aware checks, corpus ownership inference, playbook gate preset, git prepare build). Layer 1 RAG/chat via optional peers.
 
 ```bash
 pnpm install && pnpm build && pnpm test

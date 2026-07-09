@@ -599,7 +599,8 @@ describe('ak-docs CLI', () => {
 
       const result = captureStdout(() => runCli(['ask', 'integration setup auth']))
       expect(result.code).toBe(0)
-      expect(result.out).toContain('Best match: knowledge INDEX')
+      // ownership preferred for routing-style questions
+      expect(result.out).toMatch(/Best match: ownership auth/)
       expect(result.out).toContain('ak-docs query ownership auth --agent')
     } finally {
       process.chdir(projectRoot)

@@ -35,11 +35,15 @@ const sourceText = async (
   root: string,
   source: string,
   fetchText: FetchText,
-): Promise<string> => {
-  if (/^https?:\/\//.test(source)) return fetchText(source)
-  const path = resolve(root, source)
-  if (!existsSync(path)) throw new Error(`Federation source not found: ${source}`)
-  return readFileSync(path, 'utf8')
+): Promise<string | null> => {
+  try {
+    if (/^https?:\/\//.test(source)) return await fetchText(source)
+    const path = resolve(root, source)
+    if (!existsSync(path)) return null
+    return readFileSync(path, 'utf8')
+  } catch {
+    return null
+  }
 }
 
 const sameOrigin = (base: string, target: string): boolean => {
@@ -97,9 +101,14 @@ export const loadFederatedChunks = async (
 ): Promise<DocBridgeRetrievedChunk[]> => {
   const fetchText = options.fetchText ?? defaultFetchText
   const chunks: DocBridgeRetrievedChunk[] = []
+  const warnings: string[] = []
   for (const source of config.federation?.sources ?? []) {
     if (source.includeInRetriever === false || !source.llmsTxt) continue
     const llms = await sourceText(root, source.llmsTxt, fetchText)
+    if (!llms) {
+      warnings.push(`federation source skipped (unavailable): ${source.id} → ${source.llmsTxt}`)
+      continue
+    }
     chunks.push(...chunksFromMarkdown(source.id, llms, source.llmsTxt))
     const links = parseLlmsTxtLinks(llms)
     for (const link of links) {
@@ -108,13 +117,13 @@ export const loadFederatedChunks = async (
         : link.url
       if (!/\.(md|txt)(?:$|\?)/.test(url)) continue
       if (!sameOrigin(source.llmsTxt, url)) continue
-      try {
-        const raw = await sourceText(root, url, fetchText)
-        chunks.push(...chunksFromMarkdown(source.id, raw, url))
-      } catch {
-        // ponytail: federation is best-effort; surface-level health belongs in a future diagnostic command.
-      }
+      const raw = await sourceText(root, url, fetchText)
+      if (raw) chunks.push(...chunksFromMarkdown(source.id, raw, url))
     }
+  }
+  // Soft-fail: never throw for missing remote sources; one-line warn for agents/humans.
+  if (warnings.length && process.stderr.isTTY) {
+    for (const w of warnings) process.stderr.write(`${w}\n`)
   }
   return chunks
 }

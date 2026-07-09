@@ -3,6 +3,7 @@ import { join } from 'node:path'
 
 import type { DocBridgeConfigV1 } from '../config/schema.js'
 import {
+  extractSearchBody,
   firstHeading,
   firstParagraph,
   frontmatterString,
@@ -47,7 +48,9 @@ export const scanAgentCorpus = (root: string, config: DocBridgeConfigV1): Corpus
       frontmatterString(frontmatter, 'package') ??
       slugFromPath(relToCorpus)
     const title = firstHeading(raw) ?? id
-    const description = firstParagraph(raw)
+    const purpose = frontmatterString(frontmatter, 'purpose')
+    const description = purpose ?? firstParagraph(raw, 400)
+    const body = extractSearchBody(raw)
     return {
       id,
       type: 'agent-doc',
@@ -57,6 +60,7 @@ export const scanAgentCorpus = (root: string, config: DocBridgeConfigV1): Corpus
       relPath,
       frontmatter,
       ...(description ? { description } : {}),
+      ...(body ? { body } : {}),
     }
   })
 }

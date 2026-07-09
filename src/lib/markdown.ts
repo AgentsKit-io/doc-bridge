@@ -64,7 +64,8 @@ export const firstHeading = (markdown: string): string | undefined => {
   return undefined
 }
 
-export const firstParagraph = (markdown: string): string | undefined => {
+/** Complete first prose block — prefer full sentences, cap length without mid-word cuts. */
+export const firstParagraph = (markdown: string, maxLen = 400): string | undefined => {
   const { body } = parseFrontmatter(markdown)
   const lines = body.split('\n')
   const buf: string[] = []
@@ -76,11 +77,37 @@ export const firstParagraph = (markdown: string): string | undefined => {
     }
     if (t.startsWith('#')) continue
     if (t.startsWith('---')) continue
+    if (t.startsWith('```')) break
+    if (t.startsWith('|') || t.startsWith('- [') || t.startsWith('* [')) {
+      if (buf.length) break
+      continue
+    }
     buf.push(t)
-    if (buf.join(' ').length > 40) break
+    if (buf.join(' ').length >= maxLen) break
   }
-  const text = buf.join(' ').trim()
-  return text || undefined
+  let text = buf.join(' ').replace(/\s+/g, ' ').trim()
+  if (!text) return undefined
+  if (text.length <= maxLen) return text
+  // Prefer ending on sentence boundary
+  const sliced = text.slice(0, maxLen)
+  const sentenceEnd = Math.max(sliced.lastIndexOf('. '), sliced.lastIndexOf('! '), sliced.lastIndexOf('? '))
+  if (sentenceEnd > maxLen * 0.4) return sliced.slice(0, sentenceEnd + 1).trim()
+  const wordEnd = sliced.lastIndexOf(' ')
+  return (wordEnd > 0 ? sliced.slice(0, wordEnd) : sliced).trim()
+}
+
+/** Flatten markdown body for search (strip fences/links noise lightly). */
+export const extractSearchBody = (markdown: string, maxLen = 6_000): string => {
+  const { body } = parseFrontmatter(markdown)
+  const text = body
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/!\[[^\]]*\]\([^)]+\)/g, ' ')
+    .replace(/\[[^\]]*\]\([^)]+\)/g, ' ')
+    .replace(/^#+\s+/gm, '')
+    .replace(/[|>*_`#]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+  return text.length > maxLen ? text.slice(0, maxLen) : text
 }
 
 export const slugFromPath = (relPath: string): string => {

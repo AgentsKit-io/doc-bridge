@@ -103,15 +103,30 @@ const resolveHumanDoc = (
   if (override) return override
   if (fmHuman) return fmHuman
   if (humanDocs[packageId]) return humanDocs[packageId]
-  // common aliases: scoped package name tail, path segments
+
   const aliases = [
     packageId,
     packageId.replace(/^@[^/]+\//, ''),
     packageId.replace(/^os-/, ''),
     packageId.replace(/-pattern$/, ''),
+    `packages/${packageId}`,
+    `reference/packages/${packageId}`,
+    `packages/${packageId}/index`,
   ]
   for (const alias of aliases) {
     if (humanDocs[alias]) return humanDocs[alias]
+  }
+
+  // Fuzzy: id is a path segment or suffix of a human doc id
+  for (const [key, url] of Object.entries(humanDocs)) {
+    if (
+      key === packageId ||
+      key.endsWith(`/${packageId}`) ||
+      key.endsWith(`/${packageId}/index`) ||
+      key.endsWith(`-${packageId}`)
+    ) {
+      return url
+    }
   }
   return undefined
 }

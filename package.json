@@ -1,6 +1,6 @@
 {
   "name": "@agentskit/doc-bridge",
-  "version": "0.1.0-alpha.2",
+  "version": "0.1.0-alpha.3",
   "description": "Human↔agent documentation bridge — deterministic handoffs, doc-site links, memory→docs, optional AgentsKit RAG/chat.",
   "type": "module",
   "bin": {
@@ -75,11 +75,11 @@
     "zod": "^3.24.2"
   },
   "peerDependencies": {
-    "@agentskit/adapters": "^0.13.0",
-    "@agentskit/core": "^1.10.0",
-    "@agentskit/ink": "^0.9.0",
-    "@agentskit/memory": "^0.10.0",
-    "@agentskit/rag": "^0.4.0",
+    "@agentskit/adapters": ">=0.12.0 <1",
+    "@agentskit/core": ">=1.0.0 <2",
+    "@agentskit/ink": ">=0.8.0 <1",
+    "@agentskit/memory": ">=0.9.0 <1",
+    "@agentskit/rag": ">=0.3.0 <1",
     "react": ">=18.0.0"
   },
   "peerDependenciesMeta": {

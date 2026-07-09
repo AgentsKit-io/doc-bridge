@@ -160,14 +160,28 @@ const writeTextQuery = (payload: unknown): void => {
     writeLines([
       `Search: ${String(data.term ?? '')}`,
       `Matches: ${String(data.count ?? matches.length)}`,
-      ...matches.map((match) =>
-        [match.type, match.id, match.path, match.summary].filter(Boolean).join('\t'),
-      ),
+      ...(matches.length
+        ? matches.map((match) =>
+            formatSearchMatch(match as { type: string; id: string; path: string; summary?: string }),
+          )
+        : ['  (none)']),
     ])
     return
   }
 
   writeLines([textValue(result.data)])
+}
+
+const formatSearchMatch = (match: {
+  readonly type: string
+  readonly id: string
+  readonly path: string
+  readonly summary?: string
+  readonly score?: number
+}): string => {
+  const summary = match.summary ? match.summary.replace(/\s+/g, ' ').slice(0, 100) : ''
+  const score = typeof match.score === 'number' ? ` score=${match.score}` : ''
+  return `  [${match.type}] ${match.id}${score}\n    ${match.path}${summary ? `\n    ${summary}` : ''}`
 }
 
 const writeTextSearch = (
@@ -177,14 +191,13 @@ const writeTextSearch = (
     readonly id: string
     readonly path: string
     readonly summary?: string
+    readonly score?: number
   }[],
 ): void => {
   writeLines([
     `Search: ${term}`,
     `Matches: ${matches.length}`,
-    ...matches.map((match) =>
-      [match.type, match.id, match.path, match.summary].filter(Boolean).join('\t'),
-    ),
+    ...(matches.length ? matches.map(formatSearchMatch) : ['  (none)']),
   ])
 }
 
@@ -193,11 +206,14 @@ const writeAsk = (
   matches: ReturnType<typeof searchIndex>,
   index: DocBridgeIndexV1,
 ): void => {
-  const best = matches[0]
-  const owner = matches.find((match) => match.type === 'ownership' || index.lookup?.ownership?.[match.id])
+  // Prefer ownership match for routing questions
+  const owner =
+    matches.find((match) => match.type === 'ownership') ??
+    matches.find((match) => Boolean(index.lookup?.ownership?.[match.id]))
+  const best = owner ?? matches[0]
   const bestQuery =
-    owner
-      ? `ak-docs query ownership ${owner.id} --agent`
+    best && (best.type === 'ownership' || index.lookup?.ownership?.[best.id])
+      ? `ak-docs query ownership ${best.id} --agent`
       : 'ak-docs list knowledge --text'
   writeLines([
     `Question: ${question}`,
@@ -206,10 +222,8 @@ const writeAsk = (
     'Matches:',
     ...(
       matches.length
-        ? matches.slice(0, 5).map((match) =>
-            [match.type, match.id, match.path, match.summary].filter(Boolean).join('\t'),
-          )
-        : ['No local matches. Try: ak-docs search <term>']
+        ? matches.slice(0, 5).map(formatSearchMatch)
+        : ['  No local matches. Try: ak-docs search <term>']
     ),
     '',
     'Next commands:',

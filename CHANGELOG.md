@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.1.0-alpha.3
+
+Dogfood round-2 fixes (search ranking, full-text body, peers, federation soft-fail).
+
+### Fixes
+- **Search ranking:** exact id / basename boost; ownership preferred for routing questions; path dedupe
+- **Full-text search:** knowledge entries store `body` excerpt; descriptions prefer frontmatter `purpose` and complete sentences
+- **ask:** next command prefers ownership match over knowledge-only
+- **Text UX:** multi-line search/ask matches (`[type] id`, path, summary)
+- **Federation:** missing/404 remote `llms.txt` soft-skipped (no hard fail)
+- **Peers:** optional peer ranges widened (`@agentskit/core` `>=1.0`, adapters `>=0.12`) so Layer 0 install is not blocked
+- **humanDoc:** more aliases (`packages/id`, `reference/packages/id`, path suffixes)
+
 ## 0.1.0-alpha.2
 
 Dogfood-driven polish after ecosystem install on agentskit, agentskit-os, playbook, and registry.

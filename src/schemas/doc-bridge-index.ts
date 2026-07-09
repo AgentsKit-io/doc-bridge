@@ -21,7 +21,9 @@ export const KnowledgeEntrySchema = z
     type: z.string().min(1).max(128),
     title: z.string().min(1).max(256),
     path: z.string().min(1).max(512),
-    description: z.string().max(1024).optional(),
+    description: z.string().max(2_048).optional(),
+    /** Flattened body excerpt for full-text search (not for display). */
+    body: z.string().max(8_000).optional(),
     links: z.array(z.string().min(1).max(512)).max(64).optional(),
     tags: z.array(z.string().min(1).max(64)).max(32).optional(),
   })

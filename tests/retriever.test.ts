@@ -91,7 +91,7 @@ describe('doc-bridge retriever', () => {
     ])
   })
 
-  it('skips disabled federated sources and reports missing local sources', async () => {
+  it('skips disabled and missing federated sources without throwing', async () => {
     const config = {
       ...loadFixtureConfig(),
       federation: {
@@ -103,8 +103,6 @@ describe('doc-bridge retriever', () => {
       },
     }
 
-    await expect(loadFederatedChunks(fixtureRoot, config)).rejects.toThrow(
-      'Federation source not found: missing.txt',
-    )
+    await expect(loadFederatedChunks(fixtureRoot, config)).resolves.toEqual([])
   })
 })
