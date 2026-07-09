@@ -48,8 +48,21 @@ export const fumadocsAdapter: HumanAdapter = {
     const contentDir = optionString(config.options, ['contentDir', 'root'])
     if (!contentDir) return []
     const contentRoot = join(root, contentDir)
+    const excludePrefixes = Array.isArray(config.options?.excludePrefixes)
+      ? config.options.excludePrefixes.filter((v): v is string => typeof v === 'string')
+      : typeof config.options?.excludePrefix === 'string'
+        ? [config.options.excludePrefix]
+        : []
+    // Nested agent corpora under Fumadocs (e.g. content/docs/for-agents) should not be human docs
+    if (!excludePrefixes.includes('for-agents')) excludePrefixes.push('for-agents')
+
     return scanMarkdownDocs(root, contentDir, {
-      includeRelPath: (relPath) => isListedByMeta(contentRoot, relPath),
+      includeRelPath: (relPath) => {
+        if (excludePrefixes.some((prefix) => relPath === prefix || relPath.startsWith(`${prefix}/`))) {
+          return false
+        }
+        return isListedByMeta(contentRoot, relPath)
+      },
       urlPrefix: config.options?.urlPrefix,
       stripGroups: true,
     })

@@ -24,11 +24,21 @@ export const scanHumanDocRecords = (
 ): HumanDocRecord[] => {
   const out: HumanDocRecord[] = []
   const seen = new Set<string>()
+  const agentRoot = config.corpus.agent.root.replace(/\/$/, '')
 
   for (const human of humanConfigs(config)) {
     const adapter = ADAPTERS.find((candidate) => candidate.plugin === human.plugin)
     if (!adapter) continue
     for (const record of adapter.scan({ root, config: human })) {
+      // Never treat agent-corpus files as human docs (nested for-agents, etc.)
+      if (
+        record.path === agentRoot ||
+        record.path.startsWith(`${agentRoot}/`) ||
+        record.path.includes('/for-agents/') ||
+        record.path.endsWith('/for-agents')
+      ) {
+        continue
+      }
       if (seen.has(record.id)) continue
       seen.add(record.id)
       out.push(record)

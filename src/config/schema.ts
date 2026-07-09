@@ -70,10 +70,14 @@ export const OwnershipEntrySchema = z
 
 export const RoutingConfigSchema = z
   .object({
-    plugin: z.enum(['pnpm-monorepo', 'npm-workspaces', 'yarn-workspaces', 'custom']).optional(),
+    plugin: z
+      .enum(['pnpm-monorepo', 'npm-workspaces', 'yarn-workspaces', 'pattern-files', 'custom'])
+      .optional(),
     options: z
       .object({
         packages: z.array(z.string().min(1).max(256)).max(128).optional(),
+        /** Infer ownership from corpus paths/frontmatter (default true). */
+        ownershipFromCorpus: z.boolean().optional(),
         ownership: z.record(z.string().min(1).max(256), OwnershipEntrySchema).optional(),
         intents: z
           .array(
@@ -108,7 +112,8 @@ export const RoutingConfigSchema = z
 
 export const GatesConfigSchema = z
   .object({
-    preset: z.enum(['minimal', 'standard', 'strict']).optional(),
+    /** minimal: freshness · standard: + human links · strict: + okf-type · playbook: freshness + okf soft style */
+    preset: z.enum(['minimal', 'standard', 'strict', 'playbook']).optional(),
     include: z
       .array(
         z.enum([

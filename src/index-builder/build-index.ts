@@ -70,7 +70,7 @@ export const buildDocBridgeIndex = (opts: BuildIndexOptions): BuildIndexResult =
   const packages = collectPackages(config, discovered, corpus)
   const humanDocs = scanHumanDocs(root, config)
 
-  const { lookup, handoffs } = buildLookup(config, packages, corpus, outFile, humanDocs)
+  const { lookup, handoffs } = buildLookup(config, packages, corpus, outFile, humanDocs, root)
 
   const hashPayload = {
     schemaVersion: 1,

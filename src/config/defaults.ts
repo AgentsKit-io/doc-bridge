@@ -13,7 +13,7 @@ export const applyConfigDefaults = (config: DocBridgeConfigV1): DocBridgeConfigV
       agent: {
         ...config.corpus.agent,
         index: agentIndex,
-        include: config.corpus.agent.include ?? ['**/*.md'],
+        include: config.corpus.agent.include ?? ['**/*.{md,mdx}'],
         exclude: config.corpus.agent.exclude ?? [...DEFAULT_AGENT_EXCLUDE],
       },
     },

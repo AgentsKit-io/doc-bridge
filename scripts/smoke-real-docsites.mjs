@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -6,7 +6,8 @@ import { execFileSync } from 'node:child_process'
 
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const root = process.env.DOC_BRIDGE_REAL_SMOKE_ROOT ?? join(tmpdir(), 'doc-bridge-real')
-const tarball = join(repo, 'agentskit-doc-bridge-0.1.0-alpha.1.tgz')
+const version = JSON.parse(readFileSync(join(repo, 'package.json'), 'utf8')).version
+const tarball = join(repo, `agentskit-doc-bridge-${version}.tgz`)
 const runner = join(root, 'runner')
 
 const run = (cmd, args, cwd = repo) =>

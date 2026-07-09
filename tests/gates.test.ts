@@ -38,6 +38,11 @@ describe('gates', () => {
       'index-freshness',
       'human-guide-links',
       'okf-type',
+      'docs-style',
+    ])
+    expect(resolveGateIds({ ...config, gates: { preset: 'playbook' } })).toEqual([
+      'index-freshness',
+      'okf-type',
     ])
   })
 

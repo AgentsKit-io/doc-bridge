@@ -1,7 +1,9 @@
 import type { DocBridgeConfigV1 } from '../config/schema.js'
+import { defaultChecksForTarget } from '../lib/package-manager.js'
 import type { AgentHandoffV1 } from '../schemas/agent-handoff.js'
 import {
   guessAgentDocForPackage,
+  ownershipFromCorpus,
   ownershipFromFrontmatter,
   type CorpusDoc,
 } from './scan-corpus.js'
@@ -40,17 +42,12 @@ export type ChangeRecord = {
   relatedPackages?: string[]
 }
 
-const defaultChecks = (config: DocBridgeConfigV1): string[] => {
-  const preset = config.gates?.preset ?? 'minimal'
-  if (preset === 'strict' || preset === 'standard') return ['npm test', 'npm run lint']
-  return ['npm test']
-}
-
 /**
  * Merge package identity from:
  * 1. routing.options.ownership (explicit)
  * 2. pnpm / workspace discovery
  * 3. agent-doc frontmatter (package + editRoot)
+ * 4. corpus path heuristics (packages/<id>.md, pillars patterns, etc.)
  */
 export const collectPackages = (
   config: DocBridgeConfigV1,
@@ -76,7 +73,14 @@ export const collectPackages = (
     })
   }
 
-  for (const seed of ownershipFromFrontmatter(corpus)) {
+  const seeds = [
+    ...ownershipFromFrontmatter(corpus),
+    ...(config.routing?.options?.ownershipFromCorpus === false
+      ? []
+      : ownershipFromCorpus(corpus)),
+  ]
+
+  for (const seed of seeds) {
     const existing = byId.get(seed.id)
     if (!existing) {
       byId.set(seed.id, { id: seed.id, path: seed.path })
@@ -90,17 +94,45 @@ export const collectPackages = (
   return [...byId.values()].sort((a, b) => a.id.localeCompare(b.id))
 }
 
+const resolveHumanDoc = (
+  packageId: string,
+  override?: string,
+  fmHuman?: string,
+  humanDocs: HumanDocMap = {},
+): string | undefined => {
+  if (override) return override
+  if (fmHuman) return fmHuman
+  if (humanDocs[packageId]) return humanDocs[packageId]
+  // common aliases: scoped package name tail, path segments
+  const aliases = [
+    packageId,
+    packageId.replace(/^@[^/]+\//, ''),
+    packageId.replace(/^os-/, ''),
+    packageId.replace(/-pattern$/, ''),
+  ]
+  for (const alias of aliases) {
+    if (humanDocs[alias]) return humanDocs[alias]
+  }
+  return undefined
+}
+
 export const buildLookup = (
   config: DocBridgeConfigV1,
   packages: readonly DiscoveredPackage[],
   corpus: readonly CorpusDoc[],
   indexOutFile: string,
   humanDocs: HumanDocMap = {},
+  root = process.cwd(),
 ): { lookup: IndexLookup; handoffs: Record<string, AgentHandoffV1> } => {
   const ownership: Record<string, OwnershipRecord> = {}
   const handoffs: Record<string, AgentHandoffV1> = {}
-  const checks = defaultChecks(config)
-  const fmSeeds = new Map(ownershipFromFrontmatter(corpus).map((seed) => [seed.id, seed]))
+  const strict = (config.gates?.preset ?? 'minimal') !== 'minimal'
+  const fmSeeds = new Map(
+    [...ownershipFromFrontmatter(corpus), ...ownershipFromCorpus(corpus)].map((seed) => [
+      seed.id,
+      seed,
+    ]),
+  )
 
   for (const pkg of packages) {
     const override = config.routing?.options?.ownership?.[pkg.id]
@@ -112,11 +144,22 @@ export const buildLookup = (
       config.corpus.agent.index
     const startHere = agentDoc ?? ''
     const purpose = override?.purpose ?? fm?.purpose
-    const humanDoc = override?.humanDoc ?? fm?.humanDoc ?? humanDocs[pkg.id]
+    const path = override?.path ?? fm?.path ?? pkg.path
+    const checks = [
+      ...(override?.checks ??
+        fm?.checks ??
+        defaultChecksForTarget(root, {
+          packageId: pkg.id,
+          packagePath: path,
+          ...(pkg.name ? { packageName: pkg.name } : {}),
+          strict,
+        })),
+    ]
+    const humanDoc = resolveHumanDoc(pkg.id, override?.humanDoc, fm?.humanDoc, humanDocs)
     const record: OwnershipRecord = {
       id: pkg.id,
-      path: override?.path ?? fm?.path ?? pkg.path,
-      checks: [...(override?.checks ?? fm?.checks ?? checks)],
+      path,
+      checks,
       ...(override?.group ? { group: override.group } : {}),
       ...(override?.layer ? { layer: override.layer } : {}),
       ...(purpose ? { purpose } : {}),

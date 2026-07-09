@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.1.0-alpha.2
+
+Dogfood-driven polish after ecosystem install on agentskit, agentskit-os, playbook, and registry.
+
+### Fixes / features
+- **Package-manager-aware checks** — pnpm/yarn/npm/bun; `pnpm --filter <pkg>` in workspaces
+- **Corpus ownership inference** — `packages/<id>.md`, pillars patterns, registry READMEs (toggle `routing.options.ownershipFromCorpus`)
+- **Richer `guessAgentDocForPackage`** — packages/id, index.md, mdx, for-agents top-level
+- **humanDoc aliases** — scoped names, common id variants
+- **Fumadocs** excludes nested `for-agents/` from human corpus by default
+- **plain-markdown** accepts `contentDir` (alias of `root`)
+- **Gates:** preset `playbook`; docs-style profiles `playbook-okf-soft`, `title-only`; strict includes docs-style
+- **Git install:** `prepare` via `scripts/prepare.mjs` builds `dist/` when missing; `prepack` builds; source included for rebuilds
+- Default agent include `**/*.{md,mdx}`
+
 ## 0.1.0-alpha.1
 
 Initial alpha — human↔agent documentation bridge.

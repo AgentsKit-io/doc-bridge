@@ -125,7 +125,12 @@ type DocsStyleRule =
   | 'owner-source'
   | 'no-stale-wording'
 
-type DocsStyleProfile = 'google-dev-docs' | 'playbook-okf' | 'custom'
+type DocsStyleProfile =
+  | 'google-dev-docs'
+  | 'playbook-okf'
+  | 'playbook-okf-soft'
+  | 'title-only'
+  | 'custom'
 
 const DOCS_STYLE_RULES: Record<Exclude<DocsStyleProfile, 'custom'>, DocsStyleRule[]> = {
   'google-dev-docs': [
@@ -136,7 +141,11 @@ const DOCS_STYLE_RULES: Record<Exclude<DocsStyleProfile, 'custom'>, DocsStyleRul
     'examples',
     'no-stale-wording',
   ],
+  /** Full playbook OKF style (strict). */
   'playbook-okf': ['title', 'purpose', 'owner-source', 'no-stale-wording'],
+  /** Soft profile for large existing OKF corpora (title + no stale placeholders). */
+  'playbook-okf-soft': ['title', 'no-stale-wording'],
+  'title-only': ['title'],
 }
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -146,10 +155,19 @@ const docsStyleOptions = (
   config: DocBridgeConfigV1,
 ): { profile: DocsStyleProfile; required: DocsStyleRule[] } => {
   const raw = config.gates?.options?.['docs-style']
-  if (!isRecord(raw)) return { profile: 'playbook-okf', required: DOCS_STYLE_RULES['playbook-okf'] }
+  if (!isRecord(raw)) {
+    if (config.gates?.preset === 'playbook') {
+      return { profile: 'playbook-okf-soft', required: DOCS_STYLE_RULES['playbook-okf-soft'] }
+    }
+    return { profile: 'playbook-okf', required: DOCS_STYLE_RULES['playbook-okf'] }
+  }
 
   const profile =
-    raw.profile === 'google-dev-docs' || raw.profile === 'playbook-okf' || raw.profile === 'custom'
+    raw.profile === 'google-dev-docs' ||
+    raw.profile === 'playbook-okf' ||
+    raw.profile === 'playbook-okf-soft' ||
+    raw.profile === 'title-only' ||
+    raw.profile === 'custom'
       ? raw.profile
       : 'playbook-okf'
   const customRequired = Array.isArray(raw.required)
@@ -238,8 +256,11 @@ export const resolveGateIds = (config: DocBridgeConfigV1): GateId[] => {
     preset === 'minimal'
       ? ['index-freshness']
       : preset === 'strict'
-        ? ['index-freshness', 'human-guide-links', 'okf-type']
-        : ['index-freshness', 'human-guide-links'],
+        ? ['index-freshness', 'human-guide-links', 'okf-type', 'docs-style']
+        : preset === 'playbook'
+          ? // okf-type only — docs-style soft is opt-in via include (large corpora vary)
+            ['index-freshness', 'okf-type']
+          : ['index-freshness', 'human-guide-links'],
   )
 
   for (const id of config.gates?.include ?? []) {

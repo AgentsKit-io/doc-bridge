@@ -126,4 +126,47 @@ describe('buildDocBridgeIndex', () => {
     expect(result.index.handoffs?.billing?.editRoots).toEqual(['packages/billing'])
     expect(result.index.handoffs?.billing?.notes).toContain('Payments')
   })
+
+  it('infers ownership from packages/*.md paths and uses pnpm checks in workspaces', () => {
+    const root = mkdtempSync(join(tmpdir(), 'ak-docs-path-own-'))
+    mkdirSync(join(root, 'docs/for-agents/packages'), { recursive: true })
+    writeFileSync(join(root, 'pnpm-workspace.yaml'), "packages:\n  - 'packages/*'\n")
+    writeFileSync(join(root, 'package.json'), JSON.stringify({ name: 'ws', packageManager: 'pnpm@10.0.0' }))
+    writeFileSync(
+      join(root, 'docs/for-agents/packages/auth.md'),
+      '# auth\n\nAuth package ownership doc.\n',
+    )
+    const config = applyConfigDefaults(
+      DocBridgeConfigV1Schema.parse({
+        schemaVersion: 1,
+        corpus: { agent: { root: 'docs/for-agents' } },
+        gates: { preset: 'standard' },
+      }),
+    )
+
+    const result = buildDocBridgeIndex({ root, config })
+    expect(result.index.handoffs?.auth?.editRoots).toEqual(['packages/auth'])
+    expect(result.index.handoffs?.auth?.checks.some((c) => c.includes('pnpm'))).toBe(true)
+  })
+
+  it('infers playbook pattern ownership from pillars paths', () => {
+    const root = mkdtempSync(join(tmpdir(), 'ak-docs-pattern-own-'))
+    mkdirSync(join(root, 'content/docs/pillars/ai-collaboration'), { recursive: true })
+    writeFileSync(
+      join(root, 'content/docs/pillars/ai-collaboration/open-knowledge-format-pattern.md'),
+      '# Open Knowledge Format\n\nPattern body.\n',
+    )
+    const config = applyConfigDefaults(
+      DocBridgeConfigV1Schema.parse({
+        schemaVersion: 1,
+        corpus: { agent: { root: 'content/docs' } },
+        gates: { preset: 'playbook' },
+      }),
+    )
+
+    const result = buildDocBridgeIndex({ root, config })
+    expect(result.index.handoffs?.['open-knowledge-format-pattern']?.startHere).toContain(
+      'open-knowledge-format-pattern.md',
+    )
+  })
 })

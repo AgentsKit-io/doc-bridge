@@ -12,6 +12,7 @@ import { loadDocBridgeIndex } from '../query/load-index.js'
 import { runQuery } from '../query/query.js'
 import { searchIndex } from '../query/search.js'
 import type { DocBridgeIndexV1 } from '../schemas/doc-bridge-index.js'
+import { PACKAGE_VERSION } from '../version.js'
 
 type JsonRpcRequest = {
   readonly jsonrpc?: '2.0'
@@ -157,7 +158,7 @@ export const handleMcpRequest = (ctx: McpContext, request: JsonRpcRequest): unkn
     return {
       protocolVersion: '2024-11-05',
       capabilities: { tools: {} },
-      serverInfo: { name: 'ak-docs', version: '0.1.0-alpha.1' },
+      serverInfo: { name: 'ak-docs', version: PACKAGE_VERSION },
     }
   }
 

@@ -121,7 +121,7 @@ Contract: [`docs/spec/config-v1.md`](docs/spec/config-v1.md) · CLI: [`docs/spec
 
 ## Status
 
-**v0.1.0-alpha.1** — Layer 0 complete for daily use; Layer 1 RAG/chat wired via optional peers; not yet a guarantee of semver stability.
+**v0.1.0-alpha.2** — Dogfood polish (pnpm-aware checks, corpus ownership inference, playbook gate preset, git prepare build). Layer 1 RAG/chat via optional peers.
 
 ```bash
 pnpm install && pnpm build && pnpm test

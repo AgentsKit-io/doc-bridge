@@ -1,6 +1,6 @@
 {
   "name": "@agentskit/doc-bridge",
-  "version": "0.1.0-alpha.1",
+  "version": "0.1.0-alpha.2",
   "description": "Human↔agent documentation bridge — deterministic handoffs, doc-site links, memory→docs, optional AgentsKit RAG/chat.",
   "type": "module",
   "bin": {
@@ -21,6 +21,7 @@
   "files": [
     "dist",
     "bin",
+    "scripts/prepare.mjs",
     "docs",
     "examples",
     "README.md",
@@ -28,7 +29,10 @@
     "SECURITY.md",
     "CODE_OF_CONDUCT.md",
     "CHANGELOG.md",
-    "LICENSE"
+    "LICENSE",
+    "tsup.config.ts",
+    "tsconfig.json",
+    "src"
   ],
   "scripts": {
     "build": "tsup",
@@ -43,7 +47,8 @@
     "version-packages": "changeset version",
     "release": "pnpm build && pnpm test && changeset publish",
     "prepublishOnly": "pnpm build && pnpm test",
-    "prepare": "pnpm build"
+    "prepare": "node scripts/prepare.mjs",
+    "prepack": "pnpm build"
   },
   "keywords": [
     "agentskit",
