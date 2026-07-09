@@ -10,6 +10,7 @@ import {
   docBridgePatternPayload,
 } from '../src/playbook/doc-bridge-pattern.js'
 import { PACKAGE_VERSION } from '../src/version.js'
+import pkg from '../package.json' with { type: 'json' }
 
 const fixtureRoot = join(import.meta.dirname, 'fixtures', 'sample-project')
 
@@ -28,8 +29,8 @@ const captureStdout = (fn: () => number | undefined) => {
 }
 
 describe('Tier C — stable 1.0.0', () => {
-  it('exports version 1.0.0', () => {
-    expect(PACKAGE_VERSION).toBe('1.0.0')
+  it('exports the package.json version', () => {
+    expect(PACKAGE_VERSION).toBe(pkg.version)
   })
 
   it('ships playbook pattern payload', () => {

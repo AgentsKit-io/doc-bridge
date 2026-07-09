@@ -30,6 +30,10 @@ try {
   run('npm', ['init', '-y'], tmp)
   run('npm', ['install', tarball], tmp)
   const bin = join(tmp, 'node_modules', '.bin', 'ak-docs')
+  const versionOut = run(bin, ['--version'], tmp)
+  if (!versionOut.includes(`ak-docs ${version} `)) {
+    throw new Error(`version smoke failed: expected ${version}, got ${versionOut}`)
+  }
 
   run('node', ['--input-type=module', '-e', `
     import { buildDocBridgeIndex, parseDocBridgeConfig } from '@agentskit/doc-bridge'

@@ -1,6 +1,6 @@
 {
   "name": "@agentskit/doc-bridge",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Human↔agent documentation bridge — deterministic handoffs, doc-site links, memory→docs, optional AgentsKit RAG/chat.",
   "type": "module",
   "bin": {
@@ -36,6 +36,7 @@
     "src"
   ],
   "scripts": {
+    "prebuild": "node scripts/sync-version.mjs",
     "build": "tsup",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -48,7 +49,8 @@
     "coverage:badge": "node scripts/update-coverage-badge.mjs",
     "changeset": "changeset",
     "version-packages": "changeset version",
-    "release": "pnpm build && pnpm test && changeset publish",
+    "release": "npm run build && npm test && changeset publish",
+    "version": "node scripts/sync-version.mjs && git add package.json src/version.ts",
     "prepublishOnly": "npm run build && npm test",
     "prepare": "node scripts/prepare.mjs",
     "prepack": "npm run build"

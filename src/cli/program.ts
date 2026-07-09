@@ -63,7 +63,7 @@ Core (no API key):
   ak-docs demo [--fixture example|monorepo] [--text] [--in-project]
   ak-docs doctor [--text] [--badge] [--write-badge]
   ak-docs index [--watch]
-  ak-docs query <package|ownership|intent|change> <id> [--agent] [--text]
+  ak-docs query [package|ownership|intent|change] <id> [--agent] [--text]
   ak-docs search <term> [--agent] [--text]
   ak-docs list <packages|intents|changes|knowledge> [--text]
   ak-docs ask [question]          local consult (no LLM)
@@ -901,14 +901,15 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
   }
 
   if (command === 'query') {
-    const kind = positional[1] as QueryKind | undefined
-    const id = positional[2]
-    if (!kind || !QUERY_KINDS.has(kind) || kind === 'search') {
-      process.stderr.write('Usage: ak-docs query <package|ownership|intent|change> <id> [--agent]\n')
+    const maybeKind = positional[1] as QueryKind | undefined
+    if (maybeKind === 'search') {
+      process.stderr.write('Usage: ak-docs query [package|ownership|intent|change] <id> [--agent]\n')
       return 1
     }
+    const kind = maybeKind && QUERY_KINDS.has(maybeKind) ? maybeKind : 'package'
+    const id = kind === maybeKind ? positional[2] : positional[1]
     if (!id) {
-      process.stderr.write(`Missing id for query kind "${kind}".\n`)
+      process.stderr.write('Usage: ak-docs query [package|ownership|intent|change] <id> [--agent]\n')
       return 1
     }
     try {

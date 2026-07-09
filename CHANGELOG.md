@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.0.2
+
+### Fixes
+- Sync `ak-docs --version`, MCP `serverInfo.version`, and capabilities version from `package.json` during build/release.
+- Allow `ak-docs query <id> --agent` as a shortcut for package/ownership handoff lookup.
+- Packaged smoke now verifies installed CLI version.
+
+## 1.0.1
+
+### Fixes
+- Hardened release validation with coverage for Layer 1 CLI, RAG/chat wrappers, MCP install, package-manager checks, watcher, markdown/glob helpers, and packaged/docsite smoke paths.
+- Fixed provider API-key defaults for optional AgentsKit intelligence adapters.
+- Replaced publish-time `pnpm build` hooks with `npm run build` for npm-friendly packing.
+
 ## 1.0.0
 
 **Stable** — doctor, CI gate, MCP install, and agent skill are boring-reliable. Tier C polish ships.

@@ -523,9 +523,18 @@ describe('ak-docs CLI', () => {
     expect(code).toBe(0)
   })
 
+  it('queries package handoff with bare id shortcut', () => {
+    const result = captureStdout(() => runCli(['query', 'os-core', '--agent']))
+    expect(result.code).toBe(0)
+    expect(JSON.parse(result.out)).toMatchObject({
+      type: 'agent-handoff',
+      target: { id: 'os-core' },
+    })
+  })
+
   it('prints query/search/retrieve usage for missing arguments', () => {
     expect(captureStderr(() => runCli(['query', 'search', 'schema'])).err).toContain('ak-docs query')
-    expect(captureStderr(() => runCli(['query', 'ownership'])).err).toContain('Missing id')
+    expect(captureStderr(() => runCli(['query'])).err).toContain('ak-docs query')
     expect(captureStderr(() => runCli(['search'])).err).toContain('ak-docs search')
     expect(captureStderr(() => runCli(['retrieve'])).err).toContain('ak-docs retrieve')
     expect(captureStderr(() => runCli(['list'])).err).toContain('ak-docs list')
