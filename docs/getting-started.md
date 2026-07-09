@@ -1,5 +1,16 @@
 # Getting started
 
+doc-bridge turns your existing docs into an **AgentHandoff** index:
+
+- `startHere` — what the agent reads first
+- `editRoots` — where the agent is allowed to work
+- `checks` — what proves the edit
+- `humanDoc` — the human-facing guide for the same area
+
+It also runs the inverse loop: local agent memory becomes a classified,
+reviewable documentation draft. Start with CLI. Add MCP when agents should call
+it automatically. Add CI when the bridge becomes part of review.
+
 ## Install
 
 ```bash
@@ -60,6 +71,17 @@ Project root for `--config path/to/doc-bridge.config.json` is the **directory of
 
 See [config-v1](./spec/config-v1.md) and [examples](./examples.md).
 
+## Use surfaces
+
+| Surface | When to use | Command |
+|---------|-------------|---------|
+| CLI | You want to inspect or debug the bridge yourself | `ak-docs query package <id> --agent` |
+| MCP | You want coding agents to resolve handoffs before editing | `ak-docs mcp install --cursor` |
+| CI | You want stale indexes and broken links to fail PRs | `ak-docs index && ak-docs gate run` |
+| Adapters | You already have Fumadocs, Docusaurus, or markdown docs | configure `corpus.human` |
+| Memory pipeline | You want agent notes turned into reviewable docs | `ak-docs memory promote --pr --dry-run` |
+| Optional RAG/chat | You want a terminal assistant grounded in the same index | `ak-docs rag ingest && ak-docs chat` |
+
 ## MCP (Cursor / Claude)
 
 ```json
@@ -90,10 +112,13 @@ ak-docs bootstrap agent-docs         # draft agent docs from human site
 ```bash
 ak-docs memory ingest
 ak-docs memory classify
-ak-docs memory promote   # draft only — never auto-merges
+ak-docs memory promote              # prints a safe draft body
+ak-docs memory promote --pr --dry-run
+ak-docs memory promote --pr         # opens a GitHub draft PR via gh
 ```
 
-Sources include `.agent-memory/**` and `.cursor/rules/*.mdc`.
+Sources include `.agent-memory/**` and `.cursor/rules/*.mdc`. Promotion is
+draft-only and never auto-merges.
 
 ## Optional chat + RAG (AgentsKit)
 

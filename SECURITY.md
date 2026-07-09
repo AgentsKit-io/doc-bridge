@@ -2,7 +2,7 @@
 
 ## Supported versions
 
-`@agentskit/doc-bridge` is currently in alpha. Security fixes target the latest published alpha.
+Security fixes target the latest stable `@agentskit/doc-bridge` release on npm.
 
 ## Reporting a vulnerability
 
