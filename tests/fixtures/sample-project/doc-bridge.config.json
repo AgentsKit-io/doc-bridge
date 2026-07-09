@@ -4,6 +4,13 @@
     "agent": {
       "root": "docs/for-agents",
       "index": "docs/for-agents/INDEX.md"
+    },
+    "human": {
+      "plugin": "fumadocs",
+      "options": {
+        "contentDir": "docs/human",
+        "urlPrefix": "/docs"
+      }
     }
   },
   "routing": {

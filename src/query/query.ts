@@ -82,11 +82,11 @@ export const runQuery = (
           ...(m.summary ? { summary: m.summary } : {}),
           score: m.score,
         })),
-        nextCommands: matches.slice(0, 5).map((m) =>
-          m.type === 'ownership' || m.type === 'knowledge'
+        nextCommands: [...new Set(matches.slice(0, 5).map((m) =>
+          m.type === 'ownership' || index.lookup?.ownership?.[m.id]
             ? `ak-docs query ownership ${m.id} --agent`
-            : `ak-docs query package ${m.id} --agent`,
-        ),
+            : 'ak-docs list knowledge --text',
+        ))],
       }
       return payload
     }

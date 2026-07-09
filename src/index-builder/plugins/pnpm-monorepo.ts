@@ -65,7 +65,7 @@ export const discoverPnpmPackages = (
     const rel = toPosix(abs.replace(`${toPosix(root)}/`, ''))
     const folderId = basename(abs)
     const id = pkg.name?.startsWith('@') ? pkg.name.split('/').pop() ?? folderId : (pkg.name ?? folderId)
-    out.push({ id, path: rel, name: pkg.name })
+    out.push({ id, path: rel, ...(pkg.name ? { name: pkg.name } : {}) })
   }
 
   return out.sort((a, b) => a.id.localeCompare(b.id))

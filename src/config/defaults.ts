@@ -25,6 +25,11 @@ export const applyConfigDefaults = (config: DocBridgeConfigV1): DocBridgeConfigV
         outFile: 'llms.txt',
         ...config.index?.llmsTxt,
       },
+      capabilities: {
+        enabled: true,
+        outFile: '.doc-bridge/capabilities.json',
+        ...config.index?.capabilities,
+      },
       ...config.index,
     },
     gates: {

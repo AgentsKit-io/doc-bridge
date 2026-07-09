@@ -28,7 +28,7 @@ export const HandoffTargetSchema = z
 
 export type HandoffTarget = z.infer<typeof HandoffTargetSchema>
 
-/** v1 — canonical AgentHandoff. AKOS legacy payloads may omit schemaVersion. */
+/** v1 — canonical AgentHandoff. Legacy payloads may omit schemaVersion. */
 export const AgentHandoffV1Schema = z
   .object({
     type: z.literal('agent-handoff'),
@@ -47,7 +47,7 @@ export const AgentHandoffV1Schema = z
 
 export type AgentHandoffV1 = z.infer<typeof AgentHandoffV1Schema>
 
-/** Accept AKOS / legacy handoffs without schemaVersion. */
+/** Accept legacy handoffs without schemaVersion. */
 export const AgentHandoffLegacySchema = AgentHandoffV1Schema.omit({ schemaVersion: true }).extend({
   schemaVersion: z.literal(HANDOFF_SCHEMA_VERSION).optional(),
 })

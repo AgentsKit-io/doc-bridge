@@ -1,11 +1,13 @@
 {
   "name": "@agentskit/doc-bridge",
   "version": "0.1.0-alpha.1",
-  "description": "Agent-first documentation bridge for any project — OKF knowledge, AgentHandoff routing, doc site plugins.",
+  "description": "Human↔agent documentation bridge — deterministic handoffs, doc-site links, memory→docs, optional AgentsKit RAG/chat.",
   "type": "module",
   "bin": {
-    "ak-docs": "./bin/ak-docs.js"
+    "ak-docs": "bin/ak-docs.js"
   },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -19,14 +21,27 @@
   "files": [
     "dist",
     "bin",
+    "docs",
+    "examples",
     "README.md",
+    "CONTRIBUTING.md",
+    "SECURITY.md",
+    "CODE_OF_CONDUCT.md",
+    "CHANGELOG.md",
     "LICENSE"
   ],
   "scripts": {
     "build": "tsup",
     "test": "vitest run",
     "test:watch": "vitest",
+    "coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit",
+    "smoke:packaged": "node scripts/smoke-packaged.mjs",
+    "smoke:docsites": "node scripts/smoke-docsites.mjs",
+    "smoke:real-docsites": "node scripts/smoke-real-docsites.mjs",
+    "changeset": "changeset",
+    "version-packages": "changeset version",
+    "release": "pnpm build && pnpm test && changeset publish",
     "prepublishOnly": "pnpm build && pnpm test"
   },
   "keywords": [
@@ -34,13 +49,15 @@
     "documentation",
     "mcp",
     "for-agents",
-    "llms.txt",
-    "agent-handoff"
+    "llms-txt",
+    "agent-handoff",
+    "rag",
+    "human-agent-bridge"
   ],
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/AgentsKit-io/doc-bridge.git"
+    "url": "git+https://github.com/AgentsKit-io/doc-bridge.git"
   },
   "engines": {
     "node": ">=22"
@@ -51,10 +68,38 @@
   "dependencies": {
     "zod": "^3.24.2"
   },
+  "peerDependencies": {
+    "@agentskit/adapters": "^0.13.0",
+    "@agentskit/core": "^1.10.0",
+    "@agentskit/ink": "^0.9.0",
+    "@agentskit/memory": "^0.10.0",
+    "@agentskit/rag": "^0.4.0",
+    "react": ">=18.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@agentskit/adapters": { "optional": true },
+    "@agentskit/core": { "optional": true },
+    "@agentskit/ink": { "optional": true },
+    "@agentskit/memory": { "optional": true },
+    "@agentskit/rag": { "optional": true },
+    "react": { "optional": true }
+  },
   "devDependencies": {
+    "@changesets/cli": "^2.31.0",
     "@types/node": "^22.15.3",
+    "@vitest/coverage-v8": "4.1.10",
     "tsup": "^8.5.0",
     "typescript": "^6.0.3",
     "vitest": "^4.1.9"
-  }
+  },
+  "directories": {
+    "doc": "docs",
+    "example": "examples",
+    "test": "tests"
+  },
+  "author": "AgentsKit",
+  "bugs": {
+    "url": "https://github.com/AgentsKit-io/doc-bridge/issues"
+  },
+  "homepage": "https://github.com/AgentsKit-io/doc-bridge#readme"
 }

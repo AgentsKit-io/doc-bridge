@@ -1,12 +1,12 @@
 # doc-bridge config contract v1
 
-`doc-bridge.config.ts` (or `.js`, `.mjs`, `.json`, `.yaml`) is the single integration point for any project. Layer 0 fields are sufficient to run `index`, `query`, and MCP without an LLM.
+`doc-bridge.config.ts` (or `.js`, `.mjs`, `.json`, or `package.json` → `docBridge`) is the alpha integration point for any project. Layer 0 fields are sufficient to run `index`, `query`, and MCP without an LLM.
 
 | npm package | `@agentskit/doc-bridge` |
 | CLI binary | `ak-docs` |
 | Config file | `doc-bridge.config.ts` |
 
-Standalone CLI — not merged into `@agentskit/cli` or `agentskit-os`.
+Standalone CLI — not merged into a framework or OS CLI.
 
 ## Design rules
 
@@ -22,10 +22,12 @@ Standalone CLI — not merged into `@agentskit/cli` or `agentskit-os`.
 doc-bridge.config.ts
 doc-bridge.config.mts
 doc-bridge.config.js
+doc-bridge.config.mjs
 doc-bridge.config.json
-doc-bridge.config.yaml
 package.json → "docBridge" field (subset, JSON only)
 ```
+
+TypeScript/JavaScript configs are static in v0.1 alpha: `defineConfig` imports are supported, but arbitrary imports are not. YAML config files are planned.
 
 ## TypeScript shape (authoritative)
 
@@ -115,9 +117,9 @@ type HumanCorpusConfig = {
 }
 
 type HumanCorpusPluginId =
-  | 'plain-markdown'    // docs/**/*.md, optional meta sidecar
-  | 'fumadocs'
-  | 'docusaurus'
+  | 'plain-markdown'    // docs/**/*.md, frontmatter `package`/`module`/`id`
+  | 'fumadocs'          // markdown scan with index routes, (group) slugs, pages allowlists
+  | 'docusaurus'        // markdown scan with id/slug frontmatter + static sidebars.js
   | 'mkdocs'            // planned
   | 'vitepress'         // planned
   | 'custom'            // path to user plugin module
@@ -168,6 +170,12 @@ type IndexConfig = {
     enabled?: boolean             // default: true
     outFile?: string              // default: 'llms.txt' at project root
     preamble?: string             // project-specific intro paragraph
+  }
+
+  /** Optional Self-Describe companion artifact */
+  capabilities?: {
+    enabled?: boolean             // default: true
+    outFile?: string              // default: '.doc-bridge/capabilities.json'
   }
 
   /** Hash algorithm for contentHash field */
@@ -249,6 +257,18 @@ type GatesConfig = {
     'human-guide-links'?: { strict?: boolean }
     'index-freshness'?: { failOnDrift?: boolean }
     'okf-type'?: { requireType?: boolean }
+    'docs-style'?: {
+      profile?: 'google-dev-docs' | 'playbook-okf' | 'custom'
+      required?: Array<
+        | 'title'
+        | 'purpose'
+        | 'audience'
+        | 'task-orientation'
+        | 'examples'
+        | 'owner-source'
+        | 'no-stale-wording'
+      >
+    }
     'link-rot'?: { scanDirs?: string[] }
   }
 }
@@ -258,6 +278,7 @@ type GateId =
   | 'human-guide-links'
   | 'link-rot'
   | 'okf-type'
+  | 'docs-style'
   | 'routing-currency'             // every workspace package appears in routing
   | 'bootstrap-size'               // AGENTS.md / CLAUDE.md line budgets
 ```
@@ -265,8 +286,23 @@ type GateId =
 | Preset | Gates |
 |--------|-------|
 | `minimal` | `index-freshness` |
-| `standard` | + `human-guide-links`, `link-rot` |
-| `strict` | + `okf-type`, `routing-currency`, `bootstrap-size` |
+| `standard` | + `human-guide-links` in v0.1 alpha |
+| `strict` | + `okf-type` in v0.1 alpha |
+
+Implemented alpha gates: `index-freshness`, `human-guide-links`, `okf-type`, `docs-style`. `include` / `exclude` are applied to implemented gates only.
+
+### Structural vs style validation
+
+Alpha gates are deterministic lint checks, not editorial grading:
+
+| Gate | Kind | What it proves |
+|------|------|----------------|
+| `index-freshness` | structural | Generated index matches current docs/config |
+| `human-guide-links` | structural | Local `humanDoc` links resolve through configured human-doc adapters |
+| `okf-type` | OKF lint | Agent docs have required `type:` frontmatter when strict/required |
+| `docs-style` | style lint | Opt-in deterministic profile checks for title, purpose, audience, examples, owner/source, task orientation, and stale wording |
+
+`docs-style` supports `google-dev-docs`, `playbook-okf`, and `custom` profiles. It is not part of the default alpha path and does not grade prose quality; it checks for explicit structural signals. LLM critique remains planned optional behavior.
 
 ---
 
@@ -363,7 +399,7 @@ type MemoryAdapterId =
 
 ## `federation` (optional — ecosystem)
 
-Not required for any project. AKOS enables this profile.
+Not required for any project. Private dogfood enables this profile to validate scale; public consumers do not depend on private repos.
 
 ```ts
 type FederationConfig = {
@@ -379,6 +415,17 @@ type FederationSource = {
   includeInChat?: boolean
 }
 ```
+
+Layer 0 exports a local retriever helper over `DocBridgeIndex`:
+
+```ts
+import { createDocBridgeRetriever } from '@agentskit/doc-bridge'
+
+const retriever = createDocBridgeRetriever(index, { property: 'my-project' })
+const chunks = retriever.retrieve('auth ownership')
+```
+
+Chunk keys are stable: `{property}:{type}:{id}`. Deterministic CLI search and exact handoff resolution stay first; semantic/RAG runtimes can inject this retriever and add federated sources later.
 
 ---
 
@@ -540,10 +587,15 @@ export default defineConfig({
 | `ak-docs index` | `corpus`, `routing`, `index`, plugins |
 | `ak-docs query <t> --agent` | `index` + `routing` + handoff merge |
 | `ak-docs search <q>` | `index` |
+| `ak-docs retrieve <q>` | `index` + `federation` |
 | `ak-docs gate run` | `gates` |
 | `ak-docs mcp` | `surfaces.mcp` |
-| `ak-docs chat` | `intelligence.*` (fails friendly if disabled) |
-| `ak-docs memory ingest` | `intelligence.memory` |
+| `ak-docs chat` | planned; `intelligence.*` |
+| `ak-docs memory ingest` | deterministic local ingest; `MemoryCandidate[]` |
+| `ak-docs memory classify` | deterministic route classifier |
+| `ak-docs memory promote` | draft promotion + safety scan |
+| `ak-docs registry topology` | doc-curator topology |
+| `ak-docs playbook draft` | draft Playbook feedback payload |
 
 ---
 
@@ -568,5 +620,6 @@ export default defineConfig({
 ## See also
 
 - [POSITIONING.md](../POSITIONING.md)
-- [AgentHandoff v1](./agent-handoff-v1.md) *(planned)*
-- [DocBridgeIndex v1](./doc-bridge-index-v1.md) *(planned)*
+- [AgentHandoff v1](../schemas/agent-handoff-v1.md)
+- [DocBridgeIndex v1](../schemas/doc-bridge-index-v1.md)
+- [MemoryCandidate v1](../schemas/memory-candidate-v1.md)

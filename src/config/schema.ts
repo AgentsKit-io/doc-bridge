@@ -45,6 +45,13 @@ export const IndexConfigSchema = z
       })
       .strict()
       .optional(),
+    capabilities: z
+      .object({
+        enabled: z.boolean().optional(),
+        outFile: z.string().min(1).max(512).optional(),
+      })
+      .strict()
+      .optional(),
     contentHash: z.literal('sha256-normalized-v1').optional(),
   })
   .strict()
@@ -109,6 +116,7 @@ export const GatesConfigSchema = z
           'human-guide-links',
           'link-rot',
           'okf-type',
+          'docs-style',
           'routing-currency',
           'bootstrap-size',
         ]),
@@ -122,6 +130,7 @@ export const GatesConfigSchema = z
           'human-guide-links',
           'link-rot',
           'okf-type',
+          'docs-style',
           'routing-currency',
           'bootstrap-size',
         ]),
@@ -152,6 +161,10 @@ export const SurfacesConfigSchema = z
               'doc.get',
               'gate.status',
               'playbook.pattern.get',
+              'retriever.query',
+              'memory.classify',
+              'memory.promoteDraft',
+              'registry.topology',
             ]),
           )
           .max(16)
@@ -194,9 +207,10 @@ export const IntelligenceConfigSchema = z
     retriever: z
       .object({
         enabled: z.boolean().optional(),
-        mode: z.enum(['local', 'remote', 'bm25']).optional(),
+        mode: z.enum(['local', 'remote', 'bm25', 'agentskit-rag']).optional(),
         embedModel: z.string().min(1).max(128).optional(),
         chunkSize: z.number().int().min(128).max(16_384).optional(),
+        options: z.record(z.string(), z.unknown()).optional(),
       })
       .strict()
       .optional(),
@@ -272,3 +286,4 @@ export const DocBridgeConfigV1Schema = z
 
 export type DocBridgeConfigV1 = z.infer<typeof DocBridgeConfigV1Schema>
 export type AgentCorpusConfig = z.infer<typeof AgentCorpusConfigSchema>
+export type HumanCorpusConfig = z.infer<typeof HumanCorpusConfigSchema>

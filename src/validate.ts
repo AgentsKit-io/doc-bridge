@@ -1,6 +1,6 @@
 import { ZodError } from 'zod'
 
-import { DocBridgeConfigV1Schema } from './config/schema.js'
+import { DocBridgeConfigV1Schema, type DocBridgeConfigV1 } from './config/schema.js'
 import {
   AgentHandoffLegacySchema,
   AgentHandoffV1Schema,
@@ -56,4 +56,12 @@ export const parseDocBridgeIndex = (input: unknown): DocBridgeIndexV1 =>
 export const parseMemoryCandidate = (input: unknown): MemoryCandidateV1 =>
   MemoryCandidateV1Schema.parse(input)
 
-export const parseDocBridgeConfig = (input: unknown) => DocBridgeConfigV1Schema.parse(input)
+export const parseDocBridgeConfig = (input: unknown): DocBridgeConfigV1 => {
+  const result = DocBridgeConfigV1Schema.safeParse(input)
+  if (!result.success) {
+    throw new Error(
+      `Invalid doc-bridge config:\n${zodIssues(result.error).map((i) => `  - ${i.path}: ${i.message}`).join('\n')}`,
+    )
+  }
+  return result.data
+}

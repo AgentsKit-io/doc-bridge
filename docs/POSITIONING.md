@@ -1,101 +1,78 @@
 # doc-bridge positioning
 
-This document is the source of truth for **how we talk about doc-bridge** in README, issues, RFCs, and external posts.
+Source of truth for README, issues, RFCs, and external posts.
 
 ## One-liner
 
-**Agent-first documentation infrastructure for any project** — deterministic routing and handoffs, optional intelligence, any doc site, any LLM provider.
+**Human↔agent documentation bridge for any repo** — deterministic handoffs, doc-site links, memory→docs promotion, optional AgentsKit RAG/chat.
 
 ## What we are
 
-- A **task router for coding agents** (where to edit, what to read first, which checks to run)
-- A **bridge** between agent corpus (dense markdown) and human corpus (wiki, Fumadocs, Docusaurus, …)
-- A **modular toolkit**: CLI, MCP, plugins, optional chat, optional memory — install only what you need
-- **Provider-agnostic** and **offline-capable** at the core (Layer 0 needs no API key)
+- A **bridge** between agent corpus (dense markdown) and human corpus (Fumadocs, Docusaurus, plain md, …)
+- A **task router** for coding agents (`startHere`, `editRoots`, `checks`, `humanDoc`)
+- A **memory pipeline** that turns local agent memory into draft project docs (HITL)
+- A **modular toolkit**: CLI, MCP, plugins, optional intelligence — install only what you need
+- **Offline-capable at the core** (Layer 0 needs no API key)
+
+## Four loops
+
+| Loop | Job |
+|------|-----|
+| **Act** | Handoff JSON / MCP so agents edit the right place and run the right checks |
+| **Bridge** | Keep agent docs ↔ human docs linked and gate-validated |
+| **Learn** | Ingest Cursor/Claude-style memory → classify → promote drafts |
+| **Explain** | Optional RAG + terminal chat (`@agentskit/rag` + `@agentskit/ink`) with `handoffFirst` |
 
 ## What we are not
 
-- Not an AgentsKit product brochure
-- Not a LangChain-style mega-wiki with RAG bolted on
-- Not a hosted doc chat SaaS (bring your own adapter if you want chat)
 - Not a replacement for your human documentation site
+- Not a hosted doc chat SaaS
+- Not an AgentsKit brochure in the hero
+- Not “just AGENTS.md” (we *compose* with it)
 
 ## Primary persona
 
-**Engineering teams with real code ownership** — monorepos first, but any repo with modules/domains and docs.
+Engineering teams with real ownership (monorepos first). Secondary: solo libs, internal platforms, any stack with markdown.
 
-Secondary: solo devs, libraries, internal platforms, non-JS stacks (markdown + config are universal).
+## AgentsKit relationship (dogfood, not force)
 
-## AgentsKit under the hood
+| Public message | Reality |
+|----------------|---------|
+| Layer 0 works alone | Pure `@agentskit/doc-bridge` + zod |
+| Optional chat/RAG | Peers: `@agentskit/rag`, `@agentskit/ink`, `@agentskit/adapters`, `@agentskit/memory` |
+| Ecosystem proof | Public consumers — not private monorepos as marketing |
 
-| Public message | Internal reality |
-|----------------|------------------|
-| "Works with any provider" | AgentsKit `Adapter` interface |
-| "Optional semantic search" | AgentsKit `Retriever` (+ local BM25 fallback planned) |
-| "Optional doc maintenance agents" | AgentsKit `Runtime` + Registry agents |
-| "Battle-tested at scale" | AgentsKit OS is consumer #1 |
+**Rule:** User-facing docs lead with **your repo**. AgentsKit appears as opt-in intelligence and ecosystem consumers.
 
-**Rule:** User-facing docs lead with **your repo, your docs, your gates**. AgentsKit appears in "Powered by" / "Advanced" / contributor docs — not in the hero.
+### Public consumers
 
-## Comparison to wiki + RAG (LangChain-class)
+- [AgentsKit for-agents](https://www.agentskit.io/docs/for-agents) — agent-first package corpus
+- [Registry](https://registry.agentskit.io/) — agent discovery / onboarding companion
+- [Playbook llms.txt](https://playbook.agentskit.io/llms.txt) — patterns + federation source
 
-| Dimension | Wiki + RAG | doc-bridge |
-|-----------|------------|------------|
-| Primary user | Human learner | Coding agent executor |
-| Discovery | Search / embed | Handoff JSON + graph index |
-| Correctness | Best-effort retrieval | Deterministic index + CI gates |
-| Token efficiency | Multi-chunk context | One handoff per task |
-| Vendor lock-in | Often framework + hosted chat | Layer 0 is pure OSS; adapter is yours |
-| Human docs | The whole product | Plugin-linked; chat can cite them |
+## Comparison
+
+| Dimension | Wiki + RAG | AGENTS.md | Context7 | doc-bridge |
+|-----------|------------|-----------|----------|------------|
+| Primary job | Explain | Static instructions | Library docs | **Act + bridge + memory** |
+| Correctness | Best-effort | Manual | Versioned remote | Index + CI gates |
+| Your monorepo ownership | Weak | Weak | N/A | **First-class** |
+| LLM required | Usually | No | No for setup | **No for Layer 0** |
 
 ## Feature modularity
 
-Everything except Layer 0 is optional:
-
 ```
-required:  index builder, CLI, MCP handoff tools, gate presets
-optional:  fumadocs | docusaurus | … plugins
-optional:  chat search (any adapter)
-optional:  memory ingest adapters
-optional:  classification + auto-doc PRs
-optional:  Playbook / Registry ecosystem federation
+required:  index, CLI, MCP handoff tools, gate presets
+optional:  fumadocs | docusaurus | plain-markdown plugins
+optional:  memory ingest → promote
+optional:  @agentskit/rag + ink chat (intelligence.*)
+optional:  Playbook / Registry federation
 ```
-
-Defaults should work in a **plain git repo with markdown** and no `npm` workspaces.
-
-## Human documentation
-
-Human wikis remain first-class:
-
-- **Plugins** map MDX/Markdown routes → `humanDoc` in handoffs
-- **Chat** (optional) retrieves from both agent and human corpora
-- **Gates** validate cross-links agent ↔ human
-
-Agents should prefer handoffs for *action* and chat/RAG for *explanation*.
-
-## Documentation style guide (for contributors)
-
-1. Examples use **generic** names (`auth`, `billing`, `api-gateway`) — not `os-core`, `os-headless`, unless in an AKOS-specific appendix
-2. Quick starts must run **without** AgentsKit API keys
-3. "Ecosystem" sections (Playbook, Registry, AKOS) live under **Optional integrations**
-4. Issues label `ecosystem` vs `core` — core must not depend on AKOS repos
-5. Competitive framing: vs **wiki+RAG pattern**, not vs LangChain the company
-
-## CLI
-
-| npm package | `@agentskit/doc-bridge` |
-| CLI binary | `ak-docs` (only the executable name — not `doc-bridge`) |
-| Config file | `doc-bridge.config.ts` (project name, not package scope) |
-
-**Not** a subcommand of `@agentskit/cli` or `agentskit-os` — install `@agentskit/doc-bridge` alone in any repo without the OS or framework CLI.
-
-## Config contract
-
-Public spec: [`docs/spec/config-v1.md`](spec/config-v1.md). Examples use generic module names. AKOS-scale config lives in `examples/akos-consumer.appendix.config.ts` only.
 
 ## Success metrics
 
-- Zero-key path: init → index → `query --agent` in &lt; 2 minutes
-- Handoff resolves correct `editRoots` in a foreign monorepo fixture test
-- Fumadocs + Docusaurus fixture repos pass human-guide gate
-- AKOS adopts without regression (consumer #1, not spec owner)
+- Zero-key: `init` → `index` → `query --agent` in &lt; 2 minutes
+- Handoff from ownership-only config (no monorepo plugin required)
+- Human guide links gate green on fixture adapters
+- Chat/RAG path documented with optional peers
+- Public consumers cited (for-agents, Registry, Playbook)

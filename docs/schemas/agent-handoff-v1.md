@@ -2,6 +2,8 @@
 
 Zod schema: `AgentHandoffV1Schema` in `@agentskit/doc-bridge`.
 
+Portable JSON Schema export: `AgentHandoffV1JsonSchema`.
+
 ## Shape
 
 ```json
@@ -21,7 +23,7 @@ Zod schema: `AgentHandoffV1Schema` in `@agentskit/doc-bridge`.
 
 ## Legacy compatibility
 
-AgentsKit OS `pnpm docs:internal:query --agent` payloads omit `schemaVersion`. Use `normalizeAgentHandoff()` or `safeParseAgentHandoff()` to upgrade.
+Legacy `--agent` payloads may omit `schemaVersion`. Use `normalizeAgentHandoff()` or `safeParseAgentHandoff()` to upgrade.
 
 ## CLI validation
 
