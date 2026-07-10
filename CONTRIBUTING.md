@@ -19,6 +19,13 @@ pnpm build
 - Add or update the smallest test that would fail if the behavior regresses.
 - Public contract changes must update the relevant docs under `docs/spec/` or `docs/schemas/`.
 
+## Pull request checklist
+
+- Run `pnpm typecheck && pnpm test && pnpm build`.
+- Run `npm pack --dry-run` for package or README changes.
+- Update docs and `CHANGELOG.md` when behavior changes.
+- Keep examples public and reproducible.
+
 ## Releases
 
 Use Changesets for versioned changes:

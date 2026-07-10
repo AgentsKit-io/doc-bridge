@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>doc-bridge — AgentHandoff for your monorepo</title>
-  <meta name="description" content="Deterministic routing for coding agents: edit the right package, run the right checks, bridge to human docs. No API key required." />
+  <title>doc-bridge — docs your agents can act on</title>
+  <meta name="description" content="Turn human docs into executable handoffs for agents, and turn agent memory into reviewable documentation drafts. MCP, CLI, CI. No API key required." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -105,6 +105,22 @@
     .dot-y { background: var(--amber); }
     .dot-g { background: var(--green); }
     .terminal-body { padding: 1.25rem 1.5rem; overflow-x: auto; }
+    .hero-image {
+      display: block;
+      width: 100%;
+      margin: 0 0 2rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
+    }
+    .section-image {
+      display: block;
+      width: 100%;
+      margin: 0 0 1.5rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.28);
+    }
     .t-dim { color: var(--muted); }
     .t-ok { color: var(--green); }
     .t-bad { color: var(--red); }
@@ -145,6 +161,25 @@
       text-decoration: none;
     }
     .used-by a:hover { border-color: var(--accent-dim); }
+    .surface-table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+    }
+    .surface-table th,
+    .surface-table td {
+      padding: 0.9rem 1rem;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+      vertical-align: top;
+      font-size: 0.92rem;
+    }
+    .surface-table th { color: var(--text); font-weight: 600; }
+    .surface-table td { color: var(--muted); }
+    .surface-table tr:last-child td { border-bottom: 0; }
     .badge-row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1.5rem; }
     .badge-row img { height: 22px; }
     footer {
@@ -173,16 +208,19 @@
   <main>
     <section class="hero">
       <div class="wrap">
-        <div class="eyebrow">AgentHandoff for your monorepo</div>
-        <h1>Your agent never edits the wrong package again.</h1>
+        <div class="eyebrow">Docs your agents can act on</div>
+        <h1>Turn repo docs into executable handoffs.</h1>
         <p class="lead">
-          Deterministic handoffs: <strong>startHere</strong>, <strong>editRoots</strong>, <strong>checks</strong>, and a bridge to human docs.
-          Layer 0 works without any LLM or API key.
+          doc-bridge gives every coding agent the same contract: <strong>startHere</strong>,
+          <strong>editRoots</strong>, <strong>checks</strong>, and <strong>humanDoc</strong>.
+          Then it turns agent memory back into reviewable documentation drafts.
+          Use it from CLI, MCP, and CI. No LLM or API key required.
         </p>
         <div class="cta-row">
           <a class="btn btn-primary" href="#demo">See 60s demo</a>
           <a class="btn btn-ghost" href="https://github.com/AgentsKit-io/doc-bridge#readme">Read README</a>
         </div>
+        <img class="hero-image" src="assets/doc-bridge-hero.webp" alt="doc-bridge maps human docs into structured agent handoffs for CLI, MCP, and CI" />
         <div class="grid-2" id="demo">
           <div class="terminal">
             <div class="terminal-bar"><span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span></div>
@@ -221,10 +259,32 @@
       </div>
     </section>
 
+    <section>
+      <div class="wrap">
+        <h2>Use it where agents already work</h2>
+        <p class="section-lead">One index, multiple surfaces. Start with the CLI; wire MCP and CI when the first handoff is useful.</p>
+        <img class="section-image" src="assets/doc-bridge-surfaces.webp" alt="doc-bridge index used through CLI, MCP, CI, and documentation adapters" />
+        <table class="surface-table">
+          <thead>
+            <tr><th>Surface</th><th>What it does</th><th>How you use it</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>CLI</td><td>Query ownership, inspect handoffs, run doctor, search docs.</td><td><code>ak-docs query package auth --agent</code></td></tr>
+            <tr><td>MCP</td><td>Lets Cursor, Claude Code, and Codex-style agents resolve before editing.</td><td><code>ak-docs mcp install --cursor</code></td></tr>
+            <tr><td>CI</td><td>Blocks stale indexes and broken human-doc bridges.</td><td><code>ak-docs index && ak-docs gate run</code></td></tr>
+            <tr><td>Adapters</td><td>Connect Fumadocs, Docusaurus, plain markdown, and pnpm workspaces.</td><td><code>fumadocs</code> · <code>docusaurus</code> · <code>plain-markdown</code></td></tr>
+            <tr><td>Memory pipeline</td><td>Classifies local agent memory and drafts documentation updates.</td><td><code>ak-docs memory promote --pr</code></td></tr>
+            <tr><td>Optional RAG/chat</td><td>Adds handoff-first chat when you install AgentsKit peers.</td><td><code>ak-docs rag ingest && ak-docs chat</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
     <section id="loops">
       <div class="wrap">
         <h2>Four loops, one bridge</h2>
         <p class="section-lead">Act, bridge, learn, explain — each loop has a CLI command and real output, not a concept table.</p>
+        <img class="section-image" src="assets/doc-bridge-two-way.webp" alt="doc-bridge connects human docs to coding agents and agent memory back to draft docs" />
         <div class="loops">
           <div class="card">
             <div class="loop-tag">Act</div>
@@ -238,8 +298,8 @@
           </div>
           <div class="card">
             <div class="loop-tag">Learn</div>
-            <h3>Memory → docs</h3>
-            <p><code>memory promote --pr</code> · HITL draft PR</p>
+            <h3>Agent memory → docs</h3>
+            <p><code>memory classify</code> · <code>promote --pr</code></p>
           </div>
           <div class="card">
             <div class="loop-tag">Explain</div>
@@ -277,7 +337,7 @@
           <div class="terminal-bar"><span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span></div>
           <div class="terminal-body">
             <div class="t-dim"># .github/workflows/pr.yml</div>
-            <div>- uses: <span class="t-hi">AgentsKit-io/doc-bridge@v1.0.0</span></div>
+            <div>- uses: <span class="t-hi">AgentsKit-io/doc-bridge@v1.0.2</span></div>
             <div>&nbsp;&nbsp;with:</div>
             <div>&nbsp;&nbsp;&nbsp;&nbsp;config-path: doc-bridge.config.json</div>
           </div>

@@ -4,7 +4,16 @@ Zod schema: `MemoryCandidateV1Schema` in `@agentskit/doc-bridge`.
 
 Portable JSON Schema export: `MemoryCandidateV1JsonSchema`.
 
-This is the normalized draft shape for memory ingestion. Layer 0 ships deterministic local ingest for Cursor rules and `.agent-memory/**/*.md`; classification and promotion are planned.
+This is the normalized shape for memory ingestion. The core ships deterministic
+local ingest for Cursor rules and `.agent-memory/**/*.md`, classification into
+`agent | human | playbook | discard`, safety scanning, draft generation, and an
+optional GitHub draft PR flow.
+
+```bash
+ak-docs memory ingest
+ak-docs memory classify
+ak-docs memory promote --pr --dry-run
+```
 
 ## Shape
 
