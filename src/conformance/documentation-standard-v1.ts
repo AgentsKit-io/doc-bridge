@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync, readFileSync, realpathSync } from 'node:fs'
 import { relative, resolve, sep } from 'node:path'
 
 import type {
@@ -64,9 +64,18 @@ type RuleDraft = Omit<DocumentationStandardRuleResult, 'status' | 'ok' | 'except
 }
 
 const safePath = (root: string, path: string): string | undefined => {
-  const rootAbs = resolve(root)
-  const abs = resolve(rootAbs, path)
-  return abs === rootAbs || abs.startsWith(`${rootAbs}${sep}`) ? abs : undefined
+  const rootAbs = realpathSync.native(resolve(root))
+  const unresolved = resolve(rootAbs, path)
+  const unresolvedRel = relative(rootAbs, unresolved)
+  if (unresolvedRel === '..' || unresolvedRel.startsWith(`..${sep}`)) return undefined
+  if (!existsSync(unresolved)) return unresolved
+  try {
+    const abs = realpathSync.native(unresolved)
+    const rel = relative(rootAbs, abs)
+    return rel !== '..' && !rel.startsWith(`..${sep}`) ? abs : undefined
+  } catch {
+    return undefined
+  }
 }
 
 const fileEvidence = (
@@ -147,7 +156,13 @@ const llmsRule = (
   options: DocumentationStandardV1Config,
 ): RuleDraft => {
   const llmsPath = config.index?.llmsTxt?.outFile ?? 'llms.txt'
-  const paths = [llmsPath, ...(options.rawSources ?? [])]
+  const llmsKey = safePath(root, llmsPath) ?? resolve(root, llmsPath)
+  const rawSources = new Map<string, string>()
+  for (const path of options.rawSources ?? []) {
+    const key = safePath(root, path) ?? resolve(root, path)
+    if (key !== llmsKey && !rawSources.has(key)) rawSources.set(key, path)
+  }
+  const paths = [llmsPath, ...rawSources.values()]
   const evidence = paths.map((path) => fileEvidence(root, path))
   const passed = config.index?.llmsTxt?.enabled !== false && paths.length > 1 && evidence.every((item) => item.exists)
   return {

@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, unlinkSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
@@ -124,6 +124,37 @@ describe('Documentation Standard v1', () => {
     })
     expect(report.results.find((result) => result.id === 'metadata')?.evidence[0]?.detail).toContain('name="description"')
     expect(report.results.find((result) => result.id === 'tested-quickstarts')?.evidence[1]?.detail).toContain('runDemo')
+  })
+
+  it('rejects evidence symlinks that escape the project root', () => {
+    const { root, config } = fixture()
+    const outside = mkdtempSync(join(tmpdir(), 'ak-docs-standard-outside-'))
+    tempDirs.push(outside)
+    writeFileSync(join(outside, 'metadata.html'), '<title>Outside</title><meta name="description">')
+    unlinkSync(join(root, 'docs/index.html'))
+    symlinkSync(join(outside, 'metadata.html'), join(root, 'docs/index.html'))
+
+    const metadata = runDocumentationStandardV1(root, config).results.find((result) => result.id === 'metadata')
+    expect(metadata).toMatchObject({ status: 'fail' })
+    expect(metadata?.evidence[0]?.detail).toBe('Path escapes the project root.')
+  })
+
+  it('requires a raw source distinct from generated llms.txt', () => {
+    const { root, config } = fixture()
+    const duplicate = DocBridgeConfigV1Schema.parse({
+      ...config,
+      conformance: {
+        documentationStandardV1: {
+          ...config.conformance?.documentationStandardV1,
+          rawSources: ['llms.txt', './llms.txt'],
+        },
+      },
+    })
+    const result = runDocumentationStandardV1(root, duplicate).results.find(
+      (candidate) => candidate.id === 'llms-and-raw-source',
+    )
+    expect(result).toMatchObject({ status: 'fail' })
+    expect(result?.evidence).toHaveLength(1)
   })
 
   it('keeps recommended failures visible without failing required conformance', () => {

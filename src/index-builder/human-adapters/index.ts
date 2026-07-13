@@ -1,4 +1,5 @@
 import type { DocBridgeConfigV1, HumanCorpusConfig } from '../../config/schema.js'
+import { resolve, sep } from 'node:path'
 import { docusaurusAdapter } from './docusaurus.js'
 import { fumadocsAdapter } from './fumadocs.js'
 import type { HumanAdapter, HumanDocMap, HumanDocRecord } from './core.js'
@@ -24,16 +25,17 @@ export const scanHumanDocRecords = (
 ): HumanDocRecord[] => {
   const out: HumanDocRecord[] = []
   const seen = new Set<string>()
-  const agentRoot = config.corpus.agent.root.replace(/\/$/, '')
+  const agentRoot = resolve(root, config.corpus.agent.root)
 
   for (const human of humanConfigs(config)) {
     const adapter = ADAPTERS.find((candidate) => candidate.plugin === human.plugin)
     if (!adapter) continue
     for (const record of adapter.scan({ root, config: human })) {
       // Never treat agent-corpus files as human docs (nested for-agents, etc.)
+      const recordPath = resolve(record.path)
       if (
-        record.path === agentRoot ||
-        record.path.startsWith(`${agentRoot}/`) ||
+        recordPath === agentRoot ||
+        recordPath.startsWith(`${agentRoot}${sep}`) ||
         record.path.includes('/for-agents/') ||
         record.path.endsWith('/for-agents')
       ) {

@@ -9,6 +9,21 @@ import { scanHumanDocRecords } from '../src/index-builder/human-adapters/index.j
 import type { DocBridgeConfigV1 } from '../src/config/schema.js'
 
 describe('human doc adapters', () => {
+  it('does not treat an overlapping agent corpus as human documentation', () => {
+    const root = mkdtempSync(join(tmpdir(), 'ak-docs-overlapping-human-'))
+    mkdirSync(join(root, 'docs'), { recursive: true })
+    writeFileSync(join(root, 'docs/INDEX.md'), '# Agent docs')
+    const config: DocBridgeConfigV1 = {
+      schemaVersion: 1,
+      corpus: {
+        agent: { root: 'docs' },
+        human: { plugin: 'plain-markdown', options: { root: '.' } },
+      },
+    }
+
+    expect(scanHumanDocRecords(root, config)).toEqual([])
+  })
+
   it('honors Docusaurus slug and id frontmatter', () => {
     const root = mkdtempSync(join(tmpdir(), 'ak-docs-docusaurus-'))
     mkdirSync(join(root, 'website/docs/guide'), { recursive: true })
