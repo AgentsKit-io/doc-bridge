@@ -124,6 +124,7 @@ export const GatesConfigSchema = z
           'docs-style',
           'routing-currency',
           'bootstrap-size',
+          'documentation-standard-v1',
         ]),
       )
       .max(16)
@@ -138,6 +139,7 @@ export const GatesConfigSchema = z
           'docs-style',
           'routing-currency',
           'bootstrap-size',
+          'documentation-standard-v1',
         ]),
       )
       .max(16)
@@ -264,6 +266,83 @@ export const FederationConfigSchema = z
   })
   .strict()
 
+export const DocumentationEvidenceFileSchema = z
+  .object({
+    path: z.string().min(1).max(512),
+    contains: z.array(z.string().min(1).max(512)).min(1).max(32),
+  })
+  .strict()
+
+export const DocumentationLinkEvidenceSchema = z
+  .object({
+    url: z.string().url().max(512),
+    paths: z.array(z.string().min(1).max(512)).min(1).max(32),
+  })
+  .strict()
+
+export const DocumentationQuickstartEvidenceSchema = z
+  .object({
+    id: z.string().regex(/^[a-z][a-z0-9-]*$/).max(128),
+    doc: z.string().min(1).max(512),
+    test: z.string().min(1).max(512),
+    command: z.string().min(1).max(512),
+    testContains: z.array(z.string().min(1).max(256)).min(1).max(16),
+  })
+  .strict()
+
+export const DocumentationStandardRuleIdSchema = z.enum([
+  'human-docs',
+  'llms-and-raw-source',
+  'agent-handoffs',
+  'contribution',
+  'metadata',
+  'cross-links',
+  'tested-quickstarts',
+  'visual-explanations',
+  'structured-diagrams',
+])
+
+export const DocumentationStandardExceptionSchema = z
+  .object({
+    ruleId: DocumentationStandardRuleIdSchema,
+    reason: z.string().min(10).max(1_024),
+    approvedBy: z.string().min(1).max(256),
+    trackingUrl: z.string().url().max(512),
+  })
+  .strict()
+
+export const DocumentationStandardV1ConfigSchema = z
+  .object({
+    rawSources: z.array(z.string().min(1).max(512)).max(64).optional(),
+    contributionPaths: z.array(z.string().min(1).max(512)).max(16).optional(),
+    metadata: z.array(DocumentationEvidenceFileSchema).max(32).optional(),
+    links: z.array(DocumentationLinkEvidenceSchema).max(64).optional(),
+    quickstarts: z.array(DocumentationQuickstartEvidenceSchema).max(32).optional(),
+    visuals: z.array(z.string().min(1).max(512)).max(64).optional(),
+    diagrams: z.array(DocumentationEvidenceFileSchema).max(32).optional(),
+    exceptions: z.array(DocumentationStandardExceptionSchema).max(32).optional(),
+  })
+  .strict()
+  .superRefine((value, context) => {
+    const seen = new Set<string>()
+    for (const [index, exception] of (value.exceptions ?? []).entries()) {
+      if (seen.has(exception.ruleId)) {
+        context.addIssue({
+          code: 'custom',
+          path: ['exceptions', index, 'ruleId'],
+          message: `Duplicate exception for rule ${exception.ruleId}`,
+        })
+      }
+      seen.add(exception.ruleId)
+    }
+  })
+
+export const ConformanceConfigSchema = z
+  .object({
+    documentationStandardV1: DocumentationStandardV1ConfigSchema.optional(),
+  })
+  .strict()
+
 export const DocBridgeConfigV1Schema = z
   .object({
     schemaVersion: z.literal(CONFIG_SCHEMA_VERSION),
@@ -286,9 +365,12 @@ export const DocBridgeConfigV1Schema = z
     surfaces: SurfacesConfigSchema.optional(),
     intelligence: IntelligenceConfigSchema.optional(),
     federation: FederationConfigSchema.optional(),
+    conformance: ConformanceConfigSchema.optional(),
   })
   .strict()
 
 export type DocBridgeConfigV1 = z.infer<typeof DocBridgeConfigV1Schema>
 export type AgentCorpusConfig = z.infer<typeof AgentCorpusConfigSchema>
 export type HumanCorpusConfig = z.infer<typeof HumanCorpusConfigSchema>
+export type DocumentationStandardV1Config = z.infer<typeof DocumentationStandardV1ConfigSchema>
+export type DocumentationStandardRuleId = z.infer<typeof DocumentationStandardRuleIdSchema>

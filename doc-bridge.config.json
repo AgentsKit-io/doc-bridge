@@ -4,6 +4,12 @@
     "agent": {
       "root": "docs",
       "index": "docs/getting-started.md"
+    },
+    "human": {
+      "plugin": "plain-markdown",
+      "options": {
+        "root": "."
+      }
     }
   },
   "routing": {
@@ -13,12 +19,54 @@
           "path": "src",
           "purpose": "CLI, index builder, MCP, gates, and doctor",
           "checks": ["pnpm test", "pnpm typecheck"],
-          "agentDoc": "docs/POSITIONING.md"
+          "agentDoc": "docs/POSITIONING.md",
+          "humanDoc": "README"
         }
       }
     }
   },
   "gates": {
-    "preset": "minimal"
+    "preset": "minimal",
+    "include": ["documentation-standard-v1"]
+  },
+  "conformance": {
+    "documentationStandardV1": {
+      "rawSources": ["README.md", "docs/getting-started.md", "docs/spec/cli.md"],
+      "contributionPaths": ["CONTRIBUTING.md"],
+      "metadata": [
+        {
+          "path": "docs/landing/index.html",
+          "contains": ["<title>", "name=\"description\""]
+        }
+      ],
+      "links": [
+        { "url": "https://www.agentskit.io", "paths": ["README.md"] },
+        { "url": "https://registry.agentskit.io/", "paths": ["README.md"] },
+        { "url": "https://playbook.agentskit.io/llms.txt", "paths": ["README.md"] },
+        { "url": "https://github.com/AgentsKit-io/agentskit-chat", "paths": ["README.md"] },
+        { "url": "https://akos.agentskit.io", "paths": ["README.md"] },
+        { "url": "https://github.com/AgentsKit-io/code-review-cli", "paths": ["README.md"] }
+      ],
+      "quickstarts": [
+        {
+          "id": "demo",
+          "doc": "README.md",
+          "test": "tests/demo-mcp.test.ts",
+          "command": "pnpm vitest run tests/demo-mcp.test.ts",
+          "testContains": ["runs bundled example demo", "runDemo"]
+        }
+      ],
+      "visuals": [
+        "docs/landing/assets/doc-bridge-hero.webp",
+        "docs/landing/assets/doc-bridge-two-way.webp",
+        "docs/landing/assets/doc-bridge-surfaces.webp"
+      ],
+      "diagrams": [
+        {
+          "path": "docs/spec/documentation-standard-v1.md",
+          "contains": ["```mermaid"]
+        }
+      ]
+    }
   }
 }

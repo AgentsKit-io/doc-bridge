@@ -10,6 +10,11 @@ export {
   DocBridgeConfigV1Schema,
   AgentCorpusConfigSchema,
   HumanCorpusConfigSchema,
+  DocumentationStandardRuleIdSchema,
+  DocumentationStandardV1ConfigSchema,
+  ConformanceConfigSchema,
   type DocBridgeConfigV1,
   type AgentCorpusConfig,
+  type DocumentationStandardRuleId,
+  type DocumentationStandardV1Config,
 } from './schema.js'

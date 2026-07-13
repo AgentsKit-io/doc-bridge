@@ -4,6 +4,11 @@ import { createInterface } from 'node:readline/promises'
 
 import { loadConfig, projectRootFromConfigPath } from '../config/load-config.js'
 import type { DocBridgeConfigV1 } from '../config/schema.js'
+import {
+  DOCUMENTATION_STANDARD_V1_ID,
+  formatDocumentationStandardText,
+  runDocumentationStandardV1,
+} from '../conformance/documentation-standard-v1.js'
 import { buildDocBridgeIndex } from '../index-builder/build-index.js'
 import { discoverPnpmPackages } from '../index-builder/plugins/pnpm-monorepo.js'
 import { scanHumanDocRecords } from '../index-builder/human-adapters/index.js'
@@ -55,6 +60,7 @@ type Command =
   | 'chat'
   | 'rag'
   | 'list'
+  | 'conformance'
 
 const usage = `ak-docs — human↔agent documentation bridge (@agentskit/doc-bridge)
 
@@ -68,6 +74,7 @@ Core (no API key):
   ak-docs list <packages|intents|changes|knowledge> [--text]
   ak-docs ask [question]          local consult (no LLM)
   ak-docs gate run [gate-id]
+  ak-docs conformance run documentation-standard-v1 [--text]
   ak-docs mcp
   ak-docs mcp install --cursor | --claude
   ak-docs memory ingest|classify|promote [--pr] [--dry-run]
@@ -92,7 +99,13 @@ Global flags:
 
 const QUERY_KINDS = new Set<QueryKind>(['package', 'ownership', 'intent', 'change', 'search'])
 const LIST_KINDS = new Set(['packages', 'intents', 'changes', 'knowledge'])
-const GATE_IDS = new Set<GateId>(['index-freshness', 'human-guide-links', 'okf-type', 'docs-style'])
+const GATE_IDS = new Set<GateId>([
+  'index-freshness',
+  'human-guide-links',
+  'okf-type',
+  'docs-style',
+  'documentation-standard-v1',
+])
 
 const parseArgs = (argv: readonly string[]) => {
   const flags = new Set<string>()
@@ -136,6 +149,7 @@ const parseArgs = (argv: readonly string[]) => {
   else if (positional[0] === 'chat') command = 'chat'
   else if (positional[0] === 'rag') command = 'rag'
   else if (positional[0] === 'list') command = 'list'
+  else if (positional[0] === 'conformance') command = 'conformance'
 
   return { command, flags, configPath, positional }
 }
@@ -782,12 +796,12 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
     const action = positional[1]
     const gateId = positional[2] as GateId | undefined
     if (action !== 'run') {
-      process.stderr.write('Usage: ak-docs gate run [index-freshness]\n')
+      process.stderr.write('Usage: ak-docs gate run [gate-id]\n')
       return 1
     }
     if (gateId && !GATE_IDS.has(gateId)) {
       process.stderr.write(
-        `Unsupported gate "${gateId}". Supported gates: index-freshness, human-guide-links, okf-type, docs-style\n`,
+        `Unsupported gate "${gateId}". Supported gates: ${[...GATE_IDS].join(', ')}\n`,
       )
       return 1
     }
@@ -796,6 +810,25 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
       const result = runGates(root, config, gateId ? [gateId] : undefined)
       writeJson(result)
       return result.ok ? 0 : 1
+    } catch (error) {
+      process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`)
+      return 1
+    }
+  }
+
+  if (command === 'conformance') {
+    const action = positional[1]
+    const profile = positional[2]
+    if (action !== 'run' || profile !== DOCUMENTATION_STANDARD_V1_ID) {
+      process.stderr.write(`Usage: ak-docs conformance run ${DOCUMENTATION_STANDARD_V1_ID} [--text|--json]\n`)
+      return 1
+    }
+    try {
+      const { config, root } = loadProject(configPath)
+      const report = runDocumentationStandardV1(root, config)
+      if (wantsTextOutput(flags, config)) writeLines(formatDocumentationStandardText(report))
+      else writeJson(report)
+      return report.ok ? 0 : 1
     } catch (error) {
       process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`)
       return 1

@@ -1,14 +1,29 @@
 import { readFileSync } from 'node:fs'
 
 import type { DocBridgeConfigV1 } from '../config/schema.js'
+import {
+  runDocumentationStandardV1,
+  type DocumentationConformanceReportV1,
+} from '../conformance/documentation-standard-v1.js'
 import { buildDocBridgeIndex } from '../index-builder/build-index.js'
 import { scanAgentCorpus } from '../index-builder/scan-corpus.js'
 import { scanHumanDocRecords } from '../index-builder/human-adapters/index.js'
 import { IndexNotFoundError, loadDocBridgeIndex } from '../query/load-index.js'
 
-export type GateId = 'index-freshness' | 'human-guide-links' | 'okf-type' | 'docs-style'
+export type GateId =
+  | 'index-freshness'
+  | 'human-guide-links'
+  | 'okf-type'
+  | 'docs-style'
+  | 'documentation-standard-v1'
 
-const SUPPORTED_GATES = ['index-freshness', 'human-guide-links', 'okf-type', 'docs-style'] as const
+const SUPPORTED_GATES = [
+  'index-freshness',
+  'human-guide-links',
+  'okf-type',
+  'docs-style',
+  'documentation-standard-v1',
+] as const
 
 export type GateResult = {
   readonly id: GateId
@@ -16,6 +31,7 @@ export type GateResult = {
   readonly message: string
   readonly expected?: string
   readonly actual?: string
+  readonly details?: DocumentationConformanceReportV1
 }
 
 export type GateRunResult = {
@@ -28,6 +44,19 @@ export const runGate = (
   config: DocBridgeConfigV1,
   id: GateId,
 ): GateResult => {
+  if (id === 'documentation-standard-v1') {
+    const details = runDocumentationStandardV1(root, config)
+    return {
+      id,
+      ok: details.ok,
+      message: details.ok
+        ? 'Documentation Standard v1 required rules pass'
+        : `${details.summary.required.failed} Documentation Standard v1 required rule(s) failed`,
+      expected: 'all required rules pass or have approved exceptions',
+      actual: `${details.summary.required.passed} passed, ${details.summary.required.failed} failed, ${details.summary.required.excepted} excepted`,
+      details,
+    }
+  }
   if (id === 'human-guide-links') return runHumanGuideLinksGate(root, config)
   if (id === 'okf-type') return runOkfTypeGate(root, config)
   if (id === 'docs-style') return runDocsStyleGate(root, config)

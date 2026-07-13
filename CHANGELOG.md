@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Features
+- Add the proposed, deterministic `documentation-standard-v1` conformance profile with versioned JSON/text reports, actionable remediation, and auditable approved exceptions.
+- Add `ak-docs conformance run documentation-standard-v1` and opt-in `gate run` integration for CI adoption without model, API-key, or network requirements.
+
 ## 1.0.2
 
 ### Fixes
