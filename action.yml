@@ -18,7 +18,7 @@ inputs:
     required: false
     default: '22'
   package-version:
-    description: npm package version pin (e.g. 0.1.0-alpha.3)
+    description: npm package version pin (e.g. 1.1.0)
     required: false
     default: ''
 

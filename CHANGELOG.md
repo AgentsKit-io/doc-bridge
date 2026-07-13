@@ -1,16 +1,15 @@
 # Changelog
 
-## Unreleased
+## 1.1.0
 
-### Features
-- Add the stable, HITL-approved, deterministic `documentation-standard-v1` conformance profile with versioned JSON/text reports, actionable remediation, and auditable approved exceptions.
-- Add `ak-docs conformance run documentation-standard-v1` and opt-in `gate run` integration for CI adoption without model, API-key, or network requirements.
-- Validate that `llms.txt` exactly matches current deterministic generator output and that local ecosystem manifest/claims snapshots agree with declared cross-links.
-- Emit explicit diagnostics for reserved gate IDs, contain documentation scans inside the project root, statically parse JS/TS configs and Docusaurus sidebars without code execution, bound corpus/evidence reads, and verify canonical ecosystem snapshots against upstream in CI.
+### Minor Changes
+
+- Add the stable, HITL-approved Documentation Standard v1 deterministic conformance profile, CLI command, reports, remediation, explicit approved exceptions, generated llms.txt freshness checks, and canonical ecosystem manifest/claims validation.
 
 ## 1.0.2
 
 ### Fixes
+
 - Sync `ak-docs --version`, MCP `serverInfo.version`, and capabilities version from `package.json` during build/release.
 - Allow `ak-docs query <id> --agent` as a shortcut for package/ownership handoff lookup.
 - Packaged smoke now verifies installed CLI version.
@@ -18,6 +17,7 @@
 ## 1.0.1
 
 ### Fixes
+
 - Hardened release validation with coverage for Layer 1 CLI, RAG/chat wrappers, MCP install, package-manager checks, watcher, markdown/glob helpers, and packaged/docsite smoke paths.
 - Fixed provider API-key defaults for optional AgentsKit intelligence adapters.
 - Replaced publish-time `pnpm build` hooks with `npm run build` for npm-friendly packing.
@@ -27,11 +27,13 @@
 **Stable** — doctor, CI gate, MCP install, and agent skill are boring-reliable. Tier C polish ships.
 
 ### Features
+
 - **Landing** — `docs/landing/index.html` deployed to GitHub Pages (`https://agentskit-io.github.io/doc-bridge/`)
 - **Playbook pattern** — published `docs/playbook/doc-bridge-pattern.md` + `ak-docs playbook pattern [--text]`
 - **Used by** — public AgentsKit surfaces cited on landing (for-agents, Registry, Playbook)
 
 ### Stable criteria met
+
 - 60s demo path (`ak-docs demo`)
 - Doctor coverage score + badges
 - GitHub Action `doc-bridge-gate` + repo dogfood CI
@@ -39,6 +41,7 @@
 - Memory promote → draft PR, index `--watch`, Ollama smoke (optional)
 
 ### Breaking changes from alpha
+
 - None intended for Layer 0 config/handoff schemas (still `schemaVersion: 1`)
 - Pin `@v1.0.0` for GitHub Action instead of alpha tags
 
@@ -47,6 +50,7 @@
 Tier B — power-user workflows and production pipeline polish.
 
 ### Features
+
 - **`ak-docs memory promote --pr`** — draft file + `gh pr create --draft` (with `--dry-run`, `--force`)
 - **`ak-docs index --watch`** — debounced rebuild on agent/human doc changes
 - **`ak-docs doctor --badge`** / **`--write-badge`** — shields.io markdown + `.doc-bridge/coverage-badge.json`
@@ -59,6 +63,7 @@ Tier B — power-user workflows and production pipeline polish.
 Activation and agent-adoption polish — from "works" to "wow in 60s".
 
 ### Features
+
 - **`ak-docs demo`** — bundled example/monorepo fixtures; before/after handoff, gate red→green, MCP snippet (no local config)
 - **`ak-docs doctor`** — coverage score 0–100, missing agentDoc/humanDoc, gate status, next actions
 - **`ak-docs mcp install --cursor | --claude`** — writes MCP server config
@@ -73,6 +78,7 @@ Activation and agent-adoption polish — from "works" to "wow in 60s".
 Dogfood round-2 fixes (search ranking, full-text body, peers, federation soft-fail).
 
 ### Fixes
+
 - **Search ranking:** exact id / basename boost; ownership preferred for routing questions; path dedupe
 - **Full-text search:** knowledge entries store `body` excerpt; descriptions prefer frontmatter `purpose` and complete sentences
 - **ask:** next command prefers ownership match over knowledge-only
@@ -86,6 +92,7 @@ Dogfood round-2 fixes (search ranking, full-text body, peers, federation soft-fa
 Dogfood-driven polish after ecosystem install on agentskit, agentskit-os, playbook, and registry.
 
 ### Fixes / features
+
 - **Package-manager-aware checks** — pnpm/yarn/npm/bun; `pnpm --filter <pkg>` in workspaces
 - **Corpus ownership inference** — `packages/<id>.md`, pillars patterns, registry READMEs (toggle `routing.options.ownershipFromCorpus`)
 - **Richer `guessAgentDocForPackage`** — packages/id, index.md, mdx, for-agents top-level
