@@ -21,7 +21,7 @@ pnpm changeset          # if new entry needed
 pnpm version-packages   # bumps package.json + CHANGELOG from .changeset/*
 ```
 
-Current track: **`1.0.2` stable** (alpha series ended at `0.1.0-alpha.5`).
+Current track: **`1.1.0` stable** (alpha series ended at `0.1.0-alpha.5`).
 
 ## Publish (npm)
 
@@ -43,15 +43,15 @@ Confirm:
 
 ```bash
 npm view @agentskit/doc-bridge version
-npx ak-docs@0.1.0-alpha.x --version
+npx ak-docs@1.1.0 --version
 ```
 
 ## GitHub
 
 ```bash
-git tag v1.0.2
+git tag v1.1.0
 git push origin master --tags
-gh release create v1.0.2 --title "v1.0.2 — AgentHandoff stable" --notes-file CHANGELOG.md
+gh release create v1.1.0 --title "v1.1.0 — Documentation Standard v1" --notes-file CHANGELOG.md
 ```
 
 Enable GitHub Pages (Settings → Pages → GitHub Actions) for landing deploy from `.github/workflows/pages.yml`.
@@ -59,7 +59,7 @@ Enable GitHub Pages (Settings → Pages → GitHub Actions) for landing deploy f
 ## Post-publish smoke (fresh machine)
 
 ```bash
-npm i -D @agentskit/doc-bridge@0.1.0-alpha.x
+npm i -D @agentskit/doc-bridge@1.1.0
 npx ak-docs init
 npx ak-docs index
 npx ak-docs query package example --agent
