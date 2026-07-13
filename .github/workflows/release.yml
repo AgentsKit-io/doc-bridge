@@ -97,6 +97,8 @@ jobs:
           version=$(node -p "require('./package.json').version")
           artifact=$(find artifacts -maxdepth 1 -name '*.tgz' -type f -print -quit)
           test -n "$artifact"
+          artifact="./$artifact"
+          test -f "$artifact"
           if npm view "$name@$version" version 2>/dev/null | grep -Fx "$version"; then
             echo "$name@$version already published; verified and skipped"
           else
