@@ -12,6 +12,7 @@ export {
   HumanCorpusConfigSchema,
   DocumentationStandardRuleIdSchema,
   DocumentationStandardV1ConfigSchema,
+  EcosystemContractEvidenceSchema,
   ConformanceConfigSchema,
   type DocBridgeConfigV1,
   type AgentCorpusConfig,

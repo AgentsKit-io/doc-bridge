@@ -1,7 +1,5 @@
-import { readFileSync } from 'node:fs'
-import { join } from 'node:path'
-
 import type { DocBridgeConfigV1 } from '../config/schema.js'
+import { readBoundedText } from '../lib/bounded-text.js'
 import {
   extractSearchBody,
   firstHeading,
@@ -12,7 +10,7 @@ import {
   slugFromPath,
   type FrontmatterData,
 } from '../lib/markdown.js'
-import { toPosix } from '../lib/paths.js'
+import { containedProjectPath, toPosix } from '../lib/paths.js'
 import { walkFiles } from '../lib/walk.js'
 import type { KnowledgeEntry } from '../schemas/doc-bridge-index.js'
 
@@ -34,14 +32,16 @@ export type OwnershipSeed = {
 const relFromRoot = (root: string, abs: string): string => toPosix(abs.replace(`${toPosix(root)}/`, ''))
 
 export const scanAgentCorpus = (root: string, config: DocBridgeConfigV1): CorpusDoc[] => {
-  const agentRoot = join(root, config.corpus.agent.root)
+  const agentRoot = containedProjectPath(root, config.corpus.agent.root)
+  if (!agentRoot) throw new Error('Agent corpus root escapes the project root.')
   const files = walkFiles(agentRoot, { extensions: ['.md', '.mdx'] })
   const corpusRelRoot = toPosix(config.corpus.agent.root)
 
+  const budget = { used: 0 }
   return files.map((abs) => {
     const relToCorpus = toPosix(abs.replace(`${toPosix(agentRoot)}/`, ''))
     const relPath = `${corpusRelRoot}/${relToCorpus}`
-    const raw = readFileSync(abs, 'utf8')
+    const raw = readBoundedText(abs, budget)
     const { data: frontmatter } = parseFrontmatter(raw)
     const id =
       frontmatterString(frontmatter, 'id') ??

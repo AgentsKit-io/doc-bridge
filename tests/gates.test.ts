@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import { applyConfigDefaults } from '../src/config/defaults.js'
 import { DocBridgeConfigV1Schema } from '../src/config/schema.js'
@@ -44,6 +44,16 @@ describe('gates', () => {
       'index-freshness',
       'okf-type',
     ])
+  })
+
+  it('preserves reserved v1 gate ids with an explicit diagnostic', () => {
+    const config = DocBridgeConfigV1Schema.parse({ ...loadFixtureConfig(), gates: { include: ['link-rot'] } })
+    const emitWarning = vi.spyOn(process, 'emitWarning').mockImplementation(() => undefined)
+    expect(resolveGateIds(config)).toEqual(['index-freshness'])
+    expect(emitWarning).toHaveBeenCalledWith(expect.stringContaining('link-rot'), {
+      code: 'AK_DOCS_RESERVED_GATE',
+    })
+    emitWarning.mockRestore()
   })
 
   it('runs the configured supported gates when no explicit id is passed', () => {

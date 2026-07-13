@@ -290,6 +290,14 @@ export const DocumentationQuickstartEvidenceSchema = z
   })
   .strict()
 
+export const EcosystemContractEvidenceSchema = z
+  .object({
+    manifest: z.string().min(1).max(512),
+    claims: z.string().min(1).max(512),
+    productId: z.string().regex(/^[a-z][a-z0-9-]*$/).max(128),
+  })
+  .strict()
+
 export const DocumentationStandardRuleIdSchema = z.enum([
   'human-docs',
   'llms-and-raw-source',
@@ -320,6 +328,7 @@ export const DocumentationStandardV1ConfigSchema = z
     quickstarts: z.array(DocumentationQuickstartEvidenceSchema).max(32).optional(),
     visuals: z.array(z.string().min(1).max(512)).max(64).optional(),
     diagrams: z.array(DocumentationEvidenceFileSchema).max(32).optional(),
+    ecosystemContract: EcosystemContractEvidenceSchema.optional(),
     exceptions: z.array(DocumentationStandardExceptionSchema).max(32).optional(),
   })
   .strict()

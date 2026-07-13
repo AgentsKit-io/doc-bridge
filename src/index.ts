@@ -9,8 +9,12 @@ export {
 } from './config/load-config.js'
 export {
   DocBridgeConfigV1Schema,
+  DocumentationStandardRuleIdSchema,
+  DocumentationStandardV1ConfigSchema,
+  EcosystemContractEvidenceSchema,
   type DocBridgeConfigV1,
   type AgentCorpusConfig,
+  type DocumentationStandardV1Config,
 } from './config/schema.js'
 
 export {

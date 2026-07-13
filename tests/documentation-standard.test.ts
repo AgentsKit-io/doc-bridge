@@ -1,6 +1,6 @@
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { join, relative } from 'node:path'
 
 import { afterEach, describe, expect, it } from 'vitest'
 
@@ -12,6 +12,7 @@ import {
 } from '../src/conformance/documentation-standard-v1.js'
 import { runGates } from '../src/gates/run-gates.js'
 import { buildDocBridgeIndex } from '../src/index-builder/build-index.js'
+import { renderLlmsTxt } from '../src/index-builder/llms-txt.js'
 
 const tempDirs: string[] = []
 
@@ -36,6 +37,8 @@ const fixture = (): { root: string; config: DocBridgeConfigV1 } => {
   writeFileSync(join(root, 'docs/architecture.md'), '# Architecture\n\n```mermaid\nflowchart LR\n```\n')
   writeFileSync(join(root, 'docs/assets/overview.webp'), 'visual')
   writeFileSync(join(root, 'tests/quickstart.test.ts'), "it('runs quickstart', () => runDemo())\n")
+  writeFileSync(join(root, 'ecosystem.json'), readFileSync(join(import.meta.dirname, '..', 'ecosystem.json')))
+  writeFileSync(join(root, 'ecosystem-claims.json'), readFileSync(join(import.meta.dirname, '..', 'ecosystem-claims.json')))
 
   const config = applyConfigDefaults(
     DocBridgeConfigV1Schema.parse({
@@ -65,6 +68,11 @@ const fixture = (): { root: string; config: DocBridgeConfigV1 } => {
           contributionPaths: ['CONTRIBUTING.md'],
           metadata: [{ path: 'docs/index.html', contains: ['<title>', 'name="description"'] }],
           links: [{ url: 'https://www.agentskit.io', paths: ['README.md'] }],
+          ecosystemContract: {
+            manifest: 'ecosystem.json',
+            claims: 'ecosystem-claims.json',
+            productId: 'doc-bridge',
+          },
           quickstarts: [{
             id: 'demo',
             doc: 'README.md',
@@ -96,7 +104,7 @@ describe('Documentation Standard v1', () => {
     expect(first).toEqual(second)
     expect(first).toMatchObject({
       schemaVersion: 1,
-      profile: { id: 'documentation-standard-v1', version: 1, status: 'proposed' },
+      profile: { id: 'documentation-standard-v1', version: 1, status: 'stable' },
       ok: true,
       recommendedOk: true,
       summary: {
@@ -155,6 +163,101 @@ describe('Documentation Standard v1', () => {
     )
     expect(result).toMatchObject({ status: 'fail' })
     expect(result?.evidence).toHaveLength(1)
+  })
+
+  it('fails when llms.txt differs from the deterministic generated output', () => {
+    const { root, config } = fixture()
+    writeFileSync(join(root, 'llms.txt'), '# Hand-written and stale\n')
+
+    const result = runDocumentationStandardV1(root, config).results.find(
+      (candidate) => candidate.id === 'llms-and-raw-source',
+    )
+    expect(result).toMatchObject({ status: 'fail' })
+    expect(result?.evidence[0]?.detail).toContain('stale')
+  })
+
+  it('fails when ecosystem links drift from the canonical manifest and claims ledger', () => {
+    const { root, config } = fixture()
+    const manifest = JSON.parse(readFileSync(join(root, 'ecosystem.json'), 'utf8')) as {
+      products: Array<{ id: string; surfaces: { home?: string } }>
+      properties: Array<{ id: string; url: string; domain: string }>
+    }
+    const agentskit = manifest.products.find((product) => product.id === 'agentskit')
+    const legacyAgentskit = manifest.properties.find((product) => product.id === 'agentskit')
+    if (!agentskit || !legacyAgentskit) throw new Error('Invalid test fixture')
+    agentskit.surfaces.home = 'https://example.com'
+    legacyAgentskit.url = 'https://example.com'
+    legacyAgentskit.domain = 'example.com'
+    writeFileSync(join(root, 'ecosystem.json'), JSON.stringify(manifest))
+
+    const result = runDocumentationStandardV1(root, config).results.find(
+      (candidate) => candidate.id === 'cross-links',
+    )
+    expect(result).toMatchObject({ status: 'fail' })
+    expect(result?.evidence.some((item) => item.detail.includes('absent from the canonical'))).toBe(true)
+  })
+
+  it('rejects structurally incomplete canonical ecosystem snapshots', () => {
+    const { root, config } = fixture()
+    writeFileSync(join(root, 'ecosystem-claims.json'), JSON.stringify({
+      schemaVersion: 1,
+      manifestSchemaVersion: 2,
+      products: [{ productId: 'doc-bridge', claims: [] }],
+    }))
+
+    const result = runDocumentationStandardV1(root, config).results.find(
+      (candidate) => candidate.id === 'cross-links',
+    )
+    expect(result).toMatchObject({ status: 'fail' })
+  })
+
+  it('rejects whitespace-only canonical contract strings', () => {
+    const { root, config } = fixture()
+    const manifest = JSON.parse(readFileSync(join(root, 'ecosystem.json'), 'utf8')) as {
+      parentBrand: { name: string }
+    }
+    manifest.parentBrand.name = '   '
+    writeFileSync(join(root, 'ecosystem.json'), JSON.stringify(manifest))
+    const result = runDocumentationStandardV1(root, config).results.find(
+      (candidate) => candidate.id === 'cross-links',
+    )
+    expect(result).toMatchObject({ status: 'fail' })
+  })
+
+  it('bounds text evidence reads and rejects non-file visual evidence', () => {
+    const { root, config } = fixture()
+    writeFileSync(join(root, 'docs/index.html'), Buffer.alloc(4 * 1_024 * 1_024 + 1, 65))
+    const standard = config.conformance?.documentationStandardV1
+    const bounded = DocBridgeConfigV1Schema.parse({
+      ...config,
+      conformance: {
+        documentationStandardV1: { ...standard, visuals: ['docs/assets'] },
+      },
+    })
+
+    const report = runDocumentationStandardV1(root, bounded)
+    expect(report.results.find((result) => result.id === 'metadata')?.evidence[0]?.detail).toContain('exceeds')
+    expect(report.results.find((result) => result.id === 'visual-explanations')?.evidence[0]?.detail).toBe(
+      'Path is not a regular file.',
+    )
+  })
+
+  it('rejects an agent corpus file above the per-file budget', () => {
+    const { root, config } = fixture()
+    writeFileSync(join(root, 'agent-docs/INDEX.md'), Buffer.alloc(4 * 1_024 * 1_024 + 1, 65))
+    expect(() => runDocumentationStandardV1(root, config)).toThrow('exceeds')
+  })
+
+  it('rejects an agent corpus root outside the project', () => {
+    const { root, config } = fixture()
+    const outside = mkdtempSync(join(tmpdir(), 'ak-docs-agent-outside-'))
+    tempDirs.push(outside)
+    writeFileSync(join(outside, 'INDEX.md'), '# Outside')
+    const escaped = DocBridgeConfigV1Schema.parse({
+      ...config,
+      corpus: { ...config.corpus, agent: { ...config.corpus.agent, root: relative(root, outside) } },
+    })
+    expect(() => runDocumentationStandardV1(root, escaped)).toThrow('escapes')
   })
 
   it('keeps recommended failures visible without failing required conformance', () => {
@@ -240,14 +343,16 @@ describe('Documentation Standard v1', () => {
       DocBridgeConfigV1Schema.parse(JSON.parse(readFileSync(join(root, 'doc-bridge.config.json'), 'utf8'))),
     )
     const llmsPath = join(root, config.index?.llmsTxt?.outFile ?? 'llms.txt')
-    const removeGeneratedLlms = !existsSync(llmsPath)
-    if (removeGeneratedLlms) writeFileSync(llmsPath, '# Doc Bridge\n\nGenerated test evidence.\n')
+    const originalLlms = existsSync(llmsPath) ? readFileSync(llmsPath, 'utf8') : undefined
+    const generated = buildDocBridgeIndex({ root, config, write: false }).index
+    writeFileSync(llmsPath, renderLlmsTxt(config, generated.knowledge, generated.project?.name ?? 'project'))
     try {
       const report = runDocumentationStandardV1(root, config)
       expect(report.ok).toBe(true)
       expect(report.recommendedOk).toBe(true)
     } finally {
-      if (removeGeneratedLlms) unlinkSync(llmsPath)
+      if (originalLlms === undefined) unlinkSync(llmsPath)
+      else writeFileSync(llmsPath, originalLlms)
     }
   })
 })

@@ -1,7 +1,9 @@
 # Documentation Standard v1
 
-Status: **proposed — HITL approval required before stable publication**  
-Profile ID: `documentation-standard-v1`  
+Status: **stable — HITL-approved on 2026-07-13**
+
+Profile ID: `documentation-standard-v1`
+
 Schema version: `1`
 
 Documentation Standard v1 is a deterministic Doc Bridge conformance profile for
@@ -26,11 +28,11 @@ flowchart LR
 | Rule | Level | Passing evidence |
 |---|---|---|
 | `human-docs` | Required | A configured human adapter discovers at least one non-agent document |
-| `llms-and-raw-source` | Required | Generated `llms.txt` and every declared raw source exist and are non-empty |
+| `llms-and-raw-source` | Required | `llms.txt` exactly matches the current deterministic Doc Bridge output and every declared raw source is non-empty |
 | `agent-handoffs` | Required | Every emitted handoff has `startHere`, edit roots, checks, and a linked/external human bridge |
 | `contribution` | Required | At least one declared contribution guide exists and is non-empty |
 | `metadata` | Required | Declared metadata files exist and contain every configured marker |
-| `cross-links` | Required | Every declared ecosystem URL occurs in at least one declared source file |
+| `cross-links` | Required | Vendored canonical manifest/claims snapshots agree, include this product, and every declared URL is canonical and occurs in source |
 | `tested-quickstarts` | Required | Each quickstart maps a doc to a test file, identifying test markers, and a CI command |
 | `visual-explanations` | Recommended | Every declared image or animation asset exists |
 | `structured-diagrams` | Recommended | Declared diagram source exists and contains its configured marker |
@@ -68,6 +70,11 @@ The report uses status `excepted`; it never rewrites an exception as an ordinary
       "links": [
         { "url": "https://www.agentskit.io", "paths": ["README.md"] }
       ],
+      "ecosystemContract": {
+        "manifest": "ecosystem.json",
+        "claims": "ecosystem-claims.json",
+        "productId": "example"
+      },
       "quickstarts": [
         {
           "id": "demo",
@@ -92,6 +99,15 @@ identifying markers prove that the quickstart has a repository test; the normal 
 executes that test. This avoids turning documentation configuration into an arbitrary
 command-execution surface.
 
+The ecosystem contract files are committed, network-free consumer snapshots of the canonical
+AgentsKit `ecosystem.json` v2 manifest and `ecosystem-claims.json` ledger. The gate verifies
+their schema relationship, product identity parity, the adopting product ID, and that declared
+cross-links occur both in the manifest's public surfaces and in repository documentation.
+Doc Bridge also records the upstream ref and SHA-256 digests in `ecosystem-upstream.json`;
+`pnpm check:ecosystem-upstream` compares the local snapshots with AgentsKit `main` in CI.
+This network parity check is deliberately separate from the runtime conformance profile, which
+remains deterministic and offline.
+
 ## Run the profile
 
 ```bash
@@ -108,7 +124,8 @@ and 1 when a required rule fails.
 
 The Doc Bridge repository is the first real fixture and dogfoods the profile in its normal
 `ak-docs gate run`. Other ecosystem repositories adopt it in their documentation slices.
-The rule set remains `proposed` until HITL approval is recorded in
-[issue #27](https://github.com/AgentsKit-io/doc-bridge/issues/27). Stable publication also
-waits for the canonical ecosystem contract in
-[AgentsKit #1200](https://github.com/AgentsKit-io/agentskit/issues/1200).
+The required/recommended rule split received product-owner HITL approval in
+[issue #27](https://github.com/AgentsKit-io/doc-bridge/issues/27), and the canonical ecosystem
+contract was delivered by
+[AgentsKit #1208](https://github.com/AgentsKit-io/agentskit/pull/1208). The profile is stable;
+future breaking rule changes require a new version.

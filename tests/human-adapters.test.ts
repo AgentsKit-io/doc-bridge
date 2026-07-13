@@ -1,7 +1,7 @@
 import { mkdirSync, symlinkSync, writeFileSync } from 'node:fs'
 import { mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { join, relative } from 'node:path'
 
 import { describe, expect, it } from 'vitest'
 
@@ -38,6 +38,39 @@ describe('human doc adapters', () => {
     }
 
     expect(scanHumanDocRecords(root, config)).toEqual([])
+  })
+
+  it('does not scan a human corpus outside the project root', () => {
+    const root = mkdtempSync(join(tmpdir(), 'ak-docs-contained-human-'))
+    const outside = mkdtempSync(join(tmpdir(), 'ak-docs-outside-human-'))
+    writeFileSync(join(outside, 'secret.md'), '# Outside documentation')
+    const config: DocBridgeConfigV1 = {
+      schemaVersion: 1,
+      corpus: {
+        agent: { root: 'agent-docs' },
+        human: { plugin: 'plain-markdown', options: { root: relative(root, outside) } },
+      },
+    }
+
+    expect(scanHumanDocRecords(root, config)).toEqual([])
+  })
+
+  it('does not follow nested directory symlinks outside the project root', () => {
+    const root = mkdtempSync(join(tmpdir(), 'ak-docs-nested-symlink-human-'))
+    const outside = mkdtempSync(join(tmpdir(), 'ak-docs-nested-outside-human-'))
+    mkdirSync(join(root, 'human-docs'), { recursive: true })
+    writeFileSync(join(root, 'human-docs/inside.md'), '# Inside')
+    writeFileSync(join(outside, 'outside.md'), '# Outside')
+    symlinkSync(outside, join(root, 'human-docs/external'), 'dir')
+    const config: DocBridgeConfigV1 = {
+      schemaVersion: 1,
+      corpus: {
+        agent: { root: 'agent-docs' },
+        human: { plugin: 'plain-markdown', options: { root: 'human-docs' } },
+      },
+    }
+
+    expect(scanHumanDocRecords(root, config).map((doc) => doc.id)).toEqual(['inside'])
   })
 
   it('honors Docusaurus slug and id frontmatter', () => {
@@ -166,6 +199,89 @@ describe('human doc adapters', () => {
     }
 
     expect(scanHumanDocRecords(root, config).map((doc) => doc.id)).toEqual(['guide/hello'])
+  })
+
+  it('extracts Docusaurus sidebars without executing JavaScript', () => {
+    const root = mkdtempSync(join(tmpdir(), 'ak-docs-docusaurus-static-'))
+    mkdirSync(join(root, 'website/docs/guide'), { recursive: true })
+    writeFileSync(join(root, 'website/docs/guide/hello.md'), '# Hello')
+    writeFileSync(
+      join(root, 'website/sidebars.js'),
+      [
+        'this.constructor.constructor("return process")().env.AK_DOCS_SIDEBAR_EXECUTED = "yes"',
+        'module.exports = { tutorialSidebar: [{ type: "doc", id: "guide/hello" }] }',
+      ].join('\n'),
+    )
+    delete process.env.AK_DOCS_SIDEBAR_EXECUTED
+    const config: DocBridgeConfigV1 = {
+      schemaVersion: 1,
+      corpus: {
+        agent: { root: 'agent-docs' },
+        human: { plugin: 'docusaurus', options: {
+          docsDir: 'website/docs', sidebarsFile: 'website/sidebars.js',
+        } },
+      },
+    }
+
+    expect(scanHumanDocRecords(root, config).map((doc) => doc.id)).toEqual(['guide/hello'])
+    expect(process.env.AK_DOCS_SIDEBAR_EXECUTED).toBeUndefined()
+  })
+
+  it('ignores commented sidebar entries and rejects dynamic composition', () => {
+    const root = mkdtempSync(join(tmpdir(), 'ak-docs-docusaurus-comments-'))
+    mkdirSync(join(root, 'website/docs/guide'), { recursive: true })
+    writeFileSync(join(root, 'website/docs/guide/hello.md'), '# Hello')
+    writeFileSync(join(root, 'website/docs/guide/private.md'), '# Private')
+    const sidebar = join(root, 'website/sidebars.js')
+    writeFileSync(sidebar, [
+      '// id: "guide/private"',
+      'module.exports = { tutorialSidebar: [{ type: "doc", id: "guide/hello" }] }',
+    ].join('\n'))
+    const config: DocBridgeConfigV1 = {
+      schemaVersion: 1,
+      corpus: {
+        agent: { root: 'agent-docs' },
+        human: { plugin: 'docusaurus', options: {
+          docsDir: 'website/docs', sidebarsFile: 'website/sidebars.js',
+        } },
+      },
+    }
+    expect(scanHumanDocRecords(root, config).map((doc) => doc.id)).toEqual(['guide/hello'])
+
+    writeFileSync(sidebar, [
+      'const helper = { items: ["guide/private"] }',
+      'const sidebars = { tutorialSidebar: [{ type: "doc", id: "guide/hello" }] }',
+      'export default sidebars',
+    ].join('\n'))
+    expect(scanHumanDocRecords(root, config).map((doc) => doc.id)).toEqual(['guide/hello'])
+
+    writeFileSync(sidebar, [
+      'const fake = `module.exports = { items: ["guide/private"] }`',
+      'const marker = /export default \\{ items: \\["guide\\/private"\\] \\}/',
+      'function ignored() { return /module.exports = \\{ items: \\["guide\\/private"\\] \\}/ }',
+      'function alsoIgnored() { throw /export default \\{ items: \\["guide\\/private"\\] \\}/ }',
+      'const sidebars = { tutorialSidebar: [{ type: "doc", id: "guide/hello" }] }',
+      'module.exports = sidebars',
+    ].join('\n'))
+    expect(scanHumanDocRecords(root, config).map((doc) => doc.id)).toEqual(['guide/hello'])
+
+    writeFileSync(sidebar, 'module.exports = buildSidebar()')
+    expect(() => scanHumanDocRecords(root, config)).toThrow('static object')
+  })
+
+  it('rejects a human documentation file above the per-file budget', () => {
+    const root = mkdtempSync(join(tmpdir(), 'ak-docs-large-human-'))
+    mkdirSync(join(root, 'human-docs'), { recursive: true })
+    writeFileSync(join(root, 'human-docs/huge.md'), Buffer.alloc(4 * 1_024 * 1_024 + 1, 65))
+    const config: DocBridgeConfigV1 = {
+      schemaVersion: 1,
+      corpus: {
+        agent: { root: 'agent-docs' },
+        human: { plugin: 'plain-markdown', options: { root: 'human-docs' } },
+      },
+    }
+
+    expect(() => scanHumanDocRecords(root, config)).toThrow('exceeds')
   })
 
   it('skips Fumadocs dot files used as private MDX partials', () => {

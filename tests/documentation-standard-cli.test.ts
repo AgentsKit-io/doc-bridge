@@ -1,4 +1,4 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
@@ -51,6 +51,8 @@ describe('documentation conformance CLI', () => {
     writeFileSync(join(root, 'docs/architecture.md'), '```mermaid\nflowchart LR\n```\n')
     writeFileSync(join(root, 'docs/assets/overview.webp'), 'visual')
     writeFileSync(join(root, 'tests/demo.test.ts'), "it('runs demo', () => {})\n")
+    writeFileSync(join(root, 'ecosystem.json'), readFileSync(join(projectRoot, 'ecosystem.json')))
+    writeFileSync(join(root, 'ecosystem-claims.json'), readFileSync(join(projectRoot, 'ecosystem-claims.json')))
     const configPath = join(root, 'doc-bridge.config.json')
     writeFileSync(configPath, JSON.stringify({
       schemaVersion: 1,
@@ -66,6 +68,9 @@ describe('documentation conformance CLI', () => {
         contributionPaths: ['CONTRIBUTING.md'],
         metadata: [{ path: 'docs/index.html', contains: ['<title>'] }],
         links: [{ url: 'https://www.agentskit.io', paths: ['README.md'] }],
+        ecosystemContract: {
+          manifest: 'ecosystem.json', claims: 'ecosystem-claims.json', productId: 'doc-bridge',
+        },
         quickstarts: [{
           id: 'demo', doc: 'README.md', test: 'tests/demo.test.ts',
           command: 'pnpm vitest run tests/demo.test.ts', testContains: ['runs demo'],
@@ -81,7 +86,7 @@ describe('documentation conformance CLI', () => {
     ]))
     expect(text.code).toBe(0)
     expect(text.err).toBe('')
-    expect(text.out).toContain('Documentation Standard v1 (proposed)')
+    expect(text.out).toContain('Documentation Standard v1 (stable)')
     expect(text.out).toContain('PASS [required] tested-quickstarts')
 
     const json = capture(() => runCli([

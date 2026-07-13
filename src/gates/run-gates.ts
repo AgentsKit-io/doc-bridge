@@ -17,13 +17,7 @@ export type GateId =
   | 'docs-style'
   | 'documentation-standard-v1'
 
-const SUPPORTED_GATES = [
-  'index-freshness',
-  'human-guide-links',
-  'okf-type',
-  'docs-style',
-  'documentation-standard-v1',
-] as const
+const RESERVED_GATE_IDS = new Set(['link-rot', 'routing-currency', 'bootstrap-size'])
 
 export type GateResult = {
   readonly id: GateId
@@ -293,10 +287,16 @@ export const resolveGateIds = (config: DocBridgeConfigV1): GateId[] => {
   )
 
   for (const id of config.gates?.include ?? []) {
-    if (SUPPORTED_GATES.includes(id as GateId)) ids.add(id as GateId)
+    if (RESERVED_GATE_IDS.has(id)) {
+      process.emitWarning(`Gate "${id}" is reserved and has no runtime implementation; it was not executed.`, {
+        code: 'AK_DOCS_RESERVED_GATE',
+      })
+      continue
+    }
+    ids.add(id as GateId)
   }
   for (const id of config.gates?.exclude ?? []) {
-    if (SUPPORTED_GATES.includes(id as GateId)) ids.delete(id as GateId)
+    if (!RESERVED_GATE_IDS.has(id)) ids.delete(id as GateId)
   }
 
   return [...ids]

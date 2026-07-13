@@ -47,6 +47,11 @@
         { "url": "https://akos.agentskit.io", "paths": ["README.md"] },
         { "url": "https://github.com/AgentsKit-io/code-review-cli", "paths": ["README.md"] }
       ],
+      "ecosystemContract": {
+        "manifest": "ecosystem.json",
+        "claims": "ecosystem-claims.json",
+        "productId": "doc-bridge"
+      },
       "quickstarts": [
         {
           "id": "demo",

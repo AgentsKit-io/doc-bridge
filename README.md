@@ -92,7 +92,7 @@ ak-docs mcp install --cursor   # wires MCP into .cursor/mcp.json
 | **CLI** | Inspect ownership, search docs, run gates, ask local questions | `ak-docs query`, `search`, `ask`, `doctor`, `gate` |
 | **MCP server** | Let Cursor, Claude Code, Codex-style agents resolve handoffs before editing | `ak-docs mcp`, `handoff.resolve` |
 | **GitHub Action / CI** | Fail stale indexes and broken human-doc links on PRs | `AgentsKit-io/doc-bridge@v1.0.2` |
-| **Documentation conformance** | Check the proposed ecosystem standard with auditable evidence | `ak-docs conformance run documentation-standard-v1 --text` |
+| **Documentation conformance** | Check the stable ecosystem standard with auditable evidence | `ak-docs conformance run documentation-standard-v1 --text` |
 | **Doc adapters** | Link human docs to agent docs | `fumadocs`, `docusaurus`, `plain-markdown` |
 | **Monorepo routing** | Discover workspaces and checks | `pnpm-monorepo` |
 | **Memory pipeline** | Turn agent notes into reviewable documentation drafts | `memory ingest`, `classify`, `promote --pr` |

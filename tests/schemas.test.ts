@@ -5,6 +5,7 @@ import { join } from 'node:path'
 
 import { defineConfig } from '../src/config/define-config.js'
 import { loadConfig, resolveProjectRoot } from '../src/config/load-config.js'
+import { parseStaticJsObject } from '../src/lib/static-js-literal.js'
 import { normalizeAgentHandoff } from '../src/schemas/agent-handoff.js'
 import { DocBridgeJsonSchemas } from '../src/schemas/json-schemas.js'
 import { safeParseAgentHandoff } from '../src/validate.js'
@@ -166,6 +167,33 @@ describe('DocBridgeConfig v1', () => {
     const { config, path } = loadConfig({ cwd: root })
     expect(path.endsWith('doc-bridge.config.ts')).toBe(true)
     expect(config.corpus.agent.index).toBe('agent-docs/INDEX.md')
+  })
+
+  it('loads code configs without executing repository JavaScript', () => {
+    const root = mkdtempSync(join(tmpdir(), 'ak-docs-static-config-'))
+    delete process.env.AK_DOCS_CONFIG_EXECUTED
+    writeFileSync(
+      join(root, 'doc-bridge.config.js'),
+      [
+        'this.constructor.constructor("return process")().env.AK_DOCS_CONFIG_EXECUTED = "yes"',
+        'export default { schemaVersion: 1, corpus: { agent: { root: "agent-docs" } } }',
+      ].join('\n'),
+    )
+
+    expect(loadConfig({ cwd: root }).config.schemaVersion).toBe(1)
+    expect(process.env.AK_DOCS_CONFIG_EXECUTED).toBeUndefined()
+    writeFileSync(join(root, 'doc-bridge.config.js'), 'export default buildConfig()')
+    expect(() => loadConfig({ cwd: root })).toThrow('static')
+  })
+
+  it('parses the supported static JavaScript literal primitives', () => {
+    expect(parseStaticJsObject('/* static */ export default { yes: true, no: false, empty: null, count: -1.5, text: "a\\n" }')).toEqual({
+      yes: true,
+      no: false,
+      empty: null,
+      count: -1.5,
+      text: 'a\n',
+    })
   })
 
   it('reports config loading failures clearly', () => {

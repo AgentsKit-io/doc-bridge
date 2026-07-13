@@ -74,7 +74,7 @@ Core (no API key):
   ak-docs list <packages|intents|changes|knowledge> [--text]
   ak-docs ask [question]          local consult (no LLM)
   ak-docs gate run [gate-id]
-  ak-docs conformance run documentation-standard-v1 [--text]
+  ak-docs conformance run documentation-standard-v1 [--text|--json]
   ak-docs mcp
   ak-docs mcp install --cursor | --claude
   ak-docs memory ingest|classify|promote [--pr] [--dry-run]

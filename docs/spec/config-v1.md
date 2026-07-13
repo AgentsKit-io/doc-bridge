@@ -272,18 +272,17 @@ type GatesConfig = {
         | 'no-stale-wording'
       >
     }
-    'link-rot'?: { scanDirs?: string[] }
   }
 }
 
 type GateId =
   | 'index-freshness'
   | 'human-guide-links'
-  | 'link-rot'
+  | 'link-rot'                    // reserved; emits a diagnostic and is not executed
   | 'okf-type'
   | 'docs-style'
-  | 'routing-currency'             // every workspace package appears in routing
-  | 'bootstrap-size'               // AGENTS.md / CLAUDE.md line budgets
+  | 'routing-currency'            // reserved; emits a diagnostic and is not executed
+  | 'bootstrap-size'              // reserved; emits a diagnostic and is not executed
   | 'documentation-standard-v1'    // opt-in ecosystem documentation profile
 ```
 
@@ -293,7 +292,7 @@ type GateId =
 | `standard` | + `human-guide-links` in v0.1 alpha |
 | `strict` | + `okf-type` in v0.1 alpha |
 
-Implemented gates include `index-freshness`, `human-guide-links`, `link-rot`, `okf-type`, `docs-style`, `routing-currency`, `bootstrap-size`, and the opt-in `documentation-standard-v1`. `include` / `exclude` are applied to implemented gates only.
+Implemented gates include `index-freshness`, `human-guide-links`, `okf-type`, `docs-style`, and the opt-in `documentation-standard-v1`. For v1 compatibility, `link-rot`, `routing-currency`, and `bootstrap-size` remain accepted as reserved IDs; including one emits `AK_DOCS_RESERVED_GATE` and does not claim that the gate ran. Unknown IDs are rejected.
 
 ### Structural vs style validation
 
@@ -331,6 +330,11 @@ type ConformanceConfig = {
     }>
     visuals?: string[]
     diagrams?: Array<{ path: string; contains: string[] }>
+    ecosystemContract?: {
+      manifest: string
+      claims: string
+      productId: string
+    }
     exceptions?: Array<{
       ruleId: DocumentationStandardRuleId
       reason: string
@@ -342,7 +346,7 @@ type ConformanceConfig = {
 ```
 
 See [Documentation Standard v1](documentation-standard-v1.md) for rule semantics,
-report status, commands, and the stable-publication HITL requirement.
+report status, commands, and the recorded stable-publication HITL decision.
 
 ---
 

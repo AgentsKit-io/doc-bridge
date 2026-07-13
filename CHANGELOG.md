@@ -3,8 +3,10 @@
 ## Unreleased
 
 ### Features
-- Add the proposed, deterministic `documentation-standard-v1` conformance profile with versioned JSON/text reports, actionable remediation, and auditable approved exceptions.
+- Add the stable, HITL-approved, deterministic `documentation-standard-v1` conformance profile with versioned JSON/text reports, actionable remediation, and auditable approved exceptions.
 - Add `ak-docs conformance run documentation-standard-v1` and opt-in `gate run` integration for CI adoption without model, API-key, or network requirements.
+- Validate that `llms.txt` exactly matches current deterministic generator output and that local ecosystem manifest/claims snapshots agree with declared cross-links.
+- Emit explicit diagnostics for reserved gate IDs, contain documentation scans inside the project root, statically parse JS/TS configs and Docusaurus sidebars without code execution, bound corpus/evidence reads, and verify canonical ecosystem snapshots against upstream in CI.
 
 ## 1.0.2
 

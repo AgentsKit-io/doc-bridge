@@ -69,7 +69,7 @@ pnpm add -D @agentskit/doc-bridge
 | `ak-docs playbook pattern [--text]` | Export published Doc Bridge Playbook pattern (OKF markdown / JSON) |
 | `ak-docs list <kind> [--text]` | List packages, apps, intents, … |
 | `ak-docs gate run [index-freshness]` | Check generated index freshness |
-| `ak-docs conformance run documentation-standard-v1 [--text\|--json]` | Run the proposed ecosystem documentation profile with evidence and remediation |
+| `ak-docs conformance run documentation-standard-v1 [--text\|--json]` | Run the stable ecosystem documentation profile with evidence and remediation |
 | `ak-docs mcp` | Start MCP server (stdio default) |
 | `ak-docs mcp install --cursor \| --claude` | Write MCP server config for Cursor or Claude Desktop |
 
