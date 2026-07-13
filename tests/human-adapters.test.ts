@@ -1,4 +1,4 @@
-import { mkdirSync, writeFileSync } from 'node:fs'
+import { mkdirSync, symlinkSync, writeFileSync } from 'node:fs'
 import { mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -18,6 +18,22 @@ describe('human doc adapters', () => {
       corpus: {
         agent: { root: 'docs' },
         human: { plugin: 'plain-markdown', options: { root: '.' } },
+      },
+    }
+
+    expect(scanHumanDocRecords(root, config)).toEqual([])
+  })
+
+  it('does not treat a symlink alias of the agent corpus as human documentation', () => {
+    const root = mkdtempSync(join(tmpdir(), 'ak-docs-symlink-human-'))
+    mkdirSync(join(root, 'agent-docs'), { recursive: true })
+    writeFileSync(join(root, 'agent-docs/INDEX.md'), '# Agent docs')
+    symlinkSync(join(root, 'agent-docs'), join(root, 'human-docs'), 'dir')
+    const config: DocBridgeConfigV1 = {
+      schemaVersion: 1,
+      corpus: {
+        agent: { root: 'agent-docs' },
+        human: { plugin: 'plain-markdown', options: { root: 'human-docs' } },
       },
     }
 

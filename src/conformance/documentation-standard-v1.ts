@@ -1,5 +1,5 @@
 import { existsSync, readFileSync, realpathSync } from 'node:fs'
-import { relative, resolve, sep } from 'node:path'
+import { isAbsolute, relative, resolve, sep } from 'node:path'
 
 import type {
   DocBridgeConfigV1,
@@ -67,12 +67,12 @@ const safePath = (root: string, path: string): string | undefined => {
   const rootAbs = realpathSync.native(resolve(root))
   const unresolved = resolve(rootAbs, path)
   const unresolvedRel = relative(rootAbs, unresolved)
-  if (unresolvedRel === '..' || unresolvedRel.startsWith(`..${sep}`)) return undefined
+  if (isAbsolute(unresolvedRel) || unresolvedRel === '..' || unresolvedRel.startsWith(`..${sep}`)) return undefined
   if (!existsSync(unresolved)) return unresolved
   try {
     const abs = realpathSync.native(unresolved)
     const rel = relative(rootAbs, abs)
-    return rel !== '..' && !rel.startsWith(`..${sep}`) ? abs : undefined
+    return !isAbsolute(rel) && rel !== '..' && !rel.startsWith(`..${sep}`) ? abs : undefined
   } catch {
     return undefined
   }
