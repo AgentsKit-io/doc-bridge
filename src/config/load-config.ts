@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { basename, dirname, join, resolve } from 'node:path'
-import vm from 'node:vm'
 
+import { parseStaticJsObject } from '../lib/static-js-literal.js'
 import { applyConfigDefaults } from './defaults.js'
 import { DocBridgeConfigV1Schema, type DocBridgeConfigV1 } from './schema.js'
 
@@ -60,28 +60,18 @@ const parseJsonConfig = (raw: string, path: string): unknown => {
 }
 
 const parseCodeConfig = (raw: string, path: string): unknown => {
-  const code = raw
+  const unsupportedImports = raw
     .replace(/import\s+type\s+[\s\S]*?;?\n/g, '')
     .replace(/import\s+\{\s*defineConfig\s*\}\s+from\s+['"]@agentskit\/doc-bridge(?:\/config)?['"];?\n?/g, '')
-    .replace(/\s+satisfies\s+[A-Za-z0-9_.$<>{}\[\],\s]+(?=\s*(?:;|\)|$))/g, '')
-    .replace(/export\s+default/, 'module.exports.default =')
-
-  if (/\bimport\b/.test(code)) {
+  if (/\bimport\b/.test(unsupportedImports)) {
     throw new Error(`Unsupported import in ${path}. Static config only supports defineConfig imports.`)
   }
-
-  const sandbox = {
-    module: { exports: {} as { default?: unknown } },
-    exports: {},
-    defineConfig: (config: unknown) => config,
-  }
   try {
-    vm.runInNewContext(code, sandbox, { timeout: 250, filename: path })
+    return parseStaticJsObject(raw)
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
     throw new Error(`Failed to load config at ${path}: ${message}`)
   }
-  return sandbox.module.exports.default
 }
 
 const parseConfig = (input: unknown): DocBridgeConfigV1 => {

@@ -1,3 +1,6 @@
+import { realpathSync } from 'node:fs'
+import { resolve, sep } from 'node:path'
+
 import type { DocBridgeConfigV1, HumanCorpusConfig } from '../../config/schema.js'
 import { docusaurusAdapter } from './docusaurus.js'
 import { fumadocsAdapter } from './fumadocs.js'
@@ -18,22 +21,31 @@ const humanConfigs = (config: DocBridgeConfigV1): HumanCorpusConfig[] => {
   return Array.isArray(human) ? human : [human]
 }
 
+const canonicalPath = (path: string): string => {
+  try {
+    return realpathSync.native(path)
+  } catch {
+    return resolve(path)
+  }
+}
+
 export const scanHumanDocRecords = (
   root: string,
   config: DocBridgeConfigV1,
 ): HumanDocRecord[] => {
   const out: HumanDocRecord[] = []
   const seen = new Set<string>()
-  const agentRoot = config.corpus.agent.root.replace(/\/$/, '')
+  const agentRoot = canonicalPath(resolve(root, config.corpus.agent.root))
 
   for (const human of humanConfigs(config)) {
     const adapter = ADAPTERS.find((candidate) => candidate.plugin === human.plugin)
     if (!adapter) continue
     for (const record of adapter.scan({ root, config: human })) {
       // Never treat agent-corpus files as human docs (nested for-agents, etc.)
+      const recordPath = canonicalPath(record.path)
       if (
-        record.path === agentRoot ||
-        record.path.startsWith(`${agentRoot}/`) ||
+        recordPath === agentRoot ||
+        recordPath.startsWith(`${agentRoot}${sep}`) ||
         record.path.includes('/for-agents/') ||
         record.path.endsWith('/for-agents')
       ) {

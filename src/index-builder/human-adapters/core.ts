@@ -1,9 +1,10 @@
-import { readFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { realpathSync } from 'node:fs'
+import { isAbsolute, relative, resolve, sep } from 'node:path'
 
 import type { HumanCorpusConfig } from '../../config/schema.js'
 import { slugFromPath } from '../../lib/markdown.js'
-import { toPosix } from '../../lib/paths.js'
+import { readBoundedText } from '../../lib/bounded-text.js'
+import { containedProjectPath, toPosix } from '../../lib/paths.js'
 import { walkFiles } from '../../lib/walk.js'
 
 export type HumanDocRecord = {
@@ -79,11 +80,17 @@ export const scanMarkdownDocs = (
   },
 ): HumanDocRecord[] => {
   const out: HumanDocRecord[] = []
-  const absRoot = join(root, humanRoot)
+  const projectRoot = realpathSync.native(resolve(root))
+  const absRoot = containedProjectPath(root, humanRoot)
+  if (!absRoot) return out
+  const budget = { used: 0 }
 
   for (const abs of walkFiles(absRoot, { extensions: ['.md', '.mdx'] })) {
+    const canonical = realpathSync.native(abs)
+    const fileRelative = relative(projectRoot, canonical)
+    if (isAbsolute(fileRelative) || fileRelative === '..' || fileRelative.startsWith(`..${sep}`)) continue
     const relToHumanRoot = toPosix(abs.replace(`${toPosix(absRoot)}/`, ''))
-    const raw = readFileSync(abs, 'utf8')
+    const raw = readBoundedText(abs, budget)
     if (options?.includeRelPath && !options.includeRelPath(relToHumanRoot, raw)) continue
     out.push({
       id: options?.idForDoc?.(relToHumanRoot, raw) ?? docId(relToHumanRoot, raw),

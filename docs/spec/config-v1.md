@@ -63,6 +63,9 @@ export default {
 
   /** Optional: Playbook / Registry / remote OKF bundles */
   federation?: FederationConfig
+
+  /** Optional deterministic documentation conformance profiles */
+  conformance?: ConformanceConfig
 } satisfies DocBridgeConfigV1
 ```
 
@@ -248,7 +251,7 @@ Plugins document their join convention; gates fail on orphan links.
 
 ```ts
 type GatesConfig = {
-  preset?: 'minimal' | 'standard' | 'strict'
+  preset?: 'minimal' | 'standard' | 'strict' | 'playbook'
   /** Enabled gate ids; merged with preset */
   include?: GateId[]
   exclude?: GateId[]
@@ -269,18 +272,18 @@ type GatesConfig = {
         | 'no-stale-wording'
       >
     }
-    'link-rot'?: { scanDirs?: string[] }
   }
 }
 
 type GateId =
   | 'index-freshness'
   | 'human-guide-links'
-  | 'link-rot'
+  | 'link-rot'                    // reserved; emits a diagnostic and is not executed
   | 'okf-type'
   | 'docs-style'
-  | 'routing-currency'             // every workspace package appears in routing
-  | 'bootstrap-size'               // AGENTS.md / CLAUDE.md line budgets
+  | 'routing-currency'            // reserved; emits a diagnostic and is not executed
+  | 'bootstrap-size'              // reserved; emits a diagnostic and is not executed
+  | 'documentation-standard-v1'    // opt-in ecosystem documentation profile
 ```
 
 | Preset | Gates |
@@ -289,7 +292,7 @@ type GateId =
 | `standard` | + `human-guide-links` in v0.1 alpha |
 | `strict` | + `okf-type` in v0.1 alpha |
 
-Implemented alpha gates: `index-freshness`, `human-guide-links`, `okf-type`, `docs-style`. `include` / `exclude` are applied to implemented gates only.
+Implemented gates include `index-freshness`, `human-guide-links`, `okf-type`, `docs-style`, and the opt-in `documentation-standard-v1`. For v1 compatibility, `link-rot`, `routing-currency`, and `bootstrap-size` remain accepted as reserved IDs; including one emits `AK_DOCS_RESERVED_GATE` and does not claim that the gate ran. Unknown IDs are rejected.
 
 ### Structural vs style validation
 
@@ -303,6 +306,47 @@ Alpha gates are deterministic lint checks, not editorial grading:
 | `docs-style` | style lint | Opt-in deterministic profile checks for title, purpose, audience, examples, owner/source, task orientation, and stale wording |
 
 `docs-style` supports `google-dev-docs`, `playbook-okf`, and `custom` profiles. It is not part of the default alpha path and does not grade prose quality; it checks for explicit structural signals. LLM critique remains planned optional behavior.
+
+---
+
+## `conformance` (optional)
+
+Documentation Standard v1 is an opt-in, deterministic ecosystem profile. It validates
+repository evidence without executing configured commands or making network/model calls.
+
+```ts
+type ConformanceConfig = {
+  documentationStandardV1?: {
+    rawSources?: string[]
+    contributionPaths?: string[]
+    metadata?: Array<{ path: string; contains: string[] }>
+    links?: Array<{ url: string; paths: string[] }>
+    quickstarts?: Array<{
+      id: string
+      doc: string
+      test: string
+      command: string
+      testContains: string[]
+    }>
+    visuals?: string[]
+    diagrams?: Array<{ path: string; contains: string[] }>
+    ecosystemContract?: {
+      manifest: string
+      claims: string
+      productId: string
+    }
+    exceptions?: Array<{
+      ruleId: DocumentationStandardRuleId
+      reason: string
+      approvedBy: string
+      trackingUrl: string
+    }>
+  }
+}
+```
+
+See [Documentation Standard v1](documentation-standard-v1.md) for rule semantics,
+report status, commands, and the recorded stable-publication HITL decision.
 
 ---
 
@@ -589,6 +633,7 @@ export default defineConfig({
 | `ak-docs search <q>` | `index` |
 | `ak-docs retrieve <q>` | `index` + `federation` |
 | `ak-docs gate run` | `gates` |
+| `ak-docs conformance run documentation-standard-v1` | `corpus`, `routing`, `index`, `conformance` |
 | `ak-docs mcp` | `surfaces.mcp` |
 | `ak-docs chat` | planned; `intelligence.*` |
 | `ak-docs memory ingest` | deterministic local ingest; `MemoryCandidate[]` |

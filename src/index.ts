@@ -9,8 +9,12 @@ export {
 } from './config/load-config.js'
 export {
   DocBridgeConfigV1Schema,
+  DocumentationStandardRuleIdSchema,
+  DocumentationStandardV1ConfigSchema,
+  EcosystemContractEvidenceSchema,
   type DocBridgeConfigV1,
   type AgentCorpusConfig,
+  type DocumentationStandardV1Config,
 } from './config/schema.js'
 
 export {
@@ -75,6 +79,19 @@ export {
   type GateResult,
   type GateRunResult,
 } from './gates/run-gates.js'
+export {
+  DOCUMENTATION_STANDARD_V1_ID,
+  DOCUMENTATION_STANDARD_V1_STATUS,
+  formatDocumentationStandardText,
+  runDocumentationStandardV1,
+  type DocumentationConformanceReportV1,
+  type DocumentationStandardEvidence,
+  type DocumentationStandardRemediation,
+  type DocumentationStandardRuleId,
+  type DocumentationStandardRuleLevel,
+  type DocumentationStandardRuleResult,
+  type DocumentationStandardRuleStatus,
+} from './conformance/documentation-standard-v1.js'
 export { MCP_TOOLS, handleMcpRequest, startMcpStdioServer } from './mcp/server.js'
 export { installMcpConfig, mcpSnippet, type McpInstallResult, type McpInstallTarget } from './mcp/install.js'
 export { runDoctor, formatDoctorText, type DoctorReport, type DoctorIssue, type DoctorCoverage } from './doctor/run-doctor.js'
