@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.1
+
+### Fixes
+
+- Publish stable packages only from immutable tags after security, test, coverage, packaged-smoke, dogfood, and Documentation Standard v1 gates pass.
+- Sync the canonical ecosystem snapshot before release so conformance and cross-product navigation remain current.
+
 ## 1.1.0
 
 ### Minor Changes

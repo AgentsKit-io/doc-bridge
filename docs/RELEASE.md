@@ -4,13 +4,19 @@
 
 ```bash
 pnpm install
+pnpm audit --audit-level low
 pnpm typecheck
+pnpm check:ecosystem-upstream
 pnpm test
+pnpm coverage
 pnpm build
 pnpm smoke:packaged
+node bin/ak-docs.js index
+node bin/ak-docs.js gate run
+node bin/ak-docs.js conformance run documentation-standard-v1 --text
 ```
 
-Expect: packaged smoke prints `packaged smoke passed` and includes demo `query package example --agent`.
+Expect: zero known vulnerabilities, coverage above the repository threshold, packaged smoke prints `packaged smoke passed`, and every required and recommended documentation rule passes without exceptions.
 
 ## Version
 
@@ -21,45 +27,37 @@ pnpm changeset          # if new entry needed
 pnpm version-packages   # bumps package.json + CHANGELOG from .changeset/*
 ```
 
-Current track: **`1.1.0` stable** (alpha series ended at `0.1.0-alpha.5`).
+Current track: **`1.1.1` stable** (alpha series ended at `0.1.0-alpha.5`).
 
-## Publish (npm)
+## Publish (npm + GitHub)
 
-Requires npm auth for the `@agentskit` org (`npm whoami` / `NPM_TOKEN`).
+Stable releases are published only by `.github/workflows/release.yml` from an immutable semver tag. The workflow re-runs the complete security, test, coverage, packaged-smoke, dogfood, and conformance matrix, publishes with npm provenance through the `npm` environment, verifies the registry result, uploads the tarball to GitHub Releases, and then marks the release latest.
 
 ```bash
-pnpm release
-# equivalent:
-# pnpm build && pnpm test && changeset publish
+git tag v1.1.1
+git push origin v1.1.1
 ```
 
-Or one-shot after version bump:
+For recovery of an existing immutable tag, use the guarded manual dispatch. Never move or recreate a release tag.
 
 ```bash
-npm publish --access public
+gh workflow run release.yml --ref master -f tag=v1.1.1
 ```
 
 Confirm:
 
 ```bash
-npm view @agentskit/doc-bridge version
-npx ak-docs@1.1.0 --version
+npm view @agentskit/doc-bridge@1.1.1 version dist.integrity
+npx ak-docs@1.1.1 --version
+gh release view v1.1.1
 ```
 
-## GitHub
-
-```bash
-git tag v1.1.0
-git push origin master --tags
-gh release create v1.1.0 --title "v1.1.0 — Documentation Standard v1" --notes-file CHANGELOG.md
-```
-
-Enable GitHub Pages (Settings → Pages → GitHub Actions) for landing deploy from `.github/workflows/pages.yml`.
+GitHub Pages must remain configured for GitHub Actions; `.github/workflows/pages.yml` deploys the landing page from `docs/landing`.
 
 ## Post-publish smoke (fresh machine)
 
 ```bash
-npm i -D @agentskit/doc-bridge@1.1.0
+npm i -D @agentskit/doc-bridge@1.1.1
 npx ak-docs init
 npx ak-docs index
 npx ak-docs query package example --agent
