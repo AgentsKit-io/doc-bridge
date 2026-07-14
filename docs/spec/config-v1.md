@@ -1,3 +1,8 @@
+---
+title: Configuration contract v1
+description: Configure documentation corpora, ownership routing, conformance, and gates.
+---
+
 # doc-bridge config contract v1
 
 `doc-bridge.config.ts` (or `.js`, `.mjs`, `.json`, or `package.json` → `docBridge`) is the alpha integration point for any project. Layer 0 fields are sufficient to run `index`, `query`, and MCP without an LLM.

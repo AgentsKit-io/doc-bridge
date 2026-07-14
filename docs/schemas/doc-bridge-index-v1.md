@@ -1,3 +1,8 @@
+---
+title: DocBridgeIndex v1
+description: Schema reference for the deterministic Doc Bridge repository index.
+---
+
 # DocBridgeIndex v1
 
 Zod schema: `DocBridgeIndexV1Schema` in `@agentskit/doc-bridge`.

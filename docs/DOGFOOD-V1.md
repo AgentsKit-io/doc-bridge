@@ -1,3 +1,8 @@
+---
+title: Dogfood validation v1
+description: Release validation evidence for the first stable Doc Bridge package.
+---
+
 # Dogfood validation — `@agentskit/doc-bridge@1.0.0`
 
 **Date:** 2026-07-09  

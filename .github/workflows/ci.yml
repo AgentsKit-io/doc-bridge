@@ -23,6 +23,8 @@ jobs:
       - run: pnpm test
       - run: pnpm coverage
       - run: pnpm build
+      - run: pnpm check:readme-standard
+      - run: pnpm test:readme-standard
       - run: npm pack --dry-run
       - name: Packaged smoke (2-min path + MCP)
         run: pnpm smoke:packaged
@@ -36,3 +38,21 @@ jobs:
       - name: Ollama smoke (optional)
         continue-on-error: true
         run: pnpm smoke:ollama
+
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm docs:typecheck
+      - run: pnpm docs:build
+      - run: pnpm docs:lighthouse
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm docs:e2e

@@ -1,0 +1,164 @@
+{
+  "schemaVersion": 1,
+  "standardId": "agentskit-readme-standard-v1",
+  "status": "approved",
+  "approval": {
+    "approvedBy": "EmersonBraun",
+    "approvedOn": "2026-07-13",
+    "record": "https://github.com/AgentsKit-io/agentskit/issues/1203#issuecomment-4963143065"
+  },
+  "profiles": [
+    {
+      "id": "top-level-repository",
+      "description": "Parent or product repository with a full adoption and contribution journey.",
+      "budgets": {
+        "badges": { "max": 12 },
+        "images": { "min": 1, "max": 6, "zeroRequiresException": true },
+        "accessibility": { "maxMissingAlt": 0 },
+        "darkMode": { "requireStrategy": true },
+        "commandVerification": { "maxUnverifiedPrimary": 0 },
+        "freshness": { "reviewCadenceDays": 90, "requireSourceHash": true }
+      }
+    },
+    {
+      "id": "public-app",
+      "description": "Runnable public product or documentation application.",
+      "budgets": {
+        "badges": { "max": 8 },
+        "images": { "min": 1, "max": 5, "zeroRequiresException": true },
+        "accessibility": { "maxMissingAlt": 0 },
+        "darkMode": { "requireStrategy": true },
+        "commandVerification": { "maxUnverifiedPrimary": 0 },
+        "freshness": { "reviewCadenceDays": 90, "requireSourceHash": true }
+      }
+    },
+    {
+      "id": "major-package",
+      "description": "Primary package with its own adoption journey, examples, and compatibility surface.",
+      "budgets": {
+        "badges": { "max": 8 },
+        "images": { "min": 1, "max": 4, "zeroRequiresException": true },
+        "accessibility": { "maxMissingAlt": 0 },
+        "darkMode": { "requireStrategy": true },
+        "commandVerification": { "maxUnverifiedPrimary": 0 },
+        "freshness": { "reviewCadenceDays": 120, "requireSourceHash": true }
+      }
+    },
+    {
+      "id": "concise-package",
+      "description": "Focused package whose README may stay short when the package guide carries depth.",
+      "budgets": {
+        "badges": { "max": 6 },
+        "images": { "min": 0, "max": 2, "zeroRequiresException": true },
+        "accessibility": { "maxMissingAlt": 0 },
+        "darkMode": { "requireStrategy": true },
+        "commandVerification": { "maxUnverifiedPrimary": 0 },
+        "freshness": { "reviewCadenceDays": 180, "requireSourceHash": true }
+      }
+    }
+  ],
+  "surfaces": [
+    {
+      "id": "doc-bridge-root",
+      "path": "README.md",
+      "profileId": "top-level-repository",
+      "dimensions": {
+        "promise": ["Turn your docs into executable handoffs"],
+        "proof": ["## 60-second proof", "Gate: red → green"],
+        "examples": ["### Verify the real handoff path", "<!-- readme-example:verify-handoff -->"],
+        "visuals": ["docs/landing/assets/doc-bridge-hero.webp"],
+        "maturity": ["v1.1.1 stable"],
+        "compatibility": ["node >=22", "TypeScript"],
+        "contribution": ["## Contributing", "CONTRIBUTING.md"],
+        "metadata": ["**Topics:**", "`developer-experience`"],
+        "ecosystem": ["## AgentsKit ecosystem", "AgentsKit Chat", "Code Review"]
+      },
+      "visuals": [
+        { "src": "docs/landing/assets/doc-bridge-hero.webp", "kind": "brand", "darkMode": "neutral" },
+        { "src": "docs/landing/assets/doc-bridge-two-way.webp", "kind": "explanation", "darkMode": "neutral" },
+        { "src": "docs/landing/assets/doc-bridge-surfaces.webp", "kind": "explanation", "darkMode": "neutral" }
+      ],
+      "commands": [
+        { "id": "verify-handoff", "command": "node examples/verify-handoff.mjs", "test": "scripts/readme-standard.test.mjs", "testCommand": "pnpm test:readme-standard" }
+      ],
+      "examples": [
+        { "id": "verify-handoff", "fixture": "examples/verify-handoff.mjs", "test": "scripts/readme-standard.test.mjs", "testCommand": "pnpm test:readme-standard" }
+      ],
+      "freshness": {
+        "reviewedOn": "2026-07-14",
+        "reviewDueOn": "2026-10-12",
+        "sources": ["README.md", "doc-bridge.config.json", "examples/verify-handoff.mjs", "package.json"],
+        "sourceHash": "sha256:a07f1ece8bf1634f2eaa7eb8207fbbb9ee3e0ca9ec74e488a8f6b5fd660d4c90"
+      },
+      "exceptions": []
+    },
+    {
+      "id": "doc-bridge-docs-app",
+      "path": "README.md",
+      "profileId": "public-app",
+      "dimensions": {
+        "promise": ["Turn your docs into executable handoffs"],
+        "proof": ["## 60-second proof"],
+        "examples": ["<!-- readme-example:verify-handoff -->"],
+        "visuals": ["doc-bridge-two-way.webp"],
+        "maturity": ["v1.1.1 stable"],
+        "compatibility": ["node >=22"],
+        "contribution": ["## Contributing"],
+        "metadata": ["**Topics:**"],
+        "ecosystem": ["## AgentsKit ecosystem"]
+      },
+      "visuals": [
+        { "src": "docs/landing/assets/doc-bridge-hero.webp", "kind": "brand", "darkMode": "neutral" },
+        { "src": "docs/landing/assets/doc-bridge-two-way.webp", "kind": "explanation", "darkMode": "neutral" },
+        { "src": "docs/landing/assets/doc-bridge-surfaces.webp", "kind": "explanation", "darkMode": "neutral" }
+      ],
+      "commands": [
+        { "id": "verify-handoff", "command": "node examples/verify-handoff.mjs", "test": "scripts/readme-standard.test.mjs", "testCommand": "pnpm test:readme-standard" }
+      ],
+      "examples": [
+        { "id": "verify-handoff", "fixture": "examples/verify-handoff.mjs", "test": "scripts/readme-standard.test.mjs", "testCommand": "pnpm test:readme-standard" }
+      ],
+      "freshness": {
+        "reviewedOn": "2026-07-14",
+        "reviewDueOn": "2026-10-12",
+        "sources": ["README.md", "doc-bridge.config.json", "examples/verify-handoff.mjs", "package.json"],
+        "sourceHash": "sha256:a07f1ece8bf1634f2eaa7eb8207fbbb9ee3e0ca9ec74e488a8f6b5fd660d4c90"
+      },
+      "exceptions": []
+    },
+    {
+      "id": "doc-bridge-package",
+      "path": "README.md",
+      "profileId": "major-package",
+      "dimensions": {
+        "promise": ["Turn your docs into executable handoffs"],
+        "proof": ["## What ships"],
+        "examples": ["<!-- readme-example:verify-handoff -->"],
+        "visuals": ["doc-bridge-surfaces.webp"],
+        "maturity": ["v1.1.1 stable"],
+        "compatibility": ["node >=22"],
+        "contribution": ["## Contributing"],
+        "metadata": ["**Topics:**"],
+        "ecosystem": ["## AgentsKit ecosystem"]
+      },
+      "visuals": [
+        { "src": "docs/landing/assets/doc-bridge-hero.webp", "kind": "brand", "darkMode": "neutral" },
+        { "src": "docs/landing/assets/doc-bridge-two-way.webp", "kind": "explanation", "darkMode": "neutral" },
+        { "src": "docs/landing/assets/doc-bridge-surfaces.webp", "kind": "explanation", "darkMode": "neutral" }
+      ],
+      "commands": [
+        { "id": "verify-handoff", "command": "node examples/verify-handoff.mjs", "test": "scripts/readme-standard.test.mjs", "testCommand": "pnpm test:readme-standard" }
+      ],
+      "examples": [
+        { "id": "verify-handoff", "fixture": "examples/verify-handoff.mjs", "test": "scripts/readme-standard.test.mjs", "testCommand": "pnpm test:readme-standard" }
+      ],
+      "freshness": {
+        "reviewedOn": "2026-07-14",
+        "reviewDueOn": "2026-11-11",
+        "sources": ["README.md", "doc-bridge.config.json", "examples/verify-handoff.mjs", "package.json"],
+        "sourceHash": "sha256:a07f1ece8bf1634f2eaa7eb8207fbbb9ee3e0ca9ec74e488a8f6b5fd660d4c90"
+      },
+      "exceptions": []
+    }
+  ]
+}

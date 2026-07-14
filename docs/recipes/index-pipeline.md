@@ -1,3 +1,8 @@
+---
+title: Index pipeline recipes
+description: Compose indexing, querying, gating, and CI into repeatable documentation workflows.
+---
+
 # Index pipeline recipes
 
 Keep `.doc-bridge/index.json` fresh during development and in CI.

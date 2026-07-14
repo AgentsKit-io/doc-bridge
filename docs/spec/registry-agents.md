@@ -1,3 +1,8 @@
+---
+title: Registry agent topology
+description: Connect registry agent definitions to Doc Bridge ownership and documentation handoffs.
+---
+
 # Registry Agent Topology
 
 doc-bridge exposes deterministic tools; Registry agents can compose them into maintenance flows.

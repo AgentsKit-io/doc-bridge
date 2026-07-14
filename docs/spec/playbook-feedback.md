@@ -1,3 +1,8 @@
+---
+title: Playbook feedback promotion
+description: Promote durable implementation lessons into reviewed AgentsKit Playbook contributions.
+---
+
 # Playbook Feedback Promotion
 
 doc-bridge can feed durable documentation learnings back into public patterns, but promotion must be explicit and reviewable.

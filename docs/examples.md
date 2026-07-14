@@ -1,3 +1,8 @@
+---
+title: Examples
+description: Ready-to-run Doc Bridge configurations and integration examples.
+---
+
 # Examples
 
 Config sketches under [`examples/`](../examples/):

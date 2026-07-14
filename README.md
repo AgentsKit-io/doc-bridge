@@ -9,6 +9,10 @@
 
 **npm:** [`@agentskit/doc-bridge`](https://www.npmjs.com/package/@agentskit/doc-bridge) · **CLI:** `ak-docs` · **Landing:** [agentskit-io.github.io/doc-bridge](https://agentskit-io.github.io/doc-bridge/)
 
+**Topics:** `ai-agents` · `documentation` · `developer-experience` · `mcp` · `llms-txt` · `typescript`
+
+**Compatibility:** node >=22 · TypeScript 5.8+ · pnpm, npm, or yarn consumers
+
 **Turn your docs into executable handoffs for coding agents.**
 
 doc-bridge reads your repo docs, ownership map, and human documentation site, then gives every agent the same answer:
@@ -18,7 +22,7 @@ doc-bridge reads your repo docs, ownership map, and human documentation site, th
 - which checks prove the change
 - which human docs explain the feature
 
-It is not a wiki, not hosted RAG, and not another chat UI. The core works **without any LLM or API key**.
+It is not a wiki or hosted RAG. The core works **without any LLM or API key**; the documentation portal dogfoods AgentsKit Chat as an optional surface over that deterministic layer.
 
 ![doc-bridge maps human docs into structured agent handoffs](docs/landing/assets/doc-bridge-hero.webp)
 
@@ -72,6 +76,24 @@ Monorepo fixture with auth + billing:
 
 ```bash
 npx ak-docs demo --fixture monorepo --text
+```
+
+### Verify the real handoff path
+
+This checked example runs the bundled demo through the public CLI. The README gate compares this block byte-for-byte with the executable fixture and runs it on every PR.
+
+<!-- readme-command:verify-handoff -->
+<!-- readme-example:verify-handoff -->
+```js
+import { execFileSync } from 'node:child_process'
+
+execFileSync(process.execPath, ['bin/ak-docs.js', 'demo', '--text'], {
+  stdio: 'inherit',
+})
+```
+
+```bash
+node examples/verify-handoff.mjs
 ```
 
 Full setup in your repo:
@@ -221,7 +243,9 @@ ak-docs rag ingest && ak-docs chat
 
 See **[docs/chat-and-rag.md](docs/chat-and-rag.md)**.
 
-## Who uses it (public)
+## AgentsKit ecosystem
+
+### Who uses it (public)
 
 Designed for and dogfooded on open AgentsKit surfaces:
 

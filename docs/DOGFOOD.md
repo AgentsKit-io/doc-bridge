@@ -1,3 +1,8 @@
+---
+title: Ecosystem dogfood
+description: How AgentsKit repositories validate Doc Bridge against real documentation surfaces.
+---
+
 # Ecosystem dogfood — `@agentskit/doc-bridge`
 
 Validated **2026-07-09** against four consumers.

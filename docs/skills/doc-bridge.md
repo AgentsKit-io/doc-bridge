@@ -1,3 +1,8 @@
+---
+title: Agent routing skill
+description: Give coding agents a deterministic recipe for finding ownership and checks.
+---
+
 # Doc Bridge — agent routing skill
 
 Use this skill in Cursor, Claude Code, or Codex so agents resolve ownership **before** editing packages.

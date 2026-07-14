@@ -1,0 +1,26 @@
+@import 'tailwindcss';
+@import 'fumadocs-ui/css/neutral.css';
+@import 'fumadocs-ui/css/preset.css';
+@import '@agentskit/react/theme';
+
+:root {
+  --bridge-ink: #111714;
+  --bridge-paper: #f7f8f3;
+  --bridge-green: #35c579;
+  --bridge-blue: #3d79f2;
+}
+
+html { scroll-behavior: smooth; }
+body { background: var(--bridge-paper); color: var(--bridge-ink); }
+.dark body { background: #0b0f0d; color: #f4f7f2; }
+::selection { background: color-mix(in srgb, var(--bridge-green) 35%, transparent); }
+
+.bridge-grid {
+  background-image: linear-gradient(to right, color-mix(in srgb, currentColor 7%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, currentColor 7%, transparent) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; }
+}

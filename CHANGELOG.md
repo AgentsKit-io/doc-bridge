@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased
+
+### Features
+
+- Replace the legacy Pages landing with a statically exported Fumadocs portal backed directly by the canonical `docs/**` corpus.
+- Generate `llms.txt`, `llms-full.txt`, raw Markdown, and a hash-verified deterministic AgentsKit Chat artifact from the repository's own Doc Bridge index.
+- Add dynamic AgentsKit Chat dogfood with local exact answers, ambiguity choices, session-aware backend fallback, and explicit provenance.
+- Adopt README Standard v1 for repository, package, and public-app profiles with synchronized executable examples and freshness evidence.
+
+### Quality
+
+- Add desktop/mobile Playwright coverage for the landing, Fumadocs, local chat, ambiguity, and completed backend stream.
+- Expand self-ownership handoffs across CLI, indexing, query, MCP, quality, memory, and intelligence modules.
+
 ## 1.1.1
 
 ### Fixes

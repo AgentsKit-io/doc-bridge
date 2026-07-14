@@ -1,3 +1,8 @@
+---
+title: Dogfood round 2
+description: Validation evidence from the second published Doc Bridge alpha.
+---
+
 # Dogfood round 2 — published `@agentskit/doc-bridge@0.1.0-alpha.2`
 
 **Date:** 2026-07-09  

@@ -21,6 +21,55 @@
           "checks": ["pnpm test", "pnpm typecheck"],
           "agentDoc": "docs/POSITIONING.md",
           "humanDoc": "README"
+        },
+        "doc-bridge-cli": {
+          "path": "src/cli",
+          "purpose": "Public ak-docs commands, arguments, output modes, and bundled demo",
+          "checks": ["pnpm test", "pnpm typecheck", "node examples/verify-handoff.mjs"],
+          "agentDoc": "docs/spec/cli.md",
+          "humanDoc": "README"
+        },
+        "doc-bridge-index": {
+          "path": "src/index-builder",
+          "purpose": "Corpus scanning, handoff generation, hashes, llms.txt, and watch mode",
+          "checks": ["pnpm test", "pnpm typecheck", "node bin/ak-docs.js index"],
+          "agentDoc": "docs/recipes/index-pipeline.md",
+          "humanDoc": "README"
+        },
+        "doc-bridge-query": {
+          "path": "src/query",
+          "purpose": "Deterministic package queries, document search, and index loading",
+          "checks": ["pnpm test", "pnpm typecheck"],
+          "agentDoc": "docs/query.md",
+          "humanDoc": "README"
+        },
+        "doc-bridge-mcp": {
+          "path": "src/mcp",
+          "purpose": "MCP stdio server, tool contracts, and client installation",
+          "checks": ["pnpm test", "pnpm typecheck", "pnpm smoke:packaged"],
+          "agentDoc": "docs/mcp.md",
+          "humanDoc": "README"
+        },
+        "doc-bridge-quality": {
+          "path": "src/gates",
+          "purpose": "Freshness, coverage, link, conformance, and doctor quality gates",
+          "checks": ["pnpm test", "node bin/ak-docs.js gate run", "node bin/ak-docs.js doctor --text"],
+          "agentDoc": "docs/spec/documentation-standard-v1.md",
+          "humanDoc": "README"
+        },
+        "doc-bridge-memory": {
+          "path": "src/memory",
+          "purpose": "Reviewable memory ingestion, classification, and documentation promotion",
+          "checks": ["pnpm test", "pnpm typecheck"],
+          "agentDoc": "docs/schemas/memory-candidate-v1.md",
+          "humanDoc": "README"
+        },
+        "doc-bridge-chat": {
+          "path": "src/intelligence",
+          "purpose": "Optional AgentsKit RAG and chat integration after deterministic resolution",
+          "checks": ["pnpm test", "pnpm typecheck", "pnpm docs:typecheck"],
+          "agentDoc": "docs/chat-and-rag.md",
+          "humanDoc": "README"
         }
       }
     }
@@ -37,6 +86,10 @@
         {
           "path": "docs/landing/index.html",
           "contains": ["<title>", "name=\"description\""]
+        },
+        {
+          "path": "apps/docs/app/layout.tsx",
+          "contains": ["title:", "description:", "openGraph", "twitter"]
         }
       ],
       "links": [
@@ -62,6 +115,7 @@
         }
       ],
       "visuals": [
+        "apps/docs/app/icon.svg",
         "docs/landing/assets/doc-bridge-hero.webp",
         "docs/landing/assets/doc-bridge-two-way.webp",
         "docs/landing/assets/doc-bridge-surfaces.webp"
