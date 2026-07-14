@@ -18,6 +18,7 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - run: pnpm check:no-legacy-chat-imports
       - run: pnpm typecheck
       - run: pnpm check:ecosystem-upstream
       - run: pnpm test

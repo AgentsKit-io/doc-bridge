@@ -1,6 +1,6 @@
 import type { AdapterFactory } from '@agentskit/core'
 import { createDeterministicAnswerAdapter, type AskAdapter, type DeterministicAnswerAdapter } from '@agentskit/chat'
-import { decodeDeterministicSiteConfig, verifyLocalKnowledgeArtifactSync, type AnswerResponse } from '@agentskit/chat-protocol'
+import { decodeDeterministicSiteConfig, verifyLocalKnowledgeArtifactSync, type AnswerResponse } from '@agentskit/chat/protocol'
 
 export interface DiscoveryInputs { readonly siteConfig: unknown; readonly artifact: unknown }
 
