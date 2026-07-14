@@ -1,3 +1,8 @@
+---
+title: ak-docs CLI
+description: Complete command reference for indexing, querying, gates, doctor, memory, and MCP.
+---
+
 # ak-docs CLI
 
 Command-line interface for **`@agentskit/doc-bridge`**. The npm package is scoped; the **only published binary** is `ak-docs`.

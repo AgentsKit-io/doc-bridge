@@ -1,6 +1,8 @@
 ---
 type: pattern
 id: doc-bridge-pattern
+title: Doc Bridge pattern
+description: A reusable pattern for making documentation useful to humans and agents.
 purpose: Route coding agents to the correct package, checks, and human docs in any monorepo.
 owner: AgentsKit
 license: CC-BY-4.0

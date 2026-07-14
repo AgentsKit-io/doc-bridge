@@ -1,3 +1,8 @@
+---
+title: Ollama chat demo
+description: Run the optional local chat layer with Ollama after deterministic routing.
+---
+
 # Ollama chat demo (Layer 1)
 
 Zero-cloud path for grounded `ak-docs chat` and `ak-docs ask --chat`.

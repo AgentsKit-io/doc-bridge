@@ -1,3 +1,8 @@
+---
+title: Getting started
+description: Install, index, query, and gate repository documentation in about 60 seconds.
+---
+
 # Getting started
 
 doc-bridge turns your existing docs into an **AgentHandoff** index:

@@ -1,3 +1,8 @@
+---
+title: Documentation Standard v1
+description: Shared quality contract for AgentsKit documentation, metadata, examples, links, and visuals.
+---
+
 # Documentation Standard v1
 
 Status: **stable — HITL-approved on 2026-07-13**

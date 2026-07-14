@@ -1,3 +1,8 @@
+---
+title: MemoryCandidate v1
+description: Contract for reviewing and promoting durable agent memory into canonical documentation.
+---
+
 # MemoryCandidate v1
 
 Zod schema: `MemoryCandidateV1Schema` in `@agentskit/doc-bridge`.

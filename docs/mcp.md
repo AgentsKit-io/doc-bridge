@@ -1,3 +1,8 @@
+---
+title: MCP setup
+description: Connect Doc Bridge deterministic handoffs to MCP-compatible coding agents.
+---
+
 # MCP setup
 
 ## One command (recommended)

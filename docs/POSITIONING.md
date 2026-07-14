@@ -1,3 +1,8 @@
+---
+title: Doc Bridge positioning
+description: Product purpose, boundaries, maturity, and role inside the AgentsKit ecosystem.
+---
+
 # doc-bridge positioning
 
 Source of truth for README, issues, RFCs, and external posts.

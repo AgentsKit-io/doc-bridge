@@ -1,3 +1,8 @@
+---
+title: AgentHandoff v1
+description: Machine-readable contract for a compact, actionable coding-agent handoff.
+---
+
 # AgentHandoff v1
 
 Zod schema: `AgentHandoffV1Schema` in `@agentskit/doc-bridge`.

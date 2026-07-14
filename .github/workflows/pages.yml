@@ -22,9 +22,22 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
       - uses: actions/configure-pages@v5
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm docs:build
+        env:
+          DOCS_BASE_PATH: /doc-bridge
+      - name: Verify Pages subpath links
+        run: node -e "const html=require('node:fs').readFileSync('apps/docs/out/docs/getting-started/index.html','utf8');if(!html.includes('href=\"/doc-bridge/docs/spec/config-v1/\"'))throw new Error('Pages documentation links escaped the /doc-bridge base path')"
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: docs/landing
+          path: apps/docs/out
       - id: deployment
         uses: actions/deploy-pages@v4

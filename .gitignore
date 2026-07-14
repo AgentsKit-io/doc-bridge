@@ -6,3 +6,10 @@ coverage/
 .doc-bridge/
 llms.txt
 *.tgz
+apps/docs/.next/
+apps/docs/.source/
+apps/docs/out/
+apps/docs/public/
+playwright-report/
+test-results/
+.lighthouseci/
