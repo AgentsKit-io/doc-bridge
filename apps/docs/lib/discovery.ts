@@ -4,17 +4,20 @@ import { decodeDeterministicSiteConfig, verifyLocalKnowledgeArtifactSync, type A
 
 export interface DiscoveryInputs { readonly siteConfig: unknown; readonly artifact: unknown }
 
-export async function loadDiscovery(fetchImpl: typeof fetch = fetch): Promise<DiscoveryInputs | null> {
+export async function loadDiscovery(fetchImpl: typeof fetch = fetch, retryDelayMs = 150): Promise<DiscoveryInputs | null> {
   const prefix = process.env.NEXT_PUBLIC_BASE_PATH ?? ''
-  try {
-    const signal = AbortSignal.timeout(6_500)
-    const [siteConfig, artifact] = await Promise.all([
-      fetchImpl(`${prefix}/deterministic/site-config.json`, { signal }),
-      fetchImpl(`${prefix}/deterministic/knowledge.json`, { signal }),
-    ])
-    if (!siteConfig.ok || !artifact.ok) return null
-    return { siteConfig: await siteConfig.json(), artifact: await artifact.json() }
-  } catch { return null }
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      const signal = AbortSignal.timeout(6_500)
+      const [siteConfig, artifact] = await Promise.all([
+        fetchImpl(`${prefix}/deterministic/site-config.json`, { signal }),
+        fetchImpl(`${prefix}/deterministic/knowledge.json`, { signal }),
+      ])
+      if (siteConfig.ok && artifact.ok) return { siteConfig: await siteConfig.json(), artifact: await artifact.json() }
+    } catch { /* retry once before falling back to the backend */ }
+    if (attempt === 0) await new Promise((resolveDelay) => setTimeout(resolveDelay, retryDelayMs))
+  }
+  return null
 }
 
 export function createDiscoveryAdapter({

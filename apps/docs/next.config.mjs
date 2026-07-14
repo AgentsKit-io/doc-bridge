@@ -1,7 +1,7 @@
 import { createMDX } from 'fumadocs-mdx/next'
 
 const withMDX = createMDX()
-const isPages = process.env.GITHUB_ACTIONS === 'true'
+const basePath = process.env.DOCS_BASE_PATH ?? ''
 
 /** @type {import('next').NextConfig} */
 const config = {
@@ -9,9 +9,9 @@ const config = {
   reactStrictMode: true,
   trailingSlash: true,
   images: { unoptimized: true },
-  basePath: isPages ? '/doc-bridge' : '',
-  assetPrefix: isPages ? '/doc-bridge/' : undefined,
-  env: { NEXT_PUBLIC_BASE_PATH: isPages ? '/doc-bridge' : '' },
+  basePath,
+  assetPrefix: basePath ? `${basePath}/` : undefined,
+  env: { NEXT_PUBLIC_BASE_PATH: basePath },
 }
 
 export default withMDX(config)

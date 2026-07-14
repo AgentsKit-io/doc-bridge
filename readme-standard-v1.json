@@ -88,7 +88,7 @@
         "reviewedOn": "2026-07-14",
         "reviewDueOn": "2026-10-12",
         "sources": ["README.md", "doc-bridge.config.json", "examples/verify-handoff.mjs", "package.json"],
-        "sourceHash": "sha256:a07f1ece8bf1634f2eaa7eb8207fbbb9ee3e0ca9ec74e488a8f6b5fd660d4c90"
+        "sourceHash": "sha256:b4c27a374e6ce83bac3941d2de1872aa87b6f4ce68c3f0012fc6e849de17220b"
       },
       "exceptions": []
     },
@@ -122,7 +122,7 @@
         "reviewedOn": "2026-07-14",
         "reviewDueOn": "2026-10-12",
         "sources": ["README.md", "doc-bridge.config.json", "examples/verify-handoff.mjs", "package.json"],
-        "sourceHash": "sha256:a07f1ece8bf1634f2eaa7eb8207fbbb9ee3e0ca9ec74e488a8f6b5fd660d4c90"
+        "sourceHash": "sha256:b4c27a374e6ce83bac3941d2de1872aa87b6f4ce68c3f0012fc6e849de17220b"
       },
       "exceptions": []
     },
@@ -156,7 +156,7 @@
         "reviewedOn": "2026-07-14",
         "reviewDueOn": "2026-11-11",
         "sources": ["README.md", "doc-bridge.config.json", "examples/verify-handoff.mjs", "package.json"],
-        "sourceHash": "sha256:a07f1ece8bf1634f2eaa7eb8207fbbb9ee3e0ca9ec74e488a8f6b5fd660d4c90"
+        "sourceHash": "sha256:b4c27a374e6ce83bac3941d2de1872aa87b6f4ce68c3f0012fc6e849de17220b"
       },
       "exceptions": []
     }

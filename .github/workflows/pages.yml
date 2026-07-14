@@ -32,6 +32,10 @@ jobs:
       - uses: actions/configure-pages@v5
       - run: pnpm install --frozen-lockfile
       - run: pnpm docs:build
+        env:
+          DOCS_BASE_PATH: /doc-bridge
+      - name: Verify Pages subpath links
+        run: node -e "const html=require('node:fs').readFileSync('apps/docs/out/docs/getting-started/index.html','utf8');if(!html.includes('href=\"/doc-bridge/docs/spec/config-v1/\"'))throw new Error('Pages documentation links escaped the /doc-bridge base path')"
       - uses: actions/upload-pages-artifact@v3
         with:
           path: apps/docs/out

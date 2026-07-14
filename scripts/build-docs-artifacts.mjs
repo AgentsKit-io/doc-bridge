@@ -7,6 +7,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const docsRoot = join(root, 'docs')
 const publicRoot = join(root, 'apps/docs/public')
 const origin = 'https://agentskit-io.github.io/doc-bridge'
+const basePath = process.env.DOCS_BASE_PATH ?? ''
 const generatedAt = process.env.SOURCE_DATE_EPOCH
   ? new Date(Number(process.env.SOURCE_DATE_EPOCH) * 1000).toISOString()
   : '2026-07-14T00:00:00.000Z'
@@ -33,7 +34,11 @@ function aliases(values) {
 }
 function titleOf(markdown, fallback) { return markdown.match(/^#\s+(.+)$/m)?.[1]?.trim() ?? fallback }
 function descriptionOf(markdown) {
-  return markdown.split(/\n\s*\n/).map((block) => block.replace(/^#+\s+.*$/gm, '').trim())
+  const frontmatter = markdown.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n/u)?.[1]
+  const declared = frontmatter?.match(/^description:\s*(.+)$/mu)?.[1]?.trim()
+  if (declared) return declared.replace(/^['"]|['"]$/g, '').slice(0, 240)
+  const body = markdown.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/u, '')
+  return body.split(/\n\s*\n/).map((block) => block.replace(/^#+\s+.*$/gm, '').trim())
     .find((block) => block && !block.startsWith('```') && !block.startsWith('>'))?.replace(/\s+/g, ' ').slice(0, 240)
     ?? 'Canonical Doc Bridge documentation.'
 }
@@ -111,19 +116,34 @@ const commandEntries = [
 }))
 
 const handoffIndex = JSON.parse(await readFile(join(root, '.doc-bridge/index.json'), 'utf8'))
-const handoff = handoffIndex.handoffs?.['doc-bridge']
-const handoffEntry = {
-  id: 'package:doc-bridge', kind: 'package', label: 'Doc Bridge ownership handoff',
-  match: { type: 'exact', values: ['doc-bridge', '@agentskit/doc-bridge', 'who owns doc bridge', 'doc bridge handoff'] },
-  answer: {
-    markdown: `## Doc Bridge handoff\n\nStart at **${handoff?.startHere ?? 'docs/POSITIONING.md'}**. Edit roots: **${(handoff?.editRoots ?? ['src']).join(', ')}**. Checks: **${(handoff?.checks ?? ['pnpm test', 'pnpm typecheck']).join('**, **')}**.\n\nThis answer was generated from the repository's own Doc Bridge index.`,
-    citations: [{ id: 'doc:POSITIONING', title: 'Doc Bridge positioning', href: `${origin}/docs/POSITIONING/` }],
-  },
-}
+const handoffEntries = Object.entries(handoffIndex.handoffs ?? {}).map(([id, handoff]) => {
+  const startHere = handoff.startHere ?? 'docs/POSITIONING.md'
+  const slug = startHere.replace(/^docs\//u, '').replace(/\.md$/u, '')
+  const purpose = handoff.notes?.[0] ?? `${id} ownership and checks`
+  return {
+    id: `package:${id}`,
+    kind: 'package',
+    label: id === 'doc-bridge' ? 'Doc Bridge ownership handoff' : `${id} ownership handoff`,
+    match: {
+      type: 'exact',
+      values: aliases([
+        id,
+        ...(id === 'doc-bridge' ? ['@agentskit/doc-bridge', 'who owns doc bridge', 'doc bridge handoff'] : []),
+        `who owns ${id}`,
+        `${id} handoff`,
+        purpose,
+      ]),
+    },
+    answer: {
+      markdown: `## ${id} handoff\n\n${purpose}.\n\nStart at **${startHere}**. Edit roots: **${(handoff.editRoots ?? [handoff.target?.path ?? 'src']).join(', ')}**. Checks: **${(handoff.checks ?? ['pnpm test', 'pnpm typecheck']).join('**, **')}**.\n\nThis answer was generated from the repository's own Doc Bridge index.`,
+      citations: [{ id: entryId(slug), title: startHere, href: `${origin}/docs/${slug}/` }],
+    },
+  }
+})
 
 const withoutHash = {
   protocol: 'agentskit.chat.knowledge', version: 1, artifactId: 'agentskit-doc-bridge', siteId: 'doc-bridge',
-  generatedAt, entries: [...commandEntries, handoffEntry, ...docEntries],
+  generatedAt, entries: [...commandEntries, ...handoffEntries, ...docEntries],
 }
 const validation = LocalKnowledgeArtifactSchema.safeParse({ ...withoutHash, contentHash: `sha256:${'0'.repeat(64)}` })
 if (!validation.success) throw new TypeError(`Invalid deterministic artifact:\n${validation.error.message}`)
@@ -132,7 +152,7 @@ const artifact = LocalKnowledgeArtifactSchema.parse({ ...withoutHash, contentHas
 await writeFile(join(publicRoot, 'deterministic/knowledge.json'), `${JSON.stringify(artifact, null, 2)}\n`)
 await writeFile(join(publicRoot, 'deterministic/site-config.json'), `${JSON.stringify({
   protocol: 'agentskit.chat.site', version: 1, siteId: 'doc-bridge',
-  artifact: { href: '/doc-bridge/deterministic/knowledge.json', contentHash }, fallback: { mode: 'backend' },
+  artifact: { href: `${basePath}/deterministic/knowledge.json`, contentHash }, fallback: { mode: 'backend' },
 }, null, 2)}\n`)
 
 console.log(`docs artifacts: ${documents.length} sources, ${artifact.entries.length} deterministic entries, ${contentHash}`)

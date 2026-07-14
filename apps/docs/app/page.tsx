@@ -1,5 +1,7 @@
 import Link from 'next/link'
 import { ArrowRight, Bot, Braces, CheckCircle2, GitBranch, Terminal } from 'lucide-react'
+import { readdirSync } from 'node:fs'
+import { resolve } from 'node:path'
 
 const proof = [
   ['Index', 'ak-docs index', 'Build the local knowledge map from source docs.'],
@@ -7,7 +9,9 @@ const proof = [
   ['Gate', 'ak-docs gate run', 'Fail drift before incomplete context reaches an agent.'],
 ] as const
 
-const basePath = process.env.GITHUB_ACTIONS === 'true' ? '/doc-bridge' : ''
+const basePath = process.env.DOCS_BASE_PATH ?? ''
+const sourceCount = readdirSync(resolve(process.cwd(), '../../docs'), { recursive: true })
+  .filter((path) => typeof path === 'string' && path.endsWith('.md')).length
 
 export default function HomePage() {
   return (
@@ -27,7 +31,7 @@ export default function HomePage() {
           </div>
           <div className="overflow-hidden rounded-3xl border bg-[#101713] p-2 text-[#d8e4dc] shadow-2xl shadow-emerald-950/15" aria-label="Doc Bridge command output">
             <div className="flex items-center gap-2 border-b border-white/10 px-4 py-3 font-mono text-xs text-white/50"><span className="size-2 rounded-full bg-red-400" /><span className="size-2 rounded-full bg-amber-300" /><span className="size-2 rounded-full bg-emerald-400" /> deterministic handoff</div>
-            <pre className="overflow-x-auto p-5 text-sm leading-7"><code>{`$ npx @agentskit/doc-bridge index\n✓ 22 knowledge sources indexed\n\n$ npx ak-docs query package doc-bridge --agent\n{\n  "startHere": "docs/POSITIONING.md",\n  "editRoots": ["src"],\n  "checks": ["pnpm test", "pnpm typecheck"]\n}\n\nbackend calls: 0`}</code></pre>
+            <pre className="overflow-x-auto p-5 text-sm leading-7"><code>{`$ npx @agentskit/doc-bridge index\n✓ ${sourceCount} knowledge sources indexed\n\n$ npx ak-docs query package doc-bridge --agent\n{\n  "startHere": "docs/POSITIONING.md",\n  "editRoots": ["src"],\n  "checks": ["pnpm test", "pnpm typecheck"]\n}\n\nbackend calls: 0`}</code></pre>
           </div>
         </div>
       </section>

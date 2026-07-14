@@ -20,7 +20,7 @@ export const viewport: Viewport = { colorScheme: 'light dark', themeColor: '#111
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body><RootProvider>{children}<ChatLauncher /></RootProvider></body>
+      <body><RootProvider search={{ enabled: false }}>{children}<ChatLauncher /></RootProvider></body>
     </html>
   )
 }

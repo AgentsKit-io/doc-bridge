@@ -6,6 +6,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     <DocsLayout
       tree={source.pageTree}
       nav={{ title: 'Doc Bridge', url: '/' }}
+      searchToggle={{ enabled: false }}
       links={[
         { text: 'AgentsKit', url: 'https://www.agentskit.io', external: true },
         { text: 'Registry', url: 'https://registry.agentskit.io', external: true },

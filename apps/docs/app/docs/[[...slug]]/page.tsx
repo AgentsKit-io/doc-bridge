@@ -1,11 +1,11 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { DocsBody, DocsDescription, DocsPage, DocsTitle } from 'fumadocs-ui/page'
+import { DocsBody, DocsDescription, DocsPage } from 'fumadocs-ui/page'
 import { source } from '@/lib/source'
 
 type Props = { params: Promise<{ slug?: string[] }> }
 const siteUrl = 'https://agentskit-io.github.io/doc-bridge'
-const basePath = process.env.GITHUB_ACTIONS === 'true' ? '/doc-bridge' : ''
+const basePath = process.env.DOCS_BASE_PATH ?? ''
 
 export default async function Page({ params }: Props) {
   const { slug } = await params
@@ -16,7 +16,6 @@ export default async function Page({ params }: Props) {
 
   return (
     <DocsPage toc={page.data.toc} editOnGithub={{ owner: 'AgentsKit-io', repo: 'doc-bridge', sha: 'master', path: `docs/${page.file.path}` }}>
-      <DocsTitle>{page.data.title}</DocsTitle>
       {page.data.description ? <DocsDescription>{page.data.description}</DocsDescription> : null}
       <p className="mb-6 text-sm"><a href={rawPath}>View raw Markdown</a> · <a href={`${basePath}/llms.txt`}>llms.txt</a></p>
       <DocsBody><MDX /></DocsBody>

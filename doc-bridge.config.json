@@ -50,10 +50,24 @@
           "agentDoc": "docs/mcp.md",
           "humanDoc": "README"
         },
-        "doc-bridge-quality": {
+        "doc-bridge-gates": {
           "path": "src/gates",
-          "purpose": "Freshness, coverage, link, conformance, and doctor quality gates",
-          "checks": ["pnpm test", "node bin/ak-docs.js gate run", "node bin/ak-docs.js doctor --text"],
+          "purpose": "Freshness, coverage, and documentation link quality gates",
+          "checks": ["pnpm test", "node bin/ak-docs.js gate run"],
+          "agentDoc": "docs/spec/documentation-standard-v1.md",
+          "humanDoc": "README"
+        },
+        "doc-bridge-conformance": {
+          "path": "src/conformance",
+          "purpose": "Versioned documentation-standard conformance checks and reports",
+          "checks": ["pnpm test", "node bin/ak-docs.js conformance run documentation-standard-v1 --text"],
+          "agentDoc": "docs/spec/documentation-standard-v1.md",
+          "humanDoc": "README"
+        },
+        "doc-bridge-doctor": {
+          "path": "src/doctor",
+          "purpose": "Repository health scoring, findings, and remediation guidance",
+          "checks": ["pnpm test", "node bin/ak-docs.js doctor --text"],
           "agentDoc": "docs/spec/documentation-standard-v1.md",
           "humanDoc": "README"
         },
