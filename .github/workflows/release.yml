@@ -111,7 +111,16 @@ jobs:
         run: |
           name=$(node -p "require('./package.json').name")
           version=$(node -p "require('./package.json').version")
-          npm view "$name@$version" version | grep -Fx "$version"
+          published=false
+          for attempt in 1 2 3 4 5 6 7 8 9 10 11 12; do
+            if npm view "$name@$version" version 2>/dev/null | grep -Fx "$version"; then
+              published=true
+              break
+            fi
+            echo "npm registry has not propagated $name@$version yet (attempt $attempt/12)"
+            sleep 5
+          done
+          test "$published" = true
           gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 || gh release create "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --verify-tag --generate-notes
           gh release upload "$RELEASE_TAG" artifacts/* --repo "$GITHUB_REPOSITORY" --clobber
           gh release edit "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --draft=false --latest
