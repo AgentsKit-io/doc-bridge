@@ -3,7 +3,7 @@
     "collect": {
       "staticDistDir": "./apps/docs/out",
       "url": ["/", "/docs/getting-started/"],
-      "numberOfRuns": 1,
+      "numberOfRuns": 3,
       "settings": {
         "chromeFlags": "--headless --no-sandbox"
       }
