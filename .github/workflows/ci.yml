@@ -54,5 +54,11 @@ jobs:
       - run: pnpm docs:typecheck
       - run: pnpm docs:build
       - run: pnpm docs:lighthouse
+      - name: Upload Lighthouse reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-reports
+          path: .lighthouseci
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm docs:e2e
