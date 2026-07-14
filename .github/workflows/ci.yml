@@ -60,5 +60,6 @@ jobs:
         with:
           name: lighthouse-reports
           path: .lighthouseci
+          include-hidden-files: true
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm docs:e2e
