@@ -1,5 +1,8 @@
 name: CI
 
+permissions:
+  contents: read
+
 on:
   pull_request:
   push:
@@ -9,11 +12,11 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v4
+      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v4
         with:
           version: 10.19.0
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v4
         with:
           node-version: 22
           cache: pnpm
@@ -21,6 +24,8 @@ jobs:
       - run: pnpm check:no-legacy-chat-imports
       - run: pnpm typecheck
       - run: pnpm check:ecosystem-upstream
+      - run: pnpm check:marketplace
+      - run: pnpm test:marketplace
       - run: pnpm test
       - run: pnpm coverage
       - run: pnpm build
@@ -36,6 +41,14 @@ jobs:
           node bin/ak-docs.js doctor --text
           node bin/ak-docs.js doctor --write-badge
           node bin/ak-docs.js doctor --badge
+      - name: Resolve a published version for the pre-release Action smoke
+        id: published-doc-bridge
+        run: echo "version=$(npm view @agentskit/doc-bridge version)" >> "$GITHUB_OUTPUT"
+      - name: Run the public composite Action contract
+        uses: ./
+        with:
+          config-path: doc-bridge.config.json
+          package-version: ${{ steps.published-doc-bridge.outputs.version }}
       - name: Ollama smoke (optional)
         continue-on-error: true
         run: pnpm smoke:ollama
@@ -43,21 +56,22 @@ jobs:
   docs:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v4
+      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v4
         with:
           version: 10.33.0
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v4
         with:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm docs:typecheck
       - run: pnpm docs:build
+      - run: pnpm test:docs-artifacts
       - run: pnpm docs:lighthouse
       - name: Upload Lighthouse reports
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: lighthouse-reports
           path: .lighthouseci

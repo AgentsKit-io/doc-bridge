@@ -2,13 +2,14 @@
   "schemaVersion": 1,
   "corpus": {
     "agent": {
-      "root": "docs",
-      "index": "docs/getting-started.md"
+      "root": "docs/agent-corpus",
+      "index": "docs/agent-corpus/OVERVIEW.md"
     },
     "human": {
       "plugin": "plain-markdown",
       "options": {
-        "root": "."
+        "root": "docs",
+        "urlPrefix": "/docs"
       }
     }
   },
@@ -19,71 +20,71 @@
           "path": "src",
           "purpose": "CLI, index builder, MCP, gates, and doctor",
           "checks": ["pnpm test", "pnpm typecheck"],
-          "agentDoc": "docs/POSITIONING.md",
-          "humanDoc": "README"
+          "agentDoc": "docs/agent-corpus/doc-bridge.md",
+          "humanDoc": "/docs/POSITIONING"
         },
         "doc-bridge-cli": {
           "path": "src/cli",
           "purpose": "Public ak-docs commands, arguments, output modes, and bundled demo",
           "checks": ["pnpm test", "pnpm typecheck", "node examples/verify-handoff.mjs"],
-          "agentDoc": "docs/spec/cli.md",
-          "humanDoc": "README"
+          "agentDoc": "docs/agent-corpus/cli.md",
+          "humanDoc": "/docs/spec/cli"
         },
         "doc-bridge-index": {
           "path": "src/index-builder",
           "purpose": "Corpus scanning, handoff generation, hashes, llms.txt, and watch mode",
           "checks": ["pnpm test", "pnpm typecheck", "node bin/ak-docs.js index"],
-          "agentDoc": "docs/recipes/index-pipeline.md",
-          "humanDoc": "README"
+          "agentDoc": "docs/agent-corpus/INDEX.md",
+          "humanDoc": "/docs/recipes/index-pipeline"
         },
         "doc-bridge-query": {
           "path": "src/query",
           "purpose": "Deterministic package queries, document search, and index loading",
           "checks": ["pnpm test", "pnpm typecheck"],
-          "agentDoc": "docs/query.md",
-          "humanDoc": "README"
+          "agentDoc": "docs/agent-corpus/query.md",
+          "humanDoc": "/docs/query"
         },
         "doc-bridge-mcp": {
           "path": "src/mcp",
           "purpose": "MCP stdio server, tool contracts, and client installation",
           "checks": ["pnpm test", "pnpm typecheck", "pnpm smoke:packaged"],
-          "agentDoc": "docs/mcp.md",
-          "humanDoc": "README"
+          "agentDoc": "docs/agent-corpus/mcp.md",
+          "humanDoc": "/docs/mcp"
         },
         "doc-bridge-gates": {
           "path": "src/gates",
           "purpose": "Freshness, coverage, and documentation link quality gates",
           "checks": ["pnpm test", "node bin/ak-docs.js gate run"],
-          "agentDoc": "docs/spec/documentation-standard-v1.md",
-          "humanDoc": "README"
+          "agentDoc": "docs/agent-corpus/gates.md",
+          "humanDoc": "/docs/spec/documentation-standard-v1"
         },
         "doc-bridge-conformance": {
           "path": "src/conformance",
           "purpose": "Versioned documentation-standard conformance checks and reports",
           "checks": ["pnpm test", "node bin/ak-docs.js conformance run documentation-standard-v1 --text"],
-          "agentDoc": "docs/spec/documentation-standard-v1.md",
-          "humanDoc": "README"
+          "agentDoc": "docs/agent-corpus/conformance.md",
+          "humanDoc": "/docs/spec/documentation-standard-v1"
         },
         "doc-bridge-doctor": {
           "path": "src/doctor",
           "purpose": "Repository health scoring, findings, and remediation guidance",
           "checks": ["pnpm test", "node bin/ak-docs.js doctor --text"],
-          "agentDoc": "docs/spec/documentation-standard-v1.md",
-          "humanDoc": "README"
+          "agentDoc": "docs/agent-corpus/doctor.md",
+          "humanDoc": "/docs/spec/documentation-standard-v1"
         },
         "doc-bridge-memory": {
           "path": "src/memory",
           "purpose": "Reviewable memory ingestion, classification, and documentation promotion",
           "checks": ["pnpm test", "pnpm typecheck"],
-          "agentDoc": "docs/schemas/memory-candidate-v1.md",
-          "humanDoc": "README"
+          "agentDoc": "docs/agent-corpus/memory.md",
+          "humanDoc": "/docs/schemas/memory-candidate-v1"
         },
         "doc-bridge-chat": {
           "path": "src/intelligence",
           "purpose": "Optional AgentsKit RAG and chat integration after deterministic resolution",
           "checks": ["pnpm test", "pnpm typecheck", "pnpm docs:typecheck"],
-          "agentDoc": "docs/chat-and-rag.md",
-          "humanDoc": "README"
+          "agentDoc": "docs/agent-corpus/chat.md",
+          "humanDoc": "/docs/chat-and-rag"
         }
       }
     }
@@ -94,7 +95,7 @@
   },
   "conformance": {
     "documentationStandardV1": {
-      "rawSources": ["README.md", "docs/getting-started.md", "docs/spec/cli.md"],
+      "rawSources": ["README.md", "docs/getting-started.md", "docs/for-agents.md", "docs/spec/cli.md"],
       "contributionPaths": ["CONTRIBUTING.md"],
       "metadata": [
         {
@@ -110,7 +111,7 @@
         { "url": "https://www.agentskit.io", "paths": ["README.md"] },
         { "url": "https://registry.agentskit.io/", "paths": ["README.md"] },
         { "url": "https://playbook.agentskit.io/llms.txt", "paths": ["README.md"] },
-        { "url": "https://github.com/AgentsKit-io/agentskit-chat", "paths": ["README.md"] },
+        { "url": "https://chat.agentskit.io", "paths": ["README.md"] },
         { "url": "https://akos.agentskit.io", "paths": ["README.md"] },
         { "url": "https://github.com/AgentsKit-io/code-review-cli", "paths": ["README.md"] }
       ],

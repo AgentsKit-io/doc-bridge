@@ -48,6 +48,8 @@ jobs:
       - run: pnpm audit --audit-level low
       - run: pnpm typecheck
       - run: pnpm check:ecosystem-upstream
+      - run: pnpm check:marketplace
+      - run: pnpm test:marketplace
       - run: pnpm test
       - run: pnpm coverage
       - run: pnpm build
@@ -105,7 +107,7 @@ jobs:
             if [ -n "${NPM_TOKEN:-}" ]; then export NODE_AUTH_TOKEN="$NPM_TOKEN"; fi
             npm publish "$artifact" --access public --provenance
           fi
-      - name: Verify and finalize GitHub release
+      - name: Verify package and prepare GitHub release draft
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -121,6 +123,6 @@ jobs:
             sleep 5
           done
           test "$published" = true
-          gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 || gh release create "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --verify-tag --generate-notes
+          gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 || gh release create "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --verify-tag --generate-notes --draft
           gh release upload "$RELEASE_TAG" artifacts/* --repo "$GITHUB_REPOSITORY" --clobber
-          gh release edit "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --draft=false --latest
+          echo "GitHub release draft is ready. Complete the Marketplace fields in the release UI, then publish it."

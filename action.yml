@@ -18,46 +18,41 @@ inputs:
     required: false
     default: '22'
   package-version:
-    description: npm package version pin (e.g. 1.1.1)
+    description: Exact @agentskit/doc-bridge npm version (kept in sync with this Action release)
     required: false
-    default: ''
+    default: '1.1.1'
 
 runs:
   using: composite
   steps:
     - name: Setup Node
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v4
       with:
         node-version: ${{ inputs.node-version }}
 
     - name: Install ak-docs
       shell: bash
+      env:
+        DOC_BRIDGE_PACKAGE_VERSION: ${{ inputs.package-version }}
       run: |
-        VERSION="${{ inputs.package-version }}"
-        if [ -n "$VERSION" ]; then
-          npm install -g "@agentskit/doc-bridge@${VERSION}"
-        else
-          npm install -g @agentskit/doc-bridge
+        if [[ ! "$DOC_BRIDGE_PACKAGE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+          echo "::error title=Invalid package-version::Use an exact semver version such as 1.1.1"
+          exit 2
         fi
-
-    - name: Build index
-      shell: bash
-      run: |
-        if [ -n "${{ inputs.config-path }}" ]; then
-          ak-docs index --config "${{ inputs.config-path }}"
-        else
-          ak-docs index
-        fi
+        npm install -g "@agentskit/doc-bridge@${DOC_BRIDGE_PACKAGE_VERSION}"
 
     - name: Run gates
       shell: bash
+      env:
+        DOC_BRIDGE_CONFIG_PATH: ${{ inputs.config-path }}
+        DOC_BRIDGE_GATE_ID: ${{ inputs.gate }}
       run: |
-        if [ -n "${{ inputs.gate }}" ] && [ -n "${{ inputs.config-path }}" ]; then
-          ak-docs gate run "${{ inputs.gate }}" --config "${{ inputs.config-path }}"
-        elif [ -n "${{ inputs.gate }}" ]; then
-          ak-docs gate run "${{ inputs.gate }}"
-        elif [ -n "${{ inputs.config-path }}" ]; then
-          ak-docs gate run --config "${{ inputs.config-path }}"
+        if [ -n "$DOC_BRIDGE_GATE_ID" ] && [ -n "$DOC_BRIDGE_CONFIG_PATH" ]; then
+          ak-docs gate run "$DOC_BRIDGE_GATE_ID" --config "$DOC_BRIDGE_CONFIG_PATH"
+        elif [ -n "$DOC_BRIDGE_GATE_ID" ]; then
+          ak-docs gate run "$DOC_BRIDGE_GATE_ID"
+        elif [ -n "$DOC_BRIDGE_CONFIG_PATH" ]; then
+          ak-docs gate run --config "$DOC_BRIDGE_CONFIG_PATH"
         else
           ak-docs gate run
         fi
@@ -65,9 +60,11 @@ runs:
     - name: Doctor coverage (annotation)
       shell: bash
       continue-on-error: true
+      env:
+        DOC_BRIDGE_CONFIG_PATH: ${{ inputs.config-path }}
       run: |
-        if [ -n "${{ inputs.config-path }}" ]; then
-          REPORT="$(ak-docs doctor --text --config "${{ inputs.config-path }}" 2>&1 || true)"
+        if [ -n "$DOC_BRIDGE_CONFIG_PATH" ]; then
+          REPORT="$(ak-docs doctor --text --config "$DOC_BRIDGE_CONFIG_PATH" 2>&1 || true)"
         else
           REPORT="$(ak-docs doctor --text 2>&1 || true)"
         fi

@@ -1,7 +1,8 @@
 import Link from 'next/link'
-import { ArrowRight, Bot, Braces, CheckCircle2, GitBranch, Terminal } from 'lucide-react'
+import { ArrowRight, Bot, Braces, GitBranch, Terminal } from 'lucide-react'
 import { readdirSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { EcosystemPeers } from '@/components/ecosystem'
 
 const proof = [
   ['Index', 'ak-docs index', 'Build the local knowledge map from source docs.'],
@@ -27,7 +28,7 @@ export default function HomePage() {
             <p className="mb-5 font-mono text-xs uppercase tracking-[.2em] text-emerald-700 dark:text-emerald-300">Documentation infrastructure for humans + agents</p>
             <h1 className="max-w-4xl text-5xl font-semibold leading-[.98] tracking-[-.055em] sm:text-7xl">One repository.<br />Two audiences.<br /><span className="text-emerald-600">No duplicated truth.</span></h1>
             <p className="mt-7 max-w-2xl text-lg leading-8 text-neutral-600 dark:text-neutral-300">Doc Bridge converts documentation ownership into deterministic handoffs, MCP tools, freshness gates, and human links—locally, before any model or backend is called.</p>
-            <div className="mt-9 flex flex-wrap gap-3"><Link href="/docs/getting-started" className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#111714] px-5 py-3 font-medium text-white dark:bg-white dark:text-black">Run the 60-second proof <ArrowRight className="size-4" /></Link><a href={`${basePath}/llms.txt`} className="inline-flex min-h-11 items-center rounded-full border px-5 py-3 font-medium">Read llms.txt</a></div>
+            <div className="mt-9 flex flex-wrap gap-3"><Link href="/docs/getting-started" className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#111714] px-5 py-3 font-medium text-white dark:bg-white dark:text-black">Run the 60-second proof <ArrowRight className="size-4" /></Link><Link href="/for-agents" className="inline-flex min-h-11 items-center rounded-full border px-5 py-3 font-medium">For agents</Link><Link href="/docs/MARKETPLACE" className="inline-flex min-h-11 items-center rounded-full border px-5 py-3 font-medium">GitHub Marketplace</Link></div>
           </div>
           <div className="overflow-hidden rounded-3xl border bg-[#101713] p-2 text-[#d8e4dc] shadow-2xl shadow-emerald-950/15" aria-label="Doc Bridge command output">
             <div className="flex items-center gap-2 border-b border-white/10 px-4 py-3 font-mono text-xs text-white/50"><span className="size-2 rounded-full bg-red-400" /><span className="size-2 rounded-full bg-amber-300" /><span className="size-2 rounded-full bg-emerald-400" /> deterministic handoff</div>
@@ -42,7 +43,7 @@ export default function HomePage() {
 
       <section className="border-y bg-[#111714] px-5 py-20 text-white"><div className="mx-auto max-w-7xl"><p className="font-mono text-xs uppercase tracking-[.2em] text-emerald-300">Human ↔ agent loop</p><h2 className="mt-4 max-w-3xl text-4xl font-semibold tracking-tight">The bridge is a feedback system, not another documentation silo.</h2><div className="mt-12 grid gap-px overflow-hidden rounded-2xl bg-white/15 md:grid-cols-4">{[[Terminal,'Human docs','Explain intent and operation.'],[Braces,'Ownership map','Points to source, checks, and context.'],[Bot,'Agent handoff','Delivers compact deterministic context.'],[GitBranch,'Promotion loop','Turns durable learnings back into docs.']].map(([Icon,title,copy]) => { const C = Icon as typeof Terminal; return <article key={String(title)} className="bg-[#111714] p-6"><C className="size-6 text-emerald-300" /><h3 className="mt-8 text-lg font-semibold">{String(title)}</h3><p className="mt-2 text-sm leading-6 text-white/65">{String(copy)}</p></article>})}</div></div></section>
 
-      <section className="mx-auto max-w-7xl px-5 py-20 lg:px-8"><div className="grid gap-10 lg:grid-cols-2"><div><p className="font-mono text-xs uppercase tracking-[.2em] text-blue-700 dark:text-blue-300">Part of AgentsKit</p><h2 className="mt-4 text-4xl font-semibold tracking-tight">A shared path from discovery to production.</h2></div><div className="grid gap-4 text-sm sm:grid-cols-2">{[['AgentsKit','Build agents and applications.','https://www.agentskit.io'],['Registry','Install reusable agents.','https://registry.agentskit.io'],['Playbook','Apply production patterns.','https://playbook.agentskit.io'],['AgentsChat','Ship the chat surface.','https://github.com/AgentsKit-io/agentskit-chat']].map(([name,copy,url]) => <a key={name} href={url} className="rounded-2xl border p-5 transition-transform hover:-translate-y-1"><CheckCircle2 className="size-5 text-emerald-600 dark:text-emerald-300" /><h3 className="mt-6 text-lg font-semibold">{name}</h3><p className="mt-2 text-neutral-600 dark:text-neutral-300">{copy}</p></a>)}</div></div></section>
+      <EcosystemPeers />
     </main>
   )
 }

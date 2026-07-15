@@ -54,9 +54,9 @@
     "smoke:ollama": "node scripts/smoke-ollama.mjs",
     "coverage:badge": "node scripts/update-coverage-badge.mjs",
     "changeset": "changeset",
-    "version-packages": "changeset version",
+    "version-packages": "changeset version && node scripts/sync-version.mjs",
     "release": "npm run build && npm test && changeset publish",
-    "version": "node scripts/sync-version.mjs && git add package.json src/version.ts",
+    "version": "node scripts/sync-version.mjs && git add package.json src/version.ts action.yml",
     "prepublishOnly": "npm run build && npm test",
     "prepare": "node scripts/prepare.mjs",
     "prepack": "npm run build",
@@ -67,8 +67,11 @@
     "docs:e2e": "playwright test",
     "docs:lighthouse": "lhci autorun",
     "test:readme-standard": "node --test scripts/readme-standard.test.mjs",
+    "test:marketplace": "node --test scripts/marketplace-contract.test.mjs",
+    "check:marketplace": "node scripts/check-marketplace-contract.mjs",
+    "test:docs-artifacts": "node --test scripts/docs-artifacts-contract.test.mjs",
     "check:readme-standard": "node scripts/check-readme-standard.mjs",
-    "check:docs": "pnpm check:readme-standard && node bin/ak-docs.js gate run && node bin/ak-docs.js conformance run documentation-standard-v1 --text && pnpm docs:typecheck && pnpm docs:build"
+    "check:docs": "pnpm check:readme-standard && node bin/ak-docs.js gate run && node bin/ak-docs.js conformance run documentation-standard-v1 --text && pnpm docs:typecheck && pnpm docs:build && pnpm test:docs-artifacts"
   },
   "keywords": [
     "agentskit",
