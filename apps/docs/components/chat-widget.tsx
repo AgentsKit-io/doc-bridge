@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createAskAdapter, createAskSessionMemory, defineChat, defineComponentManifest, StandardComponentCatalog } from '@agentskit/chat'
-import { AgentChat } from '@agentskit/chat-react'
+import { AgentChat } from '@agentskit/chat/react'
 import { createDiscoveryAdapter, loadDiscovery, type DiscoveryInputs } from '@/lib/discovery'
 
 const components = defineComponentManifest(StandardComponentCatalog)

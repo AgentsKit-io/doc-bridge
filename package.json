@@ -46,6 +46,7 @@
     "test:watch": "vitest",
     "coverage": "vitest run --coverage",
     "check:ecosystem-upstream": "node scripts/check-ecosystem-upstream.mjs",
+    "check:no-legacy-chat-imports": "node scripts/check-no-legacy-chat-imports.mjs",
     "typecheck": "tsc --noEmit",
     "smoke:packaged": "node scripts/smoke-packaged.mjs",
     "smoke:docsites": "node scripts/smoke-docsites.mjs",
@@ -122,9 +123,7 @@
     }
   },
   "devDependencies": {
-    "@agentskit/chat": "0.2.0",
-    "@agentskit/chat-protocol": "0.2.0",
-    "@agentskit/chat-react": "0.2.0",
+    "@agentskit/chat": "0.3.0",
     "@agentskit/core": "1.12.3",
     "@agentskit/react": "0.7.4",
     "@changesets/cli": "^2.31.0",

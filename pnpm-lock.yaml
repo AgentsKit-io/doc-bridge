@@ -16,7 +16,7 @@ importers:
         version: 0.13.3
       '@agentskit/ink':
         specifier: '>=0.8.0 <1'
-        version: 0.9.2(react@19.2.7)
+        version: 0.9.2(@types/react@19.0.0)(react@19.2.0)
       '@agentskit/memory':
         specifier: '>=0.9.0 <1'
         version: 0.10.3
@@ -28,14 +28,8 @@ importers:
         version: 3.25.76
     devDependencies:
       '@agentskit/chat':
-        specifier: 0.2.0
-        version: 0.2.0(@agentskit/core@1.12.3)
-      '@agentskit/chat-protocol':
-        specifier: 0.2.0
-        version: 0.2.0(@agentskit/core@1.12.3)
-      '@agentskit/chat-react':
-        specifier: 0.2.0
-        version: 0.2.0(@agentskit/core@1.12.3)(@agentskit/react@0.7.4(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react@19.2.0)
+        specifier: 0.3.0
+        version: 0.3.0(@agentskit/core@1.12.3)(@agentskit/ink@0.9.2(@types/react@19.0.0)(react@19.2.0))(@agentskit/react@0.7.4(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(ink@7.1.0(@types/react@19.0.0)(react@19.2.0))(react@19.2.0)
       '@agentskit/core':
         specifier: 1.12.3
         version: 1.12.3
@@ -110,27 +104,68 @@ packages:
       '@aws-sdk/client-bedrock-runtime':
         optional: true
 
-  '@agentskit/chat-protocol@0.2.0':
-    resolution: {integrity: sha512-zzQrj4YRDi3wpdQ5GkSSyO1iafrMY0VwSat7XaxG2kf6A6xYyEuYVEFEee/2aWU+VVPLwR2qC2Mq8+oCIk9ItQ==}
+  '@agentskit/chat@0.3.0':
+    resolution: {integrity: sha512-N424oOZ5DClrCMTp5V5djOg+N2rwj2LJ+ZtqQvpwBEO/sZ1BORFnenqFAJEyWptAw3/REHi9etDhhTWJcWGBnQ==}
     peerDependencies:
-      '@agentskit/core': ^1.12.1
-
-  '@agentskit/chat-react@0.2.0':
-    resolution: {integrity: sha512-md1LjRoDbPM0BQPtzcTSUMrfUlO4WxfMBd7YTblaIW5uD5bvtY/SVSBPI1YldI1A/lhGi7PBFSDB5+VLzxiUzg==}
-    peerDependencies:
-      '@agentskit/react': ^0.7.1
-      react: '>=18'
-
-  '@agentskit/chat@0.2.0':
-    resolution: {integrity: sha512-7bxvOwFPkxZYywQkghL5f/1H8uW0Mx4H+T8BsZ7Xmh6fomdS3T2vk14mrX6V+YN3dcRUJ1uO1CHYOhvhJ3et8w==}
-    peerDependencies:
+      '@agentskit/angular': ^0.4.6
       '@agentskit/core': ^1.12.3
+      '@agentskit/ink': ^0.10.1
+      '@agentskit/react': ^0.7.1
+      '@agentskit/react-native': ^0.4.4
+      '@agentskit/solid': ^0.4.4
+      '@agentskit/svelte': ^0.4.4
+      '@agentskit/vue': ^0.4.4
+      '@angular/common': '>=18.1 <22'
+      '@angular/core': '>=18.1 <22'
+      ink: '>=7.1.0'
+      react: '>=18'
+      react-native: '*'
+      rxjs: ^7.0.0
+      solid-js: ^1.9.0
+      svelte: ^5.0.0
+      vue: ^3.4.0
+    peerDependenciesMeta:
+      '@agentskit/angular':
+        optional: true
+      '@agentskit/ink':
+        optional: true
+      '@agentskit/react':
+        optional: true
+      '@agentskit/react-native':
+        optional: true
+      '@agentskit/solid':
+        optional: true
+      '@agentskit/svelte':
+        optional: true
+      '@agentskit/vue':
+        optional: true
+      '@angular/common':
+        optional: true
+      '@angular/core':
+        optional: true
+      ink:
+        optional: true
+      react:
+        optional: true
+      react-native:
+        optional: true
+      rxjs:
+        optional: true
+      solid-js:
+        optional: true
+      svelte:
+        optional: true
+      vue:
+        optional: true
 
   '@agentskit/core@1.10.0':
     resolution: {integrity: sha512-Qiq9l9s0dMbnb5tjy0UJEdA40QHd0nvdbpPsPKnFLd+lSHXuU5i4D8rjLrezqiR6xq8FYzmDKItqD5+lkbIZLw==}
 
   '@agentskit/core@1.12.3':
     resolution: {integrity: sha512-fNHrzpEoCaWHDK2fwk/BIhcPseN6zCdy3N0WjzdelnmRuh7zy9/Ki0zcukesK5ZAAmXdz2+Dj8FI7AM32JyOKw==}
+
+  '@agentskit/eval@0.4.19':
+    resolution: {integrity: sha512-DYjEa6bgzP/rVqTZBuguXjn+JuoPG9NfVUa/ogubm5hPlVKL0SVD1ThTDfuhTqrMqOgqHIBwIHv5yFbjnqheDg==}
 
   '@agentskit/ink@0.9.2':
     resolution: {integrity: sha512-SLjzoGFu2t11BlgBRAj3IcerDZSy1MHtEQJJPd2HekioKc8vf7t5DG+8dp7Qep+2dX5Cj2pMC0IpdkAfvY87qg==}
@@ -696,10 +731,6 @@ packages:
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [win32]
-
-  '@noble/hashes@2.2.0':
-    resolution: {integrity: sha512-IYqDGiTXab6FniAgnSdZwgWbomxpy9FtYvLKs7wCUs2a8RkITG+DFGO1DM9cr+E3/RgADRpFjrKVaJ1z6sjtEg==}
-    engines: {node: '>= 20.19.0'}
 
   '@nodelib/fs.scandir@2.1.5':
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
@@ -3415,10 +3446,6 @@ packages:
     resolution: {integrity: sha512-tmbWg6W31tQLeB5cdIBOicJDJRR2KzXsV7uSK9iNfLWQ5bIZfxuPEHp7M8wiHyHnn0DD1i7w3Zmin0FtkrwoCQ==}
     engines: {node: '>=0.10.0'}
 
-  react@19.2.7:
-    resolution: {integrity: sha512-HNe9WslTbXmFK8o8cmwgAeJFSBvt1bPdHCVKtaaV+WlAN36mpT4hcRpwbf3fY56ar2oIXzsBpOAiIRHAdY0OlQ==}
-    engines: {node: '>=0.10.0'}
-
   read-yaml-file@1.1.0:
     resolution: {integrity: sha512-VIMnQi/Z4HT2Fxuwg5KrY174U1VdUIASQVWXXyqtNRtxSr9IYkn1rsI6Tb6HsrHCmB7gVpNwX6JxPTHcH6IoTA==}
     engines: {node: '>=6'}
@@ -4203,40 +4230,35 @@ snapshots:
     dependencies:
       '@agentskit/core': 1.10.0
 
-  '@agentskit/chat-protocol@0.2.0(@agentskit/core@1.12.3)':
+  '@agentskit/chat@0.3.0(@agentskit/core@1.12.3)(@agentskit/ink@0.9.2(@types/react@19.0.0)(react@19.2.0))(@agentskit/react@0.7.4(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(ink@7.1.0(@types/react@19.0.0)(react@19.2.0))(react@19.2.0)':
     dependencies:
       '@agentskit/core': 1.12.3
-      '@noble/hashes': 2.2.0
-      zod: 4.4.3
-
-  '@agentskit/chat-react@0.2.0(@agentskit/core@1.12.3)(@agentskit/react@0.7.4(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react@19.2.0)':
-    dependencies:
-      '@agentskit/chat': 0.2.0(@agentskit/core@1.12.3)
-      '@agentskit/chat-protocol': 0.2.0(@agentskit/core@1.12.3)
-      '@agentskit/react': 0.7.4(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
-      react: 19.2.0
-    transitivePeerDependencies:
-      - '@agentskit/core'
-
-  '@agentskit/chat@0.2.0(@agentskit/core@1.12.3)':
-    dependencies:
-      '@agentskit/chat-protocol': 0.2.0(@agentskit/core@1.12.3)
-      '@agentskit/core': 1.12.3
+      '@agentskit/eval': 0.4.19
       '@agentskit/memory': 0.11.0
       '@agentskit/statechart': 0.2.0
+      tslib: 2.8.1
       zod: 4.4.3
+    optionalDependencies:
+      '@agentskit/ink': 0.9.2(@types/react@19.0.0)(react@19.2.0)
+      '@agentskit/react': 0.7.4(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      ink: 7.1.0(@types/react@19.0.0)(react@19.2.0)
+      react: 19.2.0
 
   '@agentskit/core@1.10.0': {}
 
   '@agentskit/core@1.12.3': {}
 
-  '@agentskit/ink@0.9.2(react@19.2.7)':
+  '@agentskit/eval@0.4.19':
+    dependencies:
+      '@agentskit/core': 1.12.3
+
+  '@agentskit/ink@0.9.2(@types/react@19.0.0)(react@19.2.0)':
     dependencies:
       '@agentskit/core': 1.10.0
-      ink: 7.1.0(react@19.2.7)
+      ink: 7.1.0(@types/react@19.0.0)(react@19.2.0)
       marked: 15.0.12
       marked-terminal: 7.3.0(marked@15.0.12)
-      react: 19.2.7
+      react: 19.2.0
     transitivePeerDependencies:
       - '@types/react'
       - bufferutil
@@ -4813,8 +4835,6 @@ snapshots:
 
   '@next/swc-win32-x64-msvc@15.5.19':
     optional: true
-
-  '@noble/hashes@2.2.0': {}
 
   '@nodelib/fs.scandir@2.1.5':
     dependencies:
@@ -6603,7 +6623,7 @@ snapshots:
 
   inherits@2.0.4: {}
 
-  ink@7.1.0(react@19.2.7):
+  ink@7.1.0(@types/react@19.0.0)(react@19.2.0):
     dependencies:
       '@alcalzone/ansi-tokenize': 0.3.0
       ansi-escapes: 7.3.0
@@ -6618,8 +6638,8 @@ snapshots:
       indent-string: 5.0.0
       is-in-ci: 2.0.0
       patch-console: 2.0.0
-      react: 19.2.7
-      react-reconciler: 0.33.0(react@19.2.7)
+      react: 19.2.0
+      react-reconciler: 0.33.0(react@19.2.0)
       scheduler: 0.27.0
       signal-exit: 3.0.7
       slice-ansi: 9.0.0
@@ -6631,6 +6651,8 @@ snapshots:
       wrap-ansi: 10.0.0
       ws: 8.21.0
       yoga-layout: 3.2.1
+    optionalDependencies:
+      '@types/react': 19.0.0
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
@@ -7730,9 +7752,9 @@ snapshots:
       react: 19.2.0
       react-dom: 19.2.0(react@19.2.0)
 
-  react-reconciler@0.33.0(react@19.2.7):
+  react-reconciler@0.33.0(react@19.2.0):
     dependencies:
-      react: 19.2.7
+      react: 19.2.0
       scheduler: 0.27.0
 
   react-remove-scroll-bar@2.3.8(@types/react@19.0.0)(react@19.2.0):
@@ -7763,8 +7785,6 @@ snapshots:
       '@types/react': 19.0.0
 
   react@19.2.0: {}
-
-  react@19.2.7: {}
 
   read-yaml-file@1.1.0:
     dependencies:

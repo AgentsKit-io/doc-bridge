@@ -19,9 +19,9 @@ Layer 1 is **opt-in** and dogfoods public AgentsKit packages:
 
 ## Public docs chat: deterministic before backend
 
-The documentation portal uses `@agentskit/chat`, `@agentskit/chat-react`, and
-`@agentskit/chat-protocol` directly. It does not recreate chat lifecycle or
-session state.
+The documentation portal uses `@agentskit/chat` (root), `@agentskit/chat/react`,
+and `@agentskit/chat/protocol` directly — the consolidated AgentsKit Chat 0.3.x
+surface. It does not recreate chat lifecycle or session state.
 
 At build time, `scripts/build-docs-artifacts.mjs` reads the fresh
 `.doc-bridge/index.json` and canonical `docs/**` corpus, then writes:
