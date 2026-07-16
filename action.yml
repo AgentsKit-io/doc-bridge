@@ -20,7 +20,7 @@ inputs:
   package-version:
     description: Exact @agentskit/doc-bridge npm version (kept in sync with this Action release)
     required: false
-    default: '1.1.1'
+    default: '1.2.0'
 
 runs:
   using: composite
@@ -36,7 +36,7 @@ runs:
         DOC_BRIDGE_PACKAGE_VERSION: ${{ inputs.package-version }}
       run: |
         if [[ ! "$DOC_BRIDGE_PACKAGE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
-          echo "::error title=Invalid package-version::Use an exact semver version such as 1.1.1"
+          echo "::error title=Invalid package-version::Use an exact semver version such as 1.2.0"
           exit 2
         fi
         npm install -g "@agentskit/doc-bridge@${DOC_BRIDGE_PACKAGE_VERSION}"

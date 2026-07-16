@@ -113,7 +113,7 @@ ak-docs mcp install --cursor   # wires MCP into .cursor/mcp.json
 |---------|------------|--------------------|
 | **CLI** | Inspect ownership, search docs, run gates, ask local questions | `ak-docs query`, `search`, `ask`, `doctor`, `gate` |
 | **MCP server** | Let Cursor, Claude Code, Codex-style agents resolve handoffs before editing | `ak-docs mcp`, `handoff.resolve` |
-| **GitHub Action / CI** | Fail stale indexes and broken human-doc links on PRs | `AgentsKit-io/doc-bridge@v1.1.1` |
+| **GitHub Action / CI** | Fail stale indexes and broken human-doc links on PRs | `AgentsKit-io/doc-bridge@v1.2.0` |
 | **Documentation conformance** | Check the stable ecosystem standard with auditable evidence | `ak-docs conformance run documentation-standard-v1 --text` |
 | **Doc adapters** | Link human docs to agent docs | `fumadocs`, `docusaurus`, `plain-markdown` |
 | **Monorepo routing** | Discover workspaces and checks | `pnpm-monorepo` |
@@ -208,7 +208,7 @@ permissions:
 
 steps:
   - uses: actions/checkout@v4
-  - uses: AgentsKit-io/doc-bridge@v1.1.1
+  - uses: AgentsKit-io/doc-bridge@v1.2.0
     with:
       config-path: doc-bridge.config.json
 ```
@@ -290,7 +290,7 @@ ak-docs memory promote --pr              # opens draft PR via gh
 
 ## Status
 
-**v1.1.1 stable** — deterministic Documentation Standard v1 conformance, verified release provenance, doctor + CI + skill, landing, Playbook pattern, and full Tier A/B/C.
+**v1.2.0 stable** — deterministic Documentation Standard v1 conformance, verified release provenance, Fumadocs portal, Marketplace Action, doctor + CI + skill, and full Tier A/B/C.
 
 ```bash
 pnpm install && pnpm build && pnpm test
