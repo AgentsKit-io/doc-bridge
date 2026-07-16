@@ -2,19 +2,24 @@
   "title": "Doc Bridge",
   "pages": [
     "index",
+    "---Start---",
     "getting-started",
     "for-agents",
     "MARKETPLACE",
-    "POSITIONING",
+    "---Use---",
     "mcp",
     "query",
     "examples",
     "chat-and-rag",
     "ollama-demo",
+    "---Product---",
+    "POSITIONING",
     "playbook",
     "recipes",
+    "---Reference---",
     "schemas",
     "skills",
-    "spec"
+    "spec",
+    "RELEASE"
   ]
 }

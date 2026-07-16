@@ -10,7 +10,7 @@ const ecosystemManifestPath = join(root, 'ecosystem.json')
 const ecosystemOverridesPath = join(root, 'apps/docs/ecosystem-presentation-overrides.json')
 const publicDocsPath = join(root, 'apps/docs/public-docs.json')
 const publicAgentDocsPath = join(root, 'apps/docs/public-agent-docs.json')
-const origin = 'https://agentskit-io.github.io/doc-bridge'
+const origin = 'https://doc-bridge.agentskit.io'
 const basePath = process.env.DOCS_BASE_PATH ?? ''
 const generatedAt = process.env.SOURCE_DATE_EPOCH
   ? new Date(Number(process.env.SOURCE_DATE_EPOCH) * 1000).toISOString()
@@ -196,3 +196,5 @@ await writeFile(join(publicRoot, 'deterministic/site-config.json'), `${JSON.stri
 }, null, 2)}\n`)
 
 console.log(`docs artifacts: ${documents.length} sources, ${artifact.entries.length} deterministic entries, ${contentHash}`)
+
+await writeFile(join(publicRoot, 'CNAME'), 'doc-bridge.agentskit.io\n')

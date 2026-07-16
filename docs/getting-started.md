@@ -152,3 +152,11 @@ ak-docs ask "how does auth work?" --chat
 ```
 
 Details: [chat-and-rag.md](./chat-and-rag.md).
+
+## Related
+
+- [For agents](./for-agents.md) — machine-first resolve → read → verify loop  
+- [MCP](./mcp.md) — expose the same handoffs to MCP clients  
+- [Marketplace](./MARKETPLACE.md) — PR gate as a GitHub Action  
+- [CLI reference](./spec/cli.md) — full command surface  
+- [Positioning](./POSITIONING.md) — product boundaries inside AgentsKit

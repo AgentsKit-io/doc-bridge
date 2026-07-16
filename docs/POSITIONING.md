@@ -54,7 +54,7 @@ Engineering teams with real ownership (monorepos first). Secondary: solo libs, i
 - [AgentsKit for-agents](https://www.agentskit.io/docs/for-agents) — agent-first package corpus
 - [Registry](https://registry.agentskit.io/) — agent discovery / onboarding companion
 - [Playbook llms.txt](https://playbook.agentskit.io/llms.txt) — patterns + federation source
-- [doc-bridge landing](https://agentskit-io.github.io/doc-bridge/) — conversion page + used-by
+- [doc-bridge landing](https://doc-bridge.agentskit.io/) — conversion page + used-by
 - [Doc Bridge Playbook pattern](../playbook/doc-bridge-pattern.md) — `ak-docs playbook pattern`
 
 ## Comparison

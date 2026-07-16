@@ -52,7 +52,7 @@ test('every public document and local deterministic citation resolves in the exp
     assert.ok(existsSync(route), `missing public route for ${file}`)
   }
   assert.ok(!existsSync(resolve(publicRoot, 'raw', 'DOGFOOD-ROUND2.md')))
-  const origin = 'https://agentskit-io.github.io/doc-bridge'
+  const origin = 'https://doc-bridge.agentskit.io'
   for (const entry of knowledge.entries) {
     for (const citation of entry.answer.citations) {
       if (!citation.href.startsWith(origin)) continue
@@ -68,7 +68,7 @@ test('every public document and local deterministic citation resolves in the exp
 })
 
 test('machine entry points cross-reference the agent-first route', () => {
-  assert.ok(llms.includes('https://agentskit-io.github.io/doc-bridge/for-agents/'))
-  assert.ok(llms.includes('https://agentskit-io.github.io/doc-bridge/llms-full.txt'))
-  assert.ok(llms.includes('https://agentskit-io.github.io/doc-bridge/deterministic/knowledge.json'))
+  assert.ok(llms.includes('https://doc-bridge.agentskit.io/for-agents/'))
+  assert.ok(llms.includes('https://doc-bridge.agentskit.io/llms-full.txt'))
+  assert.ok(llms.includes('https://doc-bridge.agentskit.io/deterministic/knowledge.json'))
 })

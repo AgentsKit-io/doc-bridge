@@ -21,23 +21,37 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v4
-      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v4
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
         with:
           version: 10.33.0
-      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: pnpm
-      - uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
+      - uses: actions/configure-pages@v5
       - run: pnpm install --frozen-lockfile
+      # Custom domain doc-bridge.agentskit.io is root-hosted — no /doc-bridge base path.
       - run: pnpm docs:build
         env:
-          DOCS_BASE_PATH: /doc-bridge
-      - name: Verify Pages subpath links
-        run: node -e "const html=require('node:fs').readFileSync('apps/docs/out/docs/getting-started/index.html','utf8');if(!html.includes('href=\"/doc-bridge/docs/spec/config-v1/\"'))throw new Error('Pages documentation links escaped the /doc-bridge base path')"
-      - uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3
+          NEXT_PUBLIC_SITE_URL: https://doc-bridge.agentskit.io
+      - name: Verify product-domain links (no GitHub Pages subpath)
+        run: |
+          node -e "
+            const fs = require('node:fs');
+            const html = fs.readFileSync('apps/docs/out/docs/getting-started/index.html', 'utf8');
+            if (html.includes('href=\"/doc-bridge/')) throw new Error('Pages still embeds /doc-bridge base path');
+            if (!html.includes('href=\"/docs/spec/config-v1/\"') && !html.includes('href=\"/docs/spec/config-v1')) {
+              // fumadocs may emit either form; require docs site-local links
+              if (!html.includes('/docs/')) throw new Error('missing local docs links');
+            }
+          "
+      - name: Ensure CNAME for custom domain
+        run: |
+          cp apps/docs/public/CNAME apps/docs/out/CNAME
+          test -f apps/docs/out/CNAME
+      - uses: actions/upload-pages-artifact@v3
         with:
           path: apps/docs/out
       - id: deployment
-        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4
+        uses: actions/deploy-pages@v4

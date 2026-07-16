@@ -2,12 +2,12 @@
 
 [![npm](https://img.shields.io/npm/v/@agentskit/doc-bridge?style=flat-square)](https://www.npmjs.com/package/@agentskit/doc-bridge)
 [![CI](https://img.shields.io/github/actions/workflow/status/AgentsKit-io/doc-bridge/ci.yml?branch=master&style=flat-square)](https://github.com/AgentsKit-io/doc-bridge/actions/workflows/ci.yml)
-[![Pages](https://img.shields.io/github/actions/workflow/status/AgentsKit-io/doc-bridge/pages.yml?branch=master&label=pages&style=flat-square)](https://agentskit-io.github.io/doc-bridge/)
+[![Pages](https://img.shields.io/github/actions/workflow/status/AgentsKit-io/doc-bridge/pages.yml?branch=master&label=pages&style=flat-square)](https://doc-bridge.agentskit.io/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](LICENSE)
 [![Node](https://img.shields.io/badge/node-%3E%3D22-339933?style=flat-square)](package.json)
 [![TypeScript](https://img.shields.io/badge/types-TypeScript-3178c6?style=flat-square)](dist/index.d.ts)
 
-**npm:** [`@agentskit/doc-bridge`](https://www.npmjs.com/package/@agentskit/doc-bridge) · **CLI:** `ak-docs` · **Landing:** [agentskit-io.github.io/doc-bridge](https://agentskit-io.github.io/doc-bridge/)
+**npm:** [`@agentskit/doc-bridge`](https://www.npmjs.com/package/@agentskit/doc-bridge) · **CLI:** `ak-docs` · **Landing:** [agentskit-io.github.io/doc-bridge](https://doc-bridge.agentskit.io/)
 
 **Topics:** `ai-agents` · `documentation` · `developer-experience` · `mcp` · `llms-txt` · `typescript`
 
@@ -297,7 +297,7 @@ pnpm install && pnpm build && pnpm test
 pnpm smoke:ollama    # optional — skips if Ollama/peers unavailable
 ```
 
-**Landing:** https://agentskit-io.github.io/doc-bridge/
+**Landing:** https://doc-bridge.agentskit.io/
 
 ## Contributing
 

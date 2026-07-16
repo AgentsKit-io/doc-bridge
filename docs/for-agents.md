@@ -23,9 +23,9 @@ flowchart LR
 
 ## Machine entry points
 
-- [`llms.txt`](https://agentskit-io.github.io/doc-bridge/llms.txt) — concise discovery and canonical routes
-- [`llms-full.txt`](https://agentskit-io.github.io/doc-bridge/llms-full.txt) — complete source corpus
-- [`deterministic/knowledge.json`](https://agentskit-io.github.io/doc-bridge/deterministic/knowledge.json) — local chat/discovery artifact
-- [`raw/for-agents.md`](https://agentskit-io.github.io/doc-bridge/raw/for-agents.md) — this guide as raw Markdown
+- [`llms.txt`](https://doc-bridge.agentskit.io/llms.txt) — concise discovery and canonical routes
+- [`llms-full.txt`](https://doc-bridge.agentskit.io/llms-full.txt) — complete source corpus
+- [`deterministic/knowledge.json`](https://doc-bridge.agentskit.io/deterministic/knowledge.json) — local chat/discovery artifact
+- [`raw/for-agents.md`](https://doc-bridge.agentskit.io/raw/for-agents.md) — this guide as raw Markdown
 
 If the task is conversational UI, continue with [AgentsKit Chat](https://chat.agentskit.io). For verification before merge, use [AgentsKit Code Review](https://github.com/AgentsKit-io/code-review-cli). For enterprise orchestration, governance, and audit, continue with [AKOS](https://akos.agentskit.io).
