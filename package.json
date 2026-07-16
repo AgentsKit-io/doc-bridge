@@ -95,6 +95,7 @@
     "access": "public"
   },
   "dependencies": {
+    "mermaid": "^11.16.0",
     "zod": "^3.24.2"
   },
   "peerDependencies": {

@@ -155,8 +155,9 @@ Details: [chat-and-rag.md](./chat-and-rag.md).
 
 ## Related
 
-- [For agents](./for-agents.md) — machine-first resolve → read → verify loop  
-- [MCP](./mcp.md) — expose the same handoffs to MCP clients  
-- [Marketplace](./MARKETPLACE.md) — PR gate as a GitHub Action  
-- [CLI reference](./spec/cli.md) — full command surface  
-- [Positioning](./POSITIONING.md) — product boundaries inside AgentsKit
+- [Install and run](./guides/install-and-run.md) — guided path with tables  
+- [Index and query](./guides/index-and-query.md) — ownership resolve loop  
+- [Gate and CI](./guides/gate-ci.md) · [Marketplace](./MARKETPLACE.md)  
+- [MCP for agents](./guides/mcp-agents.md) · [For agents](./for-agents.md)  
+- [CLI reference](./spec/cli.md) · [Config](./spec/config-v1.md)  
+- [Positioning](./POSITIONING.md)

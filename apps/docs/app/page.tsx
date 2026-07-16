@@ -65,6 +65,12 @@ export default function HomePage() {
               >
                 Run the 60-second proof <ArrowRight className="size-4" />
               </Link>
+              <Link
+                href="/docs/guides/install-and-run"
+                className="inline-flex min-h-11 items-center rounded-full border px-5 py-3 font-medium"
+              >
+                Guides
+              </Link>
               <Link href="/for-agents" className="inline-flex min-h-11 items-center rounded-full border px-5 py-3 font-medium">
                 For agents
               </Link>

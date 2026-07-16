@@ -1,41 +1,56 @@
 ---
 title: Documentation
-description: Choose the shortest Doc Bridge path for humans, agents, or pull-request enforcement.
+description: Practical Doc Bridge paths for humans, agents, PR gates, and MCP — one repository, two audiences.
 ---
 
 # Documentation
 
-Doc Bridge keeps **one repository** useful to both people and coding agents. Pick the outcome you need:
+Doc Bridge keeps **one repository** useful to people and coding agents. Pick the shortest path:
 
-| Goal | Start here |
+## Start
+
+| Goal | Page |
 | --- | --- |
-| Try it locally in ~60s | [Getting started](./getting-started.md) |
-| Route a coding agent | [For agents](./for-agents.md) · [MCP](./mcp.md) |
-| Enforce freshness in PRs | [GitHub Marketplace](./MARKETPLACE.md) |
-| Wire optional chat / RAG | [Chat and RAG](./chat-and-rag.md) |
-| Understand product boundaries | [Positioning](./POSITIONING.md) |
+| Install + 60s proof | [Getting started](./getting-started.md) |
+| Guided install | [Install and run](./guides/install-and-run.md) |
+| Machine-first entry | [For agents](./for-agents.md) · site route `/for-agents` |
+| PR freshness gate | [Gate and CI](./guides/gate-ci.md) · [Marketplace](./MARKETPLACE.md) |
+
+## Build workflows
+
+| Goal | Page |
+| --- | --- |
+| Index + resolve ownership | [Index and query](./guides/index-and-query.md) · [Query](./query.md) |
+| MCP for Cursor / Claude | [MCP for agents](./guides/mcp-agents.md) · [MCP](./mcp.md) |
+| Config sketches | [Examples](./examples.md) |
+| Optional chat / RAG | [Chat and RAG](./chat-and-rag.md) · [Ollama demo](./ollama-demo.md) |
 
 ## How it works
 
-1. **Index** repository docs into a deterministic knowledge map  
-2. **Resolve** exact agent handoffs (`startHere`, `editRoots`, `checks`, `humanDoc`)  
-3. **Gate** drift so incomplete context never reaches the model  
-4. **Promote** durable learnings from agent memory back into human docs  
-
 ```text
-Repository docs  →  Deterministic index  →  Human guide
-                                      ↘  Agent handoff
-                                      ↘  Pull-request gate
+Repository docs
+      │
+      ▼
+ak-docs index  ──►  .doc-bridge/index.json + llms.txt
+      │
+      ├─► Human guides (Fumadocs / Docusaurus / md)
+      ├─► Agent handoff (CLI / MCP)
+      └─► PR gate (Marketplace Action)
 ```
+
+1. **Index** — map ownership from corpus + config  
+2. **Resolve** — deterministic handoffs (`startHere`, `editRoots`, `checks`)  
+3. **Gate** — fail stale context before agents run  
+4. **Promote** — optional memory → draft docs loop  
 
 ## Product vs reference
 
-- **Start / Use** — get value in minutes (getting started, agents, MCP, query)  
-- **Product** — positioning, playbook pattern, recipes  
-- **Reference** — schemas, CLI, config contracts  
+- **Start / Guides** — get value in minutes  
+- **Product** — [Positioning](./POSITIONING.md), [Playbook pattern](./playbook/doc-bridge-pattern.md), [Recipes](./recipes/index-pipeline.md)  
+- **Reference** — [CLI](./spec/cli.md), [Config](./spec/config-v1.md), [Schemas](./schemas/agent-handoff-v1.md)  
 
-Long-form contracts live under **Specification** and as [raw Markdown](/raw/getting-started.md) without forcing every visitor through a reference manual.
+Machine surfaces: [llms.txt](/llms.txt) · [llms-full.txt](/llms-full.txt) · [raw Markdown](/raw/getting-started.md)
 
 ## Ecosystem
 
-Doc Bridge is one product in AgentsKit — next to [AgentsKit](https://www.agentskit.io), [Registry](https://registry.agentskit.io), [Chat](https://chat.agentskit.io), [Playbook](https://playbook.agentskit.io), and [AKOS](https://akos.agentskit.io).
+Part of AgentsKit — next to [AgentsKit](https://www.agentskit.io), [Registry](https://registry.agentskit.io), [Chat](https://chat.agentskit.io), [Playbook](https://playbook.agentskit.io), and [AKOS](https://akos.agentskit.io).

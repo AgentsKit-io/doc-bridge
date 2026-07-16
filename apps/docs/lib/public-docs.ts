@@ -20,6 +20,8 @@ export function isPublicDocPath(relativePath: string): boolean {
   if (normalized === 'MARKETPLACE-ECOSYSTEM-PLAN.md') return false
   if (normalized.startsWith('agent-corpus/')) return false
   if (normalized.startsWith('landing/')) return false
+  // Public product tree (guides included)
+  if (normalized.startsWith('guides/')) return true
 
   return true
 }

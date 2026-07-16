@@ -1,0 +1,9 @@
+{
+  "title": "Guides",
+  "pages": [
+    "install-and-run",
+    "index-and-query",
+    "gate-ci",
+    "mcp-agents"
+  ]
+}

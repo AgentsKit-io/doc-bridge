@@ -3,7 +3,11 @@
   "registry": { "home": "https://registry.agentskit.io", "role": "Start from reusable agents.", "hook": "Browse production-ready agent source." },
   "agentskit-chat": { "home": "https://chat.agentskit.io", "role": "Deliver conversational interfaces.", "hook": "Building chat? Use the cross-framework application layer." },
   "playbook": { "home": "https://playbook.agentskit.io", "role": "Apply repeatable engineering standards.", "hook": "Keep agent-built code safe and shippable." },
-  "doc-bridge": { "home": "https://doc-bridge.agentskit.io/", "role": "Connect human and agent documentation.", "hook": "Make repository context deterministic." },
+  "doc-bridge": {
+    "home": "https://doc-bridge.agentskit.io/",
+    "role": "Connect human and agent documentation.",
+    "hook": "Make repository context deterministic."
+  },
   "code-review": { "home": "https://github.com/AgentsKit-io/code-review-cli", "role": "Verify changes before merge.", "hook": "Run a focused, low-noise model review." },
   "akos": { "home": "https://akos.agentskit.io", "role": "Operate and govern in production.", "hook": "Need an enterprise solution? Add orchestration, policy, and audit." }
 }
