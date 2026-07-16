@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.1
+
+### Fixes
+
+- Restore the stable release audit with pnpm's bulk advisory client and pin patched transitive versions of PostCSS, tmp, and uuid.
+
 ## 1.2.0
 
 ### Minor Changes
