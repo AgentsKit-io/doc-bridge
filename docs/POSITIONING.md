@@ -83,3 +83,14 @@ optional:  Playbook / Registry federation
 - Human guide links gate green on fixture adapters
 - Chat/RAG path documented with optional peers
 - Public consumers cited (for-agents, Registry, Playbook)
+
+## Canonical ecosystem role
+
+| Field | Value |
+|-------|--------|
+| **Product id** | `doc-bridge` |
+| **Role** | `understanding` |
+| **Kind** | developer-tool |
+| **Promise** | Human↔agent documentation bridge — deterministic handoffs for any repo |
+
+AgentsKit is the **foundation library** (not a “JavaScript framework” in marketing cards). Chat is the **experience** layer. Doc Bridge stays the **understanding** product.
