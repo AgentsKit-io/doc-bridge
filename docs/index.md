@@ -22,6 +22,8 @@ Doc Bridge keeps **one repository** useful to people and coding agents. Pick the
 | --- | --- |
 | Index + resolve ownership | [Index and query](./guides/index-and-query.md) · [Query](./query.md) |
 | MCP for Cursor / Claude | [MCP for agents](./guides/mcp-agents.md) · [MCP](./mcp.md) |
+| Memory digest → draft docs | [Memory pipeline](./guides/memory-pipeline.md) |
+| Every CLI command | [CLI map](./guides/cli-map.md) · [CLI reference](./spec/cli.md) |
 | Config sketches | [Examples](./examples.md) |
 | Optional chat / RAG | [Chat and RAG](./chat-and-rag.md) · [Ollama demo](./ollama-demo.md) |
 

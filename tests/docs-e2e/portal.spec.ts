@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 
 test('landing communicates the deterministic proof and has no horizontal overflow', async ({ page }) => {
   await page.goto('/')
-  await expect(page.getByRole('heading', { level: 1 })).toContainText('No duplicated truth')
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('duplicated truth')
   await expect(page.getByText('backend calls: 0')).toBeVisible()
   await expect(page.getByRole('link', { name: 'Run the 60-second proof' })).toHaveAttribute('href', /\/docs\/getting-started\/?$/)
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)

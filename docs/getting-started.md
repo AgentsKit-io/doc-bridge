@@ -156,8 +156,9 @@ Details: [chat-and-rag.md](./chat-and-rag.md).
 ## Related
 
 - [Install and run](./guides/install-and-run.md) — guided path with tables  
-- [Index and query](./guides/index-and-query.md) — ownership resolve loop  
+- [CLI map](./guides/cli-map.md) — every command with copy-paste examples  
+- [Memory pipeline](./guides/memory-pipeline.md) — digest · classify · promote  
+- [Index and query](./guides/index-and-query.md) · [MCP for agents](./guides/mcp-agents.md)  
 - [Gate and CI](./guides/gate-ci.md) · [Marketplace](./MARKETPLACE.md)  
-- [MCP for agents](./guides/mcp-agents.md) · [For agents](./for-agents.md)  
 - [CLI reference](./spec/cli.md) · [Config](./spec/config-v1.md)  
 - [Positioning](./POSITIONING.md)

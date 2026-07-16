@@ -66,6 +66,8 @@ Before editing a package:
 ## Related
 
 - [MCP for agents guide](./guides/mcp-agents.md)  
+- [CLI map](./guides/cli-map.md)  
+- [Memory pipeline](./guides/memory-pipeline.md)  
 - [For agents](./for-agents.md)  
 - [Index and query](./guides/index-and-query.md)  
-- [Skill](./skills/doc-bridge.md)  
+- [Skill](./skills/doc-bridge.md) 

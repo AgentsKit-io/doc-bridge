@@ -4,6 +4,8 @@
     "install-and-run",
     "index-and-query",
     "gate-ci",
-    "mcp-agents"
+    "mcp-agents",
+    "memory-pipeline",
+    "cli-map"
   ]
 }
