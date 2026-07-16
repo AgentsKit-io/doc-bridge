@@ -45,7 +45,7 @@ jobs:
           git fetch origin master --tags
           test "$(git rev-list -n 1 "$RELEASE_TAG")" = "$(git rev-parse HEAD)"
           git merge-base --is-ancestor "$(git rev-parse HEAD)" origin/master
-      - run: pnpm audit --audit-level low
+      - run: npx --yes pnpm@11.4.0 audit --audit-level low
       - run: pnpm typecheck
       - run: pnpm check:ecosystem-upstream
       - run: pnpm check:marketplace

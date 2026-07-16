@@ -71,7 +71,7 @@ Root `package.json`:
 ## CI (GitHub Action)
 
 ```yaml
-- uses: AgentsKit-io/doc-bridge@v1.2.0
+- uses: AgentsKit-io/doc-bridge@v1.2.1
 ```
 
 Or manual:
