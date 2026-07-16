@@ -66,6 +66,12 @@ export {
 
 export { buildDocBridgeIndex, type BuildIndexOptions, type BuildIndexResult } from './index-builder/build-index.js'
 export {
+  formatEcosystemLlmsBlock,
+  formatEcosystemLlmsSection,
+  type EcosystemLlmsProduct,
+  type FormatEcosystemLlmsBlockOptions,
+} from './federation/ecosystem-llms.js'
+export {
   scanHumanDocRecords,
   scanHumanDocs,
   type HumanDocMap,

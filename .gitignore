@@ -13,3 +13,4 @@ apps/docs/public/
 playwright-report/
 test-results/
 .lighthouseci/
+node_modules
