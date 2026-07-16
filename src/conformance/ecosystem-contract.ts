@@ -50,7 +50,12 @@ const ManifestSchema = z.object({
   schemaVersion: z.literal(2),
   parentBrand: z.object({ id: NonEmptyStringSchema, name: NonEmptyStringSchema }).passthrough(),
   products: z.array(ProductSchema).min(1),
-  properties: z.array(LegacyPropertySchema).length(4),
+  // Historical four-product shim or full seven-product projection of products[].
+  properties: z
+    .array(LegacyPropertySchema)
+    .refine((value) => value.length === 4 || value.length === 7, {
+      message: 'must project either the legacy four products or the full seven-product catalog',
+    }),
   builder: z.object({ id: NonEmptyStringSchema, name: NonEmptyStringSchema, url: HttpsUrlSchema }).passthrough().optional(),
 }).passthrough()
 
@@ -88,7 +93,18 @@ const ClaimsSchema = z.object({
   products: z.array(ClaimProductSchema),
 }).passthrough()
 
-const LEGACY_PRODUCT_IDS = ['agentskit', 'akos', 'playbook', 'registry'] as const
+/** Historical four-product shim order. */
+const LEGACY_FOUR_PRODUCT_IDS = ['agentskit', 'akos', 'playbook', 'registry'] as const
+/** Full seven-product projection order (matches products[]). */
+const FULL_SEVEN_PRODUCT_IDS = [
+  'agentskit',
+  'registry',
+  'agentskit-chat',
+  'playbook',
+  'doc-bridge',
+  'code-review',
+  'akos',
+] as const
 
 export const parseCanonicalEcosystemContract = (
   manifestInput: unknown,
@@ -120,7 +136,10 @@ export const parseCanonicalEcosystemContract = (
     }
   }
 
-  for (const [index, id] of LEGACY_PRODUCT_IDS.entries()) {
+  const propertyIds =
+    manifest.properties.length === 7 ? FULL_SEVEN_PRODUCT_IDS : LEGACY_FOUR_PRODUCT_IDS
+
+  for (const [index, id] of propertyIds.entries()) {
     const legacy = manifest.properties[index]
     const product = products.get(id)
     if (!legacy || !product || legacy.id !== id || !product.surfaces.home) {
