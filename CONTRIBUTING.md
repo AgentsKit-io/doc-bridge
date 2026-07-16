@@ -18,7 +18,7 @@ pnpm build
 - Prefer existing helpers and Node APIs before adding dependencies.
 - Add or update the smallest test that would fail if the behavior regresses.
 - Public contract changes must update the relevant docs under `docs/spec/` or `docs/schemas/`.
-- Dogfood AgentsKit Chat 0.3.x only: `@agentskit/chat`, `@agentskit/chat/protocol`, and `@agentskit/chat/react`. Never reintroduce `@agentskit/chat-protocol` or `@agentskit/chat-react` (`pnpm check:no-legacy-chat-imports`).
+- Dogfood AgentsKit Chat 0.4.x only: `@agentskit/chat`, `@agentskit/chat/protocol`, and `@agentskit/chat/react`. Never reintroduce `@agentskit/chat-protocol` or `@agentskit/chat-react` (`pnpm check:no-legacy-chat-imports`).
 
 ## Pull request checklist
 

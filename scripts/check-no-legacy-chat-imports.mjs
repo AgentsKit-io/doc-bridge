@@ -2,7 +2,7 @@
 /**
  * Guard against regressing to AgentsKit Chat 0.2 package names.
  *
- * Doc Bridge dogfoods the consolidated 0.3.x surface:
+ * Doc Bridge dogfoods the consolidated 0.4.x surface:
  *   @agentskit/chat
  *   @agentskit/chat/protocol
  *   @agentskit/chat/react
