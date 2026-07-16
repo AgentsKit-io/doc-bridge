@@ -62,3 +62,12 @@ Before editing a package:
 2. Open `startHere`  
 3. Stay inside `editRoots`  
 4. Run `checks` before claiming done  
+
+## Related
+
+- [MCP for agents guide](./guides/mcp-agents.md)  
+- [CLI map](./guides/cli-map.md)  
+- [Memory pipeline](./guides/memory-pipeline.md)  
+- [For agents](./for-agents.md)  
+- [Index and query](./guides/index-and-query.md)  
+- [Skill](./skills/doc-bridge.md) 

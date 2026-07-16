@@ -1,7 +1,8 @@
 import { DocsLayout } from 'fumadocs-ui/layouts/docs'
+import type { ReactNode } from 'react'
 import { source } from '@/lib/source'
 
-export default function Layout({ children }: { children: React.ReactNode }) {
+export default function Layout({ children }: { children: ReactNode }) {
   return (
     <DocsLayout
       tree={source.pageTree}
@@ -16,6 +17,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         { text: 'AKOS', url: 'https://akos.agentskit.io', external: true },
         { text: 'GitHub', url: 'https://github.com/AgentsKit-io/doc-bridge', external: true },
       ]}
-    >{children}</DocsLayout>
+    >
+      {children}
+    </DocsLayout>
   )
 }

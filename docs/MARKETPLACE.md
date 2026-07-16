@@ -37,3 +37,9 @@ If the index is stale, run `ak-docs index`, review the generated diff, and commi
 5. Publish the release, then verify the listing and execute the exact consumer workflow above in a clean fixture repository.
 
 Marketplace publication is a deliberate owner action; the workflow never moves tags and does not publish the GitHub Release before the Marketplace fields are complete.
+
+## Related
+
+- [Gate and CI guide](./guides/gate-ci.md)  
+- [Getting started](./getting-started.md)  
+- [CLI](./spec/cli.md)

@@ -1,0 +1,11 @@
+{
+  "title": "Guides",
+  "pages": [
+    "install-and-run",
+    "index-and-query",
+    "gate-ci",
+    "mcp-agents",
+    "memory-pipeline",
+    "cli-map"
+  ]
+}

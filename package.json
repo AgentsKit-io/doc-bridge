@@ -95,6 +95,7 @@
     "access": "public"
   },
   "dependencies": {
+    "mermaid": "^11.16.0",
     "zod": "^3.24.2"
   },
   "peerDependencies": {
@@ -167,5 +168,5 @@
   "bugs": {
     "url": "https://github.com/AgentsKit-io/doc-bridge/issues"
   },
-  "homepage": "https://agentskit-io.github.io/doc-bridge/"
+  "homepage": "https://doc-bridge.agentskit.io/"
 }

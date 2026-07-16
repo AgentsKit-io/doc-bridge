@@ -31,11 +31,22 @@ jobs:
           cache: pnpm
       - uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
       - run: pnpm install --frozen-lockfile
+      # Custom domain doc-bridge.agentskit.io is root-hosted — no /doc-bridge base path.
       - run: pnpm docs:build
         env:
-          DOCS_BASE_PATH: /doc-bridge
-      - name: Verify Pages subpath links
-        run: node -e "const html=require('node:fs').readFileSync('apps/docs/out/docs/getting-started/index.html','utf8');if(!html.includes('href=\"/doc-bridge/docs/spec/config-v1/\"'))throw new Error('Pages documentation links escaped the /doc-bridge base path')"
+          NEXT_PUBLIC_SITE_URL: https://doc-bridge.agentskit.io
+      - name: Verify product-domain links (no GitHub Pages subpath)
+        run: |
+          node -e "
+            const fs = require('node:fs');
+            const html = fs.readFileSync('apps/docs/out/docs/getting-started/index.html', 'utf8');
+            if (html.includes('href=\"/doc-bridge/')) throw new Error('Pages still embeds /doc-bridge base path');
+            if (!html.includes('/docs/')) throw new Error('missing local docs links');
+          "
+      - name: Ensure CNAME for custom domain
+        run: |
+          printf 'doc-bridge.agentskit.io\n' > apps/docs/out/CNAME
+          test -f apps/docs/out/CNAME
       - uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3
         with:
           path: apps/docs/out

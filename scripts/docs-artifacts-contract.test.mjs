@@ -13,6 +13,7 @@ const publicDocs = JSON.parse(readFileSync(resolve(root, 'apps/docs/public-docs.
 const publicAgentDocs = JSON.parse(readFileSync(resolve(root, 'apps/docs/public-agent-docs.json'), 'utf8'))
 const ecosystem = manifest.products.map((product) => ({ ...product, ...overrides[product.id] }))
 const knowledge = JSON.parse(readFileSync(resolve(publicRoot, 'deterministic/knowledge.json'), 'utf8'))
+const sitemap = readFileSync(resolve(root, 'apps/docs/out/sitemap.xml'), 'utf8')
 
 test('concise and full LLM surfaces have distinct progressive-disclosure roles', () => {
   assert.ok(llms.length < 8_000, `llms.txt should stay concise, received ${llms.length} bytes`)
@@ -52,7 +53,7 @@ test('every public document and local deterministic citation resolves in the exp
     assert.ok(existsSync(route), `missing public route for ${file}`)
   }
   assert.ok(!existsSync(resolve(publicRoot, 'raw', 'DOGFOOD-ROUND2.md')))
-  const origin = 'https://agentskit-io.github.io/doc-bridge'
+  const origin = 'https://doc-bridge.agentskit.io'
   for (const entry of knowledge.entries) {
     for (const citation of entry.answer.citations) {
       if (!citation.href.startsWith(origin)) continue
@@ -67,8 +68,12 @@ test('every public document and local deterministic citation resolves in the exp
   }
 })
 
+test('sitemap publishes only the public documentation surface', () => {
+  assert.doesNotMatch(sitemap, /DOGFOOD|agent-corpus|\/landing\//u)
+})
+
 test('machine entry points cross-reference the agent-first route', () => {
-  assert.ok(llms.includes('https://agentskit-io.github.io/doc-bridge/for-agents/'))
-  assert.ok(llms.includes('https://agentskit-io.github.io/doc-bridge/llms-full.txt'))
-  assert.ok(llms.includes('https://agentskit-io.github.io/doc-bridge/deterministic/knowledge.json'))
+  assert.ok(llms.includes('https://doc-bridge.agentskit.io/for-agents/'))
+  assert.ok(llms.includes('https://doc-bridge.agentskit.io/llms-full.txt'))
+  assert.ok(llms.includes('https://doc-bridge.agentskit.io/deterministic/knowledge.json'))
 })

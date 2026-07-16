@@ -63,7 +63,7 @@
 
 ### Features
 
-- **Landing** — `docs/landing/index.html` deployed to GitHub Pages (`https://agentskit-io.github.io/doc-bridge/`)
+- **Landing** — `docs/landing/index.html` deployed to GitHub Pages (`https://doc-bridge.agentskit.io/`)
 - **Playbook pattern** — published `docs/playbook/doc-bridge-pattern.md` + `ak-docs playbook pattern [--text]`
 - **Used by** — public AgentsKit surfaces cited on landing (for-agents, Registry, Playbook)
 

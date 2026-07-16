@@ -1,6 +1,12 @@
 [
   "index.md",
   "getting-started.md",
+  "guides/install-and-run.md",
+  "guides/index-and-query.md",
+  "guides/gate-ci.md",
+  "guides/mcp-agents.md",
+  "guides/memory-pipeline.md",
+  "guides/cli-map.md",
   "for-agents.md",
   "MARKETPLACE.md",
   "POSITIONING.md",

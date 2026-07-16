@@ -48,8 +48,16 @@ checks: [npm test -- auth]
 
 ## Public ecosystem surfaces
 
-doc-bridge is designed to be consumed by:
+Doc Bridge is designed to be consumed by:
 
 - https://www.agentskit.io/docs/for-agents
 - https://registry.agentskit.io/
 - https://playbook.agentskit.io/llms.txt
+- https://chat.agentskit.io/docs
+- https://doc-bridge.agentskit.io/
+
+## Related
+
+- [Install and run](./guides/install-and-run.md)
+- [Config reference](./spec/config-v1.md)
+- [Getting started](./getting-started.md)
