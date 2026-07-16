@@ -77,7 +77,7 @@ Agents call `handoff.resolve` before editing `packages/*`:
 ## CI gate
 
 ```yaml
-- uses: AgentsKit-io/doc-bridge@v1.1.1
+- uses: AgentsKit-io/doc-bridge@v1.2.0
 ```
 
 Or: `ak-docs index && ak-docs gate run` — stale index fails the PR.
