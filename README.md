@@ -203,10 +203,17 @@ Next actions
 Reuse the bundled GitHub Action on every PR:
 
 ```yaml
-- uses: AgentsKit-io/doc-bridge@v1.1.1
-  with:
-    config-path: doc-bridge.config.json
+permissions:
+  contents: read
+
+steps:
+  - uses: actions/checkout@v4
+  - uses: AgentsKit-io/doc-bridge@v1.1.1
+    with:
+      config-path: doc-bridge.config.json
 ```
+
+The Action checks the committed index before changing anything, pins the matching npm package, and rejects non-exact package versions. See the [Marketplace guide](docs/MARKETPLACE.md).
 
 ![handoff coverage](https://img.shields.io/badge/handoff_coverage-100%25-2ea44f?style=flat-square) ![human bridge](https://img.shields.io/badge/human_bridge-0%25-cb2431?style=flat-square)
 
@@ -254,7 +261,7 @@ Designed for and dogfooded on open AgentsKit surfaces:
 | **for-agents** | [agentskit.io/docs/for-agents](https://www.agentskit.io/docs/for-agents) |
 | **Registry** | [registry.agentskit.io](https://registry.agentskit.io/) |
 | **Playbook** | [playbook.agentskit.io](https://playbook.agentskit.io/llms.txt) |
-| **AgentsKit Chat** | [chat framework](https://github.com/AgentsKit-io/agentskit-chat) |
+| **AgentsKit Chat** | [documentation](https://chat.agentskit.io) · [source](https://github.com/AgentsKit-io/agentskit-chat) |
 | **AgentsKit OS** | [akos.agentskit.io](https://akos.agentskit.io) |
 | **Code Review** | [repository-native CLI](https://github.com/AgentsKit-io/code-review-cli) |
 | **This repo** | CI green · `ak-docs gate run` on every PR |

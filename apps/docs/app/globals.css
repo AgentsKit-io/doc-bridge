@@ -20,6 +20,53 @@ body { background: var(--bridge-paper); color: var(--bridge-ink); }
 .dark body { background: #0b0f0d; color: #f4f7f2; }
 ::selection { background: color-mix(in srgb, var(--bridge-green) 35%, transparent); }
 
+body { min-width: 0; overflow-x: clip; }
+main, article, [class*='fd-docs'], [class*='prose'] { min-width: 0; max-width: 100%; }
+pre { max-width: 100%; overflow-x: auto; }
+code { overflow-wrap: anywhere; }
+table { display: block; max-width: 100%; overflow-x: auto; }
+
+.ecosystem-bar {
+  position: relative;
+  z-index: 60;
+  display: flex;
+  min-height: 42px;
+  align-items: center;
+  gap: 1rem;
+  border-bottom: 1px solid color-mix(in srgb, currentColor 16%, transparent);
+  background: #0b0f0d;
+  padding: .45rem max(1rem, calc((100vw - 80rem) / 2));
+  color: #e9eee9;
+  font-size: .75rem;
+}
+.ecosystem-brand { flex: 0 0 auto; font-weight: 750; }
+.ecosystem-links { display: grid; min-width: 0; flex: 1; grid-template-columns: repeat(7, max-content); align-items: center; gap: .25rem; }
+.ecosystem-links a { flex: 0 0 auto; border-radius: .5rem; padding: .35rem .55rem; color: #aeb6af; }
+.ecosystem-links a:hover, .ecosystem-links a[aria-current='page'] { background: #1b211e; color: white; }
+
+.ecosystem-peers { width: 100%; max-width: 80rem; margin: 0 auto; padding: 5rem 1.25rem; }
+.ecosystem-peers-copy { display: grid; gap: .7rem; max-width: 46rem; }
+.ecosystem-eyebrow { color: #087a45; font-family: ui-monospace, monospace; font-size: .75rem; letter-spacing: .18em; text-transform: uppercase; }
+.dark .ecosystem-eyebrow { color: #69e7a2; }
+.ecosystem-peers h2 { font-size: clamp(2rem, 4vw, 3rem); font-weight: 650; letter-spacing: -.04em; line-height: 1.05; }
+.ecosystem-peers-copy > p:last-child { color: var(--color-fd-muted-foreground); line-height: 1.65; }
+.ecosystem-peer-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin-top: 2.5rem; }
+.ecosystem-peer { display: flex; min-width: 0; min-height: 13rem; flex-direction: column; border: 1px solid color-mix(in srgb, currentColor 18%, transparent); border-top: 3px solid var(--bridge-blue); border-radius: 1rem; padding: 1.25rem; transition: transform .2s ease, border-color .2s ease; }
+.ecosystem-peer:hover { transform: translateY(-3px); border-color: var(--bridge-green); }
+.ecosystem-peer-number { margin-bottom: 1.5rem; font-family: ui-monospace, monospace; font-size: .75rem; color: var(--color-fd-muted-foreground); }
+.ecosystem-peer strong { font-size: 1.05rem; }
+.ecosystem-peer > span:not(.ecosystem-peer-number):not(.ecosystem-peer-action) { margin-top: .65rem; color: var(--color-fd-muted-foreground); font-size: .9rem; line-height: 1.5; }
+.ecosystem-peer-action { margin-top: auto; padding-top: 1.5rem; color: #087a45; font-size: .78rem; font-weight: 650; }
+.dark .ecosystem-peer-action { color: #69e7a2; }
+.ecosystem-peer-chat { border-top-color: #f59e0b; }
+.ecosystem-peer-playbook { border-top-color: #8b5cf6; }
+.ecosystem-peer-code-review { border-top-color: #f97316; }
+.ecosystem-peer-akos { border-top-color: #10b981; }
+.ecosystem-peers-compact { margin-top: 4rem; border-top: 1px solid color-mix(in srgb, currentColor 14%, transparent); padding: 3rem 0 1rem; }
+.ecosystem-peers-compact h2 { font-size: 1.75rem; }
+.ecosystem-peers-compact .ecosystem-peer-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 1.5rem; }
+.ecosystem-peers-compact .ecosystem-peer { min-height: 10rem; }
+
 /* GitHub Light's comment token misses WCAG AA against the docs code surface. */
 html:not(.dark) [style*='--shiki-light:#6E7781'] {
   --shiki-light: #57606a !important;
@@ -33,4 +80,16 @@ html:not(.dark) [style*='--shiki-light:#6E7781'] {
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; }
+}
+
+@media (max-width: 900px) {
+  .ecosystem-peer-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 560px) {
+  .ecosystem-bar { align-items: flex-start; flex-direction: column; gap: .2rem; padding-block: .45rem; }
+  .ecosystem-links { width: 100%; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .15rem; }
+  .ecosystem-links a { padding-inline: .25rem; text-align: center; }
+  .ecosystem-peer-grid, .ecosystem-peers-compact .ecosystem-peer-grid { grid-template-columns: 1fr; }
+  .ecosystem-peer { min-height: 11rem; }
 }

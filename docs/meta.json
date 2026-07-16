@@ -1,0 +1,20 @@
+{
+  "title": "Doc Bridge",
+  "pages": [
+    "index",
+    "getting-started",
+    "for-agents",
+    "MARKETPLACE",
+    "POSITIONING",
+    "mcp",
+    "query",
+    "examples",
+    "chat-and-rag",
+    "ollama-demo",
+    "playbook",
+    "recipes",
+    "schemas",
+    "skills",
+    "spec"
+  ]
+}

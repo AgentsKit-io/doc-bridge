@@ -36,7 +36,7 @@ Current track: **`1.1.1` stable** (alpha series ended at `0.1.0-alpha.5`).
 
 ## Publish (npm + GitHub)
 
-Stable releases are published only by `.github/workflows/release.yml` from an immutable semver tag. The workflow re-runs the complete security, test, coverage, packaged-smoke, dogfood, and conformance matrix, publishes with npm provenance through the `npm` environment, verifies the registry result, uploads the tarball to GitHub Releases, and then marks the release latest.
+Stable packages are published only by `.github/workflows/release.yml` from an immutable semver tag. The workflow re-runs the complete security, test, coverage, packaged-smoke, dogfood, Marketplace-contract, and conformance matrix, publishes npm with provenance, verifies the registry result, uploads the tarball to a GitHub Release draft, and leaves final publication to the owner so the Marketplace fields can be completed first.
 
 ```bash
 git tag v1.1.1
@@ -54,10 +54,14 @@ Confirm:
 ```bash
 npm view @agentskit/doc-bridge@1.1.1 version dist.integrity
 npx ak-docs@1.1.1 --version
-gh release view v1.1.1
+gh release view v1.1.1 --json isDraft
 ```
 
-GitHub Pages must remain configured for GitHub Actions; `.github/workflows/pages.yml` deploys the landing page from `docs/landing`.
+GitHub Pages must remain configured for GitHub Actions; `.github/workflows/pages.yml` builds and deploys the Fumadocs portal from `apps/docs`.
+
+## Publish the GitHub Action to Marketplace
+
+Run `pnpm check:marketplace && pnpm test:marketplace`, then follow [the Marketplace guide](./MARKETPLACE.md). In the generated release draft, select the Marketplace option and categories before publishing the GitHub Release. npm success alone does not publish the listing.
 
 ## Post-publish smoke (fresh machine)
 

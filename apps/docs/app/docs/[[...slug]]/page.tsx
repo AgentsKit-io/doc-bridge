@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { DocsBody, DocsDescription, DocsPage } from 'fumadocs-ui/page'
 import { source } from '@/lib/source'
+import { EcosystemPeers } from '@/components/ecosystem'
 
 type Props = { params: Promise<{ slug?: string[] }> }
 const siteUrl = 'https://agentskit-io.github.io/doc-bridge'
@@ -19,6 +20,7 @@ export default async function Page({ params }: Props) {
       {page.data.description ? <DocsDescription>{page.data.description}</DocsDescription> : null}
       <p className="mb-6 text-sm"><a href={rawPath}>View raw Markdown</a> · <a href={`${basePath}/llms.txt`}>llms.txt</a></p>
       <DocsBody><MDX /></DocsBody>
+      <EcosystemPeers compact />
     </DocsPage>
   )
 }

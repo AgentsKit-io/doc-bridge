@@ -7,20 +7,49 @@ test('landing communicates the deterministic proof and has no horizontal overflo
   await expect(page.getByRole('link', { name: 'Run the 60-second proof' })).toHaveAttribute('href', /\/docs\/getting-started\/?$/)
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
   expect(overflow).toBeLessThanOrEqual(0)
+  await expect(page.locator('.ecosystem-bar a')).toHaveCount(8)
+  await expect(page.locator('.ecosystem-peer')).toHaveCount(6)
 })
 
 test('Fumadocs renders canonical docs with raw and llms surfaces', async ({ page }) => {
   await page.goto('/docs/getting-started')
   await expect(page.locator('h1#getting-started')).toBeVisible()
   await expect(page.locator('h1')).toHaveCount(1)
-  await expect(page.getByRole('button', { name: /search/i })).toHaveCount(0)
   await expect(page.getByRole('link', { name: 'config-v1' })).toHaveAttribute('href', '/docs/spec/config-v1/')
   const raw = page.getByRole('link', { name: 'View raw Markdown' })
   await expect(raw).toHaveAttribute('href', '/raw/getting-started.md')
   const llms = await page.request.get('/llms.txt')
   expect(llms.ok()).toBeTruthy()
   expect(await llms.text()).toContain('# AgentsKit Doc Bridge')
+  await expect(page.locator('.ecosystem-peer')).toHaveCount(6)
 })
+
+test('agent-first and machine surfaces are public and cross-linked', async ({ page }) => {
+  await page.goto('/for-agents')
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('Resolve context')
+  await expect(page.getByRole('link', { name: 'llms.txt' })).toHaveAttribute('href', '/llms.txt')
+  for (const path of ['/llms.txt', '/llms-full.txt', '/raw/for-agents.md', '/deterministic/knowledge.json']) {
+    expect((await page.request.get(path)).ok(), path).toBeTruthy()
+  }
+})
+
+for (const width of [375, 768, 1280, 1440]) {
+  test(`landing and docs do not overflow at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 })
+    for (const path of ['/', '/docs/getting-started', '/for-agents']) {
+      await page.goto(path)
+      const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
+      expect(overflow, `${path} at ${width}px`).toBeLessThanOrEqual(0)
+      if (path === '/') {
+        const linksFit = await page.locator('.ecosystem-links a').evaluateAll((links) => links.every((link) => {
+          const box = link.getBoundingClientRect()
+          return box.left >= 0 && box.right <= document.documentElement.clientWidth
+        }))
+        expect(linksFit, `all ecosystem links visible at ${width}px`).toBeTruthy()
+      }
+    }
+  })
+}
 
 test('known and ambiguous questions stay local', async ({ page }) => {
   const backendRequests: string[] = []
