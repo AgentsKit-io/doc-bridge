@@ -49,6 +49,11 @@ export const source = {
     }
     return page
   },
+  getPages(language?: string) {
+    return base.getPages(language).filter(page =>
+      isPublicDocPath(page.file?.path ?? page.path),
+    )
+  },
   generateParams() {
     return base.generateParams().filter((p: { slug?: string[] }) => {
       const slug = p.slug ?? []

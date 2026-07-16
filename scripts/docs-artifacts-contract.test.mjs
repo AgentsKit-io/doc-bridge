@@ -13,6 +13,7 @@ const publicDocs = JSON.parse(readFileSync(resolve(root, 'apps/docs/public-docs.
 const publicAgentDocs = JSON.parse(readFileSync(resolve(root, 'apps/docs/public-agent-docs.json'), 'utf8'))
 const ecosystem = manifest.products.map((product) => ({ ...product, ...overrides[product.id] }))
 const knowledge = JSON.parse(readFileSync(resolve(publicRoot, 'deterministic/knowledge.json'), 'utf8'))
+const sitemap = readFileSync(resolve(root, 'apps/docs/out/sitemap.xml'), 'utf8')
 
 test('concise and full LLM surfaces have distinct progressive-disclosure roles', () => {
   assert.ok(llms.length < 8_000, `llms.txt should stay concise, received ${llms.length} bytes`)
@@ -65,6 +66,10 @@ test('every public document and local deterministic citation resolves in the exp
       assert.ok(existsSync(target), `${entry.id} citation does not resolve: ${citation.href}`)
     }
   }
+})
+
+test('sitemap publishes only the public documentation surface', () => {
+  assert.doesNotMatch(sitemap, /DOGFOOD|agent-corpus|\/landing\//u)
 })
 
 test('machine entry points cross-reference the agent-first route', () => {
