@@ -50,8 +50,10 @@ export function formatEcosystemLlmsBlock(options: FormatEcosystemLlmsBlockOption
     const role = product.role ? ` Role: \`${product.role}\`.` : ''
     const maturity = product.maturity ? ` Maturity: ${product.maturity}.` : ''
     const machine = product.surfaces.llms ? ` Machine index: ${product.surfaces.llms}` : ''
+    const promise = product.promise.trim()
+    const promiseSentence = /[.!?]$/.test(promise) ? promise : `${promise}.`
     lines.push(
-      `- [${product.name}](${primary})${current} — ${product.promise}.${role}${maturity}${machine}`,
+      `- [${product.name}](${primary})${current} — ${promiseSentence}${role}${maturity}${machine}`,
     )
   }
 

@@ -28,5 +28,6 @@ describe('formatEcosystemLlmsBlock', () => {
     expect(lines.some((line) => line.includes('**(current)**') && line.includes('Doc Bridge'))).toBe(true)
     expect(lines.some((line) => line.includes('Role: `foundation`'))).toBe(true)
     expect(lines.some((line) => line.includes('Machine index: https://www.agentskit.io/llms.txt'))).toBe(true)
+    expect(lines.join('\n')).not.toContain('..')
   })
 })
