@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.2.3
+
+### Fixed
+- Publish path for seven-product `properties[]` contract and `formatEcosystemLlmsBlock` (v1.2.2 GitHub tag/package.json were misaligned; npm still on 1.2.1)
+- Marketplace Action dogfoods the local workspace package when run in this repository
+- Docs site `llms.txt` renders the shared seven-product mesh with role, maturity, machine index, and **(current)**
+
+### Changed
+- Sync `ecosystem.json` upstream snapshot from AgentsKit hub main
+
 ## 1.2.1
 
 ### Fixes

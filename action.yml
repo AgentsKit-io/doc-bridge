@@ -20,7 +20,7 @@ inputs:
   package-version:
     description: Exact @agentskit/doc-bridge npm version (kept in sync with this Action release)
     required: false
-    default: '1.2.1'
+    default: '1.2.3'
 
 runs:
   using: composite
