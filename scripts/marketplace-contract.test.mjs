@@ -30,6 +30,9 @@ test('the gate observes committed state and install is deterministic', () => {
   assert.doesNotMatch(action, /ak-docs index/u)
   assert.match(action, /ak-docs gate run/u)
   assert.match(action, /npm install -g "@agentskit\/doc-bridge@\$\{DOC_BRIDGE_PACKAGE_VERSION\}"/u)
+  // Local dogfood path installs the workspace package so CI exercises the PR under test.
+  assert.match(action, /npm install -g \./u)
+  assert.match(action, /@agentskit\/doc-bridge/u)
   assert.match(action, /\^\[0-9\]\+\\\.\[0-9\]\+\\\.\[0-9\]\+/u)
 })
 

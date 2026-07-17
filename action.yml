@@ -39,7 +39,14 @@ runs:
           echo "::error title=Invalid package-version::Use an exact semver version such as 1.2.1"
           exit 2
         fi
-        npm install -g "@agentskit/doc-bridge@${DOC_BRIDGE_PACKAGE_VERSION}"
+        # When this Action runs against the Doc Bridge repository itself (CI dogfood),
+        # install the workspace package so gates exercise the PR under test — not a
+        # stale published npm version that may lag the local ecosystem contract.
+        if [ -f package.json ] && [ "$(node -p "try{require('./package.json').name}catch{''}")" = "@agentskit/doc-bridge" ]; then
+          npm install -g .
+        else
+          npm install -g "@agentskit/doc-bridge@${DOC_BRIDGE_PACKAGE_VERSION}"
+        fi
 
     - name: Run gates
       shell: bash
