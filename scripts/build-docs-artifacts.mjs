@@ -2,6 +2,41 @@ import { cp, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises'
 import { dirname, extname, join, relative, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { computeLocalKnowledgeArtifactContentHash, LocalKnowledgeArtifactSchema } from '@agentskit/chat/protocol'
+import { createRequire } from 'node:module'
+
+const require = createRequire(import.meta.url)
+/** Prefer package export; fall back to source when running pre-build. */
+function loadFormatEcosystemLlmsBlock() {
+  try {
+    return require('../dist/index.js').formatEcosystemLlmsBlock
+  } catch {
+    // Source is TypeScript; only available after build in CI/dev. Inline mirror:
+    return function formatEcosystemLlmsBlock(options) {
+      const heading = options.heading ?? 'AgentsKit ecosystem'
+      const prefer = options.prefer ?? 'home'
+      const lines = [`## ${heading}`, '']
+      for (const product of options.products) {
+        const primary =
+          prefer === 'docs'
+            ? product.surfaces?.docs ?? product.surfaces?.home
+            : product.surfaces?.home ?? product.surfaces?.docs
+        if (!primary) continue
+        const current = product.id === options.currentProductId ? ' **(current)**' : ''
+        const role = product.role ? ` Role: \`${product.role}\`.` : ''
+        const maturity = product.maturity ? ` Maturity: ${product.maturity}.` : ''
+        const machine = product.surfaces?.llms ? ` Machine index: ${product.surfaces.llms}` : ''
+        const promise = String(product.promise ?? '').trim()
+        const promiseSentence = /[.!?]$/.test(promise) ? promise : `${promise}.`
+        lines.push(
+          `- [${product.name}](${primary})${current} — ${promiseSentence}${role}${maturity}${machine}`,
+        )
+      }
+      lines.push('')
+      return lines
+    }
+  }
+}
+const formatEcosystemLlmsBlock = loadFormatEcosystemLlmsBlock()
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const docsRoot = join(root, 'docs')
@@ -79,6 +114,24 @@ for (const doc of rawDocuments) {
 
 await cp(join(root, 'docs/landing/assets'), join(publicRoot, 'assets'), { recursive: true })
 
+const productsForLlms = [...manifest.products]
+  .map((product) => ({
+    id: product.id,
+    name: product.name,
+    role: product.role,
+    promise: product.promise,
+    maturity: product.maturity,
+    surfaces: product.surfaces,
+    navigation: product.navigation,
+  }))
+  .sort((left, right) => left.navigation.order - right.navigation.order)
+
+const ecosystemLines = formatEcosystemLlmsBlock({
+  products: productsForLlms,
+  currentProductId: 'doc-bridge',
+  prefer: 'docs',
+})
+
 const llms = [
   '# AgentsKit Doc Bridge',
   '',
@@ -97,10 +150,7 @@ const llms = [
   '',
   ...publicDocuments.map((doc) => `- [${doc.title}](${origin}/raw/${doc.file}): ${doc.description}`),
   '',
-  '## AgentsKit ecosystem',
-  '',
-  ...ecosystem.map((product) => `- [${product.name}](${product.home}): ${product.role}`),
-  '',
+  ...ecosystemLines,
   '## Machine surfaces',
   '',
   `- [Full corpus](${origin}/llms-full.txt)`,
