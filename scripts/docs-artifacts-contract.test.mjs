@@ -34,8 +34,12 @@ test('all seven products are discoverable and the six peers resolve locally', ()
   assert.deepEqual(new Set(ecosystem.map(({ id }) => id)).size, 7)
   assert.deepEqual(new Set(Object.keys(overrides)), new Set(manifest.products.map(({ id }) => id)))
   for (const product of ecosystem) {
-    assert.ok(llms.includes(`[${product.name}](${product.home})`))
+    const primary = product.surfaces?.docs ?? product.surfaces?.home ?? product.home
+    assert.ok(llms.includes(`[${product.name}](${primary})`), `missing ${product.name}`)
   }
+  assert.ok(llms.includes('**(current)**'), 'must mark Doc Bridge as current')
+  assert.ok(llms.includes('Machine index:'), 'must include machine indexes')
+  assert.ok(llms.includes('Role: `understanding`'), 'must include product roles')
   const peerEntries = knowledge.entries.filter(({ id }) => id.startsWith('ecosystem:'))
   assert.equal(peerEntries.length, 6)
   assert.ok(peerEntries.every(({ answer }) => answer.citations[0]?.href.startsWith('https://')))
