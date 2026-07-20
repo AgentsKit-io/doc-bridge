@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { ArrowRight, Bot, Braces, GitBranch, ShieldCheck, Sparkles, Terminal, Zap } from 'lucide-react'
 import { readdirSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { EcosystemPeers } from '@/components/ecosystem'
+import { EcosystemShowcase } from '@/components/ecosystem'
 import { CopyCode } from '@/components/copy-button'
 import { BASE_PATH } from '@/lib/site'
 
@@ -229,7 +229,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <EcosystemPeers />
+      <EcosystemShowcase />
     </main>
   )
 }

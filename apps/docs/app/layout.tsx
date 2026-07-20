@@ -1,8 +1,8 @@
 import type { Metadata, Viewport } from 'next'
+import Script from 'next/script'
 import { RootProvider } from 'fumadocs-ui/provider'
 import './globals.css'
 import { ChatLauncher } from '@/components/chat-launcher'
-import { EcosystemBar } from '@/components/ecosystem'
 import { SITE_URL } from '@/lib/site'
 
 export const metadata: Metadata = {
@@ -35,8 +35,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
+        <Script src="https://www.agentskit.io/ecosystem-bar.js" strategy="afterInteractive" data-current="doc-bridge" />
         <RootProvider search={{ enabled: false }}>
-          <EcosystemBar />
           {children}
           <ChatLauncher />
         </RootProvider>

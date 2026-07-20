@@ -7,8 +7,8 @@ test('landing communicates the deterministic proof and has no horizontal overflo
   await expect(page.getByRole('link', { name: 'Run the 60-second proof' })).toHaveAttribute('href', /\/docs\/getting-started\/?$/)
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
   expect(overflow).toBeLessThanOrEqual(0)
-  await expect(page.locator('.ecosystem-bar a')).toHaveCount(8)
-  await expect(page.locator('.ecosystem-peer')).toHaveCount(6)
+  await expect(page.locator('#ak-eco')).toBeVisible()
+  await expect(page.locator('agentskit-ecosystem')).toBeVisible()
 })
 
 test('Fumadocs renders canonical docs with raw and llms surfaces', async ({ page }) => {
@@ -21,7 +21,7 @@ test('Fumadocs renders canonical docs with raw and llms surfaces', async ({ page
   const llms = await page.request.get('/llms.txt')
   expect(llms.ok()).toBeTruthy()
   expect(await llms.text()).toContain('# AgentsKit Doc Bridge')
-  await expect(page.locator('.ecosystem-peer')).toHaveCount(6)
+  await expect(page.locator('agentskit-ecosystem')).toBeVisible()
 })
 
 test('agent-first and machine surfaces are public and cross-linked', async ({ page }) => {
@@ -40,13 +40,6 @@ for (const width of [375, 768, 1280, 1440]) {
       await page.goto(path)
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
       expect(overflow, `${path} at ${width}px`).toBeLessThanOrEqual(0)
-      if (path === '/') {
-        const linksFit = await page.locator('.ecosystem-links a').evaluateAll((links) => links.every((link) => {
-          const box = link.getBoundingClientRect()
-          return box.left >= 0 && box.right <= document.documentElement.clientWidth
-        }))
-        expect(linksFit, `all ecosystem links visible at ${width}px`).toBeTruthy()
-      }
     }
   })
 }
