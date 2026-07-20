@@ -4,7 +4,7 @@ import { readdirSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { EcosystemShowcase } from '@/components/ecosystem'
 import { CopyCode } from '@/components/copy-button'
-import { BASE_PATH } from '@/lib/site'
+import { SiteFooter } from '@/components/site-footer'
 
 const proof = [
   ['Index', 'ak-docs index', 'Build a deterministic knowledge map from source docs — offline.'],
@@ -49,10 +49,11 @@ backend calls: 0`
 
 export default function HomePage() {
   return (
-    <main className="bg-[#f4f6f1] text-[#111714] dark:bg-[#070a09] dark:text-[#eef2ee]">
+    <>
+      <main className="bg-[var(--bridge-paper)] text-[var(--bridge-ink)] dark:bg-[var(--bridge-night)] dark:text-[var(--bridge-paper-strong)]">
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-5 py-5 lg:px-8" aria-label="Primary navigation">
         <Link href="/" className="flex items-center gap-3 font-semibold tracking-tight">
-          <span className="grid size-9 place-items-center rounded-xl bg-[#111714] text-[#55dc91] shadow-lg shadow-emerald-900/20">↔</span>
+          <span className="grid size-9 place-items-center rounded-lg bg-[var(--bridge-ink)] text-[var(--bridge-green)]">↔</span>
           AgentsKit / Doc Bridge
         </Link>
         <div className="flex flex-wrap items-center gap-4 text-sm">
@@ -64,20 +65,11 @@ export default function HomePage() {
       </nav>
 
       {/* HERO */}
-      <section className="relative overflow-hidden border-y border-black/5 dark:border-white/10">
-        <div
-          className="pointer-events-none absolute inset-0"
-          aria-hidden
-          style={{
-            background:
-              'radial-gradient(900px 480px at 12% -10%, rgba(53,197,121,0.28), transparent 55%), radial-gradient(700px 400px at 92% 0%, rgba(61,121,242,0.18), transparent 50%), linear-gradient(to right, rgba(17,23,20,0.03) 1px, transparent 1px), linear-gradient(to bottom, rgba(17,23,20,0.03) 1px, transparent 1px)',
-            backgroundSize: 'auto, auto, 36px 36px, 36px 36px',
-          }}
-        />
+      <section className="bridge-hero relative overflow-hidden border-y border-black/5 dark:border-white/10">
         <div className="relative mx-auto grid max-w-7xl gap-12 px-5 py-16 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:px-8 lg:py-24">
           <div>
-            <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-emerald-600/25 bg-emerald-500/10 px-3 py-1 font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-800 dark:border-emerald-400/30 dark:text-emerald-300">
-              <span className="size-1.5 rounded-full bg-emerald-500" />
+            <p className="mb-5 inline-flex items-center gap-2 font-mono text-xs font-semibold uppercase tracking-[0.18em] text-emerald-800 dark:text-emerald-300">
+              <span className="h-px w-6 bg-emerald-600 dark:bg-emerald-300" aria-hidden />
               Human ↔ agent documentation bridge
             </p>
             <h1 className="max-w-3xl text-[2.55rem] font-bold leading-[0.98] tracking-[-0.05em] sm:text-6xl lg:text-7xl">
@@ -85,12 +77,12 @@ export default function HomePage() {
               <br />
               Two audiences.
               <br />
-              <span className="bg-gradient-to-r from-emerald-600 via-emerald-500 to-sky-500 bg-clip-text text-transparent dark:from-emerald-300 dark:via-emerald-400 dark:to-sky-300">
+              <span className="text-emerald-700 dark:text-emerald-300">
                 Zero duplicated truth.
               </span>
             </h1>
             <p className="mt-7 max-w-xl text-lg leading-8 text-neutral-600 dark:text-neutral-300">
-              Doc Bridge turns ownership into <strong className="font-semibold text-[#111714] dark:text-white">deterministic handoffs</strong>,
+              Doc Bridge turns ownership into <strong className="font-semibold text-[var(--bridge-ink)] dark:text-white">deterministic handoffs</strong>,
               MCP tools, freshness gates, and reviewable memory promotions — <em>before</em> any model burns tokens on the wrong files.
             </p>
 
@@ -101,27 +93,15 @@ export default function HomePage() {
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
                 href="/docs/getting-started"
-                className="inline-flex min-h-12 items-center gap-2 rounded-full bg-[#111714] px-6 py-3 text-sm font-semibold text-white shadow-xl shadow-emerald-950/20 transition hover:-translate-y-0.5 hover:bg-black dark:bg-emerald-400 dark:text-black"
+                className="inline-flex min-h-12 items-center gap-2 rounded-md bg-[var(--bridge-ink)] px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-black focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 dark:bg-emerald-400 dark:text-black dark:hover:bg-emerald-300"
               >
-                Run the 60-second proof <ArrowRight className="size-4" />
-              </Link>
-              <Link
-                href="/docs/guides/memory-pipeline"
-                className="inline-flex min-h-12 items-center rounded-full border border-black/15 px-5 py-3 text-sm font-medium transition hover:border-emerald-600/50 dark:border-white/15"
-              >
-                Memory → docs
-              </Link>
-              <Link
-                href="/docs/guides/mcp-agents"
-                className="inline-flex min-h-12 items-center rounded-full border border-black/15 px-5 py-3 text-sm font-medium transition hover:border-emerald-600/50 dark:border-white/15"
-              >
-                MCP
+                Generate your first handoff <ArrowRight className="size-4" />
               </Link>
               <a
-                href={`${BASE_PATH}/llms.txt`}
-                className="inline-flex min-h-12 items-center rounded-full border border-black/15 px-5 py-3 text-sm font-medium transition hover:border-emerald-600/50 dark:border-white/15"
+                href="#knowledge-flow"
+                className="inline-flex min-h-12 items-center rounded-md border border-black/15 px-5 py-3 text-sm font-medium transition-colors hover:border-emerald-600/50 dark:border-white/15"
               >
-                llms.txt
+                See how knowledge flows
               </a>
             </div>
 
@@ -151,7 +131,7 @@ export default function HomePage() {
       {/* PILLARS */}
       <section className="mx-auto max-w-7xl px-5 py-16 lg:px-8 lg:py-20">
         <div className="mb-10 max-w-2xl">
-          <p className="font-mono text-xs uppercase tracking-[0.2em] text-emerald-700 dark:text-emerald-300">Why it wins</p>
+          <p className="font-mono text-xs uppercase tracking-[0.2em] text-emerald-700 dark:text-emerald-300">The bridge contract</p>
           <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
             Not another wiki. A bridge that agents can execute.
           </h2>
@@ -160,7 +140,7 @@ export default function HomePage() {
           {pillars.map(([Icon, title, body]) => (
             <article
               key={title}
-              className="rounded-2xl border border-black/10 bg-white/70 p-6 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/[0.03]"
+              className="rounded-xl border border-black/10 bg-white/70 p-6 dark:border-white/10 dark:bg-white/[0.03]"
             >
               <Icon className="size-6 text-emerald-600 dark:text-emerald-300" />
               <h3 className="mt-5 text-lg font-semibold">{title}</h3>
@@ -204,13 +184,13 @@ export default function HomePage() {
       </section>
 
       {/* LOOP */}
-      <section className="bg-[#0d1311] px-5 py-16 text-white lg:py-20">
+      <section id="knowledge-flow" className="scroll-mt-24 bg-[var(--bridge-panel)] px-5 py-16 text-white lg:py-20">
         <div className="mx-auto max-w-7xl">
           <p className="font-mono text-xs uppercase tracking-[0.2em] text-emerald-300">Human ↔ agent loop</p>
           <h2 className="mt-4 max-w-3xl text-3xl font-bold tracking-tight sm:text-4xl">
             A feedback system — not another documentation silo.
           </h2>
-          <div className="mt-12 grid gap-px overflow-hidden rounded-2xl bg-white/15 md:grid-cols-4">
+          <div className="mt-12 grid gap-px overflow-hidden rounded-xl bg-white/15 md:grid-cols-4">
             {(
               [
                 [Terminal, 'Human docs', 'Explain intent and operation.'],
@@ -219,7 +199,7 @@ export default function HomePage() {
                 [GitBranch, 'Memory promote', 'Draft PR from durable learnings.'],
               ] as const
             ).map(([Icon, title, copy]) => (
-              <article key={title} className="bg-[#0d1311] p-6">
+              <article key={title} className="bg-[var(--bridge-panel)] p-6">
                 <Icon className="size-6 text-emerald-300" />
                 <h3 className="mt-8 text-lg font-semibold">{title}</h3>
                 <p className="mt-2 text-sm leading-6 text-white/65">{copy}</p>
@@ -229,7 +209,31 @@ export default function HomePage() {
         </div>
       </section>
 
+      <section className="border-t border-black/5 px-5 py-16 dark:border-white/10 lg:py-20">
+        <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-8 lg:flex-row lg:items-end">
+          <div className="max-w-3xl">
+            <p className="font-mono text-xs uppercase tracking-[0.2em] text-emerald-700 dark:text-emerald-300">
+              One source of truth
+            </p>
+            <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
+              Make your repository understandable to humans and agents.
+            </h2>
+            <p className="mt-5 max-w-2xl leading-7 text-neutral-600 dark:text-neutral-400">
+              Turn ownership, documentation, and durable agent findings into knowledge both sides can trust.
+            </p>
+          </div>
+          <Link
+            href="/docs/getting-started"
+            className="inline-flex min-h-12 shrink-0 items-center gap-2 rounded-md bg-[var(--bridge-ink)] px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-black focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 dark:bg-emerald-400 dark:text-black dark:hover:bg-emerald-300"
+          >
+            Add Doc Bridge to your repo <ArrowRight className="size-4" />
+          </Link>
+        </div>
+      </section>
+
       <EcosystemShowcase />
-    </main>
+      </main>
+      <SiteFooter />
+    </>
   )
 }

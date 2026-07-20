@@ -6,6 +6,9 @@
 :root {
   --bridge-ink: #111714;
   --bridge-paper: #f7f8f3;
+  --bridge-paper-strong: #f4f7f2;
+  --bridge-night: #0b0f0d;
+  --bridge-panel: #0d1311;
   --bridge-green: #35c579;
   --bridge-blue: #3d79f2;
   --color-fd-muted-foreground: #626862;
@@ -17,7 +20,7 @@
 
 html { scroll-behavior: smooth; }
 body { background: var(--bridge-paper); color: var(--bridge-ink); }
-.dark body { background: #0b0f0d; color: #f4f7f2; }
+.dark body { background: var(--bridge-night); color: var(--bridge-paper-strong); }
 ::selection { background: color-mix(in srgb, var(--bridge-green) 35%, transparent); }
 
 body { min-width: 0; overflow-x: clip; }
@@ -58,6 +61,18 @@ html:not(.dark) [style*='--shiki-light:#6E7781'] {
   background-image: linear-gradient(to right, color-mix(in srgb, currentColor 7%, transparent) 1px, transparent 1px),
     linear-gradient(to bottom, color-mix(in srgb, currentColor 7%, transparent) 1px, transparent 1px);
   background-size: 32px 32px;
+}
+
+.bridge-hero::before {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(900px 480px at 12% -10%, color-mix(in srgb, var(--bridge-green) 26%, transparent), transparent 55%),
+    linear-gradient(to right, color-mix(in srgb, var(--bridge-ink) 3%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--bridge-ink) 3%, transparent) 1px, transparent 1px);
+  background-size: auto, 36px 36px, 36px 36px;
+  content: '';
+  pointer-events: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
