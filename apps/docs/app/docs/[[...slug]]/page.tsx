@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { DocsBody, DocsDescription, DocsPage } from 'fumadocs-ui/page'
-import { EcosystemPeers } from '@/components/ecosystem'
+import { EcosystemShowcase } from '@/components/ecosystem'
 import { getMDXComponents } from '@/mdx-components'
 import { source } from '@/lib/source'
 import { BASE_PATH, SITE_URL } from '@/lib/site'
@@ -36,7 +36,7 @@ export default async function Page({ params }: Props) {
       <DocsBody>
         <MDX components={getMDXComponents()} />
       </DocsBody>
-      <EcosystemPeers compact />
+      <EcosystemShowcase compact />
     </DocsPage>
   )
 }
