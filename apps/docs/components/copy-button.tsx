@@ -28,7 +28,7 @@ export function CopyButton({
     <button
       type="button"
       onClick={onCopy}
-      className={`inline-flex items-center gap-1.5 rounded-md px-2 py-1 font-mono text-[11px] transition ${className}`}
+      className={`inline-flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-md px-3 py-2 font-mono text-[11px] transition ${className}`}
       aria-label={copied ? 'Copied' : label}
     >
       {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}

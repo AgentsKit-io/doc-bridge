@@ -7,13 +7,12 @@ export default function Layout({ children }: { children: ReactNode }) {
     <DocsLayout
       tree={source.pageTree}
       nav={{ title: 'Doc Bridge', url: '/' }}
-      searchToggle={{ enabled: false }}
+      searchToggle={{ enabled: true }}
       links={[
         { text: 'AgentsKit', url: 'https://www.agentskit.io', external: true },
         { text: 'Registry', url: 'https://registry.agentskit.io', external: true },
         { text: 'Chat', url: 'https://chat.agentskit.io', external: true },
         { text: 'Playbook', url: 'https://playbook.agentskit.io', external: true },
-        { text: 'Code Review', url: 'https://github.com/AgentsKit-io/code-review-cli', external: true },
         { text: 'AKOS', url: 'https://akos.agentskit.io', external: true },
         { text: 'GitHub', url: 'https://github.com/AgentsKit-io/doc-bridge', external: true },
       ]}
