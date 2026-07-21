@@ -4,7 +4,7 @@ test('landing communicates the deterministic proof and has no horizontal overflo
   await page.goto('/')
   await expect(page.getByRole('heading', { level: 1 })).toContainText('duplicated truth')
   await expect(page.getByText('backend calls: 0')).toBeVisible()
-  await expect(page.getByRole('link', { name: 'Generate your first handoff' })).toHaveAttribute('href', /\/docs\/getting-started\/?$/)
+  await expect(page.getByRole('link', { name: 'Generate your first handoff', exact: true })).toHaveAttribute('href', /\/docs\/getting-started\/?$/)
   await expect(page.getByRole('link', { name: 'See how knowledge flows' })).toHaveAttribute('href', '#knowledge-flow')
   await expect(page.getByRole('heading', { name: 'Make your repository understandable to humans and agents.' })).toBeVisible()
   await expect(page.getByRole('link', { name: 'Add Doc Bridge to your repo' })).toHaveAttribute('href', /\/docs\/getting-started\/?$/)
