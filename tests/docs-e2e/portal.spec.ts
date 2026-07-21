@@ -41,13 +41,26 @@ test('agent-first and machine surfaces are public and cross-linked', async ({ pa
   }
 })
 
-for (const width of [375, 768, 1280, 1440]) {
+for (const width of [320, 375, 768, 1280, 1440]) {
   test(`landing and docs do not overflow at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 })
     for (const path of ['/', '/docs/getting-started', '/for-agents']) {
       await page.goto(path)
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
       expect(overflow, `${path} at ${width}px`).toBeLessThanOrEqual(0)
+      if (path === '/') {
+        const clippedHeroLayout = await page.locator('.bridge-hero').evaluate((hero, viewportWidth) => {
+          const grid = hero.firstElementChild
+          const elements = grid ? [grid, ...grid.children, ...hero.querySelectorAll('pre')] : []
+          return elements.flatMap((element) => {
+            const rect = element.getBoundingClientRect()
+            return rect.left < 0 || rect.right > viewportWidth
+              ? [{ tag: element.tagName, left: rect.left, right: rect.right }]
+              : []
+          })
+        }, width)
+        expect(clippedHeroLayout, `hero layout at ${width}px`).toEqual([])
+      }
     }
   })
 }
