@@ -19,6 +19,52 @@ test('landing communicates the deterministic proof and has no horizontal overflo
   await expect(page.locator('agentskit-ecosystem')).toBeVisible()
 })
 
+test('product subheader keeps search, navigation, and the primary action reachable on mobile', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 844 })
+  await page.goto('/')
+  await expect(page.locator('#ak-eco')).toBeVisible()
+
+  const header = page.getByRole('banner')
+  await expect(header).toBeVisible()
+  const headerBox = await header.boundingBox()
+  expect(headerBox?.height).toBe(56)
+  expect(await header.evaluate(element => getComputedStyle(element).position)).toBe('sticky')
+
+  const menuButton = page.getByRole('button', { name: 'Open navigation menu' })
+  const searchButton = page.getByRole('button', { name: 'Open Search' })
+  for (const target of [menuButton, searchButton]) {
+    const box = await target.boundingBox()
+    expect(box?.width).toBeGreaterThanOrEqual(44)
+    expect(box?.height).toBeGreaterThanOrEqual(44)
+  }
+
+  await menuButton.click()
+  const mobileMenu = page.locator('#doc-bridge-mobile-menu')
+  await expect(mobileMenu.getByRole('link')).toHaveCount(4)
+  for (const link of await mobileMenu.getByRole('link').all()) {
+    expect((await link.boundingBox())?.height).toBeGreaterThanOrEqual(44)
+  }
+  await page.keyboard.press('Escape')
+  await expect(mobileMenu).toHaveCount(0)
+
+  await searchButton.click()
+  const search = page.getByRole('dialog', { name: 'Search' })
+  await search.getByPlaceholder('Search').fill('getting started')
+  await expect(search.getByText('Getting started', { exact: false }).first()).toBeVisible()
+  await page.keyboard.press('Escape')
+
+  const primary = page.getByRole('link', { name: 'Generate your first handoff', exact: true })
+  await expect(primary).toBeVisible()
+  const primaryBox = await primary.boundingBox()
+  expect(primaryBox).not.toBeNull()
+  expect((primaryBox?.y ?? 600) + (primaryBox?.height ?? 0)).toBeLessThan(600)
+
+  const copy = page.getByRole('button', { name: 'Copy' }).first()
+  const copyBox = await copy.boundingBox()
+  expect(copyBox?.width).toBeGreaterThanOrEqual(44)
+  expect(copyBox?.height).toBeGreaterThanOrEqual(44)
+})
+
 test('Fumadocs renders canonical docs with raw and llms surfaces', async ({ page }) => {
   await page.goto('/docs/getting-started')
   await expect(page.locator('h1#getting-started')).toBeVisible()
@@ -30,6 +76,24 @@ test('Fumadocs renders canonical docs with raw and llms surfaces', async ({ page
   expect(llms.ok()).toBeTruthy()
   expect(await llms.text()).toContain('# AgentsKit Doc Bridge')
   await expect(page.locator('agentskit-ecosystem')).toBeVisible()
+  await expect(page.locator('[data-search]:visible, [data-search-full]:visible').first()).toBeVisible()
+  await expect(page.getByText('Code Review', { exact: true })).toHaveCount(0)
+})
+
+test('publishes the static search index and social preview', async ({ page }) => {
+  const search = await page.request.get('/api/search/')
+  expect(search.ok()).toBeTruthy()
+  expect(search.headers()['content-type']).toContain('application/json')
+  expect((await search.json()).type).toBe('advanced')
+
+  const social = await page.request.get('/opengraph-image/')
+  expect(social.ok()).toBeTruthy()
+  expect(social.headers()['content-type']).toContain('image/png')
+  expect((await social.body()).byteLength).toBeGreaterThan(20_000)
+
+  await page.goto('/')
+  await expect(page.locator('meta[property="og:image"]')).toHaveAttribute('content', /opengraph-image/)
+  await expect(page.locator('meta[name="twitter:image"]')).toHaveAttribute('content', /opengraph-image/)
 })
 
 test('agent-first and machine surfaces are public and cross-linked', async ({ page }) => {

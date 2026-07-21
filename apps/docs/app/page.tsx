@@ -4,6 +4,7 @@ import { readdirSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { EcosystemShowcase } from '@/components/ecosystem'
 import { CopyCode } from '@/components/copy-button'
+import { ProductSubheader } from '@/components/product-subheader'
 import { SiteFooter } from '@/components/site-footer'
 
 const proof = [
@@ -50,20 +51,8 @@ backend calls: 0`
 export default function HomePage() {
   return (
     <>
+      <ProductSubheader />
       <main className="bg-[var(--bridge-paper)] text-[var(--bridge-ink)] dark:bg-[var(--bridge-night)] dark:text-[var(--bridge-paper-strong)]">
-      <nav className="mx-auto flex max-w-7xl items-center justify-between px-5 py-5 lg:px-8" aria-label="Primary navigation">
-        <Link href="/" className="flex items-center gap-3 font-semibold tracking-tight">
-          <span className="grid size-9 place-items-center rounded-lg bg-[var(--bridge-ink)] text-[var(--bridge-green)]">↔</span>
-          AgentsKit / Doc Bridge
-        </Link>
-        <div className="flex flex-wrap items-center gap-4 text-sm">
-          <Link href="/docs/getting-started" className="hover:text-emerald-700 dark:hover:text-emerald-300">Docs</Link>
-          <Link href="/docs/guides/cli-map" className="hover:text-emerald-700 dark:hover:text-emerald-300">CLI</Link>
-          <Link href="/for-agents" className="hover:text-emerald-700 dark:hover:text-emerald-300">For agents</Link>
-          <a href="https://github.com/AgentsKit-io/doc-bridge" className="hover:text-emerald-700 dark:hover:text-emerald-300">GitHub</a>
-        </div>
-      </nav>
-
       {/* HERO */}
       <section className="bridge-hero relative overflow-hidden border-y border-black/5 dark:border-white/10">
         <div className="relative mx-auto grid max-w-7xl gap-12 px-5 py-16 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:px-8 lg:py-24">
@@ -81,6 +70,22 @@ export default function HomePage() {
                 Zero duplicated truth.
               </span>
             </h1>
+
+            <div className="mt-7 flex flex-wrap gap-3">
+              <Link
+                href="/docs/getting-started"
+                className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-md bg-[var(--bridge-ink)] px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-black focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 dark:bg-emerald-400 dark:text-black dark:hover:bg-emerald-300 sm:w-auto"
+              >
+                Generate your first handoff <ArrowRight className="size-4" />
+              </Link>
+              <a
+                href="#knowledge-flow"
+                className="inline-flex min-h-12 w-full items-center justify-center rounded-md border border-black/15 px-5 py-3 text-sm font-medium transition-colors hover:border-emerald-600/50 dark:border-white/15 sm:w-auto"
+              >
+                See how knowledge flows
+              </a>
+            </div>
+
             <p className="mt-7 max-w-xl text-lg leading-8 text-neutral-600 dark:text-neutral-300">
               Doc Bridge turns ownership into <strong className="font-semibold text-[var(--bridge-ink)] dark:text-white">deterministic handoffs</strong>,
               MCP tools, freshness gates, and reviewable memory promotions — <em>before</em> any model burns tokens on the wrong files.
@@ -88,21 +93,6 @@ export default function HomePage() {
 
             <div className="mt-8 max-w-xl">
               <CopyCode code={installCode} title="install" language="bash" />
-            </div>
-
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Link
-                href="/docs/getting-started"
-                className="inline-flex min-h-12 items-center gap-2 rounded-md bg-[var(--bridge-ink)] px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-black focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 dark:bg-emerald-400 dark:text-black dark:hover:bg-emerald-300"
-              >
-                Generate your first handoff <ArrowRight className="size-4" />
-              </Link>
-              <a
-                href="#knowledge-flow"
-                className="inline-flex min-h-12 items-center rounded-md border border-black/15 px-5 py-3 text-sm font-medium transition-colors hover:border-emerald-600/50 dark:border-white/15"
-              >
-                See how knowledge flows
-              </a>
             </div>
 
             <dl className="mt-10 grid max-w-xl grid-cols-3 gap-4 border-t border-black/10 pt-8 dark:border-white/10">
