@@ -48,7 +48,7 @@ export function CopyCode({
   readonly language?: string
 }) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#0b100e] shadow-2xl shadow-emerald-950/20">
+    <div className="min-w-0 max-w-full overflow-hidden rounded-2xl border border-white/10 bg-[#0b100e] shadow-2xl shadow-emerald-950/20">
       <div className="flex items-center justify-between border-b border-white/10 px-4 py-2">
         <div className="flex items-center gap-2">
           <span className="size-2 rounded-full bg-red-400/90" />

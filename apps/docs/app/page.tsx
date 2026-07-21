@@ -67,10 +67,10 @@ export default function HomePage() {
       {/* HERO */}
       <section className="bridge-hero relative overflow-hidden border-y border-black/5 dark:border-white/10">
         <div className="relative mx-auto grid max-w-7xl gap-12 px-5 py-16 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:px-8 lg:py-24">
-          <div>
-            <p className="mb-5 inline-flex items-center gap-2 font-mono text-xs font-semibold uppercase tracking-[0.18em] text-emerald-800 dark:text-emerald-300">
-              <span className="h-px w-6 bg-emerald-600 dark:bg-emerald-300" aria-hidden />
-              Human ↔ agent documentation bridge
+          <div className="min-w-0">
+            <p className="mb-5 flex max-w-full items-start gap-2 font-mono text-xs font-semibold uppercase tracking-[0.18em] text-emerald-800 dark:text-emerald-300">
+              <span className="mt-[0.45rem] h-px w-6 shrink-0 bg-emerald-600 dark:bg-emerald-300" aria-hidden />
+              <span className="min-w-0">Human ↔ agent documentation bridge</span>
             </p>
             <h1 className="max-w-3xl text-[2.55rem] font-bold leading-[0.98] tracking-[-0.05em] sm:text-6xl lg:text-7xl">
               One repository.
@@ -119,7 +119,7 @@ export default function HomePage() {
             </dl>
           </div>
 
-          <div className="lg:pl-4">
+          <div className="min-w-0 lg:pl-4">
             <CopyCode code={proofCode} title="deterministic handoff" language="bash" />
             <p className="mt-3 text-center font-mono text-[11px] text-neutral-500">
               Live corpus · {sourceCount} indexed public sources · copy any command
