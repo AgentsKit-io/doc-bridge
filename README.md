@@ -3,6 +3,7 @@
 [![npm](https://img.shields.io/npm/v/@agentskit/doc-bridge?style=flat-square)](https://www.npmjs.com/package/@agentskit/doc-bridge)
 [![CI](https://img.shields.io/github/actions/workflow/status/AgentsKit-io/doc-bridge/ci.yml?branch=master&style=flat-square)](https://github.com/AgentsKit-io/doc-bridge/actions/workflows/ci.yml)
 [![Pages](https://img.shields.io/github/actions/workflow/status/AgentsKit-io/doc-bridge/pages.yml?branch=master&label=pages&style=flat-square)](https://doc-bridge.agentskit.io/)
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/13872/baseline)](https://www.bestpractices.dev/projects/13872)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](LICENSE)
 [![Node](https://img.shields.io/badge/node-%3E%3D22-339933?style=flat-square)](package.json)
 [![TypeScript](https://img.shields.io/badge/types-TypeScript-3178c6?style=flat-square)](dist/index.d.ts)
