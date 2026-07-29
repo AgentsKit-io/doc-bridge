@@ -306,6 +306,7 @@ Issues and PRs are welcome. Start here:
 | Need | Doc |
 |------|-----|
 | Local setup, tests, release flow | [CONTRIBUTING.md](CONTRIBUTING.md) |
+| Governance and maintainer responsibilities | [GOVERNANCE.md](GOVERNANCE.md) |
 | Vulnerability reports | [SECURITY.md](SECURITY.md) |
 | Community standards | [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) |
 | Release history | [CHANGELOG.md](CHANGELOG.md) |

@@ -8,14 +8,19 @@ Security fixes target the latest stable `@agentskit/doc-bridge` release on npm.
 
 Please do not open a public issue for security reports.
 
-Email security reports to `security@agentskit.io` with:
+Use [GitHub private vulnerability reporting](https://github.com/AgentsKit-io/doc-bridge/security/advisories/new) when possible. If that channel is unavailable, email `security@agentskit.io`.
+
+Include:
 
 - affected version or commit
 - reproduction steps
 - impact
 - any suggested fix
 
-We will acknowledge reports as soon as practical and coordinate disclosure before publishing details.
+Please do not include secrets or private repository content beyond what is
+necessary to reproduce the issue. We aim to acknowledge a complete report
+within 14 days, investigate it, and coordinate disclosure and remediation with
+the reporter before publishing details.
 
 ## Security expectations
 
