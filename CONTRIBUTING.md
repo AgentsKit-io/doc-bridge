@@ -19,6 +19,7 @@ pnpm build
 - Add or update the smallest test that would fail if the behavior regresses.
 - Public contract changes must update the relevant docs under `docs/spec/` or `docs/schemas/`.
 - Dogfood AgentsKit Chat 0.4.x only: `@agentskit/chat`, `@agentskit/chat/protocol`, and `@agentskit/chat/react`. Never reintroduce `@agentskit/chat-protocol` or `@agentskit/chat-react` (`pnpm check:no-legacy-chat-imports`).
+- Never commit API keys, tokens, secrets, or private repository content.
 
 ## Pull request checklist
 
@@ -38,3 +39,8 @@ pnpm release
 ```
 
 Do not publish from a dirty worktree.
+
+Project decisions and maintainer responsibilities are documented in
+[GOVERNANCE.md](GOVERNANCE.md). By participating, you agree to follow the
+[Code of Conduct](CODE_OF_CONDUCT.md). Report vulnerabilities through the
+private process in [SECURITY.md](SECURITY.md).
