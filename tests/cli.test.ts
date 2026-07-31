@@ -207,14 +207,8 @@ describe('ak-docs CLI', () => {
     }
   })
 
-  it('errors clearly when rag peers are missing', async () => {
-    const result = await captureStdoutAsync(async () => runCli(['rag', 'ingest']))
-    // may write to stderr
-    const err = captureStderr(() => {
-      // sync path not used
-      return 0
-    })
-    void err
+  it('errors clearly when rag intelligence is not configured', async () => {
+    expect(runCli(['index'])).toBe(0)
     const stderr = await (async () => {
       const write = process.stderr.write
       let buf = ''
@@ -230,8 +224,7 @@ describe('ak-docs CLI', () => {
       }
     })()
     expect(stderr.code).toBe(1)
-    expect(stderr.buf.toLowerCase()).toMatch(/intelligence|peer|adapter|install/)
-    void result
+    expect(stderr.buf).toContain('Intelligence is disabled')
   })
 
   it('initializes a TypeScript config when requested', () => {
