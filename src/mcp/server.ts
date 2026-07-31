@@ -30,7 +30,9 @@ type McpContext = {
 export const MCP_TOOLS = [
   {
     name: 'handoff.resolve',
-    description: 'Resolve a package or ownership id to an AgentHandoff.',
+    title: 'Resolve repository handoff',
+    description: 'Resolve a package or ownership id to its deterministic AgentHandoff.',
+    annotations: { readOnlyHint: true },
     inputSchema: {
       type: 'object',
       properties: { id: { type: 'string' }, kind: { type: 'string', enum: ['package', 'ownership'] } },
@@ -39,7 +41,9 @@ export const MCP_TOOLS = [
   },
   {
     name: 'doc.search',
-    description: 'Search the deterministic doc-bridge index.',
+    title: 'Search repository documentation',
+    description: 'Search the deterministic Doc Bridge index for repository documentation.',
+    annotations: { readOnlyHint: true },
     inputSchema: {
       type: 'object',
       properties: { term: { type: 'string' }, limit: { type: 'number' } },
@@ -48,7 +52,9 @@ export const MCP_TOOLS = [
   },
   {
     name: 'doc.get',
-    description: 'Read an indexed agent documentation file by id or path.',
+    title: 'Read indexed documentation',
+    description: 'Read one indexed agent documentation file by id or indexed path.',
+    annotations: { readOnlyHint: true },
     inputSchema: {
       type: 'object',
       properties: { id: { type: 'string' }, path: { type: 'string' } },
@@ -56,12 +62,16 @@ export const MCP_TOOLS = [
   },
   {
     name: 'gate.status',
-    description: 'Run the index-freshness gate.',
+    title: 'Check documentation gates',
+    description: 'Evaluate documentation gates without writing files.',
+    annotations: { readOnlyHint: true },
     inputSchema: { type: 'object', properties: {} },
   },
   {
     name: 'retriever.query',
-    description: 'Return local doc-bridge retriever chunks for a query.',
+    title: 'Retrieve documentation context',
+    description: 'Return relevant local Doc Bridge index chunks for a query.',
+    annotations: { readOnlyHint: true },
     inputSchema: {
       type: 'object',
       properties: { query: { type: 'string' }, limit: { type: 'number' } },
@@ -70,17 +80,23 @@ export const MCP_TOOLS = [
   },
   {
     name: 'memory.classify',
-    description: 'Classify local memory candidates into agent/human/playbook/discard routes.',
+    title: 'Classify memory candidates',
+    description: 'Classify local memory candidates into agent, human, playbook, or discard routes.',
+    annotations: { readOnlyHint: true },
     inputSchema: { type: 'object', properties: {} },
   },
   {
     name: 'memory.promoteDraft',
-    description: 'Build a safe draft promotion body for local memory candidates.',
+    title: 'Draft memory promotion',
+    description: 'Build a reviewable draft promotion body from local memory candidates without publishing it.',
+    annotations: { readOnlyHint: true },
     inputSchema: { type: 'object', properties: {} },
   },
   {
     name: 'registry.topology',
-    description: 'Return the doc-curator registry topology.',
+    title: 'Inspect registry topology',
+    description: 'Return the static Doc Bridge curator and delegate topology.',
+    annotations: { readOnlyHint: true },
     inputSchema: { type: 'object', properties: {} },
   },
 ] as const
@@ -223,12 +239,14 @@ export const handleMcpRequest = (ctx: McpContext, request: JsonRpcRequest): unkn
   throw new Error(`Unsupported MCP method "${request.method ?? ''}"`)
 }
 
-const writeFrame = (payload: unknown): void => {
+type StdioFraming = 'content-length' | 'json-line'
+
+const writeFrame = (payload: unknown, framing: StdioFraming): void => {
   const body = JSON.stringify(payload)
-  process.stdout.write(`Content-Length: ${Buffer.byteLength(body)}\r\n\r\n${body}`)
+  process.stdout.write(framing === 'json-line' ? `${body}\n` : `Content-Length: ${Buffer.byteLength(body)}\r\n\r\n${body}`)
 }
 
-const respond = (ctx: McpContext, request: JsonRpcRequest): void => {
+const respond = (ctx: McpContext, request: JsonRpcRequest, framing: StdioFraming): void => {
   if (request.id === undefined) {
     try {
       handleMcpRequest(ctx, request)
@@ -240,13 +258,13 @@ const respond = (ctx: McpContext, request: JsonRpcRequest): void => {
 
   try {
     const result = handleMcpRequest(ctx, request)
-    writeFrame({ jsonrpc: '2.0', id: request.id, result: result ?? {} })
+    writeFrame({ jsonrpc: '2.0', id: request.id, result: result ?? {} }, framing)
   } catch (error) {
     writeFrame({
       jsonrpc: '2.0',
       id: request.id,
       error: { code: -32000, message: error instanceof Error ? error.message : String(error) },
-    })
+    }, framing)
   }
 }
 
@@ -255,21 +273,35 @@ export const startMcpStdioServer = (ctx: McpContext): void => {
   process.stdin.on('data', (chunk: Buffer) => {
     buffer = Buffer.concat([buffer, chunk])
     while (true) {
-      const headerEnd = buffer.indexOf('\r\n\r\n')
-      if (headerEnd === -1) return
-      const header = buffer.subarray(0, headerEnd).toString('utf8')
-      const match = /content-length:\s*(\d+)/i.exec(header)
-      if (!match?.[1]) {
-        buffer = buffer.subarray(headerEnd + 4)
+      if (/^content-length:/i.test(buffer.subarray(0, Math.min(buffer.length, 32)).toString('utf8'))) {
+        const headerEnd = buffer.indexOf('\r\n\r\n')
+        if (headerEnd === -1) return
+        const header = buffer.subarray(0, headerEnd).toString('utf8')
+        const match = /content-length:\s*(\d+)/i.exec(header)
+        if (!match?.[1]) {
+          buffer = buffer.subarray(headerEnd + 4)
+          continue
+        }
+        const length = Number(match[1])
+        const bodyStart = headerEnd + 4
+        const bodyEnd = bodyStart + length
+        if (buffer.length < bodyEnd) return
+        const raw = buffer.subarray(bodyStart, bodyEnd).toString('utf8')
+        buffer = buffer.subarray(bodyEnd)
+        respond(ctx, JSON.parse(raw) as JsonRpcRequest, 'content-length')
         continue
       }
-      const length = Number(match[1])
-      const bodyStart = headerEnd + 4
-      const bodyEnd = bodyStart + length
-      if (buffer.length < bodyEnd) return
-      const raw = buffer.subarray(bodyStart, bodyEnd).toString('utf8')
-      buffer = buffer.subarray(bodyEnd)
-      respond(ctx, JSON.parse(raw) as JsonRpcRequest)
+
+      const lineEnd = buffer.indexOf('\n')
+      if (lineEnd === -1) return
+      const raw = buffer.subarray(0, lineEnd).toString('utf8').trim()
+      buffer = buffer.subarray(lineEnd + 1)
+      if (!raw) continue
+      try {
+        respond(ctx, JSON.parse(raw) as JsonRpcRequest, 'json-line')
+      } catch {
+        writeFrame({ jsonrpc: '2.0', id: null, error: { code: -32700, message: 'Parse error' } }, 'json-line')
+      }
     }
   })
   process.stdin.resume()

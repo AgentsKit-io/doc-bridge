@@ -123,6 +123,21 @@ ak-docs mcp install --cursor   # wires MCP into .cursor/mcp.json
 
 See [docs/getting-started.md](docs/getting-started.md), [docs/mcp.md](docs/mcp.md), and [docs/examples.md](docs/examples.md).
 
+## Claude Desktop MCP Bundle
+
+Doc Bridge can be packaged as a local MCP Bundle for Claude Desktop. The bundle keeps the eight MCP tools read-only and asks the user to select the repository's `doc-bridge.config.json`; that file defines the project boundary Doc Bridge may read.
+
+From a clean checkout:
+
+```bash
+pnpm install --frozen-lockfile
+pnpm mcpb:pack
+```
+
+The command builds Doc Bridge, creates a production-only staging directory, validates the MCPB manifest, packs the extension, checks its file inventory, and writes the local artifact under `.mcpb-output/`. Generated bundles and staging directories are intentionally excluded from Git.
+
+Current packaged compatibility is macOS. Other operating systems will be declared only after the exact bundle passes an independent installation test there.
+
 ## Why this exists
 
 | Pattern | Gap |
@@ -299,6 +314,10 @@ pnpm smoke:ollama    # optional — skips if Ollama/peers unavailable
 ```
 
 **Landing:** https://doc-bridge.agentskit.io/
+
+## Privacy Policy
+
+The local MCP server reads only the project selected through `doc-bridge.config.json`. It does not require an API key, send project data to AgentsKit, collect telemetry, or write project files through its eight MCP tools. See the complete [Privacy Policy](PRIVACY.md) for accessed paths, use, storage, sharing, retention, optional integrations, and contact information.
 
 ## Contributing
 

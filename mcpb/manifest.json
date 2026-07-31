@@ -1,0 +1,96 @@
+{
+  "manifest_version": "0.3",
+  "name": "doc-bridge",
+  "display_name": "Doc Bridge",
+  "version": "1.2.4",
+  "description": "Deterministic repository handoffs for coding agents, running locally without an LLM or API key.",
+  "long_description": "Doc Bridge turns a repository's own documentation and ownership metadata into deterministic handoffs: where an agent should start, which paths it may edit, which checks it must run, and when a human must take over. The local connector exposes the same read-only contract available through Doc Bridge CLI and CI.",
+  "author": {
+    "name": "AgentsKit",
+    "url": "https://agentskit.io"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AgentsKit-io/doc-bridge.git"
+  },
+  "homepage": "https://doc-bridge.agentskit.io/",
+  "documentation": "https://doc-bridge.agentskit.io/docs/mcp",
+  "support": "https://github.com/AgentsKit-io/doc-bridge/issues",
+  "icon": "icon.png",
+  "server": {
+    "type": "node",
+    "entry_point": "server/ak-docs.js",
+    "mcp_config": {
+      "command": "node",
+      "args": [
+        "${__dirname}/server/ak-docs.js",
+        "mcp",
+        "--config",
+        "${user_config.project_config}"
+      ],
+      "env": {}
+    }
+  },
+  "tools": [
+    {
+      "name": "handoff.resolve",
+      "description": "Resolve a package or ownership id to its deterministic AgentHandoff."
+    },
+    {
+      "name": "doc.search",
+      "description": "Search the deterministic Doc Bridge index for repository documentation."
+    },
+    {
+      "name": "doc.get",
+      "description": "Read one indexed agent documentation file by id or indexed path."
+    },
+    {
+      "name": "gate.status",
+      "description": "Evaluate documentation gates without writing files."
+    },
+    {
+      "name": "retriever.query",
+      "description": "Return relevant local Doc Bridge index chunks for a query."
+    },
+    {
+      "name": "memory.classify",
+      "description": "Classify local memory candidates into agent, human, playbook, or discard routes."
+    },
+    {
+      "name": "memory.promoteDraft",
+      "description": "Build a reviewable draft promotion body from local memory candidates without publishing it."
+    },
+    {
+      "name": "registry.topology",
+      "description": "Return the static Doc Bridge curator and delegate topology."
+    }
+  ],
+  "tools_generated": false,
+  "keywords": [
+    "coding-agents",
+    "documentation",
+    "handoff",
+    "repository",
+    "developer-tools"
+  ],
+  "license": "MIT",
+  "privacy_policies": [
+    "https://github.com/AgentsKit-io/doc-bridge/blob/master/PRIVACY.md"
+  ],
+  "compatibility": {
+    "platforms": [
+      "darwin"
+    ],
+    "runtimes": {
+      "node": ">=22"
+    }
+  },
+  "user_config": {
+    "project_config": {
+      "type": "file",
+      "title": "Doc Bridge configuration",
+      "description": "Select the doc-bridge.config.json file at the root of the repository Doc Bridge may read.",
+      "required": true
+    }
+  }
+}
