@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.6
+
+### Patch Changes
+
+- Restore the stable release security gate with patched Next.js and Sharp versions and pnpm 11-compatible dependency overrides.
+
 ## 1.2.5
 
 ### Patch Changes
