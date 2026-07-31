@@ -200,7 +200,7 @@
           "examples/verify-handoff.mjs",
           "package.json"
         ],
-        "sourceHash": "sha256:3024a7c3c61e71b6e7d2dd936f98338a5717e5926351368989d7f8e9f010765b"
+        "sourceHash": "sha256:ab404e22206bc301e3817d617285ab59beb41992122ac351beafca8d0c068ffb"
       },
       "exceptions": []
     },
@@ -279,7 +279,7 @@
           "examples/verify-handoff.mjs",
           "package.json"
         ],
-        "sourceHash": "sha256:3024a7c3c61e71b6e7d2dd936f98338a5717e5926351368989d7f8e9f010765b"
+        "sourceHash": "sha256:ab404e22206bc301e3817d617285ab59beb41992122ac351beafca8d0c068ffb"
       },
       "exceptions": []
     },
@@ -358,7 +358,7 @@
           "examples/verify-handoff.mjs",
           "package.json"
         ],
-        "sourceHash": "sha256:3024a7c3c61e71b6e7d2dd936f98338a5717e5926351368989d7f8e9f010765b"
+        "sourceHash": "sha256:ab404e22206bc301e3817d617285ab59beb41992122ac351beafca8d0c068ffb"
       },
       "exceptions": []
     }

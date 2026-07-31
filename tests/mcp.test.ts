@@ -66,6 +66,50 @@ describe('MCP tools', () => {
     expect(result.tools.map((tool) => tool.name)).toContain('handoff.resolve')
     expect(result.tools.map((tool) => tool.name)).toContain('doc.search')
     expect(result.tools.map((tool) => tool.name)).toContain('doc.get')
+    expect(result.tools).toHaveLength(8)
+    for (const tool of result.tools) {
+      expect(tool.name.length).toBeLessThanOrEqual(64)
+      expect(tool).toMatchObject({
+        title: expect.any(String),
+        description: expect.any(String),
+        annotations: { readOnlyHint: true },
+        inputSchema: { type: 'object' },
+      })
+    }
+  })
+
+  it('returns a successful text result for every read-only tool', () => {
+    const root = join(mkdtempSync(join(tmpdir(), 'ak-docs-mcp-all-tools-')), 'sample-project')
+    cpSync(fixtureRoot, root, { recursive: true })
+    mkdirSync(join(root, '.agent-memory'), { recursive: true })
+    writeFileSync(join(root, '.agent-memory/sidecar.md'), '# Sidecar\n\nSchema ownership belongs to os-core.\n')
+
+    const config = loadFixtureConfig()
+    const index = buildDocBridgeIndex({ root, config, write: false }).index
+    const ctx = { root, config, loadIndex: () => index }
+    const validArguments: Record<string, Record<string, unknown>> = {
+      'handoff.resolve': { id: 'os-core' },
+      'doc.search': { term: 'schema' },
+      'doc.get': { id: 'os-core' },
+      'gate.status': {},
+      'retriever.query': { query: 'schema', limit: 1 },
+      'memory.classify': {},
+      'memory.promoteDraft': {},
+      'registry.topology': {},
+    }
+
+    for (const tool of MCP_TOOLS) {
+      const result = handleMcpRequest(ctx, {
+        jsonrpc: '2.0',
+        id: tool.name,
+        method: 'tools/call',
+        params: { name: tool.name, arguments: validArguments[tool.name] },
+      }) as { content: { type: string; text: string }[] }
+      expect(result.content).toEqual([
+        expect.objectContaining({ type: 'text', text: expect.any(String) }),
+      ])
+      expect(result.content[0]?.text.length).toBeGreaterThan(1)
+    }
   })
 
   it('resolves handoff, searches docs, and reads docs', () => {
@@ -298,6 +342,38 @@ describe('MCP tools', () => {
       expect(out).toContain('"tools"')
       expect(out).toContain('"id":2')
       expect(out).toContain('Unknown tool')
+    } finally {
+      process.stdout.write = write
+      process.stdin.removeAllListeners('data')
+      for (const listener of previous) process.stdin.on('data', listener)
+    }
+  })
+
+  it('handles newline-delimited stdio used by current MCP clients', () => {
+    const config = loadFixtureConfig()
+    const previous = process.stdin.listeners('data')
+    const write = process.stdout.write
+    let out = ''
+    process.stdin.removeAllListeners('data')
+    process.stdout.write = ((chunk: string | Uint8Array) => {
+      out += String(chunk)
+      return true
+    }) as typeof process.stdout.write
+    try {
+      startMcpStdioServer({ root: fixtureRoot, config })
+      process.stdin.emit('data', Buffer.from('{not-json}\n'))
+      process.stdin.emit(
+        'data',
+        Buffer.from(`${JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/list' })}\n`),
+      )
+      const responses = out.trim().split('\n').map((line) => JSON.parse(line)) as Array<{
+        id: number | null
+        error?: { code: number }
+        result?: { tools: unknown[] }
+      }>
+      expect(responses[0]).toMatchObject({ id: null, error: { code: -32700 } })
+      expect(responses[1]).toMatchObject({ id: 1 })
+      expect(responses[1]?.result?.tools).toHaveLength(8)
     } finally {
       process.stdout.write = write
       process.stdin.removeAllListeners('data')

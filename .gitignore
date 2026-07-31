@@ -14,3 +14,7 @@ playwright-report/
 test-results/
 .lighthouseci/
 node_modules
+.mcpb-build/
+.mcpb-deploy/
+.mcpb-output/
+.mcpb-runtime/

@@ -16,3 +16,7 @@ if (syncedAction === action && !action.includes(`default: '${version}'`)) {
   throw new Error('Could not synchronize action.yml package-version default')
 }
 writeFileSync(actionPath, syncedAction)
+
+const mcpbManifestPath = resolve(root, 'mcpb', 'manifest.json')
+const mcpbManifest = JSON.parse(readFileSync(mcpbManifestPath, 'utf8'))
+writeFileSync(mcpbManifestPath, `${JSON.stringify({ ...mcpbManifest, version }, null, 2)}\n`)

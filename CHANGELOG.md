@@ -34,6 +34,7 @@
 
 ### Features
 
+- Add read-only MCP tool annotations, a public privacy policy, and validated MCPB packaging for local Claude Desktop installation.
 - Migrate the documentation portal dogfood from AgentsKit Chat 0.2 packages (`@agentskit/chat-protocol`, `@agentskit/chat-react`) to the consolidated 0.3.x surface (`@agentskit/chat/protocol`, `@agentskit/chat/react`) while keeping `@agentskit/chat` as the root package.
 - Replace the legacy Pages landing with a statically exported Fumadocs portal backed directly by the canonical `docs/**` corpus.
 - Generate `llms.txt`, `llms-full.txt`, raw Markdown, and a hash-verified deterministic AgentsKit Chat artifact from the repository's own Doc Bridge index.

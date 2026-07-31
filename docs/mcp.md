@@ -43,6 +43,19 @@ Or with a global/local bin:
 
 Run from the repo root (or pass config discovery that resolves to it). Always `ak-docs index` after doc changes (or gate in CI).
 
+## Claude Desktop MCP Bundle
+
+Maintainers can build the local desktop extension from a clean checkout:
+
+```bash
+pnpm install --frozen-lockfile
+pnpm mcpb:pack
+```
+
+The bundle asks the user to select the repository's `doc-bridge.config.json` and uses that file's directory as the project boundary. It contains a self-contained MCP runtime rather than the optional RAG, chat, or model-provider packages. The build validates the manifest, checks the archive inventory, and exercises all eight tools from the staged runtime.
+
+The stdio server accepts the newline-delimited JSON transport used by current MCP clients and the legacy `Content-Length` framing used by older integrations. Responses use the same framing as each request.
+
 ## Tools
 
 | Tool | Purpose |
@@ -53,6 +66,9 @@ Run from the repo root (or pass config discovery that resolves to it). Always `a
 | `gate.status` | Freshness / configured gates |
 | `retriever.query` | Local retriever chunks |
 | `memory.classify` / `memory.promoteDraft` | Memory pipeline |
+| `registry.topology` | Static curator and delegate topology |
+
+Every tool is annotated read-only. None of these MCP calls writes project files or publishes a memory promotion.
 
 ## Agent guidance (paste into AGENTS.md)
 
