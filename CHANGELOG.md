@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.5
+
+### Patch Changes
+
+- d2429f4: Add read-only MCP tool annotations, a public privacy policy, and deterministic MCPB packaging for local Claude Desktop installation.
+
 ## 1.2.4
 
 ### Patch Changes
