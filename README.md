@@ -106,6 +106,8 @@ npx ak-docs query package example --agent
 ak-docs mcp install --cursor   # wires MCP into .cursor/mcp.json
 ```
 
+Using Cline? Follow the deterministic [`llms-install.md`](llms-install.md) setup. It runs the pinned MCP server through `pnpm dlx` without adding Doc Bridge to your repository dependencies.
+
 ## What ships
 
 ![doc-bridge index used through CLI, MCP, CI, and documentation adapters](docs/landing/assets/doc-bridge-surfaces.webp)
