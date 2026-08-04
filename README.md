@@ -116,7 +116,7 @@ Using Cline? Follow the deterministic [`llms-install.md`](llms-install.md) setup
 |---------|------------|--------------------|
 | **CLI** | Inspect ownership, search docs, run gates, ask local questions | `ak-docs query`, `search`, `ask`, `doctor`, `gate` |
 | **MCP server** | Let Cursor, Claude Code, Codex-style agents resolve handoffs before editing | `ak-docs mcp`, `handoff.resolve` |
-| **GitHub Action / CI** | Fail stale indexes and broken human-doc links on PRs | `AgentsKit-io/doc-bridge@v1.2.1` |
+| **GitHub Action / CI** | Fail stale indexes and broken human-doc links on PRs | `AgentsKit-io/doc-bridge@v1.2.6` |
 | **Documentation conformance** | Check the stable ecosystem standard with auditable evidence | `ak-docs conformance run documentation-standard-v1 --text` |
 | **Doc adapters** | Link human docs to agent docs | `fumadocs`, `docusaurus`, `plain-markdown` |
 | **Monorepo routing** | Discover workspaces and checks | `pnpm-monorepo` |
@@ -226,7 +226,7 @@ permissions:
 
 steps:
   - uses: actions/checkout@v4
-  - uses: AgentsKit-io/doc-bridge@v1.2.1
+  - uses: AgentsKit-io/doc-bridge@v1.2.6
     with:
       config-path: doc-bridge.config.json
 ```
