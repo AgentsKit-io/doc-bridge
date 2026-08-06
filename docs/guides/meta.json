@@ -3,6 +3,7 @@
   "pages": [
     "install-and-run",
     "index-and-query",
+    "choose-context-layer",
     "gate-ci",
     "mcp-agents",
     "memory-pipeline",
