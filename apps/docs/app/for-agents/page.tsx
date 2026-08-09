@@ -1,7 +1,13 @@
 import Link from 'next/link'
 import { ArrowRight, Braces, FileText, ShieldCheck } from 'lucide-react'
+import type { Metadata } from 'next'
+import { SITE_URL } from '@/lib/site'
 
 const basePath = process.env.DOCS_BASE_PATH ?? ''
+
+export const metadata: Metadata = {
+  alternates: { canonical: `${SITE_URL}/for-agents/` },
+}
 
 export default function ForAgentsPage() {
   return (
