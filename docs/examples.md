@@ -13,6 +13,8 @@ Config sketches under [`examples/`](../examples/):
 | `pnpm-monorepo.config.ts` | Workspace discovery + ownership |
 | `fumadocs-only.config.ts` | Human bridge via Fumadocs |
 | `docusaurus-only.config.ts` | Human bridge via Docusaurus |
+| `vitepress-only.config.ts` | Human bridge via VitePress |
+| `starlight-only.config.ts` | Human bridge via Astro Starlight |
 | `fumadocs-with-chat.config.ts` | Standard + intelligence (AgentsKit peers) |
 | `docusaurus-with-memory.config.ts` | Assisted memory promotion path |
 
