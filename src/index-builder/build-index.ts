@@ -9,6 +9,7 @@ import { renderCapabilitiesJson } from './capabilities.js'
 import { sha256NormalizedV1 } from './content-hash.js'
 import { renderLlmsTxt } from './llms-txt.js'
 import { scanHumanDocs } from './human-adapters/index.js'
+import { discoverNxProjects } from './plugins/nx.js'
 import { discoverPnpmPackages } from './plugins/pnpm-monorepo.js'
 import { scanAgentCorpus } from './scan-corpus.js'
 
@@ -66,7 +67,12 @@ export const buildDocBridgeIndex = (opts: BuildIndexOptions): BuildIndexResult =
     config.routing?.plugin === 'npm-workspaces' ||
     config.routing?.plugin === 'yarn-workspaces'
 
-  const discovered = shouldDiscover ? discoverPnpmPackages(root, config) : []
+  const discovered =
+    config.routing?.plugin === 'nx'
+      ? discoverNxProjects(root, config)
+      : shouldDiscover
+        ? discoverPnpmPackages(root, config)
+        : []
   const packages = collectPackages(config, discovered, corpus)
   const humanDocs = scanHumanDocs(root, config)
 

@@ -11,6 +11,7 @@ Config sketches under [`examples/`](../examples/):
 |------|---------|
 | `minimal-plain-markdown.config.ts` | Solo markdown, Layer 0 only |
 | `pnpm-monorepo.config.ts` | Workspace discovery + ownership |
+| `nx-monorepo.config.ts` | Static Nx project discovery + inferred checks |
 | `fumadocs-only.config.ts` | Human bridge via Fumadocs |
 | `docusaurus-only.config.ts` | Human bridge via Docusaurus |
 | `vitepress-only.config.ts` | Human bridge via VitePress |

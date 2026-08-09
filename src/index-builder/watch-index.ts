@@ -13,6 +13,7 @@ export type WatchIndexOptions = {
 }
 
 const WATCH_PATTERN = /\.(md|mdx|json|ya?ml|mdc)$/i
+const NX_MANIFEST_PATTERN = /(^|[/\\])(project|package)\.json$/i
 
 const collectWatchRoots = (root: string, config: DocBridgeConfigV1, configPath?: string): string[] => {
   const roots = new Set<string>()
@@ -70,6 +71,14 @@ export const watchDocBridgeIndex = (opts: WatchIndexOptions): Promise<number> =>
   for (const dir of collectWatchRoots(opts.root, opts.config, opts.configPath)) {
     watch(dir, { recursive: true }, (_event, filename) => {
       if (!filename || !WATCH_PATTERN.test(filename)) return
+      rebuild()
+    })
+  }
+
+  const nxRoot = resolve(opts.root)
+  if (opts.config.routing?.plugin === 'nx' && existsSync(nxRoot)) {
+    watch(nxRoot, { recursive: true }, (_event, filename) => {
+      if (!filename || !NX_MANIFEST_PATTERN.test(filename)) return
       rebuild()
     })
   }
