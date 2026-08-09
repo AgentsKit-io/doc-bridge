@@ -105,6 +105,14 @@ test('agent-first and machine surfaces are public and cross-linked', async ({ pa
   }
 })
 
+test('agent-first landing self-canonicalizes', async ({ page }) => {
+  await page.goto('/for-agents')
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+    'href',
+    'https://doc-bridge.agentskit.io/for-agents/',
+  )
+})
+
 for (const width of [320, 375, 768, 1280, 1440]) {
   test(`landing and docs do not overflow at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 })
