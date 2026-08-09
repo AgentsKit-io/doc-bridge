@@ -9,6 +9,7 @@ export const HumanCorpusPluginIdSchema = z.enum([
   'mkdocs',
   'vitepress',
   'starlight',
+  'nextra',
   'custom',
 ])
 

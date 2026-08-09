@@ -4,6 +4,7 @@ import { resolve, sep } from 'node:path'
 import type { DocBridgeConfigV1, HumanCorpusConfig } from '../../config/schema.js'
 import { docusaurusAdapter } from './docusaurus.js'
 import { fumadocsAdapter } from './fumadocs.js'
+import { nextraAdapter } from './nextra.js'
 import type { HumanAdapter, HumanDocMap, HumanDocRecord } from './core.js'
 import { plainMarkdownAdapter } from './plain-markdown.js'
 import { starlightAdapter } from './starlight.js'
@@ -17,6 +18,7 @@ const ADAPTERS: readonly HumanAdapter[] = [
   docusaurusAdapter,
   vitepressAdapter,
   starlightAdapter,
+  nextraAdapter,
 ]
 
 const humanConfigs = (config: DocBridgeConfigV1): HumanCorpusConfig[] => {

@@ -131,6 +131,7 @@ type HumanCorpusPluginId =
   | 'mkdocs'            // planned
   | 'vitepress'         // file routes, srcDir/docsDir, optional cleanUrls
   | 'starlight'         // Astro content routes, slug and draft frontmatter
+  | 'nextra'            // content-directory routes and contentDirBasePath
   | 'custom'            // path to user plugin module
 ```
 
@@ -146,6 +147,15 @@ follows the default filename sluggifier, excludes underscore-prefixed
 partials, and never executes `astro.config.*`. Sites using a custom
 `docsLoader({ generateId })` should add explicit `slug` frontmatter so Doc
 Bridge can resolve the same public route without executing project code.
+
+Nextra options accept `contentDir` (also `docsDir` or `root`), `urlPrefix`,
+and `contentDirBasePath`. The adapter maps `index.md` and `index.mdx` to the
+containing route and uses Doc Bridge `package`, `module`, or `id` frontmatter
+as the join key. `urlPrefix` takes precedence over `contentDirBasePath`. Point
+`contentDir` at either `content` or `src/content`; Doc Bridge never imports or
+executes `next.config.*`, `_meta.*`, themes, or other project code. This
+adapter targets Nextra's content-directory convention; app-router `page.mdx`
+trees are not inferred by this plugin.
 
 ### Bridge to agent docs
 

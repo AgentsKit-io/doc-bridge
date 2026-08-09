@@ -130,6 +130,40 @@ describe('watchDocBridgeIndex', () => {
     }
   })
 
+  it('watches a Nextra content directory and rebuilds when its MDX changes', async () => {
+    const stdout = vi.spyOn(process.stdout, 'write').mockImplementation(() => true)
+    const stderr = vi.spyOn(process.stderr, 'write').mockImplementation(() => true)
+
+    try {
+      const pending = watchDocBridgeIndex({
+        root: '/repo',
+        debounceMs: 5,
+        config: {
+          schemaVersion: 1,
+          corpus: {
+            agent: { root: 'docs/for-agents' },
+            human: { plugin: 'nextra', options: { contentDir: 'content' } },
+          },
+        },
+      })
+
+      await vi.advanceTimersByTimeAsync(5)
+      const nextraWatch = fsMock.watchedDirs.indexOf('/repo/content')
+      expect(nextraWatch).toBeGreaterThanOrEqual(0)
+      fsMock.callbacks[nextraWatch]?.('change', 'guide.mdx')
+      await vi.advanceTimersByTimeAsync(5)
+
+      process.emit('SIGTERM')
+      await expect(pending).resolves.toBe(0)
+      expect(buildMock.buildDocBridgeIndex).toHaveBeenCalledTimes(2)
+      expect(stderr).not.toHaveBeenCalled()
+    } finally {
+      stdout.mockRestore()
+      stderr.mockRestore()
+      vi.useRealTimers()
+    }
+  })
+
   it('prints rebuild errors without terminating the watcher', async () => {
     const stdout = vi.spyOn(process.stdout, 'write').mockImplementation(() => true)
     const stderr = vi.spyOn(process.stderr, 'write').mockImplementation(() => true)

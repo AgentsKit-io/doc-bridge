@@ -427,4 +427,132 @@ describe('human doc adapters', () => {
 
     expect(scanHumanDocRecords(root, config)).toEqual([])
   })
+
+  it('maps Nextra content routes without executing project configuration', () => {
+    const root = mkdtempSync(join(tmpdir(), 'ak-docs-nextra-'))
+    mkdirSync(join(root, 'content/guides'), { recursive: true })
+    writeFileSync(join(root, 'content/index.mdx'), '# Home')
+    writeFileSync(join(root, 'content/guides/index.mdx'), '# Guides')
+    writeFileSync(
+      join(root, 'content/guides/setup.md'),
+      ['---', 'package: setup', '---', '', '# Setup'].join('\n'),
+    )
+    writeFileSync(
+      join(root, 'next.config.mjs'),
+      'process.env.AK_DOCS_NEXTRA_CONFIG_EXECUTED = "yes"',
+    )
+    delete process.env.AK_DOCS_NEXTRA_CONFIG_EXECUTED
+
+    const config: DocBridgeConfigV1 = {
+      schemaVersion: 1,
+      corpus: {
+        agent: { root: 'agent-docs' },
+        human: {
+          plugin: 'nextra',
+          options: { contentDir: 'content', contentDirBasePath: '/docs' },
+        },
+      },
+    }
+
+    expect(scanHumanDocRecords(root, config)).toMatchObject([
+      { id: 'guides', url: '/docs/guides' },
+      { id: 'setup', url: '/docs/guides/setup' },
+      { id: 'index', url: '/docs' },
+    ])
+    expect(process.env.AK_DOCS_NEXTRA_CONFIG_EXECUTED).toBeUndefined()
+  })
+
+  it('supports Nextra content under src with an explicit public prefix', () => {
+    const root = mkdtempSync(join(tmpdir(), 'ak-docs-nextra-src-'))
+    mkdirSync(join(root, 'src/content/reference'), { recursive: true })
+    writeFileSync(join(root, 'src/content/reference/api.mdx'), '# API')
+
+    const config: DocBridgeConfigV1 = {
+      schemaVersion: 1,
+      corpus: {
+        agent: { root: 'agent-docs' },
+        human: {
+          plugin: 'nextra',
+          options: {
+            contentDir: 'src/content',
+            contentDirBasePath: '/ignored',
+            urlPrefix: '/handbook',
+          },
+        },
+      },
+    }
+
+    expect(scanHumanDocRecords(root, config)).toMatchObject([
+      { id: 'reference/api', url: '/handbook/reference/api' },
+    ])
+  })
+
+  it('maps the unprefixed Nextra index to the public root', () => {
+    const root = mkdtempSync(join(tmpdir(), 'ak-docs-nextra-root-'))
+    mkdirSync(join(root, 'content'), { recursive: true })
+    writeFileSync(
+      join(root, 'content/index.mdx'),
+      ['---', 'package: home', '---', '', '# Home'].join('\n'),
+    )
+
+    const config: DocBridgeConfigV1 = {
+      schemaVersion: 1,
+      corpus: {
+        agent: { root: 'agent-docs' },
+        human: { plugin: 'nextra', options: { contentDir: 'content' } },
+      },
+    }
+
+    expect(scanHumanDocRecords(root, config)).toMatchObject([{ id: 'home', url: '/' }])
+  })
+
+  it('prefers a Nextra directory index when two files resolve to the same route', () => {
+    const root = mkdtempSync(join(tmpdir(), 'ak-docs-nextra-collision-'))
+    mkdirSync(join(root, 'content/themes'), { recursive: true })
+    writeFileSync(
+      join(root, 'content/themes.md'),
+      ['---', 'package: flat-theme', '---', '', '# Flat theme'].join('\n'),
+    )
+    writeFileSync(
+      join(root, 'content/themes/index.mdx'),
+      ['---', 'package: theme-index', '---', '', '# Theme index'].join('\n'),
+    )
+
+    const config: DocBridgeConfigV1 = {
+      schemaVersion: 1,
+      corpus: {
+        agent: { root: 'agent-docs' },
+        human: { plugin: 'nextra', options: { contentDir: 'content' } },
+      },
+    }
+
+    expect(scanHumanDocRecords(root, config)).toMatchObject([
+      { id: 'theme-index', url: '/themes' },
+    ])
+  })
+
+  it('uses the last ordered Nextra file when equivalent extensions share a route', () => {
+    const root = mkdtempSync(join(tmpdir(), 'ak-docs-nextra-extension-collision-'))
+    mkdirSync(join(root, 'content'), { recursive: true })
+    writeFileSync(
+      join(root, 'content/guide.md'),
+      ['---', 'package: markdown-guide', '---', '', '# Markdown guide'].join('\n'),
+    )
+    writeFileSync(
+      join(root, 'content/guide.mdx'),
+      ['---', 'package: mdx-guide', '---', '', '# MDX guide'].join('\n'),
+    )
+
+    const config: DocBridgeConfigV1 = {
+      schemaVersion: 1,
+      corpus: {
+        agent: { root: 'agent-docs' },
+        human: { plugin: 'nextra', options: { contentDir: 'content' } },
+      },
+    }
+
+    expect(scanHumanDocRecords(root, config)).toMatchObject([
+      { id: 'mdx-guide', url: '/guide' },
+    ])
+  })
 })
