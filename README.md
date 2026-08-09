@@ -118,7 +118,7 @@ Using Cline? Follow the deterministic [`llms-install.md`](llms-install.md) setup
 | **MCP server** | Let Cursor, Claude Code, Codex-style agents resolve handoffs before editing | `ak-docs mcp`, `handoff.resolve` |
 | **GitHub Action / CI** | Fail stale indexes and broken human-doc links on PRs | `AgentsKit-io/doc-bridge@v1.2.1` |
 | **Documentation conformance** | Check the stable ecosystem standard with auditable evidence | `ak-docs conformance run documentation-standard-v1 --text` |
-| **Doc adapters** | Link human docs to agent docs | `fumadocs`, `docusaurus`, `vitepress`, `starlight`, `plain-markdown` |
+| **Doc adapters** | Link human docs to agent docs | `fumadocs`, `docusaurus`, `vitepress`, `starlight`, `nextra`, `plain-markdown` |
 | **Monorepo routing** | Discover workspaces and checks | `pnpm-monorepo`, `nx` |
 | **Memory pipeline** | Turn agent notes into reviewable documentation drafts | `memory ingest`, `classify`, `promote --pr` |
 | **Optional RAG/chat** | Ground chat in the same handoff-first index | `@agentskit/rag`, `@agentskit/ink`, `ak-docs chat` |
@@ -257,7 +257,7 @@ Gate fails with `Index is stale. Run: ak-docs index` — same check in CI annota
 | **CLI** | `query` / `search` / `list` / `ask` / `gate` / `memory` / `bootstrap` |
 | **MCP** | `handoff.resolve`, `doc.search`, `doc.get`, `gate.status`, … |
 | **Gates** | Freshness, human-link validation, optional OKF style |
-| **Adapters** | `pnpm-monorepo`, `nx`, `fumadocs`, `docusaurus`, `vitepress`, `starlight`, `plain-markdown` |
+| **Adapters** | `pnpm-monorepo`, `nx`, `fumadocs`, `docusaurus`, `vitepress`, `starlight`, `nextra`, `plain-markdown` |
 
 ### Optional AgentsKit peers
 
@@ -297,6 +297,7 @@ Designed for and dogfooded on open AgentsKit surfaces:
 | Fumadocs + chat | [`examples/fumadocs-with-chat.config.ts`](examples/fumadocs-with-chat.config.ts) |
 | VitePress | [`examples/vitepress-only.config.ts`](examples/vitepress-only.config.ts) |
 | Astro Starlight | [`examples/starlight-only.config.ts`](examples/starlight-only.config.ts) |
+| Nextra | [`examples/nextra-only.config.ts`](examples/nextra-only.config.ts) |
 
 Contract: [`docs/spec/config-v1.md`](docs/spec/config-v1.md) · CLI: [`docs/spec/cli.md`](docs/spec/cli.md) · MCP: [`docs/mcp.md`](docs/mcp.md) · Skill: [`docs/skills/doc-bridge.md`](docs/skills/doc-bridge.md) · Pattern: [`docs/playbook/doc-bridge-pattern.md`](docs/playbook/doc-bridge-pattern.md) · Recipes: [`docs/recipes/index-pipeline.md`](docs/recipes/index-pipeline.md)
 

@@ -16,6 +16,7 @@ Config sketches under [`examples/`](../examples/):
 | `docusaurus-only.config.ts` | Human bridge via Docusaurus |
 | `vitepress-only.config.ts` | Human bridge via VitePress |
 | `starlight-only.config.ts` | Human bridge via Astro Starlight |
+| `nextra-only.config.ts` | Human bridge via Nextra |
 | `fumadocs-with-chat.config.ts` | Standard + intelligence (AgentsKit peers) |
 | `docusaurus-with-memory.config.ts` | Assisted memory promotion path |
 
