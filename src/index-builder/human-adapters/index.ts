@@ -6,6 +6,8 @@ import { docusaurusAdapter } from './docusaurus.js'
 import { fumadocsAdapter } from './fumadocs.js'
 import type { HumanAdapter, HumanDocMap, HumanDocRecord } from './core.js'
 import { plainMarkdownAdapter } from './plain-markdown.js'
+import { starlightAdapter } from './starlight.js'
+import { vitepressAdapter } from './vitepress.js'
 
 export type { HumanAdapter, HumanDocMap, HumanDocRecord } from './core.js'
 
@@ -13,6 +15,8 @@ const ADAPTERS: readonly HumanAdapter[] = [
   plainMarkdownAdapter,
   fumadocsAdapter,
   docusaurusAdapter,
+  vitepressAdapter,
+  starlightAdapter,
 ]
 
 const humanConfigs = (config: DocBridgeConfigV1): HumanCorpusConfig[] => {

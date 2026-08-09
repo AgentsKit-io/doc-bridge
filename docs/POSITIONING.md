@@ -70,7 +70,7 @@ Engineering teams with real ownership (monorepos first). Secondary: solo libs, i
 
 ```
 required:  index, CLI, MCP handoff tools, gate presets
-optional:  fumadocs | docusaurus | plain-markdown plugins
+optional:  fumadocs | docusaurus | vitepress | starlight | plain-markdown plugins
 optional:  memory ingest → promote
 optional:  @agentskit/rag + ink chat (intelligence.*)
 optional:  Playbook / Registry federation

@@ -105,7 +105,7 @@ Tools: `handoff.resolve`, `doc.search`, `doc.get`, `gate.status`, …
 ## Human ↔ agent bridge
 
 ```bash
-# After configuring corpus.human (fumadocs | docusaurus | plain-markdown)
+# After configuring corpus.human (fumadocs | docusaurus | vitepress | starlight | plain-markdown)
 ak-docs index
 ak-docs query package <id> --agent   # includes humanDoc when linked
 ak-docs gate run human-guide-links

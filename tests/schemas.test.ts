@@ -113,6 +113,21 @@ describe('DocBridgeConfig v1', () => {
     expect(config.surfaces?.mcp?.tools).toContain('registry.topology')
   })
 
+  it('accepts VitePress and Starlight human corpora', () => {
+    const config = parseDocBridgeConfig({
+      schemaVersion: 1,
+      corpus: {
+        agent: { root: 'docs/for-agents' },
+        human: [
+          { plugin: 'vitepress', options: { docsDir: 'docs', cleanUrls: true } },
+          { plugin: 'starlight', options: { contentDir: 'src/content/docs' } },
+        ],
+      },
+    })
+
+    expect(Array.isArray(config.corpus.human)).toBe(true)
+  })
+
   it('formats config validation errors for humans', () => {
     expect(() => parseDocBridgeConfig({ schemaVersion: 1, corpus: { agent: {} } })).toThrow(
       'Invalid doc-bridge config:\n  - corpus.agent.root: Required',

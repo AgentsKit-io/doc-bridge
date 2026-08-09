@@ -129,9 +129,23 @@ type HumanCorpusPluginId =
   | 'fumadocs'          // markdown scan with index routes, (group) slugs, pages allowlists
   | 'docusaurus'        // markdown scan with id/slug frontmatter + static sidebars.js
   | 'mkdocs'            // planned
-  | 'vitepress'         // planned
+  | 'vitepress'         // file routes, srcDir/docsDir, optional cleanUrls
+  | 'starlight'         // Astro content routes, slug and draft frontmatter
   | 'custom'            // path to user plugin module
 ```
+
+VitePress options accept `docsDir` (also `root` or `srcDir`), `urlPrefix`,
+`cleanUrls`, and up to 64 declarative `srcExclude` glob patterns. Doc Bridge
+uses `.html` routes unless `cleanUrls: true`, matching
+VitePress routing without loading or executing `.vitepress/config.*`. Route
+rewrites must therefore be reflected in the configured corpus or URL prefix.
+
+Starlight options accept `contentDir` (also `docsDir` or `root`) and
+`urlPrefix`. The adapter reads the standard `slug` and `draft` frontmatter,
+follows the default filename sluggifier, excludes underscore-prefixed
+partials, and never executes `astro.config.*`. Sites using a custom
+`docsLoader({ generateId })` should add explicit `slug` frontmatter so Doc
+Bridge can resolve the same public route without executing project code.
 
 ### Bridge to agent docs
 

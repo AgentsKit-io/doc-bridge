@@ -4,8 +4,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const fsMock = vi.hoisted(() => ({
   callbacks: [] as Array<(event: string, filename: string | null) => void>,
+  watchedDirs: [] as string[],
   existsSync: vi.fn(() => true),
-  watch: vi.fn((_dir: string, _opts: unknown, cb?: (event: string, filename: string | null) => void) => {
+  watch: vi.fn((dir: string, _opts: unknown, cb?: (event: string, filename: string | null) => void) => {
+    fsMock.watchedDirs.push(dir)
     const callback = typeof _opts === 'function' ? _opts : cb
     if (callback) fsMock.callbacks.push(callback)
     return new EventEmitter()
@@ -36,6 +38,7 @@ describe('watchDocBridgeIndex', () => {
     vi.useFakeTimers()
     vi.clearAllMocks()
     fsMock.callbacks.length = 0
+    fsMock.watchedDirs.length = 0
     buildMock.buildDocBridgeIndex.mockReturnValue({
       index: {
         contentHash: 'abcdef1234567890',
@@ -82,6 +85,40 @@ describe('watchDocBridgeIndex', () => {
         { knowledgeCount: 1, handoffCount: 1, hash: 'abcdef12' },
       ])
       expect(stdout).toHaveBeenCalledWith(expect.stringContaining('[ak-docs] watching'))
+      expect(stderr).not.toHaveBeenCalled()
+    } finally {
+      stdout.mockRestore()
+      stderr.mockRestore()
+      vi.useRealTimers()
+    }
+  })
+
+  it('watches a VitePress srcDir and rebuilds when its Markdown changes', async () => {
+    const stdout = vi.spyOn(process.stdout, 'write').mockImplementation(() => true)
+    const stderr = vi.spyOn(process.stderr, 'write').mockImplementation(() => true)
+
+    try {
+      const pending = watchDocBridgeIndex({
+        root: '/repo',
+        debounceMs: 5,
+        config: {
+          schemaVersion: 1,
+          corpus: {
+            agent: { root: 'docs/for-agents' },
+            human: { plugin: 'vitepress', options: { srcDir: 'website/vitepress' } },
+          },
+        },
+      })
+
+      await vi.advanceTimersByTimeAsync(5)
+      const vitepressWatch = fsMock.watchedDirs.indexOf('/repo/website/vitepress')
+      expect(vitepressWatch).toBeGreaterThanOrEqual(0)
+      fsMock.callbacks[vitepressWatch]?.('change', 'guide.md')
+      await vi.advanceTimersByTimeAsync(5)
+
+      process.emit('SIGTERM')
+      await expect(pending).resolves.toBe(0)
+      expect(buildMock.buildDocBridgeIndex).toHaveBeenCalledTimes(2)
       expect(stderr).not.toHaveBeenCalled()
     } finally {
       stdout.mockRestore()

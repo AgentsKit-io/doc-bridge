@@ -24,7 +24,7 @@ const collectWatchRoots = (root: string, config: DocBridgeConfigV1, configPath?:
     : []
   for (const source of humanSources) {
     const humanOpts = source.options ?? {}
-    for (const key of ['contentDir', 'docsDir', 'root']) {
+    for (const key of ['contentDir', 'docsDir', 'root', 'srcDir']) {
       const value = humanOpts[key]
       if (typeof value === 'string' && value.length) roots.add(resolve(root, value))
     }
