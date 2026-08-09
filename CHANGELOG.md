@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.3.0
+
+### Minor Changes
+
+- 319605e: Add read-only Nx project inference for Doc Bridge ownership, handoffs, and available test and lint checks.
+- e0db193: Add first-party VitePress and Astro Starlight human-documentation adapters.
+- 03c17bc: Add a first-party Nextra human-documentation adapter for deterministic content-directory routes.
+
 ## 1.2.6
 
 ### Patch Changes
