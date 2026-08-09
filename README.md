@@ -119,7 +119,7 @@ Using Cline? Follow the deterministic [`llms-install.md`](llms-install.md) setup
 | **GitHub Action / CI** | Fail stale indexes and broken human-doc links on PRs | `AgentsKit-io/doc-bridge@v1.2.1` |
 | **Documentation conformance** | Check the stable ecosystem standard with auditable evidence | `ak-docs conformance run documentation-standard-v1 --text` |
 | **Doc adapters** | Link human docs to agent docs | `fumadocs`, `docusaurus`, `vitepress`, `starlight`, `plain-markdown` |
-| **Monorepo routing** | Discover workspaces and checks | `pnpm-monorepo` |
+| **Monorepo routing** | Discover workspaces and checks | `pnpm-monorepo`, `nx` |
 | **Memory pipeline** | Turn agent notes into reviewable documentation drafts | `memory ingest`, `classify`, `promote --pr` |
 | **Optional RAG/chat** | Ground chat in the same handoff-first index | `@agentskit/rag`, `@agentskit/ink`, `ak-docs chat` |
 
@@ -257,7 +257,7 @@ Gate fails with `Index is stale. Run: ak-docs index` — same check in CI annota
 | **CLI** | `query` / `search` / `list` / `ask` / `gate` / `memory` / `bootstrap` |
 | **MCP** | `handoff.resolve`, `doc.search`, `doc.get`, `gate.status`, … |
 | **Gates** | Freshness, human-link validation, optional OKF style |
-| **Adapters** | `pnpm-monorepo`, `fumadocs`, `docusaurus`, `vitepress`, `starlight`, `plain-markdown` |
+| **Adapters** | `pnpm-monorepo`, `nx`, `fumadocs`, `docusaurus`, `vitepress`, `starlight`, `plain-markdown` |
 
 ### Optional AgentsKit peers
 
@@ -292,6 +292,7 @@ Designed for and dogfooded on open AgentsKit surfaces:
 |---------|---------|
 | Solo markdown | [`examples/minimal-plain-markdown.config.ts`](examples/minimal-plain-markdown.config.ts) |
 | pnpm monorepo | [`examples/pnpm-monorepo.config.ts`](examples/pnpm-monorepo.config.ts) |
+| Nx monorepo | [`examples/nx-monorepo.config.ts`](examples/nx-monorepo.config.ts) |
 | Demo monorepo | [`examples/demo-monorepo/`](examples/demo-monorepo/) |
 | Fumadocs + chat | [`examples/fumadocs-with-chat.config.ts`](examples/fumadocs-with-chat.config.ts) |
 | VitePress | [`examples/vitepress-only.config.ts`](examples/vitepress-only.config.ts) |

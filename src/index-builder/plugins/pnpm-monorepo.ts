@@ -9,6 +9,7 @@ export type DiscoveredPackage = {
   readonly id: string
   readonly path: string
   readonly name?: string
+  readonly checks?: readonly string[]
 }
 
 const parsePnpmWorkspace = (yaml: string): string[] => {

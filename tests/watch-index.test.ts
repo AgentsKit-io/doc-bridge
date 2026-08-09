@@ -5,9 +5,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 const fsMock = vi.hoisted(() => ({
   callbacks: [] as Array<(event: string, filename: string | null) => void>,
   watchedDirs: [] as string[],
+  watchedOptions: [] as unknown[],
   existsSync: vi.fn(() => true),
   watch: vi.fn((dir: string, _opts: unknown, cb?: (event: string, filename: string | null) => void) => {
     fsMock.watchedDirs.push(dir)
+    fsMock.watchedOptions.push(_opts)
     const callback = typeof _opts === 'function' ? _opts : cb
     if (callback) fsMock.callbacks.push(callback)
     return new EventEmitter()
@@ -39,6 +41,7 @@ describe('watchDocBridgeIndex', () => {
     vi.clearAllMocks()
     fsMock.callbacks.length = 0
     fsMock.watchedDirs.length = 0
+    fsMock.watchedOptions.length = 0
     buildMock.buildDocBridgeIndex.mockReturnValue({
       index: {
         contentHash: 'abcdef1234567890',
@@ -147,6 +150,45 @@ describe('watchDocBridgeIndex', () => {
     } finally {
       stdout.mockRestore()
       stderr.mockRestore()
+      vi.useRealTimers()
+    }
+  })
+
+  it('rebuilds for Nx project and package manifests only', async () => {
+    const stdout = vi.spyOn(process.stdout, 'write').mockImplementation(() => true)
+
+    try {
+      const pending = watchDocBridgeIndex({
+        root: '/repo',
+        debounceMs: 10,
+        config: {
+          schemaVersion: 1,
+          corpus: { agent: { root: 'docs' } },
+          routing: { plugin: 'nx' },
+        },
+      })
+      await vi.advanceTimersByTimeAsync(10)
+
+      const nxWatcherIndex = fsMock.watchedDirs.findIndex((dir, index) => {
+        const options = fsMock.watchedOptions[index]
+        return dir === '/repo' && typeof options === 'object' && options !== null && 'recursive' in options
+          ? options.recursive === true
+          : false
+      })
+      expect(nxWatcherIndex).toBeGreaterThanOrEqual(0)
+      const nxCallback = fsMock.callbacks[nxWatcherIndex]
+      nxCallback?.('change', 'apps/store/project.json')
+      await vi.advanceTimersByTimeAsync(10)
+      nxCallback?.('change', 'libs/data/package.json')
+      await vi.advanceTimersByTimeAsync(10)
+      nxCallback?.('change', 'tools/unrelated.json')
+      await vi.advanceTimersByTimeAsync(10)
+
+      process.emit('SIGTERM')
+      await expect(pending).resolves.toBe(0)
+      expect(buildMock.buildDocBridgeIndex).toHaveBeenCalledTimes(3)
+    } finally {
+      stdout.mockRestore()
       vi.useRealTimers()
     }
   })

@@ -72,7 +72,7 @@ export const OwnershipEntrySchema = z
 export const RoutingConfigSchema = z
   .object({
     plugin: z
-      .enum(['pnpm-monorepo', 'npm-workspaces', 'yarn-workspaces', 'pattern-files', 'custom'])
+      .enum(['pnpm-monorepo', 'npm-workspaces', 'yarn-workspaces', 'nx', 'pattern-files', 'custom'])
       .optional(),
     options: z
       .object({

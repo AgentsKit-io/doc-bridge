@@ -155,6 +155,7 @@ export {
 export { PACKAGE_VERSION } from './version.js'
 
 export { collectPackages, buildLookup } from './index-builder/build-handoffs.js'
+export { discoverNxProjects } from './index-builder/plugins/nx.js'
 export { projectRootFromConfigPath } from './config/load-config.js'
 export { createDocBridgeRag } from './intelligence/rag.js'
 export { runChatOnce, startInkChat } from './intelligence/chat.js'

@@ -70,6 +70,7 @@ export const collectPackages = (
       id: pkg.id,
       path: existing.path || pkg.path,
       ...(pkg.name ? { name: pkg.name } : existing.name ? { name: existing.name } : {}),
+      ...(pkg.checks ? { checks: pkg.checks } : existing.checks ? { checks: existing.checks } : {}),
     })
   }
 
@@ -163,6 +164,7 @@ export const buildLookup = (
     const checks = [
       ...(override?.checks ??
         fm?.checks ??
+        pkg.checks ??
         defaultChecksForTarget(root, {
           packageId: pkg.id,
           packagePath: path,

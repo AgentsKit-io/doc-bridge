@@ -213,7 +213,7 @@ Without `routing`, handoffs are inferred from agent corpus links only. Monorepo 
 
 ```ts
 type RoutingConfig = {
-  plugin?: 'pnpm-monorepo' | 'npm-workspaces' | 'yarn-workspaces' | 'custom'
+  plugin?: 'pnpm-monorepo' | 'npm-workspaces' | 'yarn-workspaces' | 'nx' | 'pattern-files' | 'custom'
 
   options?: {
     /** Workspace globs; default from package manager */
@@ -253,6 +253,13 @@ type ChangeRouteEntry = {
   relatedPackages?: string[]
 }
 ```
+
+`routing.plugin: 'nx'` reads `project.json` and package manifests with an `nx`
+object. It does not load Nx plugins or execute workspace code. Project roots must
+resolve inside the configured project root. Declared `test` targets become Nx test
+checks; non-minimal gate presets also include declared `lint` targets. Explicit
+`routing.options.ownership` remains authoritative. Targets created only at runtime
+by Nx plugins are intentionally not inferred by this read-only adapter.
 
 ### Join keys (agent ↔ human ↔ ownership)
 
