@@ -125,6 +125,10 @@ Using Cline? Follow the deterministic [`llms-install.md`](llms-install.md) setup
 
 See [docs/getting-started.md](docs/getting-started.md), [docs/mcp.md](docs/mcp.md), and [docs/examples.md](docs/examples.md).
 
+### Cursor plugin
+
+This repository also contains a Cursor plugin that pairs the read-only Doc Bridge MCP server with a handoff skill. It resolves `startHere`, `readBeforeEditing`, `editRoots`, and `checks` before Cursor edits a routed repository. The plugin does not request credentials or write project files through MCP.
+
 ## Claude Desktop MCP Bundle
 
 Doc Bridge can be packaged as a local MCP Bundle for Claude Desktop. The bundle keeps the eight MCP tools read-only and asks the user to select the repository's `doc-bridge.config.json`; that file defines the project boundary Doc Bridge may read.

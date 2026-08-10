@@ -60,6 +60,7 @@
     "mcpb:smoke": "node scripts/smoke-mcpb.mjs",
     "mcpb:pack": "npm run mcpb:stage && npm run mcpb:smoke && node scripts/build-mcpb.mjs pack",
     "test:mcpb": "node --test scripts/mcpb-contract.test.mjs",
+    "test:cursor-plugin": "node --test scripts/cursor-plugin-contract.test.mjs",
     "coverage:badge": "node scripts/update-coverage-badge.mjs",
     "changeset": "changeset",
     "version-packages": "changeset version && node scripts/sync-version.mjs",
