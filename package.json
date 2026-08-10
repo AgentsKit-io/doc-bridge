@@ -45,7 +45,7 @@
   "scripts": {
     "prebuild": "node scripts/sync-version.mjs",
     "build": "tsup",
-    "test": "vitest run",
+    "test": "vitest run && pnpm test:cursor-plugin",
     "test:watch": "vitest",
     "coverage": "vitest run --coverage",
     "check:ecosystem-upstream": "node scripts/check-ecosystem-upstream.mjs",
