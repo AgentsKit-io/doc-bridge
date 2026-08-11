@@ -1,0 +1,18 @@
+{
+  "name": "doc-bridge",
+  "displayName": "Doc Bridge",
+  "version": "1.3.0",
+  "description": "Resolve deterministic documentation handoffs before Cursor edits a repository.",
+  "author": {
+    "name": "AgentsKit"
+  },
+  "homepage": "https://doc-bridge.agentskit.io/",
+  "repository": "https://github.com/AgentsKit-io/doc-bridge",
+  "license": "MIT",
+  "keywords": [
+    "cursor",
+    "documentation",
+    "mcp",
+    "agent-handoff"
+  ]
+}

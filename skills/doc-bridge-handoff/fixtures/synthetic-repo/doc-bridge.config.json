@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "corpus": {
+    "agent": {
+      "root": "docs/for-agents"
+    }
+  },
+  "routing": {
+    "options": {
+      "ownership": {
+        "payments": {
+          "path": "packages/payments",
+          "purpose": "Synthetic package used only to verify portable handoff routing",
+          "checks": ["npm test -- payments"],
+          "agentDoc": "docs/for-agents/packages/payments.md"
+        }
+      }
+    }
+  },
+  "gates": {
+    "preset": "minimal"
+  }
+}
