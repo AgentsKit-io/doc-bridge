@@ -129,6 +129,10 @@ See [docs/getting-started.md](docs/getting-started.md), [docs/mcp.md](docs/mcp.m
 
 This repository also contains a Cursor plugin that pairs the read-only Doc Bridge MCP server with a handoff skill. It resolves `startHere`, `readBeforeEditing`, `editRoots`, and `checks` before Cursor edits a routed repository. The plugin does not request credentials or write project files through MCP.
 
+### Portable Agent Skill
+
+[`skills/doc-bridge-handoff`](skills/doc-bridge-handoff) packages the same fail-closed routing contract in the open Agent Skills layout for OpenClaw-compatible clients, Hermes Agent, Pi, Cursor, and other runtimes that can execute a local skill script. The skill prefers the read-only MCP tool and falls back to a pinned, zero-credential CLI resolver. It never edits files, runs returned checks, or grants authority outside `editRoots`.
+
 ## Claude Desktop MCP Bundle
 
 Doc Bridge can be packaged as a local MCP Bundle for Claude Desktop. The bundle keeps the eight MCP tools read-only and asks the user to select the repository's `doc-bridge.config.json`; that file defines the project boundary Doc Bridge may read.

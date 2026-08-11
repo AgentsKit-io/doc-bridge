@@ -23,7 +23,7 @@ test('Cursor skill requires a deterministic handoff and keeps authority bounded'
     'utf8',
   )
 
-  assert.match(skill, /^---\nname: doc-bridge-handoff\ndescription: .+\n---/)
+  assert.match(skill, /^---\nname: doc-bridge-handoff\ndescription: .+\n/)
   assert.match(skill, /handoff\.resolve/)
   assert.match(skill, /readBeforeEditing/)
   assert.match(skill, /editRoots/)

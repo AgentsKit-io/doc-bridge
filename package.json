@@ -40,12 +40,13 @@
     "mcpb",
     "tsup.config.ts",
     "tsconfig.json",
-    "src"
+    "src",
+    "skills"
   ],
   "scripts": {
     "prebuild": "node scripts/sync-version.mjs",
     "build": "tsup",
-    "test": "vitest run && pnpm test:cursor-plugin",
+    "test": "vitest run && pnpm test:cursor-plugin && pnpm test:portable-skill",
     "test:watch": "vitest",
     "coverage": "vitest run --coverage",
     "check:ecosystem-upstream": "node scripts/check-ecosystem-upstream.mjs",
@@ -61,6 +62,7 @@
     "mcpb:pack": "npm run mcpb:stage && npm run mcpb:smoke && node scripts/build-mcpb.mjs pack",
     "test:mcpb": "node --test scripts/mcpb-contract.test.mjs",
     "test:cursor-plugin": "node --test scripts/cursor-plugin-contract.test.mjs",
+    "test:portable-skill": "node --test scripts/portable-skill-contract.test.mjs",
     "coverage:badge": "node scripts/update-coverage-badge.mjs",
     "changeset": "changeset",
     "version-packages": "changeset version && node scripts/sync-version.mjs",
