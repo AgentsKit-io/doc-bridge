@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.4.0
+
+### Minor Changes
+
+- 14a9075: Add a portable, fail-closed Doc Bridge handoff skill with a zero-credential resolver and synthetic compatibility fixture for Agent Skills runtimes.
+
+### Patch Changes
+
+- 5133bda: Expose the portable Doc Bridge handoff skill as a discoverable Pi package.
+- 14a9075: Add a Cursor plugin manifest, pinned MCP configuration, and handoff skill.
+
 ## 1.3.0
 
 ### Minor Changes
