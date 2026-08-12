@@ -46,7 +46,7 @@
   "scripts": {
     "prebuild": "node scripts/sync-version.mjs",
     "build": "tsup",
-    "test": "vitest run && pnpm test:cursor-plugin && pnpm test:claude-plugin && pnpm test:portable-skill",
+    "test": "vitest run && pnpm test:cursor-plugin && pnpm test:claude-plugin && pnpm test:copilot-plugin && pnpm test:portable-skill",
     "test:watch": "vitest",
     "coverage": "vitest run --coverage",
     "check:ecosystem-upstream": "node scripts/check-ecosystem-upstream.mjs",
@@ -63,6 +63,7 @@
     "test:mcpb": "node --test scripts/mcpb-contract.test.mjs",
     "test:cursor-plugin": "node --test scripts/cursor-plugin-contract.test.mjs",
     "test:claude-plugin": "node --test scripts/claude-plugin-contract.test.mjs",
+    "test:copilot-plugin": "node --test scripts/copilot-plugin-contract.test.mjs",
     "test:portable-skill": "node --test scripts/portable-skill-contract.test.mjs",
     "coverage:badge": "node scripts/update-coverage-badge.mjs",
     "changeset": "changeset",

@@ -1,0 +1,20 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "doc-bridge",
+  "description": "Resolve repository ownership, required documentation, allowed edit roots, and checks before coding agents edit files.",
+  "version": "1.4.0",
+  "author": {
+    "name": "AgentsKit",
+    "url": "https://github.com/AgentsKit-io"
+  },
+  "homepage": "https://doc-bridge.agentskit.io/",
+  "repository": "https://github.com/AgentsKit-io/doc-bridge",
+  "license": "MIT",
+  "keywords": [
+    "documentation",
+    "repository-routing",
+    "agent-skills",
+    "coding-agents",
+    "developer-tools"
+  ]
+}

@@ -129,6 +129,14 @@ See [docs/getting-started.md](docs/getting-started.md), [docs/mcp.md](docs/mcp.m
 
 This repository also contains a Cursor plugin that pairs the read-only Doc Bridge MCP server with a handoff skill. It resolves `startHere`, `readBeforeEditing`, `editRoots`, and `checks` before Cursor edits a routed repository. The plugin does not request credentials or write project files through MCP.
 
+### GitHub Copilot plugin
+
+The root Agent Plugins manifest exposes the same portable handoff skill and read-only MCP server to GitHub Copilot CLI. Copilot discovers `skills/` and `.mcp.json` from the standard plugin layout, so the integration stays source-owned instead of copying prompts into another repository.
+
+```bash
+copilot plugin install AgentsKit-io/doc-bridge
+```
+
 ### Portable Agent Skill
 
 [`skills/doc-bridge-handoff`](skills/doc-bridge-handoff) packages the same fail-closed routing contract in the open Agent Skills layout for OpenClaw-compatible clients, Hermes Agent, Pi, Cursor, and other runtimes that can execute a local skill script. The skill prefers the read-only MCP tool and falls back to a pinned, zero-credential CLI resolver. It never edits files, runs returned checks, or grants authority outside `editRoots`.

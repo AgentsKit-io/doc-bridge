@@ -8,12 +8,6 @@ platforms:
   - darwin
   - linux
   - windows
-metadata:
-  hermes:
-    tags:
-      - documentation
-      - coding-agents
-      - repository-routing
 ---
 
 # Doc Bridge handoff
