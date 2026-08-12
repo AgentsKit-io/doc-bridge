@@ -29,6 +29,10 @@ const claudeManifestPath = resolve(root, '.claude-plugin', 'plugin.json')
 const claudeManifest = JSON.parse(readFileSync(claudeManifestPath, 'utf8'))
 writeFileSync(claudeManifestPath, `${JSON.stringify({ ...claudeManifest, version }, null, 2)}\n`)
 
+const copilotManifestPath = resolve(root, 'plugin.json')
+const copilotManifest = JSON.parse(readFileSync(copilotManifestPath, 'utf8'))
+writeFileSync(copilotManifestPath, `${JSON.stringify({ ...copilotManifest, version }, null, 2)}\n`)
+
 const cursorMcpPath = resolve(root, 'mcp.json')
 const cursorMcp = JSON.parse(readFileSync(cursorMcpPath, 'utf8'))
 cursorMcp.mcpServers['ak-docs'].args = ['-y', `@agentskit/doc-bridge@${version}`, 'mcp']
