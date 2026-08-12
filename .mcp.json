@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "ak-docs": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@agentskit/doc-bridge@1.4.0",
+        "mcp"
+      ]
+    }
+  }
+}

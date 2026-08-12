@@ -25,10 +25,15 @@ const cursorManifestPath = resolve(root, '.cursor-plugin', 'plugin.json')
 const cursorManifest = JSON.parse(readFileSync(cursorManifestPath, 'utf8'))
 writeFileSync(cursorManifestPath, `${JSON.stringify({ ...cursorManifest, version }, null, 2)}\n`)
 
+const claudeManifestPath = resolve(root, '.claude-plugin', 'plugin.json')
+const claudeManifest = JSON.parse(readFileSync(claudeManifestPath, 'utf8'))
+writeFileSync(claudeManifestPath, `${JSON.stringify({ ...claudeManifest, version }, null, 2)}\n`)
+
 const cursorMcpPath = resolve(root, 'mcp.json')
 const cursorMcp = JSON.parse(readFileSync(cursorMcpPath, 'utf8'))
 cursorMcp.mcpServers['ak-docs'].args = ['-y', `@agentskit/doc-bridge@${version}`, 'mcp']
 writeFileSync(cursorMcpPath, `${JSON.stringify(cursorMcp, null, 2)}\n`)
+writeFileSync(resolve(root, '.mcp.json'), `${JSON.stringify(cursorMcp, null, 2)}\n`)
 
 const portableResolverPath = resolve(
   root,
