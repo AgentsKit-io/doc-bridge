@@ -12,6 +12,10 @@ test('Cursor plugin exposes the pinned Doc Bridge MCP without credentials', () =
 
   assert.equal(manifest.name, 'doc-bridge')
   assert.equal(manifest.version, packageJson.version)
+  assert.equal(manifest.skills, './skills/')
+  assert.equal(manifest.mcpServers, './mcp.json')
+  assert.equal(manifest.logo, 'mcpb/icon.png')
+  assert.equal(manifest.category, 'developer-tools')
   assert.equal(server.command, 'npx')
   assert.deepEqual(server.args, ['-y', `@agentskit/doc-bridge@${packageJson.version}`, 'mcp'])
   assert.equal('env' in server, false)

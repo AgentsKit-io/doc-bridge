@@ -2,17 +2,29 @@
   "name": "doc-bridge",
   "displayName": "Doc Bridge",
   "version": "1.4.0",
-  "description": "Resolve deterministic documentation handoffs before Cursor edits a repository.",
+  "description": "Fail closed before Cursor edits the wrong files: resolve the right docs, ownership boundaries, edit roots, and checks for each change.",
   "author": {
     "name": "AgentsKit"
   },
   "homepage": "https://doc-bridge.agentskit.io/",
   "repository": "https://github.com/AgentsKit-io/doc-bridge",
   "license": "MIT",
+  "logo": "mcpb/icon.png",
   "keywords": [
     "cursor",
     "documentation",
     "mcp",
-    "agent-handoff"
-  ]
+    "agent-handoff",
+    "repository-routing",
+    "coding-agents"
+  ],
+  "category": "developer-tools",
+  "tags": [
+    "documentation",
+    "repository-safety",
+    "agent-skills",
+    "mcp"
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./mcp.json"
 }
