@@ -51,9 +51,11 @@ test('portable skill uses the open Agent Skills shape and declares bounded autho
 
 test('published package exposes the skill to Pi package discovery', () => {
   const packageJson = JSON.parse(readFileSync(packageUrl, 'utf8'))
+  const resolver = readFileSync(resolverUrl, 'utf8')
   assert.ok(packageJson.keywords.includes('pi-package'))
   assert.deepEqual(packageJson.pi?.skills, ['./skills'])
   assert.ok(packageJson.files.includes('skills'))
+  assert.ok(resolver.includes(`const VERSION = '${packageJson.version}'`))
 })
 
 test('portable resolver returns a complete handoff and fails closed for an unknown target', () => {

@@ -29,3 +29,23 @@ const cursorMcpPath = resolve(root, 'mcp.json')
 const cursorMcp = JSON.parse(readFileSync(cursorMcpPath, 'utf8'))
 cursorMcp.mcpServers['ak-docs'].args = ['-y', `@agentskit/doc-bridge@${version}`, 'mcp']
 writeFileSync(cursorMcpPath, `${JSON.stringify(cursorMcp, null, 2)}\n`)
+
+const portableResolverPath = resolve(
+  root,
+  'skills',
+  'doc-bridge-handoff',
+  'scripts',
+  'resolve-handoff.mjs',
+)
+const portableResolver = readFileSync(portableResolverPath, 'utf8')
+const syncedPortableResolver = portableResolver.replace(
+  /const VERSION = '[^']*'/u,
+  `const VERSION = '${version}'`,
+)
+if (
+  syncedPortableResolver === portableResolver &&
+  !portableResolver.includes(`const VERSION = '${version}'`)
+) {
+  throw new Error('Could not synchronize portable resolver version')
+}
+writeFileSync(portableResolverPath, syncedPortableResolver)
