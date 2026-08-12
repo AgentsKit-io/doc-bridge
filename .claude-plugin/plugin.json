@@ -1,0 +1,11 @@
+{
+  "name": "doc-bridge",
+  "description": "Fail closed before Claude edits the wrong files: resolve the right docs, ownership boundaries, edit roots, and checks for each change.",
+  "version": "1.4.0",
+  "author": {
+    "name": "AgentsKit"
+  },
+  "homepage": "https://doc-bridge.agentskit.io/",
+  "repository": "https://github.com/AgentsKit-io/doc-bridge",
+  "license": "MIT"
+}
