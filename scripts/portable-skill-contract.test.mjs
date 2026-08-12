@@ -8,6 +8,7 @@ import test from 'node:test'
 const root = new URL('../', import.meta.url)
 const skillUrl = new URL('../skills/doc-bridge-handoff/SKILL.md', import.meta.url)
 const resolverUrl = new URL('../skills/doc-bridge-handoff/scripts/resolve-handoff.mjs', import.meta.url)
+const packageUrl = new URL('../package.json', import.meta.url)
 
 const makeFakeCli = () => {
   const dir = mkdtempSync(join(tmpdir(), 'doc-bridge-skill-'))
@@ -46,6 +47,13 @@ test('portable skill uses the open Agent Skills shape and declares bounded autho
   assert.match(skill, /read-only/)
   assert.match(skill, /If resolution fails[^\n]+stop/)
   assert.doesNotMatch(skill, /api[_ -]?key|access[_ -]?token|force-push|--no-verify/i)
+})
+
+test('published package exposes the skill to Pi package discovery', () => {
+  const packageJson = JSON.parse(readFileSync(packageUrl, 'utf8'))
+  assert.ok(packageJson.keywords.includes('pi-package'))
+  assert.deepEqual(packageJson.pi?.skills, ['./skills'])
+  assert.ok(packageJson.files.includes('skills'))
 })
 
 test('portable resolver returns a complete handoff and fails closed for an unknown target', () => {

@@ -88,12 +88,18 @@
     "agentskit",
     "documentation",
     "mcp",
+    "pi-package",
     "for-agents",
     "llms-txt",
     "agent-handoff",
     "rag",
     "human-agent-bridge"
   ],
+  "pi": {
+    "skills": [
+      "./skills"
+    ]
+  },
   "license": "MIT",
   "repository": {
     "type": "git",
