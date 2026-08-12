@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.4.1
+
+### Patch Changes
+
+- ef543f6: Publish the portable handoff skill through an Agent Plugins v1 manifest for GitHub Copilot.
+- 8b07f46: Package the portable handoff skill and credential-free MCP server as a Claude Code plugin.
+
 ## 1.4.0
 
 ### Minor Changes
