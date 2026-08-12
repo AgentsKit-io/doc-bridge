@@ -139,6 +139,12 @@ Install the published skill from [ClawHub](https://clawhub.ai/emersonbraun/skill
 clawhub install doc-bridge-handoff
 ```
 
+Pi users can install the same source-owned skill through the npm package:
+
+```bash
+pi install npm:@agentskit/doc-bridge
+```
+
 ## Claude Desktop MCP Bundle
 
 Doc Bridge can be packaged as a local MCP Bundle for Claude Desktop. The bundle keeps the eight MCP tools read-only and asks the user to select the repository's `doc-bridge.config.json`; that file defines the project boundary Doc Bridge may read.
