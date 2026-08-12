@@ -38,7 +38,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: AgentsKit-io/doc-bridge@v1.3.0
+      - uses: AgentsKit-io/doc-bridge@v1.4.0
         with:
           config-path: doc-bridge.config.json
 ```

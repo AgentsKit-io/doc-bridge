@@ -24,7 +24,7 @@ Doc Bridge does not need an API key. It runs locally over stdio and treats the c
       "command": "pnpm",
       "args": [
         "dlx",
-        "@agentskit/doc-bridge@1.3.0",
+        "@agentskit/doc-bridge@1.4.0",
         "mcp"
       ],
       "cwd": "/absolute/path/to/your/repository"
@@ -61,7 +61,7 @@ This check is read-only and does not require a Doc Bridge index.
 From the configured repository root, generate the deterministic local index:
 
 ```bash
-pnpm dlx @agentskit/doc-bridge@1.3.0 index
+pnpm dlx @agentskit/doc-bridge@1.4.0 index
 ```
 
 Then ask Cline to call `handoff.resolve` before editing a package:
