@@ -164,7 +164,7 @@
     "esbuild": "^0.28.1",
     "fumadocs-core": "15.6.5",
     "fumadocs-mdx": "11.6.4",
-    "fumadocs-ui": "15.6.5",
+    "fumadocs-ui": "16.4.5",
     "lucide-react": "0.460.0",
     "next": "15.5.21",
     "react": "19.2.0",
