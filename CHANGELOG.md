@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.4.3
+
+### Patch Changes
+
+- Keep the release audit green by pinning the available `nanoid` fix and documenting
+  the upstream `extract-zip` advisory exception until its patched npm release exists.
+
 ## 1.4.2
 
 ### Patch Changes
