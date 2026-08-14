@@ -171,7 +171,7 @@
     "react-dom": "19.2.0",
     "tailwindcss": "4.3.2",
     "tsup": "^8.5.0",
-    "typescript": "^6.0.3",
+    "typescript": "^7.0.2",
     "vitest": "^4.1.9"
   },
   "directories": {
