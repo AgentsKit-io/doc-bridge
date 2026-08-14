@@ -211,6 +211,35 @@ describe('Documentation Standard v1', () => {
     expect(result).toMatchObject({ status: 'fail' })
   })
 
+  it('accepts declared managed products without a public repository', () => {
+    const { root, config } = fixture()
+    const manifest = JSON.parse(readFileSync(join(root, 'ecosystem.json'), 'utf8')) as {
+      products: Array<{ id: string; repo: string | null }>
+      properties: Array<{ id: string; repo: string | null }>
+    }
+    const claims = JSON.parse(readFileSync(join(root, 'ecosystem-claims.json'), 'utf8')) as {
+      products: Array<{ productId: string; source: Record<string, string> }>
+    }
+    const akos = manifest.products.find((product) => product.id === 'akos')
+    const legacyAkos = manifest.properties.find((product) => product.id === 'akos')
+    const akosClaims = claims.products.find((product) => product.productId === 'akos')
+    if (!akos || !legacyAkos || !akosClaims) throw new Error('Invalid test fixture')
+
+    akos.repo = null
+    legacyAkos.repo = null
+    akosClaims.source = {
+      type: 'declaration',
+      summary: 'Public commercial references only; no public repository is declared.',
+    }
+    writeFileSync(join(root, 'ecosystem.json'), JSON.stringify(manifest))
+    writeFileSync(join(root, 'ecosystem-claims.json'), JSON.stringify(claims))
+
+    const result = runDocumentationStandardV1(root, config).results.find(
+      (candidate) => candidate.id === 'cross-links',
+    )
+    expect(result).toMatchObject({ status: 'pass' })
+  })
+
   it('rejects whitespace-only canonical contract strings', () => {
     const { root, config } = fixture()
     const manifest = JSON.parse(readFileSync(join(root, 'ecosystem.json'), 'utf8')) as {

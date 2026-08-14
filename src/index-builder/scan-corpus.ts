@@ -1,4 +1,5 @@
 import type { DocBridgeConfigV1 } from '../config/schema.js'
+import { minimatch } from 'minimatch'
 import { readBoundedText } from '../lib/bounded-text.js'
 import {
   extractSearchBody,
@@ -31,10 +32,25 @@ export type OwnershipSeed = {
 
 const relFromRoot = (root: string, abs: string): string => toPosix(abs.replace(`${toPosix(root)}/`, ''))
 
+const configuredPathMatches = (
+  relPath: string,
+  include: readonly string[] | undefined,
+  exclude: readonly string[] | undefined,
+): boolean => {
+  const normalize = (pattern: string): string => toPosix(pattern).replace(/^\.\//, '')
+  const included = include?.filter(Boolean).map(normalize) ?? []
+  const excluded = exclude?.filter(Boolean).map(normalize) ?? []
+  if (excluded.some((pattern) => minimatch(relPath, pattern, { dot: true }))) return false
+  return included.length === 0 || included.some((pattern) => minimatch(relPath, pattern, { dot: true }))
+}
+
 export const scanAgentCorpus = (root: string, config: DocBridgeConfigV1): CorpusDoc[] => {
   const agentRoot = containedProjectPath(root, config.corpus.agent.root)
   if (!agentRoot) throw new Error('Agent corpus root escapes the project root.')
-  const files = walkFiles(agentRoot, { extensions: ['.md', '.mdx'] })
+  const files = walkFiles(agentRoot, { extensions: ['.md', '.mdx'] }).filter((abs) => {
+    const relToCorpus = toPosix(abs.replace(`${toPosix(agentRoot)}/`, ''))
+    return configuredPathMatches(relToCorpus, config.corpus.agent.include, config.corpus.agent.exclude)
+  })
   const corpusRelRoot = toPosix(config.corpus.agent.root)
 
   const budget = { used: 0 }

@@ -55,6 +55,31 @@ describe('human doc adapters', () => {
     expect(scanHumanDocRecords(root, config)).toEqual([])
   })
 
+  it('honors include and exclude patterns for plain Markdown', () => {
+    const root = mkdtempSync(join(tmpdir(), 'ak-docs-plain-filter-'))
+    mkdirSync(join(root, 'docs/selected'), { recursive: true })
+    mkdirSync(join(root, 'docs/other'), { recursive: true })
+    writeFileSync(join(root, 'docs/selected/README.md'), '# Selected')
+    writeFileSync(join(root, 'docs/selected/notes.md'), '# Notes')
+    writeFileSync(join(root, 'docs/other/README.md'), '# Other')
+    const config: DocBridgeConfigV1 = {
+      schemaVersion: 1,
+      corpus: {
+        agent: { root: 'agent-docs' },
+        human: {
+          plugin: 'plain-markdown',
+          options: {
+            root: 'docs',
+            include: ['selected/**/*.md'],
+            exclude: ['**/notes.md'],
+          },
+        },
+      },
+    }
+
+    expect(scanHumanDocRecords(root, config).map((doc) => doc.url)).toEqual(['selected/README'])
+  })
+
   it('does not follow nested directory symlinks outside the project root', () => {
     const root = mkdtempSync(join(tmpdir(), 'ak-docs-nested-symlink-human-'))
     const outside = mkdtempSync(join(tmpdir(), 'ak-docs-nested-outside-human-'))

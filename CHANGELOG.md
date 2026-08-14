@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.2
+
+### Patch Changes
+
+- df61b17: Accept managed ecosystem products without a public repository by supporting `repo: null` and declaration-backed claims in the canonical ecosystem contract.
+
 ## 1.4.1
 
 ### Patch Changes
