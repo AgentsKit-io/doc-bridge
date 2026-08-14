@@ -8,6 +8,7 @@ import { describe, expect, it } from 'vitest'
 import { applyConfigDefaults } from '../src/config/defaults.js'
 import { DocBridgeConfigV1Schema } from '../src/config/schema.js'
 import { buildDocBridgeIndex } from '../src/index-builder/build-index.js'
+import { knowledgeUrl } from '../src/index-builder/llms-txt.js'
 import { scanHumanDocRecords } from '../src/index-builder/human-adapters/index.js'
 import {
   guessAgentDocForPackage,
@@ -27,6 +28,16 @@ const loadFixtureConfig = () => {
 }
 
 describe('buildDocBridgeIndex', () => {
+  it('renders canonical absolute URLs when llms configuration declares a route prefix', () => {
+    expect(
+      knowledgeUrl('apps/docs-next/content/docs/for-agents/core.mdx', {
+        urlPrefix: 'https://www.agentskit.io/docs',
+        pathPrefix: 'apps/docs-next/content/docs',
+      }),
+    ).toBe('https://www.agentskit.io/docs/for-agents/core')
+    expect(knowledgeUrl('docs/agent-corpus/core.md')).toBe('docs/agent-corpus/core.md')
+  })
+
   it('builds index with corpus, ownership, and llms.txt', () => {
     const config = loadFixtureConfig()
     const result = buildDocBridgeIndex({ root: fixtureRoot, config })
@@ -225,6 +236,32 @@ describe('buildDocBridgeIndex', () => {
         expect.objectContaining({ id: 'core', path: 'packages/core' }),
       ]),
     )
+  })
+
+  it('honors agent corpus include and exclude patterns', () => {
+    const root = mkdtempSync(join(tmpdir(), 'ak-docs-scan-corpus-filter-'))
+    mkdirSync(join(root, 'agent-docs/selected'), { recursive: true })
+    mkdirSync(join(root, 'agent-docs/other'), { recursive: true })
+    writeFileSync(join(root, 'agent-docs/selected/README.md'), '# Selected')
+    writeFileSync(join(root, 'agent-docs/selected/notes.md'), '# Notes')
+    writeFileSync(join(root, 'agent-docs/other/README.md'), '# Other')
+
+    const config = applyConfigDefaults(
+      DocBridgeConfigV1Schema.parse({
+        schemaVersion: 1,
+        corpus: {
+          agent: {
+            root: 'agent-docs',
+            include: ['selected/**/*.md'],
+            exclude: ['**/notes.md'],
+          },
+        },
+      }),
+    )
+
+    expect(scanAgentCorpus(root, config).map((doc) => doc.relPath)).toEqual([
+      'agent-docs/selected/README.md',
+    ])
   })
 
   it('infers ownership from registry, pattern, top-level, and package index corpus paths once', () => {

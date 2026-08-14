@@ -22,7 +22,7 @@ const ProductSchema = z.object({
   role: NonEmptyStringSchema,
   promise: NonEmptyStringSchema,
   maturity: z.enum(['planning', 'alpha', 'beta', 'stable', 'deprecated']),
-  repo: RepoSchema,
+  repo: RepoSchema.nullable(),
   accent: z.string().regex(/^#[0-9A-Fa-f]{6}$/),
   surfaces: SurfaceSchema,
   navigation: z.object({
@@ -38,7 +38,7 @@ const LegacyPropertySchema = z.object({
   barLabel: NonEmptyStringSchema,
   domain: NonEmptyStringSchema,
   url: HttpsUrlSchema,
-  repo: RepoSchema,
+  repo: RepoSchema.nullable(),
   tagline: NonEmptyStringSchema,
   kind: NonEmptyStringSchema,
   accent: z.string().regex(/^#[0-9A-Fa-f]{6}$/),
@@ -82,6 +82,7 @@ const ClaimProductSchema = z.object({
   source: z.discriminatedUnion('type', [
     z.object({ type: z.literal('endpoint'), url: HttpsUrlSchema }).passthrough(),
     z.object({ type: z.literal('repository'), repo: RepoSchema }).passthrough(),
+    z.object({ type: z.literal('declaration'), summary: NonEmptyStringSchema }).passthrough(),
   ]),
   verification: z.enum(['verified', 'declared']),
   claims: z.array(ClaimSchema),
@@ -171,8 +172,10 @@ export const parseCanonicalEcosystemContract = (
     if (!claimProduct) throw new Error(`Claims are missing product ${productId}.`)
     if (claimProduct.source.type === 'endpoint') {
       if (claimProduct.source.url !== product.surfaces.stats) throw new Error(`Claims source for ${productId} must match stats.`)
-    } else if (claimProduct.source.repo !== product.repo) {
+    } else if (claimProduct.source.type === 'repository' && claimProduct.source.repo !== product.repo) {
       throw new Error(`Claims source for ${productId} must match repo.`)
+    } else if (claimProduct.source.type === 'declaration' && product.repo !== null) {
+      throw new Error(`Declaration source for ${productId} requires a null repo.`)
     }
     if (claimProduct.verification === 'declared' && claimProduct.claims.length > 0) {
       throw new Error(`Declared product ${productId} cannot publish claims.`)

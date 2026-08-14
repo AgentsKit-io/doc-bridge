@@ -44,6 +44,8 @@ export const IndexConfigSchema = z
         enabled: z.boolean().optional(),
         outFile: z.string().min(1).max(512).optional(),
         preamble: z.string().max(4_000).optional(),
+        urlPrefix: z.string().url().optional(),
+        pathPrefix: z.string().min(1).max(512).optional(),
       })
       .strict()
       .optional(),

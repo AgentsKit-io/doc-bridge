@@ -1,6 +1,25 @@
 import type { DocBridgeConfigV1 } from '../config/schema.js'
 import type { KnowledgeEntry } from '../schemas/doc-bridge-index.js'
 
+const routePath = (path: string, pathPrefix: string | undefined): string => {
+  const normalizedPath = path.replaceAll('\\', '/').replace(/\.(?:md|mdx)$/, '')
+  const normalizedPrefix = pathPrefix?.replaceAll('\\', '/').replace(/\/$/, '')
+  const relativePath = normalizedPrefix && normalizedPath.startsWith(`${normalizedPrefix}/`)
+    ? normalizedPath.slice(normalizedPrefix.length + 1)
+    : normalizedPath
+  return relativePath.replace(/^\/+/, '')
+}
+
+export const knowledgeUrl = (
+  path: string,
+  options: { readonly urlPrefix?: string | undefined; readonly pathPrefix?: string | undefined } = {},
+): string => {
+  const relativePath = routePath(path, options.pathPrefix)
+  if (!options.urlPrefix) return path
+  const base = options.urlPrefix.endsWith('/') ? options.urlPrefix : `${options.urlPrefix}/`
+  return new URL(relativePath, base).toString()
+}
+
 export const renderLlmsTxt = (
   config: DocBridgeConfigV1,
   knowledge: readonly KnowledgeEntry[],
@@ -12,7 +31,8 @@ export const renderLlmsTxt = (
 
   const lines = knowledge.slice(0, 500).map((entry) => {
     const desc = entry.description ? `: ${entry.description}` : ''
-    return `- [${entry.title}](${entry.path})${desc}`
+    const url = knowledgeUrl(entry.path, config.index?.llmsTxt)
+    return `- [${entry.title}](${url})${desc}`
   })
 
   return `${preamble.trim()}\n\n## Knowledge\n\n${lines.join('\n')}\n`
