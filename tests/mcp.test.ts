@@ -66,11 +66,15 @@ describe('MCP tools', () => {
     expect(result.tools.map((tool) => tool.name)).toContain('handoff.resolve')
     expect(result.tools.map((tool) => tool.name)).toContain('doc.search')
     expect(result.tools.map((tool) => tool.name)).toContain('doc.get')
-    expect(result.tools).toHaveLength(14)
+    expect(result.tools).toHaveLength(8)
     for (const tool of result.tools) {
       expect(tool.name.length).toBeLessThanOrEqual(64)
-      expect(tool).toMatchObject({ title: expect.any(String), description: expect.any(String), inputSchema: { type: 'object' } })
-      if (tool.name !== 'docbridge.proposals') expect(tool).toMatchObject({ annotations: { readOnlyHint: true } })
+      expect(tool).toMatchObject({
+        title: expect.any(String),
+        description: expect.any(String),
+        annotations: { readOnlyHint: true },
+        inputSchema: { type: 'object' },
+      })
     }
   })
 
@@ -94,7 +98,7 @@ describe('MCP tools', () => {
       'registry.topology': {},
     }
 
-    for (const tool of MCP_TOOLS.filter((item) => !item.name.startsWith('docbridge.'))) {
+    for (const tool of MCP_TOOLS) {
       const result = handleMcpRequest(ctx, {
         jsonrpc: '2.0',
         id: tool.name,
@@ -369,7 +373,7 @@ describe('MCP tools', () => {
       }>
       expect(responses[0]).toMatchObject({ id: null, error: { code: -32700 } })
       expect(responses[1]).toMatchObject({ id: 1 })
-      expect(responses[1]?.result?.tools).toHaveLength(14)
+      expect(responses[1]?.result?.tools).toHaveLength(8)
     } finally {
       process.stdout.write = write
       process.stdin.removeAllListeners('data')

@@ -13,9 +13,6 @@ import { runQuery } from '../query/query.js'
 import { searchIndex } from '../query/search.js'
 import type { DocBridgeIndexV1 } from '../schemas/doc-bridge-index.js'
 import { PACKAGE_VERSION } from '../version.js'
-import { loadWorkflowManifest, loadWorkflowStepOutput } from '../workflow/engine.js'
-import { parseDiscoverySnapshot, parseReconciliationReport } from '../validate.js'
-import type { DiscoverySnapshotV1, ReconciliationReportV1 } from '../schemas/knowledge.js'
 
 type JsonRpcRequest = {
   readonly jsonrpc?: '2.0'
@@ -102,47 +99,6 @@ export const MCP_TOOLS = [
     annotations: { readOnlyHint: true },
     inputSchema: { type: 'object', properties: {} },
   },
-  {
-    name: 'docbridge.snapshot',
-    title: 'Read the latest discovery snapshot',
-    description: 'Read the bounded canonical repository snapshot from the latest workflow run.',
-    annotations: { readOnlyHint: true },
-    inputSchema: { type: 'object', properties: { runId: { type: 'string' } } },
-  },
-  {
-    name: 'docbridge.report',
-    title: 'Read the latest reconciliation report',
-    description: 'Read the canonical reconciliation report from the latest workflow run.',
-    annotations: { readOnlyHint: true },
-    inputSchema: { type: 'object', properties: { runId: { type: 'string' } } },
-  },
-  {
-    name: 'docbridge.diagnostics',
-    title: 'Read reconciliation diagnostics',
-    description: 'Read bounded diagnostics from the latest canonical reconciliation report.',
-    annotations: { readOnlyHint: true },
-    inputSchema: { type: 'object', properties: { status: { type: 'string' }, severity: { type: 'string' } } },
-  },
-  {
-    name: 'docbridge.relations',
-    title: 'Read architecture relations',
-    description: 'Read bounded observed and declared relations from the latest canonical snapshot.',
-    annotations: { readOnlyHint: true },
-    inputSchema: { type: 'object', properties: { kind: { type: 'string' }, limit: { type: 'number' } } },
-  },
-  {
-    name: 'docbridge.run',
-    title: 'Read workflow state',
-    description: 'Read the latest resumable workflow state and artifact references.',
-    annotations: { readOnlyHint: true },
-    inputSchema: { type: 'object', properties: {} },
-  },
-  {
-    name: 'docbridge.proposals',
-    title: 'Read or approve proposals',
-    description: 'List proposals from the canonical workflow; approval is unavailable until a shared approval stage exists.',
-    inputSchema: { type: 'object', properties: { action: { type: 'string', enum: ['list', 'approve'] }, proposalHash: { type: 'string' } } },
-  },
 ] as const
 
 const asRecord = (value: unknown): Record<string, unknown> =>
@@ -169,11 +125,6 @@ const DocGetArgsSchema = z
     path: z.string().min(1).optional(),
   })
   .refine((args) => args.id || args.path, 'doc.get requires id or path')
-
-const WorkflowRunArgsSchema = z.object({ runId: z.string().min(1).optional() })
-const DiagnosticsArgsSchema = z.object({ status: z.string().min(1).optional(), severity: z.string().min(1).optional() })
-const RelationsArgsSchema = z.object({ kind: z.string().min(1).optional(), limit: z.number().int().positive().max(500).optional() })
-const ProposalsArgsSchema = z.object({ action: z.enum(['list', 'approve']).optional(), proposalHash: z.string().min(1).optional() })
 
 const parseToolArgs = <T>(tool: string, schema: z.ZodType<T>, value: unknown): T => {
   try {
@@ -216,27 +167,6 @@ const resolveDocPath = (root: string, relPath: string): string => {
   const rel = relative(rootAbs, abs)
   if (rel.startsWith('..')) throw new Error('doc.get path escapes project root')
   return abs
-}
-
-const workflowStateDir = (ctx: McpContext): string => resolve(ctx.root, ctx.config.workflow?.stateDir ?? '.doc-bridge/workflow')
-
-const workflowRun = (ctx: McpContext) => loadWorkflowManifest(workflowStateDir(ctx))
-
-const ensureLatestRun = (ctx: McpContext, runId?: string) => {
-  const run = workflowRun(ctx)
-  if (runId && run.runId !== runId) throw new Error(`Unknown workflow run "${runId}"`)
-  if (run.state === 'stale' || run.state === 'failed') throw new Error(`Workflow run is ${run.state}; resume or create a valid run before reading artifacts.`)
-  return run
-}
-
-const workflowSnapshot = (ctx: McpContext, runId?: string): DiscoverySnapshotV1 => {
-  ensureLatestRun(ctx, runId)
-  return parseDiscoverySnapshot(loadWorkflowStepOutput(workflowStateDir(ctx), 'normalize'))
-}
-
-const workflowReport = (ctx: McpContext, runId?: string): ReconciliationReportV1 => {
-  ensureLatestRun(ctx, runId)
-  return parseReconciliationReport(loadWorkflowStepOutput(workflowStateDir(ctx), 'reconcile'))
 }
 
 export const handleMcpRequest = (ctx: McpContext, request: JsonRpcRequest): unknown => {
@@ -300,42 +230,6 @@ export const handleMcpRequest = (ctx: McpContext, request: JsonRpcRequest): unkn
         steps: ['classify', 'draft', 'verify', 'review'],
         mergePolicy: { autoMerge: false, requiresHuman: true },
       })
-    }
-
-    if (name === 'docbridge.snapshot') {
-      const parsed = parseToolArgs('docbridge.snapshot', WorkflowRunArgsSchema, args)
-      return textResult(workflowSnapshot(ctx, parsed.runId))
-    }
-
-    if (name === 'docbridge.report') {
-      const parsed = parseToolArgs('docbridge.report', WorkflowRunArgsSchema, args)
-      return textResult(workflowReport(ctx, parsed.runId))
-    }
-
-    if (name === 'docbridge.diagnostics') {
-      const parsed = parseToolArgs('docbridge.diagnostics', DiagnosticsArgsSchema, args)
-      const diagnostics = workflowReport(ctx).diagnostics.filter((diagnostic) =>
-        (!parsed.status || diagnostic.status === parsed.status) && (!parsed.severity || diagnostic.severity === parsed.severity),
-      )
-      return textResult({ reportHash: workflowReport(ctx).contentHash, diagnostics })
-    }
-
-    if (name === 'docbridge.relations') {
-      const parsed = parseToolArgs('docbridge.relations', RelationsArgsSchema, args)
-      const snapshot = workflowSnapshot(ctx)
-      return textResult({ snapshotHash: snapshot.contentHash, relations: snapshot.relations.filter((relation) => !parsed.kind || relation.kind === parsed.kind).slice(0, parsed.limit ?? 100) })
-    }
-
-    if (name === 'docbridge.run') {
-      parseToolArgs('docbridge.run', z.object({}), args)
-      return textResult(workflowRun(ctx))
-    }
-
-    if (name === 'docbridge.proposals') {
-      const parsed = parseToolArgs('docbridge.proposals', ProposalsArgsSchema, args)
-      if (parsed.action === 'approve') throw new Error('docbridge.proposals approval is unavailable until the shared approval workflow is implemented')
-      const run = workflowRun(ctx)
-      return textResult({ runId: run.runId, proposals: [] })
     }
 
     throw new Error(`Unknown tool "${String(name)}"`)
