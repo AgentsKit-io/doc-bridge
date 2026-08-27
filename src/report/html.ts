@@ -1,4 +1,5 @@
 import { DiscoverySnapshotV1Schema, ReconciliationReportV1Schema, type DiscoverySnapshotV1, type ReconciliationReportV1 } from '../schemas/knowledge.js'
+import { redactSecrets } from '../safety/repository.js'
 
 export type OfflineReportInput = {
   readonly snapshot: DiscoverySnapshotV1
@@ -22,7 +23,7 @@ const embeddedJson = (value: unknown): string => JSON.stringify(value).replaceAl
 
 const evidenceText = (evidence: ReconciliationReportV1['diagnostics'][number]['evidence'][number], includeSnippets: boolean): string => {
   const location = `${evidence.path}${evidence.lineStart ? `:${evidence.lineStart}${evidence.lineEnd && evidence.lineEnd !== evidence.lineStart ? `-${evidence.lineEnd}` : ''}` : ''}`
-  return `${location}${includeSnippets && evidence.context ? ` — ${evidence.context}` : ''}`
+  return `${location}${includeSnippets && evidence.context ? ` — ${redactSecrets(evidence.context)}` : ''}`
 }
 
 const errorPage = (message: string): string => `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Doc Bridge report error</title><style>body{font:16px system-ui;margin:3rem;color:#311}main{max-width:60rem;margin:auto;border:1px solid #d99;padding:2rem;border-radius:8px;background:#fff8f8}code{white-space:pre-wrap}</style></head><body><main><h1>Doc Bridge report unavailable</h1><p>The saved snapshot/report could not be rendered.</p><code>${escapeHtml(message)}</code><p>Run <code>ak-docs check</code> to regenerate valid artifacts.</p></main></body></html>`

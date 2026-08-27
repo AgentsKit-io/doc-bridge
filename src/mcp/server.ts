@@ -19,6 +19,7 @@ import { applyFixProposal, approveFixProposal, createArtifactNormalizationPropos
 import { sha256NormalizedV1 } from '../index-builder/content-hash.js'
 import { discoverRepository } from '../discovery/repository.js'
 import { FixProposalV1Schema, type DiscoverySnapshotV1, type ReconciliationReportV1, type FixProposalV1 } from '../schemas/knowledge.js'
+import { redactValue } from '../safety/repository.js'
 
 type JsonRpcRequest = {
   readonly jsonrpc?: '2.0'
@@ -314,12 +315,12 @@ export const handleMcpRequest = (ctx: McpContext, request: JsonRpcRequest): unkn
 
     if (name === 'docbridge.snapshot') {
       const parsed = parseToolArgs('docbridge.snapshot', WorkflowRunArgsSchema, args)
-      return textResult(workflowSnapshot(ctx, parsed.runId))
+      return textResult(redactValue(workflowSnapshot(ctx, parsed.runId)))
     }
 
     if (name === 'docbridge.report') {
       const parsed = parseToolArgs('docbridge.report', WorkflowRunArgsSchema, args)
-      return textResult(workflowReport(ctx, parsed.runId))
+      return textResult(redactValue(workflowReport(ctx, parsed.runId)))
     }
 
     if (name === 'docbridge.diagnostics') {
@@ -327,7 +328,7 @@ export const handleMcpRequest = (ctx: McpContext, request: JsonRpcRequest): unkn
       const diagnostics = workflowReport(ctx).diagnostics.filter((diagnostic) =>
         (!parsed.status || diagnostic.status === parsed.status) && (!parsed.severity || diagnostic.severity === parsed.severity),
       )
-      return textResult({ reportHash: workflowReport(ctx).contentHash, diagnostics })
+      return textResult(redactValue({ reportHash: workflowReport(ctx).contentHash, diagnostics }))
     }
 
     if (name === 'docbridge.relations') {
@@ -347,30 +348,30 @@ export const handleMcpRequest = (ctx: McpContext, request: JsonRpcRequest): unkn
       if (!parsed.action || parsed.action === 'list') {
         let proposal: FixProposalV1 | undefined
         try { proposal = readSavedProposal(ctx, undefined) } catch { proposal = undefined }
-        return textResult({ ...(run ? { runId: run.runId } : {}), proposals: proposal ? [proposal] : [] })
+        return textResult(redactValue({ ...(run ? { runId: run.runId } : {}), proposals: proposal ? [proposal] : [] }))
       }
       const discovered = discoverRepository({ root: ctx.root, config: ctx.config })
       const options = { baseRevision: discovered.sourceRevision, configurationHash: sha256NormalizedV1(ctx.config), ...(ctx.config.project?.name ? { projectName: ctx.config.project.name } : {}) }
       if (parsed.action === 'propose-links') {
         const proposal = createMarkdownLinkFixProposal(ctx.root, options)
         if (proposal) saveProposal(ctx, proposal)
-        return textResult({ ...(run ? { runId: run.runId } : {}), proposal: proposal ?? null })
+        return textResult(redactValue({ ...(run ? { runId: run.runId } : {}), proposal: proposal ?? null }))
       }
       if (parsed.action === 'propose-normalize') {
         if (!parsed.artifactPath) throw new Error('docbridge.proposals propose-normalize requires artifactPath')
         const proposal = createArtifactNormalizationProposal(ctx.root, parsed.artifactPath, options)
         if (proposal) saveProposal(ctx, proposal)
-        return textResult({ ...(run ? { runId: run.runId } : {}), proposal: proposal ?? null })
+        return textResult(redactValue({ ...(run ? { runId: run.runId } : {}), proposal: proposal ?? null }))
       }
       if (parsed.action === 'approve') {
         const proposal = approveFixProposal(readSavedProposal(ctx, parsed.proposal), parsed.approvedBy ?? 'human')
         if (parsed.proposalHash && proposal.approval?.proposalHash !== parsed.proposalHash) throw new Error('proposalHash does not match the saved proposal')
         saveProposal(ctx, proposal)
-        return textResult({ ...(run ? { runId: run.runId } : {}), proposal })
+        return textResult(redactValue({ ...(run ? { runId: run.runId } : {}), proposal }))
       }
       const proposal = applyFixProposal(ctx.root, readSavedProposal(ctx, parsed.proposal), { currentRevision: discovered.sourceRevision })
       saveProposal(ctx, proposal)
-      return textResult({ ...(run ? { runId: run.runId } : {}), proposal })
+      return textResult(redactValue({ ...(run ? { runId: run.runId } : {}), proposal }))
     }
 
     throw new Error(`Unknown tool "${String(name)}"`)

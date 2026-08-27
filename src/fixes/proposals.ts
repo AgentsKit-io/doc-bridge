@@ -1,8 +1,9 @@
-import { existsSync, readdirSync, readFileSync, renameSync, statSync, unlinkSync, writeFileSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync, realpathSync, renameSync, statSync, unlinkSync, writeFileSync } from 'node:fs'
 import { basename, dirname, extname, join, relative, resolve, sep } from 'node:path'
 
 import { contentHashForArtifactV1, sha256NormalizedV1 } from '../index-builder/content-hash.js'
 import { FixProposalV1Schema, type FixProposalV1 } from '../schemas/knowledge.js'
+import { containedPath } from '../safety/repository.js'
 
 export type FixProposalOptions = {
   readonly baseRevision: string
@@ -70,7 +71,7 @@ const sortJson = (value: unknown): unknown => Array.isArray(value)
     : value
 
 export const createMarkdownLinkFixProposal = (root: string, options: FixProposalOptions): FixProposalV1 | undefined => {
-  const projectRoot = resolve(root)
+  const projectRoot = realpathSync.native(resolve(root))
   const paths = walkMarkdown(projectRoot)
   const changes: FixChange[] = []
   for (const path of paths) {
@@ -95,10 +96,10 @@ export const createMarkdownLinkFixProposal = (root: string, options: FixProposal
 }
 
 export const createArtifactNormalizationProposal = (root: string, artifactPath: string, options: FixProposalOptions): FixProposalV1 | undefined => {
-  const projectRoot = resolve(root)
+  const projectRoot = realpathSync.native(resolve(root))
   const path = artifactPath.split(sep).join('/')
-  const absolute = resolve(projectRoot, path)
-  if (!absolute.startsWith(`${projectRoot}${sep}`) || !existsSync(absolute) || !statSync(absolute).isFile()) return undefined
+  const absolute = containedPath(projectRoot, path)
+  if (!absolute || !existsSync(absolute) || !statSync(absolute).isFile()) return undefined
   const before = readFileSync(absolute, 'utf8')
   let after: string
   try { after = `${JSON.stringify(sortJson(JSON.parse(before) as unknown), null, 2)}\n` } catch { return undefined }
@@ -124,15 +125,15 @@ export const applyFixProposal = (root: string, proposalInput: unknown, options: 
   if (options.currentRevision && options.currentRevision !== proposal.baseRevision) throw new Error('The repository revision changed since this proposal was created.')
   if (!proposal.changes?.length) throw new Error('This proposal has no executable changes.')
 
-  const projectRoot = resolve(root)
+  const projectRoot = realpathSync.native(resolve(root))
   const originals = new Map<string, string>()
   const affected = new Map(proposal.affectedFiles.map((file) => [file.path, file]))
   if (proposal.changes.some((change) => !affected.has(change.path) || affected.get(change.path)?.contentHash !== sha256NormalizedV1(change.before)) || affected.size !== proposal.changes.length) {
     throw new Error('Proposal changes do not match its affected-file hashes.')
   }
   for (const file of proposal.affectedFiles) {
-    const absolute = resolve(projectRoot, file.path)
-    if (!absolute.startsWith(`${projectRoot}${sep}`) || !existsSync(absolute)) throw new Error(`Affected file is unavailable: ${file.path}`)
+    const absolute = containedPath(projectRoot, file.path)
+    if (!absolute || !existsSync(absolute)) throw new Error(`Affected file is unavailable or escapes the repository root: ${file.path}`)
     const current = readFileSync(absolute, 'utf8')
     if (sha256NormalizedV1(current) !== file.contentHash) throw new Error(`Affected file changed since proposal creation: ${file.path}`)
     originals.set(absolute, current)

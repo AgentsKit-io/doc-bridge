@@ -185,6 +185,17 @@ export const WorkflowConfigSchema = z
   })
   .strict()
 
+export const RepositorySafetyConfigSchema = z
+  .object({
+    exclude: z.array(z.string().min(1).max(512)).max(128).optional(),
+    maxFiles: z.number().int().positive().max(1_000_000).optional(),
+    maxBytes: z.number().int().positive().max(10_000_000_000).optional(),
+    maxTimeMs: z.number().int().positive().max(86_400_000).optional(),
+    maxMemoryMb: z.number().int().positive().max(1_048_576).optional(),
+    redactSecrets: z.boolean().optional(),
+  })
+  .strict()
+
 export const SurfacesConfigSchema = z
   .object({
     cli: z
@@ -410,6 +421,7 @@ export const DocBridgeConfigV1Schema = z
     gates: GatesConfigSchema.optional(),
     rules: RulesConfigSchema.optional(),
     workflow: WorkflowConfigSchema.optional(),
+    safety: RepositorySafetyConfigSchema.optional(),
     surfaces: SurfacesConfigSchema.optional(),
     intelligence: IntelligenceConfigSchema.optional(),
     federation: FederationConfigSchema.optional(),
@@ -426,3 +438,4 @@ export type RuleId = z.infer<typeof RuleIdSchema>
 export type RuleSeverity = z.infer<typeof RuleSeveritySchema>
 export type RulesConfig = z.infer<typeof RulesConfigSchema>
 export type WorkflowConfig = z.infer<typeof WorkflowConfigSchema>
+export type RepositorySafetyConfig = z.infer<typeof RepositorySafetyConfigSchema>

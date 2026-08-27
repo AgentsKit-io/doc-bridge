@@ -40,6 +40,10 @@ export const applyConfigDefaults = (config: DocBridgeConfigV1): DocBridgeConfigV
       mode: 'default',
       ...config.rules,
     },
+    safety: {
+      redactSecrets: true,
+      ...config.safety,
+    },
     surfaces: {
       cli: {
         bin: 'ak-docs',

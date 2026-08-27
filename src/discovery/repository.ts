@@ -7,8 +7,8 @@ import type { DocBridgeConfigV1 } from '../config/schema.js'
 import { expandWorkspaceGlobs } from '../lib/glob-expand.js'
 import { detectPackageManager } from '../lib/package-manager.js'
 import { toPosix } from '../lib/paths.js'
-import { walkFiles } from '../lib/walk.js'
 import { contentHashForArtifactV1, sha256NormalizedV1 } from '../index-builder/content-hash.js'
+import { DEFAULT_SAFETY_EXCLUDES, safeWalkFiles } from '../safety/repository.js'
 import {
   DiscoverySnapshotV1Schema,
   type DiscoverySnapshotV1,
@@ -50,6 +50,7 @@ type DiscoveryOptions = {
   readonly root?: string
   readonly config?: DocBridgeConfigV1
   readonly maxFiles?: number
+  readonly maxBytes?: number
 }
 
 const isRecord = (value: unknown): value is JsonRecord =>
@@ -395,12 +396,24 @@ const artifact = (root: string, config: DocBridgeConfigV1 | undefined, files: re
 export const discoverRepository = (opts: DiscoveryOptions = {}): DiscoverySnapshotV1 => {
   const root = resolve(opts.root ?? process.cwd())
   const maxFiles = opts.maxFiles ?? DEFAULT_MAX_FILES
+  const safety = opts.config?.safety
+  const maxBytes = opts.maxBytes ?? safety?.maxBytes
+  const safeOptions = {
+    exclude: [...DEFAULT_SAFETY_EXCLUDES, ...(safety?.exclude ?? [])],
+    maxFiles,
+    ...(maxBytes !== undefined ? { maxBytes } : {}),
+    ...(safety?.maxTimeMs !== undefined ? { maxTimeMs: safety.maxTimeMs } : {}),
+    ...(safety?.maxMemoryMb !== undefined ? { maxMemoryMb: safety.maxMemoryMb } : {}),
+  }
   const rootManifestPath = join(root, 'package.json')
   const rootManifest = readJson(rootManifestPath).value
   const packageResult = discoverPackages(root, rootManifest, opts.config)
-  const sourcePaths = walkFiles(root, { extensions: SOURCE_EXTENSIONS, maxFiles })
-  const documentPaths = walkFiles(root, { extensions: DOCUMENT_EXTENSIONS, maxFiles })
-  const configPaths = walkFiles(root, { extensions: ['.json', '.yaml', '.yml', '.js', '.ts'], maxFiles })
+  const sourceWalk = safeWalkFiles(root, { extensions: SOURCE_EXTENSIONS, ...safeOptions })
+  const documentWalk = safeWalkFiles(root, { extensions: DOCUMENT_EXTENSIONS, ...safeOptions })
+  const configWalk = safeWalkFiles(root, { extensions: ['.json', '.yaml', '.yml', '.js', '.ts'], ...safeOptions })
+  const sourcePaths = sourceWalk.files
+  const documentPaths = documentWalk.files
+  const configPaths = configWalk.files
     .filter((path) => /(?:^|\/)(?:tsconfig|jsconfig|vite\.config|webpack\.config|rollup\.config|next\.config|jest\.config|eslint\.config|vitest\.config)/.test(relativePath(root, path)))
   const allFiles = [...new Set([rootManifestPath, ...sourcePaths, ...documentPaths, ...configPaths].filter(existsSync))].sort()
 
@@ -451,6 +464,7 @@ export const discoverRepository = (opts: DiscoveryOptions = {}): DiscoverySnapsh
 
   const compiler = readCompilerOptions(root)
   const coverage: DiscoverySnapshotV1['coverage'] = [
+    ...[sourceWalk, documentWalk, configWalk].flatMap((walk, index) => walk.incomplete ? [{ analyzer: 'repository', scope: `limits:${['source', 'documentation', 'configuration'][index]}`, status: 'partial' as const, reason: walk.reason }] : []),
     { analyzer: 'repository', scope: 'package-manager', status: hasPackageManagerMetadata(root, rootManifest) ? 'complete' : 'partial', ...(!hasPackageManagerMetadata(root, rootManifest) ? { reason: `No package manager metadata found; default helper would fall back to ${detectPackageManager(root)}.` } : {}) },
     { analyzer: 'repository', scope: 'workspace-packages', status: packageResult.coverage.some((item) => item.status === 'partial') ? 'partial' : 'complete', ...(packageResult.coverage.find((item) => item.reason)?.reason ? { reason: packageResult.coverage.find((item) => item.reason)?.reason } : {}) },
     { analyzer: 'js-ts', scope: 'static-imports-and-exports', status: compiler.error ? 'partial' : 'complete', ...(compiler.error ? { reason: compiler.error } : {}) },
