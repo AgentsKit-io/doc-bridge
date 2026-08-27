@@ -82,6 +82,7 @@ export {
 export { buildDocBridgeIndex, type BuildIndexOptions, type BuildIndexResult } from './index-builder/build-index.js'
 export { discoverRepository, type DiscoveryOptions } from './discovery/repository.js'
 export { containedPath, DEFAULT_SAFETY_EXCLUDES, redactSecrets, redactValue, safeWalkFiles, type SafeWalkOptions, type SafeWalkResult } from './safety/repository.js'
+export { DEFAULT_REGISTRY_AGENT_ID, createRegistryAgentAdapter, loadRegistryAgentMetadata, loadRegistryAgentRunner, persistRegistryAgentProposal, type RegistryAgentAdapter, type RegistryAgentContext, type RegistryAgentMetadata, type RegistryAgentRunner } from './agents/registry-adapter.js'
 export {
   applyDocumentationDeclarations,
   parseDocumentationDeclarations,

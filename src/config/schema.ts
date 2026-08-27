@@ -291,6 +291,15 @@ export const IntelligenceConfigSchema = z
       .optional(),
     runtime: z.enum(['agentskit', 'custom']).optional(),
     runtimeModule: z.string().min(1).max(512).optional(),
+    registry: z
+      .object({
+        enabled: z.boolean().optional(),
+        agentId: z.string().min(1).max(256).optional(),
+        agentRoot: z.string().min(1).max(512).optional(),
+        runnerModule: z.string().min(1).max(512).optional(),
+      })
+      .strict()
+      .optional(),
   })
   .strict()
 

@@ -16,6 +16,7 @@ import { PACKAGE_VERSION } from '../version.js'
 import { loadWorkflowManifest, loadWorkflowStepOutput } from '../workflow/engine.js'
 import { parseDiscoverySnapshot, parseReconciliationReport } from '../validate.js'
 import { applyFixProposal, approveFixProposal, createArtifactNormalizationProposal, createMarkdownLinkFixProposal } from '../fixes/proposals.js'
+import { createRegistryAgentAdapter, loadRegistryAgentRunner, persistRegistryAgentProposal } from '../agents/registry-adapter.js'
 import { sha256NormalizedV1 } from '../index-builder/content-hash.js'
 import { discoverRepository } from '../discovery/repository.js'
 import { FixProposalV1Schema, type DiscoverySnapshotV1, type ReconciliationReportV1, type FixProposalV1 } from '../schemas/knowledge.js'
@@ -145,7 +146,7 @@ export const MCP_TOOLS = [
     name: 'docbridge.proposals',
     title: 'Read or approve proposals',
     description: 'Create, inspect, approve and apply deterministic proposals through the shared human-gated workflow.',
-    inputSchema: { type: 'object', properties: { action: { type: 'string', enum: ['list', 'propose-links', 'propose-normalize', 'approve', 'apply'] }, proposalHash: { type: 'string' }, artifactPath: { type: 'string' }, approvedBy: { type: 'string' }, proposal: { type: 'object' } } },
+    inputSchema: { type: 'object', properties: { action: { type: 'string', enum: ['list', 'propose-links', 'propose-normalize', 'suggest', 'approve', 'apply'] }, proposalHash: { type: 'string' }, artifactPath: { type: 'string' }, approvedBy: { type: 'string' }, proposal: { type: 'object' } } },
   },
 ] as const
 
@@ -177,7 +178,7 @@ const DocGetArgsSchema = z
 const WorkflowRunArgsSchema = z.object({ runId: z.string().min(1).optional() })
 const DiagnosticsArgsSchema = z.object({ status: z.string().min(1).optional(), severity: z.string().min(1).optional() })
 const RelationsArgsSchema = z.object({ kind: z.string().min(1).optional(), limit: z.number().int().positive().max(500).optional() })
-const ProposalsArgsSchema = z.object({ action: z.enum(['list', 'propose-links', 'propose-normalize', 'approve', 'apply']).optional(), proposalHash: z.string().min(1).optional(), artifactPath: z.string().min(1).optional(), approvedBy: z.string().min(1).optional(), proposal: z.unknown().optional() })
+const ProposalsArgsSchema = z.object({ action: z.enum(['list', 'propose-links', 'propose-normalize', 'suggest', 'approve', 'apply']).optional(), proposalHash: z.string().min(1).optional(), artifactPath: z.string().min(1).optional(), approvedBy: z.string().min(1).optional(), proposal: z.unknown().optional() })
 
 const parseToolArgs = <T>(tool: string, schema: z.ZodType<T>, value: unknown): T => {
   try {
@@ -349,6 +350,16 @@ export const handleMcpRequest = (ctx: McpContext, request: JsonRpcRequest): unkn
         let proposal: FixProposalV1 | undefined
         try { proposal = readSavedProposal(ctx, undefined) } catch { proposal = undefined }
         return textResult(redactValue({ ...(run ? { runId: run.runId } : {}), proposals: proposal ? [proposal] : [] }))
+      }
+      if (parsed.action === 'suggest') {
+        const snapshot = workflowSnapshot(ctx)
+        const report = workflowReport(ctx)
+        return loadRegistryAgentRunner(ctx.root, ctx.config).then(async (runner) => {
+          const adapter = createRegistryAgentAdapter(ctx.root, ctx.config, runner)
+          const proposal = await adapter.run(snapshot, report)
+          const savedPath = persistRegistryAgentProposal(workflowStateDir(ctx), proposal)
+          return textResult(redactValue({ ...(run ? { runId: run.runId } : {}), proposal, proposalPath: savedPath }))
+        })
       }
       const discovered = discoverRepository({ root: ctx.root, config: ctx.config })
       const options = { baseRevision: discovered.sourceRevision, configurationHash: sha256NormalizedV1(ctx.config), ...(ctx.config.project?.name ? { projectName: ctx.config.project.name } : {}) }

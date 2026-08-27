@@ -45,6 +45,7 @@ import { reconcileKnowledge } from '../reconciliation/reconcile.js'
 import type { DiscoverySnapshotV1, ReconciliationReportV1 } from '../schemas/knowledge.js'
 import { sha256NormalizedV1 } from '../index-builder/content-hash.js'
 import { applyFixProposal, approveFixProposal, createArtifactNormalizationProposal, createMarkdownLinkFixProposal } from '../fixes/proposals.js'
+import { createRegistryAgentAdapter, loadRegistryAgentRunner, persistRegistryAgentProposal } from '../agents/registry-adapter.js'
 import { PACKAGE_VERSION } from '../version.js'
 
 type Command =
@@ -63,6 +64,7 @@ type Command =
   | 'check'
   | 'map'
   | 'fix'
+  | 'suggest'
   | 'index'
   | 'gate'
   | 'rules'
@@ -89,6 +91,7 @@ Core (no API key):
   ak-docs scan | reconcile | check | map [--text|--json]
   ak-docs fix propose links|normalize <artifact> [--output <file>]
   ak-docs fix approve|apply <proposal.json> [--by <name>]
+  ak-docs suggest [--json|--text]   run the configured local Registry agent
   ak-docs query [package|ownership|intent|change] <id> [--agent] [--text]
   ak-docs search <term> [--agent] [--text]
   ak-docs list <packages|intents|changes|knowledge> [--text]
@@ -164,6 +167,7 @@ const parseArgs = (argv: readonly string[]) => {
   else if (positional[0] === 'check') command = 'check'
   else if (positional[0] === 'map') command = 'map'
   else if (positional[0] === 'fix') command = 'fix'
+  else if (positional[0] === 'suggest') command = 'suggest'
   else if (positional[0] === 'index') command = 'index'
   else if (positional[0] === 'gate') command = 'gate'
   else if (positional[0] === 'rules') command = 'rules'
@@ -616,6 +620,24 @@ const runFixCommand = (argv: readonly string[], positional: readonly string[], c
   }
 }
 
+const runSuggestCommand = async (flags: ReadonlySet<string>, configPath: string | undefined): Promise<number> => {
+  try {
+    const { config, root } = loadProject(configPath)
+    const stateDir = resolve(root, config.workflow?.stateDir ?? '.doc-bridge/workflow')
+    const snapshot = parseDiscoverySnapshot(loadWorkflowStepOutput(stateDir, 'normalize'))
+    const report = parseReconciliationReport(loadWorkflowStepOutput(stateDir, 'reconcile'))
+    const adapter = createRegistryAgentAdapter(root, config, await loadRegistryAgentRunner(root, config))
+    const proposal = await adapter.run(snapshot, report)
+    const proposalPath = persistRegistryAgentProposal(stateDir, proposal)
+    if (flags.has('--text')) writeLines([`Agent: ${adapter.metadata.id}`, `Proposal: ${proposal.proposalId}`, `Hash: ${proposal.contentHash}`, `Saved: ${proposalPath}`])
+    else writeJson({ ok: true, proposal, proposalPath })
+    return 0
+  } catch (error) {
+    process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`)
+    return 2
+  }
+}
+
 const writeIfMissing = (path: string, contents: string): boolean => {
   if (existsSync(path)) return false
   mkdirSync(dirname(path), { recursive: true })
@@ -862,6 +884,7 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
   }
 
   if (command === 'fix') return runFixCommand(argv, positional, configPath)
+  if (command === 'suggest') return runSuggestCommand(flags, configPath)
 
   if (command === 'init') {
     const root = process.cwd()
