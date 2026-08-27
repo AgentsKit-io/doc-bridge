@@ -2,7 +2,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { createInterface } from 'node:readline/promises'
 
-import { loadConfig, projectRootFromConfigPath } from '../config/load-config.js'
+import { ConfigNotFoundError, loadConfig, projectRootFromConfigPath } from '../config/load-config.js'
 import type { DocBridgeConfigV1, RuleId, RuleSeverity } from '../config/schema.js'
 import {
   DOCUMENTATION_STANDARD_V1_ID,
@@ -10,6 +10,8 @@ import {
   runDocumentationStandardV1,
 } from '../conformance/documentation-standard-v1.js'
 import { buildDocBridgeIndex } from '../index-builder/build-index.js'
+import { applyDocumentationDeclarations } from '../discovery/documentation.js'
+import { discoverRepository } from '../discovery/repository.js'
 import { discoverPnpmPackages } from '../index-builder/plugins/pnpm-monorepo.js'
 import { scanHumanDocRecords } from '../index-builder/human-adapters/index.js'
 import { retrieveHybridChunks } from '../federation/llms.js'
@@ -23,6 +25,7 @@ import { ingestMemoryCandidates } from '../memory/ingest.js'
 import { classifyMemoryCandidates, draftMemoryPromotion } from '../memory/pipeline.js'
 import { promoteMemoryToGithubPr } from '../memory/github-pr.js'
 import { watchDocBridgeIndex } from '../index-builder/watch-index.js'
+import { loadWorkflowManifest, loadWorkflowStepOutput, runWorkflow, type WorkflowExecutionResult } from '../workflow/engine.js'
 import {
   formatDoctorBadgeJson,
   formatDoctorBadgeMarkdown,
@@ -37,6 +40,10 @@ import { runQuery, type QueryKind } from '../query/query.js'
 import { searchIndex } from '../query/search.js'
 import type { DocBridgeIndexV1 } from '../schemas/doc-bridge-index.js'
 import { parseAgentHandoff, parseDocBridgeConfig, parseReconciliationReport } from '../validate.js'
+import { parseDiscoverySnapshot } from '../validate.js'
+import { reconcileKnowledge } from '../reconciliation/reconcile.js'
+import type { DiscoverySnapshotV1, ReconciliationReportV1 } from '../schemas/knowledge.js'
+import { sha256NormalizedV1 } from '../index-builder/content-hash.js'
 import { PACKAGE_VERSION } from '../version.js'
 
 type Command =
@@ -49,6 +56,11 @@ type Command =
   | 'memory'
   | 'playbook'
   | 'registry'
+  | 'discover'
+  | 'scan'
+  | 'reconcile'
+  | 'check'
+  | 'map'
   | 'index'
   | 'gate'
   | 'rules'
@@ -71,6 +83,8 @@ Core (no API key):
   ak-docs demo [--fixture example|monorepo] [--text] [--in-project]
   ak-docs doctor [--text] [--badge] [--write-badge]
   ak-docs index [--watch]
+  ak-docs discover [--text|--json]
+  ak-docs scan | reconcile | check | map [--text|--json]
   ak-docs query [package|ownership|intent|change] <id> [--agent] [--text]
   ak-docs search <term> [--agent] [--text]
   ak-docs list <packages|intents|changes|knowledge> [--text]
@@ -140,6 +154,11 @@ const parseArgs = (argv: readonly string[]) => {
   else if (positional[0] === 'memory') command = 'memory'
   else if (positional[0] === 'playbook') command = 'playbook'
   else if (positional[0] === 'registry') command = 'registry'
+  else if (positional[0] === 'discover') command = 'discover'
+  else if (positional[0] === 'scan') command = 'scan'
+  else if (positional[0] === 'reconcile') command = 'reconcile'
+  else if (positional[0] === 'check') command = 'check'
+  else if (positional[0] === 'map') command = 'map'
   else if (positional[0] === 'index') command = 'index'
   else if (positional[0] === 'gate') command = 'gate'
   else if (positional[0] === 'rules') command = 'rules'
@@ -428,6 +447,90 @@ const diagnosticNextCommands = (
   ]
 }
 
+const workflowOptions = (
+  root: string,
+  config: DocBridgeConfigV1,
+  sourceRevision: string,
+  stage: 'collect' | 'normalize' | 'reconcile' | 'evaluate' | 'report',
+  handlers: Parameters<typeof runWorkflow>[0]['handlers'],
+): Parameters<typeof runWorkflow>[0] => ({
+  root,
+  ...(config.workflow?.stateDir ? { stateDir: config.workflow.stateDir } : {}),
+  sourceRevision,
+  configurationHash: sha256NormalizedV1(config),
+  stage,
+  handlers,
+})
+
+const scanWorkflow = (root: string, config: DocBridgeConfigV1): WorkflowExecutionResult => {
+  const discovered = discoverRepository({ root, config })
+  runWorkflow(workflowOptions(root, config, discovered.sourceRevision, 'collect', { collect: () => discovered }))
+  return runWorkflow(workflowOptions(root, config, discovered.sourceRevision, 'normalize', { normalize: ({ input }) => input }))
+}
+
+const documentationInputs = (root: string, snapshot: DiscoverySnapshotV1) => snapshot.entities
+  .filter((entity) => entity.kind === 'document' && entity.path)
+  .map((entity) => ({ path: entity.path as string, content: readFileSync(resolve(root, entity.path as string), 'utf8') }))
+
+const reconcileWorkflow = (root: string, config: DocBridgeConfigV1): WorkflowExecutionResult => {
+  const scanned = scanWorkflow(root, config)
+  const snapshot = parseDiscoverySnapshot(loadWorkflowStepOutput(scanned.stateDir, 'normalize'))
+  const declared = applyDocumentationDeclarations(snapshot, documentationInputs(root, snapshot)).snapshot
+  const report = reconcileKnowledge(snapshot, declared)
+  return runWorkflow(workflowOptions(root, config, snapshot.sourceRevision, 'reconcile', { reconcile: () => report }))
+}
+
+const checkWorkflow = (root: string, config: DocBridgeConfigV1): WorkflowExecutionResult => {
+  const reconciled = reconcileWorkflow(root, config)
+  const report = parseReconciliationReport(loadWorkflowStepOutput(reconciled.stateDir, 'reconcile'))
+  const evaluated = runWorkflow(workflowOptions(root, config, report.sourceRevision, 'evaluate', { evaluate: () => evaluateRules(report, { ...(config.rules ? { config: config.rules } : {}) }) }))
+  return runWorkflow(workflowOptions(root, config, report.sourceRevision, 'report', { report: ({ input }) => input }))
+}
+
+const workflowOutput = (result: WorkflowExecutionResult): Record<string, unknown> => {
+  const snapshot = (() => { try { return parseDiscoverySnapshot(loadWorkflowStepOutput(result.stateDir, 'normalize')) } catch { return undefined } })()
+  const report = (() => { try { return parseReconciliationReport(loadWorkflowStepOutput(result.stateDir, 'reconcile')) } catch { return undefined } })()
+  const rules = (() => {
+    try {
+      const value = loadWorkflowStepOutput(result.stateDir, 'evaluate')
+      return value && typeof value === 'object' ? value : undefined
+    } catch { return undefined }
+  })()
+  return {
+    ok: result.run.state !== 'failed' && result.run.state !== 'stale',
+    runId: result.run.runId,
+    state: result.run.state,
+    stateDir: result.stateDir,
+    artifactRefs: result.run.artifactRefs,
+    steps: result.run.steps,
+    reusedStages: result.reusedStages,
+    ...(snapshot ? { snapshotHash: snapshot.contentHash, sourceRevision: snapshot.sourceRevision, configurationHash: snapshot.configurationHash, coverage: snapshot.coverage } : {}),
+    ...(report ? { reportHash: report.contentHash, diagnostics: report.diagnostics } : {}),
+    ...(rules ? { rules } : {}),
+  }
+}
+
+const runWorkflowCommand = (
+  command: 'scan' | 'reconcile' | 'check' | 'map',
+  flags: ReadonlySet<string>,
+  configPath: string | undefined,
+): number => {
+  try {
+    const { config, root } = loadProject(configPath)
+    const result = command === 'scan' ? scanWorkflow(root, config) : command === 'reconcile' ? reconcileWorkflow(root, config) : checkWorkflow(root, config)
+    const output = workflowOutput(result)
+    if (command === 'map') output.kind = 'architecture-map'
+    if (wantsTextOutput(flags, config)) {
+      writeLines([`Run: ${String(output.runId)}`, `State: ${String(output.state)}`, ...(output.snapshotHash ? [`Snapshot: ${String(output.snapshotHash)}`] : []), ...(output.reportHash ? [`Report: ${String(output.reportHash)}`] : []), `Artifacts: ${String((output.artifactRefs as unknown[]).length)}`])
+    } else writeJson(output)
+    const ruleExitCode = output.rules && typeof output.rules === 'object' && 'exitCode' in output.rules && (output.rules as { exitCode?: unknown }).exitCode === 1 ? 1 : 0
+    return result.run.state === 'failed' ? 1 : ruleExitCode
+  } catch (error) {
+    process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`)
+    return 2
+  }
+}
+
 const runRulesCommand = (
   argv: readonly string[],
   flags: ReadonlySet<string>,
@@ -693,6 +796,34 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
       process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`)
       return 1
     }
+  }
+
+  if (command === 'discover') {
+    try {
+      let config: DocBridgeConfigV1 | undefined
+      let root = process.cwd()
+      try {
+        const loaded = loadProject(configPath)
+        config = loaded.config
+        root = loaded.root
+      } catch (error) {
+        if (!(error instanceof ConfigNotFoundError) || configPath) throw error
+      }
+      const snapshot = discoverRepository({ root, ...(config ? { config } : {}) })
+      if (wantsTextOutput(flags, config ?? { surfaces: { cli: { defaultFormat: 'json' } } } as DocBridgeConfigV1)) {
+        writeLines([`Project: ${snapshot.project.name}`, `Entities: ${snapshot.entities.length}`, `Relations: ${snapshot.relations.length}`, `Source revision: ${snapshot.sourceRevision}`, ...(config ? [] : ['No configuration found; discovery used safe defaults.'])])
+      } else {
+        writeJson({ ok: true, snapshot, ...(config ? {} : { proposedConfig: { schemaVersion: 1, corpus: { agent: { root: 'docs/for-agents' } } } }) })
+      }
+      return 0
+    } catch (error) {
+      process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`)
+      return 2
+    }
+  }
+
+  if (command === 'scan' || command === 'reconcile' || command === 'check' || command === 'map') {
+    return runWorkflowCommand(command, flags, configPath)
   }
 
   if (command === 'init') {

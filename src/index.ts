@@ -92,6 +92,7 @@ export { reconcileKnowledge } from './reconciliation/reconcile.js'
 export {
   WORKFLOW_STAGES,
   loadWorkflowManifest,
+  loadWorkflowStepOutput,
   runWorkflow,
   type WorkflowExecutionResult,
   type WorkflowOptions,

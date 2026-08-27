@@ -85,6 +85,14 @@ const stageArtifactPath = (stateDir: string, stage: WorkflowStage, inputHash: st
 
 const readArtifact = (path: string): PersistedArtifact => JSON.parse(readFileSync(path, 'utf8')) as PersistedArtifact
 
+const stepArtifactPath = (stateDir: string, step: WorkflowStep): string => resolve(stateDir, step.artifactRefs?.[0] ?? '')
+
+const stepOutput = (stateDir: string, run: WorkflowRunV1, stage: WorkflowStage): unknown => {
+  const step = run.steps.find((item) => item.name === stage)
+  if (!step || step.status !== 'completed' || !step.artifactRefs?.[0]) return null
+  return readArtifact(stepArtifactPath(stateDir, step)).value
+}
+
 const acquireLock = (stateDir: string): (() => void) => {
   const lock = join(stateDir, '.lock')
   try {
@@ -164,7 +172,9 @@ export const runWorkflow = (options: WorkflowOptions): WorkflowExecutionResult =
     }
 
     if (!run) throw new Error('Workflow manifest was not initialized.')
-    let previousOutput: unknown = null
+    const firstSelectedStage = selectedStages(options.stage)[0]
+    const previousStageIndex = firstSelectedStage ? WORKFLOW_STAGES.indexOf(firstSelectedStage) - 1 : -1
+    let previousOutput: unknown = previousStageIndex >= 0 ? stepOutput(stateDir, run, WORKFLOW_STAGES[previousStageIndex]!) : null
     const reusedStages: WorkflowStage[] = []
     for (const stage of selectedStages(options.stage)) {
       const input = options.inputs?.[stage] ?? previousOutput
@@ -224,3 +234,5 @@ export const runWorkflow = (options: WorkflowOptions): WorkflowExecutionResult =
 }
 
 export const loadWorkflowManifest = (stateDir: string): WorkflowRunV1 => WorkflowRunV1Schema.parse(JSON.parse(readFileSync(join(resolve(stateDir), 'manifest.json'), 'utf8')) as unknown)
+
+export const loadWorkflowStepOutput = (stateDir: string, stage: WorkflowStage): unknown => stepOutput(resolve(stateDir), loadWorkflowManifest(stateDir), stage)
