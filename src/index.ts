@@ -91,6 +91,14 @@ export {
 export { reconcileKnowledge } from './reconciliation/reconcile.js'
 export { renderOfflineReport, type OfflineReportInput, type OfflineReportOptions } from './report/html.js'
 export {
+  applyFixProposal,
+  approveFixProposal,
+  createArtifactNormalizationProposal,
+  createMarkdownLinkFixProposal,
+  type FixApplyOptions,
+  type FixProposalOptions,
+} from './fixes/proposals.js'
+export {
   WORKFLOW_STAGES,
   loadWorkflowManifest,
   loadWorkflowStepOutput,
@@ -172,6 +180,7 @@ export {
   EvidenceSourceSchema,
   FindingStatusSchema,
   FixProposalStatusSchema,
+  FixChangeSchema,
   FixProposalV1Schema,
   KNOWLEDGE_CONTENT_HASH_ALGO,
   KNOWLEDGE_SCHEMA_VERSION,
@@ -190,6 +199,7 @@ export {
   type Evidence,
   type FindingStatus,
   type FixProposalV1,
+  type FixChange,
   type KnowledgeArtifactV1,
   type KnowledgeDiagnostic,
   type KnowledgeEntity,

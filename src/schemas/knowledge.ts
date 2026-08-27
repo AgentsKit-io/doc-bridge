@@ -265,6 +265,15 @@ export const AffectedFileSchema = z
   })
   .strict()
 
+export const FixChangeSchema = z
+  .object({
+    path: boundedString(512),
+    before: z.string().max(100_000),
+    after: z.string().max(100_000),
+  })
+  .strict()
+export type FixChange = z.infer<typeof FixChangeSchema>
+
 export const FixProposalV1Schema = z
   .object({
     type: z.literal('fix-proposal'),
@@ -272,6 +281,7 @@ export const FixProposalV1Schema = z
     proposalId: boundedString(128),
     baseRevision: boundedString(128),
     affectedFiles: z.array(AffectedFileSchema).max(256),
+    changes: z.array(FixChangeSchema).max(256).optional(),
     preconditions: z.array(boundedString(2_048)).max(64),
     diff: boundedString(100_000),
     postconditions: z.array(boundedString(2_048)).max(64),

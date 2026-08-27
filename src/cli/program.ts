@@ -44,6 +44,7 @@ import { parseDiscoverySnapshot } from '../validate.js'
 import { reconcileKnowledge } from '../reconciliation/reconcile.js'
 import type { DiscoverySnapshotV1, ReconciliationReportV1 } from '../schemas/knowledge.js'
 import { sha256NormalizedV1 } from '../index-builder/content-hash.js'
+import { applyFixProposal, approveFixProposal, createArtifactNormalizationProposal, createMarkdownLinkFixProposal } from '../fixes/proposals.js'
 import { PACKAGE_VERSION } from '../version.js'
 
 type Command =
@@ -61,6 +62,7 @@ type Command =
   | 'reconcile'
   | 'check'
   | 'map'
+  | 'fix'
   | 'index'
   | 'gate'
   | 'rules'
@@ -85,6 +87,8 @@ Core (no API key):
   ak-docs index [--watch]
   ak-docs discover [--text|--json]
   ak-docs scan | reconcile | check | map [--text|--json]
+  ak-docs fix propose links|normalize <artifact> [--output <file>]
+  ak-docs fix approve|apply <proposal.json> [--by <name>]
   ak-docs query [package|ownership|intent|change] <id> [--agent] [--text]
   ak-docs search <term> [--agent] [--text]
   ak-docs list <packages|intents|changes|knowledge> [--text]
@@ -159,6 +163,7 @@ const parseArgs = (argv: readonly string[]) => {
   else if (positional[0] === 'reconcile') command = 'reconcile'
   else if (positional[0] === 'check') command = 'check'
   else if (positional[0] === 'map') command = 'map'
+  else if (positional[0] === 'fix') command = 'fix'
   else if (positional[0] === 'index') command = 'index'
   else if (positional[0] === 'gate') command = 'gate'
   else if (positional[0] === 'rules') command = 'rules'
@@ -581,6 +586,36 @@ const runRulesCommand = (
   }
 }
 
+const runFixCommand = (argv: readonly string[], positional: readonly string[], configPath: string | undefined): number => {
+  try {
+    const { config, root } = loadProject(configPath)
+    const action = positional[1]
+    const proposalPath = positional[2]
+    const sourceRevision = discoverRepository({ root, config }).sourceRevision
+    const fixOptions = { baseRevision: sourceRevision, configurationHash: sha256NormalizedV1(config), ...(config.project?.name ? { projectName: config.project.name } : {}) }
+    if (action === 'propose') {
+      const proposal = positional[2] === 'links'
+        ? createMarkdownLinkFixProposal(root, fixOptions)
+        : positional[2] === 'normalize' && positional[3] ? createArtifactNormalizationProposal(root, positional[3], fixOptions) : undefined
+      if (!proposal) { writeJson({ ok: true, proposal: null }); return 0 }
+      const outputPath = optionValues(argv, '--output')[0]
+      if (outputPath) { mkdirSync(dirname(resolve(root, outputPath)), { recursive: true }); writeFileSync(resolve(root, outputPath), `${JSON.stringify(proposal, null, 2)}\n`, 'utf8') }
+      writeJson({ ok: true, proposal, ...(outputPath ? { proposalPath: resolve(root, outputPath) } : {}) })
+      return 0
+    }
+    if (!proposalPath || !['approve', 'apply'].includes(action ?? '')) throw new Error('Usage: ak-docs fix propose links|normalize <artifact> [--output <file>] | fix approve|apply <proposal.json> [--by <name>]')
+    const file = resolve(root, proposalPath)
+    const proposal = JSON.parse(readFileSync(file, 'utf8')) as unknown
+    const result = action === 'approve' ? approveFixProposal(proposal, optionValues(argv, '--by')[0] ?? 'human') : applyFixProposal(root, proposal, { currentRevision: sourceRevision })
+    writeFileSync(file, `${JSON.stringify(result, null, 2)}\n`, 'utf8')
+    writeJson({ ok: true, proposal: result, proposalPath: file })
+    return 0
+  } catch (error) {
+    process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`)
+    return 2
+  }
+}
+
 const writeIfMissing = (path: string, contents: string): boolean => {
   if (existsSync(path)) return false
   mkdirSync(dirname(path), { recursive: true })
@@ -825,6 +860,8 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
   if (command === 'scan' || command === 'reconcile' || command === 'check' || command === 'map') {
     return runWorkflowCommand(command, flags, configPath)
   }
+
+  if (command === 'fix') return runFixCommand(argv, positional, configPath)
 
   if (command === 'init') {
     const root = process.cwd()

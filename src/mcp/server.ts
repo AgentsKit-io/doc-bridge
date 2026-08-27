@@ -1,5 +1,5 @@
-import { readFileSync, realpathSync } from 'node:fs'
-import { relative, resolve } from 'node:path'
+import { mkdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs'
+import { join, relative, resolve } from 'node:path'
 
 import { z, ZodError } from 'zod'
 
@@ -15,7 +15,10 @@ import type { DocBridgeIndexV1 } from '../schemas/doc-bridge-index.js'
 import { PACKAGE_VERSION } from '../version.js'
 import { loadWorkflowManifest, loadWorkflowStepOutput } from '../workflow/engine.js'
 import { parseDiscoverySnapshot, parseReconciliationReport } from '../validate.js'
-import type { DiscoverySnapshotV1, ReconciliationReportV1 } from '../schemas/knowledge.js'
+import { applyFixProposal, approveFixProposal, createArtifactNormalizationProposal, createMarkdownLinkFixProposal } from '../fixes/proposals.js'
+import { sha256NormalizedV1 } from '../index-builder/content-hash.js'
+import { discoverRepository } from '../discovery/repository.js'
+import { FixProposalV1Schema, type DiscoverySnapshotV1, type ReconciliationReportV1, type FixProposalV1 } from '../schemas/knowledge.js'
 
 type JsonRpcRequest = {
   readonly jsonrpc?: '2.0'
@@ -140,8 +143,8 @@ export const MCP_TOOLS = [
   {
     name: 'docbridge.proposals',
     title: 'Read or approve proposals',
-    description: 'List proposals from the canonical workflow; approval is unavailable until a shared approval stage exists.',
-    inputSchema: { type: 'object', properties: { action: { type: 'string', enum: ['list', 'approve'] }, proposalHash: { type: 'string' } } },
+    description: 'Create, inspect, approve and apply deterministic proposals through the shared human-gated workflow.',
+    inputSchema: { type: 'object', properties: { action: { type: 'string', enum: ['list', 'propose-links', 'propose-normalize', 'approve', 'apply'] }, proposalHash: { type: 'string' }, artifactPath: { type: 'string' }, approvedBy: { type: 'string' }, proposal: { type: 'object' } } },
   },
 ] as const
 
@@ -173,7 +176,7 @@ const DocGetArgsSchema = z
 const WorkflowRunArgsSchema = z.object({ runId: z.string().min(1).optional() })
 const DiagnosticsArgsSchema = z.object({ status: z.string().min(1).optional(), severity: z.string().min(1).optional() })
 const RelationsArgsSchema = z.object({ kind: z.string().min(1).optional(), limit: z.number().int().positive().max(500).optional() })
-const ProposalsArgsSchema = z.object({ action: z.enum(['list', 'approve']).optional(), proposalHash: z.string().min(1).optional() })
+const ProposalsArgsSchema = z.object({ action: z.enum(['list', 'propose-links', 'propose-normalize', 'approve', 'apply']).optional(), proposalHash: z.string().min(1).optional(), artifactPath: z.string().min(1).optional(), approvedBy: z.string().min(1).optional(), proposal: z.unknown().optional() })
 
 const parseToolArgs = <T>(tool: string, schema: z.ZodType<T>, value: unknown): T => {
   try {
@@ -238,6 +241,13 @@ const workflowReport = (ctx: McpContext, runId?: string): ReconciliationReportV1
   ensureLatestRun(ctx, runId)
   return parseReconciliationReport(loadWorkflowStepOutput(workflowStateDir(ctx), 'reconcile'))
 }
+
+const proposalPath = (ctx: McpContext): string => join(ctx.root, '.doc-bridge', 'proposal.json')
+const readSavedProposal = (ctx: McpContext, input: unknown): FixProposalV1 => {
+  if (input !== undefined) return FixProposalV1Schema.parse(input)
+  try { return FixProposalV1Schema.parse(JSON.parse(readFileSync(proposalPath(ctx), 'utf8')) as unknown) } catch { throw new Error(`No saved fix proposal at ${proposalPath(ctx)}.`) }
+}
+const saveProposal = (ctx: McpContext, proposal: FixProposalV1): void => { mkdirSync(join(ctx.root, '.doc-bridge'), { recursive: true }); writeFileSync(proposalPath(ctx), `${JSON.stringify(proposal, null, 2)}\n`, 'utf8') }
 
 export const handleMcpRequest = (ctx: McpContext, request: JsonRpcRequest): unknown => {
   if (request.method === 'initialize') {
@@ -333,9 +343,34 @@ export const handleMcpRequest = (ctx: McpContext, request: JsonRpcRequest): unkn
 
     if (name === 'docbridge.proposals') {
       const parsed = parseToolArgs('docbridge.proposals', ProposalsArgsSchema, args)
-      if (parsed.action === 'approve') throw new Error('docbridge.proposals approval is unavailable until the shared approval workflow is implemented')
-      const run = workflowRun(ctx)
-      return textResult({ runId: run.runId, proposals: [] })
+      const run = (() => { try { return workflowRun(ctx) } catch { return undefined } })()
+      if (!parsed.action || parsed.action === 'list') {
+        let proposal: FixProposalV1 | undefined
+        try { proposal = readSavedProposal(ctx, undefined) } catch { proposal = undefined }
+        return textResult({ ...(run ? { runId: run.runId } : {}), proposals: proposal ? [proposal] : [] })
+      }
+      const discovered = discoverRepository({ root: ctx.root, config: ctx.config })
+      const options = { baseRevision: discovered.sourceRevision, configurationHash: sha256NormalizedV1(ctx.config), ...(ctx.config.project?.name ? { projectName: ctx.config.project.name } : {}) }
+      if (parsed.action === 'propose-links') {
+        const proposal = createMarkdownLinkFixProposal(ctx.root, options)
+        if (proposal) saveProposal(ctx, proposal)
+        return textResult({ ...(run ? { runId: run.runId } : {}), proposal: proposal ?? null })
+      }
+      if (parsed.action === 'propose-normalize') {
+        if (!parsed.artifactPath) throw new Error('docbridge.proposals propose-normalize requires artifactPath')
+        const proposal = createArtifactNormalizationProposal(ctx.root, parsed.artifactPath, options)
+        if (proposal) saveProposal(ctx, proposal)
+        return textResult({ ...(run ? { runId: run.runId } : {}), proposal: proposal ?? null })
+      }
+      if (parsed.action === 'approve') {
+        const proposal = approveFixProposal(readSavedProposal(ctx, parsed.proposal), parsed.approvedBy ?? 'human')
+        if (parsed.proposalHash && proposal.approval?.proposalHash !== parsed.proposalHash) throw new Error('proposalHash does not match the saved proposal')
+        saveProposal(ctx, proposal)
+        return textResult({ ...(run ? { runId: run.runId } : {}), proposal })
+      }
+      const proposal = applyFixProposal(ctx.root, readSavedProposal(ctx, parsed.proposal), { currentRevision: discovered.sourceRevision })
+      saveProposal(ctx, proposal)
+      return textResult({ ...(run ? { runId: run.runId } : {}), proposal })
     }
 
     throw new Error(`Unknown tool "${String(name)}"`)
