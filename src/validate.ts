@@ -14,6 +14,18 @@ import {
   MemoryCandidateV1Schema,
   type MemoryCandidateV1,
 } from './schemas/memory-candidate.js'
+import {
+  AgentProposalV1Schema,
+  DiscoverySnapshotV1Schema,
+  FixProposalV1Schema,
+  ReconciliationReportV1Schema,
+  WorkflowRunV1Schema,
+  type AgentProposalV1,
+  type DiscoverySnapshotV1,
+  type FixProposalV1,
+  type ReconciliationReportV1,
+  type WorkflowRunV1,
+} from './schemas/knowledge.js'
 
 export type ParseIssue = {
   readonly path: string
@@ -55,6 +67,18 @@ export const parseDocBridgeIndex = (input: unknown): DocBridgeIndexV1 =>
 
 export const parseMemoryCandidate = (input: unknown): MemoryCandidateV1 =>
   MemoryCandidateV1Schema.parse(input)
+
+export const parseDiscoverySnapshot = (input: unknown): DiscoverySnapshotV1 =>
+  DiscoverySnapshotV1Schema.parse(input)
+
+export const parseReconciliationReport = (input: unknown): ReconciliationReportV1 =>
+  ReconciliationReportV1Schema.parse(input)
+
+export const parseWorkflowRun = (input: unknown): WorkflowRunV1 => WorkflowRunV1Schema.parse(input)
+
+export const parseAgentProposal = (input: unknown): AgentProposalV1 => AgentProposalV1Schema.parse(input)
+
+export const parseFixProposal = (input: unknown): FixProposalV1 => FixProposalV1Schema.parse(input)
 
 export const parseDocBridgeConfig = (input: unknown): DocBridgeConfigV1 => {
   const result = DocBridgeConfigV1Schema.safeParse(input)

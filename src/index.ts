@@ -55,10 +55,15 @@ export {
 
 export {
   parseAgentHandoff,
+  parseAgentProposal,
   parseAgentSearch,
   parseDocBridgeConfig,
   parseDocBridgeIndex,
+  parseDiscoverySnapshot,
+  parseFixProposal,
   parseMemoryCandidate,
+  parseReconciliationReport,
+  parseWorkflowRun,
   safeParseAgentHandoff,
   type ParseIssue,
   type ParseResult,
@@ -115,7 +120,45 @@ export {
   type GithubPrOptions,
   type GithubPrResult,
 } from './memory/github-pr.js'
-export { sha256NormalizedV1 } from './index-builder/content-hash.js'
+export { canonicalJsonV1, contentHashForArtifactV1, sha256NormalizedV1 } from './index-builder/content-hash.js'
+export {
+  AgentProposalV1Schema,
+  AffectedFileSchema,
+  CoverageSchema,
+  DiagnosticSeveritySchema,
+  DiscoverySnapshotV1Schema,
+  EntitySchema,
+  EvidenceSchema,
+  EvidenceSourceSchema,
+  FindingStatusSchema,
+  FixProposalStatusSchema,
+  FixProposalV1Schema,
+  KNOWLEDGE_CONTENT_HASH_ALGO,
+  KNOWLEDGE_SCHEMA_VERSION,
+  ProvenanceSchema,
+  ProjectIdentitySchema,
+  ProposalOriginSchema,
+  ReconciliationReportV1Schema,
+  RelationSchema,
+  WorkflowRunV1Schema,
+  WorkflowStepSchema,
+  WorkflowStateSchema,
+  WorkflowTransitionSchema,
+  type AgentProposalV1,
+  type DiagnosticSeverity,
+  type DiscoverySnapshotV1,
+  type Evidence,
+  type FindingStatus,
+  type FixProposalV1,
+  type KnowledgeArtifactV1,
+  type KnowledgeDiagnostic,
+  type KnowledgeEntity,
+  type KnowledgeRelation,
+  type Provenance,
+  type ReconciliationReportV1,
+  type WorkflowRunV1,
+  type WorkflowState,
+} from './schemas/knowledge.js'
 export { IndexNotFoundError, indexFilePath, loadDocBridgeIndex, resolveRoot } from './query/load-index.js'
 export { runQuery, type QueryKind, type QueryRequest, type QueryResult } from './query/query.js'
 export { searchIndex, type SearchMatch } from './query/search.js'
