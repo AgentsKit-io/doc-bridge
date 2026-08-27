@@ -197,6 +197,7 @@ export const WorkflowStepSchema = z
     artifactRefs: z.array(boundedString(512)).max(32).optional(),
   })
   .strict()
+export type WorkflowStep = z.infer<typeof WorkflowStepSchema>
 
 export const WorkflowTransitionSchema = z
   .object({
@@ -206,6 +207,7 @@ export const WorkflowTransitionSchema = z
     reason: z.string().max(1_024).optional(),
   })
   .strict()
+export type WorkflowTransition = z.infer<typeof WorkflowTransitionSchema>
 
 export const WorkflowRunV1Schema = z
   .object({

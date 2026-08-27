@@ -18,9 +18,11 @@ export {
   RuleIdSchema,
   RuleSeveritySchema,
   RulesConfigSchema,
+  WorkflowConfigSchema,
   type RuleId,
   type RuleSeverity,
   type RulesConfig,
+  type WorkflowConfig,
 } from './config/schema.js'
 
 export {
@@ -87,6 +89,16 @@ export {
   type DocumentationDiagnostic,
 } from './discovery/documentation.js'
 export { reconcileKnowledge } from './reconciliation/reconcile.js'
+export {
+  WORKFLOW_STAGES,
+  loadWorkflowManifest,
+  runWorkflow,
+  type WorkflowExecutionResult,
+  type WorkflowOptions,
+  type WorkflowStage,
+  type WorkflowStageContext,
+  type WorkflowStageHandler,
+} from './workflow/engine.js'
 export {
   evaluateRules,
   parseRuleId,

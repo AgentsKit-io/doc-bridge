@@ -179,6 +179,12 @@ export const RulesConfigSchema = z
   })
   .strict()
 
+export const WorkflowConfigSchema = z
+  .object({
+    stateDir: z.string().min(1).max(512).optional(),
+  })
+  .strict()
+
 export const SurfacesConfigSchema = z
   .object({
     cli: z
@@ -403,6 +409,7 @@ export const DocBridgeConfigV1Schema = z
     routing: RoutingConfigSchema.optional(),
     gates: GatesConfigSchema.optional(),
     rules: RulesConfigSchema.optional(),
+    workflow: WorkflowConfigSchema.optional(),
     surfaces: SurfacesConfigSchema.optional(),
     intelligence: IntelligenceConfigSchema.optional(),
     federation: FederationConfigSchema.optional(),
@@ -418,3 +425,4 @@ export type DocumentationStandardRuleId = z.infer<typeof DocumentationStandardRu
 export type RuleId = z.infer<typeof RuleIdSchema>
 export type RuleSeverity = z.infer<typeof RuleSeveritySchema>
 export type RulesConfig = z.infer<typeof RulesConfigSchema>
+export type WorkflowConfig = z.infer<typeof WorkflowConfigSchema>
