@@ -72,6 +72,15 @@ export {
 export { buildDocBridgeIndex, type BuildIndexOptions, type BuildIndexResult } from './index-builder/build-index.js'
 export { discoverRepository, type DiscoveryOptions } from './discovery/repository.js'
 export {
+  applyDocumentationDeclarations,
+  parseDocumentationDeclarations,
+  type DocumentationAnalysisResult,
+  type DocumentationDeclarationInput,
+  type DocumentationDeclarationOptions,
+  type DocumentationDeclarationResult,
+  type DocumentationDiagnostic,
+} from './discovery/documentation.js'
+export {
   formatEcosystemLlmsBlock,
   formatEcosystemLlmsSection,
   type EcosystemLlmsProduct,
