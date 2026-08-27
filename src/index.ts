@@ -80,6 +80,7 @@ export {
   type DocumentationDeclarationResult,
   type DocumentationDiagnostic,
 } from './discovery/documentation.js'
+export { reconcileKnowledge } from './reconciliation/reconcile.js'
 export {
   formatEcosystemLlmsBlock,
   formatEcosystemLlmsSection,
