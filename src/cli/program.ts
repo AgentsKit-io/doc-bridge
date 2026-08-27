@@ -46,6 +46,7 @@ import type { DiscoverySnapshotV1, ReconciliationReportV1 } from '../schemas/kno
 import { sha256NormalizedV1 } from '../index-builder/content-hash.js'
 import { applyFixProposal, approveFixProposal, createArtifactNormalizationProposal, createMarkdownLinkFixProposal } from '../fixes/proposals.js'
 import { createRegistryAgentAdapter, loadRegistryAgentRunner, persistRegistryAgentProposal } from '../agents/registry-adapter.js'
+import { renderOfflineReport } from '../report/html.js'
 import { PACKAGE_VERSION } from '../version.js'
 
 type Command =
@@ -88,7 +89,7 @@ Core (no API key):
   ak-docs doctor [--text] [--badge] [--write-badge]
   ak-docs index [--watch]
   ak-docs discover [--text|--json]
-  ak-docs scan | reconcile | check | map [--text|--json]
+  ak-docs scan | reconcile | check | map [--text|--json] [--html]
   ak-docs fix propose links|normalize <artifact> [--output <file>]
   ak-docs fix approve|apply <proposal.json> [--by <name>]
   ak-docs suggest [--json|--text]   run the configured local Registry agent
@@ -523,12 +524,22 @@ const runWorkflowCommand = (
   command: 'scan' | 'reconcile' | 'check' | 'map',
   flags: ReadonlySet<string>,
   configPath: string | undefined,
+  argv: readonly string[],
 ): number => {
   try {
     const { config, root } = loadProject(configPath)
     const result = command === 'scan' ? scanWorkflow(root, config) : command === 'reconcile' ? reconcileWorkflow(root, config) : checkWorkflow(root, config)
     const output = workflowOutput(result)
     if (command === 'map') output.kind = 'architecture-map'
+    if (command === 'map' && flags.has('--html')) {
+      const snapshot = parseDiscoverySnapshot(loadWorkflowStepOutput(result.stateDir, 'normalize'))
+      const report = parseReconciliationReport(loadWorkflowStepOutput(result.stateDir, 'reconcile'))
+      const outputPath = optionValues(argv, '--output')[0] ?? '.doc-bridge/report.html'
+      const htmlPath = resolve(root, outputPath)
+      mkdirSync(dirname(htmlPath), { recursive: true })
+      writeFileSync(htmlPath, renderOfflineReport({ snapshot, report }), 'utf8')
+      output.htmlPath = htmlPath
+    }
     if (wantsTextOutput(flags, config)) {
       writeLines([`Run: ${String(output.runId)}`, `State: ${String(output.state)}`, ...(output.snapshotHash ? [`Snapshot: ${String(output.snapshotHash)}`] : []), ...(output.reportHash ? [`Report: ${String(output.reportHash)}`] : []), `Artifacts: ${String((output.artifactRefs as unknown[]).length)}`])
     } else writeJson(output)
@@ -880,7 +891,7 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
   }
 
   if (command === 'scan' || command === 'reconcile' || command === 'check' || command === 'map') {
-    return runWorkflowCommand(command, flags, configPath)
+    return runWorkflowCommand(command, flags, configPath, argv)
   }
 
   if (command === 'fix') return runFixCommand(argv, positional, configPath)

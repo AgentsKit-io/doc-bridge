@@ -62,6 +62,9 @@ describe('workflow CLI', () => {
       const mapped = capture(() => runCli(['map', '--json']))
       expect(mapped.code).toBe(0)
       expect((JSON.parse(mapped.out) as { snapshotHash: string }).snapshotHash).toBe(checkPayload.snapshotHash)
+      const html = capture(() => runCli(['map', '--html', '--output', '.doc-bridge/fixture-report.html']))
+      expect(html.code).toBe(0)
+      expect(readFileSync(join(root, '.doc-bridge', 'fixture-report.html'), 'utf8')).toContain('Architecture map')
       expect(readFileSync(join(root, '.doc-bridge', 'workflow', 'manifest.json'), 'utf8')).toContain(checkPayload.runId)
     } finally { process.chdir(previous) }
   })
