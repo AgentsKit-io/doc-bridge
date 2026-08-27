@@ -70,6 +70,7 @@ export {
 } from './validate.js'
 
 export { buildDocBridgeIndex, type BuildIndexOptions, type BuildIndexResult } from './index-builder/build-index.js'
+export { discoverRepository, type DiscoveryOptions } from './discovery/repository.js'
 export {
   formatEcosystemLlmsBlock,
   formatEcosystemLlmsSection,
