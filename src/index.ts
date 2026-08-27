@@ -15,6 +15,12 @@ export {
   type DocBridgeConfigV1,
   type AgentCorpusConfig,
   type DocumentationStandardV1Config,
+  RuleIdSchema,
+  RuleSeveritySchema,
+  RulesConfigSchema,
+  type RuleId,
+  type RuleSeverity,
+  type RulesConfig,
 } from './config/schema.js'
 
 export {
@@ -81,6 +87,15 @@ export {
   type DocumentationDiagnostic,
 } from './discovery/documentation.js'
 export { reconcileKnowledge } from './reconciliation/reconcile.js'
+export {
+  evaluateRules,
+  parseRuleId,
+  parseRuleSeverity,
+  type RuleEngineOptions,
+  type RuleEvaluationResult,
+  type RuleFinding,
+  type RuleMode,
+} from './rules/engine.js'
 export {
   formatEcosystemLlmsBlock,
   formatEcosystemLlmsSection,
