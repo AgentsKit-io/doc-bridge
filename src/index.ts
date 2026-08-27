@@ -89,6 +89,7 @@ export {
   type DocumentationDiagnostic,
 } from './discovery/documentation.js'
 export { reconcileKnowledge } from './reconciliation/reconcile.js'
+export { renderOfflineReport, type OfflineReportInput, type OfflineReportOptions } from './report/html.js'
 export {
   WORKFLOW_STAGES,
   loadWorkflowManifest,
