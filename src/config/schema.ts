@@ -152,33 +152,6 @@ export const GatesConfigSchema = z
   })
   .strict()
 
-export const RuleIdSchema = z.enum([
-  'documentation-quality',
-  'graph-undocumented-relation',
-  'declared-unobserved-relation',
-  'unresolved-reference',
-  'conflicting-declaration',
-  'not-analyzed-coverage',
-  'stale-documentation',
-  'centrality-risk',
-  'critical-path-risk',
-  'freshness',
-  'ownership',
-])
-
-export const RuleSeveritySchema = z.enum(['off', 'info', 'warn', 'error'])
-
-export const RulesConfigSchema = z
-  .object({
-    mode: z.enum(['default', 'recommended', 'strict']).optional(),
-    severity: z.record(RuleIdSchema, RuleSeveritySchema).optional(),
-    ignore: z.array(RuleIdSchema).max(128).optional(),
-    criticalEntities: z.array(z.string().min(1).max(256)).max(128).optional(),
-    criticalPaths: z.array(z.string().min(1).max(512)).max(128).optional(),
-    warningThresholds: z.record(RuleIdSchema, z.number().int().min(1).max(100_000)).optional(),
-  })
-  .strict()
-
 export const SurfacesConfigSchema = z
   .object({
     cli: z
@@ -402,7 +375,6 @@ export const DocBridgeConfigV1Schema = z
     index: IndexConfigSchema.optional(),
     routing: RoutingConfigSchema.optional(),
     gates: GatesConfigSchema.optional(),
-    rules: RulesConfigSchema.optional(),
     surfaces: SurfacesConfigSchema.optional(),
     intelligence: IntelligenceConfigSchema.optional(),
     federation: FederationConfigSchema.optional(),
@@ -415,6 +387,3 @@ export type AgentCorpusConfig = z.infer<typeof AgentCorpusConfigSchema>
 export type HumanCorpusConfig = z.infer<typeof HumanCorpusConfigSchema>
 export type DocumentationStandardV1Config = z.infer<typeof DocumentationStandardV1ConfigSchema>
 export type DocumentationStandardRuleId = z.infer<typeof DocumentationStandardRuleIdSchema>
-export type RuleId = z.infer<typeof RuleIdSchema>
-export type RuleSeverity = z.infer<typeof RuleSeveritySchema>
-export type RulesConfig = z.infer<typeof RulesConfigSchema>

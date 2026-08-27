@@ -36,10 +36,6 @@ export const applyConfigDefaults = (config: DocBridgeConfigV1): DocBridgeConfigV
       preset: 'minimal',
       ...config.gates,
     },
-    rules: {
-      mode: 'default',
-      ...config.rules,
-    },
     surfaces: {
       cli: {
         bin: 'ak-docs',

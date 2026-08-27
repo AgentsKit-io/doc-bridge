@@ -3,7 +3,7 @@ import { dirname, resolve } from 'node:path'
 import { createInterface } from 'node:readline/promises'
 
 import { loadConfig, projectRootFromConfigPath } from '../config/load-config.js'
-import type { DocBridgeConfigV1, RuleId, RuleSeverity } from '../config/schema.js'
+import type { DocBridgeConfigV1 } from '../config/schema.js'
 import {
   DOCUMENTATION_STANDARD_V1_ID,
   formatDocumentationStandardText,
@@ -14,7 +14,6 @@ import { discoverPnpmPackages } from '../index-builder/plugins/pnpm-monorepo.js'
 import { scanHumanDocRecords } from '../index-builder/human-adapters/index.js'
 import { retrieveHybridChunks } from '../federation/llms.js'
 import { runGates, type GateId } from '../gates/run-gates.js'
-import { evaluateRules, parseRuleId, parseRuleSeverity, type RuleMode } from '../rules/engine.js'
 import { runChatOnce, startInkChat } from '../intelligence/chat.js'
 import { PeerMissingError, layer1InstallHint } from '../intelligence/peers.js'
 import { createDocBridgeRag } from '../intelligence/rag.js'
@@ -36,7 +35,7 @@ import { IndexNotFoundError, loadDocBridgeIndex } from '../query/load-index.js'
 import { runQuery, type QueryKind } from '../query/query.js'
 import { searchIndex } from '../query/search.js'
 import type { DocBridgeIndexV1 } from '../schemas/doc-bridge-index.js'
-import { parseAgentHandoff, parseDocBridgeConfig, parseReconciliationReport } from '../validate.js'
+import { parseAgentHandoff, parseDocBridgeConfig } from '../validate.js'
 import { PACKAGE_VERSION } from '../version.js'
 
 type Command =
@@ -51,7 +50,6 @@ type Command =
   | 'registry'
   | 'index'
   | 'gate'
-  | 'rules'
   | 'mcp'
   | 'doctor'
   | 'demo'
@@ -76,7 +74,6 @@ Core (no API key):
   ak-docs list <packages|intents|changes|knowledge> [--text]
   ak-docs ask [question]          local consult (no LLM)
   ak-docs gate run [gate-id]
-  ak-docs rules run <report.json> [--preset default|recommended|strict] [--severity rule=level] [--ignore rule]
   ak-docs conformance run documentation-standard-v1 [--text|--json]
   ak-docs mcp
   ak-docs mcp install --cursor | --claude
@@ -142,7 +139,6 @@ const parseArgs = (argv: readonly string[]) => {
   else if (positional[0] === 'registry') command = 'registry'
   else if (positional[0] === 'index') command = 'index'
   else if (positional[0] === 'gate') command = 'gate'
-  else if (positional[0] === 'rules') command = 'rules'
   else if (positional[0] === 'mcp') command = 'mcp'
   else if (positional[0] === 'doctor') command = 'doctor'
   else if (positional[0] === 'demo') command = 'demo'
@@ -156,30 +152,6 @@ const parseArgs = (argv: readonly string[]) => {
   else if (positional[0] === 'conformance') command = 'conformance'
 
   return { command, flags, configPath, positional }
-}
-
-const optionValues = (argv: readonly string[], name: string): string[] => {
-  const values: string[] = []
-  for (let index = 0; index < argv.length; index += 1) {
-    const arg = argv[index]
-    if (arg?.startsWith(`${name}=`)) values.push(arg.slice(name.length + 1))
-    else if (arg === name && argv[index + 1] && !argv[index + 1]?.startsWith('-')) {
-      values.push(argv[index + 1] as string)
-      index += 1
-    }
-  }
-  return values
-}
-
-const parseRuleAssignments = <T>(values: readonly string[], parseValue: (value: string) => T): Record<string, T> => {
-  const result: Record<string, T> = {}
-  for (const value of values) {
-    const separator = value.indexOf('=')
-    if (separator <= 0 || separator === value.length - 1) throw new Error(`Invalid rule assignment "${value}". Use rule=value.`)
-    const key = value.slice(0, separator)
-    result[key] = parseValue(value.slice(separator + 1))
-  }
-  return result
 }
 
 const writeJson = (payload: unknown): void => {
@@ -426,56 +398,6 @@ const diagnosticNextCommands = (
     `edit ${config.corpus.agent.root}/packages/<module>.md  # frontmatter: package + editRoot`,
     'ak-docs index',
   ]
-}
-
-const runRulesCommand = (
-  argv: readonly string[],
-  flags: ReadonlySet<string>,
-  positional: readonly string[],
-  configPath: string | undefined,
-): number => {
-  const action = positional[1]
-  const reportPath = positional[2]
-  if (action !== 'run' || !reportPath) {
-    process.stderr.write('Usage: ak-docs rules run <report.json> [--preset default|recommended|strict] [--severity rule=level] [--ignore rule]\n')
-    return 2
-  }
-
-  try {
-    const { config } = loadProject(configPath)
-    const report = parseReconciliationReport(JSON.parse(readFileSync(resolve(reportPath), 'utf8')) as unknown)
-    const presetValue = optionValues(argv, '--preset')[0]
-    const preset = presetValue === undefined
-      ? undefined
-      : (['default', 'recommended', 'strict'].includes(presetValue) ? presetValue as RuleMode : (() => { throw new Error(`Invalid rules preset "${presetValue}".`) })())
-    const severity: Partial<Record<RuleId, RuleSeverity>> = {}
-    for (const [rule, level] of Object.entries(parseRuleAssignments(optionValues(argv, '--severity'), parseRuleSeverity))) {
-      severity[parseRuleId(rule)] = level
-    }
-    const ignore = optionValues(argv, '--ignore').map(parseRuleId)
-    const result = evaluateRules(report, {
-      ...(config.rules ? { config: config.rules } : {}),
-      ...(preset ? { preset } : {}),
-      ...(Object.keys(severity).length ? { severity } : {}),
-      ...(ignore.length ? { ignore } : {}),
-      ...(optionValues(argv, '--critical-entity').length ? { criticalEntities: optionValues(argv, '--critical-entity') } : {}),
-      ...(optionValues(argv, '--critical-path').length ? { criticalPaths: optionValues(argv, '--critical-path') } : {}),
-    })
-    if (wantsTextOutput(flags, config)) {
-      writeLines([
-        `Rules: ${result.mode}`,
-        `Findings: ${result.findings.length}`,
-        ...(result.findings.length ? result.findings.map((finding) => `  [${finding.severity}] ${finding.code}: ${finding.message}`) : ['  (none)']),
-        `Exit code: ${result.exitCode}`,
-      ])
-    } else {
-      writeJson({ ok: result.exitCode === 0, reportHash: report.contentHash, ...result })
-    }
-    return result.exitCode
-  } catch (error) {
-    process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`)
-    return 2
-  }
 }
 
 const writeIfMissing = (path: string, contents: string): boolean => {
@@ -893,8 +815,6 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
       return 1
     }
   }
-
-  if (command === 'rules') return runRulesCommand(argv, flags, positional, configPath)
 
   if (command === 'conformance') {
     const action = positional[1]
