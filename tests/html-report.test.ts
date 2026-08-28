@@ -74,7 +74,7 @@ describe('offline HTML report', () => {
     expect(html).toContain('heuristic')
     expect(html).toContain('dynamic-imports')
     expect(html).toContain('src/a.ts')
-    const script = html.match(/<script\b[^>]*>([\s\S]*?)<\/script>/i)?.[1]
+    const script = html.match(/<script\b[^>]*>([\s\S]*?)<\/script\s*>/i)?.[1]
     expect(script).toBeDefined()
     expect(() => new Function(script as string)).not.toThrow()
     expect(html).not.toContain('secret snippet')
@@ -146,7 +146,7 @@ describe('offline HTML report', () => {
       ],
     }
     const html = renderOfflineReport({ ...input, snapshot })
-    const script = html.match(/<script\b[^>]*>([\s\S]*?)<\/script>/i)?.[1] ?? ''
+    const script = html.match(/<script\b[^>]*>([\s\S]*?)<\/script\s*>/i)?.[1] ?? ''
     const payload = JSON.parse(script.match(/const data=(\{[\s\S]*\});\ndata\.entities/)?.[1] ?? '{}')
 
     expect(payload.view.overview.nodes).not.toContainEqual(expect.objectContaining({ kind: 'external' }))
