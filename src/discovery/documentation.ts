@@ -73,6 +73,32 @@ const scalar = (value: string): string => {
   return trimmed
 }
 
+const isFieldName = (value: string): boolean => {
+  if (!/^[A-Za-z]/.test(value)) return false
+  for (const character of value.slice(1)) {
+    if (!/[A-Za-z0-9_-]/.test(character)) return false
+  }
+  return true
+}
+
+const parseIndentedField = (raw: string, indentation: number): { readonly key: string; readonly value: string } | undefined => {
+  const prefix = ' '.repeat(indentation)
+  if (!raw.startsWith(prefix) || raw[indentation] === ' ') return undefined
+  const body = raw.slice(indentation)
+  const separator = body.indexOf(':')
+  if (separator <= 0) return undefined
+  const key = body.slice(0, separator).trim()
+  return isFieldName(key) ? { key, value: body.slice(separator + 1).trim() } : undefined
+}
+
+const parseListItem = (raw: string, indentation: number): string | undefined => {
+  const prefix = `${' '.repeat(indentation)}-`
+  if (!raw.startsWith(prefix)) return undefined
+  const rest = raw.slice(prefix.length)
+  if (rest && !/\s/.test(rest[0] ?? '')) return undefined
+  return rest.trim()
+}
+
 const conventionalPackageReference = (path: string, agentRoot: string): string | undefined => {
   const prefix = `${agentRoot.replace(/\/$/, '')}/`
   if (!path.startsWith(prefix)) return undefined
@@ -208,11 +234,10 @@ const parseBlock = (
       section = undefined
       continue
     }
-    if (/^ {2}[A-Za-z][A-Za-z0-9_-]*\s*:/.test(raw)) {
+    const sectionField = parseIndentedField(raw, 2)
+    if (sectionField) {
       finishRelation()
-      const match = /^ {2}([A-Za-z][A-Za-z0-9_-]*)\s*:\s*(.*)$/.exec(raw)
-      const key = match?.[1]
-      const value = match?.[2] ?? ''
+      const { key, value } = sectionField
       if (key !== 'covers' && key !== 'relations') {
         addDiagnostic(diagnostics, input, 'DOCBRIDGE_FIELD_UNKNOWN', `Unknown docbridge field: ${key ?? '(missing)'}.`, line)
         section = undefined
@@ -229,35 +254,36 @@ const parseBlock = (
       }
       continue
     }
-    if (section === 'covers' && /^ {4}-\s*/.test(raw)) {
-      const value = scalar(raw.replace(/^ {4}-\s*/, ''))
+    const listValue = parseListItem(raw, 4)
+    if (section === 'covers' && listValue !== undefined) {
+      const value = scalar(listValue)
       if (!value) addDiagnostic(diagnostics, input, 'DOCBRIDGE_REFERENCE_MISSING', 'covers entries must not be empty.', line)
       else covers.push({ value, line })
       continue
     }
-    if (section === 'relations' && /^ {4}-\s*/.test(raw)) {
+    if (section === 'relations' && listValue !== undefined) {
       finishRelation()
-      const firstField = /^ {4}-\s*([A-Za-z][A-Za-z0-9_-]*)\s*:\s*(.*)$/.exec(raw)
+      const firstField = parseIndentedField(`    ${listValue}`, 4)
       current = { startLine: line, endLine: line, fields: new Set() }
-      if (firstField?.[1]) {
-        current.fields.add(firstField[1])
-        current[firstField[1] as 'from' | 'to' | 'kind' | 'detection'] = scalar(firstField[2] ?? '')
-      } else if (raw.replace(/^ {4}-\s*/, '').trim()) {
+      if (firstField?.key) {
+        current.fields.add(firstField.key)
+        current[firstField.key as 'from' | 'to' | 'kind' | 'detection'] = scalar(firstField.value)
+      } else if (listValue) {
         addDiagnostic(diagnostics, input, 'DOCBRIDGE_RELATION_INVALID', 'Relation entries must be field mappings.', line)
       }
       continue
     }
-    if (section === 'relations' && current && /^ {6}[A-Za-z][A-Za-z0-9_-]*\s*:/.test(raw)) {
-      const field = /^ {6}([A-Za-z][A-Za-z0-9_-]*)\s*:\s*(.*)$/.exec(raw)
-      const key = field?.[1]
+    const field = parseIndentedField(raw, 6)
+    if (section === 'relations' && current && field) {
+      const { key, value } = field
       current.endLine = line
-      if (!key || !['from', 'to', 'kind', 'detection'].includes(key)) {
-        addDiagnostic(diagnostics, input, 'DOCBRIDGE_FIELD_UNKNOWN', `Unknown relation field: ${key ?? '(missing)'}.`, line)
+      if (!['from', 'to', 'kind', 'detection'].includes(key)) {
+        addDiagnostic(diagnostics, input, 'DOCBRIDGE_FIELD_UNKNOWN', `Unknown relation field: ${key}.`, line)
       } else if (current.fields.has(key)) {
         addDiagnostic(diagnostics, input, 'DOCBRIDGE_FIELD_DUPLICATE', `Duplicate relation field: ${key}.`, line)
       } else {
         current.fields.add(key)
-        current[key as 'from' | 'to' | 'kind' | 'detection'] = scalar(field?.[2] ?? '')
+        current[key as 'from' | 'to' | 'kind' | 'detection'] = scalar(value)
       }
       continue
     }

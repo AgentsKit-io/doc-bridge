@@ -25,7 +25,7 @@ import { ingestMemoryCandidates } from '../memory/ingest.js'
 import { classifyMemoryCandidates, draftMemoryPromotion } from '../memory/pipeline.js'
 import { promoteMemoryToGithubPr } from '../memory/github-pr.js'
 import { watchDocBridgeIndex } from '../index-builder/watch-index.js'
-import { loadWorkflowManifest, loadWorkflowStepOutput, runWorkflow, type WorkflowExecutionResult } from '../workflow/engine.js'
+import { loadWorkflowStepOutput, runWorkflow, type WorkflowExecutionResult } from '../workflow/engine.js'
 import {
   formatDoctorBadgeJson,
   formatDoctorBadgeMarkdown,

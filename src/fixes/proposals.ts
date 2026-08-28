@@ -1,4 +1,4 @@
-import { existsSync, readdirSync, readFileSync, realpathSync, renameSync, statSync, unlinkSync, writeFileSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync, realpathSync, renameSync, unlinkSync, writeFileSync } from 'node:fs'
 import { basename, dirname, extname, join, relative, resolve, sep } from 'node:path'
 
 import { contentHashForArtifactV1, sha256NormalizedV1 } from '../index-builder/content-hash.js'
@@ -99,8 +99,9 @@ export const createArtifactNormalizationProposal = (root: string, artifactPath: 
   const projectRoot = realpathSync.native(resolve(root))
   const path = artifactPath.split(sep).join('/')
   const absolute = containedPath(projectRoot, path)
-  if (!absolute || !existsSync(absolute) || !statSync(absolute).isFile()) return undefined
-  const before = readFileSync(absolute, 'utf8')
+  if (!absolute) return undefined
+  let before: string
+  try { before = readFileSync(absolute, 'utf8') } catch { return undefined }
   let after: string
   try { after = `${JSON.stringify(sortJson(JSON.parse(before) as unknown), null, 2)}\n` } catch { return undefined }
   return after === before ? undefined : makeProposal(projectRoot, options, [{ path: relative(projectRoot, absolute).split(sep).join('/'), before, after }], ['The artifact contains valid JSON.'], ['The artifact is valid canonical JSON with one trailing newline.'])

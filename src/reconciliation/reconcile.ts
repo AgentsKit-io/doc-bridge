@@ -137,7 +137,6 @@ const aggregatedRelations = (
     const parts = key.split('\u0000')
     const from = parts[0] ?? first.from
     const to = parts[1] ?? first.to
-    const kind = parts[2] ?? first.kind
     const detection = parts[3] ?? relationDetection(first)
     const mergedEvidence = mergeEvidence(...group)
     return {
