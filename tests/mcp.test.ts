@@ -9,7 +9,7 @@ import { applyConfigDefaults } from '../src/config/defaults.js'
 import { DocBridgeConfigV1Schema } from '../src/config/schema.js'
 import { buildDocBridgeIndex } from '../src/index-builder/build-index.js'
 import { installMcpConfig, mcpSnippet } from '../src/mcp/install.js'
-import { MCP_TOOLS, handleMcpRequest, startMcpStdioServer } from '../src/mcp/server.js'
+import { MCP_TOOLS, handleMcpRequest, respondMcpRequest, startMcpStdioServer } from '../src/mcp/server.js'
 import { runQuery } from '../src/query/query.js'
 
 const fixtureRoot = join(fileURLToPath(new URL('.', import.meta.url)), 'fixtures', 'sample-project')
@@ -66,16 +66,47 @@ describe('MCP tools', () => {
     expect(result.tools.map((tool) => tool.name)).toContain('handoff.resolve')
     expect(result.tools.map((tool) => tool.name)).toContain('doc.search')
     expect(result.tools.map((tool) => tool.name)).toContain('doc.get')
-    expect(result.tools).toHaveLength(8)
+    expect(result.tools).toHaveLength(14)
     for (const tool of result.tools) {
       expect(tool.name.length).toBeLessThanOrEqual(64)
-      expect(tool).toMatchObject({
-        title: expect.any(String),
-        description: expect.any(String),
-        annotations: { readOnlyHint: true },
-        inputSchema: { type: 'object' },
-      })
+      expect(tool).toMatchObject({ title: expect.any(String), description: expect.any(String), inputSchema: { type: 'object' } })
+      if (tool.name !== 'docbridge.proposals') expect(tool).toMatchObject({ annotations: { readOnlyHint: true } })
     }
+  })
+
+  it('filters the advertised and callable tools from configuration', () => {
+    const config = applyConfigDefaults(DocBridgeConfigV1Schema.parse({
+      schemaVersion: 1,
+      corpus: { agent: { root: 'docs' } },
+      surfaces: { mcp: { tools: ['doc.search'] } },
+    }))
+    const ctx = { root: fixtureRoot, config }
+    expect((handleMcpRequest(ctx, { method: 'tools/list' }) as { tools: { name: string }[] }).tools.map((tool) => tool.name)).toEqual(['doc.search'])
+    expect(() => handleMcpRequest(ctx, { method: 'tools/call', params: { name: 'gate.status', arguments: {} } })).toThrow('disabled by configuration')
+  })
+
+  it('awaits asynchronous tool failures before writing an MCP response', async () => {
+    const config = applyConfigDefaults(DocBridgeConfigV1Schema.parse({
+      schemaVersion: 1,
+      corpus: { agent: { root: 'docs' } },
+      intelligence: { registry: { enabled: true } },
+    }))
+    const writes: string[] = []
+    const originalWrite = process.stdout.write
+    process.stdout.write = ((chunk: string | Uint8Array) => {
+      writes.push(String(chunk))
+      return true
+    }) as typeof process.stdout.write
+    try {
+      await respondMcpRequest(
+        { root: fixtureRoot, config },
+        { jsonrpc: '2.0', id: 7, method: 'tools/call', params: { name: 'docbridge.proposals', arguments: { action: 'suggest' } } },
+        'json-line',
+      )
+    } finally {
+      process.stdout.write = originalWrite
+    }
+    expect(JSON.parse(writes[0] ?? '{}')).toMatchObject({ id: 7, error: { message: expect.stringContaining('not installed') } })
   })
 
   it('returns a successful text result for every read-only tool', () => {
@@ -98,7 +129,7 @@ describe('MCP tools', () => {
       'registry.topology': {},
     }
 
-    for (const tool of MCP_TOOLS) {
+    for (const tool of MCP_TOOLS.filter((item) => !item.name.startsWith('docbridge.'))) {
       const result = handleMcpRequest(ctx, {
         jsonrpc: '2.0',
         id: tool.name,
@@ -256,6 +287,23 @@ describe('MCP tools', () => {
     ).toThrow('Unknown indexed doc path "package.json"')
   })
 
+  it('keeps MCP fix proposals human-gated from discovery through application', () => {
+    const root = mkdtempSync(join(tmpdir(), 'ak-docs-mcp-fixes-'))
+    writeFileSync(join(root, 'guide.md'), '[API](./api)\n')
+    writeFileSync(join(root, 'api.md'), '# API\n')
+    const config = loadFixtureConfig()
+    const ctx = { root, config }
+    const call = (arguments_: Record<string, unknown>) => JSON.parse(((handleMcpRequest(ctx, {
+      method: 'tools/call',
+      params: { name: 'docbridge.proposals', arguments: arguments_ },
+    }) as { content: { text: string }[] }).content[0]?.text ?? '{}')) as { proposal?: { status?: string } }
+
+    expect(call({ action: 'propose-links' }).proposal?.status).toBe('proposed')
+    expect(call({ action: 'approve', approvedBy: 'human' }).proposal?.status).toBe('approved')
+    expect(call({ action: 'apply' }).proposal?.status).toBe('applied')
+    expect(readFileSync(join(root, 'guide.md'), 'utf8')).toBe('[API](./api.md)\n')
+  })
+
   it('rejects doc.get symlinks that resolve outside the project root', () => {
     const root = join(mkdtempSync(join(tmpdir(), 'ak-docs-mcp-symlink-')), 'sample-project')
     cpSync(fixtureRoot, root, { recursive: true })
@@ -312,7 +360,7 @@ describe('MCP tools', () => {
     }
   })
 
-  it('handles stdio frames and JSON-RPC errors', () => {
+  it('handles stdio frames and JSON-RPC errors', async () => {
     const config = loadFixtureConfig()
     const previous = process.stdin.listeners('data')
     const write = process.stdout.write
@@ -338,6 +386,7 @@ describe('MCP tools', () => {
           ].join(''),
         ),
       )
+      await new Promise((resolve) => setImmediate(resolve))
       expect(out).toContain('"id":1')
       expect(out).toContain('"tools"')
       expect(out).toContain('"id":2')
@@ -349,7 +398,7 @@ describe('MCP tools', () => {
     }
   })
 
-  it('handles newline-delimited stdio used by current MCP clients', () => {
+  it('handles newline-delimited stdio used by current MCP clients', async () => {
     const config = loadFixtureConfig()
     const previous = process.stdin.listeners('data')
     const write = process.stdout.write
@@ -366,6 +415,7 @@ describe('MCP tools', () => {
         'data',
         Buffer.from(`${JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/list' })}\n`),
       )
+      await new Promise((resolve) => setImmediate(resolve))
       const responses = out.trim().split('\n').map((line) => JSON.parse(line)) as Array<{
         id: number | null
         error?: { code: number }
@@ -373,7 +423,7 @@ describe('MCP tools', () => {
       }>
       expect(responses[0]).toMatchObject({ id: null, error: { code: -32700 } })
       expect(responses[1]).toMatchObject({ id: 1 })
-      expect(responses[1]?.result?.tools).toHaveLength(8)
+      expect(responses[1]?.result?.tools).toHaveLength(14)
     } finally {
       process.stdout.write = write
       process.stdin.removeAllListeners('data')

@@ -12,4 +12,5 @@ export default defineConfig({
   clean: true,
   splitting: false,
   target: 'node22',
+  external: ['typescript'],
 })

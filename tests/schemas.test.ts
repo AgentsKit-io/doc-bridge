@@ -12,6 +12,14 @@ import { safeParseAgentHandoff } from '../src/validate.js'
 import { parseAgentSearch, parseDocBridgeConfig } from '../src/validate.js'
 import { parseDocBridgeIndex } from '../src/validate.js'
 import { parseMemoryCandidate } from '../src/validate.js'
+import { canonicalJsonV1, contentHashForArtifactV1, sha256NormalizedV1 } from '../src/index-builder/content-hash.js'
+import {
+  AgentProposalV1Schema,
+  DiscoverySnapshotV1Schema,
+  FixProposalV1Schema,
+  ReconciliationReportV1Schema,
+  WorkflowRunV1Schema,
+} from '../src/schemas/knowledge.js'
 
 const legacyHandoff = {
   type: 'agent-handoff',
@@ -88,6 +96,187 @@ describe('JSON Schema exports', () => {
     expect(DocBridgeJsonSchemas.agentHandoffV1.required).toContain('startHere')
     expect(DocBridgeJsonSchemas.docBridgeIndexV1.required).toContain('contentHash')
     expect(DocBridgeJsonSchemas.memoryCandidateV1.required).toContain('fact')
+  })
+})
+
+const artifactMetadata = {
+  schemaVersion: 1,
+  contentHash: 'a'.repeat(64),
+  contentHashAlgo: 'sha256-normalized-v1',
+  project: { name: 'fixture' },
+  sourceRevision: 'b'.repeat(40),
+  sourceRevisionKind: 'git' as const,
+  configurationHash: 'c'.repeat(64),
+  pipelineVersion: '1.0.0',
+  analyzerVersions: { 'js-ts': '1.0.0' },
+}
+
+const evidence = [{ source: 'code' as const, path: 'src/index.ts', lineStart: 1, lineEnd: 2 }]
+
+describe('Knowledge Engine v1 artifacts', () => {
+  it('parses the five versioned artifact envelopes', () => {
+    const snapshot = DiscoverySnapshotV1Schema.parse({
+      type: 'discovery-snapshot',
+      ...artifactMetadata,
+      entities: [{ id: 'module:src/index', kind: 'module', name: 'index', provenance: 'observed', evidence }],
+      relations: [],
+      coverage: [{ analyzer: 'js-ts', scope: 'imports', status: 'complete' }],
+    })
+
+    const report = ReconciliationReportV1Schema.parse({
+      type: 'reconciliation-report',
+      ...artifactMetadata,
+      snapshotHash: 'a'.repeat(64),
+      diagnostics: [],
+      summary: { entityCount: 1, relationCount: 0, diagnosticCount: 0 },
+    })
+
+    expect(
+      WorkflowRunV1Schema.parse({
+        type: 'workflow-run',
+        ...artifactMetadata,
+        runId: 'run-1',
+        state: 'created',
+        steps: [],
+        transitions: [],
+        artifactRefs: [],
+      }).state,
+    ).toBe('created')
+
+    expect(
+      AgentProposalV1Schema.parse({
+        type: 'agent-proposal',
+        ...artifactMetadata,
+        proposalId: 'proposal-1',
+        baseSnapshotHash: snapshot.contentHash,
+        baseReportHash: report.contentHash,
+        relatedDiagnosticIds: [],
+        rationale: 'Review this relation.',
+        confidence: 0.8,
+        evidence,
+        intendedChanges: ['Add a declaration.'],
+        origin: { kind: 'registry-agent', id: 'example-agent', version: '1.0.0', provider: 'agentskit', model: 'fixture', capabilities: ['snapshot.read'] },
+        checks: ['pnpm test'],
+      }).proposalId,
+    ).toBe('proposal-1')
+
+    expect(
+      FixProposalV1Schema.parse({
+        type: 'fix-proposal',
+        ...artifactMetadata,
+        proposalId: 'fix-1',
+        baseRevision: artifactMetadata.sourceRevision,
+        affectedFiles: [{ path: 'docs/index.md', contentHash: 'd'.repeat(64) }],
+        preconditions: ['The target exists.'],
+        diff: '--- a/docs/index.md\n+++ b/docs/index.md',
+        postconditions: ['The link resolves.'],
+        status: 'proposed',
+      }).status,
+    ).toBe('proposed')
+  })
+
+  it('preserves unknown namespaced kinds and rejects invalid evidence ranges', () => {
+    const parsed = DiscoverySnapshotV1Schema.parse({
+      type: 'discovery-snapshot',
+      ...artifactMetadata,
+      entities: [
+        { id: 'vendor:service', kind: 'vendor.external-service', name: 'service', provenance: 'declared', evidence: [] },
+      ],
+      relations: [
+        { id: 'r1', kind: 'vendor.calls', from: 'vendor:service', to: 'module:src/index', provenance: 'declared', evidence: [] },
+      ],
+      coverage: [],
+    })
+    expect(parsed.entities[0]?.kind).toBe('vendor.external-service')
+    expect(() =>
+      DiscoverySnapshotV1Schema.parse({
+        type: 'discovery-snapshot',
+        ...artifactMetadata,
+        entities: [
+          {
+            id: 'module:a',
+            kind: 'module',
+            name: 'a',
+            provenance: 'observed',
+            evidence: [{ source: 'code', path: 'a.ts', lineStart: 3, lineEnd: 2 }],
+          },
+        ],
+        relations: [],
+        coverage: [],
+      }),
+    ).toThrow()
+  })
+
+  it('canonicalizes object keys and produces stable hashes', () => {
+    const first = { relation: { to: 'module:b', from: 'module:a' }, entities: ['module:a', 'module:b'] }
+    const second = { entities: ['module:a', 'module:b'], relation: { from: 'module:a', to: 'module:b' } }
+
+    expect(canonicalJsonV1(first)).toBe(canonicalJsonV1(second))
+    expect(sha256NormalizedV1(first)).toBe(sha256NormalizedV1(second))
+    expect(sha256NormalizedV1(first)).toMatch(/^[a-f0-9]{64}$/)
+  })
+
+  it('hashes an artifact without including its existing contentHash field', () => {
+    const artifact = {
+      ...artifactMetadata,
+      type: 'discovery-snapshot' as const,
+      entities: [],
+      relations: [],
+      coverage: [],
+    }
+    const expected = sha256NormalizedV1({ ...artifact, contentHash: undefined })
+    expect(contentHashForArtifactV1(artifact)).toBe(expected)
+  })
+
+  it('rejects duplicate entity and relation IDs', () => {
+    expect(() =>
+      DiscoverySnapshotV1Schema.parse({
+        type: 'discovery-snapshot',
+        ...artifactMetadata,
+        entities: [
+          { id: 'module:a', kind: 'module', name: 'a', provenance: 'observed', evidence: [] },
+          { id: 'module:a', kind: 'module', name: 'renamed-a', provenance: 'observed', evidence: [] },
+        ],
+        relations: [
+          { id: 'relation:a', kind: 'imports', from: 'module:a', to: 'module:b', provenance: 'observed', evidence: [] },
+          { id: 'relation:a', kind: 'imports', from: 'module:b', to: 'module:a', provenance: 'observed', evidence: [] },
+        ],
+        coverage: [],
+      }),
+    ).toThrow()
+  })
+
+  it('requires traceable origins and approvals for promoted proposals', () => {
+    expect(() =>
+      AgentProposalV1Schema.parse({
+        type: 'agent-proposal',
+        ...artifactMetadata,
+        proposalId: 'proposal-2',
+        baseSnapshotHash: 'a'.repeat(64),
+        baseReportHash: 'a'.repeat(64),
+        relatedDiagnosticIds: [],
+        rationale: 'Missing origin id.',
+        confidence: 0.5,
+        evidence: [],
+        intendedChanges: ['Review manually.'],
+        origin: { kind: 'registry-agent' },
+        checks: [],
+      }),
+    ).toThrow()
+
+    expect(() =>
+      FixProposalV1Schema.parse({
+        type: 'fix-proposal',
+        ...artifactMetadata,
+        proposalId: 'fix-2',
+        baseRevision: artifactMetadata.sourceRevision,
+        affectedFiles: [],
+        preconditions: [],
+        diff: '--- a/file\n+++ b/file',
+        postconditions: [],
+        status: 'approved',
+      }),
+    ).toThrow()
   })
 })
 

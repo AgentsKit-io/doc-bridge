@@ -82,6 +82,11 @@ export const firstParagraph = (markdown: string, maxLen = 400): string | undefin
       if (buf.length) break
       continue
     }
+    // Navigation-only links are useful in the document, but not as its summary.
+    if (/^(?:!?)\[[^\]]*\]\([^)]*\)$/.test(t)) {
+      if (buf.length) break
+      continue
+    }
     buf.push(t)
     if (buf.join(' ').length >= maxLen) break
   }

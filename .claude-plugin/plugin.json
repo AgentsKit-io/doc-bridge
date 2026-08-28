@@ -1,7 +1,7 @@
 {
   "name": "doc-bridge",
   "description": "Fail closed before Claude edits the wrong files: resolve the right docs, ownership boundaries, edit roots, and checks for each change.",
-  "version": "1.4.3",
+  "version": "1.7.44",
   "author": {
     "name": "AgentsKit"
   },

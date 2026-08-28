@@ -13,7 +13,14 @@ const sortValue = (value: unknown): unknown => {
   return value
 }
 
+export const canonicalJsonV1 = (payload: unknown): string => JSON.stringify(sortValue(payload))
+
 export const sha256NormalizedV1 = (payload: unknown): string => {
-  const normalized = JSON.stringify(sortValue(payload))
+  const normalized = canonicalJsonV1(payload)
   return createHash('sha256').update(normalized, 'utf8').digest('hex')
+}
+
+export const contentHashForArtifactV1 = <T extends { readonly contentHash: string }>(artifact: T): string => {
+  const { contentHash: _contentHash, ...payload } = artifact
+  return sha256NormalizedV1(payload)
 }

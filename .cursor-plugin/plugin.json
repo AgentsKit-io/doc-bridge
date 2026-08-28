@@ -1,7 +1,7 @@
 {
   "name": "doc-bridge",
   "displayName": "Doc Bridge",
-  "version": "1.4.3",
+  "version": "1.7.44",
   "description": "Fail closed before Cursor edits the wrong files: resolve the right docs, ownership boundaries, edit roots, and checks for each change.",
   "author": {
     "name": "AgentsKit"

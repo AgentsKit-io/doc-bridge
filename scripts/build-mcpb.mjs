@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto'
 import { execFileSync } from 'node:child_process'
-import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
+import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
 import { builtinModules } from 'node:module'
 import { relative, resolve } from 'node:path'
 
@@ -18,7 +18,7 @@ const mode = process.argv[2]
 const run = (command, args, cwd = root) =>
   execFileSync(command, args, { cwd, stdio: 'inherit', env: process.env })
 
-const copy = (source, destination) => cpSync(source, destination, { recursive: true })
+const copy = (source, destination) => cpSync(realpathSync(source), destination, { recursive: true })
 
 const listFiles = (directory, prefix = '') =>
   readdirSync(directory, { withFileTypes: true })
@@ -56,7 +56,7 @@ const stage = async () => {
     outfile: resolve(runtimeDir, 'ak-docs.js'),
     sourcemap: false,
     packages: 'bundle',
-    external: [...new Set(builtinModules.flatMap((name) => [name, `node:${name}`]))],
+    external: ['typescript', ...new Set(builtinModules.flatMap((name) => [name, `node:${name}`]))],
     logLevel: 'info',
   })
 
@@ -65,6 +65,7 @@ const stage = async () => {
   copy(resolve(root, 'mcpb', 'icon.png'), resolve(stageDir, 'icon.png'))
   copy(resolve(root, 'mcpb', '.mcpbignore'), resolve(stageDir, '.mcpbignore'))
   copy(resolve(runtimeDir, 'ak-docs.js'), resolve(stageDir, 'server', 'ak-docs.js'))
+  copy(resolve(root, 'node_modules', 'typescript'), resolve(stageDir, 'server', 'node_modules', 'typescript'))
   copy(resolve(root, 'LICENSE'), resolve(stageDir, 'server', 'LICENSE'))
   writeFileSync(
     resolve(stageDir, 'server', 'package.json'),

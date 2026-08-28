@@ -53,6 +53,8 @@ describe('markdown helpers', () => {
     expect(parseFrontmatter('---\ntitle: no close\n# Body').data).toEqual({})
     expect(firstHeading('No heading')).toBeUndefined()
     expect(firstParagraph('# Title\n\n- [x] todo')).toBeUndefined()
+    expect(firstParagraph('# Title\n\n- [x] todo')).toBeUndefined()
+    expect(firstParagraph('# Title\n\n[Guide](guide.md)\n\nExplains the system.')).toBe('Explains the system.')
     expect(firstParagraph('Short sentence. Another sentence that is long.', 18)).toBe('Short sentence.')
     expect(firstParagraph('averyverylongword without sentence', 8)).toBe('averyver')
   })

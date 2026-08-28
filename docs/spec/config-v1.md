@@ -7,6 +7,10 @@ description: Configure documentation corpora, ownership routing, conformance, an
 
 `doc-bridge.config.ts` (or `.js`, `.mjs`, `.json`, or `package.json` → `docBridge`) is the alpha integration point for any project. Layer 0 fields are sufficient to run `index`, `query`, and MCP without an LLM.
 
+Reconciliation summaries also expose deterministic `diagnosticsByCode` and
+`diagnosticsByStatus` maps. They are additive rollups for agents and dashboards;
+the canonical `diagnostics` array remains the source of evidence.
+
 | npm package | `@agentskit/doc-bridge` |
 | CLI binary | `ak-docs` |
 | Config file | `doc-bridge.config.ts` |
@@ -71,6 +75,18 @@ export default {
 
   /** Optional deterministic documentation conformance profiles */
   conformance?: ConformanceConfig
+
+  /** Optional language analyzers and runtime-wiring coverage */
+  analysis?: AnalysisConfig
+
+  /** Optional reconciliation scope and orphan-document policy */
+  reconciliation?: ReconciliationConfig
+
+  /** Optional resumable workflow state */
+  workflow?: WorkflowConfig
+
+  /** Optional report publication privacy; private is the default */
+  report?: { privacy?: 'private' | 'anonymized' }
 } satisfies DocBridgeConfigV1
 ```
 
@@ -386,6 +402,83 @@ report status, commands, and the recorded stable-publication HITL decision.
 
 ---
 
+## `reconciliation` (optional)
+
+```ts
+type ReconciliationConfig = {
+  /** Semantic comparison level; discovery still preserves raw file relations. */
+  scope?: 'file' | 'module' | 'package'
+  /** Observed relation kinds that require documentation declarations. */
+  requiredRelationKinds?: string[]
+  /** Emit info findings for documentation with no observed package/module join. */
+  includeOrphanedDocuments?: boolean
+}
+```
+
+Use `scope: 'package'` for monorepos where file imports should be compared as package-level architecture evidence. Omit `requiredRelationKinds` to require all observed kinds; an empty array intentionally disables undocumented-relation findings and must be treated as an explicit exemption.
+
+The reconciliation documentation summary reports package health separately from
+relation findings: `fresh` means the package has coverage documentation and no
+known discrepancy; `stale` means a declared relation conflicts with observed
+architecture; `missing` means no coverage document was found; and `unverified`
+means coverage exists but at least one relevant relation or analyzer boundary
+could not be verified. Package-level aggregation preserves the relation
+endpoints used for this classification, so an undocumented relation cannot be
+reported alongside a falsely `fresh` package.
+
+## `report` (optional)
+
+```ts
+report?: {
+  /** Replace project identity, names, paths, snippets, and finding text in HTML output. */
+  privacy?: 'private' | 'anonymized'
+}
+```
+
+`private` is the default and keeps local evidence useful for debugging. `anonymized` is intended for reports shared outside the repository: it preserves counts, relation kinds, topology, and coverage status while removing project-specific identity and evidence content. The generated HTML and every lazy chunk use the same mode.
+
+## `analysis` (optional)
+
+```ts
+type AnalysisConfig = {
+  /** Ordered language/framework analyzer plugins. */
+  plugins?: Array<{
+    id: string
+    enabled?: boolean
+    order?: number
+    options?: Record<string, unknown>
+    reason?: string
+  }>
+  jsTs?: {
+    /** Property-access methods considered runtime wiring entry points. */
+    runtimeWiringMethods?: string[]
+    /** Additional adapter methods that represent runtime wiring. */
+    runtimeWiringAdapters?: Array<{ id: string; methods: string[] }>
+    /** Include test/spec modules in runtime-wiring coverage. Default: false. */
+    includeTestRuntimeWiring?: boolean
+  }
+}
+```
+
+The JS/TS analyzer defaults to `register`, `use`, `mount`, and `attach`.
+Generic APIs such as `bind` and `listen` are intentionally opt-in to avoid
+classifying ordinary function binding and server startup as architecture.
+When a configured method receives an identifier bound to a
+static import, Doc Bridge records a `runtime-wiring` relation with
+`metadata.detection: 'runtime-wiring-static'`. Reflective, computed, or
+otherwise unbound targets remain explicit `not-analyzed` coverage entries.
+Test/spec modules are excluded from this signal by default because their
+registrations usually construct fixtures rather than production architecture;
+set `includeTestRuntimeWiring: true` when test wiring is part of the contract.
+This keeps runtime behavior useful without claiming that arbitrary dependency
+injection or reflection was resolved. Analyzer plugins must implement the
+versioned contract in `docs/spec/analyzer-plugin-v1.md`; malformed or
+unsupported output remains explicit `not-analyzed` evidence.
+
+`workflow.stateDir` optionally relocates the content-addressed workflow
+artifacts. Runs are resumable and idempotent; pipeline and analyzer versions
+are part of the run identity.
+
 ## `surfaces` (optional)
 
 ```ts
@@ -466,6 +559,18 @@ type IntelligenceConfig = {
   /** Reference runtime; custom path for non-AgentsKit engines later */
   runtime?: 'agentskit' | 'custom'
   runtimeModule?: string
+
+  registry?: {
+    enabled?: boolean
+    agentId?: string
+    agentRoot?: string
+    runnerModule?: string
+    deterministic?: boolean
+    timeoutMs?: number
+    maxTokens?: number
+    maxResponseBytes?: number
+    maxConcurrency?: number
+  }
 }
 
 type MemoryAdapterId =
@@ -474,6 +579,12 @@ type MemoryAdapterId =
   | 'session-export'               // manual JSON/md drop folder
   | 'bootstrap-delta'              // git diff on AGENTS.md
 ```
+
+Registry agents are advisory and must come from the AgentsKit Registry. The
+adapter redacts secrets, validates the proposal contract, bounds execution and
+response size, and requires human approval before any change is applied. The
+default agent is `ecosystem-doc-bridge-corpus-scanner`; compatible Registry
+agents may be selected explicitly.
 
 ---
 

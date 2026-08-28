@@ -36,6 +36,14 @@ export const applyConfigDefaults = (config: DocBridgeConfigV1): DocBridgeConfigV
       preset: 'minimal',
       ...config.gates,
     },
+    rules: {
+      mode: 'default',
+      ...config.rules,
+    },
+    safety: {
+      redactSecrets: true,
+      ...config.safety,
+    },
     surfaces: {
       cli: {
         bin: 'ak-docs',
@@ -44,7 +52,12 @@ export const applyConfigDefaults = (config: DocBridgeConfigV1): DocBridgeConfigV
       },
       mcp: {
         enabled: true,
-        tools: ['handoff.resolve', 'doc.search', 'doc.get', 'gate.status'],
+        tools: [
+          'handoff.resolve', 'doc.search', 'doc.get', 'gate.status', 'retriever.query',
+          'memory.classify', 'memory.promoteDraft', 'registry.topology',
+          'docbridge.snapshot', 'docbridge.report', 'docbridge.diagnostics',
+          'docbridge.relations', 'docbridge.run', 'docbridge.proposals',
+        ],
         transport: 'stdio',
         ...config.surfaces?.mcp,
       },

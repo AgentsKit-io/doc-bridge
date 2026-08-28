@@ -15,6 +15,18 @@ export {
   type DocBridgeConfigV1,
   type AgentCorpusConfig,
   type DocumentationStandardV1Config,
+  RuleIdSchema,
+  RuleSeveritySchema,
+  RulesConfigSchema,
+  WorkflowConfigSchema,
+  RepositorySafetyConfigSchema,
+  ReportConfigSchema,
+  type RuleId,
+  type RuleSeverity,
+  type RulesConfig,
+  type WorkflowConfig,
+  type RepositorySafetyConfig,
+  type ReportConfig,
 } from './config/schema.js'
 
 export {
@@ -55,16 +67,70 @@ export {
 
 export {
   parseAgentHandoff,
+  parseAgentProposal,
   parseAgentSearch,
   parseDocBridgeConfig,
   parseDocBridgeIndex,
+  parseDiscoverySnapshot,
+  parseFixProposal,
   parseMemoryCandidate,
+  parseReconciliationReport,
+  parseWorkflowRun,
   safeParseAgentHandoff,
   type ParseIssue,
   type ParseResult,
 } from './validate.js'
 
 export { buildDocBridgeIndex, type BuildIndexOptions, type BuildIndexResult } from './index-builder/build-index.js'
+export { discoverRepository, type DiscoveryOptions } from './discovery/repository.js'
+export { containedPath, DEFAULT_SAFETY_EXCLUDES, redactSecrets, redactValue, safeWalkFiles, type SafeWalkOptions, type SafeWalkResult } from './safety/repository.js'
+export { DEFAULT_REGISTRY_AGENT_ID, createRegistryAgentAdapter, loadRegistryAgentMetadata, loadRegistryAgentRunner, persistRegistryAgentProposal, type RegistryAgentAdapter, type RegistryAgentContext, type RegistryAgentMetadata, type RegistryAgentRunner } from './agents/registry-adapter.js'
+export {
+  applyDocumentationDeclarations,
+  parseDocumentationDeclarations,
+  type DocumentationAnalysisResult,
+  type DocumentationDeclarationInput,
+  type DocumentationDeclarationOptions,
+  type DocumentationDeclarationResult,
+  type DocumentationDiagnostic,
+} from './discovery/documentation.js'
+export { reconcileKnowledge } from './reconciliation/reconcile.js'
+export {
+  DEFAULT_LARGE_REPORT_THRESHOLD_BYTES,
+  renderOfflineReport,
+  renderOfflineReportArtifact,
+  type OfflineReportArtifact,
+  type OfflineReportInput,
+  type OfflineReportOptions,
+} from './report/html.js'
+export {
+  applyFixProposal,
+  approveFixProposal,
+  createArtifactNormalizationProposal,
+  createMarkdownLinkFixProposal,
+  type FixApplyOptions,
+  type FixProposalOptions,
+} from './fixes/proposals.js'
+export {
+  WORKFLOW_STAGES,
+  loadWorkflowManifest,
+  loadWorkflowStepOutput,
+  runWorkflow,
+  type WorkflowExecutionResult,
+  type WorkflowOptions,
+  type WorkflowStage,
+  type WorkflowStageContext,
+  type WorkflowStageHandler,
+} from './workflow/engine.js'
+export {
+  evaluateRules,
+  parseRuleId,
+  parseRuleSeverity,
+  type RuleEngineOptions,
+  type RuleEvaluationResult,
+  type RuleFinding,
+  type RuleMode,
+} from './rules/engine.js'
 export {
   formatEcosystemLlmsBlock,
   formatEcosystemLlmsSection,
@@ -98,7 +164,7 @@ export {
   type DocumentationStandardRuleResult,
   type DocumentationStandardRuleStatus,
 } from './conformance/documentation-standard-v1.js'
-export { MCP_TOOLS, handleMcpRequest, startMcpStdioServer } from './mcp/server.js'
+export { MCP_TOOLS, handleMcpRequest, respondMcpRequest, startMcpStdioServer } from './mcp/server.js'
 export { installMcpConfig, mcpSnippet, type McpInstallResult, type McpInstallTarget } from './mcp/install.js'
 export { runDoctor, formatDoctorText, type DoctorReport, type DoctorIssue, type DoctorCoverage } from './doctor/run-doctor.js'
 export {
@@ -115,7 +181,74 @@ export {
   type GithubPrOptions,
   type GithubPrResult,
 } from './memory/github-pr.js'
-export { sha256NormalizedV1 } from './index-builder/content-hash.js'
+export { canonicalJsonV1, contentHashForArtifactV1, sha256NormalizedV1 } from './index-builder/content-hash.js'
+export {
+  ANALYZER_PLUGIN_CONTRACT_VERSION,
+  AnalyzerPluginManifestSchema,
+  AnalyzerPluginOutputSchema,
+  createAnalyzerRegistry,
+  type AnalyzerPlugin,
+  type AnalyzerPluginInput,
+  type AnalyzerPluginManifest,
+  type AnalyzerPluginOutput,
+  type AnalyzerRegistry,
+} from './plugins/contract.js'
+export {
+  BENCHMARK_SCHEMA_VERSION,
+  BenchmarkFixtureV1Schema,
+  benchmarkFixture,
+  compareBenchmarkSnapshots,
+  formatBenchmarkText,
+  measureAgentEfficiency,
+  measureBenchmark,
+  type AgentEfficiencyObservation,
+  type BenchmarkFixtureV1,
+  type BenchmarkObservation,
+  type BenchmarkResult,
+  type BenchmarkSetMetrics,
+  type BenchmarkSnapshot,
+  type BenchmarkSnapshotDiff,
+} from './metrics/benchmark.js'
+export {
+  AgentProposalV1Schema,
+  AffectedFileSchema,
+  CoverageSchema,
+  DiagnosticSeveritySchema,
+  DiscoverySnapshotV1Schema,
+  EntitySchema,
+  EvidenceSchema,
+  EvidenceSourceSchema,
+  FindingStatusSchema,
+  FixProposalStatusSchema,
+  FixChangeSchema,
+  FixProposalV1Schema,
+  KNOWLEDGE_CONTENT_HASH_ALGO,
+  KNOWLEDGE_SCHEMA_VERSION,
+  ProvenanceSchema,
+  ProjectIdentitySchema,
+  ProposalOriginSchema,
+  ReconciliationReportV1Schema,
+  RelationSchema,
+  WorkflowRunV1Schema,
+  WorkflowStepSchema,
+  WorkflowStateSchema,
+  WorkflowTransitionSchema,
+  type AgentProposalV1,
+  type DiagnosticSeverity,
+  type DiscoverySnapshotV1,
+  type Evidence,
+  type FindingStatus,
+  type FixProposalV1,
+  type FixChange,
+  type KnowledgeArtifactV1,
+  type KnowledgeDiagnostic,
+  type KnowledgeEntity,
+  type KnowledgeRelation,
+  type Provenance,
+  type ReconciliationReportV1,
+  type WorkflowRunV1,
+  type WorkflowState,
+} from './schemas/knowledge.js'
 export { IndexNotFoundError, indexFilePath, loadDocBridgeIndex, resolveRoot } from './query/load-index.js'
 export { runQuery, type QueryKind, type QueryRequest, type QueryResult } from './query/query.js'
 export { searchIndex, type SearchMatch } from './query/search.js'

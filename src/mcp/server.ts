@@ -1,5 +1,5 @@
-import { readFileSync, realpathSync } from 'node:fs'
-import { relative, resolve } from 'node:path'
+import { mkdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs'
+import { join, relative, resolve } from 'node:path'
 
 import { z, ZodError } from 'zod'
 
@@ -13,6 +13,14 @@ import { runQuery } from '../query/query.js'
 import { searchIndex } from '../query/search.js'
 import type { DocBridgeIndexV1 } from '../schemas/doc-bridge-index.js'
 import { PACKAGE_VERSION } from '../version.js'
+import { loadWorkflowManifest, loadWorkflowStepOutput } from '../workflow/engine.js'
+import { parseDiscoverySnapshot, parseReconciliationReport } from '../validate.js'
+import { applyFixProposal, approveFixProposal, createArtifactNormalizationProposal, createMarkdownLinkFixProposal } from '../fixes/proposals.js'
+import { createRegistryAgentAdapter, loadRegistryAgentRunner, persistRegistryAgentProposal } from '../agents/registry-adapter.js'
+import { sha256NormalizedV1 } from '../index-builder/content-hash.js'
+import { discoverRepository } from '../discovery/repository.js'
+import { FixProposalV1Schema, type DiscoverySnapshotV1, type ReconciliationReportV1, type FixProposalV1 } from '../schemas/knowledge.js'
+import { redactValue } from '../safety/repository.js'
 
 type JsonRpcRequest = {
   readonly jsonrpc?: '2.0'
@@ -99,6 +107,47 @@ export const MCP_TOOLS = [
     annotations: { readOnlyHint: true },
     inputSchema: { type: 'object', properties: {} },
   },
+  {
+    name: 'docbridge.snapshot',
+    title: 'Read the latest discovery snapshot',
+    description: 'Read the bounded canonical repository snapshot from the latest workflow run.',
+    annotations: { readOnlyHint: true },
+    inputSchema: { type: 'object', properties: { runId: { type: 'string' } } },
+  },
+  {
+    name: 'docbridge.report',
+    title: 'Read the latest reconciliation report',
+    description: 'Read the canonical reconciliation report from the latest workflow run.',
+    annotations: { readOnlyHint: true },
+    inputSchema: { type: 'object', properties: { runId: { type: 'string' } } },
+  },
+  {
+    name: 'docbridge.diagnostics',
+    title: 'Read reconciliation diagnostics',
+    description: 'Read bounded diagnostics from the latest canonical reconciliation report.',
+    annotations: { readOnlyHint: true },
+    inputSchema: { type: 'object', properties: { status: { type: 'string' }, severity: { type: 'string' } } },
+  },
+  {
+    name: 'docbridge.relations',
+    title: 'Read architecture relations',
+    description: 'Read bounded observed and declared relations from the latest canonical snapshot.',
+    annotations: { readOnlyHint: true },
+    inputSchema: { type: 'object', properties: { kind: { type: 'string' }, limit: { type: 'number' } } },
+  },
+  {
+    name: 'docbridge.run',
+    title: 'Read workflow state',
+    description: 'Read the latest resumable workflow state and artifact references.',
+    annotations: { readOnlyHint: true },
+    inputSchema: { type: 'object', properties: {} },
+  },
+  {
+    name: 'docbridge.proposals',
+    title: 'Read or approve proposals',
+    description: 'Create, inspect, approve and apply deterministic proposals through the shared human-gated workflow.',
+    inputSchema: { type: 'object', properties: { action: { type: 'string', enum: ['list', 'propose-links', 'propose-normalize', 'suggest', 'approve', 'apply'] }, proposalHash: { type: 'string' }, artifactPath: { type: 'string' }, approvedBy: { type: 'string' }, proposal: { type: 'object' } } },
+  },
 ] as const
 
 const asRecord = (value: unknown): Record<string, unknown> =>
@@ -125,6 +174,11 @@ const DocGetArgsSchema = z
     path: z.string().min(1).optional(),
   })
   .refine((args) => args.id || args.path, 'doc.get requires id or path')
+
+const WorkflowRunArgsSchema = z.object({ runId: z.string().min(1).optional() })
+const DiagnosticsArgsSchema = z.object({ status: z.string().min(1).optional(), severity: z.string().min(1).optional() })
+const RelationsArgsSchema = z.object({ kind: z.string().min(1).optional(), limit: z.number().int().positive().max(500).optional() })
+const ProposalsArgsSchema = z.object({ action: z.enum(['list', 'propose-links', 'propose-normalize', 'suggest', 'approve', 'apply']).optional(), proposalHash: z.string().min(1).optional(), artifactPath: z.string().min(1).optional(), approvedBy: z.string().min(1).optional(), proposal: z.unknown().optional() })
 
 const parseToolArgs = <T>(tool: string, schema: z.ZodType<T>, value: unknown): T => {
   try {
@@ -169,6 +223,45 @@ const resolveDocPath = (root: string, relPath: string): string => {
   return abs
 }
 
+const workflowStateDir = (ctx: McpContext): string => resolve(ctx.root, ctx.config.workflow?.stateDir ?? '.doc-bridge/workflow')
+
+const workflowRun = (ctx: McpContext) => loadWorkflowManifest(workflowStateDir(ctx))
+
+const ensureLatestRun = (ctx: McpContext, runId?: string) => {
+  const run = workflowRun(ctx)
+  if (runId && run.runId !== runId) throw new Error(`Unknown workflow run "${runId}"`)
+  if (run.state === 'stale' || run.state === 'failed') throw new Error(`Workflow run is ${run.state}; resume or create a valid run before reading artifacts.`)
+  return run
+}
+
+const workflowSnapshot = (ctx: McpContext, runId?: string): DiscoverySnapshotV1 => {
+  ensureLatestRun(ctx, runId)
+  return parseDiscoverySnapshot(loadWorkflowStepOutput(workflowStateDir(ctx), 'normalize'))
+}
+
+const workflowReport = (ctx: McpContext, runId?: string): ReconciliationReportV1 => {
+  ensureLatestRun(ctx, runId)
+  return parseReconciliationReport(loadWorkflowStepOutput(workflowStateDir(ctx), 'reconcile'))
+}
+
+const proposalPath = (ctx: McpContext): string => join(ctx.root, '.doc-bridge', 'proposal.json')
+const readSavedProposal = (ctx: McpContext, input: unknown): FixProposalV1 => {
+  if (input !== undefined) return FixProposalV1Schema.parse(input)
+  try { return FixProposalV1Schema.parse(JSON.parse(readFileSync(proposalPath(ctx), 'utf8')) as unknown) } catch { throw new Error(`No saved fix proposal at ${proposalPath(ctx)}.`) }
+}
+const saveProposal = (ctx: McpContext, proposal: FixProposalV1): void => { mkdirSync(join(ctx.root, '.doc-bridge'), { recursive: true }); writeFileSync(proposalPath(ctx), `${JSON.stringify(proposal, null, 2)}\n`, 'utf8') }
+
+const enabledMcpTools = (ctx: McpContext) => {
+  const configured = ctx.config.surfaces?.mcp?.tools
+  if (!configured || configured.length === MCP_TOOLS.length && MCP_TOOLS.every((tool) => configured.includes(tool.name as typeof configured[number]))) return MCP_TOOLS
+  return MCP_TOOLS.filter((tool) => configured.includes(tool.name as typeof configured[number]))
+}
+
+const assertMcpToolEnabled = (ctx: McpContext, name: string): void => {
+  if (!MCP_TOOLS.some((tool) => tool.name === name)) throw new Error(`Unknown tool "${name}"`)
+  if (!enabledMcpTools(ctx).some((tool) => tool.name === name)) throw new Error(`MCP tool "${name}" is disabled by configuration.`)
+}
+
 export const handleMcpRequest = (ctx: McpContext, request: JsonRpcRequest): unknown => {
   if (request.method === 'initialize') {
     return {
@@ -178,12 +271,14 @@ export const handleMcpRequest = (ctx: McpContext, request: JsonRpcRequest): unkn
     }
   }
 
-  if (request.method === 'tools/list') return { tools: MCP_TOOLS }
+  if (request.method === 'tools/list') return { tools: enabledMcpTools(ctx) }
 
   if (request.method === 'tools/call') {
     const params = asRecord(request.params)
     const name = params.name
     const args = asRecord(params.arguments)
+    if (typeof name !== 'string') throw new Error('MCP tools/call requires a tool name.')
+    assertMcpToolEnabled(ctx, name)
     const index = () => ctx.loadIndex?.() ?? loadDocBridgeIndex(ctx.root, ctx.config)
 
     if (name === 'handoff.resolve') {
@@ -232,6 +327,77 @@ export const handleMcpRequest = (ctx: McpContext, request: JsonRpcRequest): unkn
       })
     }
 
+    if (name === 'docbridge.snapshot') {
+      const parsed = parseToolArgs('docbridge.snapshot', WorkflowRunArgsSchema, args)
+      return textResult(redactValue(workflowSnapshot(ctx, parsed.runId)))
+    }
+
+    if (name === 'docbridge.report') {
+      const parsed = parseToolArgs('docbridge.report', WorkflowRunArgsSchema, args)
+      return textResult(redactValue(workflowReport(ctx, parsed.runId)))
+    }
+
+    if (name === 'docbridge.diagnostics') {
+      const parsed = parseToolArgs('docbridge.diagnostics', DiagnosticsArgsSchema, args)
+      const diagnostics = workflowReport(ctx).diagnostics.filter((diagnostic) =>
+        (!parsed.status || diagnostic.status === parsed.status) && (!parsed.severity || diagnostic.severity === parsed.severity),
+      )
+      return textResult(redactValue({ reportHash: workflowReport(ctx).contentHash, diagnostics }))
+    }
+
+    if (name === 'docbridge.relations') {
+      const parsed = parseToolArgs('docbridge.relations', RelationsArgsSchema, args)
+      const snapshot = workflowSnapshot(ctx)
+      return textResult({ snapshotHash: snapshot.contentHash, relations: snapshot.relations.filter((relation) => !parsed.kind || relation.kind === parsed.kind).slice(0, parsed.limit ?? 100) })
+    }
+
+    if (name === 'docbridge.run') {
+      parseToolArgs('docbridge.run', z.object({}), args)
+      return textResult(workflowRun(ctx))
+    }
+
+    if (name === 'docbridge.proposals') {
+      const parsed = parseToolArgs('docbridge.proposals', ProposalsArgsSchema, args)
+      const run = (() => { try { return workflowRun(ctx) } catch { return undefined } })()
+      if (!parsed.action || parsed.action === 'list') {
+        let proposal: FixProposalV1 | undefined
+        try { proposal = readSavedProposal(ctx, undefined) } catch { proposal = undefined }
+        return textResult(redactValue({ ...(run ? { runId: run.runId } : {}), proposals: proposal ? [proposal] : [] }))
+      }
+      if (parsed.action === 'suggest') {
+        return loadRegistryAgentRunner(ctx.root, ctx.config).then(async (runner) => {
+          const snapshot = workflowSnapshot(ctx)
+          const report = workflowReport(ctx)
+          const adapter = createRegistryAgentAdapter(ctx.root, ctx.config, runner)
+          const proposal = await adapter.run(snapshot, report)
+          const savedPath = persistRegistryAgentProposal(workflowStateDir(ctx), proposal)
+          return textResult(redactValue({ ...(run ? { runId: run.runId } : {}), proposal, proposalPath: savedPath }))
+        })
+      }
+      const discovered = discoverRepository({ root: ctx.root, config: ctx.config })
+      const options = { baseRevision: discovered.sourceRevision, configurationHash: sha256NormalizedV1(ctx.config), ...(ctx.config.project?.name ? { projectName: ctx.config.project.name } : {}) }
+      if (parsed.action === 'propose-links') {
+        const proposal = createMarkdownLinkFixProposal(ctx.root, options)
+        if (proposal) saveProposal(ctx, proposal)
+        return textResult(redactValue({ ...(run ? { runId: run.runId } : {}), proposal: proposal ?? null }))
+      }
+      if (parsed.action === 'propose-normalize') {
+        if (!parsed.artifactPath) throw new Error('docbridge.proposals propose-normalize requires artifactPath')
+        const proposal = createArtifactNormalizationProposal(ctx.root, parsed.artifactPath, options)
+        if (proposal) saveProposal(ctx, proposal)
+        return textResult(redactValue({ ...(run ? { runId: run.runId } : {}), proposal: proposal ?? null }))
+      }
+      if (parsed.action === 'approve') {
+        const proposal = approveFixProposal(readSavedProposal(ctx, parsed.proposal), parsed.approvedBy ?? 'human')
+        if (parsed.proposalHash && proposal.approval?.proposalHash !== parsed.proposalHash) throw new Error('proposalHash does not match the saved proposal')
+        saveProposal(ctx, proposal)
+        return textResult(redactValue({ ...(run ? { runId: run.runId } : {}), proposal }))
+      }
+      const proposal = applyFixProposal(ctx.root, readSavedProposal(ctx, parsed.proposal), { currentRevision: discovered.sourceRevision })
+      saveProposal(ctx, proposal)
+      return textResult(redactValue({ ...(run ? { runId: run.runId } : {}), proposal }))
+    }
+
     throw new Error(`Unknown tool "${String(name)}"`)
   }
 
@@ -246,10 +412,10 @@ const writeFrame = (payload: unknown, framing: StdioFraming): void => {
   process.stdout.write(framing === 'json-line' ? `${body}\n` : `Content-Length: ${Buffer.byteLength(body)}\r\n\r\n${body}`)
 }
 
-const respond = (ctx: McpContext, request: JsonRpcRequest, framing: StdioFraming): void => {
+export const respondMcpRequest = async (ctx: McpContext, request: JsonRpcRequest, framing: StdioFraming): Promise<void> => {
   if (request.id === undefined) {
     try {
-      handleMcpRequest(ctx, request)
+      await handleMcpRequest(ctx, request)
     } catch {
       // Notifications do not get responses.
     }
@@ -257,7 +423,7 @@ const respond = (ctx: McpContext, request: JsonRpcRequest, framing: StdioFraming
   }
 
   try {
-    const result = handleMcpRequest(ctx, request)
+    const result = await handleMcpRequest(ctx, request)
     writeFrame({ jsonrpc: '2.0', id: request.id, result: result ?? {} }, framing)
   } catch (error) {
     writeFrame({
@@ -270,6 +436,10 @@ const respond = (ctx: McpContext, request: JsonRpcRequest, framing: StdioFraming
 
 export const startMcpStdioServer = (ctx: McpContext): void => {
   let buffer = Buffer.alloc(0)
+  let responseChain = Promise.resolve()
+  const enqueueResponse = (request: JsonRpcRequest, framing: StdioFraming): void => {
+    responseChain = responseChain.then(() => respondMcpRequest(ctx, request, framing))
+  }
   process.stdin.on('data', (chunk: Buffer) => {
     buffer = Buffer.concat([buffer, chunk])
     while (true) {
@@ -288,7 +458,7 @@ export const startMcpStdioServer = (ctx: McpContext): void => {
         if (buffer.length < bodyEnd) return
         const raw = buffer.subarray(bodyStart, bodyEnd).toString('utf8')
         buffer = buffer.subarray(bodyEnd)
-        respond(ctx, JSON.parse(raw) as JsonRpcRequest, 'content-length')
+        enqueueResponse(JSON.parse(raw) as JsonRpcRequest, 'content-length')
         continue
       }
 
@@ -298,7 +468,7 @@ export const startMcpStdioServer = (ctx: McpContext): void => {
       buffer = buffer.subarray(lineEnd + 1)
       if (!raw) continue
       try {
-        respond(ctx, JSON.parse(raw) as JsonRpcRequest, 'json-line')
+        enqueueResponse(JSON.parse(raw) as JsonRpcRequest, 'json-line')
       } catch {
         writeFrame({ jsonrpc: '2.0', id: null, error: { code: -32700, message: 'Parse error' } }, 'json-line')
       }

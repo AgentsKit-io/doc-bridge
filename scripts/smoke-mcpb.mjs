@@ -57,14 +57,14 @@ while (rest.length > 0) {
 assert.equal(responses.length, requests.length)
 for (const response of responses) assert.equal(response.error, undefined)
 assert.equal(responses[0].result.serverInfo.name, 'ak-docs')
-assert.equal(responses[1].result.tools.length, 8)
+assert.equal(responses[1].result.tools.length, 14)
 for (const tool of responses[1].result.tools) {
   assert.equal(typeof tool.title, 'string')
-  assert.equal(tool.annotations.readOnlyHint, true)
+  if (tool.name !== 'docbridge.proposals') assert.equal(tool.annotations.readOnlyHint, true)
 }
 for (const response of responses.slice(2)) {
   assert.equal(response.result.content[0].type, 'text')
   assert.ok(response.result.content[0].text.length > 1)
 }
 
-process.stdout.write(`${JSON.stringify({ server, toolsExercised: 8, responses: responses.length }, null, 2)}\n`)
+process.stdout.write(`${JSON.stringify({ server, toolsExercised: 8, advertisedTools: 14, responses: responses.length }, null, 2)}\n`)
