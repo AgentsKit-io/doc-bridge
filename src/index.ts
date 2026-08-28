@@ -20,11 +20,13 @@ export {
   RulesConfigSchema,
   WorkflowConfigSchema,
   RepositorySafetyConfigSchema,
+  ReportConfigSchema,
   type RuleId,
   type RuleSeverity,
   type RulesConfig,
   type WorkflowConfig,
   type RepositorySafetyConfig,
+  type ReportConfig,
 } from './config/schema.js'
 
 export {
@@ -93,7 +95,14 @@ export {
   type DocumentationDiagnostic,
 } from './discovery/documentation.js'
 export { reconcileKnowledge } from './reconciliation/reconcile.js'
-export { renderOfflineReport, type OfflineReportInput, type OfflineReportOptions } from './report/html.js'
+export {
+  DEFAULT_LARGE_REPORT_THRESHOLD_BYTES,
+  renderOfflineReport,
+  renderOfflineReportArtifact,
+  type OfflineReportArtifact,
+  type OfflineReportInput,
+  type OfflineReportOptions,
+} from './report/html.js'
 export {
   applyFixProposal,
   approveFixProposal,
@@ -155,7 +164,7 @@ export {
   type DocumentationStandardRuleResult,
   type DocumentationStandardRuleStatus,
 } from './conformance/documentation-standard-v1.js'
-export { MCP_TOOLS, handleMcpRequest, startMcpStdioServer } from './mcp/server.js'
+export { MCP_TOOLS, handleMcpRequest, respondMcpRequest, startMcpStdioServer } from './mcp/server.js'
 export { installMcpConfig, mcpSnippet, type McpInstallResult, type McpInstallTarget } from './mcp/install.js'
 export { runDoctor, formatDoctorText, type DoctorReport, type DoctorIssue, type DoctorCoverage } from './doctor/run-doctor.js'
 export {
@@ -173,6 +182,33 @@ export {
   type GithubPrResult,
 } from './memory/github-pr.js'
 export { canonicalJsonV1, contentHashForArtifactV1, sha256NormalizedV1 } from './index-builder/content-hash.js'
+export {
+  ANALYZER_PLUGIN_CONTRACT_VERSION,
+  AnalyzerPluginManifestSchema,
+  AnalyzerPluginOutputSchema,
+  createAnalyzerRegistry,
+  type AnalyzerPlugin,
+  type AnalyzerPluginInput,
+  type AnalyzerPluginManifest,
+  type AnalyzerPluginOutput,
+  type AnalyzerRegistry,
+} from './plugins/contract.js'
+export {
+  BENCHMARK_SCHEMA_VERSION,
+  BenchmarkFixtureV1Schema,
+  benchmarkFixture,
+  compareBenchmarkSnapshots,
+  formatBenchmarkText,
+  measureAgentEfficiency,
+  measureBenchmark,
+  type AgentEfficiencyObservation,
+  type BenchmarkFixtureV1,
+  type BenchmarkObservation,
+  type BenchmarkResult,
+  type BenchmarkSetMetrics,
+  type BenchmarkSnapshot,
+  type BenchmarkSnapshotDiff,
+} from './metrics/benchmark.js'
 export {
   AgentProposalV1Schema,
   AffectedFileSchema,

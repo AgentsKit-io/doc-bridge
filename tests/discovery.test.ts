@@ -22,7 +22,7 @@ const fixture = (): string => {
   writeFileSync(join(root, 'packages', 'app', 'package.json'), JSON.stringify({ name: '@fixture/app', dependencies: { 'external-lib': '^1.0.0' } }))
   writeFileSync(join(root, 'packages', 'app', 'src', 'index.ts'), "import { helper } from './helper.js'\nimport { helper as helper2 } from './helper.js'\nexport { helper } from './helper.js'\nexport const app = helper + helper2\n")
   writeFileSync(join(root, 'packages', 'app', 'src', 'helper.ts'), "export const helper = 1\n")
-  writeFileSync(join(root, 'packages', 'app', 'src', 'dynamic.ts'), "export const value = import(variable)\n")
+  writeFileSync(join(root, 'packages', 'app', 'src', 'dynamic.ts'), "const helperSpecifier = './helper'\nexport const value = import(variable)\nexport const loaded = import('./helper')\nexport const loadedViaBinding = import(helperSpecifier)\n")
   writeFileSync(join(root, 'src-alias.ts'), "import { helper } from '@app/helper'\nexport const aliased = helper\n")
   writeFileSync(join(root, 'tsconfig.json'), JSON.stringify({ compilerOptions: { baseUrl: '.', paths: { '@app/*': ['packages/app/src/*'] } } }))
   writeFileSync(join(root, 'docs', 'architecture.md'), '# Architecture\n')
@@ -56,8 +56,10 @@ describe('repository discovery', () => {
     expect(first.contentHash).toBe(second.contentHash)
     expect(first.sourceRevisionKind).toBe('content')
     expect(first.coverage.some((entry) => entry.status === 'not-analyzed' && entry.scope.startsWith('dynamic-imports'))).toBe(true)
+    expect(first.coverage.find((entry) => entry.scope === 'dynamic-imports')).toMatchObject({ status: 'partial' })
+    expect(first.relations).toContainEqual(expect.objectContaining({ from: 'module:packages/app/src/dynamic.ts', to: 'module:packages/app/src/helper.ts', kind: 'imports', metadata: { detection: 'dynamic-literal' } }))
     expect(first.coverage.some((entry) => entry.scope === 'runtime-wiring')).toBe(true)
-    expect(first.entities.find((entity) => entity.id === 'module:packages/app/src/dynamic.ts')?.metadata).toEqual({ exports: ['value'], test: false })
+    expect(first.entities.find((entity) => entity.id === 'module:packages/app/src/dynamic.ts')?.metadata).toEqual({ exports: ['loaded', 'loadedViaBinding', 'value'], test: false })
 
     writeFileSync(join(root, 'packages', 'app', 'src', 'helper.ts'), 'export const helper = 2\n')
     expect(discoverRepository({ root }).sourceRevision).not.toBe(first.sourceRevision)
@@ -83,7 +85,8 @@ describe('repository discovery', () => {
     writeFileSync(join(root, 'packages', 'edge', 'src', 'dir', 'index.ts'), 'export const directory = 1\n')
     writeFileSync(join(root, 'packages', 'edge', 'src', 'exports.ts'), 'export class EdgeClass {}\nexport function edgeFunction() {}\nexport interface EdgeInterface {}\nexport type EdgeType = string\nexport enum EdgeEnum { A }\nexport namespace EdgeNamespace {}\nexport const first = 1, second = 2\nexport default first\n')
     writeFileSync(join(root, 'packages', 'edge', 'src', 'star.ts'), "export * from './dir'\n")
-    writeFileSync(join(root, 'packages', 'edge', 'src', 'imports.ts'), "import edge = require('@fixture/edge')\nconst literal = require('unlisted-runtime')\nconst dynamic = require(runtimeName)\nconst lazy = import(runtimeName)\nimport './dir'\nimport './missing'\nmodule.register()\nexport { edge, literal, dynamic, lazy }\n")
+    writeFileSync(join(root, 'packages', 'edge', 'src', 'imports.ts'), "import edge = require('@fixture/edge')\nimport listenTarget = require('listen-runtime')\nconst literal = require('unlisted-runtime')\nconst dynamic = require(runtimeName)\nconst lazy = import(runtimeName)\nimport './dir'\nimport './missing'\nmodule.register(edge)\nmodule.register(unbound)\nmodule.listen(listenTarget)\nexport { edge, literal, dynamic, lazy }\n")
+    writeFileSync(join(root, 'packages', 'edge', 'src', 'wiring.test.ts'), "import edge = require('@fixture/edge')\nmodule.register(edge)\n")
 
     const snapshot = discoverRepository({ root })
     const exports = snapshot.entities.find((entity) => entity.id === 'module:packages/edge/src/exports.ts')?.metadata
@@ -93,9 +96,18 @@ describe('repository discovery', () => {
     expect(snapshot.entities.map((entity) => entity.id)).toContain('external:unlisted-runtime')
     expect(snapshot.relations).toContainEqual(expect.objectContaining({ from: 'module:packages/edge/src/imports.ts', to: 'module:packages/edge/src/dir/index.ts', kind: 'imports' }))
     expect(snapshot.relations).toContainEqual(expect.objectContaining({ from: 'module:packages/edge/src/imports.ts', to: 'package:@fixture/edge', kind: 'imports' }))
+    expect(snapshot.relations).toContainEqual(expect.objectContaining({ from: 'module:packages/edge/src/imports.ts', to: 'package:@fixture/edge', kind: 'runtime-wiring', metadata: { detection: 'runtime-wiring-static' } }))
+    expect(snapshot.relations.some((relation) => relation.from === 'module:packages/edge/src/imports.ts' && relation.to === 'external:listen-runtime' && relation.kind === 'runtime-wiring')).toBe(false)
     expect(scopes).toContain('dynamic-imports:packages/edge/src/imports.ts')
     expect(scopes).toContain('runtime-wiring:packages/edge/src/imports.ts')
     expect(snapshot.coverage.find((entry) => entry.scope === 'package-manager')?.status).toBe('complete')
+
+    const configured = discoverRepository({ root, config: { analysis: { jsTs: { runtimeWiringMethods: ['register'], runtimeWiringAdapters: [{ id: 'node-runtime', methods: ['listen'] }] } } } as DocBridgeConfigV1 })
+    expect(configured.relations).toContainEqual(expect.objectContaining({ from: 'module:packages/edge/src/imports.ts', to: 'external:listen-runtime', kind: 'runtime-wiring', metadata: { detection: 'runtime-wiring-static' } }))
+
+    expect(snapshot.coverage.some((entry) => entry.scope === 'runtime-wiring:packages/edge/src/wiring.test.ts')).toBe(false)
+    const configuredTests = discoverRepository({ root, config: { analysis: { jsTs: { includeTestRuntimeWiring: true } } } as DocBridgeConfigV1 })
+    expect(configuredTests.relations).toContainEqual(expect.objectContaining({ from: 'module:packages/edge/src/wiring.test.ts', to: 'package:@fixture/edge', kind: 'runtime-wiring', metadata: { detection: 'runtime-wiring-static' } }))
   })
 
   it('uses configured package patterns and reports malformed manifests and compiler configuration', () => {
@@ -136,5 +148,47 @@ describe('repository discovery', () => {
     const partial = discoverRepository({ root: emptyRoot })
     expect(partial.coverage.find((entry) => entry.scope === 'package-manager')).toMatchObject({ status: 'partial' })
     expect(partial.coverage.find((entry) => entry.scope === 'static-imports-and-exports')).toMatchObject({ status: 'partial' })
+  })
+
+  it('marks dynamic loading and runtime wiring as not applicable when absent', () => {
+    const root = mkdtempSync(join(tmpdir(), 'doc-bridge-discovery-no-dynamic-'))
+    writeFileSync(join(root, 'package.json'), JSON.stringify({ name: 'static-root' }))
+    writeFileSync(join(root, 'index.ts'), 'export const value = 1\n')
+
+    const snapshot = discoverRepository({ root })
+
+    expect(snapshot.coverage.find((entry) => entry.scope === 'dynamic-imports')).toMatchObject({ status: 'not-applicable' })
+    expect(snapshot.coverage.find((entry) => entry.scope === 'runtime-wiring')).toMatchObject({ status: 'not-applicable' })
+    expect(snapshot.coverage.every((entry) => entry.analyzerVersion)).toBe(true)
+  })
+
+  it('honors configured repository file limits and ignores non-package workspace directories', () => {
+    const root = mkdtempSync(join(tmpdir(), 'doc-bridge-discovery-limits-'))
+    mkdirSync(join(root, 'packages', 'generated', 'dist'), { recursive: true })
+    writeFileSync(join(root, 'package.json'), JSON.stringify({ name: 'limited-root' }))
+    writeFileSync(join(root, 'pnpm-workspace.yaml'), 'packages:\n  - "packages/*"\n')
+    writeFileSync(join(root, 'packages', 'generated', 'dist', 'index.js'), 'export {}\n')
+    writeFileSync(join(root, 'src.ts'), 'export const value = 1\n')
+
+    const snapshot = discoverRepository({ root, config: { safety: { maxFiles: 1 } } as DocBridgeConfigV1 })
+
+    expect(snapshot.coverage.find((entry) => entry.scope === 'workspace-packages')).toMatchObject({ status: 'complete' })
+    expect(snapshot.coverage.some((entry) => entry.reason?.includes('10000'))).toBe(false)
+    expect(snapshot.coverage.some((entry) => entry.reason?.includes('1 file limit'))).toBe(true)
+  })
+
+  it('bounds long module and relation identities without losing determinism', () => {
+    const root = mkdtempSync(join(tmpdir(), 'doc-bridge-discovery-long-'))
+    const longDirectory = 'nested-' + 'x'.repeat(240)
+    mkdirSync(join(root, 'src', longDirectory), { recursive: true })
+    writeFileSync(join(root, 'package.json'), JSON.stringify({ name: 'long-root' }))
+    writeFileSync(join(root, 'src', longDirectory, 'index.ts'), 'import external from "external"\nexport default external\n')
+
+    const first = discoverRepository({ root })
+    const second = discoverRepository({ root })
+
+    expect(first.contentHash).toBe(second.contentHash)
+    expect(first.entities.every((entity) => entity.id.length <= 256)).toBe(true)
+    expect(first.relations.every((relation) => relation.id.length <= 256)).toBe(true)
   })
 })

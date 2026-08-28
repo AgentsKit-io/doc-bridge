@@ -1,11 +1,12 @@
 {
   "name": "@agentskit/doc-bridge",
-  "version": "1.4.3",
+  "version": "1.7.44",
   "mcpName": "io.github.AgentsKit-io/doc-bridge",
   "description": "Human↔agent documentation bridge — deterministic handoffs, doc-site links, memory→docs, optional AgentsKit RAG/chat.",
   "type": "module",
   "bin": {
-    "ak-docs": "bin/ak-docs.js"
+    "ak-docs": "bin/ak-docs.js",
+    "ak-verify": "bin/ak-verify.js"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -24,6 +25,8 @@
     "bin",
     "action.yml",
     "scripts/prepare.mjs",
+    "scripts/verification-harness.mjs",
+    "scripts/report-visual-check.mjs",
     "scripts/check-ecosystem-upstream.mjs",
     "ecosystem.json",
     "ecosystem-claims.json",
@@ -78,6 +81,8 @@
     "docs:build": "pnpm build && node bin/ak-docs.js index && pnpm docs:artifacts && cd apps/docs && next build",
     "docs:typecheck": "cd apps/docs && fumadocs-mdx && tsc --noEmit",
     "docs:e2e": "playwright test",
+    "report:visual": "node scripts/report-visual-check.mjs",
+    "test:verification-harness": "node --test scripts/verification-harness.test.mjs",
     "docs:lighthouse": "lhci autorun",
     "test:readme-standard": "node --test scripts/readme-standard.test.mjs",
     "test:marketplace": "node --test scripts/marketplace-contract.test.mjs",

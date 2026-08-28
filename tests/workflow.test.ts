@@ -54,4 +54,40 @@ describe('persistent workflow engine', () => {
     writeFileSync(join(stateDir, '.lock', 'owner.json'), JSON.stringify({ pid: process.pid }))
     expect(() => runWorkflow({ root, stateDir: '.state', sourceRevision: 'revision-1', configurationHash: hash('a'), stage: 'collect', handlers: handlers() })).toThrow('already running')
   })
+
+  it('resumes a failed stage without rerunning valid prior artifacts', () => {
+    const root = mkdtempSync(join(tmpdir(), 'doc-bridge-workflow-resume-'))
+    expect(() => runWorkflow({ root, sourceRevision: 'revision-1', configurationHash: hash('a'), handlers: handlers(true) })).toThrow('report failed')
+    const failed = loadWorkflowManifest(join(root, '.doc-bridge/workflow'))
+    expect(failed.state).toBe('failed')
+    const resumed = runWorkflow({ root, sourceRevision: 'revision-1', configurationHash: hash('a'), handlers: handlers() })
+    expect(resumed.run.state).toBe('delivered')
+    expect(resumed.reusedStages).toEqual(['collect', 'normalize', 'reconcile', 'evaluate'])
+  })
+
+  it('rejects a corrupted artifact and records the failure', () => {
+    const root = mkdtempSync(join(tmpdir(), 'doc-bridge-workflow-corrupt-'))
+    const first = runWorkflow({ root, sourceRevision: 'revision-1', configurationHash: hash('a'), stage: 'collect', handlers: handlers() })
+    const step = first.run.steps.find((item) => item.name === 'collect')!
+    writeFileSync(join(first.stateDir, step.artifactRefs![0]!), '{"type":"workflow-step-artifact","stage":"collect","inputHash":"bad","outputHash":"bad","value":{}}\n')
+    expect(() => runWorkflow({ root, sourceRevision: 'revision-1', configurationHash: hash('a'), stage: 'normalize', handlers: handlers() })).toThrow(/Invalid workflow artifact|hash mismatch/)
+    expect(loadWorkflowManifest(first.stateDir).state).toBe('failed')
+  })
+
+  it('records cancellation and allows an explicit resume', () => {
+    const root = mkdtempSync(join(tmpdir(), 'doc-bridge-workflow-cancel-'))
+    const cancelled = runWorkflow({ root, sourceRevision: 'revision-1', configurationHash: hash('a'), stage: 'collect', shouldCancel: () => true, handlers: handlers() })
+    expect(cancelled.run.state).toBe('cancelled')
+    const resumed = runWorkflow({ root, sourceRevision: 'revision-1', configurationHash: hash('a'), stage: 'collect', handlers: handlers() })
+    expect(resumed.run.state).toBe('discovering')
+    expect(resumed.run.steps.find((step) => step.name === 'collect')?.status).toBe('completed')
+  })
+
+  it('invalidates reuse when analyzer versions change', () => {
+    const root = mkdtempSync(join(tmpdir(), 'doc-bridge-workflow-version-'))
+    const first = runWorkflow({ root, sourceRevision: 'revision-1', configurationHash: hash('a'), analyzerVersions: { 'js-ts': '1.0.0' }, stage: 'collect', handlers: handlers() })
+    const second = runWorkflow({ root, sourceRevision: 'revision-1', configurationHash: hash('a'), analyzerVersions: { 'js-ts': '2.0.0' }, stage: 'collect', handlers: handlers() })
+    expect(second.reusedStages).toEqual([])
+    expect(second.run.artifactRefs).toContain(`supersedes:${first.run.runId}`)
+  })
 })

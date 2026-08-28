@@ -26,7 +26,7 @@ importers:
         version: 0.13.3
       '@agentskit/memory':
         specifier: '>=0.9.0 <1'
-        version: 0.10.3
+        version: 0.11.0
       '@agentskit/rag':
         specifier: '>=0.3.0 <1'
         version: 0.4.2
@@ -196,9 +196,6 @@ packages:
     resolution: {integrity: sha512-M3/yBrEM2Pen1LVa+0xZQds0bDaSaY5jK90jpwg6fGg+dDcU+ZyxgqcW2TufddQJxVrOFzJr9xlRVBELmdJB3g==}
     peerDependencies:
       react: '>=18.0.0'
-
-  '@agentskit/memory@0.10.3':
-    resolution: {integrity: sha512-u1Czj+5Ex7UeddgOUIJ4YKvPUE8jnZgAsQVG3AwmpTtsOebtKzIZ2elNVrCWRg0M4w7ynJI4Z87uvs6nIhy8CQ==}
 
   '@agentskit/memory@0.11.0':
     resolution: {integrity: sha512-sTAVVmaHIKLUYH3nFfbjmWwm3zfQ1Ljy1ct4mVhOlrvqfequ+sekrA+dzStX4PrQEtGob3MEy3qZlwwA+oxsqw==}
@@ -4854,10 +4851,6 @@ snapshots:
       - bufferutil
       - react-devtools-core
       - utf-8-validate
-
-  '@agentskit/memory@0.10.3':
-    dependencies:
-      '@agentskit/core': 1.10.0
 
   '@agentskit/memory@0.11.0':
     dependencies:

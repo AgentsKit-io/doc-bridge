@@ -251,6 +251,17 @@ const readSavedProposal = (ctx: McpContext, input: unknown): FixProposalV1 => {
 }
 const saveProposal = (ctx: McpContext, proposal: FixProposalV1): void => { mkdirSync(join(ctx.root, '.doc-bridge'), { recursive: true }); writeFileSync(proposalPath(ctx), `${JSON.stringify(proposal, null, 2)}\n`, 'utf8') }
 
+const enabledMcpTools = (ctx: McpContext) => {
+  const configured = ctx.config.surfaces?.mcp?.tools
+  if (!configured || configured.length === MCP_TOOLS.length && MCP_TOOLS.every((tool) => configured.includes(tool.name as typeof configured[number]))) return MCP_TOOLS
+  return MCP_TOOLS.filter((tool) => configured.includes(tool.name as typeof configured[number]))
+}
+
+const assertMcpToolEnabled = (ctx: McpContext, name: string): void => {
+  if (!MCP_TOOLS.some((tool) => tool.name === name)) throw new Error(`Unknown tool "${name}"`)
+  if (!enabledMcpTools(ctx).some((tool) => tool.name === name)) throw new Error(`MCP tool "${name}" is disabled by configuration.`)
+}
+
 export const handleMcpRequest = (ctx: McpContext, request: JsonRpcRequest): unknown => {
   if (request.method === 'initialize') {
     return {
@@ -260,12 +271,14 @@ export const handleMcpRequest = (ctx: McpContext, request: JsonRpcRequest): unkn
     }
   }
 
-  if (request.method === 'tools/list') return { tools: MCP_TOOLS }
+  if (request.method === 'tools/list') return { tools: enabledMcpTools(ctx) }
 
   if (request.method === 'tools/call') {
     const params = asRecord(request.params)
     const name = params.name
     const args = asRecord(params.arguments)
+    if (typeof name !== 'string') throw new Error('MCP tools/call requires a tool name.')
+    assertMcpToolEnabled(ctx, name)
     const index = () => ctx.loadIndex?.() ?? loadDocBridgeIndex(ctx.root, ctx.config)
 
     if (name === 'handoff.resolve') {
@@ -352,9 +365,9 @@ export const handleMcpRequest = (ctx: McpContext, request: JsonRpcRequest): unkn
         return textResult(redactValue({ ...(run ? { runId: run.runId } : {}), proposals: proposal ? [proposal] : [] }))
       }
       if (parsed.action === 'suggest') {
-        const snapshot = workflowSnapshot(ctx)
-        const report = workflowReport(ctx)
         return loadRegistryAgentRunner(ctx.root, ctx.config).then(async (runner) => {
+          const snapshot = workflowSnapshot(ctx)
+          const report = workflowReport(ctx)
           const adapter = createRegistryAgentAdapter(ctx.root, ctx.config, runner)
           const proposal = await adapter.run(snapshot, report)
           const savedPath = persistRegistryAgentProposal(workflowStateDir(ctx), proposal)
@@ -399,10 +412,10 @@ const writeFrame = (payload: unknown, framing: StdioFraming): void => {
   process.stdout.write(framing === 'json-line' ? `${body}\n` : `Content-Length: ${Buffer.byteLength(body)}\r\n\r\n${body}`)
 }
 
-const respond = (ctx: McpContext, request: JsonRpcRequest, framing: StdioFraming): void => {
+export const respondMcpRequest = async (ctx: McpContext, request: JsonRpcRequest, framing: StdioFraming): Promise<void> => {
   if (request.id === undefined) {
     try {
-      handleMcpRequest(ctx, request)
+      await handleMcpRequest(ctx, request)
     } catch {
       // Notifications do not get responses.
     }
@@ -410,7 +423,7 @@ const respond = (ctx: McpContext, request: JsonRpcRequest, framing: StdioFraming
   }
 
   try {
-    const result = handleMcpRequest(ctx, request)
+    const result = await handleMcpRequest(ctx, request)
     writeFrame({ jsonrpc: '2.0', id: request.id, result: result ?? {} }, framing)
   } catch (error) {
     writeFrame({
@@ -423,6 +436,10 @@ const respond = (ctx: McpContext, request: JsonRpcRequest, framing: StdioFraming
 
 export const startMcpStdioServer = (ctx: McpContext): void => {
   let buffer = Buffer.alloc(0)
+  let responseChain = Promise.resolve()
+  const enqueueResponse = (request: JsonRpcRequest, framing: StdioFraming): void => {
+    responseChain = responseChain.then(() => respondMcpRequest(ctx, request, framing))
+  }
   process.stdin.on('data', (chunk: Buffer) => {
     buffer = Buffer.concat([buffer, chunk])
     while (true) {
@@ -441,7 +458,7 @@ export const startMcpStdioServer = (ctx: McpContext): void => {
         if (buffer.length < bodyEnd) return
         const raw = buffer.subarray(bodyStart, bodyEnd).toString('utf8')
         buffer = buffer.subarray(bodyEnd)
-        respond(ctx, JSON.parse(raw) as JsonRpcRequest, 'content-length')
+        enqueueResponse(JSON.parse(raw) as JsonRpcRequest, 'content-length')
         continue
       }
 
@@ -451,7 +468,7 @@ export const startMcpStdioServer = (ctx: McpContext): void => {
       buffer = buffer.subarray(lineEnd + 1)
       if (!raw) continue
       try {
-        respond(ctx, JSON.parse(raw) as JsonRpcRequest, 'json-line')
+        enqueueResponse(JSON.parse(raw) as JsonRpcRequest, 'json-line')
       } catch {
         writeFrame({ jsonrpc: '2.0', id: null, error: { code: -32700, message: 'Parse error' } }, 'json-line')
       }

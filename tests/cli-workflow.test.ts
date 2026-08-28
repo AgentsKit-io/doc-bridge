@@ -66,6 +66,21 @@ describe('workflow CLI', () => {
       expect(html.code).toBe(0)
       expect(readFileSync(join(root, '.doc-bridge', 'fixture-report.html'), 'utf8')).toContain('Architecture map')
       expect(readFileSync(join(root, '.doc-bridge', 'workflow', 'manifest.json'), 'utf8')).toContain(checkPayload.runId)
+      expect(JSON.parse(readFileSync(join(root, '.doc-bridge', 'workflow', 'manifest.json'), 'utf8')).analyzerVersions['js-ts']).toBe('1.3.0')
+
+      const reportPath = join(root, '.doc-bridge', 'transition-report.html')
+      const large = capture(() => runCli(['map', '--html', '--output', reportPath, '--report-threshold', '1', '--json']))
+      expect(large.code).toBe(0)
+      expect((JSON.parse(large.out) as { htmlMode: string }).htmlMode).toBe('directory')
+      expect(existsSync(reportPath.replace(/\.html$/, '') + '/index.html')).toBe(true)
+
+      expect(capture(() => runCli(['map', '--html', '--output', reportPath, '--report-threshold', '0', '--json'])).code).toBe(2)
+      expect(existsSync(reportPath.replace(/\.html$/, '') + '/manifest.json')).toBe(true)
+
+      const small = capture(() => runCli(['map', '--html', '--output', reportPath, '--json']))
+      expect(small.code).toBe(0)
+      expect((JSON.parse(small.out) as { htmlMode: string }).htmlMode).toBe('single-file')
+      expect(existsSync(reportPath.replace(/\.html$/, ''))).toBe(false)
     } finally { process.chdir(previous) }
   })
 

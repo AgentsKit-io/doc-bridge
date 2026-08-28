@@ -22,10 +22,13 @@ export type WorkflowOptions = {
   readonly sourceRevision: string
   readonly configurationHash: string
   readonly toolVersion?: string
+  readonly pipelineVersion?: string
+  readonly analyzerVersions?: Readonly<Record<string, string>>
   readonly runId?: string
   readonly stage?: WorkflowStage | 'all'
   readonly inputs?: Partial<Record<WorkflowStage, unknown>>
   readonly handlers: Partial<Record<WorkflowStage, WorkflowStageHandler>>
+  readonly shouldCancel?: () => boolean
 }
 
 export type WorkflowExecutionResult = {
@@ -67,6 +70,22 @@ const appendTransition = (stateDir: string, transition: WorkflowRunV1['transitio
 }
 
 const transition = (run: WorkflowRunV1, to: WorkflowState, reason?: string): WorkflowRunV1 => {
+  const allowed: Readonly<Record<WorkflowState, readonly WorkflowState[]>> = {
+    created: ['created', 'discovering', 'failed', 'cancelled'],
+    discovering: ['discovering', 'analyzed', 'failed', 'cancelled', 'stale'],
+    analyzed: ['analyzed', 'compared', 'failed', 'cancelled', 'stale'],
+    compared: ['compared', 'proposed', 'failed', 'cancelled', 'stale'],
+    'awaiting-agent': ['awaiting-agent', 'proposed', 'failed', 'cancelled', 'stale'],
+    proposed: ['proposed', 'validating', 'delivered', 'failed', 'cancelled', 'stale'],
+    'awaiting-approval': ['awaiting-approval', 'validating', 'failed', 'cancelled', 'stale'],
+    validating: ['validating', 'delivered', 'failed', 'cancelled', 'stale'],
+    delivered: ['delivered', 'stale', 'failed', 'cancelled'],
+    failed: ['failed', 'discovering', 'analyzed', 'compared', 'proposed', 'validating', 'delivered', 'cancelled'],
+    cancelled: ['cancelled', 'discovering', 'analyzed', 'compared', 'proposed', 'validating', 'delivered'],
+    stale: [],
+    superseded: [],
+  }
+  if (!allowed[run.state].includes(to)) throw new Error(`Illegal workflow transition ${run.state} -> ${to}.`)
   const item = {
     from: run.state,
     to,
@@ -79,18 +98,30 @@ const transition = (run: WorkflowRunV1, to: WorkflowState, reason?: string): Wor
 const runId = (): string => `${Date.now()}-${process.pid}`
 
 const stageInputHash = (options: WorkflowOptions, stage: WorkflowStage, input: unknown): string =>
-  sha256NormalizedV1({ stage, input, sourceRevision: options.sourceRevision, configurationHash: options.configurationHash, toolVersion: options.toolVersion ?? '1.0.0' })
+  sha256NormalizedV1({ stage, input, sourceRevision: options.sourceRevision, configurationHash: options.configurationHash, pipelineVersion: options.pipelineVersion ?? '1.0.0', analyzerVersions: options.analyzerVersions ?? {}, toolVersion: options.toolVersion ?? '1.0.0' })
 
 const stageArtifactPath = (stateDir: string, stage: WorkflowStage, inputHash: string): string => join(stateDir, 'artifacts', `${stage}-${inputHash}.json`)
 
 const readArtifact = (path: string): PersistedArtifact => JSON.parse(readFileSync(path, 'utf8')) as PersistedArtifact
 
-const stepArtifactPath = (stateDir: string, step: WorkflowStep): string => resolve(stateDir, step.artifactRefs?.[0] ?? '')
+const readVerifiedArtifact = (path: string, stage: WorkflowStage, step: WorkflowStep): PersistedArtifact => {
+  const artifact = readArtifact(path)
+  if (artifact.type !== 'workflow-step-artifact' || artifact.stage !== stage || artifact.inputHash !== step.inputHash) throw new Error(`Invalid workflow artifact for stage "${stage}".`)
+  if (sha256NormalizedV1(artifact.value) !== artifact.outputHash || artifact.outputHash !== step.outputHash) throw new Error(`Workflow artifact hash mismatch for stage "${stage}".`)
+  return artifact
+}
+
+const stepArtifactPath = (stateDir: string, step: WorkflowStep): string => {
+  const path = resolve(stateDir, step.artifactRefs?.[0] ?? '')
+  const pathRelativeToState = relative(stateDir, path)
+  if (pathRelativeToState.startsWith('..') || pathRelativeToState.startsWith('/')) throw new Error(`Workflow artifact escapes state directory for stage "${step.name}".`)
+  return path
+}
 
 const stepOutput = (stateDir: string, run: WorkflowRunV1, stage: WorkflowStage): unknown => {
   const step = run.steps.find((item) => item.name === stage)
   if (!step || step.status !== 'completed' || !step.artifactRefs?.[0]) return null
-  return readArtifact(stepArtifactPath(stateDir, step)).value
+  return readVerifiedArtifact(stepArtifactPath(stateDir, step), stage, step).value
 }
 
 const acquireLock = (stateDir: string): (() => void) => {
@@ -120,7 +151,7 @@ const loadManifest = (stateDir: string): WorkflowRunV1 | undefined => {
 }
 
 const baseRun = (options: WorkflowOptions, stateDir: string, supersedes?: string): WorkflowRunV1 => {
-  const inputHash = sha256NormalizedV1({ sourceRevision: options.sourceRevision, configurationHash: options.configurationHash, toolVersion: options.toolVersion ?? '1.0.0' })
+  const inputHash = sha256NormalizedV1({ sourceRevision: options.sourceRevision, configurationHash: options.configurationHash, pipelineVersion: options.pipelineVersion ?? '1.0.0', analyzerVersions: options.analyzerVersions ?? {}, toolVersion: options.toolVersion ?? '1.0.0' })
   return WorkflowRunV1Schema.parse({
     type: 'workflow-run',
     schemaVersion: 1,
@@ -130,8 +161,8 @@ const baseRun = (options: WorkflowOptions, stateDir: string, supersedes?: string
     sourceRevision: options.sourceRevision,
     sourceRevisionKind: 'content',
     configurationHash: options.configurationHash,
-    pipelineVersion: '1.0.0',
-    analyzerVersions: { workflow: options.toolVersion ?? '1.0.0' },
+    pipelineVersion: options.pipelineVersion ?? '1.0.0',
+    analyzerVersions: { ...(options.analyzerVersions ?? {}), workflow: options.toolVersion ?? '1.0.0' },
     runId: options.runId ?? runId(),
     state: 'created',
     steps: WORKFLOW_STAGES.map((name) => ({ name, status: 'pending', inputHash })) as WorkflowStep[],
@@ -145,7 +176,8 @@ const withHash = (run: WorkflowRunV1): WorkflowRunV1 => WorkflowRunV1Schema.pars
 const sameInputs = (run: WorkflowRunV1, options: WorkflowOptions): boolean =>
   run.sourceRevision === options.sourceRevision &&
   run.configurationHash === options.configurationHash &&
-  run.analyzerVersions.workflow === (options.toolVersion ?? '1.0.0')
+  run.pipelineVersion === (options.pipelineVersion ?? '1.0.0') &&
+  sha256NormalizedV1(run.analyzerVersions) === sha256NormalizedV1({ ...(options.analyzerVersions ?? {}), workflow: options.toolVersion ?? '1.0.0' })
 
 const selectedStages = (stage: WorkflowOptions['stage']): readonly WorkflowStage[] =>
   stage && stage !== 'all' ? [stage] : WORKFLOW_STAGES
@@ -174,7 +206,17 @@ export const runWorkflow = (options: WorkflowOptions): WorkflowExecutionResult =
     if (!run) throw new Error('Workflow manifest was not initialized.')
     const firstSelectedStage = selectedStages(options.stage)[0]
     const previousStageIndex = firstSelectedStage ? WORKFLOW_STAGES.indexOf(firstSelectedStage) - 1 : -1
-    let previousOutput: unknown = previousStageIndex >= 0 ? stepOutput(stateDir, run, WORKFLOW_STAGES[previousStageIndex]!) : null
+    let previousOutput: unknown = null
+    if (previousStageIndex >= 0) {
+      try {
+        previousOutput = stepOutput(stateDir, run, WORKFLOW_STAGES[previousStageIndex]!)
+      } catch (error) {
+        run = withHash(transition(run, 'failed', error instanceof Error ? error.message : String(error)))
+        appendTransition(stateDir, run.transitions[run.transitions.length - 1]!)
+        writeManifest(stateDir, run)
+        throw error
+      }
+    }
     const reusedStages: WorkflowStage[] = []
     for (const stage of selectedStages(options.stage)) {
       const input = options.inputs?.[stage] ?? previousOutput
@@ -182,9 +224,23 @@ export const runWorkflow = (options: WorkflowOptions): WorkflowExecutionResult =
       const existing = run.steps.find((step) => step.name === stage)
       const artifactPath = existing?.artifactRefs?.[0] ? resolve(stateDir, existing.artifactRefs[0]) : stageArtifactPath(stateDir, stage, inputHash)
       if (existing?.status === 'completed' && existing.inputHash === inputHash && existing.outputHash && existsSync(artifactPath)) {
-        previousOutput = readArtifact(artifactPath).value
+        try {
+          previousOutput = readVerifiedArtifact(artifactPath, stage, existing).value
+        } catch (error) {
+          run = withHash(transition(run, 'failed', error instanceof Error ? error.message : String(error)))
+          appendTransition(stateDir, run.transitions[run.transitions.length - 1]!)
+          writeManifest(stateDir, run)
+          throw error
+        }
         reusedStages.push(stage)
         continue
+      }
+
+      if (options.shouldCancel?.()) {
+        run = withHash(transition(run, 'cancelled', `Workflow cancellation requested before stage "${stage}".`))
+        appendTransition(stateDir, run.transitions[run.transitions.length - 1]!)
+        writeManifest(stateDir, run)
+        return { run, stateDir, reusedStages }
       }
 
       const handler = options.handlers[stage]

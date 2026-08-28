@@ -18,6 +18,12 @@ const expectedTools = [
   'memory.classify',
   'memory.promoteDraft',
   'registry.topology',
+  'docbridge.snapshot',
+  'docbridge.report',
+  'docbridge.diagnostics',
+  'docbridge.relations',
+  'docbridge.run',
+  'docbridge.proposals',
 ]
 
 test('MCPB manifest pins the local read-only Doc Bridge entrypoint', () => {

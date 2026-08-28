@@ -51,11 +51,12 @@ export const EvidenceSchema = z
   })
 export type Evidence = z.infer<typeof EvidenceSchema>
 
-export const CoverageStatusSchema = z.enum(['complete', 'partial', 'not-analyzed'])
+export const CoverageStatusSchema = z.enum(['complete', 'partial', 'not-analyzed', 'not-applicable'])
 
 export const CoverageSchema = z
   .object({
     analyzer: boundedString(128),
+    analyzerVersion: boundedString(64).optional(),
     scope: boundedString(512),
     status: CoverageStatusSchema,
     reason: z.string().max(1_024).optional(),
@@ -165,6 +166,21 @@ export const ReconciliationReportV1Schema = z
         entityCount: z.number().int().nonnegative(),
         relationCount: z.number().int().nonnegative(),
         diagnosticCount: z.number().int().nonnegative(),
+        scope: z.enum(['file', 'module', 'package']).optional(),
+        requiredRelationKinds: z.array(boundedString(128)).max(128).optional(),
+        diagnosticsByCode: z.record(z.string().max(128), z.number().int().nonnegative()).optional(),
+        diagnosticsByStatus: z.record(z.string().max(128), z.number().int().nonnegative()).optional(),
+        documentation: z.object({
+          documentCount: z.number().int().nonnegative(),
+          documentedDocumentCount: z.number().int().nonnegative(),
+          packageCount: z.number().int().nonnegative(),
+          packageStatus: z.object({
+            fresh: z.number().int().nonnegative(),
+            stale: z.number().int().nonnegative(),
+            missing: z.number().int().nonnegative(),
+            unverified: z.number().int().nonnegative(),
+          }).strict(),
+        }).strict().optional(),
       })
       .strict(),
   })

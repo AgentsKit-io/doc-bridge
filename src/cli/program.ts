@@ -1,5 +1,5 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
-import { dirname, resolve } from 'node:path'
+import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs'
+import { dirname, relative, resolve } from 'node:path'
 import { createInterface } from 'node:readline/promises'
 
 import { ConfigNotFoundError, loadConfig, projectRootFromConfigPath } from '../config/load-config.js'
@@ -46,7 +46,8 @@ import type { DiscoverySnapshotV1, ReconciliationReportV1 } from '../schemas/kno
 import { sha256NormalizedV1 } from '../index-builder/content-hash.js'
 import { applyFixProposal, approveFixProposal, createArtifactNormalizationProposal, createMarkdownLinkFixProposal } from '../fixes/proposals.js'
 import { createRegistryAgentAdapter, loadRegistryAgentRunner, persistRegistryAgentProposal } from '../agents/registry-adapter.js'
-import { renderOfflineReport } from '../report/html.js'
+import { renderOfflineReportArtifact } from '../report/html.js'
+import { benchmarkFixture, formatBenchmarkText, measureBenchmark } from '../metrics/benchmark.js'
 import { PACKAGE_VERSION } from '../version.js'
 
 type Command =
@@ -60,6 +61,7 @@ type Command =
   | 'playbook'
   | 'registry'
   | 'discover'
+  | 'benchmark'
   | 'scan'
   | 'reconcile'
   | 'check'
@@ -89,7 +91,8 @@ Core (no API key):
   ak-docs doctor [--text] [--badge] [--write-badge]
   ak-docs index [--watch]
   ak-docs discover [--text|--json]
-  ak-docs scan | reconcile | check | map [--text|--json] [--html]
+  ak-docs benchmark <fixture.json> <observation.json> [--text|--json]
+  ak-docs scan | reconcile | check | map [--text|--json] [--html] [--report-threshold <bytes>]
   ak-docs fix propose links|normalize <artifact> [--output <file>]
   ak-docs fix approve|apply <proposal.json> [--by <name>]
   ak-docs suggest [--json|--text]   run the configured local Registry agent
@@ -163,6 +166,7 @@ const parseArgs = (argv: readonly string[]) => {
   else if (positional[0] === 'playbook') command = 'playbook'
   else if (positional[0] === 'registry') command = 'registry'
   else if (positional[0] === 'discover') command = 'discover'
+  else if (positional[0] === 'benchmark') command = 'benchmark'
   else if (positional[0] === 'scan') command = 'scan'
   else if (positional[0] === 'reconcile') command = 'reconcile'
   else if (positional[0] === 'check') command = 'check'
@@ -463,19 +467,24 @@ const workflowOptions = (
   sourceRevision: string,
   stage: 'collect' | 'normalize' | 'reconcile' | 'evaluate' | 'report',
   handlers: Parameters<typeof runWorkflow>[0]['handlers'],
+  versions?: Pick<Parameters<typeof runWorkflow>[0], 'pipelineVersion' | 'analyzerVersions'>,
 ): Parameters<typeof runWorkflow>[0] => ({
   root,
   ...(config.workflow?.stateDir ? { stateDir: config.workflow.stateDir } : {}),
   sourceRevision,
   configurationHash: sha256NormalizedV1(config),
+  toolVersion: PACKAGE_VERSION,
+  ...(versions?.pipelineVersion ? { pipelineVersion: versions.pipelineVersion } : {}),
+  ...(versions?.analyzerVersions ? { analyzerVersions: versions.analyzerVersions } : {}),
   stage,
   handlers,
 })
 
 const scanWorkflow = (root: string, config: DocBridgeConfigV1): WorkflowExecutionResult => {
   const discovered = discoverRepository({ root, config })
-  runWorkflow(workflowOptions(root, config, discovered.sourceRevision, 'collect', { collect: () => discovered }))
-  return runWorkflow(workflowOptions(root, config, discovered.sourceRevision, 'normalize', { normalize: ({ input }) => input }))
+  const versions = { pipelineVersion: discovered.pipelineVersion, analyzerVersions: discovered.analyzerVersions }
+  runWorkflow(workflowOptions(root, config, discovered.sourceRevision, 'collect', { collect: () => discovered }, versions))
+  return runWorkflow(workflowOptions(root, config, discovered.sourceRevision, 'normalize', { normalize: ({ input }) => input }, versions))
 }
 
 const documentationInputs = (root: string, snapshot: DiscoverySnapshotV1) => snapshot.entities
@@ -485,16 +494,23 @@ const documentationInputs = (root: string, snapshot: DiscoverySnapshotV1) => sna
 const reconcileWorkflow = (root: string, config: DocBridgeConfigV1): WorkflowExecutionResult => {
   const scanned = scanWorkflow(root, config)
   const snapshot = parseDiscoverySnapshot(loadWorkflowStepOutput(scanned.stateDir, 'normalize'))
-  const declared = applyDocumentationDeclarations(snapshot, documentationInputs(root, snapshot)).snapshot
-  const report = reconcileKnowledge(snapshot, declared)
-  return runWorkflow(workflowOptions(root, config, snapshot.sourceRevision, 'reconcile', { reconcile: () => report }))
+  const declared = applyDocumentationDeclarations(snapshot, documentationInputs(root, snapshot), {
+    agentRoot: config.corpus.agent.root,
+  }).snapshot
+  const report = reconcileKnowledge(snapshot, declared, {
+    ...(config.reconciliation?.scope === undefined ? {} : { scope: config.reconciliation.scope }),
+    ...(config.reconciliation?.requiredRelationKinds === undefined ? {} : { requiredRelationKinds: config.reconciliation.requiredRelationKinds }),
+    ...(config.reconciliation?.includeOrphanedDocuments === undefined ? {} : { includeOrphanedDocuments: config.reconciliation.includeOrphanedDocuments }),
+  })
+  return runWorkflow(workflowOptions(root, config, snapshot.sourceRevision, 'reconcile', { reconcile: () => report }, { pipelineVersion: snapshot.pipelineVersion, analyzerVersions: snapshot.analyzerVersions }))
 }
 
 const checkWorkflow = (root: string, config: DocBridgeConfigV1): WorkflowExecutionResult => {
   const reconciled = reconcileWorkflow(root, config)
   const report = parseReconciliationReport(loadWorkflowStepOutput(reconciled.stateDir, 'reconcile'))
-  const evaluated = runWorkflow(workflowOptions(root, config, report.sourceRevision, 'evaluate', { evaluate: () => evaluateRules(report, { ...(config.rules ? { config: config.rules } : {}) }) }))
-  return runWorkflow(workflowOptions(root, config, report.sourceRevision, 'report', { report: ({ input }) => input }))
+  const versions = { pipelineVersion: report.pipelineVersion, analyzerVersions: report.analyzerVersions }
+  runWorkflow(workflowOptions(root, config, report.sourceRevision, 'evaluate', { evaluate: () => evaluateRules(report, { ...(config.rules ? { config: config.rules } : {}) }) }, versions))
+  return runWorkflow(workflowOptions(root, config, report.sourceRevision, 'report', { report: ({ input }) => input }, versions))
 }
 
 const workflowOutput = (result: WorkflowExecutionResult): Record<string, unknown> => {
@@ -520,6 +536,56 @@ const workflowOutput = (result: WorkflowExecutionResult): Record<string, unknown
   }
 }
 
+const writeAtomicFile = (path: string, content: string): void => {
+  const temporaryPath = `${path}.tmp-${process.pid}`
+  writeFileSync(temporaryPath, content, 'utf8')
+  renameSync(temporaryPath, path)
+}
+
+const writeReportArtifact = (htmlPath: string, artifact: ReturnType<typeof renderOfflineReportArtifact>): string => {
+  mkdirSync(dirname(htmlPath), { recursive: true })
+  if (artifact.mode === 'single-file') {
+    writeAtomicFile(htmlPath, artifact.indexHtml)
+    const artifactDir = htmlPath.replace(/\.html?$/i, '')
+    if (existsSync(artifactDir)) rmSync(artifactDir, { recursive: true, force: true })
+    return htmlPath
+  }
+
+  const artifactDir = htmlPath.replace(/\.html?$/i, '')
+  const temporaryDir = `${artifactDir}.tmp-${process.pid}`
+  const backupDir = `${artifactDir}.previous-${process.pid}`
+  const launcherTemp = `${htmlPath}.tmp-${process.pid}`
+  rmSync(temporaryDir, { recursive: true, force: true })
+  rmSync(backupDir, { recursive: true, force: true })
+  mkdirSync(temporaryDir, { recursive: true })
+  for (const [file, content] of Object.entries(artifact.files)) {
+    const filePath = resolve(temporaryDir, file)
+    mkdirSync(dirname(filePath), { recursive: true })
+    writeFileSync(filePath, content, 'utf8')
+  }
+  writeFileSync(resolve(temporaryDir, 'manifest.json'), artifact.manifest, 'utf8')
+  const frameSource = `${relative(dirname(htmlPath), artifactDir)}/index.html`
+  const launcher = `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Doc Bridge report</title></head><body style="margin:0"><iframe title="Doc Bridge report" src="${frameSource}" style="border:0;width:100vw;height:100vh"></iframe></body></html>`
+  writeFileSync(launcherTemp, launcher, 'utf8')
+  try {
+    if (existsSync(artifactDir)) renameSync(artifactDir, backupDir)
+    renameSync(temporaryDir, artifactDir)
+    renameSync(launcherTemp, htmlPath)
+    if (existsSync(backupDir)) rmSync(backupDir, { recursive: true, force: true })
+  } catch (error) {
+    if (existsSync(backupDir)) {
+      const failedDir = `${artifactDir}.failed-${process.pid}`
+      if (existsSync(artifactDir)) renameSync(artifactDir, failedDir)
+      renameSync(backupDir, artifactDir)
+      if (existsSync(failedDir)) rmSync(failedDir, { recursive: true, force: true })
+    } else if (existsSync(artifactDir)) rmSync(artifactDir, { recursive: true, force: true })
+    if (existsSync(temporaryDir)) rmSync(temporaryDir, { recursive: true, force: true })
+    if (existsSync(launcherTemp)) rmSync(launcherTemp, { force: true })
+    throw error
+  }
+  return artifactDir
+}
+
 const runWorkflowCommand = (
   command: 'scan' | 'reconcile' | 'check' | 'map',
   flags: ReadonlySet<string>,
@@ -537,8 +603,12 @@ const runWorkflowCommand = (
       const outputPath = optionValues(argv, '--output')[0] ?? '.doc-bridge/report.html'
       const htmlPath = resolve(root, outputPath)
       mkdirSync(dirname(htmlPath), { recursive: true })
-      writeFileSync(htmlPath, renderOfflineReport({ snapshot, report }), 'utf8')
-      output.htmlPath = htmlPath
+      const thresholdValue = optionValues(argv, '--report-threshold')[0]
+      const thresholdBytes = thresholdValue === undefined ? undefined : Number(thresholdValue)
+      if (thresholdBytes !== undefined && (!Number.isSafeInteger(thresholdBytes) || thresholdBytes < 1)) throw new Error('--report-threshold must be a positive integer.')
+      const artifact = renderOfflineReportArtifact({ snapshot, report }, { ...(config.report?.privacy ? { privacy: config.report.privacy } : {}), ...(thresholdBytes === undefined ? {} : { thresholdBytes }) })
+      output.htmlPath = writeReportArtifact(htmlPath, artifact)
+      output.htmlMode = artifact.mode
     }
     if (wantsTextOutput(flags, config)) {
       writeLines([`Run: ${String(output.runId)}`, `State: ${String(output.state)}`, ...(output.snapshotHash ? [`Snapshot: ${String(output.snapshotHash)}`] : []), ...(output.reportHash ? [`Report: ${String(output.reportHash)}`] : []), `Artifacts: ${String((output.artifactRefs as unknown[]).length)}`])
@@ -884,6 +954,26 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
         writeJson({ ok: true, snapshot, ...(config ? {} : { proposedConfig: { schemaVersion: 1, corpus: { agent: { root: 'docs/for-agents' } } } }) })
       }
       return 0
+    } catch (error) {
+      process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`)
+      return 2
+    }
+  }
+
+  if (command === 'benchmark') {
+    const fixturePath = positional[1]
+    const observationPath = positional[2]
+    if (!fixturePath || !observationPath) {
+      process.stderr.write('Usage: ak-docs benchmark <fixture.json> <observation.json> [--text|--json]\n')
+      return 1
+    }
+    try {
+      const fixture = benchmarkFixture(JSON.parse(readFileSync(resolve(fixturePath), 'utf8')) as unknown)
+      const observation = JSON.parse(readFileSync(resolve(observationPath), 'utf8')) as Parameters<typeof measureBenchmark>[0]
+      const result = measureBenchmark(observation, fixture)
+      if (flags.has('--text')) writeLines([formatBenchmarkText(result)])
+      else writeJson(result)
+      return result.regressions.length ? 1 : 0
     } catch (error) {
       process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`)
       return 2

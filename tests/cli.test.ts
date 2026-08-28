@@ -89,6 +89,18 @@ describe('ak-docs CLI', () => {
     expect(code).toBe(0)
   })
 
+  it('runs the anonymization-safe benchmark command', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'ak-docs-benchmark-'))
+    const fixture = join(dir, 'fixture.json')
+    const observation = join(dir, 'observation.json')
+    writeFileSync(fixture, JSON.stringify({ schemaVersion: 1, supported: { entities: ['entity'], relations: [], findings: [] } }))
+    writeFileSync(observation, JSON.stringify({ entities: ['entity'], relations: [], findings: [], evidenced: ['entity'] }))
+    const result = captureStdout(() => runCli(['benchmark', fixture, observation]))
+    expect(result.code).toBe(0)
+    expect(JSON.parse(result.out)).toMatchObject({ schemaVersion: 1, evidenceRatio: 1, regressions: [] })
+    expect(result.out).not.toContain('entity')
+  })
+
   it('prints validation errors for bad config and handoffs', () => {
     const root = mkdtempSync(join(tmpdir(), 'ak-docs-invalid-'))
     try {

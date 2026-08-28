@@ -22,6 +22,8 @@ export type DocumentationDeclarationInput = {
 export type DocumentationDeclarationOptions = {
   readonly snapshot: Pick<DiscoverySnapshotV1, 'entities'>
   readonly documentId?: string
+  /** Agent corpus root used for conservative package/app path inference. */
+  readonly agentRoot?: string
 }
 
 export type DocumentationDeclarationResult = {
@@ -71,6 +73,15 @@ const scalar = (value: string): string => {
   return trimmed
 }
 
+const conventionalPackageReference = (path: string, agentRoot: string): string | undefined => {
+  const prefix = `${agentRoot.replace(/\/$/, '')}/`
+  if (!path.startsWith(prefix)) return undefined
+  const relative = path.slice(prefix.length)
+  const [scope, file] = relative.split('/')
+  if ((scope !== 'packages' && scope !== 'apps') || !file) return undefined
+  return file.replace(/\.mdx?$/, '')
+}
+
 const list = (value: string): string[] | undefined => {
   const trimmed = value.trim()
   if (!trimmed.startsWith('[') || !trimmed.endsWith(']')) return undefined
@@ -103,7 +114,15 @@ const resolveEntity = (
   lineStart: number,
   unresolved: Map<string, KnowledgeEntity>,
 ): KnowledgeEntity => {
-  const resolved = entities.find((entity) => entity.id === reference || entity.aliases?.includes(reference))
+  const direct = entities.find((entity) => entity.id === reference || entity.aliases?.includes(reference))
+  if (direct) return direct
+  const packageReference = reference.replace(/^package:/, '')
+  const packageCandidates = entities.filter((entity) => {
+    if (entity.kind !== 'package') return false
+    const pathName = entity.path?.split('/').pop()
+    return entity.name === reference || entity.path === reference || pathName === packageReference || entity.name.endsWith(`/${packageReference}`)
+  })
+  const resolved = packageCandidates.length === 1 ? packageCandidates[0] : undefined
   if (resolved) return resolved
   const id = `unresolved:${reference}`
   const existing = unresolved.get(id)
@@ -123,9 +142,14 @@ const relationKey = (from: string, to: string, kind: string): string => `${from}
 
 const parseBlock = (
   input: DocumentationDeclarationInput,
+  options: Pick<DocumentationDeclarationOptions, 'agentRoot'> = {},
 ): { readonly covers: readonly { value: string; line: number }[]; readonly relations: readonly RelationFields[]; readonly diagnostics: readonly DocumentationDiagnostic[]; readonly hasDocbridge: boolean } => {
+  const conventionalPath = conventionalPackageReference(input.path, options.agentRoot ?? 'docs/for-agents')
   const frontmatter = findFrontmatter(input.content)
   if (!frontmatter) {
+    if (conventionalPath && !input.content.replace(/^\uFEFF/, '').startsWith('---')) {
+      return { covers: [{ value: conventionalPath, line: 1 }], relations: [], diagnostics: [], hasDocbridge: true }
+    }
     if (input.content.replace(/^\uFEFF/, '').startsWith('---')) {
       return {
         covers: [],
@@ -138,8 +162,24 @@ const parseBlock = (
   }
 
   const { lines, end } = frontmatter
-  const docbridgeLine = lines.findIndex((line, index) => index > 0 && index < end && /^docbridge\s*:/.test(line))
-  if (docbridgeLine < 0) return { covers: [], relations: [], diagnostics: [], hasDocbridge: false }
+  let docbridgeLine = -1
+  let typeLine = -1
+  let packageLine = -1
+  let humanDocLine = -1
+  for (let index = 1; index < end; index += 1) {
+    const line = lines[index] ?? ''
+    if (docbridgeLine < 0 && /^docbridge\s*:/.test(line)) docbridgeLine = index
+    if (typeLine < 0 && /^type\s*:/.test(line)) typeLine = index
+    if (packageLine < 0 && /^package\s*:/.test(line)) packageLine = index
+    if (humanDocLine < 0 && /^humanDoc\s*:/.test(line)) humanDocLine = index
+  }
+  if (docbridgeLine < 0) {
+    const type = typeLine >= 0 ? scalar(lines[typeLine]?.slice('type:'.length) ?? '') : ''
+    const packageReference = packageLine >= 0 ? scalar(lines[packageLine]?.slice('package:'.length) ?? '') : conventionalPath ?? ''
+    if (type === 'package' && packageReference) return { covers: [{ value: packageReference, line: packageLine >= 0 ? packageLine + 1 : typeLine + 1 }], relations: [], diagnostics: [], hasDocbridge: true }
+    if (conventionalPath) return { covers: [{ value: packageReference, line: humanDocLine >= 0 ? humanDocLine + 1 : 1 }], relations: [], diagnostics: [], hasDocbridge: true }
+    return { covers: [], relations: [], diagnostics: [], hasDocbridge: false }
+  }
 
   const diagnostics: DocumentationDiagnostic[] = []
   const covers: { value: string; line: number }[] = []
@@ -231,7 +271,7 @@ export const parseDocumentationDeclarations = (
   input: DocumentationDeclarationInput,
   options: DocumentationDeclarationOptions,
 ): DocumentationDeclarationResult => {
-  const parsed = parseBlock(input)
+  const parsed = parseBlock(input, options)
   if (!parsed.hasDocbridge) return { hasDocbridge: false, entities: [], relations: [], diagnostics: [] }
   const diagnostics = [...parsed.diagnostics]
   const unresolved = new Map<string, KnowledgeEntity>()
@@ -300,13 +340,14 @@ export const parseDocumentationDeclarations = (
 export const applyDocumentationDeclarations = (
   snapshot: DiscoverySnapshotV1,
   documents: readonly DocumentationDeclarationInput[],
+  options: Pick<DocumentationDeclarationOptions, 'agentRoot'> = {},
 ): DocumentationAnalysisResult => {
   const entities = new Map(snapshot.entities.map((entity) => [entity.id, entity]))
   const relations = new Map(snapshot.relations.map((relation) => [relation.id, relation]))
   const diagnostics: DocumentationDiagnostic[] = []
 
   for (const document of documents) {
-    const result = parseDocumentationDeclarations(document, { snapshot })
+    const result = parseDocumentationDeclarations(document, { snapshot, ...options })
     diagnostics.push(...result.diagnostics)
     for (const entity of result.entities) entities.set(entity.id, entity)
     for (const relation of result.relations) relations.set(relation.id, relation)

@@ -3,7 +3,7 @@ import { isAbsolute, relative, resolve, sep } from 'node:path'
 
 import { minimatch } from 'minimatch'
 
-export const DEFAULT_SAFETY_EXCLUDES = ['**/.git/**', '**/node_modules/**', '**/dist/**', '**/build/**', '**/coverage/**', '**/.doc-bridge/**', '**/.env', '**/.env.*', '**/*secret*', '**/*credential*', '**/*.pem', '**/*.key'] as const
+export const DEFAULT_SAFETY_EXCLUDES = ['**/.git/**', '**/node_modules/**', '**/dist/**', '**/build/**', '**/coverage/**', '**/.doc-bridge/**', '**/.turbo/**', '**/.env', '**/.env.*', '**/*secret*', '**/*credential*', '**/*.pem', '**/*.key'] as const
 
 export type SafeWalkOptions = {
   readonly extensions?: readonly string[]

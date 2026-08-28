@@ -2,7 +2,7 @@
   "manifest_version": "0.3",
   "name": "doc-bridge",
   "display_name": "Doc Bridge",
-  "version": "1.4.3",
+  "version": "1.7.44",
   "description": "Deterministic repository handoffs for coding agents, running locally without an LLM or API key.",
   "long_description": "Doc Bridge turns a repository's own documentation and ownership metadata into deterministic handoffs: where an agent should start, which paths it may edit, which checks it must run, and when a human must take over. The local connector exposes the same read-only contract available through Doc Bridge CLI and CI.",
   "author": {
@@ -63,6 +63,30 @@
     {
       "name": "registry.topology",
       "description": "Return the static Doc Bridge curator and delegate topology."
+    },
+    {
+      "name": "docbridge.snapshot",
+      "description": "Read the latest discovery snapshot from the resumable workflow."
+    },
+    {
+      "name": "docbridge.report",
+      "description": "Read the latest reconciliation report from the resumable workflow."
+    },
+    {
+      "name": "docbridge.diagnostics",
+      "description": "Read reconciliation diagnostics from the latest workflow report."
+    },
+    {
+      "name": "docbridge.relations",
+      "description": "Read bounded architecture relations from the latest workflow snapshot."
+    },
+    {
+      "name": "docbridge.run",
+      "description": "Read the latest resumable Doc Bridge workflow state."
+    },
+    {
+      "name": "docbridge.proposals",
+      "description": "Create, inspect, approve, and apply human-gated Doc Bridge proposals."
     }
   ],
   "tools_generated": false,

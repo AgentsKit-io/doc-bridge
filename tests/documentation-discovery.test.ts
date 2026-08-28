@@ -61,6 +61,26 @@ describe('documentation declarations', () => {
 
   it('keeps documents without declarations and unknown references available for reconciliation', () => {
     const snapshot = project()
+    const packageFrontmatter = parseDocumentationDeclarations(
+      { path: 'docs/package.md', content: ['---', 'type: package', 'package: fixture', 'humanDoc: /docs/guide', '---', '# Package'].join('\n') },
+      { snapshot },
+    )
+    expect(packageFrontmatter.hasDocbridge).toBe(true)
+    expect(packageFrontmatter.diagnostics).toEqual([])
+    expect(packageFrontmatter.relations).toContainEqual(expect.objectContaining({ kind: 'covers', to: 'package:fixture' }))
+
+    const conventionalPackageDoc = parseDocumentationDeclarations(
+      { path: 'docs/for-agents/packages/fixture.md', content: ['---', 'humanDoc: /docs/guide', '---', '# Package'].join('\n') },
+      { snapshot },
+    )
+    expect(conventionalPackageDoc.relations).toContainEqual(expect.objectContaining({ kind: 'covers', to: 'package:fixture' }))
+
+    const conventionalAgentDoc = parseDocumentationDeclarations(
+      { path: 'docs/for-agents/packages/fixture.md', content: '# Package without a human bridge\n' },
+      { snapshot },
+    )
+    expect(conventionalAgentDoc.relations).toContainEqual(expect.objectContaining({ kind: 'covers', to: 'package:fixture' }))
+
     const plain = '# Plain document\n\nNo structured declaration.\n'
     const empty = parseDocumentationDeclarations(
       { path: 'docs/plain.md', content: plain },

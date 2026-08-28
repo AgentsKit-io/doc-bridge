@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "project": "doc-bridge",
+  "root": "..",
+  "profile": "strict",
+  "contract": {
+    "intent": "Validate the Doc Bridge package, real CLI/MCP artifact, documentation, and report UI for the current source revision.",
+    "outcomes": [
+      { "id": "artifact", "statement": "The package builds and its tests pass.", "checks": ["typecheck", "test-suite", "build"] },
+      { "id": "surfaces", "statement": "The real CLI, MCP artifact, and discovery flow work.", "checks": ["cli-version", "cli-discovery", "mcp-package"] },
+      { "id": "documentation", "statement": "Documentation checks and repository evidence are valid.", "checks": ["docs-typecheck", "diff-clean"] },
+      { "id": "report-ui", "statement": "The report is validated in a real browser and awaits human visual approval.", "checks": ["report-ui"] },
+      { "id": "harness", "statement": "The verification harness contract itself is tested.", "checks": ["harness-contract"] }
+    ]
+  },
+  "surfaces": {
+    "logic": true,
+    "endpoint": { "required": false, "reason": "This repository is being verified as a CLI/library artifact in this run." },
+    "database": { "required": false, "reason": "This repository has no database-backed behavior in this run." },
+    "cli": true,
+    "mcp": true,
+    "ui": true,
+    "docs": true
+  },
+  "checks": [
+    { "id": "typecheck", "category": "logic", "command": "pnpm typecheck", "timeoutMs": 180000 },
+    { "id": "harness-contract", "category": "logic", "command": "pnpm test:verification-harness", "timeoutMs": 120000 },
+    { "id": "test-suite", "category": "test", "command": "pnpm test", "timeoutMs": 240000 },
+    { "id": "build", "category": "build", "command": "pnpm build", "timeoutMs": 180000 },
+    { "id": "cli-version", "category": "cli", "execution": "real", "command": "node bin/ak-docs.js --version", "timeoutMs": 30000 },
+    { "id": "cli-discovery", "category": "cli", "execution": "real", "command": "node bin/ak-docs.js discover --json --config doc-bridge.config.json", "timeoutMs": 120000 },
+    { "id": "mcp-package", "category": "mcp", "execution": "real", "command": "pnpm mcpb:stage && pnpm mcpb:validate && pnpm mcpb:smoke", "timeoutMs": 180000 },
+    { "id": "docs-typecheck", "category": "docs", "command": "pnpm docs:typecheck", "timeoutMs": 180000 },
+    { "id": "diff-clean", "category": "custom", "command": "git diff --check", "timeoutMs": 30000 },
+    { "id": "report-ui", "category": "ui", "execution": "real", "capabilities": ["real-browser", "screenshot"], "command": "node scripts/report-visual-check.mjs .doc-bridge/report.html --output .doc-bridge/verification/ui", "timeoutMs": 180000 }
+  ],
+  "tracking": {
+    "required": true,
+    "authorization": "ask",
+    "target": "github:AgentsKit-io/doc-bridge#112"
+  },
+  "cleanup": { "roots": [".codex/verification/tmp"] }
+}

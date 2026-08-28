@@ -1,5 +1,296 @@
 # Changelog
 
+## 1.7.44
+
+- Precompute module-to-package ownership during package-scope reconciliation to reduce repeated entity scans on large repositories.
+
+## 1.7.43
+
+- Add deterministic reconciliation rollups by diagnostic code and status for agent and dashboard consumption.
+
+## 1.7.42
+
+- Correct package documentation health classification when aggregated relations are undocumented.
+- Add regression coverage so package-level reports cannot mark affected packages as fresh.
+
+## 1.7.41
+
+- Add configurable anonymized HTML report output that preserves topology and metrics without project-specific identity or evidence content.
+
+## 1.7.40
+
+- Clarify that `ak-verify` is portable while verification contracts remain project-local.
+- Require a project verification contract before implementation under the global agent policy.
+
+## 1.7.39
+
+- Avoid recompiling the conventional agent-package path matcher for every document during reconciliation.
+
+## 1.7.38
+
+- Count conventional agent documents under `packages/` and `apps/` as package coverage even when they do not declare a `humanDoc` bridge.
+- Preserve configurable agent roots and keep human-document linking as a separate concern.
+
+## 1.7.37
+
+- Keep package-frontmatter reconciliation linear in document size and avoid unnecessary package scans for direct entity references.
+
+## 1.7.36
+
+- Link package documentation that follows the existing `apps|packages` path convention when it declares a human documentation route.
+
+## 1.7.35
+
+- Reconcile existing package frontmatter (`type`, `package`, and `humanDoc`) as safe package coverage without requiring duplicate Doc Bridge declarations.
+
+## 1.7.34
+
+- Resolve constant-bound dynamic import and require specifiers while keeping computed and ambiguous bindings explicitly unresolved.
+
+## 1.7.33
+
+- Anchor dense architecture maps to the viewport so wide graph snapshots do not render as an empty centered strip.
+
+## 1.7.32
+
+- Balance dense graph nodes into a readable grid instead of compressing deep hierarchies into a narrow vertical strip.
+
+## 1.7.31
+
+- Preserve readable dense-map sizing across responsive breakpoint overrides.
+
+## 1.7.30
+
+- Keep dense architecture maps readable with prioritized edge rendering, explicit total-versus-visible counts, and horizontal map exploration.
+
+## 1.7.29
+
+- Add enterprise verification profiles with legal state transitions, content-addressed evidence, resumable workflow artifacts, and audited baseline replacement.
+- Add explicit JS/TS coverage boundaries, versioned analyzer plugins, benchmark metrics, and bounded AgentsKit Registry proposals.
+- Improve documentation/code reconciliation with document classification, package documentation status, and orphan-document findings.
+
+## 1.7.28
+
+- Keep the initial large-report payload limited to package topology while preserving compact evidence indexes for insights and risk lenses.
+- Preserve module counts and relation finding health in the overview without loading module/file detail chunks.
+
+## 1.7.27
+
+### Patch Changes
+
+- Exclude test and spec modules from runtime-wiring coverage by default, with an explicit opt-in for test architecture.
+
+## 1.7.26
+
+### Patch Changes
+
+- Report unresolved runtime wiring only when a call contains a potential target, avoiding inline-registration and no-argument false positives.
+
+## 1.7.25
+
+### Patch Changes
+
+- Remove generic `bind` and `listen` calls from default runtime-wiring detection while keeping them configurable.
+
+## 1.7.24
+
+### Patch Changes
+
+- Warm the browser runtime before visual timing so cold Chromium startup does not masquerade as report latency.
+
+## 1.7.23
+
+### Patch Changes
+
+- Clarify runtime-wiring coverage so resolved static targets and unresolved indirect wiring are not conflated.
+
+## 1.7.22
+
+### Patch Changes
+
+- Resolve configurable runtime-wiring calls when their arguments are statically imported, while preserving unresolved calls as explicit coverage gaps.
+
+## 1.7.21
+
+### Patch Changes
+
+- Preserve explicit detection metadata for literal dynamic imports and advance the JS/TS analyzer version.
+
+## 1.7.20
+
+### Patch Changes
+
+- Resolve literal dynamic imports as repository relations and distinguish them from unresolved non-literal loading.
+
+## 1.7.19
+
+### Patch Changes
+
+- Keep the directory report index small by describing only the findings chunk; level and detail chunks remain addressable from the overview metadata.
+
+## 1.7.18
+
+### Patch Changes
+
+- Encode package chunk names as an ordered list to keep the initial report metadata compact.
+
+## 1.7.17
+
+### Patch Changes
+
+- Measure double-click application response from a window-capture listener that cannot be stopped by the report event handler.
+
+## 1.7.16
+
+### Patch Changes
+
+- Derive evidence chunk names from existing package level metadata and compact graph payloads further.
+
+## 1.7.15
+
+### Patch Changes
+
+- Keep module and file navigation within the selected package scope after package-level hydration.
+
+## 1.7.14
+
+### Patch Changes
+
+- Resolve selected package chunks before their parent group chunks during report navigation.
+
+## 1.7.13
+
+### Patch Changes
+
+- Defer report evidence payloads until a graph node is selected, keeping topology navigation compact.
+
+## 1.7.12
+
+### Patch Changes
+
+- Keep application/group report chunks at package level and load module/file data only for the selected package.
+
+## 1.7.11
+
+### Patch Changes
+
+- Split large report level data into on-demand group and package chunks to reduce initial navigation cost.
+
+## 1.7.10
+
+### Patch Changes
+
+- Remove the hidden findings DOM while navigating the architecture lens to avoid unnecessary layout work.
+
+## 1.7.9
+
+### Patch Changes
+
+- Record report render phase timings in visual evidence for actionable performance diagnosis.
+
+## 1.7.8
+
+### Patch Changes
+
+- Cache the graph model for the active report navigation state and invalidate it after lazy data hydration.
+
+## 1.7.7
+
+### Patch Changes
+
+- Avoid recalculating hidden findings and insight dashboards during architecture navigation.
+
+## 1.7.6
+
+### Patch Changes
+
+- Persist browser interaction timing markers in the report DOM so visual evidence is isolated from test-runner state.
+
+## 1.7.5
+
+### Patch Changes
+
+- Distinguish real browser gesture duration from application interaction response in visual evidence.
+
+## 1.7.4
+
+### Patch Changes
+
+- Avoid duplicate architecture drill-down renders when a native double-click is received.
+
+## 1.7.3
+
+### Patch Changes
+
+- Measure report render and interaction latency with a high-resolution clock.
+
+## 1.7.2
+
+### Patch Changes
+
+- Harden verification outcomes and add measurable report interaction timings.
+
+## 1.7.1
+
+### Patch Changes
+
+- Keep verification outcomes consistent when human approval completes a run.
+
+## 1.7.0
+
+### Minor Changes
+
+- Add configurable package/module reconciliation scopes while preserving raw file-level evidence for architecture exploration.
+- Require verification contracts to declare intent and map every outcome to executable checks.
+
+## 1.6.4
+
+### Patch Changes
+
+- Make report visual verification work with standalone reports, lazy-loaded findings, and repositories whose architecture starts at a domain or group rather than an app.
+
+## 1.6.3
+
+### Patch Changes
+
+- Add configurable relation-coverage policy, invalidate workflow artifacts when analyzer logic changes, improve offline report readability on small screens, and ship the visual verification script used by the report command.
+
+## 1.6.2
+
+### Patch Changes
+
+- Keep the architecture overview legible by mapping project packages first, using a scrollable deterministic canvas, and revealing external dependencies in package drill-down views.
+
+## 1.6.1
+
+### Patch Changes
+
+- Index report findings by entity and relation before rendering the offline graph, keeping large reports responsive during initial load and level changes.
+
+## 1.6.0
+
+### Minor Changes
+
+- Replace the offline HTML report with a progressive, read-only architecture viewer. The report now includes grouped SVG topology by level, documentation drift, risk/hotspot, and evidence lenses, deterministic heuristic signals, selected-entity evidence details, Jest-like diagnostics, and explicit analyzer coverage boundaries.
+
+## 1.5.2
+
+### Patch Changes
+
+- Exclude Turbo cache files from repository discovery by default.
+
+## 1.5.1
+
+### Patch Changes
+
+- Honor configured repository file limits and ignore non-package workspace directories during discovery.
+
+## 1.5.0
+
+### Minor Changes
+
+- Add the canonical knowledge-engine workflow, architecture map, configurable MCP surfaces, and human-gated Registry agent proposals.
+
 ## 1.4.3
 
 ### Patch Changes

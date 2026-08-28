@@ -5,7 +5,7 @@ import { z } from 'zod'
 
 import type { DocBridgeConfigV1 } from '../config/schema.js'
 import { AgentProposalV1Schema, type AgentProposalV1, type DiscoverySnapshotV1, type ReconciliationReportV1 } from '../schemas/knowledge.js'
-import { contentHashForArtifactV1 } from '../index-builder/content-hash.js'
+import { contentHashForArtifactV1, sha256NormalizedV1 } from '../index-builder/content-hash.js'
 import { containedPath, redactValue } from '../safety/repository.js'
 
 export const DEFAULT_REGISTRY_AGENT_ID = 'ecosystem-doc-bridge-corpus-scanner'
@@ -27,6 +27,7 @@ export type RegistryAgentContext = {
   readonly capabilities: readonly ['snapshot.read', 'evidence.read', 'proposal.write']
   readonly network: false
   readonly shell: false
+  readonly deterministic: boolean
 }
 
 export type RegistryAgentRunner = (context: RegistryAgentContext) => Promise<unknown> | unknown
@@ -73,15 +74,38 @@ export const loadRegistryAgentMetadata = (root: string, config: DocBridgeConfigV
 export const createRegistryAgentAdapter = (root: string, config: DocBridgeConfigV1, runner: RegistryAgentRunner): RegistryAgentAdapter => {
   if (!registryConfig(config)?.enabled) throw new Error('Registry agents are disabled. Set intelligence.registry.enabled: true to run an assisted workflow.')
   const metadata = loadRegistryAgentMetadata(resolve(root), config)
+  const settings = registryConfig(config) ?? {}
+  const timeoutMs = settings.timeoutMs ?? 120_000
+  const maxResponseBytes = settings.maxResponseBytes ?? 256_000
+  const maxTokens = settings.maxTokens ?? Math.ceil(maxResponseBytes / 4)
+  const maxConcurrency = settings.maxConcurrency ?? 1
+  let active = 0
+  const deterministicCache = new Map<string, AgentProposalV1>()
   return {
     metadata,
     run: async (snapshot, report, evidence = report.diagnostics.flatMap((diagnostic) => diagnostic.evidence).slice(0, 64)) => {
-      const context = deepFreeze({ snapshot: redactValue(snapshot), report: redactValue(report), evidence: redactValue(evidence), capabilities: ['snapshot.read', 'evidence.read', 'proposal.write'] as const, network: false as const, shell: false as const }) as RegistryAgentContext
-      const proposal = AgentProposalV1Schema.parse(await runner(context))
-      if (proposal.contentHash !== contentHashForArtifactV1(proposal)) throw new Error('Registry agent proposal contentHash does not match its canonical contents.')
-      if (proposal.baseSnapshotHash !== snapshot.contentHash || proposal.baseReportHash !== report.contentHash) throw new Error('Registry agent proposal is not based on the supplied snapshot/report hashes.')
-      if (proposal.origin.kind !== 'registry-agent' || proposal.origin.id !== metadata.id) throw new Error(`Registry agent proposal origin must be ${metadata.id}.`)
-      return proposal
+      if (active >= maxConcurrency) throw new Error(`Registry agent concurrency limit ${maxConcurrency} exceeded.`)
+      const cacheKey = sha256NormalizedV1({ snapshotHash: snapshot.contentHash, reportHash: report.contentHash, agentId: metadata.id, agentVersion: metadata.version, evidence })
+      if (settings.deterministic && deterministicCache.has(cacheKey)) return deterministicCache.get(cacheKey) as AgentProposalV1
+      active += 1
+      let timer: ReturnType<typeof setTimeout> | undefined
+      try {
+        const context = deepFreeze({ snapshot: redactValue(snapshot), report: redactValue(report), evidence: redactValue(evidence), capabilities: ['snapshot.read', 'evidence.read', 'proposal.write'] as const, network: false as const, shell: false as const, deterministic: settings.deterministic ?? true }) as RegistryAgentContext
+        const timeout = new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new Error(`Registry agent timed out after ${timeoutMs}ms.`)), timeoutMs) })
+        const raw = await Promise.race([Promise.resolve(runner(context)), timeout])
+        const responseBytes = Buffer.byteLength(JSON.stringify(raw))
+        if (responseBytes > maxResponseBytes) throw new Error(`Registry agent response limit ${maxResponseBytes} bytes exceeded.`)
+        if (Math.ceil(responseBytes / 4) > maxTokens) throw new Error(`Registry agent token budget ${maxTokens} exceeded.`)
+        const proposal = AgentProposalV1Schema.parse(raw)
+        if (proposal.contentHash !== contentHashForArtifactV1(proposal)) throw new Error('Registry agent proposal contentHash does not match its canonical contents.')
+        if (proposal.baseSnapshotHash !== snapshot.contentHash || proposal.baseReportHash !== report.contentHash) throw new Error('Registry agent proposal is not based on the supplied snapshot/report hashes.')
+        if (proposal.origin.kind !== 'registry-agent' || proposal.origin.id !== metadata.id) throw new Error(`Registry agent proposal origin must be ${metadata.id}.`)
+        if (settings.deterministic) deterministicCache.set(cacheKey, proposal)
+        return proposal
+      } finally {
+        if (timer) clearTimeout(timer)
+        active -= 1
+      }
     },
   }
 }
