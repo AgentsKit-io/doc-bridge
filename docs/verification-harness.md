@@ -52,6 +52,10 @@ Checks may emit one final JSON line with `status` set to `passed`, `failed`, or 
 
 Visual checks must use a real browser or an explicitly configured equivalent. A passing build is not visual approval. Endpoint, database, CLI, and MCP checks must execute their real artifact when the contract marks that surface as required.
 
+UI checks fail closed unless the check declares the `real-browser` and `screenshot` capabilities and its final structured result contains `capability: "real-browser"`, screenshot artifacts with project-relative paths, SHA-256 hashes and viewports, plus a passing result for every contract outcome mapped to that check. Missing files, stale hashes, placeholder pending results, and unmapped criteria block the run before human approval is available.
+
+Delegated work does not weaken the gate. Subagents receive the parent contract hash, assigned criterion IDs, allowed scope, required capabilities, and expected evidence. Their output remains provisional until the orchestrator reruns this harness against the combined current source revision.
+
 The final evidence ledger must distinguish `validated`, `partially validated`, `not analyzed`, `blocked`, and `not applicable`. Counts such as indexed documents, package presence, or rendered reports do not prove semantic documentation/code agreement, stale-content detection, runtime wiring, or UI behavior.
 
 When a report is shared outside its repository, configure `report.privacy: 'anonymized'`. This is separate from `safety.redactSecrets`: secret redaction does not anonymize project names, paths, identifiers, snippets, or finding messages. The privacy check must inspect the generated HTML and all lazy chunks, not only the configuration.
