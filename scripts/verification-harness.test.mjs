@@ -102,6 +102,32 @@ test('resolves a contract stored below the project root', () => {
   assert.equal(config.root, '..')
 })
 
+test('accepts the shared harness contract fields and isolates stateDir', async () => {
+  const root = mkdtempSync(join(tmpdir(), 'ak-verify-shared-'))
+  const configDir = join(root, '.codex')
+  mkdirSync(configDir)
+  const configPath = join(configDir, 'verification.json')
+  writeFileSync(configPath, JSON.stringify({
+    schemaVersion: 1,
+    project: 'shared-fixture',
+    root: '..',
+    stateDir: '.codex/verification/shared',
+    profile: 'strict',
+    contract: {
+      intent: 'Validate the shared fixture',
+      scope: { inScope: ['fixture'], outOfScope: ['network'] },
+      ambiguities: [],
+      outcomes: [{ id: 'logic', statement: 'The logic check passes.', checks: ['logic'] }],
+    },
+    checks: [{ id: 'logic', category: 'logic', evidence: 'structured', command: 'node -e "console.log(JSON.stringify({status:\'passed\',criteria:[\'logic\']}))"' }],
+    tracking: { required: false, reason: 'fixture only' },
+    budget: { maxDurationMs: 30000 },
+  }))
+  assert.equal(await main(['run', '--config', configPath, '--json']), 0)
+  assert.equal(existsSync(join(root, '.codex/verification/shared/latest.json')), true)
+  assert.equal(existsSync(join(root, '.codex/verification/latest.json')), false)
+})
+
 test('runs an idempotent complete verification and exposes status', async () => {
   const root = mkdtempSync(join(tmpdir(), 'ak-verify-run-'))
   const configDir = join(root, '.codex')
