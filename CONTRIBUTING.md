@@ -30,15 +30,17 @@ pnpm build
 
 ## Releases
 
-Use Changesets for versioned changes:
+Use Changesets for versioned changes. A merged changeset on `master` starts the
+version workflow, which opens a version PR and publishes the merged version
+through npm Trusted Publishing (GitHub OIDC). No npm token is stored in GitHub.
 
 ```bash
 pnpm changeset
-pnpm version-packages
-pnpm release
 ```
 
-Do not publish from a dirty worktree.
+The npm package must have a GitHub Actions trusted publisher configured for
+`AgentsKit-io/doc-bridge`, workflow `changesets.yml`, and environment `npm`.
+Do not publish from a dirty worktree or run `pnpm release` locally.
 
 Project decisions and maintainer responsibilities are documented in
 [GOVERNANCE.md](GOVERNANCE.md). By participating, you agree to follow the
