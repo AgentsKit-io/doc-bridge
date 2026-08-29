@@ -85,7 +85,9 @@ export const parseLlmsTxtLinks = (raw: string): { title: string; url: string; de
     }
 
     for (const token of line.split(/\s+/)) {
-      const url = token.replace(/[),.;:]+$/, '')
+      let end = token.length
+      while (end > 0 && '),.;:'.includes(token[end - 1] ?? '')) end -= 1
+      const url = token.slice(0, end)
       if (!/^https?:\/\//i.test(url) || links.some((link) => link.url === url)) continue
       links.push({ title: slugFromPath(url), url })
     }

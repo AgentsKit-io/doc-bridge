@@ -95,9 +95,6 @@ const fileEvidence = (
       evidence: { path, detail: 'Path escapes the project root.' },
     }
   }
-  if (!existsSync(abs)) {
-    return { exists: false, content: '', evidence: { path, detail: 'File does not exist.' } }
-  }
   let fd: number | undefined
   try {
     fd = openSync(abs, 'r')
@@ -131,8 +128,13 @@ const fileEvidence = (
         detail: content.trim().length > 0 ? 'File exists and is non-empty.' : 'File is empty.',
       },
     }
-  } catch {
-    return { exists: false, content: '', evidence: { path, detail: 'File is not readable text.' } }
+  } catch (error) {
+    const code = error && typeof error === 'object' && 'code' in error ? error.code : undefined
+    return {
+      exists: false,
+      content: '',
+      evidence: { path, detail: code === 'ENOENT' ? 'File does not exist.' : 'File is not readable text.' },
+    }
   } finally {
     if (fd !== undefined) closeSync(fd)
   }
