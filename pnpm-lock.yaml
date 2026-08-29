@@ -50,7 +50,7 @@ importers:
     devDependencies:
       '@agentskit/chat':
         specifier: 0.4.1
-        version: 0.4.1(@agentskit/core@1.12.8)(@agentskit/ink@0.10.9(@types/react@19.2.18)(react@19.2.8))(@agentskit/react@0.7.4(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(ink@7.1.0(@types/react@19.2.18)(react@19.2.8))(react@19.2.8)
+        version: 0.4.1(@agentskit/core@1.12.8)(@agentskit/ink@0.10.9(@types/react@19.2.18)(react@19.2.8))(@agentskit/react@0.8.3(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(ink@7.1.0(@types/react@19.2.18)(react@19.2.8))(react@19.2.8)
       '@agentskit/core':
         specifier: 1.12.8
         version: 1.12.8
@@ -58,8 +58,8 @@ importers:
         specifier: 0.10.9
         version: 0.10.9(@types/react@19.2.18)(react@19.2.8)
       '@agentskit/react':
-        specifier: 0.7.4
-        version: 0.7.4(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+        specifier: 0.8.3
+        version: 0.8.3(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@anthropic-ai/mcpb':
         specifier: 2.1.2
         version: 2.1.2(supports-color@7.2.0)
@@ -211,8 +211,8 @@ packages:
   '@agentskit/rag@0.4.2':
     resolution: {integrity: sha512-3YP+WfuuCNNyXW3vm8WZOvkXbnYXmml5rTQHlbaw2wOUiHBAhWaFhIAHsk4TUlsEQIUAtmfbmXsuH4R11KyFdg==}
 
-  '@agentskit/react@0.7.4':
-    resolution: {integrity: sha512-puGYPDczHwPwGAkdr58Nbt67lkmAQWVujDeuas5NzGOfAGB2/oQMUU1L8qN6qODvQbEhsKOFQYYBUMXnS7Utvg==}
+  '@agentskit/react@0.8.3':
+    resolution: {integrity: sha512-5GM0Hflus4txWr3GrkXHsAeytW8fY8oXlNZGCT6oAfJOFc5DjNHAP878DW7gCUqlztqiXmj/SVbm2/k0KPwKcA==}
     peerDependencies:
       react: '>=18.0.0'
       react-dom: '>=18.0.0'
@@ -4823,7 +4823,7 @@ snapshots:
     dependencies:
       '@agentskit/core': 1.10.0
 
-  '@agentskit/chat@0.4.1(@agentskit/core@1.12.8)(@agentskit/ink@0.10.9(@types/react@19.2.18)(react@19.2.8))(@agentskit/react@0.7.4(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(ink@7.1.0(@types/react@19.2.18)(react@19.2.8))(react@19.2.8)':
+  '@agentskit/chat@0.4.1(@agentskit/core@1.12.8)(@agentskit/ink@0.10.9(@types/react@19.2.18)(react@19.2.8))(@agentskit/react@0.8.3(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(ink@7.1.0(@types/react@19.2.18)(react@19.2.8))(react@19.2.8)':
     dependencies:
       '@agentskit/core': 1.12.8
       '@agentskit/eval': 0.4.19
@@ -4833,7 +4833,7 @@ snapshots:
       zod: 4.4.3
     optionalDependencies:
       '@agentskit/ink': 0.10.9(@types/react@19.2.18)(react@19.2.8)
-      '@agentskit/react': 0.7.4(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      '@agentskit/react': 0.8.3(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       ink: 7.1.0(@types/react@19.2.18)(react@19.2.8)
       react: 19.2.8
 
@@ -4868,9 +4868,9 @@ snapshots:
     dependencies:
       '@agentskit/core': 1.10.0
 
-  '@agentskit/react@0.7.4(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
+  '@agentskit/react@0.8.3(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
     dependencies:
-      '@agentskit/core': 1.12.3
+      '@agentskit/core': 1.12.8
       react: 19.2.8
       react-dom: 19.2.8(react@19.2.8)
 

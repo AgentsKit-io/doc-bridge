@@ -157,7 +157,7 @@
     "@agentskit/chat": "0.4.1",
     "@agentskit/core": "1.12.8",
     "@agentskit/ink": "0.10.9",
-    "@agentskit/react": "0.7.4",
+    "@agentskit/react": "0.8.3",
     "@anthropic-ai/mcpb": "2.1.2",
     "@changesets/cli": "^3.0.1",
     "@lhci/cli": "^0.15.1",
