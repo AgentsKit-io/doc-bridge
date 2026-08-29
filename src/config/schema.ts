@@ -185,6 +185,8 @@ export const ReconciliationConfigSchema = z
     scope: z.enum(['file', 'module', 'package']).optional(),
     /** Relation kinds that must have documentation declarations. Omit to require all observed kinds; [] disables this signal. */
     requiredRelationKinds: z.array(z.string().min(1).max(128)).max(128).optional(),
+    /** Limit missing-declaration findings to relations whose endpoints are internal project entities. */
+    requiredRelationTargets: z.enum(['all', 'internal']).optional(),
     includeOrphanedDocuments: z.boolean().optional(),
   })
   .strict()

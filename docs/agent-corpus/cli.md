@@ -1,6 +1,6 @@
 ---
-type: package
-package: doc-bridge-cli
+type: module
+id: doc-bridge-cli
 editRoot: src/cli
 humanDoc: /docs/spec/cli
 ---

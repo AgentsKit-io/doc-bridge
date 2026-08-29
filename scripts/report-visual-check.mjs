@@ -94,6 +94,12 @@ const inspect = async (frame, width, height) => frame.evaluate(({ width: viewpor
     diagnosticCount: typeof globalThis.__DOC_BRIDGE_DATA__?.diagnosticCount === 'number'
       ? globalThis.__DOC_BRIDGE_DATA__.diagnosticCount
       : Number.parseInt(document.querySelector('#finding-count')?.textContent ?? '', 10) || document.querySelectorAll('.finding').length,
+    actionableCount: typeof globalThis.__DOC_BRIDGE_DATA__?.actionableCount === 'number'
+      ? globalThis.__DOC_BRIDGE_DATA__.actionableCount
+      : Number.parseInt((document.querySelector('#finding-count')?.textContent ?? '').match(/(\d+) actionable findings/)?.[1] ?? '0', 10),
+    confirmedCount: typeof globalThis.__DOC_BRIDGE_DATA__?.confirmedCount === 'number'
+      ? globalThis.__DOC_BRIDGE_DATA__.confirmedCount
+      : Number.parseInt((document.querySelector('#finding-count')?.textContent ?? '').match(/(\d+) confirmed checks/)?.[1] ?? '0', 10),
     unnamedButtonCount: unnamedButtons.length,
     visibleOverflowCount: visibleOverflow.length,
     contrastFailures,
@@ -157,7 +163,8 @@ const exercise = async (frame, result) => {
     if (await load.count()) await load.click()
     else if (result.diagnosticCount > 0 && await frame.locator('.finding-group').count() === 0) throw new Error('finding loader is missing while findings are present')
   }, async () => {
-    if (result.diagnosticCount > 0) {
+    const evidenceView = await frame.locator('body').getAttribute('data-report-view') === 'coverage'
+    if (result.actionableCount > 0 || (evidenceView && result.confirmedCount > 0)) {
       await poll(() => frame.locator('.finding-group').count(), (count) => count > 0, 'finding groups')
     } else if (await frame.locator('.finding-group').count() !== 0) {
       throw new Error('finding groups rendered despite zero findings')

@@ -102,6 +102,21 @@ This plan is a validation contract. A green result from one cycle never substitu
 - the known-case fixture matrix has 100% detection of expected findings and 0 unsupported findings;
 - the real target report does not show zero findings merely because reconciliation was disabled.
 
+### Phase 3 — Real-artifact documentation inventory
+
+The first AKOS audit exposed that the repository contains multiple documentation
+surfaces. A single `documentedDocumentCount / documentCount` ratio mixed the 27
+agent-corpus documents with human guides, project files, archives, and
+unclassified Markdown. Doc Bridge now reports deterministic document counts by
+classification and marks `docs-archive` as `archive`; the report highlights the
+agent-corpus ratio separately. This keeps the metric useful without hiding the
+full inventory.
+
+The phase gate is satisfied only when the real AKOS artifact reports the
+classification totals, the agent-corpus numerator/denominator, and evidence for
+the classification rule. A changed source revision or configuration invalidates
+the evidence and requires a new workflow and verification run.
+
 ### Cycle 5 — Registry agent quality
 
 **Purpose:** validate the configured agent from the AgentsKit Registry as an evidence-grounded assistant to discovery and classification.
@@ -234,3 +249,7 @@ Cycle 7 shipped Doc Bridge `1.7.28` to `agentskit-os` and made the large-report 
 - the current verification contract covers the package dogfood target, not the complete Doc Bridge enterprise objective.
 
 The current run is `AWAITING_HUMAN_APPROVAL`, not complete. Discovery, package-level reconciliation, Registry-agent proof, documentation cohesion, export accuracy, CLI execution, and measured efficiency passed. The benchmark baseline was not replaced. After human approval, the next cycle should use these numbers as the comparison point and focus on classifying the remaining 9 production runtime-wiring candidates and improving documentation usefulness rather than report transport performance.
+
+### Phase 2 — Semantic classification measurement
+
+The next cycle adds a small, deterministic labeled benchmark around the real reconciliation function. It covers confirmed, undocumented, stale, not-analyzed, conflicting, and unresolved declarations. The acceptance threshold is exact per-case diagnostic classification with non-empty evidence, plus `1.000` finding precision, `1.000` finding recall, and `1.000` evidence ratio. The AKOS verification contract runs this gate directly against the checked-out Doc Bridge source so a later change cannot silently preserve only the aggregate report counts.

@@ -54,8 +54,12 @@ describe('offline HTML report', () => {
     const html = renderOfflineReport(input)
 
     expect(html).toContain('Architecture map')
+    expect(html).toContain('actionable findings')
+    expect(html).toContain('confirmed checks')
+    expect(html).toContain('Confirmed checks are available in Evidence')
     expect(html).toContain('Jest-like diagnostics')
     expect(html).toContain('Documentation drift')
+    expect(html).toContain('Agent documentation')
     expect(html).toContain('Risks &amp; hotspots')
     expect(html).toContain('Evidence')
     expect(html).toContain('id="graph"')

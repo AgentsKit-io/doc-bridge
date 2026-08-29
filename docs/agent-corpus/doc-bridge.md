@@ -1,6 +1,6 @@
 ---
 type: package
-package: doc-bridge
+package: '@agentskit/doc-bridge'
 editRoot: src
 humanDoc: /docs/POSITIONING
 ---

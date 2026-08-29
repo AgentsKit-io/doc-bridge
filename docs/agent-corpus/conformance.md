@@ -1,6 +1,6 @@
 ---
-type: package
-package: doc-bridge-conformance
+type: module
+id: doc-bridge-conformance
 editRoot: src/conformance
 humanDoc: /docs/spec/documentation-standard-v1
 ---

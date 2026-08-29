@@ -102,6 +102,7 @@ const firstLineContaining = (text: string, pattern: string): number | undefined 
 
 const documentClassification = (path: string): string => {
   if (/(^|\/)docs\/for-agents(?:\/|$)/.test(path)) return 'agent'
+  if (/(^|\/)docs-archive(?:\/|$)/.test(path)) return 'archive'
   if (/(^|\/)docs(?:\/|$)/.test(path)) return 'human'
   if (/(^|\/)(README|CONTRIBUTING|SECURITY|CHANGELOG)(?:\.|$)/i.test(path)) return 'project'
   return 'unclassified'
@@ -273,22 +274,64 @@ const moduleReferences = (
   path: string,
   sourceFile: ts.SourceFile,
   runtimeWiringMethods: ReadonlySet<string>,
-): { readonly references: readonly ImportReference[]; readonly exports: readonly string[]; readonly hasDynamic: boolean; readonly hasLiteralDynamic: boolean; readonly hasRuntimeWiring: boolean; readonly hasUnresolvedRuntimeWiring: boolean } => {
+): { readonly references: readonly ImportReference[]; readonly exports: readonly string[]; readonly dynamicEvidence: readonly Evidence[]; readonly hasDynamic: boolean; readonly hasLiteralDynamic: boolean; readonly hasRuntimeWiring: boolean; readonly hasUnresolvedRuntimeWiring: boolean } => {
   const references: ImportReference[] = []
+  const dynamicEvidence: Evidence[] = []
   let hasDynamic = false
   let hasLiteralDynamic = false
   let hasRuntimeWiring = false
   let hasUnresolvedRuntimeWiring = false
   const importedBindings = new Map<string, string>()
   const staticStringBindings = new Map<string, string | undefined>()
-  const collectStaticStringBindings = (node: ts.Node): void => {
-    if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.initializer && ts.isStringLiteralLike(node.initializer) && ts.isVariableDeclarationList(node.parent) && (node.parent.flags & ts.NodeFlags.Const) !== 0) {
-      const previous = staticStringBindings.get(node.name.text)
-      staticStringBindings.set(node.name.text, !staticStringBindings.has(node.name.text) || previous === node.initializer.text ? node.initializer.text : undefined)
+  const localBindings = new Set<string>()
+  const resolveStaticString = (expression: ts.Expression): string | undefined => {
+    if (ts.isStringLiteralLike(expression)) return expression.text
+    if (ts.isIdentifier(expression)) return staticStringBindings.get(expression.text)
+    if (ts.isParenthesizedExpression(expression)) return resolveStaticString(expression.expression)
+    if (ts.isBinaryExpression(expression) && expression.operatorToken.kind === ts.SyntaxKind.PlusToken) {
+      const left = resolveStaticString(expression.left)
+      const right = resolveStaticString(expression.right)
+      return left !== undefined && right !== undefined ? left + right : undefined
     }
+    return undefined
+  }
+  const collectStaticStringBindings = (node: ts.Node): void => {
+    if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.initializer && ts.isVariableDeclarationList(node.parent) && (node.parent.flags & ts.NodeFlags.Const) !== 0) {
+      const value = resolveStaticString(node.initializer)
+      const previous = staticStringBindings.get(node.name.text)
+      staticStringBindings.set(node.name.text, !staticStringBindings.has(node.name.text) || previous === value ? value : undefined)
+    }
+    if (
+      (ts.isVariableDeclaration(node) || ts.isParameter(node) || ts.isBindingElement(node)) &&
+      ts.isIdentifier(node.name)
+    ) localBindings.add(node.name.text)
+    if (
+      (ts.isFunctionDeclaration(node) || ts.isClassDeclaration(node) || ts.isEnumDeclaration(node)) &&
+      node.name
+    ) localBindings.add(node.name.text)
     ts.forEachChild(node, collectStaticStringBindings)
   }
   collectStaticStringBindings(sourceFile)
+  const addImportedBindingReference = (expression: ts.Expression, node: ts.Node): boolean => {
+    if (ts.isIdentifier(expression)) {
+      const specifier = importedBindings.get(expression.text)
+      if (specifier) {
+        addReference({ text: specifier } as ts.StringLiteralLike, 'runtime-wiring', node, 'runtime-wiring-static')
+        return true
+      }
+      return false
+    }
+    if (ts.isPropertyAccessExpression(expression)) return addImportedBindingReference(expression.expression, node)
+    if (ts.isCallExpression(expression)) return addImportedBindingReference(expression.expression, node)
+    return false
+  }
+  const isKnownLocal = (expression: ts.Expression): boolean => {
+    if (ts.isIdentifier(expression)) return localBindings.has(expression.text) || importedBindings.has(expression.text)
+    if (expression.kind === ts.SyntaxKind.ThisKeyword) return true
+    if (ts.isPropertyAccessExpression(expression)) return isKnownLocal(expression.expression)
+    if (ts.isCallExpression(expression)) return isKnownLocal(expression.expression)
+    return ts.isStringLiteralLike(expression)
+  }
   const addReference = (specifier: ts.StringLiteralLike, kind: ImportReference['kind'], node: ts.Node, detection?: ImportReference['detection']): void => {
     references.push({ specifier: specifier.text, kind, evidence: nodeEvidence(root, path, sourceFile, node), ...(detection ? { detection } : {}) })
   }
@@ -309,32 +352,35 @@ const moduleReferences = (
       importedBindings.set(node.name.text, node.moduleReference.expression.text)
     } else if (ts.isCallExpression(node)) {
       if (node.expression.kind === ts.SyntaxKind.ImportKeyword) {
-        if (node.arguments[0] && ts.isStringLiteralLike(node.arguments[0])) {
+        const specifier = node.arguments[0] ? resolveStaticString(node.arguments[0]) : undefined
+        if (specifier !== undefined) {
           hasLiteralDynamic = true
-          addReference(node.arguments[0], 'imports', node, 'dynamic-literal')
-        } else if (node.arguments[0] && ts.isIdentifier(node.arguments[0]) && staticStringBindings.get(node.arguments[0].text)) {
-          hasLiteralDynamic = true
-          addReference({ text: staticStringBindings.get(node.arguments[0].text)! } as ts.StringLiteralLike, 'imports', node, 'dynamic-literal')
-        } else hasDynamic = true
+          dynamicEvidence.push(nodeEvidence(root, path, sourceFile, node))
+          addReference({ text: specifier } as ts.StringLiteralLike, 'imports', node, 'dynamic-literal')
+        } else {
+          hasDynamic = true
+          dynamicEvidence.push(nodeEvidence(root, path, sourceFile, node))
+        }
       } else if (ts.isIdentifier(node.expression) && node.expression.text === 'require') {
         const argument = node.arguments[0]
-        if (argument && ts.isStringLiteralLike(argument)) addReference(argument, 'imports', node)
-        else if (argument && ts.isIdentifier(argument) && staticStringBindings.get(argument.text)) addReference({ text: staticStringBindings.get(argument.text)! } as ts.StringLiteralLike, 'imports', node)
-        else hasDynamic = true
+        const specifier = argument ? resolveStaticString(argument) : undefined
+        if (specifier !== undefined) {
+          dynamicEvidence.push(nodeEvidence(root, path, sourceFile, node))
+          addReference({ text: specifier } as ts.StringLiteralLike, 'imports', node)
+        } else {
+          hasDynamic = true
+          dynamicEvidence.push(nodeEvidence(root, path, sourceFile, node))
+        }
       } else if (ts.isPropertyAccessExpression(node.expression) && runtimeWiringMethods.has(node.expression.name.text)) {
         hasRuntimeWiring = true
-        const before = references.length
-        let hasPotentialTargetArgument = false
+        let hasUnresolvedTarget = false
         for (const argument of node.arguments) {
-          if (ts.isIdentifier(argument)) {
-            hasPotentialTargetArgument = true
-            const specifier = importedBindings.get(argument.text)
-            if (specifier) addReference({ text: specifier } as ts.StringLiteralLike, 'runtime-wiring', node, 'runtime-wiring-static')
-          } else if (ts.isPropertyAccessExpression(argument) || ts.isCallExpression(argument)) {
-            hasPotentialTargetArgument = true
-          }
+          if (ts.isStringLiteralLike(argument)) continue
+          if (addImportedBindingReference(argument, node)) continue
+          if (!isKnownLocal(argument)) hasUnresolvedTarget = true
         }
-        if (hasPotentialTargetArgument && references.length === before) hasUnresolvedRuntimeWiring = true
+        const receiver = node.expression.expression
+        if (hasUnresolvedTarget && !isKnownLocal(receiver)) hasUnresolvedRuntimeWiring = true
       }
     }
     ts.forEachChild(node, visit)
@@ -343,6 +389,7 @@ const moduleReferences = (
   return {
     references,
     exports: exportedNames(sourceFile),
+    dynamicEvidence,
     hasDynamic,
     hasLiteralDynamic,
     hasRuntimeWiring,
@@ -445,11 +492,11 @@ const artifact = (root: string, config: DocBridgeConfigV1 | undefined, files: re
     sourceRevision: revision.value,
     sourceRevisionKind: revision.kind,
     configurationHash: sha256NormalizedV1(config ?? {}),
-    pipelineVersion: '1.0.0',
-    analyzerVersions: { repository: '1.0.0', 'js-ts': '1.3.0' },
+    pipelineVersion: '1.1.8',
+    analyzerVersions: { repository: '1.1.1', 'js-ts': '1.3.4' },
     entities: [...entities].sort((a, b) => a.id.localeCompare(b.id)),
     relations: [...relations].sort((a, b) => a.id.localeCompare(b.id)),
-    coverage: coverage.map((entry) => ({ ...entry, analyzerVersion: entry.analyzerVersion ?? ({ repository: '1.0.0', 'js-ts': '1.3.0' }[entry.analyzer] ?? '1.0.0') })),
+    coverage: coverage.map((entry) => ({ ...entry, analyzerVersion: entry.analyzerVersion ?? ({ repository: '1.1.1', 'js-ts': '1.3.4' }[entry.analyzer] ?? '1.0.0') })),
   }
   return DiscoverySnapshotV1Schema.parse({ ...base, contentHash: contentHashForArtifactV1(base) })
 }
@@ -552,6 +599,7 @@ export const discoverRepository = (opts: DiscoveryOptions = {}): DiscoverySnapsh
   const includeTestRuntimeWiring = opts.config?.analysis?.jsTs?.includeTestRuntimeWiring ?? false
   let observedLiteralDynamic = false
   let observedUnresolvedDynamic = false
+  const observedDynamicEvidence: Evidence[] = []
   let observedRuntimeWiring = false
   let observedUnresolvedRuntimeWiring = false
   for (const module of modules.values()) {
@@ -561,6 +609,7 @@ export const discoverRepository = (opts: DiscoveryOptions = {}): DiscoverySnapsh
     const references = moduleReferences(root, module.absPath, sourceFile, runtimeWiringMethods)
     observedLiteralDynamic ||= references.hasLiteralDynamic
     observedUnresolvedDynamic ||= references.hasDynamic
+    observedDynamicEvidence.push(...references.dynamicEvidence)
     observedRuntimeWiring ||= references.hasRuntimeWiring
     observedUnresolvedRuntimeWiring ||= references.hasUnresolvedRuntimeWiring
     for (const reference of references.references) {
@@ -572,14 +621,14 @@ export const discoverRepository = (opts: DiscoveryOptions = {}): DiscoverySnapsh
       }
       addRelation({ id: entityId('relation', `${module.entityId}:${reference.kind}:${target.targetId}`), kind: reference.kind, from: module.entityId, to: target.targetId, provenance: 'observed', evidence: [reference.evidence], ...(reference.detection ? { metadata: { detection: reference.detection } } : {}) })
     }
-    if (references.hasLiteralDynamic || references.hasDynamic) coverage.push({ analyzer: 'js-ts', scope: `dynamic-imports:${module.path}`, status: references.hasDynamic ? 'not-analyzed' : 'complete', reason: references.hasDynamic ? 'A non-literal dynamic import was found; the target is unresolved.' : 'Literal dynamic imports were resolved.', evidence: [lineEvidence('code', root, module.absPath)] })
+    if (references.hasLiteralDynamic || references.hasDynamic) coverage.push({ analyzer: 'js-ts', scope: `dynamic-imports:${module.path}`, status: references.hasDynamic ? 'not-analyzed' : 'complete', reason: references.hasDynamic ? 'A non-literal dynamic import was found; the target is unresolved.' : 'Literal dynamic imports were resolved.', evidence: [...references.dynamicEvidence.slice(0, 32)] })
     if (references.hasUnresolvedRuntimeWiring) coverage.push({ analyzer: 'js-ts', scope: `runtime-wiring:${module.path}`, status: 'not-analyzed', reason: 'A runtime registration/wiring call was found without a statically imported target.', evidence: [lineEvidence('code', root, module.absPath)] })
   }
 
   if (dynamicCoverageIndex >= 0) coverage[dynamicCoverageIndex] = observedUnresolvedDynamic
-    ? { analyzer: 'js-ts', scope: 'dynamic-imports', status: 'partial', reason: 'Literal dynamic imports are resolved; non-literal import expressions and require calls remain unresolved.' }
+    ? { analyzer: 'js-ts', scope: 'dynamic-imports', status: 'partial', reason: 'Literal dynamic imports are resolved; non-literal import expressions and require calls remain unresolved. Evidence lists representative dynamic loading sites.', evidence: [...observedDynamicEvidence.slice(0, 32)] }
     : observedLiteralDynamic
-      ? { analyzer: 'js-ts', scope: 'dynamic-imports', status: 'complete', reason: 'All observed dynamic imports used literal targets and were resolved.' }
+      ? { analyzer: 'js-ts', scope: 'dynamic-imports', status: 'complete', reason: 'All observed dynamic imports used literal targets and were resolved.', evidence: [...observedDynamicEvidence.slice(0, 32)] }
       : { analyzer: 'js-ts', scope: 'dynamic-imports', status: 'not-applicable', reason: 'No dynamic loading expression was observed.' }
   const runtimeCoverageIndex = coverage.findIndex((entry) => entry.scope === 'runtime-wiring')
   if (runtimeCoverageIndex >= 0) coverage[runtimeCoverageIndex] = observedUnresolvedRuntimeWiring

@@ -1,6 +1,6 @@
 ---
-type: package
-package: doc-bridge-index
+type: module
+id: doc-bridge-index
 editRoot: src/index-builder
 humanDoc: /docs/recipes/index-pipeline
 ---

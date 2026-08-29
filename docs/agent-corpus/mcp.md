@@ -1,6 +1,6 @@
 ---
-type: package
-package: doc-bridge-mcp
+type: module
+id: doc-bridge-mcp
 editRoot: src/mcp
 humanDoc: /docs/mcp
 ---
