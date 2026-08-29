@@ -20,7 +20,7 @@ const relation = (
   from: string,
   to: string,
   provenance: 'observed' | 'declared',
-  detection?: 'static' | 'dynamic' | 'external',
+  detection?: 'static' | 'dynamic' | 'external' | 'dynamic-literal',
 ): KnowledgeRelation => ({
   id,
   kind: 'imports',
@@ -128,6 +128,70 @@ describe('knowledge reconciliation', () => {
     expect(reconcileKnowledge(observed, declared, { requiredRelationKinds: ['depends-on'] }).diagnostics).toHaveLength(0)
   })
 
+  it('can require declarations only for internal relation endpoints', () => {
+    const entities = [
+      { ...entity('package:a', 'package'), path: 'packages/a' },
+      { ...entity('package:b', 'package'), path: 'packages/b' },
+      entity('external:vendor'),
+    ]
+    const observed = snapshot([
+      relation('internal', 'package:a', 'package:b', 'observed'),
+      relation('external', 'package:a', 'external:vendor', 'observed'),
+      relation('self', 'package:a', 'package:a', 'observed'),
+    ], entities)
+    const declared = snapshot([], entities, hash('c'))
+
+    const report = reconcileKnowledge(observed, declared, {
+      scope: 'package',
+      requiredRelationKinds: ['imports'],
+      requiredRelationTargets: 'internal',
+    })
+
+    expect(report.diagnostics).toHaveLength(1)
+    expect(report.diagnostics[0]).toMatchObject({ code: 'RELATION_UNDOCUMENTED', relationIds: [expect.stringContaining('relation:aggregated:package:')] })
+    expect(report.summary.requiredRelationTargets).toBe('internal')
+  })
+
+  it('matches literal dynamic imports with the documented dynamic detection', () => {
+    const entities = [
+      { ...entity('package:a', 'package'), path: 'packages/a' },
+      { ...entity('package:b', 'package'), path: 'packages/b' },
+      { ...entity('module:packages/a/index.ts'), path: 'packages/a/index.ts' },
+      { ...entity('module:packages/b/index.ts'), path: 'packages/b/index.ts' },
+    ]
+    const observed = snapshot([
+      relation('observed', 'module:packages/a/index.ts', 'module:packages/b/index.ts', 'observed', 'dynamic-literal'),
+    ], entities)
+    const declared = snapshot([
+      relation('declared', 'package:a', 'package:b', 'declared', 'dynamic'),
+    ], entities, hash('c'))
+
+    const report = reconcileKnowledge(observed, declared, { scope: 'package', requiredRelationKinds: ['imports'], requiredRelationTargets: 'internal' })
+    expect(report.diagnostics.filter((item) => item.code === 'RELATION_UNDOCUMENTED')).toHaveLength(0)
+    expect(report.diagnostics).toContainEqual(expect.objectContaining({ code: 'RELATION_CONFIRMED' }))
+  })
+
+  it('allows multiple documented detections when both are observed', () => {
+    const entities = [
+      { ...entity('package:a', 'package'), path: 'packages/a' },
+      { ...entity('package:b', 'package'), path: 'packages/b' },
+      { ...entity('module:packages/a/index.ts'), path: 'packages/a/index.ts' },
+      { ...entity('module:packages/b/index.ts'), path: 'packages/b/index.ts' },
+    ]
+    const observed = snapshot([
+      relation('observed-static', 'module:packages/a/index.ts', 'module:packages/b/index.ts', 'observed', 'static'),
+      relation('observed-dynamic', 'module:packages/a/index.ts', 'module:packages/b/index.ts', 'observed', 'dynamic-literal'),
+    ], entities)
+    const declared = snapshot([
+      relation('declared-static', 'package:a', 'package:b', 'declared', 'static'),
+      relation('declared-dynamic', 'package:a', 'package:b', 'declared', 'dynamic'),
+    ], entities, hash('c'))
+
+    const report = reconcileKnowledge(observed, declared, { scope: 'package', requiredRelationKinds: ['imports'], requiredRelationTargets: 'internal' })
+    expect(report.diagnostics.some((item) => item.code === 'CONFLICTING_DECLARATIONS')).toBe(false)
+    expect(report.diagnostics.some((item) => item.code === 'RELATION_UNDOCUMENTED')).toBe(false)
+  })
+
   it('aggregates file relations at package scope while preserving evidence count', () => {
     const entities = [
       { ...entity('package:a', 'package'), path: 'packages/a' },
@@ -168,6 +232,8 @@ describe('knowledge reconciliation', () => {
     expect(withoutOrphans.summary.documentation).toEqual({
       documentCount: 2,
       documentedDocumentCount: 1,
+      documentClassificationCounts: { unclassified: 2 },
+      documentedDocumentClassificationCounts: { unclassified: 1 },
       packageCount: 2,
       packageStatus: { fresh: 0, stale: 1, missing: 1, unverified: 0 },
     })

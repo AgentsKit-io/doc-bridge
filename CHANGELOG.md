@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.7.45
+
+### Patch Changes
+
+- 9929eb0: Harden dependency resolution, filesystem and URL handling, reconciliation schema compatibility, generated-code boundaries, CI permissions, and npm publishing without long-lived npm tokens.
+
 ## 1.7.44
 
 - Precompute module-to-package ownership during package-scope reconciliation to reduce repeated entity scans on large repositories.

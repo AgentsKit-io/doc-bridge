@@ -38,6 +38,12 @@ package.json → "docBridge" field (subset, JSON only)
 
 TypeScript/JavaScript configs are static in v0.1 alpha: `defineConfig` imports are supported, but arbitrary imports are not. YAML config files are planned.
 
+Dynamic-loading coverage is evidence-backed. Literal strings, constant aliases,
+parenthesized strings, and string concatenations are resolved without executing
+repository code. Runtime-dependent `import()` and `require()` expressions remain
+`partial`/`not-analyzed`, and the coverage entry records representative
+file-and-line evidence for each observed loading site (up to the schema limit).
+
 ## TypeScript shape (authoritative)
 
 ```ts
@@ -410,12 +416,16 @@ type ReconciliationConfig = {
   scope?: 'file' | 'module' | 'package'
   /** Observed relation kinds that require documentation declarations. */
   requiredRelationKinds?: string[]
+  /** Limit missing-declaration findings to relations between internal project entities. */
+  requiredRelationTargets?: 'all' | 'internal'
   /** Emit info findings for documentation with no observed package/module join. */
   includeOrphanedDocuments?: boolean
 }
 ```
 
 Use `scope: 'package'` for monorepos where file imports should be compared as package-level architecture evidence. Omit `requiredRelationKinds` to require all observed kinds; an empty array intentionally disables undocumented-relation findings and must be treated as an explicit exemption.
+
+Use `requiredRelationTargets: 'internal'` when the repository wants package or module architecture declarations without requiring Markdown to enumerate every external library import. External relations remain in the raw snapshot and report as evidence; they simply do not generate missing-declaration findings.
 
 The reconciliation documentation summary reports package health separately from
 relation findings: `fresh` means the package has coverage documentation and no
@@ -425,6 +435,15 @@ means coverage exists but at least one relevant relation or analyzer boundary
 could not be verified. Package-level aggregation preserves the relation
 endpoints used for this classification, so an undocumented relation cannot be
 reported alongside a falsely `fresh` package.
+
+The same summary keeps document inventory separate from coverage claims:
+`documentCount` and `documentClassificationCounts` describe every discovered
+Markdown document, while `documentedDocumentCount` and
+`documentedDocumentClassificationCounts` describe documents that declare a
+knowledge relation. The classification keys are analyzer output (for example
+`agent`, `human`, `project`, `archive`, and `unclassified`); consumers must not
+interpret total repository Markdown coverage as agent-corpus coverage. Use the
+`agent` pair when measuring the configured agent documentation surface.
 
 ## `report` (optional)
 
@@ -436,6 +455,27 @@ report?: {
 ```
 
 `private` is the default and keeps local evidence useful for debugging. `anonymized` is intended for reports shared outside the repository: it preserves counts, relation kinds, topology, and coverage status while removing project-specific identity and evidence content. The generated HTML and every lazy chunk use the same mode.
+
+## `safety` (optional)
+
+```ts
+type RepositorySafetyConfig = {
+  /** Additional project-relative glob patterns excluded from repository discovery. */
+  exclude?: string[]
+  maxFiles?: number
+  maxBytes?: number
+  maxTimeMs?: number
+  maxMemoryMb?: number
+  redactSecrets?: boolean
+}
+```
+
+Discovery always excludes unsafe or generated trees by default, including
+`.git`, `node_modules`, `dist`, `build`, `coverage`, `.doc-bridge`, `.next`,
+`out`, `.turbo`, `.svelte-kit`, `.mcpb-build`, and `.mcpb-output`, plus common
+secret files. `safety.exclude` adds project-specific patterns; it does not
+replace the built-in safety boundary. Excluded files remain outside the
+snapshot and are represented by analyzer coverage when relevant.
 
 ## `analysis` (optional)
 
@@ -467,6 +507,11 @@ When a configured method receives an identifier bound to a
 static import, Doc Bridge records a `runtime-wiring` relation with
 `metadata.detection: 'runtime-wiring-static'`. Reflective, computed, or
 otherwise unbound targets remain explicit `not-analyzed` coverage entries.
+Dynamic `import()` and `require()` targets are resolved when their specifier is
+a literal, a `const` string binding, a parenthesized static expression, or a
+concatenation of other statically known strings. Expressions that depend on
+runtime values remain explicit `not-analyzed` coverage entries; Doc Bridge does
+not execute repository code to guess their targets.
 Test/spec modules are excluded from this signal by default because their
 registrations usually construct fixtures rather than production architecture;
 set `includeTestRuntimeWiring: true` when test wiring is part of the contract.

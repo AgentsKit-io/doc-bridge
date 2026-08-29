@@ -1,6 +1,6 @@
 ---
-type: package
-package: doc-bridge-chat
+type: module
+id: doc-bridge-chat
 editRoot: src/intelligence
 humanDoc: /docs/chat-and-rag
 ---

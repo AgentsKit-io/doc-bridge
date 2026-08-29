@@ -1,6 +1,6 @@
 ---
-type: package
-package: doc-bridge-doctor
+type: module
+id: doc-bridge-doctor
 editRoot: src/doctor
 humanDoc: /docs/spec/documentation-standard-v1
 ---

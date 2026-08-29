@@ -15,19 +15,25 @@ export type ReconciliationOptions = {
   readonly scope?: 'file' | 'module' | 'package'
   /** Omit for backwards-compatible all-relation checking; [] disables missing-declaration findings. */
   readonly requiredRelationKinds?: readonly string[]
+  /** Limit missing-declaration findings to relations between internal project entities. */
+  readonly requiredRelationTargets?: 'all' | 'internal'
   /** Emit one bounded finding for each observed Markdown document without declarations. */
   readonly includeOrphanedDocuments?: boolean
 }
 
 const ignoredDocumentationRelations = new Set(['covers'])
 
+const isInternalEntity = (id: string): boolean => !id.startsWith('external:') && !id.startsWith('unresolved:')
+
 const metadataDetection = (relation: KnowledgeRelation): string | undefined => {
   const detection = relation.metadata?.detection
   return typeof detection === 'string' ? detection : undefined
 }
 
+const normalizeDetection = (value: string): string => value === 'dynamic-literal' ? 'dynamic' : value
+
 const relationDetection = (relation: KnowledgeRelation): string =>
-  relation.discriminator ?? metadataDetection(relation) ?? 'static'
+  normalizeDetection(relation.discriminator ?? metadataDetection(relation) ?? 'static')
 
 const entityResolver = (snapshots: readonly DiscoverySnapshotV1[]): EntityResolver => {
   const references = new Map<string, string>()
@@ -60,6 +66,24 @@ const boundedEvidence = (evidence: readonly Evidence[]): Evidence[] => [...evide
 const diagnosticCounts = (values: readonly string[]): Record<string, number> => {
   const counts = new Map<string, number>()
   for (const value of values) counts.set(value, (counts.get(value) ?? 0) + 1)
+  return Object.fromEntries([...counts.entries()].sort(([a], [b]) => a.localeCompare(b)))
+}
+
+const documentClass = (entity: KnowledgeEntity): string => {
+  const classification = entity.metadata?.classification
+  return typeof classification === 'string' && classification.length > 0 ? classification : 'unclassified'
+}
+
+const countDocumentClasses = (
+  documents: readonly KnowledgeEntity[],
+  selectedIds?: ReadonlySet<string>,
+): Record<string, number> => {
+  const counts = new Map<string, number>()
+  for (const document of documents) {
+    if (selectedIds && !selectedIds.has(document.id)) continue
+    const classification = documentClass(document)
+    counts.set(classification, (counts.get(classification) ?? 0) + 1)
+  }
   return Object.fromEntries([...counts.entries()].sort(([a], [b]) => a.localeCompare(b)))
 }
 
@@ -239,9 +263,19 @@ export const reconcileKnowledge = (
     declaredByBase.set(base, group)
   }
 
+  const observedDetectionsByBase = new Map<string, Set<string>>()
+  for (const relation of observedRelations) {
+    const base = relationBase(relation, resolveEntity)
+    const detections = observedDetectionsByBase.get(base) ?? new Set<string>()
+    detections.add(relationDetection(relation))
+    observedDetectionsByBase.set(base, detections)
+  }
+
   for (const group of declaredByBase.values()) {
     const detections = new Set(group.map(relationDetection))
     if (detections.size < 2) continue
+    const observedDetections = observedDetectionsByBase.get(relationBase(group[0] as KnowledgeRelation, resolveEntity))
+    if (observedDetections && [...detections].every((detection) => observedDetections.has(detection))) continue
     diagnostics.push(reportDiagnostic(
       'CONFLICTING_DECLARATIONS',
       'conflict',
@@ -269,7 +303,11 @@ export const reconcileKnowledge = (
         undefined,
         [relation.id, match.id],
       ))
-    } else if (coverageAvailable(observed, relation) && (requiredRelationKinds === undefined || requiredRelationKinds.has(relation.kind))) {
+    } else if (
+      coverageAvailable(observed, relation) &&
+      (requiredRelationKinds === undefined || requiredRelationKinds.has(relation.kind)) &&
+      (options.requiredRelationTargets !== 'internal' || (relation.from !== relation.to && isInternalEntity(relation.from) && isInternalEntity(relation.to)))
+    ) {
       diagnostics.push(reportDiagnostic(
         'RELATION_UNDOCUMENTED',
         'undocumented',
@@ -334,9 +372,13 @@ export const reconcileKnowledge = (
     else if (statuses.has('undocumented') || statuses.has('unresolved') || statuses.has('not-analyzed')) packageStatus.unverified += 1
     else packageStatus.fresh += 1
   }
+  const documents = observed.entities.filter((entity) => entity.kind === 'document')
+  const documentedDocumentIds = new Set(allDeclaredRelations.filter((relation) => relation.from.startsWith('document:')).map((relation) => relation.from))
   const documentation = {
-    documentCount: observed.entities.filter((entity) => entity.kind === 'document').length,
-    documentedDocumentCount: new Set(allDeclaredRelations.filter((relation) => relation.from.startsWith('document:')).map((relation) => relation.from)).size,
+    documentCount: documents.length,
+    documentedDocumentCount: documentedDocumentIds.size,
+    documentClassificationCounts: countDocumentClasses(documents),
+    documentedDocumentClassificationCounts: countDocumentClasses(documents, documentedDocumentIds),
     packageCount: packageEntities.length,
     packageStatus,
   }
@@ -359,6 +401,7 @@ export const reconcileKnowledge = (
       diagnosticCount: sortedDiagnostics.length,
       ...(options.scope === undefined ? {} : { scope: options.scope }),
       ...(options.requiredRelationKinds === undefined ? {} : { requiredRelationKinds: [...new Set(options.requiredRelationKinds)].sort() }),
+      ...(options.requiredRelationTargets === undefined ? {} : { requiredRelationTargets: options.requiredRelationTargets }),
       diagnosticsByCode: diagnosticCounts(sortedDiagnostics.map((diagnostic) => diagnostic.code)),
       diagnosticsByStatus: diagnosticCounts(sortedDiagnostics.map((diagnostic) => diagnostic.status)),
       documentation,

@@ -500,6 +500,7 @@ const reconcileWorkflow = (root: string, config: DocBridgeConfigV1): WorkflowExe
   const report = reconcileKnowledge(snapshot, declared, {
     ...(config.reconciliation?.scope === undefined ? {} : { scope: config.reconciliation.scope }),
     ...(config.reconciliation?.requiredRelationKinds === undefined ? {} : { requiredRelationKinds: config.reconciliation.requiredRelationKinds }),
+    ...(config.reconciliation?.requiredRelationTargets === undefined ? {} : { requiredRelationTargets: config.reconciliation.requiredRelationTargets }),
     ...(config.reconciliation?.includeOrphanedDocuments === undefined ? {} : { includeOrphanedDocuments: config.reconciliation.includeOrphanedDocuments }),
   })
   return runWorkflow(workflowOptions(root, config, snapshot.sourceRevision, 'reconcile', { reconcile: () => report }, { pipelineVersion: snapshot.pipelineVersion, analyzerVersions: snapshot.analyzerVersions }))

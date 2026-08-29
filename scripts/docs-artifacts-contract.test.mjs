@@ -79,6 +79,14 @@ test('every public document and local deterministic citation resolves in the exp
   }
 })
 
+test('all deterministic entry and citation ids remain portable for scoped packages', () => {
+  const portableId = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/u
+  for (const entry of knowledge.entries) {
+    assert.match(entry.id, portableId)
+    for (const citation of entry.answer.citations) assert.match(citation.id, portableId)
+  }
+})
+
 test('sitemap publishes only the public documentation surface', () => {
   assert.doesNotMatch(sitemap, /DOGFOOD|agent-corpus|\/landing\//u)
 })

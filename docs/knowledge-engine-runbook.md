@@ -16,6 +16,8 @@ ak-docs map --html --output .doc-bridge/report.html
 
 Expected artifacts are under `.doc-bridge/workflow/`: `manifest.json`, immutable stage artifacts, `transitions.jsonl`, and `last-known-good.json`. The HTML report is standalone and can be opened directly without a server or network.
 
+The safe repository walk excludes common generated trees, including `dist`, `build`, `.next`, `out`, `.turbo`, `.svelte-kit`, `.mcpb-build`, and `.mcpb-output`, so generated output is reported as a coverage boundary rather than mistaken for source architecture. Add a project-specific `safety.exclude` pattern when another tool generates code outside these conventions.
+
 ## Safe fixes
 
 ```bash
@@ -56,12 +58,15 @@ Missing declarations are configurable because not every implementation import is
 {
   "reconciliation": {
     "scope": "package",
-    "requiredRelationKinds": ["imports", "re-exports", "depends-on"]
+    "requiredRelationKinds": ["imports", "re-exports", "depends-on"],
+    "requiredRelationTargets": "internal"
   }
 }
 ```
 
 Omit the option to preserve the original all-relation behavior. Use an empty list for low-friction adoption when package/app coverage and explicitly declared claims matter more than documenting every module, test, or external-library import. Existing declarations are still checked for stale, conflicting, and unresolved references.
+
+With `requiredRelationTargets: "internal"`, external-library relations remain in the canonical graph and evidence trail but do not require a Markdown declaration. Internal project relations still require declarations and remain subject to stale, conflicting, and unresolved checks.
 
 Package health is not inferred from coverage presence alone. A covered package
 is `fresh` only when its relevant relations are verified; undocumented or
@@ -72,3 +77,10 @@ large architecture/documentation gap.
 The reconciliation summary also includes deterministic `diagnosticsByCode` and
 `diagnosticsByStatus` rollups. Use them for triage and dashboards, but keep the
 canonical diagnostics and their evidence as the source of truth.
+
+Document counts are intentionally split by classification. The total document
+inventory includes human, agent, project, archive, and unclassified Markdown;
+it is not the denominator for agent-corpus coverage. Compare
+`documentClassificationCounts.agent` with
+`documentedDocumentClassificationCounts.agent` for the configured agent-doc
+surface, and inspect the remaining classifications separately.

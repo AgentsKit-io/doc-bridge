@@ -168,11 +168,14 @@ export const ReconciliationReportV1Schema = z
         diagnosticCount: z.number().int().nonnegative(),
         scope: z.enum(['file', 'module', 'package']).optional(),
         requiredRelationKinds: z.array(boundedString(128)).max(128).optional(),
+        requiredRelationTargets: z.enum(['all', 'internal']).optional(),
         diagnosticsByCode: z.record(z.string().max(128), z.number().int().nonnegative()).optional(),
         diagnosticsByStatus: z.record(z.string().max(128), z.number().int().nonnegative()).optional(),
         documentation: z.object({
           documentCount: z.number().int().nonnegative(),
           documentedDocumentCount: z.number().int().nonnegative(),
+          documentClassificationCounts: z.record(z.string().max(128), z.number().int().nonnegative()),
+          documentedDocumentClassificationCounts: z.record(z.string().max(128), z.number().int().nonnegative()),
           packageCount: z.number().int().nonnegative(),
           packageStatus: z.object({
             fresh: z.number().int().nonnegative(),

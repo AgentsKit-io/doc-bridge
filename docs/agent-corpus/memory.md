@@ -1,6 +1,6 @@
 ---
-type: package
-package: doc-bridge-memory
+type: module
+id: doc-bridge-memory
 editRoot: src/memory
 humanDoc: /docs/schemas/memory-candidate-v1
 ---

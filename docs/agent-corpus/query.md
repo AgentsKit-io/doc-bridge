@@ -1,6 +1,6 @@
 ---
-type: package
-package: doc-bridge-query
+type: module
+id: doc-bridge-query
 editRoot: src/query
 humanDoc: /docs/query
 ---

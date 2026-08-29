@@ -13,6 +13,14 @@
       }
     }
   },
+  "reconciliation": {
+    "scope": "package",
+    "requiredRelationKinds": ["imports", "re-exports", "depends-on"],
+    "requiredRelationTargets": "internal"
+  },
+  "safety": {
+    "exclude": ["**/examples/**", "**/public/raw/**"]
+  },
   "routing": {
     "options": {
       "ownership": {

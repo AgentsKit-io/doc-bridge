@@ -22,7 +22,7 @@ const fixture = (): string => {
   writeFileSync(join(root, 'packages', 'app', 'package.json'), JSON.stringify({ name: '@fixture/app', dependencies: { 'external-lib': '^1.0.0' } }))
   writeFileSync(join(root, 'packages', 'app', 'src', 'index.ts'), "import { helper } from './helper.js'\nimport { helper as helper2 } from './helper.js'\nexport { helper } from './helper.js'\nexport const app = helper + helper2\n")
   writeFileSync(join(root, 'packages', 'app', 'src', 'helper.ts'), "export const helper = 1\n")
-  writeFileSync(join(root, 'packages', 'app', 'src', 'dynamic.ts'), "const helperSpecifier = './helper'\nexport const value = import(variable)\nexport const loaded = import('./helper')\nexport const loadedViaBinding = import(helperSpecifier)\n")
+  writeFileSync(join(root, 'packages', 'app', 'src', 'dynamic.ts'), "const helperSpecifier = './helper'\nconst composedSpecifier = './' + 'helper'\nexport const value = import(variable)\nexport const loaded = import('./helper')\nexport const loadedViaBinding = import(helperSpecifier)\nexport const loadedViaExpression = import(composedSpecifier)\nexport const requiredViaExpression = require(composedSpecifier)\n")
   writeFileSync(join(root, 'src-alias.ts'), "import { helper } from '@app/helper'\nexport const aliased = helper\n")
   writeFileSync(join(root, 'tsconfig.json'), JSON.stringify({ compilerOptions: { baseUrl: '.', paths: { '@app/*': ['packages/app/src/*'] } } }))
   writeFileSync(join(root, 'docs', 'architecture.md'), '# Architecture\n')
@@ -39,6 +39,7 @@ describe('repository discovery', () => {
     expect(entityIds).toContain('package:@fixture/app')
     expect(entityIds).toContain('module:packages/app/src/index.ts')
     expect(entityIds).toContain('document:docs/architecture.md')
+    expect(snapshot.entities.find((entity) => entity.id === 'document:docs/architecture.md')?.metadata).toEqual({ classification: 'human' })
     expect(entityIds).toContain('external:external-lib')
     expect(relationKinds).toContain('contains')
     expect(relationKinds).toContain('imports')
@@ -46,6 +47,15 @@ describe('repository discovery', () => {
     expect(relationKinds).toContain('depends-on')
     expect(snapshot.relations.some((relation) => relation.from === 'module:src-alias.ts' && relation.to === 'module:packages/app/src/helper.ts')).toBe(true)
     expect(snapshot.relations.find((relation) => relation.from === 'module:packages/app/src/index.ts' && relation.kind === 'imports')?.evidence).toHaveLength(2)
+  })
+
+  it('keeps archived documentation out of the current human-doc classification', () => {
+    const root = fixture()
+    mkdirSync(join(root, 'docs-archive'), { recursive: true })
+    writeFileSync(join(root, 'docs-archive', 'legacy.md'), '# Legacy\n')
+
+    const document = discoverRepository({ root }).entities.find((entity) => entity.id === 'document:docs-archive/legacy.md')
+    expect(document?.metadata).toEqual({ classification: 'archive' })
   })
 
   it('makes unsupported dynamic behavior explicit and remains deterministic', () => {
@@ -57,9 +67,18 @@ describe('repository discovery', () => {
     expect(first.sourceRevisionKind).toBe('content')
     expect(first.coverage.some((entry) => entry.status === 'not-analyzed' && entry.scope.startsWith('dynamic-imports'))).toBe(true)
     expect(first.coverage.find((entry) => entry.scope === 'dynamic-imports')).toMatchObject({ status: 'partial' })
+    expect(first.coverage.find((entry) => entry.scope === 'dynamic-imports')?.evidence).toEqual(expect.arrayContaining([
+      expect.objectContaining({ path: 'packages/app/src/dynamic.ts', lineStart: 3, lineEnd: 3 }),
+    ]))
+    expect(first.coverage.find((entry) => entry.scope === 'dynamic-imports:packages/app/src/dynamic.ts')?.evidence).toEqual(expect.arrayContaining([
+      expect.objectContaining({ path: 'packages/app/src/dynamic.ts', lineStart: 3, lineEnd: 3 }),
+      expect.objectContaining({ path: 'packages/app/src/dynamic.ts', lineStart: 6, lineEnd: 6 }),
+    ]))
     expect(first.relations).toContainEqual(expect.objectContaining({ from: 'module:packages/app/src/dynamic.ts', to: 'module:packages/app/src/helper.ts', kind: 'imports', metadata: { detection: 'dynamic-literal' } }))
     expect(first.coverage.some((entry) => entry.scope === 'runtime-wiring')).toBe(true)
-    expect(first.entities.find((entity) => entity.id === 'module:packages/app/src/dynamic.ts')?.metadata).toEqual({ exports: ['loaded', 'loadedViaBinding', 'value'], test: false })
+    expect(first.entities.find((entity) => entity.id === 'module:packages/app/src/dynamic.ts')?.metadata).toEqual({ exports: ['loaded', 'loadedViaBinding', 'loadedViaExpression', 'requiredViaExpression', 'value'], test: false })
+    expect(first.relations.filter((relation) => relation.from === 'module:packages/app/src/dynamic.ts' && relation.to === 'module:packages/app/src/helper.ts' && relation.kind === 'imports')).toHaveLength(1)
+    expect(first.relations.find((relation) => relation.from === 'module:packages/app/src/dynamic.ts' && relation.to === 'module:packages/app/src/helper.ts' && relation.kind === 'imports')?.evidence).toHaveLength(4)
 
     writeFileSync(join(root, 'packages', 'app', 'src', 'helper.ts'), 'export const helper = 2\n')
     expect(discoverRepository({ root }).sourceRevision).not.toBe(first.sourceRevision)
@@ -86,6 +105,7 @@ describe('repository discovery', () => {
     writeFileSync(join(root, 'packages', 'edge', 'src', 'exports.ts'), 'export class EdgeClass {}\nexport function edgeFunction() {}\nexport interface EdgeInterface {}\nexport type EdgeType = string\nexport enum EdgeEnum { A }\nexport namespace EdgeNamespace {}\nexport const first = 1, second = 2\nexport default first\n')
     writeFileSync(join(root, 'packages', 'edge', 'src', 'star.ts'), "export * from './dir'\n")
     writeFileSync(join(root, 'packages', 'edge', 'src', 'imports.ts'), "import edge = require('@fixture/edge')\nimport listenTarget = require('listen-runtime')\nconst literal = require('unlisted-runtime')\nconst dynamic = require(runtimeName)\nconst lazy = import(runtimeName)\nimport './dir'\nimport './missing'\nmodule.register(edge)\nmodule.register(unbound)\nmodule.listen(listenTarget)\nexport { edge, literal, dynamic, lazy }\n")
+    writeFileSync(join(root, 'packages', 'edge', 'src', 'local-wiring.ts'), "const registry = { register(value: unknown) {} }\nexport class LocalDispatcher { run(value: unknown) { this.register(value) } register(value: unknown) {} }\nregistry.register('local')\n")
     writeFileSync(join(root, 'packages', 'edge', 'src', 'wiring.test.ts'), "import edge = require('@fixture/edge')\nmodule.register(edge)\n")
 
     const snapshot = discoverRepository({ root })
@@ -106,6 +126,7 @@ describe('repository discovery', () => {
     expect(configured.relations).toContainEqual(expect.objectContaining({ from: 'module:packages/edge/src/imports.ts', to: 'external:listen-runtime', kind: 'runtime-wiring', metadata: { detection: 'runtime-wiring-static' } }))
 
     expect(snapshot.coverage.some((entry) => entry.scope === 'runtime-wiring:packages/edge/src/wiring.test.ts')).toBe(false)
+    expect(snapshot.coverage.some((entry) => entry.scope === 'runtime-wiring:packages/edge/src/local-wiring.ts')).toBe(false)
     const configuredTests = discoverRepository({ root, config: { analysis: { jsTs: { includeTestRuntimeWiring: true } } } as DocBridgeConfigV1 })
     expect(configuredTests.relations).toContainEqual(expect.objectContaining({ from: 'module:packages/edge/src/wiring.test.ts', to: 'package:@fixture/edge', kind: 'runtime-wiring', metadata: { detection: 'runtime-wiring-static' } }))
   })
@@ -160,6 +181,18 @@ describe('repository discovery', () => {
     expect(snapshot.coverage.find((entry) => entry.scope === 'dynamic-imports')).toMatchObject({ status: 'not-applicable' })
     expect(snapshot.coverage.find((entry) => entry.scope === 'runtime-wiring')).toMatchObject({ status: 'not-applicable' })
     expect(snapshot.coverage.every((entry) => entry.analyzerVersion)).toBe(true)
+  })
+
+  it('bounds dynamic-loading evidence at the schema limit', () => {
+    const root = mkdtempSync(join(tmpdir(), 'doc-bridge-discovery-dynamic-limit-'))
+    writeFileSync(join(root, 'package.json'), JSON.stringify({ name: 'dynamic-limit-root' }))
+    writeFileSync(join(root, 'dynamic.ts'), Array.from({ length: 40 }, (_, index) => `export const value${index} = import(runtimeName${index})`).join('\n') + '\n')
+
+    const snapshot = discoverRepository({ root })
+    const coverage = snapshot.coverage.find((entry) => entry.scope === 'dynamic-imports:dynamic.ts')
+
+    expect(coverage?.status).toBe('not-analyzed')
+    expect(coverage?.evidence).toHaveLength(32)
   })
 
   it('honors configured repository file limits and ignores non-package workspace directories', () => {

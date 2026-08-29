@@ -61,7 +61,8 @@ async function walk(directory) {
 }
 
 function unix(path) { return path.split(sep).join('/') }
-function entryId(slug) { return `doc:${slug.replace(/[^A-Za-z0-9._:-]+/g, ':')}` }
+function artifactId(prefix, value) { return `${prefix}:${value.replace(/[^A-Za-z0-9._:-]+/g, ':')}` }
+function entryId(slug) { return artifactId('doc', slug) }
 function canonicalDocUrl(slug) { return slug === 'index' ? `${origin}/docs/` : `${origin}/docs/${slug}/` }
 function aliases(values) {
   const seen = new Set()
@@ -208,7 +209,7 @@ const handoffEntries = Object.entries(handoffIndex.handoffs ?? {}).map(([id, han
     : `${origin}${handoff.humanDoc ?? '/docs/getting-started'}/`
   const purpose = handoff.notes?.[0] ?? `${id} ownership and checks`
   return {
-    id: `package:${id}`,
+    id: artifactId('package', id),
     kind: 'package',
     label: id === 'doc-bridge' ? 'Doc Bridge ownership handoff' : `${id} ownership handoff`,
     match: {
@@ -224,7 +225,7 @@ const handoffEntries = Object.entries(handoffIndex.handoffs ?? {}).map(([id, han
     answer: {
       markdown: `## ${id} handoff\n\n${purpose}.\n\nStart at [**${startHere}**](${rawUrl}). Edit roots: **${(handoff.editRoots ?? [handoff.target?.path ?? 'src']).join(', ')}**. Checks: **${(handoff.checks ?? ['pnpm test', 'pnpm typecheck']).join('**, **')}**.\n\nThis answer was generated from the repository's own Doc Bridge index.`,
       citations: [
-        { id: `human:${id}`, title: `${id} human guide`, href: humanUrl },
+        { id: artifactId('human', id), title: `${id} human guide`, href: humanUrl },
         { id: entryId(rawPath), title: startHere, href: rawUrl },
       ],
     },

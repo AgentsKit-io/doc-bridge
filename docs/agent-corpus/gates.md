@@ -1,6 +1,6 @@
 ---
-type: package
-package: doc-bridge-gates
+type: module
+id: doc-bridge-gates
 editRoot: src/gates
 humanDoc: /docs/spec/documentation-standard-v1
 ---
