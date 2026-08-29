@@ -41,8 +41,9 @@ for (const file of requiredFiles) {
   if (localDigest !== expectedDigest) {
     throw new Error(`${file} differs from its recorded upstream SHA-256 digest.`)
   }
-  const url = `https://raw.githubusercontent.com/${metadata.repository}/${metadata.ref}/${file}`
-  const upstream = await fetchText(url)
+  const url = new URL(`https://raw.githubusercontent.com/${metadata.repository}/${metadata.ref}/${file}`)
+  if (url.hostname !== 'raw.githubusercontent.com') throw new Error('Unexpected upstream host.')
+  const upstream = await fetchText(url.href)
   if (sha256(upstream) !== expectedDigest || upstream !== local) {
     throw new Error(`${file} is stale against ${metadata.repository}@${metadata.ref}. Sync the canonical snapshot and digest.`)
   }

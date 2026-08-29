@@ -4,25 +4,17 @@ packages:
 allowBuilds:
   esbuild: true
 
-auditConfig:
-  # image-size 2.0.3 is the declared fix but was not published as of 2026-08-09.
-  # Remove each exception as soon as its upstream patched release is available.
-  ignoreGhsas:
-    - GHSA-w3rx-r6r6-pgpr
-    - GHSA-5p2g-fcmc-qvqq
-    # extract-zip 2.0.2 is the declared fix, but no patched npm release exists.
-    # Recheck this exception before each release and remove it once upstream publishes.
-    - GHSA-jmr9-qjv8-65gv
-
 overrides:
+  '@puppeteer/browsers': 3.2.1
   brace-expansion: 5.0.9
   dompurify: 3.4.13
-  esbuild: ^0.28.1
+  esbuild: ^0.28.2
   ip-address: 10.3.1
   'js-yaml@<4': 3.15.1
   'js-yaml@>=4 <5': 4.3.1
   nanoid: 3.3.18
   postcss: 8.5.23
+  proxy-agent: 8.0.2
   sharp: 0.35.0
   tmp: 0.2.7
   uuid: 11.1.1

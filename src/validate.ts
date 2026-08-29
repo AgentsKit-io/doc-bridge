@@ -36,10 +36,16 @@ export type ParseResult<T> =
   | { readonly ok: true; readonly value: T }
   | { readonly ok: false; readonly issues: readonly ParseIssue[] }
 
+const zodMessage = (issue: ZodError['issues'][number]): string => {
+  if (issue.code === 'invalid_type' && issue.message.endsWith('received undefined')) return 'Required'
+  if (issue.code === 'invalid_value' && 'values' in issue) return 'Invalid enum value'
+  return issue.message
+}
+
 const zodIssues = (error: ZodError): readonly ParseIssue[] =>
   error.issues.map((issue) => ({
     path: issue.path.join('.') || '(root)',
-    message: issue.message,
+    message: zodMessage(issue),
   }))
 
 export const safeParseAgentHandoff = (input: unknown): ParseResult<AgentHandoffV1> => {

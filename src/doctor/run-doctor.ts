@@ -52,17 +52,6 @@ const gradeForScore = (score: number): DoctorReport['grade'] => {
   return 'F'
 }
 
-const agentDocPaths = (index: DocBridgeIndexV1): Set<string> => {
-  const paths = new Set<string>()
-  for (const owner of Object.values(index.lookup?.ownership ?? {})) {
-    if (owner.agentDoc) paths.add(owner.agentDoc)
-  }
-  for (const handoff of Object.values(index.handoffs ?? {})) {
-    if (handoff.startHere) paths.add(handoff.startHere)
-  }
-  return paths
-}
-
 const computeScore = (coverage: DoctorCoverage): number => {
   let score = 0
 
@@ -166,7 +155,7 @@ export const runDoctor = (root: string, config: DocBridgeConfigV1): DoctorReport
   let index: DocBridgeIndexV1 | undefined
   let hasIndex = true
   let freshnessOk = false
-  let freshnessMessage = 'Index is fresh'
+  let freshnessMessage: string
 
   try {
     index = loadDocBridgeIndex(root, config)
@@ -191,8 +180,6 @@ export const runDoctor = (root: string, config: DocBridgeConfigV1): DoctorReport
   const missingHumanDoc = ownership.filter(([, owner]) => !owner.humanDoc).map(([id]) => id)
 
   const indexedPaths = new Set(index.knowledge.map((entry) => entry.path))
-  const expectedAgentDocs = agentDocPaths(index)
-  const unindexed = [...expectedAgentDocs].filter((path) => !indexedPaths.has(path))
 
   const corpusDocs = scanAgentCorpus(root, config).filter(
     (doc) => doc.path !== config.corpus.agent.index,

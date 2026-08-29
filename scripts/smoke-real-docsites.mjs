@@ -1,11 +1,13 @@
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { execFileSync } from 'node:child_process'
 
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), '..')
-const root = process.env.DOC_BRIDGE_REAL_SMOKE_ROOT ?? join(tmpdir(), 'doc-bridge-real')
+const root = process.env.DOC_BRIDGE_REAL_SMOKE_ROOT
+  ? resolve(process.env.DOC_BRIDGE_REAL_SMOKE_ROOT)
+  : mkdtempSync(join(tmpdir(), 'doc-bridge-real-'))
 const version = JSON.parse(readFileSync(join(repo, 'package.json'), 'utf8')).version
 const tarball = join(repo, `agentskit-doc-bridge-${version}.tgz`)
 const runner = join(root, 'runner')
@@ -108,9 +110,6 @@ const prepareFumadocs = (dir) => {
     )}\n`,
   )
 }
-
-const countFiles = (dir) =>
-  Number(run('find', [dir, '-type', 'f'], dirname(dir)).trim().split('\n').filter(Boolean).length)
 
 const smokeDocusaurus = (bin, dir) => {
   prepareDocusaurus(dir)

@@ -1,4 +1,4 @@
-import { docs } from '@/.source'
+import { docs } from '@/.source/server'
 import { getSlugs, loader } from 'fumadocs-core/source'
 import { isPublicDocPath } from './public-docs'
 
@@ -6,9 +6,9 @@ const base = loader({
   baseUrl: '/docs',
   source: docs.toFumadocsSource(),
   slugs: info =>
-    info.name === 'README' || info.name === 'index'
-      ? info.dirname.split('/').filter(Boolean)
-      : getSlugs(info),
+    ['README', 'index'].includes(info.path.split('/').pop()?.replace(/\.[^.]+$/u, '') ?? '')
+      ? info.path.split('/').slice(0, -1).filter(Boolean)
+      : getSlugs(info.path),
 })
 
 function filterTree(node: any): any {
@@ -37,7 +37,7 @@ export const source = {
   getPage(slug?: string[]) {
     const page = base.getPage(slug)
     if (!page) return page
-    const filePath = page.file?.path ?? `${(slug ?? []).join('/')}.md`
+    const filePath = page.path ?? `${(slug ?? []).join('/')}.md`
     if (!isPublicDocPath(filePath)) {
       const joined = (slug ?? []).join('/')
       if (
@@ -51,7 +51,7 @@ export const source = {
   },
   getPages(language?: string) {
     return base.getPages(language).filter(page =>
-      isPublicDocPath(page.file?.path ?? page.path),
+    isPublicDocPath(page.path),
     )
   },
   generateParams() {

@@ -176,5 +176,18 @@ export const evaluateRules = (
   return { mode: resolved.mode, findings: sortedFindings, exitCode: sortedFindings.some((finding) => finding.severity === 'error') ? 1 : 0 }
 }
 
-export const parseRuleId = (value: string): RuleId => RuleIdSchema.parse(value)
-export const parseRuleSeverity = (value: string): RuleSeverity => RuleSeveritySchema.parse(value)
+export const parseRuleId = (value: string): RuleId => {
+  try {
+    return RuleIdSchema.parse(value)
+  } catch {
+    throw new Error(`Invalid enum value: ${value}`)
+  }
+}
+
+export const parseRuleSeverity = (value: string): RuleSeverity => {
+  try {
+    return RuleSeveritySchema.parse(value)
+  } catch {
+    throw new Error(`Invalid enum value: ${value}`)
+  }
+}

@@ -13,7 +13,7 @@ export default async function Page({ params }: Props) {
   const page = source.getPage(slug)
   if (!page) notFound()
   const MDX = page.data.body
-  const rawPath = `${BASE_PATH}/raw/${page.file.path}`
+  const rawPath = `${BASE_PATH}/raw/${page.path}`
 
   return (
     <DocsPage
@@ -22,7 +22,7 @@ export default async function Page({ params }: Props) {
         owner: 'AgentsKit-io',
         repo: 'doc-bridge',
         sha: 'master',
-        path: `docs/${page.file.path}`,
+        path: `docs/${page.path}`,
       }}
     >
       {page.data.description ? <DocsDescription>{page.data.description}</DocsDescription> : null}

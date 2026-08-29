@@ -93,7 +93,7 @@ export const EntitySchema = z
     aliases: z.array(boundedString(256)).max(32).optional(),
     provenance: ProvenanceSchema,
     evidence: z.array(EvidenceSchema).max(64),
-    metadata: z.record(z.unknown()).optional(),
+    metadata: z.record(z.string(), z.unknown()).optional(),
   })
   .strict()
 export type KnowledgeEntity = z.infer<typeof EntitySchema>
@@ -107,7 +107,7 @@ export const RelationSchema = z
     discriminator: boundedString(256).optional(),
     provenance: ProvenanceSchema,
     evidence: z.array(EvidenceSchema).max(64),
-    metadata: z.record(z.unknown()).optional(),
+    metadata: z.record(z.string(), z.unknown()).optional(),
   })
   .strict()
 export type KnowledgeRelation = z.infer<typeof RelationSchema>

@@ -42,7 +42,7 @@ export function SiteFooter() {
           })}
         </nav>
 
-        <p className="mt-6 text-xs text-neutral-500">
+        <p className="mt-6 text-xs text-neutral-500 dark:text-neutral-400">
           Six products. One connected agent toolkit.
         </p>
       </div>

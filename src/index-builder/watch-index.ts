@@ -1,5 +1,5 @@
 import { existsSync, watch } from 'node:fs'
-import { dirname, join, resolve } from 'node:path'
+import { dirname, resolve } from 'node:path'
 
 import type { DocBridgeConfigV1 } from '../config/schema.js'
 import { buildDocBridgeIndex } from './build-index.js'
