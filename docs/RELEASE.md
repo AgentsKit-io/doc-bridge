@@ -32,8 +32,9 @@ pnpm changeset          # if new entry needed
 pnpm version-packages   # bumps package.json + CHANGELOG from .changeset/*
 ```
 
-Current track: **`1.7.44` stable**. The pending security changeset is a patch
-and will produce `1.7.45` through the Changesets workflow.
+Current track: **`1.7.45` stable**. The release includes the enterprise
+knowledge-bridge, deterministic benchmark, scoped-package artifact fix, and
+trusted-publishing workflow hardening.
 
 ## Publish (npm + GitHub)
 
@@ -52,22 +53,22 @@ Before the first publish, configure npm Trusted Publishing for package
 workflow `changesets.yml`, and GitHub environment `npm`.
 
 ```bash
-git tag v1.7.44
-git push origin v1.7.44
+git tag v1.7.45
+git push origin v1.7.45
 ```
 
 For recovery of an existing immutable tag, use the guarded manual dispatch. Never move or recreate a release tag.
 
 ```bash
-gh workflow run release.yml --ref master -f tag=v1.7.44
+gh workflow run release.yml --ref master -f tag=v1.7.45
 ```
 
 Confirm:
 
 ```bash
-npm view @agentskit/doc-bridge@1.7.44 version dist.integrity
-npx ak-docs@1.7.44 --version
-gh release view v1.7.44 --json isDraft
+npm view @agentskit/doc-bridge@1.7.45 version dist.integrity
+npx ak-docs@1.7.45 --version
+gh release view v1.7.45 --json isDraft
 ```
 
 GitHub Pages must remain configured for GitHub Actions; `.github/workflows/pages.yml` builds and deploys the Fumadocs portal from `apps/docs`.
