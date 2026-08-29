@@ -32,7 +32,7 @@
     { "id": "mcp-package", "category": "mcp", "execution": "real", "command": "pnpm mcpb:stage && pnpm mcpb:validate && pnpm mcpb:smoke", "timeoutMs": 180000 },
     { "id": "docs-typecheck", "category": "docs", "command": "pnpm docs:typecheck", "timeoutMs": 180000 },
     { "id": "diff-clean", "category": "custom", "command": "git diff --check", "timeoutMs": 30000 },
-    { "id": "report-ui", "category": "ui", "execution": "real", "capabilities": ["real-browser", "screenshot"], "command": "node scripts/report-visual-check.mjs .doc-bridge/report.html --output .doc-bridge/verification/ui", "timeoutMs": 180000 }
+    { "id": "report-ui", "category": "ui", "execution": "real", "capabilities": ["real-browser", "screenshot"], "command": "node scripts/report-visual-check.mjs .doc-bridge/report.html --output .codex/verification/ui", "timeoutMs": 180000 }
   ],
   "tracking": {
     "required": true,

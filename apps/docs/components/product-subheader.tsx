@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { Menu, X } from 'lucide-react'
-import { LargeSearchToggle, SearchToggle } from 'fumadocs-ui/components/layout/search-toggle'
+import { FullSearchTrigger, SearchTrigger } from 'fumadocs-ui/layouts/shared/slots/search-trigger'
 import { useState } from 'react'
 
 const links = [
@@ -38,11 +38,11 @@ export function ProductSubheader() {
               {link.label}
             </Link>
           ))}
-          <LargeSearchToggle aria-label="Search Doc Bridge documentation" className="ml-1 min-h-11 w-40 border-black/10 bg-white/55 dark:border-white/10 dark:bg-white/[0.04]" />
+          <FullSearchTrigger aria-label="Search Doc Bridge documentation" className="ml-1 min-h-11 w-40 border-black/10 bg-white/55 dark:border-white/10 dark:bg-white/[0.04]" />
         </div>
 
         <div className="ml-auto flex items-center md:hidden">
-          <SearchToggle aria-label="Search Doc Bridge documentation" className="size-11" />
+          <SearchTrigger aria-label="Search Doc Bridge documentation" className="size-11" />
           <button
             type="button"
             className="grid size-11 place-items-center rounded-md hover:bg-black/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 dark:hover:bg-white/10"

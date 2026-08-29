@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs'
+import { closeSync, existsSync, mkdirSync, openSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs'
 import { dirname, relative, resolve } from 'node:path'
 import { createInterface } from 'node:readline/promises'
 
@@ -720,10 +720,19 @@ const runSuggestCommand = async (flags: ReadonlySet<string>, configPath: string 
 }
 
 const writeIfMissing = (path: string, contents: string): boolean => {
-  if (existsSync(path)) return false
   mkdirSync(dirname(path), { recursive: true })
-  writeFileSync(path, contents, 'utf8')
-  return true
+  try {
+    const fd = openSync(path, 'wx')
+    try {
+      writeFileSync(fd, contents, 'utf8')
+      return true
+    } finally {
+      closeSync(fd)
+    }
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'EEXIST') return false
+    throw error
+  }
 }
 
 const demoOwnership = {

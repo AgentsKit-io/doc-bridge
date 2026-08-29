@@ -79,7 +79,13 @@ const parseConfig = (input: unknown): DocBridgeConfigV1 => {
   if (result.success) return result.data
   throw new Error(
     `Invalid doc-bridge config:\n${result.error.issues.map((issue) =>
-      `  - ${issue.path.join('.') || '(root)'}: ${issue.message}`,
+      `  - ${issue.path.join('.') || '(root)'}: ${
+        issue.code === 'invalid_type' && issue.message.endsWith('received undefined')
+          ? 'Required'
+          : issue.code === 'invalid_value' && 'values' in issue
+            ? 'Invalid enum value'
+            : issue.message
+      }`,
     ).join('\n')}`,
   )
 }

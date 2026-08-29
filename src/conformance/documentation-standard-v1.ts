@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, realpathSync, statSync } from 'node:fs'
+import { closeSync, existsSync, fstatSync, openSync, readFileSync, realpathSync } from 'node:fs'
 import { isAbsolute, relative, resolve, sep } from 'node:path'
 
 import type {
@@ -95,11 +95,10 @@ const fileEvidence = (
       evidence: { path, detail: 'Path escapes the project root.' },
     }
   }
-  if (!existsSync(abs)) {
-    return { exists: false, content: '', evidence: { path, detail: 'File does not exist.' } }
-  }
+  let fd: number | undefined
   try {
-    const stat = statSync(abs)
+    fd = openSync(abs, 'r')
+    const stat = fstatSync(fd)
     if (!stat.isFile()) {
       return { exists: false, content: '', evidence: { path, detail: 'Path is not a regular file.' } }
     }
@@ -120,7 +119,7 @@ const fileEvidence = (
         evidence: { path, detail: `Text evidence exceeds ${MAX_TEXT_EVIDENCE_BYTES} bytes.` },
       }
     }
-    const content = readFileSync(abs, 'utf8')
+    const content = readFileSync(fd, 'utf8')
     return {
       exists: content.trim().length > 0,
       content,
@@ -129,8 +128,15 @@ const fileEvidence = (
         detail: content.trim().length > 0 ? 'File exists and is non-empty.' : 'File is empty.',
       },
     }
-  } catch {
-    return { exists: false, content: '', evidence: { path, detail: 'File is not readable text.' } }
+  } catch (error) {
+    const code = error && typeof error === 'object' && 'code' in error ? error.code : undefined
+    return {
+      exists: false,
+      content: '',
+      evidence: { path, detail: code === 'ENOENT' ? 'File does not exist.' : 'File is not readable text.' },
+    }
+  } finally {
+    if (fd !== undefined) closeSync(fd)
   }
 }
 

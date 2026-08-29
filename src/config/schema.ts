@@ -171,11 +171,11 @@ export const RuleSeveritySchema = z.enum(['off', 'info', 'warn', 'error'])
 export const RulesConfigSchema = z
   .object({
     mode: z.enum(['default', 'recommended', 'strict']).optional(),
-    severity: z.record(RuleIdSchema, RuleSeveritySchema).optional(),
+    severity: z.partialRecord(RuleIdSchema, RuleSeveritySchema).optional(),
     ignore: z.array(RuleIdSchema).max(128).optional(),
     criticalEntities: z.array(z.string().min(1).max(256)).max(128).optional(),
     criticalPaths: z.array(z.string().min(1).max(512)).max(128).optional(),
-    warningThresholds: z.record(RuleIdSchema, z.number().int().min(1).max(100_000)).optional(),
+    warningThresholds: z.partialRecord(RuleIdSchema, z.number().int().min(1).max(100_000)).optional(),
   })
   .strict()
 

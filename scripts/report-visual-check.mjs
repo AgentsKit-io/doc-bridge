@@ -280,6 +280,16 @@ const result = {
       : 'Automated checks passed; screenshots require human visual review. Re-run with --human-approved only after review.',
 }
 writeFileSync(join(outputDir, 'result.json'), `${JSON.stringify(result, null, 2)}\n`, 'utf8')
-console.log(JSON.stringify(result, null, 2))
-console.log(JSON.stringify(result))
+console.log(JSON.stringify({
+  status,
+  capability: result.capability,
+  artifacts: result.artifacts,
+  criteria: result.criteria,
+  reportPath: result.reportPath,
+  outputDir: result.outputDir,
+  viewports: result.viewports,
+  themes: result.themes,
+  failures: result.failures,
+  note: result.note,
+}))
 if (status === 'failed') process.exitCode = 1
