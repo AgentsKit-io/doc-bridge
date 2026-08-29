@@ -32,7 +32,7 @@ jobs:
         with:
           node-version: 22
           package-manager-cache: false
-      - name: Pin npm release client
+      - name: Install pinned npm release client
         env:
           NPM_TARBALL_URL: https://registry.npmjs.org/npm/-/npm-11.18.0.tgz
           NPM_TARBALL_SHA512: T67M4L5wNm0cZ7EBLErcEkY1SmzEW/WJ+SADBzsFUY1UdAPfFHXFQtZ6SEXiK0+vzXysCvAsepbMaBTwnrAD+w==
@@ -40,11 +40,9 @@ jobs:
           curl --fail --location --retry 3 --output npm-11.18.0.tgz "$NPM_TARBALL_URL"
           actual_sha512="$(openssl dgst -sha512 -binary npm-11.18.0.tgz | base64 -w0)"
           test "$actual_sha512" = "$NPM_TARBALL_SHA512"
-          npm_client_dir="$RUNNER_TEMP/npm-11.18.0"
-          mkdir -p "$npm_client_dir"
-          tar -xzf npm-11.18.0.tgz -C "$npm_client_dir" --strip-components=1
-          echo "$npm_client_dir/bin" >> "$GITHUB_PATH"
-          node "$npm_client_dir/bin/npm-cli.js" --version
+          npm install --global --ignore-scripts --no-audit --no-fund ./npm-11.18.0.tgz
+          hash -r
+          npm --version
           rm -f npm-11.18.0.tgz
       - run: pnpm install --frozen-lockfile
       - run: pnpm audit --audit-level low
