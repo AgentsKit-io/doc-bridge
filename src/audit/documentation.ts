@@ -94,10 +94,6 @@ const evidenceFor = (path: string, lineStart?: number): Evidence => ({
   ...(lineStart === undefined ? {} : { lineStart }),
 })
 const derivedEvidence: Evidence = { source: 'derived', path: '.doc-bridge/documentation-audit' }
-const lineAt = (content: string, pattern: RegExp): number | undefined => {
-  const index = content.split(/\r?\n/).findIndex((line) => pattern.test(line))
-  return index < 0 ? undefined : index + 1
-}
 const words = (content: string): number => content.replace(/```[\s\S]*?```/g, ' ').match(/[A-Za-z0-9][A-Za-z0-9'-]*/g)?.length ?? 0
 const hasTitle = (content: string): boolean => {
   if (frontmatterString(parseFrontmatter(content).data, 'title')) return true
