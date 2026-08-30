@@ -365,14 +365,15 @@ export const handleMcpRequest = (ctx: McpContext, request: JsonRpcRequest): unkn
         return textResult(redactValue({ ...(run ? { runId: run.runId } : {}), proposals: proposal ? [proposal] : [] }))
       }
       if (parsed.action === 'suggest') {
-        return loadRegistryAgentRunner(ctx.root, ctx.config).then(async (runner) => {
+        return (async () => {
+          const runner = ctx.config.intelligence?.registry?.cli ? undefined : await loadRegistryAgentRunner(ctx.root, ctx.config)
           const snapshot = workflowSnapshot(ctx)
           const report = workflowReport(ctx)
-          const adapter = createRegistryAgentAdapter(ctx.root, ctx.config, runner)
+          const adapter = createRegistryAgentAdapter(ctx.root, ctx.config, ctx.config.intelligence?.registry?.cli ? undefined : runner)
           const proposal = await adapter.run(snapshot, report)
           const savedPath = persistRegistryAgentProposal(workflowStateDir(ctx), proposal)
           return textResult(redactValue({ ...(run ? { runId: run.runId } : {}), proposal, proposalPath: savedPath }))
-        })
+        })()
       }
       const discovered = discoverRepository({ root: ctx.root, config: ctx.config })
       const options = { baseRevision: discovered.sourceRevision, configurationHash: sha256NormalizedV1(ctx.config), ...(ctx.config.project?.name ? { projectName: ctx.config.project.name } : {}) }

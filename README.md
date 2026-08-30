@@ -118,6 +118,7 @@ Using Cline? Follow the deterministic [`llms-install.md`](llms-install.md) setup
 | **MCP server** | Let Cursor, Claude Code, Codex-style agents resolve handoffs before editing | `ak-docs mcp`, `handoff.resolve` |
 | **GitHub Action / CI** | Fail stale indexes and broken human-doc links on PRs | `AgentsKit-io/doc-bridge@v1.4.0` |
 | **Documentation conformance** | Check the stable ecosystem standard with auditable evidence | `ak-docs conformance run documentation-standard-v1 --text` |
+| **Documentation audit** | Measure documentation quality and compare docs with the observed project graph | `ak-docs audit documentation --json` |
 | **Doc adapters** | Link human docs to agent docs | `fumadocs`, `docusaurus`, `vitepress`, `starlight`, `nextra`, `plain-markdown` |
 | **Monorepo routing** | Discover workspaces and checks | `pnpm-monorepo`, `nx` |
 | **Memory pipeline** | Turn agent notes into reviewable documentation drafts | `memory ingest`, `classify`, `promote --pr` |

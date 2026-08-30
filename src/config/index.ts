@@ -8,6 +8,7 @@ export {
 } from './load-config.js'
 export {
   DocBridgeConfigV1Schema,
+  DocumentationAuditConfigSchema,
   ReconciliationConfigSchema,
   AgentCorpusConfigSchema,
   HumanCorpusConfigSchema,
@@ -17,6 +18,7 @@ export {
   ConformanceConfigSchema,
   ReportConfigSchema,
   type DocBridgeConfigV1,
+  type DocumentationAuditConfig,
   type AgentCorpusConfig,
   type DocumentationStandardRuleId,
   type DocumentationStandardV1Config,

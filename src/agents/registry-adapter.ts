@@ -1,4 +1,5 @@
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs'
+import { spawn } from 'node:child_process'
 import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { z } from 'zod'
@@ -32,6 +33,8 @@ export type RegistryAgentContext = {
 
 export type RegistryAgentRunner = (context: RegistryAgentContext) => Promise<unknown> | unknown
 
+type RegistryCliConfig = NonNullable<NonNullable<NonNullable<DocBridgeConfigV1['intelligence']>['registry']>['cli']>
+
 export type RegistryAgentAdapter = {
   readonly metadata: RegistryAgentMetadata
   readonly run: (snapshot: DiscoverySnapshotV1, report: ReconciliationReportV1, evidence?: readonly RegistryAgentContext['evidence'][number][]) => Promise<AgentProposalV1>
@@ -46,6 +49,73 @@ const deepFreeze = <T>(value: T): T => {
 }
 
 const registryConfig = (config: DocBridgeConfigV1) => config.intelligence?.registry
+
+const runCli = (root: string, cli: RegistryCliConfig, context: RegistryAgentContext, timeoutMs: number, maxInputBytes: number, maxResponseBytes: number): Promise<unknown> => new Promise((resolve, reject) => {
+  const input = JSON.stringify({
+    protocol: 'doc-bridge.registry-agent.v1',
+    response: 'Return exactly one AgentProposalV1 JSON object on stdout. Do not emit markdown or logs on stdout.',
+    context,
+  })
+  if (Buffer.byteLength(input, 'utf8') > maxInputBytes) {
+    reject(new Error(`Registry agent CLI input limit ${maxInputBytes} bytes exceeded.`))
+    return
+  }
+  const child = spawn(cli.command, cli.args ?? [], {
+    cwd: root,
+    shell: false,
+    env: process.env,
+    stdio: ['pipe', 'pipe', 'pipe'],
+  })
+  let stdout = ''
+  let stderr = ''
+  let settled = false
+  const finish = (callback: () => void): void => {
+    if (settled) return
+    settled = true
+    callback()
+  }
+  const timer = setTimeout(() => {
+    child.kill('SIGTERM')
+    finish(() => reject(new Error(`Registry agent CLI timed out after ${timeoutMs}ms.`)))
+  }, timeoutMs)
+  child.stdout.on('data', (chunk: Buffer) => {
+    stdout += chunk.toString('utf8')
+    if (Buffer.byteLength(stdout, 'utf8') > maxResponseBytes) {
+      clearTimeout(timer)
+      child.kill('SIGTERM')
+      finish(() => reject(new Error(`Registry agent CLI response limit ${maxResponseBytes} bytes exceeded.`)))
+    }
+  })
+  child.stderr.on('data', (chunk: Buffer) => {
+    stderr += chunk.toString('utf8')
+    if (Buffer.byteLength(stderr, 'utf8') > maxResponseBytes) stderr = stderr.slice(-maxResponseBytes)
+  })
+  child.once('error', (error) => {
+    clearTimeout(timer)
+    finish(() => reject(new Error(`Registry agent CLI failed to start: ${error.message}`)))
+  })
+  child.once('close', (code, signal) => {
+    clearTimeout(timer)
+    finish(() => {
+      if (code !== 0) {
+        const detail = stderr.trim() ? `: ${stderr.trim()}` : signal ? ` (${signal})` : ''
+        reject(new Error(`Registry agent CLI exited with code ${code ?? 'unknown'}${detail}`))
+        return
+      }
+      try {
+        resolve(JSON.parse(stdout) as unknown)
+      } catch (error) {
+        reject(new Error(`Registry agent CLI must return one JSON object on stdout: ${error instanceof Error ? error.message : String(error)}`))
+      }
+    })
+  })
+  child.stdin.once('error', (error) => {
+    clearTimeout(timer)
+    child.kill('SIGTERM')
+    finish(() => reject(new Error(`Registry agent CLI stdin failed: ${error.message}`)))
+  })
+  child.stdin.end(input)
+})
 
 export const loadRegistryAgentRunner = async (root: string, config: DocBridgeConfigV1): Promise<RegistryAgentRunner> => {
   const metadata = loadRegistryAgentMetadata(root, config)
@@ -71,11 +141,12 @@ export const loadRegistryAgentMetadata = (root: string, config: DocBridgeConfigV
   return { ...metadata, root: agentPath }
 }
 
-export const createRegistryAgentAdapter = (root: string, config: DocBridgeConfigV1, runner: RegistryAgentRunner): RegistryAgentAdapter => {
+export const createRegistryAgentAdapter = (root: string, config: DocBridgeConfigV1, runner?: RegistryAgentRunner): RegistryAgentAdapter => {
   if (!registryConfig(config)?.enabled) throw new Error('Registry agents are disabled. Set intelligence.registry.enabled: true to run an assisted workflow.')
   const metadata = loadRegistryAgentMetadata(resolve(root), config)
   const settings = registryConfig(config) ?? {}
   const timeoutMs = settings.timeoutMs ?? 120_000
+  const maxInputBytes = settings.maxInputBytes ?? 8_000_000
   const maxResponseBytes = settings.maxResponseBytes ?? 256_000
   const maxTokens = settings.maxTokens ?? Math.ceil(maxResponseBytes / 4)
   const maxConcurrency = settings.maxConcurrency ?? 1
@@ -85,14 +156,22 @@ export const createRegistryAgentAdapter = (root: string, config: DocBridgeConfig
     metadata,
     run: async (snapshot, report, evidence = report.diagnostics.flatMap((diagnostic) => diagnostic.evidence).slice(0, 64)) => {
       if (active >= maxConcurrency) throw new Error(`Registry agent concurrency limit ${maxConcurrency} exceeded.`)
-      const cacheKey = sha256NormalizedV1({ snapshotHash: snapshot.contentHash, reportHash: report.contentHash, agentId: metadata.id, agentVersion: metadata.version, evidence })
+      const cacheKey = sha256NormalizedV1({ snapshotHash: snapshot.contentHash, reportHash: report.contentHash, agentId: metadata.id, agentVersion: metadata.version, cli: settings.cli ?? null, maxInputBytes, evidence })
       if (settings.deterministic && deterministicCache.has(cacheKey)) return deterministicCache.get(cacheKey) as AgentProposalV1
       active += 1
       let timer: ReturnType<typeof setTimeout> | undefined
       try {
         const context = deepFreeze({ snapshot: redactValue(snapshot), report: redactValue(report), evidence: redactValue(evidence), capabilities: ['snapshot.read', 'evidence.read', 'proposal.write'] as const, network: false as const, shell: false as const, deterministic: settings.deterministic ?? true }) as RegistryAgentContext
-        const timeout = new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new Error(`Registry agent timed out after ${timeoutMs}ms.`)), timeoutMs) })
-        const raw = await Promise.race([Promise.resolve(runner(context)), timeout])
+        const localRunner = runner
+        if (!settings.cli && !localRunner) throw new Error('Registry agent requires either intelligence.registry.cli or a local runner module.')
+        let raw: unknown
+        if (settings.cli) {
+          raw = await runCli(resolve(root), settings.cli, context, timeoutMs, maxInputBytes, maxResponseBytes)
+        } else {
+          if (!localRunner) throw new Error('Registry agent requires either intelligence.registry.cli or a local runner module.')
+          const timeout = new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new Error(`Registry agent timed out after ${timeoutMs}ms.`)), timeoutMs) })
+          raw = await Promise.race([Promise.resolve(localRunner(context)), timeout])
+        }
         const responseBytes = Buffer.byteLength(JSON.stringify(raw))
         if (responseBytes > maxResponseBytes) throw new Error(`Registry agent response limit ${maxResponseBytes} bytes exceeded.`)
         if (Math.ceil(responseBytes / 4) > maxTokens) throw new Error(`Registry agent token budget ${maxTokens} exceeded.`)

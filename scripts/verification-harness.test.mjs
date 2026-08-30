@@ -102,6 +102,36 @@ test('resolves a contract stored below the project root', () => {
   assert.equal(config.root, '..')
 })
 
+test('accepts portable harness extensions and honors its configured state directory', async () => {
+  const root = mkdtempSync(join(tmpdir(), 'ak-verify-extensions-'))
+  const configDir = join(root, '.codex')
+  mkdirSync(configDir)
+  const configPath = join(configDir, 'verification.json')
+  writeFileSync(configPath, JSON.stringify({
+    schemaVersion: 1,
+    project: 'portable-harness-fixture',
+    root: '..',
+    stateDir: '.codex/verification/harness',
+    profile: 'strict',
+    budget: { maxDurationMs: 1000 },
+    benchmark: { suiteId: 'fixture-suite', taskId: 'fixture-task', mode: 'harness' },
+    contract: {
+      intent: 'Validate the portable harness contract.',
+      scope: { inScope: ['fixture'], outOfScope: ['production'] },
+      ambiguities: [],
+      outcomes: [{ id: 'fixture', statement: 'The fixture check passes.', checks: ['logic'] }],
+    },
+    checks: [{ id: 'logic', category: 'logic', evidence: 'structured', command: 'true' }],
+    tracking: { required: false, reason: 'fixture only' },
+  }))
+  const config = validateConfig(JSON.parse(readFileSync(configPath, 'utf8')), configPath)
+  assert.equal(config.stateDir, '.codex/verification/harness')
+  assert.equal(config.contract.scope.inScope[0], 'fixture')
+  assert.equal(config.benchmark.taskId, 'fixture-task')
+  assert.equal(await main(['run', '--config', configPath, '--json']), 0)
+  assert.equal(existsSync(join(root, '.codex/verification/harness/latest.json')), true)
+})
+
 test('runs an idempotent complete verification and exposes status', async () => {
   const root = mkdtempSync(join(tmpdir(), 'ak-verify-run-'))
   const configDir = join(root, '.codex')

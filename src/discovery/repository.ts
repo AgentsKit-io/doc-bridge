@@ -492,7 +492,7 @@ const artifact = (root: string, config: DocBridgeConfigV1 | undefined, files: re
     sourceRevision: revision.value,
     sourceRevisionKind: revision.kind,
     configurationHash: sha256NormalizedV1(config ?? {}),
-    pipelineVersion: '1.1.8',
+    pipelineVersion: '1.1.9',
     analyzerVersions: { repository: '1.1.1', 'js-ts': '1.3.4' },
     entities: [...entities].sort((a, b) => a.id.localeCompare(b.id)),
     relations: [...relations].sort((a, b) => a.id.localeCompare(b.id)),

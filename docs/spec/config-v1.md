@@ -610,7 +610,13 @@ type IntelligenceConfig = {
     agentId?: string
     agentRoot?: string
     runnerModule?: string
+    cli?: {
+      /** Executable name or absolute path; arguments are passed without a shell. */
+      command: string
+      args?: string[]
+    }
     deterministic?: boolean
+    maxInputBytes?: number
     timeoutMs?: number
     maxTokens?: number
     maxResponseBytes?: number

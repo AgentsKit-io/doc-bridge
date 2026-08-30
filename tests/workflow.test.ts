@@ -65,6 +65,15 @@ describe('persistent workflow engine', () => {
     expect(resumed.reusedStages).toEqual(['collect', 'normalize', 'reconcile', 'evaluate'])
   })
 
+  it('invalidates a failed run when its source changes before retry', () => {
+    const root = mkdtempSync(join(tmpdir(), 'doc-bridge-workflow-failed-retry-'))
+    expect(() => runWorkflow({ root, sourceRevision: 'revision-1', configurationHash: hash('a'), handlers: handlers(true) })).toThrow('report failed')
+    const retried = runWorkflow({ root, sourceRevision: 'revision-2', configurationHash: hash('a'), handlers: handlers() })
+    expect(retried.run.state).toBe('delivered')
+    expect(retried.reusedStages).toEqual([])
+    expect(retried.run.artifactRefs.some((ref) => ref.startsWith('supersedes:'))).toBe(true)
+  })
+
   it('rejects a corrupted artifact and records the failure', () => {
     const root = mkdtempSync(join(tmpdir(), 'doc-bridge-workflow-corrupt-'))
     const first = runWorkflow({ root, sourceRevision: 'revision-1', configurationHash: hash('a'), stage: 'collect', handlers: handlers() })
