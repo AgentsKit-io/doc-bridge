@@ -80,8 +80,8 @@ const transition = (run: WorkflowRunV1, to: WorkflowState, reason?: string): Wor
     'awaiting-approval': ['awaiting-approval', 'validating', 'failed', 'cancelled', 'stale'],
     validating: ['validating', 'delivered', 'failed', 'cancelled', 'stale'],
     delivered: ['delivered', 'stale', 'failed', 'cancelled'],
-    failed: ['failed', 'discovering', 'analyzed', 'compared', 'proposed', 'validating', 'delivered', 'cancelled'],
-    cancelled: ['cancelled', 'discovering', 'analyzed', 'compared', 'proposed', 'validating', 'delivered'],
+    failed: ['failed', 'discovering', 'analyzed', 'compared', 'proposed', 'validating', 'delivered', 'cancelled', 'stale'],
+    cancelled: ['cancelled', 'discovering', 'analyzed', 'compared', 'proposed', 'validating', 'delivered', 'stale'],
     stale: [],
     superseded: [],
   }

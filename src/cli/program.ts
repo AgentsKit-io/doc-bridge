@@ -49,6 +49,7 @@ import { createRegistryAgentAdapter, loadRegistryAgentRunner, persistRegistryAge
 import { renderOfflineReportArtifact } from '../report/html.js'
 import { benchmarkFixture, formatBenchmarkText, measureBenchmark } from '../metrics/benchmark.js'
 import { PACKAGE_VERSION } from '../version.js'
+import { auditDocumentation, formatDocumentationAuditText } from '../audit/documentation.js'
 
 type Command =
   | 'help'
@@ -82,6 +83,7 @@ type Command =
   | 'rag'
   | 'list'
   | 'conformance'
+  | 'audit'
 
 const usage = `ak-docs — human↔agent documentation bridge (@agentskit/doc-bridge)
 
@@ -103,6 +105,7 @@ Core (no API key):
   ak-docs gate run [gate-id]
   ak-docs rules run <report.json> [--preset default|recommended|strict] [--severity rule=level] [--ignore rule]
   ak-docs conformance run documentation-standard-v1 [--text|--json]
+  ak-docs audit documentation [--text|--json]
   ak-docs mcp
   ak-docs mcp install --cursor | --claude
   ak-docs memory ingest|classify|promote [--pr] [--dry-run]
@@ -187,6 +190,7 @@ const parseArgs = (argv: readonly string[]) => {
   else if (positional[0] === 'rag') command = 'rag'
   else if (positional[0] === 'list') command = 'list'
   else if (positional[0] === 'conformance') command = 'conformance'
+  else if (positional[0] === 'audit') command = 'audit'
 
   return { command, flags, configPath, positional }
 }
@@ -622,6 +626,43 @@ const runWorkflowCommand = (
   }
 }
 
+const runDocumentationAuditCommand = (
+  flags: ReadonlySet<string>,
+  positional: readonly string[],
+  configPath: string | undefined,
+): number => {
+  if (positional[1] !== 'documentation') {
+    process.stderr.write('Usage: ak-docs audit documentation [--text|--json]\n')
+    return 1
+  }
+  try {
+    const { config, root } = loadProject(configPath)
+    const scanned = scanWorkflow(root, config)
+    const snapshot = parseDiscoverySnapshot(loadWorkflowStepOutput(scanned.stateDir, 'normalize'))
+    const analysis = applyDocumentationDeclarations(snapshot, documentationInputs(root, snapshot), { agentRoot: config.corpus.agent.root })
+    const reconciliation = reconcileKnowledge(snapshot, analysis.snapshot, {
+      ...(config.reconciliation?.scope === undefined ? {} : { scope: config.reconciliation.scope }),
+      ...(config.reconciliation?.requiredRelationKinds === undefined ? {} : { requiredRelationKinds: config.reconciliation.requiredRelationKinds }),
+      ...(config.reconciliation?.requiredRelationTargets === undefined ? {} : { requiredRelationTargets: config.reconciliation.requiredRelationTargets }),
+      includeOrphanedDocuments: config.reconciliation?.includeOrphanedDocuments ?? true,
+    })
+    const report = auditDocumentation({
+      root,
+      snapshot,
+      declared: analysis.snapshot,
+      reconciliation,
+      declarationDiagnostics: analysis.diagnostics,
+      ...(config.audit?.documentation ? { config: config.audit.documentation } : {}),
+    })
+    if (wantsTextOutput(flags, config)) writeLines(formatDocumentationAuditText(report))
+    else writeJson({ ok: report.status !== 'blocked', report })
+    return report.status === 'blocked' ? 1 : 0
+  } catch (error) {
+    process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`)
+    return 2
+  }
+}
+
 const runRulesCommand = (
   argv: readonly string[],
   flags: ReadonlySet<string>,
@@ -708,7 +749,8 @@ const runSuggestCommand = async (flags: ReadonlySet<string>, configPath: string 
     const stateDir = resolve(root, config.workflow?.stateDir ?? '.doc-bridge/workflow')
     const snapshot = parseDiscoverySnapshot(loadWorkflowStepOutput(stateDir, 'normalize'))
     const report = parseReconciliationReport(loadWorkflowStepOutput(stateDir, 'reconcile'))
-    const adapter = createRegistryAgentAdapter(root, config, await loadRegistryAgentRunner(root, config))
+    const runner = config.intelligence?.registry?.cli ? undefined : await loadRegistryAgentRunner(root, config)
+    const adapter = createRegistryAgentAdapter(root, config, runner)
     const proposal = await adapter.run(snapshot, report)
     const proposalPath = persistRegistryAgentProposal(stateDir, proposal)
     if (flags.has('--text')) writeLines([`Agent: ${adapter.metadata.id}`, `Proposal: ${proposal.proposalId}`, `Hash: ${proposal.contentHash}`, `Saved: ${proposalPath}`])
@@ -993,6 +1035,7 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
   if (command === 'scan' || command === 'reconcile' || command === 'check' || command === 'map') {
     return runWorkflowCommand(command, flags, configPath, argv)
   }
+  if (command === 'audit') return runDocumentationAuditCommand(flags, positional, configPath)
 
   if (command === 'fix') return runFixCommand(argv, positional, configPath)
   if (command === 'suggest') return runSuggestCommand(flags, configPath)

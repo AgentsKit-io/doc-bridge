@@ -24,6 +24,7 @@ export type DocumentationDeclarationOptions = {
   readonly documentId?: string
   /** Agent corpus root used for conservative package/app path inference. */
   readonly agentRoot?: string
+  readonly entityLookup?: EntityLookup
 }
 
 export type DocumentationDeclarationResult = {
@@ -48,6 +49,8 @@ type RelationFields = {
   fields: Set<string>
 }
 
+type EntityLookup = ReadonlyMap<string, KnowledgeEntity>
+
 const detectionValues = new Set(['static', 'dynamic', 'external'])
 
 const evidence = (path: string, lineStart: number, lineEnd = lineStart): Evidence => ({
@@ -64,6 +67,15 @@ const diagnostic = (
   lineStart: number,
   lineEnd = lineStart,
 ): DocumentationDiagnostic => ({ code, message, path: 'docbridge', evidence: evidence(path, lineStart, lineEnd) })
+
+const entityLookup = (entities: readonly KnowledgeEntity[]): EntityLookup => {
+  const lookup = new Map<string, KnowledgeEntity>()
+  for (const entity of entities) {
+    if (!lookup.has(entity.id)) lookup.set(entity.id, entity)
+    for (const alias of entity.aliases ?? []) if (!lookup.has(alias)) lookup.set(alias, entity)
+  }
+  return lookup
+}
 
 const scalar = (value: string): string => {
   const trimmed = value.trim()
@@ -139,8 +151,9 @@ const resolveEntity = (
   input: DocumentationDeclarationInput,
   lineStart: number,
   unresolved: Map<string, KnowledgeEntity>,
+  lookup: EntityLookup,
 ): KnowledgeEntity => {
-  const direct = entities.find((entity) => entity.id === reference || entity.aliases?.includes(reference))
+  const direct = lookup.get(reference)
   if (direct) return direct
   const packageReference = reference.replace(/^package:/, '')
   const packageCandidates = entities.filter((entity) => {
@@ -304,13 +317,14 @@ export const parseDocumentationDeclarations = (
   const relations: KnowledgeRelation[] = []
   const documentId = options.documentId ?? `document:${input.path}`
   const relationClaims = new Map<string, string>()
+  const lookup = options.entityLookup ?? entityLookup(options.snapshot.entities)
 
   if (!parsed.covers.length && !parsed.relations.length) {
     addDiagnostic(diagnostics, input, 'DOCBRIDGE_CONTENT_MISSING', 'docbridge must declare covers or relations.', 1)
   }
 
   for (const [index, cover] of parsed.covers.entries()) {
-    const target = resolveEntity(cover.value, options.snapshot.entities, input, cover.line, unresolved)
+    const target = resolveEntity(cover.value, options.snapshot.entities, input, cover.line, unresolved, lookup)
     relations.push({
       id: `relation:declared:${input.path}:covers:${index}`,
       kind: 'covers',
@@ -336,8 +350,8 @@ export const parseDocumentationDeclarations = (
       addDiagnostic(diagnostics, input, 'DOCBRIDGE_DETECTION_INVALID', `Invalid relation detection: ${detection}.`, declaration.startLine, declaration.endLine)
       continue
     }
-    const fromEntity = resolveEntity(from, options.snapshot.entities, input, declaration.startLine, unresolved)
-    const toEntity = resolveEntity(to, options.snapshot.entities, input, declaration.startLine, unresolved)
+    const fromEntity = resolveEntity(from, options.snapshot.entities, input, declaration.startLine, unresolved, lookup)
+    const toEntity = resolveEntity(to, options.snapshot.entities, input, declaration.startLine, unresolved, lookup)
     const key = relationKey(fromEntity.id, toEntity.id, kind)
     const previousDetection = relationClaims.get(key)
     if (previousDetection === detection) addDiagnostic(diagnostics, input, 'DOCBRIDGE_DECLARATION_DUPLICATE', 'Duplicate relation declaration.', declaration.startLine, declaration.endLine)
@@ -371,9 +385,10 @@ export const applyDocumentationDeclarations = (
   const entities = new Map(snapshot.entities.map((entity) => [entity.id, entity]))
   const relations = new Map(snapshot.relations.map((relation) => [relation.id, relation]))
   const diagnostics: DocumentationDiagnostic[] = []
+  const lookup = entityLookup(snapshot.entities)
 
   for (const document of documents) {
-    const result = parseDocumentationDeclarations(document, { snapshot, ...options })
+    const result = parseDocumentationDeclarations(document, { snapshot, ...options, entityLookup: lookup })
     diagnostics.push(...result.diagnostics)
     for (const entity of result.entities) entities.set(entity.id, entity)
     for (const relation of result.relations) relations.set(relation.id, relation)

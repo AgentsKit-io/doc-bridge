@@ -9,10 +9,12 @@ export {
 } from './config/load-config.js'
 export {
   DocBridgeConfigV1Schema,
+  DocumentationAuditConfigSchema,
   DocumentationStandardRuleIdSchema,
   DocumentationStandardV1ConfigSchema,
   EcosystemContractEvidenceSchema,
   type DocBridgeConfigV1,
+  type DocumentationAuditConfig,
   type AgentCorpusConfig,
   type DocumentationStandardV1Config,
   RuleIdSchema,
@@ -95,6 +97,16 @@ export {
   type DocumentationDiagnostic,
 } from './discovery/documentation.js'
 export { reconcileKnowledge } from './reconciliation/reconcile.js'
+export {
+  DOCUMENTATION_AUDIT_SCHEMA_VERSION,
+  DocumentationAuditFindingSchema,
+  DocumentationAuditReportV1Schema,
+  auditDocumentation,
+  formatDocumentationAuditText,
+  type DocumentationAuditFinding,
+  type DocumentationAuditOptions,
+  type DocumentationAuditReportV1,
+} from './audit/documentation.js'
 export {
   DEFAULT_LARGE_REPORT_THRESHOLD_BYTES,
   renderOfflineReport,

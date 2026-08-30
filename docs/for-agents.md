@@ -13,6 +13,14 @@ ak-docs query ownership <id> --agent
 
 The response supplies four things: `startHere`, `readBeforeEditing`, `editRoots`, and `checks`.
 
+For a documentation change, inspect the deterministic audit before editing:
+
+```bash
+ak-docs audit documentation --json
+```
+
+Treat `blocked` as a stop condition. Treat `not-analyzed` as missing evidence, not as a pass. Agent proposals remain advisory until a human approves them.
+
 ```mermaid
 flowchart LR
   Q["Resolve ownership"] --> R["Read startHere"]

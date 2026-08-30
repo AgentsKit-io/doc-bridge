@@ -87,10 +87,22 @@ const surfaceRequired = (value, name) => {
 
 const validateConfig = (raw, configPath) => {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) fail(`Invalid verification config: ${configPath}`)
-  assertKnownKeys(raw, new Set(['schemaVersion', 'project', 'root', 'profile', 'contract', 'surfaces', 'checks', 'exemptions', 'measurement', 'tracking', 'cleanup', 'overrides']), 'verification config')
+  assertKnownKeys(raw, new Set(['schemaVersion', 'project', 'root', 'stateDir', 'profile', 'contract', 'surfaces', 'checks', 'exemptions', 'measurement', 'tracking', 'cleanup', 'overrides', 'budget', 'benchmark']), 'verification config')
   if (raw.schemaVersion !== 1) fail('verification config schemaVersion must be 1.')
   if (typeof raw.project !== 'string' || !raw.project) fail('verification config project is required.')
   if (raw.root !== undefined && typeof raw.root !== 'string') fail('verification config root must be a string.')
+  if (raw.stateDir !== undefined && (typeof raw.stateDir !== 'string' || !raw.stateDir.trim())) fail('verification config stateDir must be a non-empty string.')
+  if (raw.stateDir !== undefined && !inside(projectRoot(configPath, raw), resolve(projectRoot(configPath, raw), raw.stateDir))) fail('verification config stateDir must stay inside the project root.')
+  if (raw.budget !== undefined) {
+    if (!raw.budget || typeof raw.budget !== 'object' || Array.isArray(raw.budget)) fail('verification config budget must be an object.')
+    assertKnownKeys(raw.budget, new Set(['maxDurationMs']), 'budget')
+    if (!Number.isInteger(raw.budget.maxDurationMs) || raw.budget.maxDurationMs < 1) fail('budget.maxDurationMs must be a positive integer.')
+  }
+  if (raw.benchmark !== undefined) {
+    if (!raw.benchmark || typeof raw.benchmark !== 'object' || Array.isArray(raw.benchmark)) fail('verification config benchmark must be an object.')
+    assertKnownKeys(raw.benchmark, new Set(['suiteId', 'taskId', 'mode']), 'benchmark')
+    for (const key of ['suiteId', 'taskId', 'mode']) if (typeof raw.benchmark[key] !== 'string' || !raw.benchmark[key].trim()) fail(`benchmark.${key} must be a non-empty string.`)
+  }
   const profile = raw.profile ?? 'default'
   if (!PROFILES.has(profile)) fail(`verification config profile must be one of: ${[...PROFILES].join(', ')}.`)
   const policy = PROFILE_POLICIES[profile]
@@ -102,12 +114,13 @@ const validateConfig = (raw, configPath) => {
   if (!Array.isArray(raw.checks) || raw.checks.length === 0) fail('verification config requires at least one check.')
   const checks = raw.checks.map((check, index) => {
     if (!check || typeof check !== 'object' || Array.isArray(check)) fail(`checks[${index}] must be an object.`)
-    assertKnownKeys(check, new Set(['id', 'category', 'command', 'required', 'timeoutMs', 'execution', 'capabilities']), `checks[${index}]`)
+    assertKnownKeys(check, new Set(['id', 'category', 'command', 'required', 'timeoutMs', 'execution', 'capabilities', 'evidence']), `checks[${index}]`)
     if (typeof check.id !== 'string' || !check.id) fail(`checks[${index}].id is required.`)
     if (typeof check.command !== 'string' || !check.command) fail(`checks[${index}].command is required.`)
     if (!CATEGORIES.has(check.category)) fail(`checks[${index}].category is invalid.`)
     if (check.required !== undefined && typeof check.required !== 'boolean') fail(`checks[${index}].required must be boolean.`)
     if (check.timeoutMs !== undefined && (!Number.isInteger(check.timeoutMs) || check.timeoutMs < 1)) fail(`checks[${index}].timeoutMs must be a positive integer.`)
+    if (check.evidence !== undefined && (typeof check.evidence !== 'string' || !check.evidence.trim())) fail(`checks[${index}].evidence must be a non-empty string.`)
     if (['endpoint', 'database', 'cli', 'mcp', 'ui'].includes(check.category) && check.execution !== 'real') fail(`checks[${index}] requires execution: "real".`)
     if (check.capabilities !== undefined && (!Array.isArray(check.capabilities) || check.capabilities.some((item) => typeof item !== 'string' || !item.trim()))) fail(`checks[${index}].capabilities must contain non-empty strings.`)
     if (check.category === 'ui') {
@@ -117,8 +130,14 @@ const validateConfig = (raw, configPath) => {
   })
   if (new Set(checks.map((check) => check.id)).size !== checks.length) fail('check ids must be unique.')
   if (!raw.contract || typeof raw.contract !== 'object' || Array.isArray(raw.contract)) fail('verification contract is required.')
-  assertKnownKeys(raw.contract, new Set(['intent', 'outcomes']), 'contract')
+  assertKnownKeys(raw.contract, new Set(['intent', 'scope', 'ambiguities', 'outcomes']), 'contract')
   if (typeof raw.contract.intent !== 'string' || !raw.contract.intent.trim()) fail('contract.intent is required.')
+  if (raw.contract.scope !== undefined) {
+    if (!raw.contract.scope || typeof raw.contract.scope !== 'object' || Array.isArray(raw.contract.scope)) fail('contract.scope must be an object.')
+    assertKnownKeys(raw.contract.scope, new Set(['inScope', 'outOfScope']), 'contract.scope')
+    for (const key of ['inScope', 'outOfScope']) if (!Array.isArray(raw.contract.scope[key]) || raw.contract.scope[key].some((item) => typeof item !== 'string' || !item.trim())) fail(`contract.scope.${key} must contain non-empty strings.`)
+  }
+  if (raw.contract.ambiguities !== undefined && (!Array.isArray(raw.contract.ambiguities) || raw.contract.ambiguities.some((item) => typeof item !== 'string' || !item.trim()))) fail('contract.ambiguities must contain non-empty strings.')
   if (!Array.isArray(raw.contract.outcomes) || raw.contract.outcomes.length === 0) fail('contract.outcomes requires at least one outcome.')
   const checkIds = new Set(checks.map((check) => check.id))
   const outcomes = raw.contract.outcomes.map((outcome, index) => {
@@ -171,7 +190,7 @@ const validateConfig = (raw, configPath) => {
     assertKnownKeys(raw.cleanup, new Set(['roots']), 'cleanup')
     if (raw.cleanup.roots !== undefined && (!Array.isArray(raw.cleanup.roots) || raw.cleanup.roots.some((root) => typeof root !== 'string' || !root.trim()))) fail('cleanup.roots must contain non-empty strings.')
   }
-  return { ...raw, profile, checks, contract: { intent: raw.contract.intent.trim(), outcomes }, surfaces, tracking, measurement, configPath, profilePolicy: policy }
+  return { ...raw, profile, checks, contract: { intent: raw.contract.intent.trim(), ...(raw.contract.scope ? { scope: raw.contract.scope } : {}), ...(raw.contract.ambiguities ? { ambiguities: raw.contract.ambiguities } : {}), outcomes }, surfaces, tracking, measurement, configPath, profilePolicy: policy }
 }
 
 const sourceRevision = (root) => {
@@ -268,14 +287,14 @@ const validateMeasurementResult = (run, measurement) => {
   }
 }
 
-const stateDirFor = (root) => join(root, '.codex', 'verification')
-const runDirFor = (root, runId) => join(stateDirFor(root), 'runs', runId)
-const latestPathFor = (root) => join(stateDirFor(root), 'latest.json')
-const loadLatest = (root) => existsSync(latestPathFor(root)) ? readJson(latestPathFor(root)) : undefined
-const saveRun = (root, run) => {
-  const dir = runDirFor(root, run.runId)
+const stateDirFor = (root, configuredStateDir) => resolve(root, configuredStateDir ?? join('.codex', 'verification'))
+const runDirFor = (root, runId, configuredStateDir) => join(stateDirFor(root, configuredStateDir), 'runs', runId)
+const latestPathFor = (root, configuredStateDir) => join(stateDirFor(root, configuredStateDir), 'latest.json')
+const loadLatest = (root, configuredStateDir) => existsSync(latestPathFor(root, configuredStateDir)) ? readJson(latestPathFor(root, configuredStateDir)) : undefined
+const saveRun = (root, run, configuredStateDir) => {
+  const dir = runDirFor(root, run.runId, configuredStateDir)
   writeAtomic(join(dir, 'run.json'), run)
-  writeAtomic(latestPathFor(root), { runId: run.runId, state: run.state, path: relative(root, join(dir, 'run.json')), updatedAt: now() })
+  writeAtomic(latestPathFor(root, configuredStateDir), { runId: run.runId, state: run.state, path: relative(root, join(dir, 'run.json')), updatedAt: now() })
 }
 const transition = (run, state, reason) => {
   if (!STATES.has(state)) fail(`Unknown verification state: ${state}.`)
@@ -298,7 +317,7 @@ const attachEvidence = (run) => {
 const runVerification = async (root, config, runId) => {
   const source = sourceRevision(root)
   const inputHash = hash({ source, config: hash(config), version: VERSION })
-  const previous = loadLatest(root)
+  const previous = loadLatest(root, config.stateDir)
   if (previous?.runId) {
     const previousRunPath = join(root, previous.path)
     if (existsSync(previousRunPath)) {
@@ -328,13 +347,13 @@ const runVerification = async (root, config, runId) => {
     exemptions: config.exemptions ?? [],
     transitions: [{ from: null, to: 'PLANNED', at: now() }],
   }
-  saveRun(root, run)
+  saveRun(root, run, config.stateDir)
   run = transition(run, 'VERIFYING')
-  saveRun(root, run)
+  saveRun(root, run, config.stateDir)
   for (const [index, check] of config.checks.entries()) {
     const result = await commandResult(root, check)
     run = { ...run, checks: run.checks.map((item, itemIndex) => itemIndex === index ? { ...item, ...result } : item) }
-    saveRun(root, run)
+    saveRun(root, run, config.stateDir)
   }
   run = validateUiEvidence(root, run)
   run = {
@@ -362,7 +381,7 @@ const runVerification = async (root, config, runId) => {
   else if (config.surfaces.ui.required) run = transition(run, 'AWAITING_HUMAN_APPROVAL', 'Visual UI approval is required.')
   else if (config.tracking.required) run = transition(run, 'AWAITING_AUTHORIZATION', `Tracking authorization is required for ${config.tracking.target}.`)
   else run = transition(run, 'COMPLETE', 'All configured verification gates passed.')
-  saveRun(root, run)
+  saveRun(root, run, config.stateDir)
   return run
 }
 
@@ -372,11 +391,11 @@ const intent = (value) => {
   return normalized
 }
 
-const updateApproval = (root, run, type, rawIntent, by) => {
+const updateApproval = (root, run, type, rawIntent, by, configuredStateDir) => {
   const expectedState = type === 'human-approval' ? 'AWAITING_HUMAN_APPROVAL' : 'AWAITING_AUTHORIZATION'
   if (run.state !== expectedState) fail(`Cannot record ${type} while run is ${run.state}.`)
   const approvedIntent = intent(rawIntent)
-  const dir = runDirFor(root, run.runId)
+  const dir = runDirFor(root, run.runId, configuredStateDir)
   writeAtomic(join(dir, `${type}.json`), {
     type,
     runId: run.runId,
@@ -391,7 +410,7 @@ const updateApproval = (root, run, type, rawIntent, by) => {
   if (type === 'human-approval') run = { ...run, outcomes: run.outcomes.map((outcome) => outcome.status === 'awaiting-human-approval' ? { ...outcome, status: 'passed' } : outcome) }
   if (type === 'human-approval' && run.state === 'AWAITING_HUMAN_APPROVAL') run = run.tracking.required ? transition(run, 'AWAITING_AUTHORIZATION', `Human approval recorded for ${run.runId}.`) : transition(run, 'COMPLETE', 'Human approval recorded and all gates passed.')
   if (type === 'tracking-authorization' && run.state === 'AWAITING_AUTHORIZATION') run = transition(run, 'COMPLETE', `Tracking authorization recorded for ${run.tracking.target}.`)
-  saveRun(root, run)
+  saveRun(root, run, configuredStateDir)
   return run
 }
 
@@ -407,7 +426,7 @@ const replaceBaseline = (root, config, sourcePath, rawIntent, by) => {
   if (source === target) fail('Baseline source must differ from the configured baseline target.')
   const value = readJson(source)
   writeAtomic(target, value)
-  const auditPath = join(stateDirFor(root), 'baseline-audit.jsonl')
+  const auditPath = join(stateDirFor(root, config.stateDir), 'baseline-audit.jsonl')
   mkdirSync(dirname(auditPath), { recursive: true })
   const entry = { action: 'replace-baseline', source: relative(root, source), target: relative(root, target), baselineHash: hash(value), intent: approvedIntent, by, at: now() }
   appendFileSync(auditPath, `${JSON.stringify(entry)}\n`, 'utf8')
@@ -415,7 +434,7 @@ const replaceBaseline = (root, config, sourcePath, rawIntent, by) => {
 }
 
 const clean = (root, config, periodic) => {
-  const manifestPath = join(stateDirFor(root), 'owned-artifacts.json')
+  const manifestPath = join(stateDirFor(root, config.stateDir), 'owned-artifacts.json')
   if (!existsSync(manifestPath)) return { removed: [], skipped: [], periodic, message: 'No task-owned artifacts are registered.' }
   const manifest = readJson(manifestPath)
   if (!Array.isArray(manifest)) fail('owned-artifacts.json must contain an array.')
@@ -455,20 +474,20 @@ const main = async (argv) => {
     return ['COMPLETE', 'AWAITING_HUMAN_APPROVAL', 'AWAITING_AUTHORIZATION'].includes(run.state) ? 0 : 1
   }
   if (command === 'status') {
-    const latest = loadLatest(root)
+    const latest = loadLatest(root, config.stateDir)
     if (!latest) fail('No verification run exists.')
     const run = readJson(join(root, latest.path))
     output(run, flags.has('json'))
     return run.state === 'COMPLETE' ? 0 : 1
   }
   if (command === 'clean') { output(clean(root, config, flags.has('periodic')), flags.has('json')); return 0 }
-  const latest = loadLatest(root)
+  const latest = loadLatest(root, config.stateDir)
   if (!latest) fail('No verification run exists.')
   let run = readJson(join(root, latest.path))
   const targetRunId = positional[1]
   if (targetRunId !== run.runId) fail(`Run id mismatch. Latest run is ${run.runId}.`)
-  if (command === 'approve') run = updateApproval(root, run, 'human-approval', positional[2], values.get('by'))
-  else if (command === 'authorize') run = updateApproval(root, run, 'tracking-authorization', positional[2], values.get('by'))
+  if (command === 'approve') run = updateApproval(root, run, 'human-approval', positional[2], values.get('by'), config.stateDir)
+  else if (command === 'authorize') run = updateApproval(root, run, 'tracking-authorization', positional[2], values.get('by'), config.stateDir)
   else fail(`Unknown command "${command}".`)
   output(run, flags.has('json'))
   return run.state === 'COMPLETE' ? 0 : 1

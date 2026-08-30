@@ -158,6 +158,20 @@ the evidence and requires a new workflow and verification run.
 - issue/PR tracking is updated only after authorization and includes the exact run ID;
 - task-owned temporary artifacts are cleaned while user-owned or ambiguous artifacts remain untouched;
 - structural decisions are documented in the relevant ADR/RFC;
+
+## Documentation quality audit baseline — 2026-08-29
+
+The first deterministic audit run across the five consumer repositories used the same local Doc Bridge source revision. Repository names are intentionally anonymized in this study artifact; the evidence remains in each repository's local verification state.
+
+| Consumer | Documents | Package coverage | Title rate | Example rate | Exact duplicate groups | Structure gaps | Contradictions | Stale |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| Consumer 01 | 4,098 | 82/83 (98.8%) | 32.4% | 15.0% | 23 | 2,712 | 0 | 0 |
+| Consumer 02 | 1,537 | 26/26 (100%) | 71.2% | 42.0% | 2 | 0 | 0 | 0 |
+| Consumer 03 | 169 | 20/21 (95.2%) | 96.4% | 59.8% | 0 | 1,083 | 0 | 0 |
+| Consumer 04 | 163 | 0/2 (0%) | 98.2% | 58.3% | 0 | 512 | 0 | 0 |
+| Consumer 05 | 416 | 0/1 (0%) | 99.8% | 23.6% | 0 | 5,118 | 0 | 0 |
+
+These numbers are a baseline, not a quality score. The audit reports semantic contradiction, unnecessary content, and generated-document freshness as `not-analyzed` until a configured AgentsKit Registry agent or human review supplies evidence. Future rounds must retain the same metrics and compare source revision, configuration hash, audit hash, and verification run ID.
 - final report states residual risks and the next human action; enterprise readiness is not claimed while any required gate is pending.
 
 ## Initial baseline to collect

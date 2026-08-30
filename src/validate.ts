@@ -3,7 +3,6 @@ import { ZodError } from 'zod'
 import { DocBridgeConfigV1Schema, type DocBridgeConfigV1 } from './config/schema.js'
 import {
   AgentHandoffLegacySchema,
-  AgentHandoffV1Schema,
   AgentSearchV1Schema,
   normalizeAgentHandoff,
   type AgentHandoffV1,
@@ -51,9 +50,7 @@ const zodIssues = (error: ZodError): readonly ParseIssue[] =>
 export const safeParseAgentHandoff = (input: unknown): ParseResult<AgentHandoffV1> => {
   const legacy = AgentHandoffLegacySchema.safeParse(input)
   if (!legacy.success) return { ok: false, issues: zodIssues(legacy.error) }
-  const normalized = AgentHandoffV1Schema.safeParse(normalizeAgentHandoff(legacy.data))
-  if (!normalized.success) return { ok: false, issues: zodIssues(normalized.error) }
-  return { ok: true, value: normalized.data }
+  return { ok: true, value: normalizeAgentHandoff(legacy.data) }
 }
 
 export const parseAgentHandoff = (input: unknown): AgentHandoffV1 => {

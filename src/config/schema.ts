@@ -191,6 +191,20 @@ export const ReconciliationConfigSchema = z
   })
   .strict()
 
+export const DocumentationAuditConfigSchema = z
+  .object({
+    /** Glob-like paths that should be compared for structure coverage. */
+    criticalPaths: z.array(z.string().min(1).max(512)).max(128).optional(),
+    /** Generated docs are checked for presence/freshness evidence only; content quality is skipped. */
+    generatedPaths: z.array(z.string().min(1).max(512)).max(128).optional(),
+    exclude: z.array(z.string().min(1).max(512)).max(128).optional(),
+    minWords: z.number().int().nonnegative().max(100_000).optional(),
+    requiredSections: z.array(z.string().min(1).max(128)).max(32).optional(),
+    requireExamples: z.boolean().optional(),
+    exactDuplicates: z.boolean().optional(),
+  })
+  .strict()
+
 export const AnalysisConfigSchema = z
   .object({
     plugins: z
@@ -359,8 +373,17 @@ export const IntelligenceConfigSchema = z
         agentId: z.string().min(1).max(256).optional(),
         agentRoot: z.string().min(1).max(512).optional(),
         runnerModule: z.string().min(1).max(512).optional(),
+        cli: z
+          .object({
+            /** Executable name or absolute path. Arguments are passed without a shell. */
+            command: z.string().min(1).max(512),
+            args: z.array(z.string().max(2_048)).max(64).optional(),
+          })
+          .strict()
+          .optional(),
         deterministic: z.boolean().optional(),
         timeoutMs: z.number().int().positive().max(600_000).optional(),
+        maxInputBytes: z.number().int().positive().max(50_000_000).optional(),
         maxTokens: z.number().int().positive().max(1_000_000).optional(),
         maxResponseBytes: z.number().int().positive().max(10_000_000).optional(),
         maxConcurrency: z.number().int().positive().max(64).optional(),
@@ -496,6 +519,7 @@ export const DocBridgeConfigV1Schema = z
     routing: RoutingConfigSchema.optional(),
     gates: GatesConfigSchema.optional(),
     reconciliation: ReconciliationConfigSchema.optional(),
+    audit: z.object({ documentation: DocumentationAuditConfigSchema.optional() }).strict().optional(),
     analysis: AnalysisConfigSchema.optional(),
     rules: RulesConfigSchema.optional(),
     workflow: WorkflowConfigSchema.optional(),
@@ -514,6 +538,7 @@ export type HumanCorpusConfig = z.infer<typeof HumanCorpusConfigSchema>
 export type DocumentationStandardV1Config = z.infer<typeof DocumentationStandardV1ConfigSchema>
 export type DocumentationStandardRuleId = z.infer<typeof DocumentationStandardRuleIdSchema>
 export type ReconciliationConfig = z.infer<typeof ReconciliationConfigSchema>
+export type DocumentationAuditConfig = z.infer<typeof DocumentationAuditConfigSchema>
 export type AnalysisConfig = z.infer<typeof AnalysisConfigSchema>
 export type RuleId = z.infer<typeof RuleIdSchema>
 export type RuleSeverity = z.infer<typeof RuleSeveritySchema>

@@ -19,7 +19,7 @@
     "requiredRelationTargets": "internal"
   },
   "safety": {
-    "exclude": ["**/examples/**", "**/public/raw/**"]
+    "exclude": ["**/examples/**", "**/public/raw/**", ".changeset/**", ".impeccable.md", "**/CLAUDE.md"]
   },
   "routing": {
     "options": {

@@ -5,10 +5,16 @@
   "profile": "strict",
   "contract": {
     "intent": "Validate the Doc Bridge package, real CLI/MCP artifact, documentation, and report UI for the current source revision.",
+    "scope": {
+      "inScope": ["deterministic documentation quality and structure/code reconciliation", "generated documentation freshness boundaries", "documentation audit CLI output"],
+      "outOfScope": ["natural-language semantic approval without human or Registry-agent review", "editing generated documentation directly"]
+    },
     "outcomes": [
       { "id": "artifact", "statement": "The package builds and its tests pass.", "checks": ["typecheck", "test-suite", "build"] },
       { "id": "surfaces", "statement": "The real CLI, MCP artifact, and discovery flow work.", "checks": ["cli-version", "cli-discovery", "mcp-package"] },
       { "id": "documentation", "statement": "Documentation checks and repository evidence are valid.", "checks": ["docs-typecheck", "diff-clean"] },
+      { "id": "documentation-audit", "statement": "The documentation audit reports measurable quality, coverage, structure gaps, contradictions, and explicit limitations.", "checks": ["documentation-audit"] },
+      { "id": "registry-cli", "statement": "The Registry adapter can invoke a configured CLI with bounded JSON stdin/stdout and fail closed on invalid output.", "checks": ["registry-cli"] },
       { "id": "report-ui", "statement": "The report is validated in a real browser and awaits human visual approval.", "checks": ["report-ui"] },
       { "id": "harness", "statement": "The verification harness contract itself is tested.", "checks": ["harness-contract"] }
     ]
@@ -23,16 +29,18 @@
     "docs": true
   },
   "checks": [
-    { "id": "typecheck", "category": "logic", "command": "pnpm typecheck", "timeoutMs": 180000 },
-    { "id": "harness-contract", "category": "logic", "command": "pnpm test:verification-harness", "timeoutMs": 120000 },
-    { "id": "test-suite", "category": "test", "command": "pnpm test", "timeoutMs": 240000 },
-    { "id": "build", "category": "build", "command": "pnpm build", "timeoutMs": 180000 },
-    { "id": "cli-version", "category": "cli", "execution": "real", "command": "node bin/ak-docs.js --version", "timeoutMs": 30000 },
-    { "id": "cli-discovery", "category": "cli", "execution": "real", "command": "node bin/ak-docs.js discover --json --config doc-bridge.config.json", "timeoutMs": 120000 },
-    { "id": "mcp-package", "category": "mcp", "execution": "real", "command": "pnpm mcpb:stage && pnpm mcpb:validate && pnpm mcpb:smoke", "timeoutMs": 180000 },
-    { "id": "docs-typecheck", "category": "docs", "command": "pnpm docs:typecheck", "timeoutMs": 180000 },
-    { "id": "diff-clean", "category": "custom", "command": "git diff --check", "timeoutMs": 30000 },
-    { "id": "report-ui", "category": "ui", "execution": "real", "capabilities": ["real-browser", "screenshot"], "command": "node scripts/report-visual-check.mjs .doc-bridge/report.html --output .codex/verification/ui", "timeoutMs": 180000 }
+    { "id": "typecheck", "evidence": "structured", "category": "logic", "command": "pnpm typecheck", "timeoutMs": 180000 },
+    { "id": "harness-contract", "evidence": "structured", "category": "logic", "command": "pnpm test:verification-harness", "timeoutMs": 120000 },
+    { "id": "test-suite", "evidence": "structured", "category": "test", "command": "pnpm test", "timeoutMs": 240000 },
+    { "id": "build", "evidence": "structured", "category": "build", "command": "pnpm build", "timeoutMs": 180000 },
+    { "id": "cli-version", "evidence": "structured", "category": "cli", "execution": "real", "command": "node bin/ak-docs.js --version", "timeoutMs": 30000 },
+    { "id": "cli-discovery", "evidence": "structured", "category": "cli", "execution": "real", "command": "node bin/ak-docs.js discover --json --config doc-bridge.config.json", "timeoutMs": 120000 },
+    { "id": "mcp-package", "evidence": "structured", "category": "mcp", "execution": "real", "command": "pnpm mcpb:stage && pnpm mcpb:validate && pnpm mcpb:smoke", "timeoutMs": 180000 },
+    { "id": "docs-typecheck", "evidence": "structured", "category": "docs", "command": "pnpm docs:typecheck", "timeoutMs": 180000 },
+    { "id": "documentation-audit", "evidence": "structured", "category": "docs", "execution": "real", "command": "pnpm build && node bin/ak-docs.js audit documentation --json", "timeoutMs": 240000 },
+    { "id": "registry-cli", "evidence": "structured", "category": "logic", "execution": "real", "command": "pnpm vitest run tests/registry-adapter.test.ts", "timeoutMs": 120000 },
+    { "id": "diff-clean", "evidence": "structured", "category": "custom", "command": "git diff --check", "timeoutMs": 30000 },
+    { "id": "report-ui", "evidence": "structured", "category": "ui", "execution": "real", "capabilities": ["real-browser", "screenshot"], "command": "node scripts/report-visual-check.mjs .doc-bridge/report.html --output .codex/verification/ui", "timeoutMs": 180000 }
   ],
   "tracking": {
     "required": true,

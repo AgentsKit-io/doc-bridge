@@ -37,7 +37,27 @@ npx agentskit add ecosystem-doc-bridge-corpus-scanner
 ak-docs suggest --json
 ```
 
-Set `intelligence.registry.enabled: true` and `runnerModule` in `doc-bridge.config.json`. The runner receives redacted immutable snapshot/report/evidence context and must return `AgentProposalV1`. Network, shell, direct file mutation, and automatic approval are not available.
+Set `intelligence.registry.enabled: true` and either `runnerModule` or the generic `cli` adapter in `doc-bridge.config.json`. The runner receives redacted immutable snapshot/report/evidence context and must return `AgentProposalV1`. Network, shell, direct file mutation, and automatic approval are not available to a module runner. A CLI receives the same context as a JSON envelope on stdin and must write exactly one `AgentProposalV1` JSON object to stdout; configure the executable and argument array without shell syntax:
+
+```json
+{
+  "intelligence": {
+    "registry": {
+      "enabled": true,
+      "agentId": "ecosystem-doc-bridge-corpus-scanner",
+      "cli": {
+        "command": "codex",
+        "args": ["exec", "--json"]
+      },
+      "timeoutMs": 120000,
+      "maxInputBytes": 8000000,
+      "maxResponseBytes": 262144
+    }
+  }
+}
+```
+
+The child runs with the project root as its working directory, never through a shell, and inherits the parent environment so the CLI can use its own login. Doc Bridge enforces timeout, output and proposal-schema limits, rejects non-zero exits, non-JSON output, mismatched hashes, and invalid origins. The CLI is an explicit trust boundary: its own network and filesystem permissions are controlled by the operator, not by Doc Bridge.
 
 ## Recovery and CI
 

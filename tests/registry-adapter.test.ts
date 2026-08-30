@@ -45,6 +45,32 @@ describe('AgentsKit Registry adapter', () => {
     expect(readFileSync(saved, 'utf8')).toContain(DEFAULT_REGISTRY_AGENT_ID)
   })
 
+  it('runs a configured CLI with a JSON stdin/stdout protocol', async () => {
+    const root = agentRoot()
+    const { snapshot, report } = fixture()
+    const proposal = validProposal(snapshot, report)
+    const cliPath = join(root, 'registry-agent-cli.mjs')
+    writeFileSync(cliPath, `import { readFileSync } from 'node:fs'
+const input = readFileSync(0, 'utf8')
+if (!input.includes('doc-bridge.registry-agent.v1')) process.exit(3)
+process.stdout.write(${JSON.stringify(JSON.stringify(proposal))})
+`)
+    const adapter = createRegistryAgentAdapter(root, config(true, { cli: { command: process.execPath, args: [cliPath] } }), () => {
+      throw new Error('local runner must not be called when CLI mode is configured')
+    })
+    const result = await adapter.run(snapshot, report)
+    expect(result.contentHash).toBe(proposal.contentHash)
+  })
+
+  it('fails closed when the configured CLI does not return JSON', async () => {
+    const root = agentRoot()
+    const { snapshot, report } = fixture()
+    const cliPath = join(root, 'invalid-registry-agent-cli.mjs')
+    writeFileSync(cliPath, 'process.stdout.write("not-json")\n')
+    const adapter = createRegistryAgentAdapter(root, config(true, { cli: { command: process.execPath, args: [cliPath] } }))
+    await expect(adapter.run(snapshot, report)).rejects.toThrow('must return one JSON object')
+  })
+
   it('fails closed when disabled, unavailable or replaced by another origin', () => {
     const root = mkdtempSync(join(tmpdir(), 'doc-bridge-agent-missing-'))
     expect(() => createRegistryAgentAdapter(root, config(false), () => ({}))).toThrow('disabled')
