@@ -4,12 +4,12 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
 import { defineConfig } from '../src/config/define-config.js'
-import { loadConfig, resolveProjectRoot } from '../src/config/load-config.js'
+import { loadConfig, projectRootFromConfigPath, resolveProjectRoot } from '../src/config/load-config.js'
 import { parseStaticJsObject } from '../src/lib/static-js-literal.js'
 import { normalizeAgentHandoff } from '../src/schemas/agent-handoff.js'
 import { DocBridgeJsonSchemas } from '../src/schemas/json-schemas.js'
-import { safeParseAgentHandoff } from '../src/validate.js'
-import { parseAgentSearch, parseDocBridgeConfig } from '../src/validate.js'
+import { parseAgentHandoff, safeParseAgentHandoff } from '../src/validate.js'
+import { parseAgentProposal, parseAgentSearch, parseDocBridgeConfig, parseFixProposal, parseWorkflowRun } from '../src/validate.js'
 import { parseDocBridgeIndex } from '../src/validate.js'
 import { parseMemoryCandidate } from '../src/validate.js'
 import { canonicalJsonV1, contentHashForArtifactV1, sha256NormalizedV1 } from '../src/index-builder/content-hash.js'
@@ -48,6 +48,16 @@ describe('AgentHandoff v1', () => {
     const result = safeParseAgentHandoff({ ...legacyHandoff, type: 'nope' })
     expect(result.ok).toBe(false)
   })
+
+  it('accepts a complete legacy payload and reports invalid normalized payloads', () => {
+    const result = safeParseAgentHandoff(legacyHandoff)
+    expect(result).toMatchObject({ ok: true, value: { schemaVersion: 1, target: { id: 'auth' } } })
+
+    const invalid = safeParseAgentHandoff({ ...legacyHandoff, editRoots: [''] })
+    expect(invalid).toMatchObject({ ok: false, issues: expect.arrayContaining([expect.objectContaining({ path: 'editRoots.0' })]) })
+    expect(parseAgentHandoff(legacyHandoff).target.id).toBe('auth')
+    expect(() => parseAgentHandoff({ ...legacyHandoff, type: 'nope' })).toThrow('Invalid AgentHandoff')
+  })
 })
 
 describe('DocBridgeIndex v1', () => {
@@ -66,6 +76,12 @@ describe('DocBridgeIndex v1', () => {
       ],
     })
     expect(index.knowledge).toHaveLength(1)
+  })
+})
+
+describe('configuration paths', () => {
+  it('resolves a project root relative to a configuration file', () => {
+    expect(projectRootFromConfigPath('/tmp/project/config/doc-bridge.config.json', '../')).toBe('/tmp/project')
   })
 })
 
@@ -173,6 +189,41 @@ describe('Knowledge Engine v1 artifacts', () => {
         status: 'proposed',
       }).status,
     ).toBe('proposed')
+
+    expect(parseWorkflowRun({
+      type: 'workflow-run',
+      ...artifactMetadata,
+      runId: 'run-2',
+      state: 'created',
+      steps: [],
+      transitions: [],
+      artifactRefs: [],
+    }).runId).toBe('run-2')
+    expect(parseAgentProposal({
+      type: 'agent-proposal',
+      ...artifactMetadata,
+      proposalId: 'proposal-2',
+      baseSnapshotHash: artifactMetadata.contentHash,
+      baseReportHash: artifactMetadata.contentHash,
+      relatedDiagnosticIds: [],
+      rationale: 'Review this relation.',
+      confidence: 0.8,
+      evidence,
+      intendedChanges: ['Add a declaration.'],
+      origin: { kind: 'registry-agent', id: 'example-agent', version: '1.0.0', provider: 'agentskit', model: 'fixture', capabilities: ['snapshot.read'] },
+      checks: ['pnpm test'],
+    }).proposalId).toBe('proposal-2')
+    expect(parseFixProposal({
+      type: 'fix-proposal',
+      ...artifactMetadata,
+      proposalId: 'fix-2',
+      baseRevision: artifactMetadata.sourceRevision,
+      affectedFiles: [{ path: 'docs/index.md', contentHash: 'd'.repeat(64) }],
+      preconditions: ['The target exists.'],
+      diff: '--- a/docs/index.md\n+++ b/docs/index.md',
+      postconditions: ['The link resolves.'],
+      status: 'proposed',
+    }).proposalId).toBe('fix-2')
   })
 
   it('preserves unknown namespaced kinds and rejects invalid evidence ranges', () => {

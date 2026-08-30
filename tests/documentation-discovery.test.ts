@@ -144,4 +144,65 @@ describe('documentation declarations', () => {
     const unclosed = parseDocumentationDeclarations({ path: 'docs/unclosed.md', content: '---\ndocbridge:\n  covers: [x]\n' }, { snapshot })
     expect(unclosed.diagnostics[0]).toMatchObject({ code: 'DOCBRIDGE_FRONTMATTER_MALFORMED', evidence: { path: 'docs/unclosed.md', lineStart: 1 } })
   })
+
+  it('keeps malformed parser branches observable without throwing', () => {
+    const snapshot = project()
+    const result = parseDocumentationDeclarations(
+      {
+        path: 'docs/edge-cases.md',
+        content: [
+          '---',
+          'docbridge: inline',
+          '  unknown: value',
+          '  1bad: value',
+          '  bad!: value',
+          '  malformed',
+          '\tbad: value',
+          '  covers: not-a-list',
+          '    -bad',
+          '    - "package:fixture"',
+          'outside: value',
+          '  covers: [missing-system, another-system]',
+          '  relations: not-a-list',
+          '    - invalid',
+          '    - from: package:fixture',
+          '      from: package:fixture',
+          '      to: "module:src/index.ts"',
+          '      kind: exposes',
+          '      detection: impossible',
+          '      extra: value',
+          '  # comment',
+          '---',
+          '# Edge cases',
+        ].join('\n'),
+      },
+      { snapshot },
+    )
+
+    expect(result.relations).toContainEqual(expect.objectContaining({ kind: 'covers', to: 'package:fixture' }))
+    expect(result.diagnostics.map((item) => item.code)).toEqual(expect.arrayContaining([
+      'DOCBRIDGE_BLOCK_MALFORMED',
+      'DOCBRIDGE_FIELD_UNKNOWN',
+      'DOCBRIDGE_INDENTATION_INVALID',
+      'DOCBRIDGE_COVERS_INVALID',
+      'DOCBRIDGE_STRUCTURE_INVALID',
+      'DOCBRIDGE_RELATIONS_INVALID',
+      'DOCBRIDGE_RELATION_INVALID',
+      'DOCBRIDGE_FIELD_DUPLICATE',
+      'DOCBRIDGE_DETECTION_INVALID',
+      'DOCBRIDGE_FIELD_UNKNOWN',
+    ]))
+
+    const frontmatterOnly = parseDocumentationDeclarations(
+      { path: 'docs/frontmatter-only.md', content: '---\ntitle: Guide\n---\n# Guide\n' },
+      { snapshot },
+    )
+    expect(frontmatterOnly.hasDocbridge).toBe(false)
+
+    const invalidConventionalPath = parseDocumentationDeclarations(
+      { path: 'docs/for-agents/guides/fixture.md', content: '# Guide\n' },
+      { snapshot, agentRoot: 'docs/for-agents' },
+    )
+    expect(invalidConventionalPath.hasDocbridge).toBe(false)
+  })
 })

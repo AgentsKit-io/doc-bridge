@@ -152,6 +152,15 @@ describe('knowledge reconciliation', () => {
     expect(report.summary.requiredRelationTargets).toBe('internal')
   })
 
+  it('retains candidate evidence when a static declaration disagrees with observed detection', () => {
+    const entities = [entity('module:a'), entity('module:b')]
+    const observed = snapshot([relation('observed-dynamic', 'module:a', 'module:b', 'observed', 'dynamic-literal')], entities)
+    const declared = snapshot([relation('declared-static', 'module:a', 'module:b', 'declared', 'static')], entities, hash('c'))
+
+    const report = reconcileKnowledge(observed, declared)
+    expect(report.diagnostics).toContainEqual(expect.objectContaining({ code: 'DECLARED_RELATION_STALE', relationIds: ['declared-static', 'observed-dynamic'] }))
+  })
+
   it('matches literal dynamic imports with the documented dynamic detection', () => {
     const entities = [
       { ...entity('package:a', 'package'), path: 'packages/a' },
