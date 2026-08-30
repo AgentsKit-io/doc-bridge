@@ -264,11 +264,15 @@ export const reconcileKnowledge = (
   }
 
   const observedDetectionsByBase = new Map<string, Set<string>>()
+  const observedByBase = new Map<string, KnowledgeRelation[]>()
   for (const relation of observedRelations) {
     const base = relationBase(relation, resolveEntity)
     const detections = observedDetectionsByBase.get(base) ?? new Set<string>()
     detections.add(relationDetection(relation))
     observedDetectionsByBase.set(base, detections)
+    const group = observedByBase.get(base) ?? []
+    group.push(relation)
+    observedByBase.set(base, group)
   }
 
   for (const group of declaredByBase.values()) {
@@ -323,7 +327,7 @@ export const reconcileKnowledge = (
   }
 
   for (const relation of declaredRelations) {
-    const candidates = observedRelations.filter((candidate) => relationBase(candidate, resolveEntity) === relationBase(relation, resolveEntity))
+    const candidates = observedByBase.get(relationBase(relation, resolveEntity)) ?? []
     const detection = relationDetection(relation)
     if (candidates.some((candidate) => relationMatches(candidate, relation, resolveEntity))) continue
     if (isUnresolved(resolveEntity(relation.from), entities) || isUnresolved(resolveEntity(relation.to), entities)) continue
