@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import { contentHashForArtifactV1, sha256NormalizedV1 } from '../index-builder/content-hash.js'
+import { contentHashForArtifactV1 } from '../index-builder/content-hash.js'
 import type { ControlledStudyObservationV1 } from './runner.js'
 
 export const STUDY_METRICS_SCHEMA_VERSION = 1 as const
