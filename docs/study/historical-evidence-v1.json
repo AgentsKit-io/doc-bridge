@@ -1,0 +1,252 @@
+{
+  "type": "historical-evidence-registry",
+  "schemaVersion": 1,
+  "registryVersion": "v1",
+  "records": [
+    {
+      "id": "dogfood-round-01",
+      "evidenceClass": "historical",
+      "observedAt": "2026-07-09T00:00:00.000Z",
+      "subject": { "kind": "aggregate", "id": "ecosystem-aggregate" },
+      "source": { "kind": "study-artifact", "reference": "dogfood-v1" },
+      "docBridgeVersion": "1.0.0",
+      "status": "partially-validated",
+      "metrics": { "knowledge-documents": 358, "agent-handoffs": 233, "gate-pass-rate": 1, "agent-search-hit-rate": 1 },
+      "missingMetrics": [
+        { "metricId": "tokens-to-answer", "status": "not-analyzed", "reason": "Not collected in this round." },
+        { "metricId": "documentation-correctness", "status": "not-analyzed", "reason": "Semantic review was not part of this round." },
+        { "metricId": "time-to-answer", "status": "not-analyzed", "reason": "Not collected in this round." }
+      ],
+      "limitations": ["Historical evidence is observational and not causal.", "The original task suite was not fixed."]
+    },
+    {
+      "id": "dogfood-round-02",
+      "evidenceClass": "historical",
+      "observedAt": "2026-07-09T00:00:00.000Z",
+      "subject": { "kind": "aggregate", "id": "ecosystem-aggregate" },
+      "source": { "kind": "study-artifact", "reference": "dogfood-round-2" },
+      "docBridgeVersion": "0.1.0-alpha.2",
+      "status": "partially-validated",
+      "metrics": { "knowledge-documents": 358, "agent-handoffs": 233, "agent-search-hit-rate": 1 },
+      "missingMetrics": [
+        { "metricId": "tokens-to-answer", "status": "not-analyzed", "reason": "Not collected in this round." },
+        { "metricId": "documentation-correctness", "status": "not-analyzed", "reason": "Semantic review was not part of this round." },
+        { "metricId": "study-cost", "status": "not-analyzed", "reason": "Cost accounting was not collected in this round." }
+      ],
+      "limitations": ["Historical evidence is observational and not causal.", "The original task suite was not fixed."]
+    },
+    {
+      "id": "dogfood-round-03",
+      "evidenceClass": "historical",
+      "observedAt": "2026-07-09T00:00:00.000Z",
+      "subject": { "kind": "aggregate", "id": "ecosystem-aggregate" },
+      "source": { "kind": "study-artifact", "reference": "dogfood-round-3" },
+      "docBridgeVersion": "0.1.0-alpha.3",
+      "status": "partially-validated",
+      "metrics": { "knowledge-documents": 358, "agent-handoffs": 233, "agent-search-hit-rate": 1, "ranking-validations": 4 },
+      "missingMetrics": [
+        { "metricId": "tokens-to-answer", "status": "not-analyzed", "reason": "Not collected in this round." },
+        { "metricId": "documentation-correctness", "status": "not-analyzed", "reason": "Semantic review was not part of this round." },
+        { "metricId": "study-cost", "status": "not-analyzed", "reason": "Cost accounting was not collected in this round." }
+      ],
+      "limitations": ["Historical evidence is observational and not causal.", "The original task suite was not fixed."]
+    },
+    {
+      "id": "documentation-audit-consumer-01",
+      "evidenceClass": "historical",
+      "observedAt": "2026-08-29T00:00:00.000Z",
+      "subject": { "kind": "consumer", "id": "consumer-01" },
+      "source": { "kind": "validation-plan", "reference": "documentation-audit-baseline" },
+      "status": "partially-validated",
+      "metrics": { "documents": 4098, "package-coverage": 0.988, "title-rate": 0.324, "example-rate": 0.15, "exact-duplicate-groups": 23, "structure-gaps": 2712, "contradictions": 0, "stale-documents": 0 },
+      "missingMetrics": [
+        { "metricId": "documentation-correctness", "status": "not-analyzed", "reason": "Natural-language semantic review was not deterministic in this round." },
+        { "metricId": "documentation-clarity", "status": "not-analyzed", "reason": "Human clarity review was not collected in this round." },
+        { "metricId": "tokens-to-answer", "status": "not-analyzed", "reason": "Agent task measurement was not collected in this round." }
+      ],
+      "limitations": ["This is a deterministic audit baseline, not a complete semantic quality score."]
+    },
+    {
+      "id": "documentation-audit-consumer-02",
+      "evidenceClass": "historical",
+      "observedAt": "2026-08-29T00:00:00.000Z",
+      "subject": { "kind": "consumer", "id": "consumer-02" },
+      "source": { "kind": "validation-plan", "reference": "documentation-audit-baseline" },
+      "status": "partially-validated",
+      "metrics": { "documents": 1537, "package-coverage": 1, "title-rate": 0.712, "example-rate": 0.42, "exact-duplicate-groups": 2, "structure-gaps": 0, "contradictions": 0, "stale-documents": 0 },
+      "missingMetrics": [
+        { "metricId": "documentation-correctness", "status": "not-analyzed", "reason": "Natural-language semantic review was not deterministic in this round." },
+        { "metricId": "documentation-clarity", "status": "not-analyzed", "reason": "Human clarity review was not collected in this round." },
+        { "metricId": "tokens-to-answer", "status": "not-analyzed", "reason": "Agent task measurement was not collected in this round." }
+      ],
+      "limitations": ["This is a deterministic audit baseline, not a complete semantic quality score."]
+    },
+    {
+      "id": "documentation-audit-consumer-03",
+      "evidenceClass": "historical",
+      "observedAt": "2026-08-29T00:00:00.000Z",
+      "subject": { "kind": "consumer", "id": "consumer-03" },
+      "source": { "kind": "validation-plan", "reference": "documentation-audit-baseline" },
+      "status": "partially-validated",
+      "metrics": { "documents": 169, "package-coverage": 0.952, "title-rate": 0.964, "example-rate": 0.598, "exact-duplicate-groups": 0, "structure-gaps": 1083, "contradictions": 0, "stale-documents": 0 },
+      "missingMetrics": [
+        { "metricId": "documentation-correctness", "status": "not-analyzed", "reason": "Natural-language semantic review was not deterministic in this round." },
+        { "metricId": "documentation-clarity", "status": "not-analyzed", "reason": "Human clarity review was not collected in this round." },
+        { "metricId": "tokens-to-answer", "status": "not-analyzed", "reason": "Agent task measurement was not collected in this round." }
+      ],
+      "limitations": ["This is a deterministic audit baseline, not a complete semantic quality score."]
+    },
+    {
+      "id": "documentation-audit-consumer-04",
+      "evidenceClass": "historical",
+      "observedAt": "2026-08-29T00:00:00.000Z",
+      "subject": { "kind": "consumer", "id": "consumer-04" },
+      "source": { "kind": "validation-plan", "reference": "documentation-audit-baseline" },
+      "status": "partially-validated",
+      "metrics": { "documents": 163, "package-coverage": 0, "title-rate": 0.982, "example-rate": 0.583, "exact-duplicate-groups": 0, "structure-gaps": 512, "contradictions": 0, "stale-documents": 0 },
+      "missingMetrics": [
+        { "metricId": "documentation-correctness", "status": "not-analyzed", "reason": "Natural-language semantic review was not deterministic in this round." },
+        { "metricId": "documentation-clarity", "status": "not-analyzed", "reason": "Human clarity review was not collected in this round." },
+        { "metricId": "tokens-to-answer", "status": "not-analyzed", "reason": "Agent task measurement was not collected in this round." }
+      ],
+      "limitations": ["This is a deterministic audit baseline, not a complete semantic quality score."]
+    },
+    {
+      "id": "documentation-audit-consumer-05",
+      "evidenceClass": "historical",
+      "observedAt": "2026-08-29T00:00:00.000Z",
+      "subject": { "kind": "consumer", "id": "consumer-05" },
+      "source": { "kind": "validation-plan", "reference": "documentation-audit-baseline" },
+      "status": "partially-validated",
+      "metrics": { "documents": 416, "package-coverage": 0, "title-rate": 0.998, "example-rate": 0.236, "exact-duplicate-groups": 0, "structure-gaps": 5118, "contradictions": 0, "stale-documents": 0 },
+      "missingMetrics": [
+        { "metricId": "documentation-correctness", "status": "not-analyzed", "reason": "Natural-language semantic review was not deterministic in this round." },
+        { "metricId": "documentation-clarity", "status": "not-analyzed", "reason": "Human clarity review was not collected in this round." },
+        { "metricId": "tokens-to-answer", "status": "not-analyzed", "reason": "Agent task measurement was not collected in this round." }
+      ],
+      "limitations": ["This is a deterministic audit baseline, not a complete semantic quality score."]
+    },
+    {
+      "id": "validation-cycle-02",
+      "evidenceClass": "historical",
+      "observedAt": "2026-08-27T00:00:00.000Z",
+      "subject": { "kind": "consumer", "id": "consumer-06" },
+      "source": { "kind": "validation-plan", "reference": "validation-cycle-02" },
+      "docBridgeVersion": "1.7.20",
+      "workflowRunId": "1787934948972-14360",
+      "verificationRunId": "1787935063723-14641",
+      "status": "partially-validated",
+      "metrics": { "pipeline-total-ms": 6052, "report-artifact-bytes": 26338177, "report-first-render-p95-ms": 113, "report-application-response-p95-ms": 92, "report-gesture-p95-ms": 76, "agent-search-hit-rate": 1, "agent-estimated-p95-tokens": 1067, "context-reduction": 0.99, "reconciliation-evidence-ratio": 1 },
+      "missingMetrics": [
+        { "metricId": "tokens-to-answer", "status": "not-analyzed", "reason": "Only agent context estimates were collected." },
+        { "metricId": "documentation-correctness", "status": "not-analyzed", "reason": "Semantic documentation review was outside this cycle." },
+        { "metricId": "documentation-clarity", "status": "not-analyzed", "reason": "Human clarity review was outside this cycle." },
+        { "metricId": "time-to-answer", "status": "not-analyzed", "reason": "Task answer timing was not collected." },
+        { "metricId": "study-cost", "status": "not-analyzed", "reason": "Study cost accounting was not collected." }
+      ],
+      "limitations": ["Automated report checks passed, but human visual approval remained pending.", "The consumer result is a real-world baseline, not a semantic truth set."]
+    },
+    {
+      "id": "validation-cycle-03",
+      "evidenceClass": "historical",
+      "observedAt": "2026-08-27T00:00:00.000Z",
+      "subject": { "kind": "consumer", "id": "consumer-06" },
+      "source": { "kind": "validation-plan", "reference": "validation-cycle-03" },
+      "docBridgeVersion": "1.7.21",
+      "workflowRunId": "1787937333636-16849",
+      "verificationRunId": "1787937404198-17113",
+      "status": "partially-validated",
+      "metrics": { "literal-dynamic-import-relations": 379, "unresolved-dynamic-files": 56, "runtime-wiring-candidates": 46, "report-first-render-p95-ms": 59, "report-application-response-p95-ms": 79, "report-gesture-p95-ms": 76, "agent-search-hit-rate": 1, "agent-estimated-p95-tokens": 1067, "context-reduction": 0.99 },
+      "missingMetrics": [
+        { "metricId": "tokens-to-answer", "status": "not-analyzed", "reason": "Only agent context estimates were collected." },
+        { "metricId": "documentation-correctness", "status": "not-analyzed", "reason": "Semantic documentation review was outside this cycle." },
+        { "metricId": "documentation-clarity", "status": "not-analyzed", "reason": "Human clarity review was outside this cycle." },
+        { "metricId": "time-to-answer", "status": "not-analyzed", "reason": "Task answer timing was not collected." },
+        { "metricId": "study-cost", "status": "not-analyzed", "reason": "Study cost accounting was not collected." }
+      ],
+      "limitations": ["Automated report checks passed, but human visual approval remained pending.", "Non-literal loading and runtime wiring remained explicit limitations."]
+    },
+    {
+      "id": "validation-cycle-04",
+      "evidenceClass": "historical",
+      "observedAt": "2026-08-28T00:00:00.000Z",
+      "subject": { "kind": "consumer", "id": "consumer-06" },
+      "source": { "kind": "validation-plan", "reference": "validation-cycle-04" },
+      "docBridgeVersion": "1.7.24",
+      "workflowRunId": "1787938291045-21432",
+      "verificationRunId": "1787938325493-21506",
+      "status": "partially-validated",
+      "metrics": { "pipeline-total-ms": 6094, "report-artifact-bytes": 26441496, "report-first-render-p95-ms": 110, "report-application-response-p95-ms": 71, "report-gesture-p95-ms": 76, "runtime-wiring-candidates": 116, "agent-search-hit-rate": 1, "agent-estimated-p95-tokens": 1067, "context-reduction": 0.99 },
+      "missingMetrics": [
+        { "metricId": "tokens-to-answer", "status": "not-analyzed", "reason": "Only agent context estimates were collected." },
+        { "metricId": "documentation-correctness", "status": "not-analyzed", "reason": "Semantic documentation review was outside this cycle." },
+        { "metricId": "documentation-clarity", "status": "not-analyzed", "reason": "Human clarity review was outside this cycle." },
+        { "metricId": "time-to-answer", "status": "not-analyzed", "reason": "Task answer timing was not collected." },
+        { "metricId": "study-cost", "status": "not-analyzed", "reason": "Study cost accounting was not collected." }
+      ],
+      "limitations": ["Automated report checks passed, but human visual approval remained pending.", "Runtime wiring remained conservative and partially unresolved."]
+    },
+    {
+      "id": "validation-cycle-05",
+      "evidenceClass": "historical",
+      "observedAt": "2026-08-28T00:00:00.000Z",
+      "subject": { "kind": "consumer", "id": "consumer-06" },
+      "source": { "kind": "validation-plan", "reference": "validation-cycle-05" },
+      "docBridgeVersion": "1.7.25",
+      "workflowRunId": "1787938899030-22694",
+      "verificationRunId": "1787938967570-22837",
+      "status": "partially-validated",
+      "metrics": { "pipeline-total-ms": 6042, "report-artifact-bytes": 26422816, "report-first-render-p95-ms": 58, "report-application-response-p95-ms": 71, "report-gesture-p95-ms": 75, "runtime-wiring-candidates": 54, "agent-search-hit-rate": 1, "agent-estimated-p95-tokens": 1067, "context-reduction": 0.99 },
+      "missingMetrics": [
+        { "metricId": "tokens-to-answer", "status": "not-analyzed", "reason": "Only agent context estimates were collected." },
+        { "metricId": "documentation-correctness", "status": "not-analyzed", "reason": "Semantic documentation review was outside this cycle." },
+        { "metricId": "documentation-clarity", "status": "not-analyzed", "reason": "Human clarity review was outside this cycle." },
+        { "metricId": "time-to-answer", "status": "not-analyzed", "reason": "Task answer timing was not collected." },
+        { "metricId": "study-cost", "status": "not-analyzed", "reason": "Study cost accounting was not collected." }
+      ],
+      "limitations": ["Automated report checks passed, but human visual approval remained pending.", "Runtime wiring remained conservative and partially unresolved."]
+    },
+    {
+      "id": "validation-cycle-06",
+      "evidenceClass": "historical",
+      "observedAt": "2026-08-28T00:00:00.000Z",
+      "subject": { "kind": "consumer", "id": "consumer-06" },
+      "source": { "kind": "validation-plan", "reference": "validation-cycle-06" },
+      "docBridgeVersion": "1.7.26",
+      "workflowRunId": "1787939273593-23788",
+      "verificationRunId": "1787939317943-23884",
+      "status": "partially-validated",
+      "metrics": { "pipeline-total-ms": 5903, "report-artifact-bytes": 26412971, "report-first-render-p95-ms": 106, "report-application-response-p95-ms": 71, "report-gesture-p95-ms": 77, "runtime-wiring-candidates": 22, "agent-search-hit-rate": 1, "agent-estimated-p95-tokens": 1067, "context-reduction": 0.99 },
+      "missingMetrics": [
+        { "metricId": "tokens-to-answer", "status": "not-analyzed", "reason": "Only agent context estimates were collected." },
+        { "metricId": "documentation-correctness", "status": "not-analyzed", "reason": "Semantic documentation review was outside this cycle." },
+        { "metricId": "documentation-clarity", "status": "not-analyzed", "reason": "Human clarity review was outside this cycle." },
+        { "metricId": "time-to-answer", "status": "not-analyzed", "reason": "Task answer timing was not collected." },
+        { "metricId": "study-cost", "status": "not-analyzed", "reason": "Study cost accounting was not collected." }
+      ],
+      "limitations": ["Automated report checks passed, but human visual approval remained pending.", "Runtime wiring remained conservative and partially unresolved."]
+    },
+    {
+      "id": "validation-cycle-07",
+      "evidenceClass": "historical",
+      "observedAt": "2026-08-29T00:00:00.000Z",
+      "subject": { "kind": "consumer", "id": "consumer-06" },
+      "source": { "kind": "validation-plan", "reference": "validation-cycle-07" },
+      "docBridgeVersion": "1.7.28",
+      "workflowRunId": "1787940069560-26699",
+      "verificationRunId": "1787940112369-26783",
+      "status": "partially-validated",
+      "metrics": { "pipeline-total-ms": 5910, "report-artifact-bytes": 26370691, "report-first-render-p95-ms": 113, "report-application-response-p95-ms": 71, "report-gesture-p95-ms": 78, "overview-chunk-bytes": 843002, "runtime-wiring-candidates": 9, "agent-search-hit-rate": 1, "agent-estimated-p95-tokens": 1067, "context-reduction": 0.99, "reconciliation-evidence-ratio": 1 },
+      "missingMetrics": [
+        { "metricId": "tokens-to-answer", "status": "not-analyzed", "reason": "Only agent context estimates were collected." },
+        { "metricId": "documentation-correctness", "status": "not-analyzed", "reason": "Semantic documentation review was outside this cycle." },
+        { "metricId": "documentation-clarity", "status": "not-analyzed", "reason": "Human clarity review was outside this cycle." },
+        { "metricId": "time-to-answer", "status": "not-analyzed", "reason": "Task answer timing was not collected." },
+        { "metricId": "study-cost", "status": "not-analyzed", "reason": "Study cost accounting was not collected." }
+      ],
+      "limitations": ["Automated report checks passed, but human visual approval remained pending.", "The consumer result is a real-world baseline, not a semantic truth set."]
+    }
+  ],
+  "contentHashAlgo": "sha256-normalized-v1",
+  "contentHash": "022f12245e75a16e386d20739e130d675d7aacfec0f14f3bbadd0248659ffcb0"
+}

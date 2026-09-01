@@ -30,6 +30,12 @@ const AuditCategorySchema = z.enum([
   'limitation',
 ])
 const AuditConfidenceSchema = z.enum(['high', 'medium', 'low'])
+const DocumentationTierSchema = z.enum(['tier-0', 'tier-1', 'tier-2'])
+const DocumentationDimensionStatusSchema = z.enum(['validated', 'partial', 'not-analyzed'])
+const DimensionAssessmentSchema = z.object({
+  status: DocumentationDimensionStatusSchema,
+  reason: z.string().min(1).max(1_024),
+}).strict()
 
 export const DocumentationAuditFindingSchema = z.object({
   id: z.string().regex(/^[a-f0-9]{64}$/),
@@ -43,6 +49,35 @@ export const DocumentationAuditFindingSchema = z.object({
   evidence: z.array(EvidenceSchema).max(64),
   remediation: z.string().max(2_048).optional(),
 }).strict()
+
+export const DocumentationAuditDocumentSchema = z.object({
+  path: z.string().min(1).max(512),
+  classification: z.object({
+    type: z.string().min(1).max(128),
+    audience: z.string().min(1).max(128),
+    lifecycle: z.string().min(1).max(128),
+    tier: DocumentationTierSchema,
+    critical: z.boolean(),
+  }).strict(),
+  metadata: z.object({
+    owner: z.boolean(),
+    lifecycle: z.boolean(),
+    sourceOfTruth: z.boolean(),
+    validationPath: z.boolean(),
+    complete: z.boolean(),
+    missing: z.array(z.enum(['owner', 'lifecycle', 'sourceOfTruth', 'validationPath'])).max(4),
+  }).strict(),
+  dimensions: z.object({
+    correctness: DimensionAssessmentSchema,
+    completeness: DimensionAssessmentSchema,
+    clarity: DimensionAssessmentSchema,
+    agentEfficiency: DimensionAssessmentSchema,
+    maintainability: DimensionAssessmentSchema,
+  }).strict(),
+  example: z.object({ present: z.boolean(), validation: DocumentationDimensionStatusSchema }).strict(),
+}).strict()
+
+export type DocumentationAuditDocument = z.infer<typeof DocumentationAuditDocumentSchema>
 
 export const DocumentationAuditReportV1Schema = z.object({
   type: z.literal('documentation-audit-report'),
@@ -77,7 +112,21 @@ export const DocumentationAuditReportV1Schema = z.object({
     staleCount: z.number().int().nonnegative(),
     notAnalyzedCount: z.number().int().nonnegative(),
     blockingCount: z.number().int().nonnegative(),
+    tierCounts: z.object({ 'tier-0': z.number().int().nonnegative(), 'tier-1': z.number().int().nonnegative(), 'tier-2': z.number().int().nonnegative() }).strict(),
+    criticalDocumentCount: z.number().int().nonnegative(),
+    criticalDocumentsWithOwner: z.number().int().nonnegative(),
+    criticalDocumentsWithLifecycle: z.number().int().nonnegative(),
+    criticalDocumentsWithSourceOfTruth: z.number().int().nonnegative(),
+    criticalDocumentsWithValidationPath: z.number().int().nonnegative(),
+    dimensionStatus: z.object({
+      correctness: z.object({ validated: z.number().int().nonnegative(), partial: z.number().int().nonnegative(), 'not-analyzed': z.number().int().nonnegative() }).strict(),
+      completeness: z.object({ validated: z.number().int().nonnegative(), partial: z.number().int().nonnegative(), 'not-analyzed': z.number().int().nonnegative() }).strict(),
+      clarity: z.object({ validated: z.number().int().nonnegative(), partial: z.number().int().nonnegative(), 'not-analyzed': z.number().int().nonnegative() }).strict(),
+      agentEfficiency: z.object({ validated: z.number().int().nonnegative(), partial: z.number().int().nonnegative(), 'not-analyzed': z.number().int().nonnegative() }).strict(),
+      maintainability: z.object({ validated: z.number().int().nonnegative(), partial: z.number().int().nonnegative(), 'not-analyzed': z.number().int().nonnegative() }).strict(),
+    }).strict(),
   }).strict(),
+  documentAssessments: z.array(DocumentationAuditDocumentSchema).max(100_000),
   generatedDocuments: z.array(z.object({ path: z.string().min(1).max(512), freshness: z.literal('not-analyzed') }).strict()).max(128),
   limitations: z.array(z.string().min(1).max(1_024)).max(32),
 }).strict()
@@ -111,6 +160,55 @@ const bodyForDuplicate = (content: string): string => {
 }
 const matches = (path: string, patterns: readonly string[]): boolean => patterns.some((pattern) => minimatch(path, pattern, { dot: true }))
 const rate = (count: number, total: number): number | null => total ? count / total : null
+type DocumentationTier = z.infer<typeof DocumentationTierSchema>
+type DocumentationDimensionStatus = z.infer<typeof DocumentationDimensionStatusSchema>
+
+const metadataPresent = (content: string, key: string): boolean => {
+  const value = parseFrontmatter(content).data[key]
+  return typeof value === 'string' ? value.trim().length > 0 : value === true
+}
+
+const inferredDocumentType = (path: string): string => {
+  const lower = path.toLocaleLowerCase()
+  if (lower === 'agents.md' || lower.endsWith('/agents.md') || lower.includes('/for-agents/')) return 'agent-guidance'
+  if (lower.includes('/adr/') || lower.startsWith('adr/')) return 'architecture-decision'
+  if (lower.includes('runbook') || lower.includes('/operations/')) return 'runbook'
+  if (lower.includes('security')) return 'security'
+  if (lower.includes('contribut')) return 'contribution'
+  if (lower.includes('architecture')) return 'architecture'
+  if (lower.includes('/api/') || lower.includes('/reference/')) return 'reference'
+  if (lower.includes('/example') || lower.includes('/recipe')) return 'example'
+  return 'guide'
+}
+
+const inferredAudience = (path: string): string => {
+  const lower = path.toLocaleLowerCase()
+  if (lower.includes('/agent-corpus/') || lower.includes('/for-agents/') || lower.endsWith('agents.md')) return 'agent'
+  if (lower === 'readme.md' || lower.includes('/readme.')) return 'human-and-agent'
+  return 'human'
+}
+
+const inferredLifecycle = (path: string): string => /(?:^|\/)(?:archive|archived|historical)(?:\/|$)/i.test(path) ? 'archived' : 'active'
+
+const inferredTier = (path: string): DocumentationTier => {
+  const lower = path.toLocaleLowerCase()
+  if (lower === 'agents.md' || lower.endsWith('/agents.md') || lower.includes('/agent-corpus/') || lower.includes('/for-agents/') || lower.includes('security') || lower.includes('contribut') || lower.includes('runbook') || lower.includes('/operations/')) return 'tier-0'
+  if (lower.includes('/adr/') || lower.includes('architecture') || lower.includes('/api/') || lower.includes('/integration') || lower.includes('/packages/') || lower.includes('/apps/') || lower.includes('/spec/')) return 'tier-1'
+  return 'tier-2'
+}
+
+const tierFor = (path: string, content: string, config: DocumentationAuditConfig): { readonly tier: DocumentationTier; readonly critical: boolean } => {
+  const data = parseFrontmatter(content).data
+  const rule = config.tierRules?.find((candidate) => matches(path, [candidate.pattern]))
+  const explicit = frontmatterString(data, 'tier')
+  const tier = (explicit === 'tier-0' || explicit === 'tier-1' || explicit === 'tier-2')
+    ? explicit
+    : rule?.tier ?? config.defaultTier ?? inferredTier(path)
+  const explicitCritical = data.critical === true ? true : data.critical === false ? false : undefined
+  return { tier, critical: explicitCritical ?? rule?.critical ?? tier === 'tier-0' }
+}
+
+const dimension = (status: DocumentationDimensionStatus, reason: string): { readonly status: DocumentationDimensionStatus; readonly reason: string } => ({ status, reason })
 
 const isCritical = (finding: Pick<DocumentationAuditFinding, 'evidence'>, paths: readonly string[]): boolean =>
   paths.length > 0 && finding.evidence.some((item) => matches(item.path, paths))
@@ -185,6 +283,51 @@ export const auditDocumentation = (options: DocumentationAuditOptions): Document
     .filter((entity) => entity.kind === 'package' && entity.path !== '.')
     .sort((a, b) => a.id.localeCompare(b.id))
   const coveredPackages = new Set(options.declared.relations.filter((relation) => relation.kind === 'covers' && relation.from.startsWith('document:')).map((relation) => relation.to))
+  const requiredCriticalMetadata = config.requiredCriticalMetadata ?? ['owner', 'lifecycle', 'sourceOfTruth', 'validationPath']
+  const documentAssessments: DocumentationAuditDocument[] = documents.map((document) => {
+    const data = parseFrontmatter(document.content).data
+    const tiering = tierFor(document.path, document.content, config)
+    const metadata = {
+      owner: metadataPresent(document.content, 'owner'),
+      lifecycle: metadataPresent(document.content, 'lifecycle'),
+      sourceOfTruth: metadataPresent(document.content, 'sourceOfTruth'),
+      validationPath: metadataPresent(document.content, 'validationPath'),
+    }
+    const missing = requiredCriticalMetadata.filter((key) => !metadata[key])
+    const metadataState = { ...metadata, complete: missing.length === 0, missing }
+    const title = hasTitle(document.content)
+    const examples = hasExample(document.content)
+    const sections = requiredSections.every((section) => hasHeading(document.content, section))
+    const qualityAnalyzed = !matches(document.path, generatedPaths)
+    const assessment: DocumentationAuditDocument = {
+      path: document.path,
+      classification: {
+        type: frontmatterString(data, 'type') ?? inferredDocumentType(document.path),
+        audience: frontmatterString(data, 'audience') ?? inferredAudience(document.path),
+        lifecycle: frontmatterString(data, 'lifecycle') ?? inferredLifecycle(document.path),
+        tier: tiering.tier,
+        critical: tiering.critical,
+      },
+      metadata: {
+        ...metadataState,
+      },
+      dimensions: {
+        correctness: dimension('not-analyzed', qualityAnalyzed ? 'Semantic correctness requires code, configuration, and applicable runtime evidence review.' : 'Generated-document correctness is outside this deterministic audit.'),
+        completeness: dimension(!qualityAnalyzed ? 'not-analyzed' : title && sections ? 'partial' : 'not-analyzed', title && sections ? 'Required structural signals are present; semantic completeness remains unverified.' : 'Required structural signals are incomplete or not configured.'),
+        clarity: dimension(!qualityAnalyzed ? 'not-analyzed' : title ? 'partial' : 'not-analyzed', title ? 'Title and basic structure are present; human clarity review remains unverified.' : 'A title is required before clarity can be assessed.'),
+        agentEfficiency: dimension(!qualityAnalyzed ? 'not-analyzed' : title && examples ? 'partial' : 'not-analyzed', title && examples ? 'Title and an example are present; task usefulness and retrieval efficiency remain unverified.' : 'Agent efficiency requires a clear title and example before semantic review.'),
+        maintainability: dimension(metadataState.complete ? 'validated' : 'partial', metadataState.complete ? 'Required maintainability metadata is present.' : 'Ownership, lifecycle, source-of-truth, or validation metadata is incomplete.'),
+      },
+      example: { present: examples, validation: 'not-analyzed' },
+    }
+    if (tiering.critical && missing.length > 0) findings.push(createFinding(
+      'DOCUMENTATION_CRITICAL_METADATA_MISSING', 'quality', 'undocumented', 'warn', 'high',
+      `Critical ${document.path} is missing maintainability metadata: ${missing.join(', ')}.`,
+      [evidenceFor(document.path)], [document.path, missing], criticalPaths,
+      'Add the missing owner, lifecycle, source-of-truth, or validation-path metadata, or declare a tracked exception.',
+    ))
+    return assessment
+  })
 
   for (const document of generated) {
     findings.push(createFinding(
@@ -237,6 +380,12 @@ export const auditDocumentation = (options: DocumentationAuditOptions): Document
   const sortedFindings = [...new Map(findings.map((finding) => [finding.id, finding])).values()].sort((a, b) => a.id.localeCompare(b.id))
   const qualityDocs = analyzed.length
   const requiredSectionDocs = analyzed.filter((document) => requiredSections.every((section) => hasHeading(document.content, section))).length
+  const statusCounts = (dimensionName: keyof DocumentationAuditDocument['dimensions']) => ({
+    validated: documentAssessments.filter((assessment) => assessment.dimensions[dimensionName].status === 'validated').length,
+    partial: documentAssessments.filter((assessment) => assessment.dimensions[dimensionName].status === 'partial').length,
+    'not-analyzed': documentAssessments.filter((assessment) => assessment.dimensions[dimensionName].status === 'not-analyzed').length,
+  })
+  const criticalAssessments = documentAssessments.filter((assessment) => assessment.classification.critical)
   const base = {
     type: 'documentation-audit-report' as const,
     schemaVersion: DOCUMENTATION_AUDIT_SCHEMA_VERSION,
@@ -270,7 +419,25 @@ export const auditDocumentation = (options: DocumentationAuditOptions): Document
       staleCount: sortedFindings.filter((finding) => finding.category === 'stale').length,
       notAnalyzedCount: sortedFindings.filter((finding) => finding.status === 'not-analyzed').length,
       blockingCount: sortedFindings.filter((finding) => finding.blocking).length,
+      tierCounts: {
+        'tier-0': documentAssessments.filter((assessment) => assessment.classification.tier === 'tier-0').length,
+        'tier-1': documentAssessments.filter((assessment) => assessment.classification.tier === 'tier-1').length,
+        'tier-2': documentAssessments.filter((assessment) => assessment.classification.tier === 'tier-2').length,
+      },
+      criticalDocumentCount: criticalAssessments.length,
+      criticalDocumentsWithOwner: criticalAssessments.filter((assessment) => assessment.metadata.owner).length,
+      criticalDocumentsWithLifecycle: criticalAssessments.filter((assessment) => assessment.metadata.lifecycle).length,
+      criticalDocumentsWithSourceOfTruth: criticalAssessments.filter((assessment) => assessment.metadata.sourceOfTruth).length,
+      criticalDocumentsWithValidationPath: criticalAssessments.filter((assessment) => assessment.metadata.validationPath).length,
+      dimensionStatus: {
+        correctness: statusCounts('correctness'),
+        completeness: statusCounts('completeness'),
+        clarity: statusCounts('clarity'),
+        agentEfficiency: statusCounts('agentEfficiency'),
+        maintainability: statusCounts('maintainability'),
+      },
     },
+    documentAssessments,
     generatedDocuments: generated.map((document) => ({ path: document.path, freshness: 'not-analyzed' as const })),
     limitations: [
       'Generated documentation receives presence and freshness-boundary reporting only; generator checks must prove freshness.',

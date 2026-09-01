@@ -1,0 +1,46 @@
+{
+  "type": "controlled-study-pilot-report",
+  "schemaVersion": 1,
+  "studyRound": "baseline-codex-2026-08-31",
+  "planHash": "949e7642f85ac2f598e006a0c47ccdcf7c0a4c44f8f2697a0e5c7993bfc0add4",
+  "ledgerHash": "675b343552fabde2bb13dee441b6154949a85b302a88517b214334977cc61111",
+  "providerConfigHash": "c321593deefd52b8c1e5d7d096052989535959e6affe4a8b36714798bd51f517",
+  "repositoryConfigHash": "d85352921b5d18aa1d480d02ffdc5247755833e9f717c734b965023c6cec5c28",
+  "observations": [
+    {
+      "taskId": "consumer-02-documentation",
+      "modelId": "low-cost-model",
+      "scenarioId": "deterministic-doc-bridge",
+      "status": "completed",
+      "providerTokens": 209704,
+      "durationMs": 79451,
+      "toolCalls": 6,
+      "taskOutcome": "partial",
+      "evidenceQuality": "medium",
+      "safetyOutcome": "safe"
+    },
+    {
+      "taskId": "consumer-01-architecture",
+      "modelId": "reference-model",
+      "scenarioId": "registry-assisted",
+      "status": "budget-exceeded",
+      "providerTokens": 400078,
+      "durationMs": 82142,
+      "toolCalls": 12
+    }
+  ],
+  "aggregate": {
+    "observationCount": 2,
+    "completedRate": 0.5,
+    "providerTokens": 609782,
+    "latencyP95Ms": 82142,
+    "averageToolCalls": 9
+  },
+  "limitations": [
+    "Pilot sample is not a controlled baseline and cannot establish improvement.",
+    "Semantic task success remains pending human adjudication.",
+    "The reference task exceeded the configured token ceiling."
+  ],
+  "contentHashAlgo": "sha256-normalized-v1",
+  "contentHash": "3d3e99aca88de44ca4fa2688b7453f75da500bda858c3f9f63d65c34aa50da6e"
+}

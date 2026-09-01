@@ -1,0 +1,79 @@
+{
+  "type": "controlled-study-ab-result",
+  "schemaVersion": 1,
+  "resultVersion": "v1",
+  "round": "ab-baseline-2026-08-31",
+  "runId": "phase-8-ab-baseline-recovery-01",
+  "planHash": "42d96e1152014318eadd2e0790259efc0ea96b138a1dcc4ac60c182ec357215f",
+  "ledgerHash": "9bf49dcee8071a4b5bfc7c515d2ee3d53c5f02344ffcf8bdeb7a412ad3f4e678",
+  "metricsReportHash": "a04b7b1a3081d1011bcd99548d9929ebb96de75fd217823f498112a586533428",
+  "sample": {
+    "taskCount": 24,
+    "modelCount": 2,
+    "scenarioCount": 2,
+    "observationsPerArm": 48,
+    "pairedComparisons": 48
+  },
+  "arms": [
+    {
+      "scenarioId": "repository-only",
+      "observationCount": 48,
+      "executionStatus": { "completed": 38, "budget-exceeded": 9, "timed-out": 1 },
+      "completedRate": 0.7916666667,
+      "completedConfidence95": { "low": 0.6574, "high": 0.8827 },
+      "taskOutcome": { "success": 4, "partial": 29, "blocked": 12, "incomplete": 2, "missing": 1 },
+      "successRate": 0.085106383,
+      "successOutcomeCoverage": 47,
+      "evidenceCitationRate": 0.9375,
+      "evidenceQualityRate": 0.2340425532,
+      "providerTokens": 11841294,
+      "providerTokenObservations": 47,
+      "latencyP95Ms": 97489,
+      "contextBytesP95": 2085,
+      "responseBytesP95": 1084,
+      "totalCostUsd": null
+    },
+    {
+      "scenarioId": "deterministic-doc-bridge",
+      "observationCount": 48,
+      "executionStatus": { "completed": 40, "budget-exceeded": 8, "timed-out": 0 },
+      "completedRate": 0.8333333333,
+      "completedConfidence95": { "low": 0.7042, "high": 0.913 },
+      "taskOutcome": { "success": 5, "partial": 22, "blocked": 19, "incomplete": 2 },
+      "successRate": 0.1041666667,
+      "successOutcomeCoverage": 48,
+      "evidenceCitationRate": 0.9166666667,
+      "evidenceQualityRate": 0.2708333333,
+      "providerTokens": 12142335,
+      "providerTokenObservations": 48,
+      "latencyP95Ms": 94339,
+      "contextBytesP95": 2094,
+      "responseBytesP95": 1120,
+      "totalCostUsd": null
+    }
+  ],
+  "pairedDeltas": {
+    "providerTokensAverage": -5761.7021277,
+    "providerTokensRelative": -0.022868,
+    "latencyAverageMs": 609.5625,
+    "latencyP95Ms": -3150,
+    "contextP95Bytes": 9,
+    "responseP95Bytes": 22,
+    "completedRate": 0.0416666666,
+    "successRate": 0.0190602837,
+    "evidenceCitationRate": -0.0208333333,
+    "evidenceQualityRate": 0.0359297801
+  },
+  "interpretation": {
+    "classification": "inconclusive",
+    "summary": "The deterministic Doc Bridge arm shows higher completion and evidence-quality rates and lower latency p95 in this sample, but the paired token reduction is small and citation rate is slightly lower. The sample is too small and outcome coverage is incomplete for an enterprise or causal claim."
+  },
+  "limitations": [
+    "Provider cost was not emitted by the CLI adapter; cost comparison is not analyzed.",
+    "Repository-only has one observation without provider token counts and one timed-out execution; token comparison uses 47 paired token observations.",
+    "Task outcomes were not adjudicated by an independent reviewer; success rates are directional study measurements.",
+    "This is one controlled run with 24 tasks and two models; it does not establish causality or generalize to other repositories."
+  ],
+  "contentHashAlgo": "sha256-normalized-v1",
+  "contentHash": "94ac03bcb9f1d600ded42084503ca27d6a3a8e730a338b05fdd3c365d5e5ed7a"
+}

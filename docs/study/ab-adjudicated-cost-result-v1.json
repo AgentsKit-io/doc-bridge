@@ -1,0 +1,80 @@
+{
+  "type": "controlled-study-ab-result",
+  "schemaVersion": 1,
+  "resultVersion": "v1",
+  "round": "ab-adjudicated-cost-2026-08-31",
+  "runId": "phase-9-ab-adjudicated-cost-03",
+  "planHash": "f61bf70063fcceb9dfe823ac9d0707f0f004a075143cae6e9518523c64ba1b4f",
+  "ledgerHash": "cc3eb8a816f961b4a4d8fdefd96365e6b89f3fd7d5aad287c3c5cc79a80ed0f5",
+  "metricsReportHash": "d2849c3515da91385af91e9a80b70fa25b5f2ad6f248255229aba6ce73b3fd22",
+  "sample": {
+    "taskCount": 24,
+    "modelCount": 2,
+    "scenarioCount": 2,
+    "observationsPerArm": 48,
+    "pairedComparisons": 48
+  },
+  "arms": [
+    {
+      "scenarioId": "repository-only",
+      "observationCount": 48,
+      "executionStatus": { "completed": 36, "budget-exceeded": 11, "timed-out": 1 },
+      "completedRate": 0.75,
+      "taskOutcome": { "success": 3, "partial": 34, "blocked": 10, "missing": 1 },
+      "adjudicationOutcome": { "success": 0, "partial": 33, "blocked": 13, "incomplete": 2 },
+      "adjudicatedSuccessRate": 0,
+      "evidenceCitationRate": 0.9375,
+      "evidenceQualityRate": 0.229167,
+      "providerTokens": 13416254,
+      "providerTokenObservations": 47,
+      "providerTokenCostUnits": 13416254,
+      "latencyMeanMs": 68064.75,
+      "latencyP95Ms": 124193,
+      "totalCostUsd": null
+    },
+    {
+      "scenarioId": "deterministic-doc-bridge",
+      "observationCount": 48,
+      "executionStatus": { "completed": 42, "budget-exceeded": 5, "timed-out": 1 },
+      "completedRate": 0.875,
+      "taskOutcome": { "success": 1, "partial": 29, "blocked": 17, "missing": 1 },
+      "adjudicationOutcome": { "success": 0, "partial": 40, "blocked": 6, "incomplete": 2 },
+      "adjudicatedSuccessRate": 0,
+      "evidenceCitationRate": 0.9375,
+      "evidenceQualityRate": 0.208333,
+      "providerTokens": 11048857,
+      "providerTokenObservations": 47,
+      "providerTokenCostUnits": 11048857,
+      "latencyMeanMs": 58335.292,
+      "latencyP95Ms": 84440,
+      "totalCostUsd": null
+    }
+  ],
+  "pairedDeltas": {
+    "comparisonDirection": "deterministic-doc-bridge minus repository-only",
+    "providerTokenCostUnitsAverage": -53325.065,
+    "providerTokenCostUnitsRelative": -0.18459,
+    "providerTokenPairCount": 46,
+    "latencyAverageMs": -9729.458,
+    "latencyRelative": -0.142944,
+    "latencyP95Ms": -39753,
+    "completedRate": 0.125,
+    "evidenceCitationRate": 0,
+    "evidenceQualityRate": -0.020834,
+    "adjudicatedSuccessRate": 0
+  },
+  "interpretation": {
+    "classification": "inconclusive",
+    "summary": "The deterministic Doc Bridge arm completed more executions and used fewer provider token-equivalent units with lower latency p95 in this controlled sample. Evidence citation was unchanged and high-quality evidence was slightly lower. The independent adjudicator found no successful outcome in either arm, so the study does not establish improved task correctness.",
+    "decision": "Do not use this run as a causal, enterprise-readiness, or currency-cost claim. Use it as an auditable directional measurement and as input to the next study design."
+  },
+  "limitations": [
+    "The cost metric is provider token-equivalent units, not USD; the CLI provider emitted no currency cost.",
+    "Two observations lacked provider token counts, so paired token comparison uses 46 of 48 pairs.",
+    "Adjudication is deterministic and bounded by execution status, acceptance metrics, and evidence count; it is not independent semantic review by a human or second model.",
+    "The sample has 24 task definitions, two models, one replicate, and two scenarios; it does not establish causality or generalize to other repositories.",
+    "The study task acceptance instrumentation produced no adjudicated successes; semantic correctness remains not analyzed."
+  ],
+  "contentHashAlgo": "sha256-normalized-v1",
+  "contentHash": "9589b4e36283c36face82acdacbd756b3b96e001c59f2fb0574f9b5be4ef034c"
+}

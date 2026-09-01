@@ -1,0 +1,183 @@
+{
+  "type": "documentation-audit-round",
+  "schemaVersion": 1,
+  "roundId": "deterministic-doc-audit-2026-08-31",
+  "evidenceClass": "observational",
+  "observedAt": "2026-08-31T12:41:43.000Z",
+  "tool": {
+    "package": "@agentskit/doc-bridge",
+    "version": "1.7.45",
+    "pipelineVersion": "1.1.9",
+    "analyzerVersions": {
+      "repository": "1.1.1",
+      "js-ts": "1.3.4"
+    }
+  },
+  "population": [
+    {
+      "id": "consumer-01",
+      "sourceRevision": "0551139b338745da778fffaad15df2a521eca561",
+      "configurationHash": "8b01bbcbc686cb6050a8602de90d6c451131bf4aea9038f0b3a93f110bbda224",
+      "snapshotHash": "22a00a742c20fe763c376c81fe9892f16d143a76b7e079b4cf0892455720c52b",
+      "reconciliationHash": "8cbb4953b29bf096a1255e123bac9ea9167b12a01076b65fc2e646a5d54a948e",
+      "reportHash": "a1766bb82073d134fecead8fd90fcb0f275a51c4cc12bd3f93c7eebb52deeed6",
+      "status": "needs-review",
+      "metrics": {
+        "documentCount": 1506,
+        "packageCount": 25,
+        "packageCoverageRate": 1,
+        "exampleRate": 0.4296148738,
+        "exactDuplicateGroups": 0,
+        "structureGapCount": 0,
+        "contradictionCount": 0,
+        "staleCount": 0,
+        "criticalDocumentCount": 71,
+        "criticalOwnerCount": 0,
+        "criticalLifecycleCount": 0,
+        "criticalSourceOfTruthCount": 0,
+        "criticalValidationPathCount": 0,
+        "semanticFindingsNotAnalyzed": 1
+      }
+    },
+    {
+      "id": "consumer-02",
+      "sourceRevision": "29f1ca1eff0b3f8bbad11a3616828a1a3d45623e458a50113c44a5e1db44e96f",
+      "configurationHash": "70aba95ef37af3f3ba7b9dbcfaad1d4dc12b4a9f26921e401cd3719462831f62",
+      "snapshotHash": "7213faf33b0e2cdee8fe846b1dfb0d02220524aaa1ac2efa81f45bb0309a198f",
+      "reconciliationHash": "92be573e4b4119717e1feb5282ba25c37f958223ac1f9a185a8424eb6810b263",
+      "reportHash": "a286f125b075889ee54168ccb3abd6a34854cb603fd3cfa54463f02c4dfd9d74",
+      "status": "needs-review",
+      "metrics": {
+        "documentCount": 165,
+        "packageCount": 20,
+        "packageCoverageRate": 1,
+        "exampleRate": 0.6181818182,
+        "exactDuplicateGroups": 0,
+        "structureGapCount": 0,
+        "contradictionCount": 0,
+        "staleCount": 0,
+        "criticalDocumentCount": 28,
+        "criticalOwnerCount": 0,
+        "criticalLifecycleCount": 0,
+        "criticalSourceOfTruthCount": 0,
+        "criticalValidationPathCount": 0,
+        "semanticFindingsNotAnalyzed": 1
+      }
+    },
+    {
+      "id": "consumer-03",
+      "sourceRevision": "e34b7a0d60f870856942319b323a1dcc942d2e8511914a4cfe74b83c962101cb",
+      "configurationHash": "d3d863d650a980bcc32b290af594b39988fdeba78ca1cb39f70c6020bb94f6d3",
+      "snapshotHash": "cf060e2a910dc0b12e6b0a538260e2f9ea5f404c664dd97897509f7172d7ef9a",
+      "reconciliationHash": "fa25789f81194f71cd8bd7cf4f5be8b0445bf789d3530ea0a54e00b2acbee1ef",
+      "reportHash": "e0f32b9d606604b680161d33abe40f3cd9b7a1461db240c75eae8eb180bcd971",
+      "status": "needs-review",
+      "metrics": {
+        "documentCount": 1348,
+        "packageCount": 82,
+        "packageCoverageRate": 1,
+        "exampleRate": 0.4072700297,
+        "exactDuplicateGroups": 0,
+        "structureGapCount": 0,
+        "contradictionCount": 0,
+        "staleCount": 0,
+        "criticalDocumentCount": 249,
+        "criticalOwnerCount": 0,
+        "criticalLifecycleCount": 0,
+        "criticalSourceOfTruthCount": 0,
+        "criticalValidationPathCount": 0,
+        "semanticFindingsNotAnalyzed": 1
+      }
+    },
+    {
+      "id": "consumer-04",
+      "sourceRevision": "30c864e347970f6d56d8ca9a6c9c12199e5af619f2d81a915614206d5f798cf4",
+      "configurationHash": "ad3be4f59dafc63cd9740d1cc95c2411f72c09a41a2141a150970cf93640fb36",
+      "snapshotHash": "655e90ec96c770d79e5bcee4499fced0823ffde07019a874a6b792bc31c41505",
+      "reconciliationHash": "5f8d85116f81d7698d30ea2fc6d33288dc7b1be0dddf20f51075e0a3cda5a21c",
+      "reportHash": "480718d5ab555ee2260c09eba423580fa318eeb1740d489cd0f805473d49f90c",
+      "status": "needs-review",
+      "metrics": {
+        "documentCount": 384,
+        "packageCount": 0,
+        "packageCoverageRate": null,
+        "exampleRate": 0.1614583333,
+        "exactDuplicateGroups": 0,
+        "structureGapCount": 0,
+        "contradictionCount": 0,
+        "staleCount": 0,
+        "criticalDocumentCount": 28,
+        "criticalOwnerCount": 0,
+        "criticalLifecycleCount": 0,
+        "criticalSourceOfTruthCount": 0,
+        "criticalValidationPathCount": 0,
+        "semanticFindingsNotAnalyzed": 1
+      }
+    },
+    {
+      "id": "consumer-05",
+      "sourceRevision": "e6079d4ea8f730012ddb406f14f597112f5dcf5e",
+      "configurationHash": "d16e4ece3da2d0bf8be1ea898572d697c80ae6ac84ece1f151f017f6ef347cc2",
+      "snapshotHash": "c57bb3af76a3d5ef38f79ecd1dd1de1b8f523ecd7fa7c876a3fdad9b53eb0e90",
+      "reconciliationHash": "72a3ac55d5d7d2931b60e9a179cb10903fe88cfc8fbf5ee50b1c36e7d8f7b9e8",
+      "reportHash": "b7ee459d0bf7564e170e0696cb39e245f7e1887ec1a2b3ab4115ce079daea095",
+      "status": "needs-review",
+      "metrics": {
+        "documentCount": 172,
+        "packageCount": 2,
+        "packageCoverageRate": 1,
+        "exampleRate": 0.5697674419,
+        "exactDuplicateGroups": 0,
+        "structureGapCount": 0,
+        "contradictionCount": 0,
+        "staleCount": 0,
+        "criticalDocumentCount": 28,
+        "criticalOwnerCount": 0,
+        "criticalLifecycleCount": 0,
+        "criticalSourceOfTruthCount": 0,
+        "criticalValidationPathCount": 0,
+        "semanticFindingsNotAnalyzed": 1
+      }
+    },
+    {
+      "id": "consumer-06",
+      "sourceRevision": "80f33b09c495a4a5ede0795058c67e9993cfe8efe59605e436cc11f59a3ef3bd",
+      "configurationHash": "f94d74f17dfcd00f3bcd8b972caf48371158d29244afb2e5358613736429650a",
+      "snapshotHash": "b3ec0e5b8711098e381bf6020d02a63f2e0a8385f995633914b18a066d9d1cb5",
+      "reconciliationHash": "21a54d9304711a1e9505a8f9b5b65f393dc6bb1115cff47b7432d646c1073104",
+      "reportHash": "54d6e339b43636eb9b8f6b6a49f5462750fc00f07f8e6c7aab8cdf6cf6b337c4",
+      "status": "needs-review",
+      "metrics": {
+        "documentCount": 85,
+        "packageCount": 0,
+        "packageCoverageRate": null,
+        "exampleRate": 0.5764705882,
+        "exactDuplicateGroups": 0,
+        "structureGapCount": 0,
+        "contradictionCount": 0,
+        "staleCount": 0,
+        "criticalDocumentCount": 18,
+        "criticalOwnerCount": 1,
+        "criticalLifecycleCount": 0,
+        "criticalSourceOfTruthCount": 0,
+        "criticalValidationPathCount": 0,
+        "semanticFindingsNotAnalyzed": 1
+      }
+    }
+  ],
+  "commonDimensionStatus": {
+    "correctness": "not-analyzed",
+    "completeness": "partial",
+    "clarity": "partial",
+    "agentEfficiency": "partial-or-not-analyzed",
+    "maintainability": "partial"
+  },
+  "limitations": [
+    "This is a deterministic observational snapshot, not a controlled model comparison.",
+    "Natural-language correctness, document contradictions, unnecessary content, and semantic freshness remain not-analyzed.",
+    "The snapshot records findings and hashes only; it does not contain repository names, paths, document contents, prompts, credentials, or raw agent responses.",
+    "Provider tokens, task success, latency-to-answer, rework, and human adjudication were not collected in this round."
+  ],
+  "contentHash": "bd77d126783fe1d493b240254c5bb3b86c7485d89b0eaa00299a6501993f3587",
+  "contentHashAlgo": "sha256-normalized-v1"
+}

@@ -23,7 +23,7 @@ const agentRoot = (id = DEFAULT_REGISTRY_AGENT_ID) => {
   return root
 }
 const validProposal = (snapshot: ReturnType<typeof fixture>['snapshot'], report: ReturnType<typeof fixture>['report'], id = DEFAULT_REGISTRY_AGENT_ID) => {
-  const proposal = { type: 'agent-proposal' as const, schemaVersion: 1 as const, contentHash: '0'.repeat(64), contentHashAlgo: 'sha256-normalized-v1' as const, project: snapshot.project, sourceRevision: snapshot.sourceRevision, sourceRevisionKind: snapshot.sourceRevisionKind, configurationHash: snapshot.configurationHash, pipelineVersion: '1.0.0', analyzerVersions: { agent: '1.0.0' }, proposalId: 'p1', baseSnapshotHash: snapshot.contentHash, baseReportHash: report.contentHash, relatedDiagnosticIds: ['d1'], rationale: 'Review the finding.', confidence: 0.8, evidence: [], intendedChanges: ['Update the documentation.'], origin: { kind: 'registry-agent' as const, id, version: '1.0.0', capabilities: ['proposal.write'] }, checks: ['pnpm test'] }
+  const proposal = { type: 'agent-proposal' as const, schemaVersion: 1 as const, contentHash: '0'.repeat(64), contentHashAlgo: 'sha256-normalized-v1' as const, project: snapshot.project, sourceRevision: snapshot.sourceRevision, sourceRevisionKind: snapshot.sourceRevisionKind, configurationHash: snapshot.configurationHash, pipelineVersion: '1.0.0', analyzerVersions: { agent: '1.0.0' }, proposalId: 'p1', baseSnapshotHash: snapshot.contentHash, baseReportHash: report.contentHash, relatedDiagnosticIds: ['d1'], rationale: 'Review the finding.', confidence: 0.8, evidence: report.diagnostics[0]!.evidence, intendedChanges: ['Update the documentation.'], origin: { kind: 'registry-agent' as const, id, version: '1.0.0', capabilities: ['proposal.write'] }, checks: ['pnpm test'] }
   return { ...proposal, contentHash: contentHashForArtifactV1(proposal) }
 }
 
@@ -69,6 +69,24 @@ process.stdout.write(${JSON.stringify(JSON.stringify(proposal))})
     writeFileSync(cliPath, 'process.stdout.write("not-json")\n')
     const adapter = createRegistryAgentAdapter(root, config(true, { cli: { command: process.execPath, args: [cliPath] } }))
     await expect(adapter.run(snapshot, report)).rejects.toThrow('must return one JSON object')
+  })
+
+  it('rejects proposals that are not grounded in supplied diagnostics and evidence', async () => {
+    const root = agentRoot()
+    const { snapshot, report } = fixture()
+    const adapter = createRegistryAgentAdapter(root, config(), () => {
+      const proposal = validProposal(snapshot, report)
+      return { ...proposal, relatedDiagnosticIds: ['missing-diagnostic'], contentHash: contentHashForArtifactV1({ ...proposal, relatedDiagnosticIds: ['missing-diagnostic'], contentHash: '0'.repeat(64) }) }
+    })
+    await expect(adapter.run(snapshot, report)).rejects.toThrow('unknown diagnostic')
+  })
+
+  it('supports an alternate installed Registry agent without changing the adapter contract', async () => {
+    const alternate = 'alternate-doc-reviewer'
+    const root = agentRoot(alternate)
+    const { snapshot, report } = fixture()
+    const adapter = createRegistryAgentAdapter(root, config(true, { agentId: alternate }), () => validProposal(snapshot, report, alternate))
+    expect((await adapter.run(snapshot, report)).origin.id).toBe(alternate)
   })
 
   it('fails closed when disabled, unavailable or replaced by another origin', () => {

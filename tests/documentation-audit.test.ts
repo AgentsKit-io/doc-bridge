@@ -84,4 +84,52 @@ describe('documentation audit', () => {
     })
     expect(report.findings.filter((finding) => finding.code === 'DOCUMENTATION_TITLE_MISSING').map((finding) => finding.evidence[0]?.path)).not.toEqual(expect.arrayContaining(['docs/frontmatter.md', 'docs/html.md']))
   })
+
+  it('classifies tiers and reports independent quality and maintainability dimensions', () => {
+    const value = fixture()
+    writeFileSync(join(value.root, 'docs', 'critical.md'), [
+      '---',
+      'type: runbook',
+      'audience: human-and-agent',
+      'lifecycle: active',
+      'owner: platform',
+      'sourceOfTruth: docs/critical.md',
+      'validationPath: pnpm test',
+      'tier: tier-0',
+      '---',
+      '',
+      '# Critical runbook',
+      '',
+      'Follow this operational procedure.',
+      '',
+      '```sh',
+      'pnpm test',
+      '```',
+    ].join('\n'))
+    const report = auditDocumentation({
+      root: value.root,
+      snapshot: { ...value.snapshot, entities: [...value.snapshot.entities, { id: 'document:critical', kind: 'document', name: 'critical', path: 'docs/critical.md', provenance: 'observed', evidence: [] }] },
+      declared: value.analysis.snapshot,
+      reconciliation: value.reconciliation,
+      config: { tierRules: [{ pattern: 'docs/copy-a.md', tier: 'tier-0', critical: true }] },
+    })
+    const critical = report.documentAssessments.find((assessment) => assessment.path === 'docs/critical.md')
+    const overridden = report.documentAssessments.find((assessment) => assessment.path === 'docs/copy-a.md')
+    expect(critical?.classification).toMatchObject({ type: 'runbook', audience: 'human-and-agent', tier: 'tier-0', critical: true })
+    expect(critical?.metadata).toMatchObject({ complete: true, missing: [] })
+    expect(critical?.dimensions.correctness.status).toBe('not-analyzed')
+    expect(critical?.dimensions.maintainability.status).toBe('validated')
+    expect(overridden?.classification).toMatchObject({ tier: 'tier-0', critical: true })
+    expect(report.metrics.tierCounts['tier-0']).toBe(2)
+    expect(report.metrics.criticalDocumentsWithOwner).toBe(1)
+    expect(report.findings.some((finding) => finding.code === 'DOCUMENTATION_CRITICAL_METADATA_MISSING')).toBe(true)
+    const reclassified = auditDocumentation({
+      root: value.root,
+      snapshot: { ...value.snapshot, entities: [...value.snapshot.entities, { id: 'document:critical', kind: 'document', name: 'critical', path: 'docs/critical.md', provenance: 'observed', evidence: [] }] },
+      declared: value.analysis.snapshot,
+      reconciliation: value.reconciliation,
+      config: { tierRules: [{ pattern: 'docs/copy-a.md', tier: 'tier-0', critical: false }] },
+    })
+    expect(reclassified.documentAssessments.find((assessment) => assessment.path === 'docs/copy-a.md')?.classification.critical).toBe(false)
+  })
 })

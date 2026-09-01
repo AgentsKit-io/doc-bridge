@@ -16,7 +16,7 @@
 
 **Turn your docs into executable handoffs for coding agents.**
 
-doc-bridge reads your repo docs, ownership map, and human documentation site, then gives every agent the same answer:
+doc-bridge reads your repo docs, ownership map, and human documentation site, then gives humans and agents the same evidence-linked starting point:
 
 - where to start reading
 - which files/packages it may edit
@@ -26,6 +26,26 @@ doc-bridge reads your repo docs, ownership map, and human documentation site, th
 It is not a wiki or hosted RAG. The core works **without any LLM or API key**; the documentation portal dogfoods AgentsKit Chat as an optional surface over that deterministic layer.
 
 ![doc-bridge maps human docs into structured agent handoffs](docs/landing/assets/doc-bridge-hero.webp)
+
+## Built for agent-scale repositories
+
+Doc Bridge turns large repository structure and documentation into compact, evidence-linked context that humans and coding agents can query instead of repeatedly traversing the full repository.
+
+### Up to 99% less context payload
+
+This is an estimated reduction in serialized context payload for one historical benchmark—not a guarantee of token savings or answer quality. It is not the same measure as provider-token usage below.
+
+![Estimated context payload reduction](docs/landing/assets/context-payload-reduction.svg)
+
+### Controlled A/B signal
+
+In a controlled study with 96 anonymized executions, the deterministic Doc Bridge workflow showed a directional operational signal of:
+
+- **2.29% fewer paired provider tokens**;
+- **3.15 seconds lower P95 latency**;
+- **83.3% operationally completed executions vs. 79.2%** with repository-only context.
+
+These are different measures: the 99% figure is an estimated context-payload reduction from anonymized dogfooding, while the 2.29% figure uses provider-token data from 47 paired observations in the controlled run. Neither result establishes semantic correctness or enterprise readiness. See the [full methodology and anonymized data](docs/study/README.md).
 
 ## Why teams use it
 
@@ -52,6 +72,20 @@ The handoff is a routing contract:
 ```
 
 That contract works from the terminal, MCP, CI, and optional RAG/chat.
+
+## Documentation quality and reconciliation
+
+Discovery is only the first step. `ak-docs audit documentation` compares declared documentation and ownership with the observed project graph and reports evidence-backed findings for missing coverage, stale relations, structured contradictions, exact duplicates, missing examples, and incomplete maintenance metadata.
+
+Natural-language correctness, unnecessary prose, and semantic redundancy remain explicitly `not-analyzed` until a configured agent or human review evaluates them. Proposed changes stay reviewable and human-approved.
+
+```text
+Example finding (anonymized)
+  CONTRADICTION · high confidence
+  Documentation declaration differs from the observed project relation
+  Evidence: 4 source files + 1 documentation declaration
+  Action: review ownership and update the canonical document
+```
 
 ## 60-second proof
 
@@ -110,13 +144,13 @@ Using Cline? Follow the deterministic [`llms-install.md`](llms-install.md) setup
 
 ## What ships
 
-![doc-bridge index used through CLI, MCP, CI, and documentation adapters](docs/landing/assets/doc-bridge-surfaces.webp)
+See the [surface map](docs/landing/assets/doc-bridge-surfaces.webp) for a visual overview of the CLI, MCP, CI, and adapter surfaces.
 
 | Surface | Use it for | Command / artifact |
 |---------|------------|--------------------|
 | **CLI** | Inspect ownership, search docs, run gates, ask local questions | `ak-docs query`, `search`, `ask`, `doctor`, `gate` |
 | **MCP server** | Let Cursor, Claude Code, Codex-style agents resolve handoffs before editing | `ak-docs mcp`, `handoff.resolve` |
-| **GitHub Action / CI** | Fail stale indexes and broken human-doc links on PRs | `AgentsKit-io/doc-bridge@v1.4.0` |
+| **GitHub Action / CI** | Fail stale indexes and broken human-doc links on PRs | `AgentsKit-io/doc-bridge@ee756a13c006c597445c31e2643c1e8cece715d7` |
 | **Documentation conformance** | Check the stable ecosystem standard with auditable evidence | `ak-docs conformance run documentation-standard-v1 --text` |
 | **Documentation audit** | Measure documentation quality and compare docs with the observed project graph | `ak-docs audit documentation --json` |
 | **Doc adapters** | Link human docs to agent docs | `fumadocs`, `docusaurus`, `vitepress`, `starlight`, `nextra`, `plain-markdown` |
@@ -255,7 +289,7 @@ permissions:
 
 steps:
   - uses: actions/checkout@v4
-  - uses: AgentsKit-io/doc-bridge@v1.4.0
+  - uses: AgentsKit-io/doc-bridge@ee756a13c006c597445c31e2643c1e8cece715d7 # v1.7.45
     with:
       config-path: doc-bridge.config.json
 ```
@@ -309,7 +343,6 @@ Designed for and dogfooded on open AgentsKit surfaces:
 | **Registry** | [registry.agentskit.io](https://registry.agentskit.io/) |
 | **Playbook** | [playbook.agentskit.io](https://playbook.agentskit.io/llms.txt) |
 | **AgentsKit Chat** | [documentation](https://chat.agentskit.io) · [source](https://github.com/AgentsKit-io/agentskit-chat) |
-| **AgentsKit OS** | [akos.agentskit.io](https://akos.agentskit.io) |
 | **Code Review** | [repository-native CLI](https://github.com/AgentsKit-io/code-review-cli) |
 | **This repo** | CI green · `ak-docs gate run` on every PR |
 
@@ -341,7 +374,7 @@ ak-docs memory promote --pr              # opens draft PR via gh
 
 ## Status
 
-**v1.4.0 stable** — portable, fail-closed handoffs for Cursor, Pi, Hermes, and ClawHub-compatible clients; deterministic Documentation Standard v1 conformance; verified release provenance; Marketplace Action; doctor + CI + skill; and full Tier A/B/C.
+**Current npm package: v1.7.45 stable** — portable, fail-closed handoffs for Cursor, Pi, Hermes, and ClawHub-compatible clients; deterministic Documentation Standard v1 conformance; verified release provenance; Marketplace Action; doctor + CI + skill; and documentation-quality audit tooling.
 
 ```bash
 pnpm install && pnpm build && pnpm test
@@ -357,6 +390,8 @@ The local MCP server reads only the project selected through `doc-bridge.config.
 ## Contributing
 
 Issues and PRs are welcome. Start here:
+
+To improve the evidence base, reproduce the [anonymized study](docs/study/README.md), add a language or framework analyzer, contribute a documentation-quality rule, or add a fixture for a real contradiction or stale relation.
 
 | Need | Doc |
 |------|-----|

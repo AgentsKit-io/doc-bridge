@@ -120,7 +120,6 @@
         { "url": "https://registry.agentskit.io/", "paths": ["README.md"] },
         { "url": "https://playbook.agentskit.io/llms.txt", "paths": ["README.md"] },
         { "url": "https://chat.agentskit.io", "paths": ["README.md"] },
-        { "url": "https://akos.agentskit.io", "paths": ["README.md"] },
         { "url": "https://github.com/AgentsKit-io/code-review-cli", "paths": ["README.md"] }
       ],
       "ecosystemContract": {

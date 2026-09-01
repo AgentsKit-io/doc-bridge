@@ -34,6 +34,8 @@ set of repository-specific checks fits every project.
 
 Before implementation, the human intent and acceptance criteria must be explicit. Every criterion must map to an executable check and its expected evidence. If a criterion is not mapped, the run is `CLARIFYING` or `BLOCKED`; a project may not silently shrink the scope to the checks that are easiest to run.
 
+An explicit human approval of the goal or plan authorizes the intermediate implementation, verification, tracking, and cleanup steps within that same contract. The harness must not repeatedly request approval for those intermediate steps. This approval does not waive evidence: failed, missing, stale, or newly out-of-scope work still blocks completion, and material artifact changes still require the applicable evidence review.
+
 ## States
 
 `CLARIFYING` → `PLANNED` → `VERIFYING` → `AWAITING_HUMAN_APPROVAL` / `AWAITING_AUTHORIZATION` → `COMPLETE`.
