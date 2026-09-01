@@ -28,6 +28,22 @@ pnpm build
 - Update docs and `CHANGELOG.md` when behavior changes.
 - Keep examples public and reproducible.
 
+## Why contribute?
+
+Doc Bridge helps humans and coding agents navigate large repositories with less context and stronger evidence. The study is intentionally open and anonymized so contributors can improve the measurement surface as well as the product.
+
+High-impact contribution areas:
+
+- language and framework analyzers;
+- documentation quality rules and contradiction detectors;
+- architecture relation extraction;
+- CLI, MCP, and documentation adapters;
+- executable acceptance checks;
+- anonymized benchmark tasks and replications;
+- accessibility and report improvements.
+
+Start with the [study overview](docs/study/README.md), run the chart check, and use the smallest reproducible example for a proposed change.
+
 ## Releases
 
 Use Changesets for versioned changes. A merged changeset on `master` starts the

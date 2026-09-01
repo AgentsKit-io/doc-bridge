@@ -214,6 +214,8 @@ test('fails closed until explicit UI approval is recorded', async () => {
   const approvedRun = JSON.parse(readFileSync(join(root, approvedLatest.path), 'utf8'))
   assert.equal(approvedRun.state, 'COMPLETE')
   assert.equal(approvedRun.outcomes[0].status, 'passed')
+  assert.equal(approvedRun.checks.find((check) => check.id === 'ui').status, 'passed')
+  assert.equal(approvedRun.evidenceReferences.find((evidence) => evidence.checkId === 'ui').status, 'passed')
 })
 
 test('rejects placeholder UI evidence without browser artifacts', async () => {
@@ -274,6 +276,35 @@ test('blocks when a check reports structured failure even with exit code zero', 
   assert.equal(run.state, 'BLOCKED')
   assert.equal(run.checks[0].status, 'failed')
   assert.equal(run.checks[0].verificationStatus, 'failed')
+})
+
+test('cleans only task-owned artifacts inside configured cleanup roots', async () => {
+  const root = mkdtempSync(join(tmpdir(), 'ak-verify-cleanup-'))
+  const configDir = join(root, '.codex')
+  const ownedRoot = join(root, 'tmp')
+  mkdirSync(configDir)
+  mkdirSync(join(configDir, 'verification'))
+  mkdirSync(ownedRoot)
+  writeFileSync(join(ownedRoot, 'owned.txt'), 'owned')
+  writeFileSync(join(root, 'keep.txt'), 'keep')
+  const configPath = join(configDir, 'verification.json')
+  writeFileSync(configPath, JSON.stringify({
+    schemaVersion: 1,
+    project: 'cleanup-fixture',
+    root: '..',
+    profile: 'strict',
+    contract: { intent: 'Validate cleanup boundaries', outcomes: [{ id: 'logic', statement: 'The fixture is valid.', checks: ['logic'] }] },
+    checks: [{ id: 'logic', category: 'logic', command: 'true' }],
+    cleanup: { roots: ['tmp'] },
+    tracking: { required: false, reason: 'fixture only' },
+  }))
+  writeFileSync(join(root, '.codex/verification/owned-artifacts.json'), JSON.stringify([
+    { path: 'tmp/owned.txt', taskOwned: true },
+    { path: 'keep.txt', taskOwned: true },
+  ]))
+  assert.equal(await main(['clean', '--config', configPath, '--json']), 0)
+  assert.equal(existsSync(join(ownedRoot, 'owned.txt')), false)
+  assert.equal(existsSync(join(root, 'keep.txt')), true)
 })
 
 test('blocks when required measurement evidence reports a regression', async () => {

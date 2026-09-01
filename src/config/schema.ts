@@ -202,6 +202,13 @@ export const DocumentationAuditConfigSchema = z
     requiredSections: z.array(z.string().min(1).max(128)).max(32).optional(),
     requireExamples: z.boolean().optional(),
     exactDuplicates: z.boolean().optional(),
+    defaultTier: z.enum(['tier-0', 'tier-1', 'tier-2']).optional(),
+    tierRules: z.array(z.object({
+      pattern: z.string().min(1).max(512),
+      tier: z.enum(['tier-0', 'tier-1', 'tier-2']),
+      critical: z.boolean().optional(),
+    }).strict()).max(128).optional(),
+    requiredCriticalMetadata: z.array(z.enum(['owner', 'lifecycle', 'sourceOfTruth', 'validationPath'])).max(4).optional(),
   })
   .strict()
 

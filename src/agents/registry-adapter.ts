@@ -50,6 +50,21 @@ const deepFreeze = <T>(value: T): T => {
 
 const registryConfig = (config: DocBridgeConfigV1) => config.intelligence?.registry
 
+const evidenceKey = (item: RegistryAgentContext['evidence'][number]): string => `${item.source}:${item.path}:${item.lineStart ?? ''}:${item.lineEnd ?? ''}`
+
+const validateGrounding = (proposal: AgentProposalV1, snapshot: DiscoverySnapshotV1, report: ReconciliationReportV1): void => {
+  const diagnosticIds = new Set(report.diagnostics.map((diagnostic) => diagnostic.id))
+  const evidence = [
+    ...report.diagnostics.flatMap((diagnostic) => diagnostic.evidence),
+    ...snapshot.entities.flatMap((entity) => entity.evidence),
+    ...snapshot.relations.flatMap((relation) => relation.evidence),
+  ]
+  const evidenceKeys = new Set(evidence.map(evidenceKey))
+  if (!proposal.evidence.length) throw new Error('Registry agent proposal must contain at least one evidence reference.')
+  if (proposal.relatedDiagnosticIds.some((id) => !diagnosticIds.has(id))) throw new Error('Registry agent proposal references an unknown diagnostic.')
+  if (proposal.evidence.some((item) => !evidenceKeys.has(evidenceKey(item)))) throw new Error('Registry agent proposal contains evidence outside the supplied snapshot/report.')
+}
+
 const runCli = (root: string, cli: RegistryCliConfig, context: RegistryAgentContext, timeoutMs: number, maxInputBytes: number, maxResponseBytes: number): Promise<unknown> => new Promise((resolve, reject) => {
   const input = JSON.stringify({
     protocol: 'doc-bridge.registry-agent.v1',
@@ -178,7 +193,8 @@ export const createRegistryAgentAdapter = (root: string, config: DocBridgeConfig
         const proposal = AgentProposalV1Schema.parse(raw)
         if (proposal.contentHash !== contentHashForArtifactV1(proposal)) throw new Error('Registry agent proposal contentHash does not match its canonical contents.')
         if (proposal.baseSnapshotHash !== snapshot.contentHash || proposal.baseReportHash !== report.contentHash) throw new Error('Registry agent proposal is not based on the supplied snapshot/report hashes.')
-        if (proposal.origin.kind !== 'registry-agent' || proposal.origin.id !== metadata.id) throw new Error(`Registry agent proposal origin must be ${metadata.id}.`)
+        if (proposal.origin.kind !== 'registry-agent' || proposal.origin.id !== metadata.id || proposal.origin.version !== metadata.version) throw new Error(`Registry agent proposal origin must be ${metadata.id}@${metadata.version}.`)
+        validateGrounding(proposal, snapshot, report)
         if (settings.deterministic) deterministicCache.set(cacheKey, proposal)
         return proposal
       } finally {

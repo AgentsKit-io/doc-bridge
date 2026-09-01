@@ -1,0 +1,90 @@
+{
+  "type": "study-protocol",
+  "schemaVersion": 1,
+  "protocolVersion": "v1",
+  "title": "Documentation quality and agent efficiency study",
+  "evidenceClasses": ["historical", "controlled"],
+  "repositories": [
+    { "id": "consumer-01", "visibility": "anonymized", "role": "consumer" },
+    { "id": "consumer-02", "visibility": "anonymized", "role": "consumer" },
+    { "id": "consumer-03", "visibility": "anonymized", "role": "consumer" },
+    { "id": "consumer-04", "visibility": "anonymized", "role": "consumer" },
+    { "id": "consumer-05", "visibility": "anonymized", "role": "consumer" },
+    { "id": "consumer-06", "visibility": "anonymized", "role": "consumer" }
+  ],
+  "taskCategories": ["discovery", "architecture", "documentation", "implementation"],
+  "models": [
+    { "id": "low-cost-model", "role": "low-cost", "status": "pinned", "provider": "codex", "model": "gpt-5.6-sol", "version": "codex-cli-0.149.0", "promptContractHash": "20897bddf03704d26f975003bf3ba0d4d8cb38559b382603d7a03cb17b487a7c" },
+    { "id": "reference-model", "role": "reference", "status": "pinned", "provider": "codex", "model": "gpt-5.6-luna", "version": "codex-cli-0.149.0", "promptContractHash": "a0a90a4141327fef23e2d7ef99da79cd44cfe66fa65d7757484e95629b3fe7bd" }
+  ],
+  "scenarios": [
+    {
+      "id": "repository-only",
+      "label": "Repository only",
+      "source": "repository-only",
+      "modelIds": ["low-cost-model", "reference-model"],
+      "requiresHumanApproval": true
+    },
+    {
+      "id": "deterministic-doc-bridge",
+      "label": "Deterministic Doc Bridge",
+      "source": "deterministic-doc-bridge",
+      "modelIds": ["low-cost-model", "reference-model"],
+      "requiresHumanApproval": true
+    },
+    {
+      "id": "registry-assisted",
+      "label": "Doc Bridge plus Registry agent",
+      "source": "doc-bridge-registry-agent",
+      "modelIds": ["low-cost-model", "reference-model"],
+      "registryAgent": "configured",
+      "requiresHumanApproval": true
+    }
+  ],
+  "metrics": [
+    { "id": "task-success", "family": "task", "unit": "ratio", "source": "adjudicator", "required": true, "description": "Proportion of task acceptance criteria satisfied." },
+    { "id": "tokens-to-answer", "family": "discovery", "unit": "tokens", "source": "provider", "required": true, "description": "Tokens consumed before a correct evidence-backed answer." },
+    { "id": "time-to-answer", "family": "discovery", "unit": "milliseconds", "source": "runner", "required": true, "description": "Elapsed time before a correct evidence-backed answer." },
+    { "id": "evidence-citation-rate", "family": "discovery", "unit": "ratio", "source": "adjudicator", "required": true, "description": "Proportion of answer claims supported by required evidence." },
+    { "id": "documentation-correctness", "family": "documentation", "unit": "ratio", "source": "adjudicator", "required": true, "description": "Proportion of reviewed claims agreeing with observed evidence." },
+    { "id": "documentation-completeness", "family": "documentation", "unit": "ratio", "source": "adjudicator", "required": true, "description": "Proportion of required knowledge present for the declared scope." },
+    { "id": "documentation-clarity", "family": "documentation", "unit": "ratio", "source": "human", "required": true, "description": "Proportion of reviewed documents understandable to the declared audience." },
+    { "id": "documentation-maintainability", "family": "documentation", "unit": "ratio", "source": "human", "required": true, "description": "Proportion of critical documents with maintainable ownership and validation metadata." },
+    { "id": "docbridge-runtime", "family": "operations", "unit": "milliseconds", "source": "doc-bridge", "required": true, "description": "Doc Bridge analysis and report runtime." },
+    { "id": "study-cost", "family": "cost", "unit": "currency", "source": "runner", "required": true, "description": "Measured cost of analysis and controlled task execution." }
+  ],
+  "outcomes": [
+    { "id": "protocol-integrity", "statement": "The study protocol is valid, versioned, and reproducible.", "checks": [{ "id": "protocol-validation", "command": "ak-docs study protocol docs/study/protocol-v1.json --json" }] },
+    { "id": "historical-evidence", "statement": "Historical observations preserve provenance, missing measurements, and limitations.", "checks": [{ "id": "history-validation", "command": "ak-docs study history docs/study/historical-evidence-v1.json --protocol docs/study/protocol-v1.json --json" }] },
+    { "id": "controlled-comparison", "statement": "Controlled task results can be compared only under a fixed protocol and source revision.", "checks": [{ "id": "controlled-run-validation", "command": "ak-verify run --config .codex/verification.json --json" }] },
+    { "id": "documentation-quality", "statement": "Documentation quality is measured for correctness, completeness, clarity, and maintainability.", "checks": [{ "id": "documentation-quality-review", "command": "pnpm docs:typecheck" }] },
+    { "id": "semantic-consistency", "statement": "Documentation claims can be compared with observed repository evidence.", "checks": [{ "id": "semantic-evidence-review", "command": "ak-docs study history docs/study/historical-evidence-v1.json --protocol docs/study/protocol-v1.json --json" }] },
+    { "id": "agent-efficiency", "statement": "Agent task efficiency is measured with tokens, time, evidence, and task success.", "checks": [{ "id": "efficiency-metric-contract", "command": "pnpm exec vitest run tests/study-protocol.test.ts" }] },
+    { "id": "privacy", "statement": "Published study artifacts contain no private repository names, paths, prompts, or raw responses.", "checks": [{ "id": "privacy-scan", "command": "rg -qi \"forbidden-pattern\" docs/study docs/spec/study-protocol-v1.md" }] },
+    { "id": "recovery", "statement": "Invalid or incomplete evidence is rejected or preserved as explicit missing data.", "checks": [{ "id": "recovery-contract-tests", "command": "pnpm exec vitest run tests/study-protocol.test.ts" }] },
+    { "id": "longitudinal-reporting", "statement": "Study runs are versioned and auditable over time.", "checks": [{ "id": "content-hash-validation", "command": "pnpm exec vitest run tests/study-protocol.test.ts" }] },
+    { "id": "stopping-rules", "statement": "The study defines measurable stopping targets before controlled rounds begin.", "checks": [{ "id": "stopping-target-validation", "command": "ak-docs study protocol docs/study/protocol-v1.json --json" }] }
+  ],
+  "budget": {
+    "maxTokensPerTask": 400000,
+    "maxRuntimeMsPerTask": 180000,
+    "maxRuns": 288,
+    "maxNetworkRequests": 0
+  },
+  "privacy": {
+    "mode": "anonymized",
+    "forbiddenFields": ["repository-content", "paths", "prompts", "credentials", "private-identifiers", "raw-agent-responses"],
+    "publicationRequiresHumanReview": true
+  },
+  "stopping": {
+    "minControlledRounds": 3,
+    "consecutiveNoMaterialImprovementRounds": 3,
+    "targets": [
+      { "metricId": "tokens-to-answer", "direction": "decrease", "threshold": 0.25 },
+      { "metricId": "time-to-answer", "direction": "decrease", "threshold": 0.2 },
+      { "metricId": "task-success", "direction": "no-regression", "threshold": 0 }
+    ]
+  },
+  "contentHashAlgo": "sha256-normalized-v1",
+  "contentHash": "7a56ae4da91ae56fb8b4b7e506adce525ab6fcb637d635cafb7091c2bd437adf"
+}

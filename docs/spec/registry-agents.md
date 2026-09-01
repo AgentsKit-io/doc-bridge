@@ -68,3 +68,9 @@ mergePolicy:
 - `knowledge-promoter` may draft PR content, but must never merge.
 - `code-review` runs after gates so reviewers see deterministic failures first.
 - Future RAG mode should inject `createDocBridgeRetriever(index)` and keep exact handoff resolution ahead of semantic results.
+
+## Grounding and approval boundary
+
+The adapter accepts only a typed `AgentProposalV1` whose base snapshot and report hashes match the supplied artifacts. A proposal must identify the configured Registry agent and exact installed version, reference known diagnostics, and include evidence present in the supplied snapshot or reconciliation report. Unknown diagnostics, out-of-scope evidence, malformed output, timeout, response limits, and token limits fail closed.
+
+The adapter returns advisory evidence only. It does not apply documentation changes, mark findings resolved, or approve its own output. Convert an accepted suggestion into the existing human-gated fix-proposal flow, run post-apply verification, and treat the new source revision as a new evidence run. An alternate Registry agent is selected by changing `intelligence.registry.agentId` and installing matching metadata under `agentRoot`; the common adapter and evidence contract remain unchanged.

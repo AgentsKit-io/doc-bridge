@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>doc-bridge — docs your agents can act on</title>
   <meta name="description" content="Turn human docs into executable handoffs for agents, and turn agent memory into reviewable documentation drafts. MCP, CLI, CI. No API key required." />
+  <link rel="icon" href="data:," />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -121,6 +122,61 @@
       border-radius: var(--radius);
       box-shadow: 0 18px 50px rgba(0, 0, 0, 0.28);
     }
+    .metrics {
+      display: grid;
+      gap: 1rem;
+      margin: 2rem 0 0;
+    }
+    .metrics-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+    }
+    .metrics-card img { display: block; width: 100%; height: auto; border-radius: 8px; }
+    .metrics-note { color: var(--muted); font-size: 0.85rem; margin-top: 0.75rem; }
+    .metric-kicker,
+    .finding-kicker {
+      color: var(--green);
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .quality-grid { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 1.25rem; align-items: start; }
+    .finding {
+      background: #0d1219;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      font-family: var(--mono);
+      font-size: 0.86rem;
+      line-height: 1.7;
+      overflow-x: auto;
+    }
+    .finding strong { color: var(--red); font-weight: 600; }
+    .finding span { color: var(--muted); }
+    .contributor-cta { margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border); }
+    .contributor-cta p { color: var(--muted); max-width: 62ch; margin: 0.5rem 0 1rem; }
+    .metric-mobile-summary { display: none; }
+    @media (max-width: 480px) {
+      .metrics-card img { display: none; }
+      .metric-mobile-summary {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.75rem;
+        margin-top: 1rem;
+      }
+      .metric-mobile-summary div {
+        padding: 0.9rem;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: #0d1219;
+      }
+      .metric-mobile-summary strong { display: block; color: var(--green); font-size: 1.35rem; line-height: 1.1; }
+      .metric-mobile-summary span { display: block; color: var(--muted); font-size: 0.78rem; margin-top: 0.35rem; }
+    }
     .t-dim { color: var(--muted); }
     .t-ok { color: var(--green); }
     .t-bad { color: var(--red); }
@@ -129,7 +185,7 @@
     h2 { font-size: 1.5rem; letter-spacing: -0.02em; margin-bottom: 0.5rem; }
     .section-lead { color: var(--muted); margin-bottom: 2rem; max-width: 60ch; }
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
-    @media (max-width: 720px) { .grid-2 { grid-template-columns: 1fr; } .nav-links { display: none; } }
+    @media (max-width: 720px) { .grid-2, .quality-grid { grid-template-columns: 1fr; } .nav-links { display: none; } }
     .card {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -197,6 +253,7 @@
       <div class="logo">doc-bridge <span>/ ak-docs</span></div>
       <nav class="nav-links">
         <a href="#demo">Demo</a>
+        <a href="#quality">Quality</a>
         <a href="#loops">Loops</a>
         <a href="#used-by">Used by</a>
         <a href="https://github.com/AgentsKit-io/doc-bridge">GitHub</a>
@@ -256,6 +313,57 @@
             </div>
           </div>
         </div>
+        <div class="metrics" aria-labelledby="measured-impact-title">
+          <div class="metrics-card">
+            <h2 id="measured-impact-title">Measured context efficiency</h2>
+            <div class="metric-kicker">Estimated · historical benchmark</div>
+            <p class="section-lead">Anonymized dogfooding estimated up to 99% less context payload between the scanned repository corpus and the P95 agent payload. This is not a provider-token measurement.</p>
+            <img src="assets/context-payload-reduction.svg" alt="Estimated context payload reduction from 100 percent of the repository corpus to 1 percent of the agent context payload" />
+            <div class="metric-mobile-summary" aria-label="Estimated context efficiency summary">
+              <div><strong>99%</strong><span>less context payload</span></div>
+              <div><strong>1%</strong><span>estimated P95 payload</span></div>
+            </div>
+            <p class="metrics-note">Doc Bridge 1.7.20 · estimated payload reduction, not a guaranteed token reduction or correctness result.</p>
+          </div>
+          <div class="metrics-card">
+            <h2>Controlled A/B signal</h2>
+            <div class="metric-kicker">Operational · 47 token-complete pairs</div>
+            <p class="section-lead">Across 96 anonymized executions, the deterministic workflow showed fewer paired provider tokens, lower P95 latency, and higher operational completion. This does not establish semantic correctness.</p>
+            <img src="assets/controlled-ab-comparison.svg" alt="Controlled A/B comparison showing 2.29 percent fewer paired provider tokens, 3.15 seconds lower P95 latency, and 4.17 percentage points more operationally completed executions" />
+            <div class="metric-mobile-summary" aria-label="Controlled A/B signal summary">
+              <div><strong>−2.29%</strong><span>paired provider tokens</span></div>
+              <div><strong>−3.15 s</strong><span>P95 latency</span></div>
+            </div>
+            <p class="metrics-note"><a href="https://github.com/AgentsKit-io/doc-bridge/blob/master/docs/study/README.md">Read the methodology and anonymized data.</a></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="quality">
+      <div class="wrap">
+        <h2>Find the gap between docs and reality.</h2>
+        <p class="section-lead">Doc Bridge compares declared documentation and ownership with the observed project graph, then keeps every finding tied to evidence and a reviewable action.</p>
+        <div class="quality-grid">
+          <div class="finding" aria-label="Anonymized documentation contradiction finding">
+            <div class="finding-kicker">Anonymized finding</div>
+            <div><strong>CONTRADICTION · high confidence</strong></div>
+            <div>Documentation declaration differs from the observed project relation</div>
+            <div><span>Evidence: 4 source files + 1 documentation declaration</span></div>
+            <div><span>Action: review ownership and update the canonical document</span></div>
+          </div>
+          <div>
+            <h3>What the deterministic audit can show</h3>
+            <table class="surface-table">
+              <tbody>
+                <tr><td>Coverage</td><td>Missing package or ownership documentation</td></tr>
+                <tr><td>Freshness</td><td>Stale declared relations and generated-document boundaries</td></tr>
+                <tr><td>Quality</td><td>Titles, examples, required sections, metadata, and exact duplicates</td></tr>
+                <tr><td>Limits</td><td>Natural-language correctness and semantic redundancy remain review work</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -304,7 +412,7 @@
           <div class="card">
             <div class="loop-tag">Explain</div>
             <h3>Local consult</h3>
-            <p><code>ask</code> · optional Ollama chat</p>
+            <p><code>ask</code> · optional provider-backed review</p>
           </div>
         </div>
       </div>
@@ -312,8 +420,8 @@
 
     <section id="used-by">
       <div class="wrap">
-        <h2>Used by AgentsKit (public)</h2>
-        <p class="section-lead">Dogfooded on open surfaces — not private monorepo claims.</p>
+        <h2>Public dogfood surfaces</h2>
+        <p class="section-lead">Open AgentsKit surfaces used for validation — not independent customer or private-monorepo claims.</p>
         <div class="used-by">
           <a href="https://www.agentskit.io/docs/for-agents">AgentsKit for-agents</a>
           <a href="https://registry.agentskit.io/">AgentsKit Registry</a>
@@ -326,6 +434,12 @@
           <img src="https://img.shields.io/badge/handoff_coverage-ready-2ea44f?style=flat-square" alt="handoff coverage" />
           <img src="https://img.shields.io/github/actions/workflow/status/AgentsKit-io/doc-bridge/ci.yml?branch=master&style=flat-square&label=CI" alt="CI" />
         </div>
+        <div class="contributor-cta">
+          <h3>Help make repository knowledge verifiable.</h3>
+          <p>Reproduce the anonymized study, add an analyzer, contribute a documentation rule, or create a fixture for a stale relation or structured contradiction.</p>
+          <a class="btn btn-primary" href="https://github.com/AgentsKit-io/doc-bridge/blob/master/docs/study/README.md">Reproduce the study</a>
+          <a class="btn btn-ghost" href="https://github.com/AgentsKit-io/doc-bridge/blob/master/CONTRIBUTING.md">Contribute</a>
+        </div>
       </div>
     </section>
 
@@ -337,7 +451,7 @@
           <div class="terminal-bar"><span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span></div>
           <div class="terminal-body">
             <div class="t-dim"># .github/workflows/pr.yml</div>
-            <div>- uses: <span class="t-hi">AgentsKit-io/doc-bridge@v1.4.0</span></div>
+            <div>- uses: <span class="t-hi">AgentsKit-io/doc-bridge@ee756a13c006c597445c31e2643c1e8cece715d7</span> <span class="t-dim"># v1.7.45</span></div>
             <div>&nbsp;&nbsp;with:</div>
             <div>&nbsp;&nbsp;&nbsp;&nbsp;config-path: doc-bridge.config.json</div>
           </div>

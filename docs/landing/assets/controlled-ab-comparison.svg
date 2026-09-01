@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 620" role="img" aria-labelledby="title desc">
+  <title id="title">Controlled A/B signal (operational)</title>
+  <desc id="desc">96 anonymized executions · 24 tasks · 2 pinned models · one replicate</desc>
+  <rect width="1200" height="620" rx="24" fill="#0b0f14"/>
+  <g font-family="Inter, ui-sans-serif, system-ui, sans-serif" fill="#e8eef6">
+    <text x="64" y="76" font-size="32" font-weight="700">Controlled A/B signal (operational)</text>
+    <text x="64" y="112" font-size="18" fill="#8fa3b8">96 anonymized executions · 24 tasks · 2 pinned models · one replicate</text>
+    
+    <line x1="600" y1="158" x2="600" y2="548" stroke="#526579" stroke-width="2"/>
+    <text x="600" y="142" text-anchor="middle" font-size="16" fill="#8fa3b8">repository-only baseline</text>
+    <text x="64" y="214" font-size="20" font-weight="600">Paired provider tokens</text>
+    <text x="1136" y="214" text-anchor="end" font-size="24" font-weight="700" fill="#3ecf8e">−2.29%</text>
+    <rect x="64" y="234" width="1072" height="14" rx="7" fill="#1e2a38"/>
+    <rect x="446" y="234" width="154" height="14" rx="7" fill="#3ecf8e"/>
+<text x="64" y="298" font-size="20" font-weight="600">P95 latency</text>
+    <text x="1136" y="298" text-anchor="end" font-size="24" font-weight="700" fill="#3ecf8e">−3.15 s</text>
+    <rect x="64" y="318" width="1072" height="14" rx="7" fill="#1e2a38"/>
+    <rect x="388" y="318" width="212" height="14" rx="7" fill="#3ecf8e"/>
+<text x="64" y="382" font-size="20" font-weight="600">Operational completion</text>
+    <text x="1136" y="382" text-anchor="end" font-size="24" font-weight="700" fill="#3ecf8e">+4.17 pp</text>
+    <rect x="64" y="402" width="1072" height="14" rx="7" fill="#1e2a38"/>
+    <rect x="600" y="402" width="280" height="14" rx="7" fill="#3ecf8e"/>
+<text x="64" y="466" font-size="20" font-weight="600">Evidence quality</text>
+    <text x="1136" y="466" text-anchor="end" font-size="24" font-weight="700" fill="#3ecf8e">+3.59 pp</text>
+    <rect x="64" y="486" width="1072" height="14" rx="7" fill="#1e2a38"/>
+    <rect x="600" y="486" width="241" height="14" rx="7" fill="#3ecf8e"/>
+    <text x="64" y="584" font-size="16" fill="#8fa3b8">Directional signal; see the full study for denominators and limitations.</text>
+  
+  </g>
+</svg>

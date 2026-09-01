@@ -14,6 +14,10 @@
       { "id": "surfaces", "statement": "The real CLI, MCP artifact, and discovery flow work.", "checks": ["cli-version", "cli-discovery", "mcp-package"] },
       { "id": "documentation", "statement": "Documentation checks and repository evidence are valid.", "checks": ["docs-typecheck", "diff-clean"] },
       { "id": "documentation-audit", "statement": "The documentation audit reports measurable quality, coverage, structure gaps, contradictions, and explicit limitations.", "checks": ["documentation-audit"] },
+      { "id": "study-metrics", "statement": "The longitudinal study metrics CLI produces hashed, segmented, missing-data-safe measurements without replacing a baseline.", "checks": ["study-metrics"] },
+      { "id": "study-verification", "statement": "Study evidence has explicit provenance, privacy, budget, and artifact-hash bindings.", "checks": ["study-verification"] },
+      { "id": "study-privacy", "statement": "Publication-bound study artifacts pass deterministic privacy scanning.", "checks": ["study-privacy"] },
+      { "id": "study-instrumentation", "statement": "Study provider cost attribution and independent adjudication remain bounded, failure-safe, and independently testable.", "checks": ["study-instrumentation", "study-privacy"] },
       { "id": "registry-cli", "statement": "The Registry adapter can invoke a configured CLI with bounded JSON stdin/stdout and fail closed on invalid output.", "checks": ["registry-cli"] },
       { "id": "report-ui", "statement": "The report is validated in a real browser and awaits human visual approval.", "checks": ["report-ui"] },
       { "id": "harness", "statement": "The verification harness contract itself is tested.", "checks": ["harness-contract"] }
@@ -38,6 +42,10 @@
     { "id": "mcp-package", "evidence": "structured", "category": "mcp", "execution": "real", "command": "pnpm mcpb:stage && pnpm mcpb:validate && pnpm mcpb:smoke", "timeoutMs": 180000 },
     { "id": "docs-typecheck", "evidence": "structured", "category": "docs", "command": "pnpm docs:typecheck", "timeoutMs": 180000 },
     { "id": "documentation-audit", "evidence": "structured", "category": "docs", "execution": "real", "command": "pnpm build && node bin/ak-docs.js audit documentation --json", "timeoutMs": 240000 },
+    { "id": "study-metrics", "evidence": "structured", "category": "logic", "execution": "real", "command": "pnpm build && node bin/ak-docs.js study metrics docs/study/observation-ledger-v1.json --json --allow-regressions", "timeoutMs": 240000 },
+    { "id": "study-verification", "evidence": "structured", "category": "logic", "execution": "real", "command": "pnpm build && node bin/ak-docs.js study verification docs/study/verification-binding-v1.json --json", "timeoutMs": 240000 },
+    { "id": "study-privacy", "evidence": "structured", "category": "docs", "execution": "real", "command": "pnpm build && node scripts/study-privacy-gate.mjs docs/study", "timeoutMs": 240000 },
+    { "id": "study-instrumentation", "evidence": "structured", "category": "logic", "execution": "real", "command": "pnpm vitest run tests/study-provider-cli.test.ts", "timeoutMs": 120000 },
     { "id": "registry-cli", "evidence": "structured", "category": "logic", "execution": "real", "command": "pnpm vitest run tests/registry-adapter.test.ts", "timeoutMs": 120000 },
     { "id": "diff-clean", "evidence": "structured", "category": "custom", "command": "git diff --check", "timeoutMs": 30000 },
     { "id": "report-ui", "evidence": "structured", "category": "ui", "execution": "real", "capabilities": ["real-browser", "screenshot"], "command": "node scripts/report-visual-check.mjs .doc-bridge/report.html --output .codex/verification/ui", "timeoutMs": 180000 }

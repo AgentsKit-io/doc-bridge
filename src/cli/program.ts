@@ -50,6 +50,28 @@ import { renderOfflineReportArtifact } from '../report/html.js'
 import { benchmarkFixture, formatBenchmarkText, measureBenchmark } from '../metrics/benchmark.js'
 import { PACKAGE_VERSION } from '../version.js'
 import { auditDocumentation, formatDocumentationAuditText } from '../audit/documentation.js'
+import {
+  formatHistoricalEvidenceText,
+  formatStudyProtocolText,
+  parseHistoricalEvidenceRegistry,
+  parseStudyProtocol,
+  validateHistoricalEvidenceRegistry,
+} from '../study/protocol.js'
+import {
+  formatStudyTaskSuiteText,
+  parseStudyTaskSuite,
+  selectTaskExecutions,
+} from '../study/task-suite.js'
+import {
+  formatControlledStudyRunPlanText,
+  parseControlledStudyLedger,
+  parseControlledStudyRunPlan,
+} from '../study/runner.js'
+import { formatControlledStudyRunText, parseStudyRepositoryConfig, runControlledStudy } from '../study/execution.js'
+import { independentlyAdjudicateStudyLedger, persistIndependentlyAdjudicatedLedger } from '../study/adjudication.js'
+import { formatStudyProviderCliText, parseStudyProviderCliConfig } from '../study/provider-cli.js'
+import { calculateStudyMetrics, formatStudyMetricsText } from '../study/metrics.js'
+import { formatStudyVerificationText, parseStudyVerificationBinding } from '../study/verification.js'
 
 type Command =
   | 'help'
@@ -63,6 +85,7 @@ type Command =
   | 'registry'
   | 'discover'
   | 'benchmark'
+  | 'study'
   | 'scan'
   | 'reconcile'
   | 'check'
@@ -94,6 +117,17 @@ Core (no API key):
   ak-docs index [--watch]
   ak-docs discover [--text|--json]
   ak-docs benchmark <fixture.json> <observation.json> [--text|--json]
+  ak-docs study protocol <protocol.json> [--text|--json]
+  ak-docs study history <registry.json> [--protocol <protocol.json>] [--text|--json]
+  ak-docs study tasks <task-suite.json> [--text|--json]
+  ak-docs study select <task-suite.json> [--text|--json]
+  ak-docs study plan <run-plan.json> [--text|--json]
+  ak-docs study providers <provider-cli.json> [--text|--json]
+  ak-docs study run <run-plan.json> <task-suite.json> --providers <provider-cli.json> --repositories <repositories.json> --ledger <ledger.json> [--round <id>] [--dry-run] [--text|--json]
+  ak-docs study adjudicate <observation-ledger.json> <task-suite.json> --adjudicator <provider-cli.json> --output <ledger.json> [--run-id <id>] [--offset <n>] [--limit <n>] [--text|--json]
+  ak-docs study ledger <observation-ledger.json> [--text|--json]
+  ak-docs study verification <binding.json> [--text|--json]
+  ak-docs study metrics <observation-ledger.json> [--baseline-round <id>] [--current-round <id>] [--baseline-run-id <id>] [--current-run-id <id>] [--allow-regressions] [--text|--json]
   ak-docs scan | reconcile | check | map [--text|--json] [--html] [--report-threshold <bytes>]
   ak-docs fix propose links|normalize <artifact> [--output <file>]
   ak-docs fix approve|apply <proposal.json> [--by <name>]
@@ -170,6 +204,7 @@ const parseArgs = (argv: readonly string[]) => {
   else if (positional[0] === 'registry') command = 'registry'
   else if (positional[0] === 'discover') command = 'discover'
   else if (positional[0] === 'benchmark') command = 'benchmark'
+  else if (positional[0] === 'study') command = 'study'
   else if (positional[0] === 'scan') command = 'scan'
   else if (positional[0] === 'reconcile') command = 'reconcile'
   else if (positional[0] === 'check') command = 'check'
@@ -943,6 +978,122 @@ const registryTopology = () => ({
   mergePolicy: { autoMerge: false, requiresHuman: true },
 })
 
+const runStudyCommand = async (flags: ReadonlySet<string>, positional: readonly string[], argv: readonly string[]): Promise<number> => {
+  const action = positional[1]
+  const inputPath = positional[2]
+  if (!inputPath || !['protocol', 'history', 'tasks', 'select', 'plan', 'providers', 'run', 'adjudicate', 'ledger', 'metrics', 'verification'].includes(action ?? '')) {
+    process.stderr.write('Usage: ak-docs study protocol|history|tasks|select|plan|providers|run|adjudicate|ledger|metrics|verification <artifact.json> [--protocol <protocol.json>] [--providers <provider-cli.json>] [--adjudicator <provider-cli.json>] [--repositories <repositories.json>] [--ledger <ledger.json>] [--output <ledger.json>] [--run-id <id>] [--limit <n>] [--round <id>] [--dry-run] [--baseline-round <id>] [--current-round <id>] [--text|--json]\n')
+    return 1
+  }
+  try {
+    if (action === 'run') {
+      const taskSuitePath = positional[3]
+      const providersPath = optionValues(argv, '--providers')[0]
+      const repositoriesPath = optionValues(argv, '--repositories')[0]
+      const ledgerPath = optionValues(argv, '--ledger')[0]
+      if (!taskSuitePath || !providersPath || !repositoriesPath || !ledgerPath) throw new Error('Study run requires a task suite, --providers, --repositories, and --ledger.')
+      const summary = await runControlledStudy({
+        plan: parseControlledStudyRunPlan(JSON.parse(readFileSync(resolve(inputPath), 'utf8')) as unknown),
+        suite: parseStudyTaskSuite(JSON.parse(readFileSync(resolve(taskSuitePath), 'utf8')) as unknown),
+        providers: parseStudyProviderCliConfig(JSON.parse(readFileSync(resolve(providersPath), 'utf8')) as unknown),
+        repositories: parseStudyRepositoryConfig(JSON.parse(readFileSync(resolve(repositoriesPath), 'utf8')) as unknown),
+        ledgerPath: resolve(ledgerPath),
+        ...(optionValues(argv, '--round')[0] === undefined ? {} : { round: optionValues(argv, '--round')[0] }),
+        ...(flags.has('--dry-run') ? { dryRun: true } : {}),
+      })
+      if (flags.has('--text')) writeLines(formatControlledStudyRunText(summary))
+      else writeJson({ ok: summary.status === 'dry-run' || summary.status === 'completed', summary })
+      return 0
+    }
+    if (action === 'adjudicate') {
+      const taskSuitePath = positional[3]
+      const adjudicatorConfigPath = optionValues(argv, '--adjudicator')[0]
+      const outputPath = optionValues(argv, '--output')[0]
+      if (!taskSuitePath || !adjudicatorConfigPath || !outputPath) throw new Error('Study adjudication requires a task suite, --adjudicator with an adjudicator, and --output.')
+      const config = parseStudyProviderCliConfig(JSON.parse(readFileSync(resolve(adjudicatorConfigPath), 'utf8')) as unknown)
+      if (!config.adjudicator) throw new Error('Study provider config must declare an adjudicator.')
+      const ledger = parseControlledStudyLedger(JSON.parse(readFileSync(resolve(inputPath), 'utf8')) as unknown)
+      const suite = parseStudyTaskSuite(JSON.parse(readFileSync(resolve(taskSuitePath), 'utf8')) as unknown)
+      const limitValue = optionValues(argv, '--limit')[0]
+      const limit = limitValue === undefined ? undefined : Number(limitValue)
+      const offsetValue = optionValues(argv, '--offset')[0]
+      const offset = offsetValue === undefined ? undefined : Number(offsetValue)
+      const result = await independentlyAdjudicateStudyLedger({ ledger, taskSuite: suite, config: config.adjudicator, configurationHash: config.contentHash, cwd: process.cwd(), maxRuntimeMs: suite.maxRuntimeMsPerTask, ...(optionValues(argv, '--run-id')[0] === undefined ? {} : { runId: optionValues(argv, '--run-id')[0] }), ...(offset === undefined ? {} : { offset }), ...(limit === undefined ? {} : { limit }) })
+      persistIndependentlyAdjudicatedLedger(outputPath, result)
+      if (flags.has('--text')) writeLines([`Adjudicated observations: ${result.observations.length}`, `Ledger: ${resolve(outputPath)}`, `Content hash: ${result.contentHash}`])
+      else writeJson({ ok: true, ledger: result })
+      return 0
+    }
+    const input = JSON.parse(readFileSync(resolve(inputPath), 'utf8')) as unknown
+    if (action === 'protocol') {
+      const protocol = parseStudyProtocol(input)
+      if (flags.has('--text')) writeLines(formatStudyProtocolText(protocol))
+      else writeJson({ ok: true, protocol })
+      return 0
+    }
+    if (action === 'tasks') {
+      const suite = parseStudyTaskSuite(input)
+      if (flags.has('--text')) writeLines(formatStudyTaskSuiteText(suite))
+      else writeJson({ ok: true, suite })
+      return 0
+    }
+    if (action === 'select') {
+      const suite = parseStudyTaskSuite(input)
+      const executions = selectTaskExecutions(suite)
+      if (flags.has('--text')) writeLines([`Selected executions: ${executions.length}`, `First execution: ${executions[0]?.taskId ?? 'none'} / ${executions[0]?.variantId ?? 'none'}`])
+      else writeJson({ ok: true, executions })
+      return 0
+    }
+    if (action === 'plan') {
+      const plan = parseControlledStudyRunPlan(input)
+      if (flags.has('--text')) writeLines(formatControlledStudyRunPlanText(plan))
+      else writeJson({ ok: true, plan })
+      return 0
+    }
+    if (action === 'providers') {
+      const providers = parseStudyProviderCliConfig(input)
+      if (flags.has('--text')) writeLines(formatStudyProviderCliText(providers))
+      else writeJson({ ok: true, providers })
+      return 0
+    }
+    if (action === 'ledger') {
+      const ledger = parseControlledStudyLedger(input)
+      if (flags.has('--text')) writeLines([`Ledger: ${ledger.ledgerVersion}`, `Observations: ${ledger.observations.length}`, `Content hash: ${ledger.contentHash}`])
+      else writeJson({ ok: true, ledger })
+      return 0
+    }
+    if (action === 'metrics') {
+      const ledger = parseControlledStudyLedger(input)
+      const baselineRound = optionValues(argv, '--baseline-round')[0]
+      const currentRound = optionValues(argv, '--current-round')[0]
+      const baselineRunId = optionValues(argv, '--baseline-run-id')[0]
+      const currentRunId = optionValues(argv, '--current-run-id')[0]
+      const report = calculateStudyMetrics(ledger.observations, { ...(baselineRound === undefined ? {} : { baselineRound }), ...(currentRound === undefined ? {} : { currentRound }), ...(baselineRunId === undefined ? {} : { baselineRunId }), ...(currentRunId === undefined ? {} : { currentRunId }) })
+      if (flags.has('--text')) writeLines(formatStudyMetricsText(report))
+      else writeJson({ ok: true, report })
+      return report.comparisons.some((comparison) => comparison.status === 'regressed') && !flags.has('--allow-regressions') ? 1 : 0
+    }
+    if (action === 'verification') {
+      const binding = parseStudyVerificationBinding(input)
+      if (flags.has('--text')) writeLines(formatStudyVerificationText(binding))
+      else writeJson({ ok: true, binding })
+      return 0
+    }
+    const registry = parseHistoricalEvidenceRegistry(input)
+    const protocolPath = optionValues(argv, '--protocol')[0]
+    if (protocolPath) {
+      const protocol = parseStudyProtocol(JSON.parse(readFileSync(resolve(protocolPath), 'utf8')) as unknown)
+      validateHistoricalEvidenceRegistry(registry, protocol)
+    }
+    if (flags.has('--text')) writeLines(formatHistoricalEvidenceText(registry))
+    else writeJson({ ok: true, registry })
+    return 0
+  } catch (error) {
+    process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`)
+    return 2
+  }
+}
+
 export const runCli = (argv: readonly string[]): number | undefined | Promise<number> => {
   const { command, flags, configPath, positional } = parseArgs(argv)
 
@@ -1031,6 +1182,8 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
       return 2
     }
   }
+
+  if (command === 'study') return runStudyCommand(flags, positional, argv)
 
   if (command === 'scan' || command === 'reconcile' || command === 'check' || command === 'map') {
     return runWorkflowCommand(command, flags, configPath, argv)

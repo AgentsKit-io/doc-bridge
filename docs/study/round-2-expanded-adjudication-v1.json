@@ -1,0 +1,91 @@
+{
+  "type": "expanded-adjudication-result",
+  "schemaVersion": 1,
+  "round": "round-2-expanded-adjudication-2026-08-31",
+  "sourceLedgerHash": "cc3eb8a816f961b4a4d8fdefd96365e6b89f3fd7d5aad287c3c5cc79a80ed0f5",
+  "outputLedgerHash": "a89fa316b88eea707347c1b2caae64c6895ce19688a57a7909e15abb51058f20",
+  "configurationHash": "d816148be351fd8dacdf82f204d6694b41e3f3af90ce5f8cae11ced8c99ef37b",
+  "sampleSize": 12,
+  "independentAdjudicationCount": 12,
+  "pendingCount": 0,
+  "coverage": 1,
+  "providerNetwork": true,
+  "adjudicatorModelId": "gpt-5.6-luna",
+  "scenarioCoverage": [
+    "deterministic-doc-bridge",
+    "repository-only"
+  ],
+  "categoryCoverage": [
+    "architecture",
+    "discovery",
+    "documentation",
+    "implementation"
+  ],
+  "repositoryCoverage": [
+    "consumer-01",
+    "consumer-03",
+    "consumer-04",
+    "consumer-05",
+    "consumer-06"
+  ],
+  "inputTokens": 226577,
+  "outputTokens": 3297,
+  "tokenCostUnits": 229874,
+  "configuredCostUsd": 0.302758,
+  "latencyMs": {
+    "min": 8078,
+    "max": 11503,
+    "average": 9841.5,
+    "p95": 11503
+  },
+  "outcomeCounts": {
+    "incomplete": 2,
+    "partial": 5,
+    "blocked": 5
+  },
+  "reasonCodeCounts": {
+    "acceptance-check-blocked": 1,
+    "acceptance-check-failed": 1,
+    "acceptance-check-not-established": 1,
+    "acceptance-check-not-executed": 1,
+    "acceptance-check-not-passed": 2,
+    "acceptance-check-unavailable": 1,
+    "architecture-artifact-not-inspected": 1,
+    "budget-exceeded-does-not-establish-blocked-target": 1,
+    "candidate-outcome-misclassified": 1,
+    "candidate-record-omits-discovery-map": 1,
+    "correct-target-and-evidence": 1,
+    "discovery-evidence-not-validated": 3,
+    "documentation-only-scope": 1,
+    "entrypoint-evidence-present": 1,
+    "entrypoints-and-owners-not-stated": 1,
+    "evidence-content-not-provided": 1,
+    "evidence-identifiers-alone-do-not-prove-correctness": 1,
+    "execution-budget-exceeded": 1,
+    "issue-category-not-provided": 1,
+    "knowledge-gap-evidence-present": 3,
+    "minimal-documentation-only-proposal": 1,
+    "precise-documentation-issue-not-provided": 1,
+    "required-acceptance-check-blocked": 1,
+    "required-acceptance-check-failed": 2,
+    "required-evidence-insufficient": 1,
+    "success-not-supported": 1,
+    "target-document-identified": 3,
+    "target-document-not-identified": 1,
+    "verification-command-blocked": 1,
+    "verification-command-unavailable": 1,
+    "verification-plan-present": 3
+  },
+  "privacy": {
+    "forbiddenMatchCount": 0,
+    "rawRepositoryPathsIncluded": false,
+    "rawRepositoryContentIncluded": false
+  },
+  "limitations": [
+    "The sample is anonymized and bounded; it is not a full-repository evaluation.",
+    "The configured USD rates are experimental study rates, not a vendor invoice.",
+    "Independent adjudication evaluates the bounded candidate record and cannot recover evidence omitted from it."
+  ],
+  "contentHashAlgo": "sha256-normalized-v1",
+  "contentHash": "df4a869c9da7354c7fdd6a6ed993f67f9fb16ccb8c2953b8c937328e248701ce"
+}

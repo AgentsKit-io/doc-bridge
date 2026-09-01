@@ -26,6 +26,17 @@ Doc Bridge keeps **one repository** useful to people and coding agents. Pick the
 | Every CLI command | [CLI map](./guides/cli-map.md) · [CLI reference](./spec/cli.md) |
 | Config sketches | [Examples](./examples.md) |
 | Optional chat / RAG | [Chat and RAG](./chat-and-rag.md) · [Ollama demo](./ollama-demo.md) |
+| Study and measurement | [Study overview and anonymized data](./study/README.md) · [Study protocol v1](./spec/study-protocol-v1.md) |
+| Controlled task suite | [Study task suite v1](./spec/study-task-suite-v1.md) |
+| Controlled study runner | [Study runner v1](./spec/study-runner-v1.md) |
+| Provider CLI adapter | [Study provider CLI v1](./spec/study-provider-cli-v1.md) |
+| Round 1 instrumentation | [Instrumentation plan v1](./study/round-1-instrumentation-plan-v1.md) · [adjudicated smoke ledger](./study/round-1-adjudicated-smoke-v1.json) |
+| Longitudinal measurements | [Study metrics v1](./spec/study-metrics-v1.md) |
+| Study verification | [Study verification v1](./spec/study-verification-v1.md) |
+| A/B baseline result | [A/B baseline result 2026-08-31](./study/ab-baseline-result-v1.json) · [analysis](./study/ab-baseline-analysis-v1.md) |
+| Documentation quality audit | [Documentation audit v1](./spec/documentation-audit-v1.md) |
+| Current documentation audit snapshot | [Audit round 2026-08-31](./study/documentation-audit-round-2026-08-31.json) |
+| Controlled pilot evidence | [Pilot round 2026-08-31](./study/pilot-round-2026-08-31.json) |
 
 ## How it works
 
@@ -55,4 +66,4 @@ Machine surfaces: [llms.txt](/llms.txt) · [llms-full.txt](/llms-full.txt) · [r
 
 ## Ecosystem
 
-Part of AgentsKit — next to [AgentsKit](https://www.agentskit.io), [Registry](https://registry.agentskit.io), [Chat](https://chat.agentskit.io), [Playbook](https://playbook.agentskit.io), and [AKOS](https://akos.agentskit.io).
+Part of AgentsKit — next to [AgentsKit](https://www.agentskit.io), [Registry](https://registry.agentskit.io), [Chat](https://chat.agentskit.io), and [Playbook](https://playbook.agentskit.io).

@@ -1,0 +1,27 @@
+{
+  "type": "controlled-study-verification",
+  "schemaVersion": 1,
+  "verificationRunId": "verification-fixture-01",
+  "sourceRevisionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "protocolHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "configurationHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+  "baselineHash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+  "artifactHashes": {
+    "metrics": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+    "ledger": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+  },
+  "privacy": {
+    "mode": "anonymized",
+    "checkedArtifactCount": 2,
+    "forbiddenMatchCount": 0,
+    "publicationReview": "approved"
+  },
+  "budget": {
+    "maxTokens": 1000,
+    "usedTokens": 800,
+    "maxRuntimeMs": 2000,
+    "usedRuntimeMs": 1500
+  },
+  "contentHashAlgo": "sha256-normalized-v1",
+  "contentHash": "1c94cb0a2b70e18cffc99f4317d772760dfd9f29039009ece86d2031078bb781"
+}

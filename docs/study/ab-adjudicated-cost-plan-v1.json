@@ -1,0 +1,33 @@
+{
+  "type": "controlled-study-run-plan",
+  "schemaVersion": 1,
+  "planVersion": "v1-ab-adjudicated-cost",
+  "protocolVersion": "v1",
+  "protocolHash": "7a56ae4da91ae56fb8b4b7e506adce525ab6fcb637d635cafb7091c2bd437adf",
+  "taskSuiteHash": "d7810828bce3c6616f00897fd7c92dfa4ecdf12e549923795cd95cc81a2b0029",
+  "sourceRevisionHash": "0dfd7a83cfdfaecd78055642f74ce6552bfd83cf14f7bc6ed308ec978eda0ef6",
+  "configurationHash": "0a7dede28ccf1e672044c7b429a67d64d34e68c133dd21ffc07d763ff50642fe",
+  "docBridgeVersion": "1.7.45",
+  "models": [
+    { "id": "low-cost-model", "role": "low-cost", "provider": "codex", "model": "gpt-5.6-sol", "version": "codex-cli-0.149.0", "parametersHash": "6dc5481139cc4fc6960a38ffd4c7e68605108d0d3eac9ac3c269c92703200273", "contextLimit": 272000, "toolConfigurationHash": "a08b38a4fa7e559811713cabc2e2f62cb05ef266d406dcb38cf46be627417e20", "promptContractHash": "5ba19f0e4ea57c4206d2965a55fc1bbd081348a8ccf89c86ff64a81df93bf98b" },
+    { "id": "reference-model", "role": "reference", "provider": "codex", "model": "gpt-5.6-luna", "version": "codex-cli-0.149.0", "parametersHash": "785593a535c713ae8015defb031047fb9ae55926ec4ac0cb0cafcdaa5cba1e30", "contextLimit": 272000, "toolConfigurationHash": "d2fe8bbf1fa6add2b357c4a199a37224c03bbe4edf29901ff45ae0ef8ee99366", "promptContractHash": "5ba19f0e4ea57c4206d2965a55fc1bbd081348a8ccf89c86ff64a81df93bf98b" }
+  ],
+  "scenarios": [
+    { "id": "repository-only", "network": false },
+    { "id": "deterministic-doc-bridge", "network": false },
+    { "id": "registry-assisted", "agentId": "ecosystem-doc-bridge-corpus-scanner", "agentVersion": "v1.0.0", "network": false }
+  ],
+  "taskIds": [
+    "consumer-01-discovery", "consumer-01-architecture", "consumer-01-documentation", "consumer-01-implementation",
+    "consumer-02-discovery", "consumer-02-architecture", "consumer-02-documentation", "consumer-02-implementation",
+    "consumer-03-discovery", "consumer-03-architecture", "consumer-03-documentation", "consumer-03-implementation",
+    "consumer-04-discovery", "consumer-04-architecture", "consumer-04-documentation", "consumer-04-implementation",
+    "consumer-05-discovery", "consumer-05-architecture", "consumer-05-documentation", "consumer-05-implementation",
+    "consumer-06-discovery", "consumer-06-architecture", "consumer-06-documentation", "consumer-06-implementation"
+  ],
+  "sampling": { "strategy": "pairwise-task-strata", "sampleSize": 96, "scenarioIds": ["repository-only", "deterministic-doc-bridge"] },
+  "budget": { "maxTokens": 400000, "maxRuntimeMs": 180000, "maxOutputBytes": 256000, "maxAttempts": 1 },
+  "runId": "phase-9-ab-adjudicated-cost-01",
+  "contentHashAlgo": "sha256-normalized-v1",
+  "contentHash": "7d03ca649d4d4d23cc9c7cb7237aba6e51697d04d2d8ac1912101ccb439b08b8"
+}

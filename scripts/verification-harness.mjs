@@ -407,7 +407,16 @@ const updateApproval = (root, run, type, rawIntent, by, configuredStateDir) => {
     by: by ?? 'human',
     at: now(),
   })
-  if (type === 'human-approval') run = { ...run, outcomes: run.outcomes.map((outcome) => outcome.status === 'awaiting-human-approval' ? { ...outcome, status: 'passed' } : outcome) }
+  if (type === 'human-approval') {
+    run = {
+      ...run,
+      checks: run.checks.map((check) => check.status === 'awaiting-human-approval'
+        ? { ...check, status: 'passed', verificationStatus: 'human-approved' }
+        : check),
+      outcomes: run.outcomes.map((outcome) => outcome.status === 'awaiting-human-approval' ? { ...outcome, status: 'passed' } : outcome),
+    }
+    run = attachEvidence(run)
+  }
   if (type === 'human-approval' && run.state === 'AWAITING_HUMAN_APPROVAL') run = run.tracking.required ? transition(run, 'AWAITING_AUTHORIZATION', `Human approval recorded for ${run.runId}.`) : transition(run, 'COMPLETE', 'Human approval recorded and all gates passed.')
   if (type === 'tracking-authorization' && run.state === 'AWAITING_AUTHORIZATION') run = transition(run, 'COMPLETE', `Tracking authorization recorded for ${run.tracking.target}.`)
   saveRun(root, run, configuredStateDir)

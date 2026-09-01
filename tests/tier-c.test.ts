@@ -80,7 +80,7 @@ describe('Tier C — stable 1.0.0', () => {
     expect(existsSync(landing)).toBe(true)
     const html = readFileSync(landing, 'utf8')
     expect(html).toContain('Turn repo docs into executable handoffs.')
-    expect(html).toContain('Used by AgentsKit')
+    expect(html).toContain('Public dogfood surfaces')
     expect(html).toContain('AgentsKit-io/doc-bridge')
   })
 })
