@@ -6,10 +6,12 @@ import {
   createControlledStudyLedger,
   createControlledStudyRunPlan,
   parseControlledStudyLedger,
+  parseControlledStudyObservation,
   parseControlledStudyRunPlan,
   runControlledCommand,
   upsertControlledStudyObservation,
 } from '../src/study/runner.js'
+import { formatControlledStudyRunText } from '../src/study/execution.js'
 
 const fixture = () => JSON.parse(readFileSync(new URL('../docs/study/run-plan-v1.json', import.meta.url), 'utf8')) as Record<string, unknown>
 const plan = () => parseControlledStudyRunPlan(fixture())
@@ -24,6 +26,7 @@ describe('controlled study runner', () => {
     expect(value.models).toHaveLength(2)
     expect(value.scenarios).toHaveLength(3)
     expect(value.taskIds).toHaveLength(24)
+    expect(formatControlledStudyRunText({ status: 'dry-run', runId: value.runId, planned: 24, executed: 0, skipped: 0, providerConfigHash: 'a'.repeat(64), repositoryConfigHash: 'b'.repeat(64) })).toContain('Status: dry-run')
   })
 
   it('accepts a pairwise sampling plan without weakening the three-scenario suite', () => {
@@ -62,6 +65,17 @@ describe('controlled study runner', () => {
     expect(invalidMetrics.execution.errorCode).toBe('invalid-metrics')
   })
 
+  it('fails closed for invalid JSON and output over the command budget', async () => {
+    const value = plan()
+    const execution = { taskId: value.taskIds[0]!, repositoryId: 'consumer-01', category: 'discovery' as const, scenarioId: 'repository-only' as const, modelId: 'low-cost-model', replicate: 0, variantId: 'variant-a' }
+    const invalidJson = await runControlledCommand({ plan: value, execution, command: process.execPath, args: ['-e', "process.stdout.write('not-json')"], cwd: process.cwd(), contextBytes: 0 })
+    expect(invalidJson.execution.status).toBe('invalid-output')
+    expect(invalidJson.execution.errorCode).toBe('invalid-json')
+    const outputLimit = await runControlledCommand({ plan: value, execution, command: process.execPath, args: ['-e', "process.stdout.write('0123456789')"], cwd: process.cwd(), contextBytes: 0, maxOutputBytes: 2 })
+    expect(outputLimit.execution.status).toBe('budget-exceeded')
+    expect(outputLimit.execution.errorCode).toBe('output-limit')
+  })
+
   it('terminates a nested provider process when the wrapper times out', async () => {
     const value = rehash({ ...fixture(), budget: { ...(fixture().budget as Record<string, unknown>), maxRuntimeMs: 20, maxAttempts: 1 } })
     const execution = { taskId: value.taskIds[0]!, repositoryId: 'consumer-01', category: 'discovery' as const, scenarioId: 'repository-only' as const, modelId: 'low-cost-model', replicate: 0, variantId: 'variant-a' }
@@ -85,6 +99,8 @@ describe('controlled study runner', () => {
     const empty = parseControlledStudyLedger({ type: 'controlled-study-observation-ledger', schemaVersion: 1, ledgerVersion: 'v1', observations: [], contentHashAlgo: 'sha256-normalized-v1', contentHash: 'd7aacae053872796b29fbb6cca38a41a5fb2d542c7a5628c0671c9add14f9955' })
     const first = upsertControlledStudyObservation(empty, observation)
     expect(upsertControlledStudyObservation(first, observation)).toEqual(first)
+    expect(parseControlledStudyObservation(observation)).toEqual(observation)
+    expect(() => parseControlledStudyObservation({ ...observation, contentHash: 'a'.repeat(64) })).toThrow('Invalid controlled observation content hash')
     expect(() => parseControlledStudyLedger({ ...first, contentHash: 'a'.repeat(64) })).toThrow('Invalid observation-ledger content hash')
     expect(createControlledStudyLedger({ type: 'controlled-study-observation-ledger', schemaVersion: 1, ledgerVersion: 'v1', observations: [] }).observations).toEqual([])
   })

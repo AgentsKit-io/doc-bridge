@@ -151,4 +151,18 @@ describe('study provider CLI contract', () => {
     expect(adjudicated.adjudication).toMatchObject({ status: 'pending', actor: 'invalid-reviewer', method: 'independent-rubric-v1' })
     expect(adjudicated.adjudication.outcome).toBeUndefined()
   })
+
+  it('keeps adjudication pending when the independent CLI times out, is unavailable, or exceeds output limits', async () => {
+    const task = suite.tasks[0]!
+    const execution = { taskId: task.id, repositoryId: task.repositoryId, category: task.category, scenarioId: 'repository-only' as const, modelId: 'low-cost-model', replicate: 0, variantId: task.variants[0]!.id }
+    const observation = await runControlledCommand({ plan, execution, command: process.execPath, args: ['-e', 'process.stdout.write("{}")'], cwd: process.cwd(), contextBytes: 0 })
+    const base = { type: 'study-provider-cli-config' as const, schemaVersion: 1 as const, configVersion: 'adjudicator-status-fixture-v1', providers: [providerConfig.providers[0]] }
+    const run = async (args: string[], maxOutputBytes = 10_000, id = 'status-reviewer', maxRuntimeMs = 1_000) => {
+      const config = parseStudyProviderCliConfig(createStudyProviderCliConfig({ ...base, adjudicator: { id, modelId: 'reference-model', command: process.execPath, args, envAllowlist: [], providerNetwork: false, maxInputBytes: 1_000_000, maxOutputBytes } }))
+      return independentlyAdjudicateStudyObservation(task, observation, config.adjudicator!, process.cwd(), maxRuntimeMs, config.contentHash)
+    }
+    expect((await run(['-e', 'setTimeout(() => {}, 1000)'], 10_000, 'timeout-reviewer', 20)).adjudication.reason).toContain('timed-out')
+    expect((await run(['-e', 'process.stdout.write("0123456789")'], 2, 'budget-reviewer')).adjudication.reason).toContain('budget-exceeded')
+    expect((await run(['-e', 'process.exit(1)'], 10_000, 'unavailable-reviewer')).adjudication.reason).toContain('unavailable')
+  })
 })
