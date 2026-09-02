@@ -15,6 +15,7 @@ import { parseMemoryCandidate } from '../src/validate.js'
 import { canonicalJsonV1, contentHashForArtifactV1, sha256NormalizedV1 } from '../src/index-builder/content-hash.js'
 import {
   AgentProposalV1Schema,
+  CorrelationContextV1Schema,
   DiscoverySnapshotV1Schema,
   FixProposalV1Schema,
   ReconciliationReportV1Schema,
@@ -224,6 +225,15 @@ describe('Knowledge Engine v1 artifacts', () => {
       postconditions: ['The link resolves.'],
       status: 'proposed',
     }).proposalId).toBe('fix-2')
+  })
+
+  it('preserves the optional cross-repository correlation envelope', () => {
+    const correlation = CorrelationContextV1Schema.parse({ operationId: 'op-1', runId: 'run-1', traceId: 'trace-1' })
+    const run = WorkflowRunV1Schema.parse({
+      type: 'workflow-run', ...artifactMetadata, runId: 'run-1', correlation,
+      state: 'created', steps: [], transitions: [], artifactRefs: [],
+    })
+    expect(run.correlation?.operationId).toBe('op-1')
   })
 
   it('preserves unknown namespaced kinds and rejects invalid evidence ranges', () => {

@@ -228,11 +228,23 @@ export const WorkflowTransitionSchema = z
   .strict()
 export type WorkflowTransition = z.infer<typeof WorkflowTransitionSchema>
 
+/** Optional identity envelope shared with AgentsKit runtime and Chat events. */
+export const CorrelationContextV1Schema = z.object({
+  operationId: boundedString(128),
+  runId: boundedString(128).optional(),
+  sessionId: boundedString(128).optional(),
+  turnId: boundedString(128).optional(),
+  actionId: boundedString(128).optional(),
+  traceId: boundedString(128).optional(),
+}).strict()
+export type CorrelationContextV1 = z.infer<typeof CorrelationContextV1Schema>
+
 export const WorkflowRunV1Schema = z
   .object({
     type: z.literal('workflow-run'),
     ...ArtifactMetadata,
     runId: boundedString(128),
+    correlation: CorrelationContextV1Schema.optional(),
     state: WorkflowStateSchema,
     steps: z.array(WorkflowStepSchema).max(32),
     transitions: z.array(WorkflowTransitionSchema).max(1_000),

@@ -71,6 +71,12 @@ The handoff is a routing contract:
 }
 ```
 
+Workflow runs may carry the same optional `correlation` envelope used by the
+AgentsKit runtime and Chat protocol. `operationId` is the cross-repository
+identity; `runId`, `sessionId`, `turnId`, `actionId`, and `traceId` retain local
+meaning. It is bounded metadata only and must not contain prompts, secrets, or
+document content.
+
 That contract works from the terminal, MCP, CI, and optional RAG/chat.
 
 ## Documentation quality and reconciliation

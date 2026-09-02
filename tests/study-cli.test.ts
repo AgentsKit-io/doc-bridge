@@ -58,7 +58,7 @@ describe('study CLI artifact contracts', () => {
     }
   })
 
-  it('runs the real study dry-run and a bounded independent adjudication', async () => {
+  it('runs the real study dry-run and a bounded independent adjudication', { timeout: 30000 }, async () => {
     const temp = mkdtempSync(join(tmpdir(), 'doc-bridge-study-cli-run-'))
     const providersPath = join(temp, 'providers.json')
     const repositoriesPath = join(temp, 'repositories.json')

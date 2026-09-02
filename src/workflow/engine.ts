@@ -2,7 +2,7 @@ import { appendFileSync, existsSync, mkdirSync, readFileSync, renameSync, rmSync
 import { join, relative, resolve } from 'node:path'
 
 import { contentHashForArtifactV1, sha256NormalizedV1 } from '../index-builder/content-hash.js'
-import { WorkflowRunV1Schema, type WorkflowRunV1, type WorkflowState, type WorkflowStep } from '../schemas/knowledge.js'
+import { WorkflowRunV1Schema, type CorrelationContextV1, type WorkflowRunV1, type WorkflowState, type WorkflowStep } from '../schemas/knowledge.js'
 
 export const WORKFLOW_STAGES = ['collect', 'normalize', 'reconcile', 'evaluate', 'report'] as const
 export type WorkflowStage = (typeof WORKFLOW_STAGES)[number]
@@ -25,6 +25,7 @@ export type WorkflowOptions = {
   readonly pipelineVersion?: string
   readonly analyzerVersions?: Readonly<Record<string, string>>
   readonly runId?: string
+  readonly correlation?: CorrelationContextV1
   readonly stage?: WorkflowStage | 'all'
   readonly inputs?: Partial<Record<WorkflowStage, unknown>>
   readonly handlers: Partial<Record<WorkflowStage, WorkflowStageHandler>>
@@ -164,6 +165,7 @@ const baseRun = (options: WorkflowOptions, stateDir: string, supersedes?: string
     pipelineVersion: options.pipelineVersion ?? '1.0.0',
     analyzerVersions: { ...(options.analyzerVersions ?? {}), workflow: options.toolVersion ?? '1.0.0' },
     runId: options.runId ?? runId(),
+    ...(options.correlation === undefined ? {} : { correlation: options.correlation }),
     state: 'created',
     steps: WORKFLOW_STAGES.map((name) => ({ name, status: 'pending', inputHash })) as WorkflowStep[],
     transitions: [{ from: null, to: 'created', at: new Date().toISOString() }],
