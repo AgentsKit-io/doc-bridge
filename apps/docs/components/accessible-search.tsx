@@ -1,9 +1,9 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useLayoutEffect } from 'react'
 
 export function AccessibleSearch() {
-  useEffect(() => {
+  useLayoutEffect(() => {
     const labelInputs = () => {
       document.querySelectorAll<HTMLInputElement>('input[placeholder="Search"]:not([aria-label])').forEach((input) => {
         input.setAttribute('aria-label', 'Search documentation')
