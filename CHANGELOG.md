@@ -1,5 +1,25 @@
 # Changelog
 
+## 1.8.0
+
+### Minor Changes
+
+- 4ed42e3: Add configurable documentation tiers, criticality metadata checks, and independent quality-dimension assessments to the documentation audit.
+- ee756a1: Add a bounded, shell-free generic CLI adapter for AgentsKit Registry proposals.
+- ee756a1: Add a configurable documentation audit command with measurable quality, coverage, structure-gap, stale, contradiction, redundancy, and generated-document freshness-boundary findings.
+- 4ed42e3: Add deterministic longitudinal study metrics with subgroup comparisons, uncertainty, missing-data handling, quality guardrails, and anonymization-safe cost measurements.
+- 4ed42e3: Add versioned, anonymization-safe study protocol and historical evidence registry contracts with CLI validation and summaries.
+- 4ed42e3: Add bounded controlled-study run plans, isolated command execution, provenance-safe observations, and idempotent observation ledgers.
+- 4ed42e3: Add a versioned controlled-study task suite with deterministic variant assignment and outcome adjudication contracts.
+- 4ed42e3: Add content-addressed controlled-study verification bindings for provenance, privacy, budget, recovery, and publication-safe evidence.
+
+### Patch Changes
+
+- c1fed28: Refresh supported runtime and documentation dependencies, harden GitHub Actions pins, and keep the README freshness contract synchronized.
+- 4ed42e3: Reject Registry-agent proposals that reference unknown diagnostics or evidence outside the supplied artifacts, and document alternate-agent and human-approval boundaries.
+- ee756a1: Allow failed or cancelled workflow runs with changed inputs to be invalidated and retried, and bump the discovery pipeline identity when report artifacts change.
+- 4ed42e3: Add a generic bounded CLI adapter and resumable `study run` execution for hosted model CLIs and AgentsKit Registry agents without requiring Ollama.
+
 ## 1.7.45
 
 ### Patch Changes
