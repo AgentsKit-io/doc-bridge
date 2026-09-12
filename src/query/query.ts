@@ -1,7 +1,9 @@
 import type { DocBridgeConfigV1 } from '../config/schema.js'
 import {
   normalizeAgentHandoff,
+  AgentQueryModeSchema,
   type AgentHandoffV1,
+  type AgentQueryMode,
   type AgentSearchV1,
 } from '../schemas/agent-handoff.js'
 import type { DocBridgeIndexV1 } from '../schemas/doc-bridge-index.js'
@@ -15,6 +17,8 @@ export type QueryRequest = {
   readonly id?: string
   readonly term?: string
   readonly agent?: boolean
+  readonly mode?: AgentQueryMode
+  readonly contextBudgetTokens?: number
 }
 
 export type QueryResult =
@@ -70,6 +74,57 @@ const handoffForPackage = (
   })
 }
 
+const modeLimits: Record<AgentQueryMode, { readonly matches: number; readonly nextCommands: number }> = {
+  discovery: { matches: 8, nextCommands: 5 },
+  editing: { matches: 5, nextCommands: 3 },
+  debugging: { matches: 6, nextCommands: 4 },
+  documentation: { matches: 6, nextCommands: 3 },
+}
+
+const boundedAgentContext = (
+  matches: readonly AgentSearchV1['matches'][number][],
+  nextCommands: readonly string[],
+  contextBudgetTokens: number,
+): { readonly matches: AgentSearchV1['matches']; readonly nextCommands: string[]; readonly contextBytes: number; readonly truncated: boolean } => {
+  if (!Number.isInteger(contextBudgetTokens) || contextBudgetTokens < 1 || contextBudgetTokens > 1_000_000) throw new Error('contextBudgetTokens must be an integer between 1 and 1000000.')
+  const maxBytes = contextBudgetTokens * 4
+  let boundedMatches = matches.map((match) => ({ ...match }))
+  let boundedCommands = [...nextCommands]
+  let truncated = false
+  const contextBytes = () => Buffer.byteLength(JSON.stringify({ matches: boundedMatches, nextCommands: boundedCommands }), 'utf8')
+  while (contextBytes() > maxBytes) {
+    const summaryIndex = [...boundedMatches].map((match) => match.summary !== undefined).lastIndexOf(true)
+    if (summaryIndex >= 0) {
+      const match = boundedMatches[summaryIndex]
+      if (match) {
+        const { summary: _summary, ...withoutSummary } = match
+        boundedMatches[summaryIndex] = withoutSummary
+        truncated = true
+        continue
+      }
+    }
+    if (boundedCommands.length > 1) {
+      boundedCommands.pop()
+      truncated = true
+      continue
+    }
+    if (boundedMatches.length > 1) {
+      boundedMatches.pop()
+      truncated = true
+      continue
+    }
+    if (boundedCommands.length > 0) {
+      boundedCommands.pop()
+      truncated = true
+      continue
+    }
+    break
+  }
+  const finalContextBytes = contextBytes()
+  if (finalContextBytes > maxBytes) throw new Error(`contextBudgetTokens ${contextBudgetTokens} is too small for the minimum grounded result.`)
+  return { matches: boundedMatches, nextCommands: boundedCommands, contextBytes: finalContextBytes, truncated }
+}
+
 export const runQuery = (
   index: DocBridgeIndexV1,
   config: DocBridgeConfigV1,
@@ -79,16 +134,18 @@ export const runQuery = (
     const term = req.term ?? req.id ?? ''
     const matches = searchIndex(index, term)
     if (req.agent) {
+      const mode = AgentQueryModeSchema.parse(req.mode ?? 'discovery')
+      const limits = modeLimits[mode]
       const focusedMatches = matches[0] && (matches[0].type === 'intent' || matches[0].type === 'change')
         ? matches.filter((match) => match.type === matches[0]?.type).slice(0, 3)
-        : matches.slice(0, 8)
+        : matches.slice(0, limits.matches)
       const agentMatches = focusedMatches.map((m) => ({
         type: m.type,
         id: m.id,
         path: m.path,
         ...(m.summary ? { summary: m.summary } : {}),
       }))
-      const nextCommands = [...new Set(focusedMatches.slice(0, 5).map((m) =>
+      const nextCommands = [...new Set(focusedMatches.slice(0, limits.nextCommands).map((m) =>
         m.type === 'intent'
           ? `ak-docs query intent ${m.id} --agent`
           : m.type === 'change'
@@ -97,7 +154,7 @@ export const runQuery = (
           ? `ak-docs query ownership ${m.id} --agent`
           : 'ak-docs list knowledge --text',
       ))]
-      const contextBytes = Buffer.byteLength(JSON.stringify({ matches: agentMatches, nextCommands }), 'utf8')
+      const bounded = boundedAgentContext(agentMatches, nextCommands, req.contextBudgetTokens ?? 256)
       const payload: AgentSearchV1 = {
         type: 'agent-search',
         schemaVersion: 1,
@@ -112,12 +169,15 @@ export const runQuery = (
               ...(matches[0].summary ? { summary: matches[0].summary } : {}),
             }
           : null,
-        matches: agentMatches,
-        nextCommands,
+        matches: bounded.matches,
+        nextCommands: bounded.nextCommands,
         telemetry: {
-          contextBytes,
-          estimatedTokens: Math.ceil(contextBytes / 4),
+          contextBytes: bounded.contextBytes,
+          estimatedTokens: Math.ceil(bounded.contextBytes / 4),
           tokenMethod: 'estimate',
+          contextBudgetTokens: req.contextBudgetTokens ?? 256,
+          mode,
+          truncated: bounded.truncated,
         },
       }
       return payload

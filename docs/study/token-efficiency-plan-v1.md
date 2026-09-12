@@ -5,7 +5,7 @@ description: A versioned, evidence-driven plan for reducing agent token consumpt
 
 # Token efficiency improvement plan
 
-Status: `phase-1-in-progress`
+Status: `phase-2-in-progress`
 
 ## Objective
 
@@ -156,6 +156,14 @@ Optimize the smallest useful context path:
 Every optimization must be compared against the Phase 0 baseline and must
 preserve correctness and safety.
 
+The deterministic agent-search path now accepts a task mode and an explicit
+context-token budget. It removes summaries and follow-up commands before
+dropping grounded matches, reports whether truncation occurred, and fails
+closed when the minimum grounded result cannot fit. The fixture benchmark keeps
+the same four expected matches while reducing estimated context from 51 to 28
+tokens at a 32-token budget (45.1% on that fixture only). This is a bounded
+engineering signal, not a repository-wide or provider-token claim.
+
 ### Phase 3 — Correctness-valid task suite
 
 Expand the fixed task suite so each task has:
@@ -239,7 +247,24 @@ Phase 0 evidence: run `1789248412380-77131-6xxoie`, source revision
 - [x] Preserve adjudicator token provenance independently from the candidate
   provider.
 - [x] Cover the new telemetry fields with executable runner tests.
-- [ ] Run the complete repository verification contract against the Phase 1
+- [x] Run the complete repository verification contract against the Phase 1
   source revision.
 
+Phase 1 evidence: run `1789254057078-3613-646ec3`, source revision
+`9b30fc32737316fc09d7ced0fe9b9f0953f88bf7`, and verification digest
+`1043fb367e857c54ec977b6172068bdfb9f374fb9b95c9829fe0c900d35eb02a`.
+
 Phase 1 is complete only after the final unchecked item has current evidence.
+
+## Phase 2 execution checklist
+
+- [x] Add task-specific deterministic search modes.
+- [x] Add an explicit per-query context budget for CLI and MCP agent search.
+- [x] Preserve the best grounded match while truncating lower-value context.
+- [x] Fail closed when the minimum grounded result cannot fit the budget.
+- [x] Measure correctness and baseline-versus-budgeted context on the public
+  fixture.
+- [ ] Run the complete repository verification contract against the Phase 2
+  source revision.
+
+Phase 2 is complete only after the final unchecked item has current evidence.

@@ -216,6 +216,19 @@ describe('query + search', () => {
     console.error(JSON.stringify({ benchmark: 'agent-retrieval-v1', queries: queries.length, hitRate: metrics.hitRate, estimatedTokensP95: metrics.estimatedTokensP95, contextReduction: metrics.contextReduction }))
   })
 
+  it('enforces an explicit agent context budget and reports truncation', () => {
+    const config = loadFixtureConfig()
+    const index = buildDocBridgeIndex({ root: fixtureRoot, config, write: false }).index
+    const result = runQuery(index, config, { kind: 'search', term: 'schema', agent: true, mode: 'documentation', contextBudgetTokens: 32 })
+    expect(result).toMatchObject({ type: 'agent-search', telemetry: { contextBudgetTokens: 32, mode: 'documentation', truncated: true } })
+    if ('telemetry' in result && result.telemetry) {
+      expect(result.telemetry.estimatedTokens).toBeGreaterThan(0)
+      expect(result.telemetry.estimatedTokens).toBeLessThanOrEqual(32)
+      expect(result.bestMatch?.id).toBe('os-core')
+    }
+    expect(() => runQuery(index, config, { kind: 'search', term: 'schema', agent: true, contextBudgetTokens: 8 })).toThrow('too small for the minimum grounded result')
+  })
+
   it('measures correctly grounded tasks separately from retrieval hits', () => {
     const config = loadFixtureConfig()
     const index = buildDocBridgeIndex({ root: fixtureRoot, config, write: false }).index

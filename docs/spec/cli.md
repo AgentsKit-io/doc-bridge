@@ -59,7 +59,7 @@ pnpm add -D @agentskit/doc-bridge
 | `ak-docs index` | Build `DocBridgeIndex` + optional `llms.txt` |
 | `ak-docs index --watch` | Debounced rebuild on agent/human doc changes |
 | `ak-docs query <target> [--agent] [--text]` | Resolve package/module/intent/change → handoff JSON or text |
-| `ak-docs search <term> [--agent] [--text]` | Full-text search over index |
+| `ak-docs search <term> [--agent] [--mode=<mode>] [--context-budget=<tokens>] [--text]` | Full-text search over index; agent mode supports bounded task-specific context |
 | `ak-docs ask <question>` | Human-readable local consult mode: search + best match + next handoff commands; no LLM |
 | `ak-docs ask` | Interactive local REPL in a TTY; commands: `search <term>`, `read <id-or-path>`, `open <id-or-path>`, `resolve <id>`, `gate [id]`, `exit` |
 | `ak-docs retrieve <query>` | Hybrid local/federated retriever chunks; deterministic local first |
@@ -106,7 +106,7 @@ Peers: `@agentskit/rag`, `@agentskit/ink`, `@agentskit/adapters`, `@agentskit/me
 ak-docs index
 ak-docs query ownership auth --agent
 ak-docs query ownership auth --text
-ak-docs search "sidecar transport" --agent
+ak-docs search "sidecar transport" --agent --mode=discovery --context-budget=256
 ak-docs list packages --text
 ak-docs gate run
 ak-docs mcp

@@ -35,6 +35,7 @@ export {
   AgentHandoffV1Schema,
   AgentHandoffLegacySchema,
   AgentSearchV1Schema,
+  AgentQueryModeSchema,
   HandoffTargetTypeSchema,
   HANDOFF_SCHEMA_VERSION,
   normalizeAgentHandoff,
@@ -42,6 +43,7 @@ export {
   type AgentHandoffV1,
   type HandoffBridge,
   type AgentSearchV1,
+  type AgentQueryMode,
   type HandoffTarget,
   type HandoffTargetType,
 } from './schemas/agent-handoff.js'

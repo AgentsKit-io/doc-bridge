@@ -133,7 +133,7 @@ Core (no API key):
   ak-docs fix approve|apply <proposal.json> [--by <name>]
   ak-docs suggest [--documentation] [--json|--text]   run the configured Registry agent
   ak-docs query [package|ownership|intent|change] <id> [--agent] [--text]
-  ak-docs search <term> [--agent] [--text]
+  ak-docs search <term> [--agent] [--mode=<mode>] [--context-budget=<tokens>] [--text]
   ak-docs list <packages|intents|changes|knowledge> [--text]
   ak-docs ask [question]          local consult (no LLM)
   ak-docs gate run [gate-id]
@@ -182,6 +182,12 @@ const parseArgs = (argv: readonly string[]) => {
     if (!arg) continue
     if (arg === '--config') {
       configPath = argv[i + 1]
+      i += 1
+      continue
+    }
+    if (arg === '--mode' || arg === '--context-budget') {
+      const value = argv[i + 1]
+      if (value !== undefined && !value.startsWith('-')) flags.add(`${arg}=${value}`)
       i += 1
       continue
     }
@@ -1551,7 +1557,16 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
       const { config, root } = loadProject(configPath)
         const index = loadFreshDocBridgeIndex(root, config)
       if (flags.has('--agent')) {
-        const result = runQuery(index, config, { kind: 'search', term, agent: true })
+        const mode = optionValues(argv, '--mode')[0]
+        const budgetValue = optionValues(argv, '--context-budget')[0]
+        const contextBudgetTokens = budgetValue === undefined ? undefined : Number(budgetValue)
+        const result = runQuery(index, config, {
+          kind: 'search',
+          term,
+          agent: true,
+          ...(mode === undefined ? {} : { mode: mode as 'discovery' | 'editing' | 'debugging' | 'documentation' }),
+          ...(contextBudgetTokens === undefined ? {} : { contextBudgetTokens }),
+        })
         writeJson(result)
       } else {
         const matches = searchIndex(index, term)
