@@ -45,6 +45,7 @@ for (const kind of ['documentation-freshness', 'documentation-contradiction', 'd
 
 const report = {
   status: failures.length === 0 ? 'passed' : 'failed',
+  criteria: ['token-efficiency-phase3'],
   benchmark: 'task-suite-phase3-v1',
   suiteContentHash: suite.contentHash,
   taskCount: suite.tasks.length,
