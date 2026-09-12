@@ -5,7 +5,7 @@ description: A versioned, evidence-driven plan for reducing agent token consumpt
 
 # Token efficiency improvement plan
 
-Status: `phase-3-in-progress`
+Status: `phase-4-ready`
 
 ## Objective
 
@@ -283,7 +283,11 @@ Phase 2 is complete only after the final unchecked item has current evidence.
 - [x] Define bounded recovery and safe outcomes for every task category.
 - [x] Explicitly cover discovery, architecture, documentation freshness,
   documentation/code contradiction, missing documentation, and implementation.
-- [ ] Run the complete repository verification contract against the Phase 3
+- [x] Run the complete repository verification contract against the Phase 3
   source revision.
 
 Phase 3 is complete only after the final unchecked item has current evidence.
+
+Phase 3 evidence: run `1789256493577-54099-pxyb0i`, source revision
+`5d70fb0083ffc991233347c6617b8dc37e453518`, and verification digest
+`0cec5cfb673316c7648b4279e30c4f5ec5e1b2194cd1da755775a65da41ea29f`.
