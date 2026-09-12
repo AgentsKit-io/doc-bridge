@@ -128,6 +128,25 @@ describe('query + search', () => {
     expect(matches.some((m) => m.path.endsWith('os-core.md'))).toBe(true)
   })
 
+  it('uses linked agent documentation to route ownership searches', () => {
+    const config = loadFixtureConfig()
+    const index = buildDocBridgeIndex({ root: fixtureRoot, config, write: false }).index
+    const owner = index.lookup?.ownership?.['os-core']
+    if (!owner) throw new Error('Fixture ownership is missing')
+    const linked = {
+      ...index,
+      lookup: {
+        ...index.lookup!,
+        ownership: {
+          ...index.lookup?.ownership,
+          'os-core': { ...owner, agentDoc: 'docs/for-agents/packages/os-core.md' },
+        },
+      },
+    }
+
+    expect(searchIndex(linked, 'event bus')[0]).toMatchObject({ type: 'ownership', id: 'os-core' })
+  })
+
   it('searches non-English documentation without ASCII-only token loss', () => {
     const config = loadFixtureConfig()
     const index = buildDocBridgeIndex({ root: fixtureRoot, config, write: false }).index

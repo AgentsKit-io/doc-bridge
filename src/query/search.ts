@@ -92,7 +92,10 @@ export const searchIndex = (index: DocBridgeIndexV1, term: string, limit = 20): 
 
   for (const [id, owner] of Object.entries(index.lookup?.ownership ?? {})) {
     const path = owner.agentDoc ?? owner.path
-    const hay = `${id} ${owner.path} ${owner.purpose ?? ''} ${owner.group ?? ''} ${owner.agentDoc ?? ''} ${owner.humanDoc ?? ''}`.toLowerCase()
+    const agentDoc = owner.agentDoc
+      ? index.knowledge.find((entry) => entry.path === owner.agentDoc)
+      : undefined
+    const hay = `${id} ${owner.path} ${owner.purpose ?? ''} ${owner.group ?? ''} ${owner.agentDoc ?? ''} ${owner.humanDoc ?? ''} ${agentDoc?.title ?? ''} ${agentDoc?.description ?? ''} ${agentDoc?.body ?? ''}`.toLowerCase()
     let score = scoreHay(tokens, hay, 2)
     score += identityBoost(id, path, tokens, term)
     if (score <= 0) continue
