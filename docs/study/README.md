@@ -5,6 +5,11 @@ description: Anonymized measurements for Doc Bridge context efficiency, evidence
 
 # Documentation efficiency study
 
+The next improvement series is governed by the [Token efficiency improvement
+plan](./token-efficiency-plan-v1.md). It separates context-payload reduction,
+provider-token reduction, and tokens-to-correct-action so that a smaller
+payload cannot be presented as a correctness or token-saving result by itself.
+
 This directory contains the anonymized, versioned evidence behind the Doc Bridge performance narrative. It is designed to let contributors inspect the numbers without exposing repository contents, private paths, prompts, credentials, or raw agent responses.
 
 ## Executive summary
@@ -33,6 +38,7 @@ The independent bounded adjudicator recorded **0 semantic successes in both arms
 | Artifact | Purpose |
 | --- | --- |
 | [Protocol](./protocol-v1.json) | Metric definitions, scenarios, privacy boundary, and stopping rules. |
+| [Token efficiency protocol v2](./token-efficiency-protocol-v2.json) | Correct-action token metric, evidence gates, and non-regression targets. |
 | [Task suite](./task-suite-v1.json) | Fixed anonymized discovery, architecture, documentation, and implementation tasks. |
 | [A/B baseline result](./ab-baseline-result-v1.json) | Controlled repository-only versus deterministic Doc Bridge measurements. |
 | [A/B baseline analysis](./ab-baseline-analysis-v1.md) | Human-readable interpretation of the controlled baseline. |
