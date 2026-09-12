@@ -73,6 +73,7 @@ child.once('close', (code) => {
     evidenceIds,
     ...(Number.isInteger(metrics.clarificationRequests) ? { clarificationRequests: metrics.clarificationRequests } : {}),
     ...(Number.isInteger(metrics.reworkCount) ? { reworkCount: metrics.reworkCount } : {}),
+    ...(Number.isInteger(metrics.firstEvidenceLatencyMs) ? { firstEvidenceLatencyMs: metrics.firstEvidenceLatencyMs } : {}),
     ...(Number.isInteger(usage?.input_tokens) ? { inputTokens: usage.input_tokens } : {}),
     ...(Number.isInteger(usage?.output_tokens) ? { outputTokens: usage.output_tokens } : {}),
     ...(usage ? { tokenMethod: 'provider' } : {}),

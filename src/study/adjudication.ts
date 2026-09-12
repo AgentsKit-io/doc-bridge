@@ -125,6 +125,7 @@ export const independentlyAdjudicateStudyObservation = async (task: StudyTaskV1,
     outcome: output.outcome,
     confidence: output.confidence,
     reasonCodes: output.reasonCodes,
+    ...(output.tokenMethod === undefined ? {} : { tokenMethod: output.tokenMethod }),
     reason: 'Independent adjudicator evaluated the anonymized bounded candidate record against the task rubric.',
   }, {
     ...baseMeasurements,

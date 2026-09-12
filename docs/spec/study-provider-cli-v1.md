@@ -67,6 +67,7 @@ The response may contain the bounded metrics below. Unknown fields are ignored b
   "outputTokens": 340,
   "tokenMethod": "provider",
   "toolCalls": 4,
+  "firstEvidenceLatencyMs": 820,
   "taskOutcome": "success",
   "evidenceQuality": "high",
   "safetyOutcome": "safe",
@@ -80,7 +81,7 @@ The response may contain the bounded metrics below. Unknown fields are ignored b
 }
 ```
 
-Raw prompts, responses, repository contents, paths, and credentials are not written to the observation ledger. The ledger stores status, hashes, timing, labeled token counts, tool counts, metric fields, and automated or pending human adjudication. The runner derives `providerTokenCostUnits` from provider-reported input plus output tokens; this is a transparent token-equivalent cost metric and must not be presented as currency.
+Raw prompts, responses, repository contents, paths, and credentials are not written to the observation ledger. The ledger stores status, hashes, timing, labeled token counts, context-token attribution, first-evidence latency when observed, tool counts, metric fields, and automated or pending human adjudication. The runner derives `providerTokenCostUnits` from provider-reported input plus output tokens; this is a transparent token-equivalent cost metric and must not be presented as currency. Context-token estimates are stored separately with `contextTokenMethod: "estimate"`; they are never combined with provider usage.
 
 ## Independent adjudication
 

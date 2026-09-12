@@ -5,7 +5,7 @@ description: A versioned, evidence-driven plan for reducing agent token consumpt
 
 # Token efficiency improvement plan
 
-Status: `phase-0-in-progress`
+Status: `phase-1-in-progress`
 
 ## Objective
 
@@ -132,6 +132,13 @@ tool calls, first useful evidence, clarification, rework, latency, and cost.
 Do not optimize the retrieval algorithm until this phase can explain where
 tokens are spent.
 
+The runner now persists `contextBytes` together with `contextTokens` and an
+explicit `contextTokenMethod` (`provider` or `estimate`). When the provider can
+measure it, `firstEvidenceLatencyMs` is retained beside execution latency.
+Provider and adjudicator token methods remain separate from byte-based context
+estimates and configured USD cost. Missing fields remain missing data; they are
+never reconstructed from an unsuccessful response.
+
 ### Phase 2 — Deterministic context reduction
 
 Optimize the smallest useful context path:
@@ -211,11 +218,28 @@ agent responses. Human approval remains required before publication.
 - [x] Register this plan in the study documentation.
 - [x] Create and validate `token-efficiency-v2` without modifying historical
   protocol or result artifacts.
-- [ ] Define and hash the fresh baseline manifest.
-- [ ] Map each Phase 0 criterion to the verification contract.
-- [ ] Run deterministic protocol, privacy, documentation, and repository
+- [x] Define and hash the fresh baseline manifest.
+- [x] Map each Phase 0 criterion to the verification contract.
+- [x] Run deterministic protocol, privacy, documentation, and repository
   verification checks.
-- [ ] Record the Phase 0 run ID and unresolved limitations.
+- [x] Record the Phase 0 run ID and unresolved limitations.
 
 Phase 0 is complete only when every unchecked item has current evidence tied to
 the same source revision and protocol hash.
+
+Phase 0 evidence: run `1789248412380-77131-6xxoie`, source revision
+`978642d64d18d39cafd920345bcb1b71b288c4f3`, and verification digest
+`13a7c518d879dfdc8738df897e489a37b467aa7b4017bf52ebe458ffb9a67f0`.
+
+## Phase 1 execution checklist
+
+- [x] Persist a labeled context-token value without mixing it with provider
+  input/output tokens.
+- [x] Preserve first-evidence latency when the provider reports it.
+- [x] Preserve adjudicator token provenance independently from the candidate
+  provider.
+- [x] Cover the new telemetry fields with executable runner tests.
+- [ ] Run the complete repository verification contract against the Phase 1
+  source revision.
+
+Phase 1 is complete only after the final unchecked item has current evidence.
