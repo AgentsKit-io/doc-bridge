@@ -70,7 +70,7 @@ pnpm add -D @agentskit/doc-bridge
 | `ak-docs memory promote` | Build draft-only promotion body with safety scan; never auto-merges |
 | `ak-docs memory promote --pr [--dry-run] [--force]` | Write draft + open GitHub draft PR via `gh` |
 | `ak-docs registry topology` | Print the `doc-curator` topology for AgentsKit/Registry composition |
-| `ak-docs suggest --json` | Run the configured Registry agent module or CLI and persist its typed proposal |
+| `ak-docs suggest [--documentation] --json` | Run the configured Registry agent module or CLI and persist its typed proposal; optionally include the bounded documentation-audit context |
 | `ak-docs playbook draft` | Build a draft Playbook feedback payload from local memory candidates |
 | `ak-docs playbook pattern [--text]` | Export published Doc Bridge Playbook pattern (OKF markdown / JSON) |
 | `ak-docs list <kind> [--text]` | List packages, apps, intents, … |

@@ -1,7 +1,7 @@
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
@@ -559,6 +559,59 @@ describe('ak-docs CLI', () => {
   it('searches corpus with --agent', () => {
     const code = runCli(['search', 'schema', '--agent'])
     expect(code).toBe(0)
+  })
+
+  it('runs documentation-aware Registry suggestions through the CLI contract', async () => {
+    const root = join(mkdtempSync(join(tmpdir(), 'ak-docs-suggest-documentation-')), 'sample-project')
+    cpSync(fixtureRoot, root, { recursive: true })
+    const agentId = 'fixture-documentation-reviewer'
+    const agentRoot = join(root, 'agents', agentId)
+    mkdirSync(agentRoot, { recursive: true })
+    writeFileSync(join(agentRoot, 'agent.json'), JSON.stringify({ id: agentId, version: '1.0.0', provider: 'fixture', capabilities: ['snapshot.read', 'evidence.read', 'proposal.write'] }))
+    const hashModule = pathToFileURL(fileURLToPath(new URL('../dist/index.js', import.meta.url))).href
+    writeFileSync(join(root, 'registry-runner.mjs'), `import { contentHashForArtifactV1 } from ${JSON.stringify(hashModule)}
+export default (context) => {
+  const finding = context.documentation.findings[0]
+  const proposal = {
+    type: 'agent-proposal', schemaVersion: 1, contentHash: '0'.repeat(64), contentHashAlgo: 'sha256-normalized-v1',
+    project: context.snapshot.project, sourceRevision: context.snapshot.sourceRevision, sourceRevisionKind: context.snapshot.sourceRevisionKind,
+    configurationHash: context.snapshot.configurationHash, pipelineVersion: context.snapshot.pipelineVersion, analyzerVersions: { fixture: '1.0.0' },
+    proposalId: 'fixture-documentation-proposal', baseSnapshotHash: context.snapshot.contentHash, baseReportHash: context.report.contentHash,
+    baseDocumentationAuditHash: context.documentation.contentHash, relatedDiagnosticIds: [finding.id], rationale: 'Review the documented finding.',
+    confidence: 0.75, evidence: finding.evidence, intendedChanges: ['Review the documented finding with a human.'],
+    origin: { kind: 'registry-agent', id: ${JSON.stringify(agentId)}, version: '1.0.0', capabilities: ['proposal.write'] }, checks: ['pnpm test'],
+  }
+  return { ...proposal, contentHash: contentHashForArtifactV1(proposal) }
+}
+`)
+    const configPath = join(root, 'doc-bridge.config.json')
+    const config = JSON.parse(readFileSync(configPath, 'utf8'))
+    config.intelligence = { registry: { enabled: true, agentId, agentRoot: 'agents', runnerModule: 'registry-runner.mjs', deterministic: true } }
+    writeFileSync(configPath, JSON.stringify(config))
+
+    try {
+      process.chdir(root)
+      expect(runCli(['check', '--config', configPath, '--json'])).toBe(0)
+      const result = await captureStdoutAsync(() => runCli(['suggest', '--documentation', '--config', configPath, '--json']))
+      expect(result.code).toBe(0)
+      const payload = JSON.parse(result.out)
+      expect(payload.documentationAuditHash).toMatch(/^[a-f0-9]{64}$/)
+      expect(payload.proposal.baseDocumentationAuditHash).toBe(payload.documentationAuditHash)
+      expect(payload.proposal.origin.id).toBe(agentId)
+      expect(readFileSync(payload.proposalPath, 'utf8')).toContain('baseDocumentationAuditHash')
+    } finally {
+      process.chdir(projectRoot)
+    }
+  })
+
+  it('routes natural-language CLI searches to focused intent and change handoffs', () => {
+    const intent = captureStdout(() => runCli(['search', 'find package', '--agent']))
+    expect(intent.code).toBe(0)
+    expect(JSON.parse(intent.out)).toMatchObject({ bestMatch: { type: 'intent', id: 'find-package' }, matches: [{ type: 'intent' }] })
+
+    const change = captureStdout(() => runCli(['search', 'change zod schema', '--agent']))
+    expect(change.code).toBe(0)
+    expect(JSON.parse(change.out)).toMatchObject({ bestMatch: { type: 'change', id: 'zod-schema' }, matches: [{ type: 'change' }] })
   })
 
   it('prints search output as text when requested', () => {

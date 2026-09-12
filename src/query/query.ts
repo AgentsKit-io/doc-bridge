@@ -6,6 +6,7 @@ import {
 } from '../schemas/agent-handoff.js'
 import type { DocBridgeIndexV1 } from '../schemas/doc-bridge-index.js'
 import { searchIndex } from './search.js'
+import { Buffer } from 'node:buffer'
 
 export type QueryKind = 'package' | 'ownership' | 'intent' | 'change' | 'search'
 
@@ -78,6 +79,25 @@ export const runQuery = (
     const term = req.term ?? req.id ?? ''
     const matches = searchIndex(index, term)
     if (req.agent) {
+      const focusedMatches = matches[0] && (matches[0].type === 'intent' || matches[0].type === 'change')
+        ? matches.filter((match) => match.type === matches[0]?.type).slice(0, 3)
+        : matches.slice(0, 8)
+      const agentMatches = focusedMatches.map((m) => ({
+        type: m.type,
+        id: m.id,
+        path: m.path,
+        ...(m.summary ? { summary: m.summary } : {}),
+      }))
+      const nextCommands = [...new Set(focusedMatches.slice(0, 5).map((m) =>
+        m.type === 'intent'
+          ? `ak-docs query intent ${m.id} --agent`
+          : m.type === 'change'
+            ? `ak-docs query change ${m.id} --agent`
+            : m.type === 'ownership' || index.lookup?.ownership?.[m.id]
+          ? `ak-docs query ownership ${m.id} --agent`
+          : 'ak-docs list knowledge --text',
+      ))]
+      const contextBytes = Buffer.byteLength(JSON.stringify({ matches: agentMatches, nextCommands }), 'utf8')
       const payload: AgentSearchV1 = {
         type: 'agent-search',
         schemaVersion: 1,
@@ -90,21 +110,15 @@ export const runQuery = (
               id: matches[0].id,
               path: matches[0].path,
               ...(matches[0].summary ? { summary: matches[0].summary } : {}),
-              score: matches[0].score,
             }
           : null,
-        matches: matches.slice(0, 8).map((m) => ({
-          type: m.type,
-          id: m.id,
-          path: m.path,
-          ...(m.summary ? { summary: m.summary } : {}),
-          score: m.score,
-        })),
-        nextCommands: [...new Set(matches.slice(0, 5).map((m) =>
-          m.type === 'ownership' || index.lookup?.ownership?.[m.id]
-            ? `ak-docs query ownership ${m.id} --agent`
-            : 'ak-docs list knowledge --text',
-        ))],
+        matches: agentMatches,
+        nextCommands,
+        telemetry: {
+          contextBytes,
+          estimatedTokens: Math.ceil(contextBytes / 4),
+          tokenMethod: 'estimate',
+        },
       }
       return payload
     }

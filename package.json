@@ -25,7 +25,6 @@
     "bin",
     "action.yml",
     "scripts/prepare.mjs",
-    "scripts/verification-harness.mjs",
     "scripts/report-visual-check.mjs",
     "scripts/check-ecosystem-upstream.mjs",
     "ecosystem.json",
@@ -82,7 +81,7 @@
     "docs:typecheck": "cd apps/docs && fumadocs-mdx && tsc --noEmit",
     "docs:e2e": "playwright test",
     "report:visual": "node scripts/report-visual-check.mjs",
-    "test:verification-harness": "node --test scripts/verification-harness.test.mjs",
+    "test:verification-harness": "node bin/ak-verify.js doctor --config .codex/verification.json --json",
     "docs:lighthouse": "lhci autorun",
     "test:readme-standard": "node --test scripts/readme-standard.test.mjs",
     "test:marketplace": "node --test scripts/marketplace-contract.test.mjs",
@@ -119,6 +118,7 @@
     "access": "public"
   },
   "dependencies": {
+    "@agentskit/harness": "0.9.0",
     "github-slugger": "^2.0.0",
     "mermaid": "^11.17.2",
     "minimatch": "^10.2.6",

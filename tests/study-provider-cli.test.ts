@@ -95,6 +95,21 @@ describe('study provider CLI contract', () => {
     expect(adjudicated.measurements?.providerTokenCostUnits).toBe(8)
   })
 
+  it('does not treat an unrelated evidence id as satisfying a requirement', async () => {
+    const task = suite.tasks[0]!
+    const execution = { taskId: task.id, repositoryId: task.repositoryId, category: task.category, scenarioId: 'repository-only' as const, modelId: 'low-cost-model', replicate: 0, variantId: task.variants[0]!.id }
+    const observation = await runControlledCommand({
+      plan,
+      execution,
+      command: process.execPath,
+      args: ['-e', "process.stdout.write(JSON.stringify({taskOutcome: 'success', evidenceQuality: 'high', safetyOutcome: 'safe', evidenceIds: ['unrelated-evidence'], clarificationRequests: 0, reworkCount: 0, inputTokens: 3, outputTokens: 5, tokenMethod: 'provider', measurements: {acceptanceChecksPassed: 1, acceptanceChecksTotal: 1}}))"],
+      cwd: process.cwd(),
+      contextBytes: 128,
+    })
+
+    expect(adjudicateControlledStudyObservation(task, observation).adjudication.outcome).toBe('partial')
+  })
+
   it('calculates configured USD cost without mixing cached input with uncached input', () => {
     expect(calculateStudyCostUsd({ currency: 'USD', inputPerMillionUsd: 2, cachedInputPerMillionUsd: 1, outputPerMillionUsd: 4 }, { inputTokens: 1_500, cachedInputTokens: 500, outputTokens: 1_000 })).toBe(0.0065)
   })

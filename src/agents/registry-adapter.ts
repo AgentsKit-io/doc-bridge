@@ -5,6 +5,7 @@ import { pathToFileURL } from 'node:url'
 import { z } from 'zod'
 
 import type { DocBridgeConfigV1 } from '../config/schema.js'
+import type { DocumentationAuditReportV1 } from '../audit/documentation.js'
 import { AgentProposalV1Schema, type AgentProposalV1, type DiscoverySnapshotV1, type ReconciliationReportV1 } from '../schemas/knowledge.js'
 import { contentHashForArtifactV1, sha256NormalizedV1 } from '../index-builder/content-hash.js'
 import { containedPath, redactValue } from '../safety/repository.js'
@@ -25,6 +26,7 @@ export type RegistryAgentContext = {
   readonly snapshot: DiscoverySnapshotV1
   readonly report: ReconciliationReportV1
   readonly evidence: readonly ReconciliationReportV1['diagnostics'][number]['evidence'][number][]
+  readonly documentation?: Pick<DocumentationAuditReportV1, 'contentHash' | 'sourceRevision' | 'status' | 'findings' | 'documentAssessments' | 'metrics' | 'limitations'>
   readonly capabilities: readonly ['snapshot.read', 'evidence.read', 'proposal.write']
   readonly network: false
   readonly shell: false
@@ -37,7 +39,7 @@ type RegistryCliConfig = NonNullable<NonNullable<NonNullable<DocBridgeConfigV1['
 
 export type RegistryAgentAdapter = {
   readonly metadata: RegistryAgentMetadata
-  readonly run: (snapshot: DiscoverySnapshotV1, report: ReconciliationReportV1, evidence?: readonly RegistryAgentContext['evidence'][number][]) => Promise<AgentProposalV1>
+  readonly run: (snapshot: DiscoverySnapshotV1, report: ReconciliationReportV1, evidence?: readonly RegistryAgentContext['evidence'][number][], documentation?: DocumentationAuditReportV1) => Promise<AgentProposalV1>
 }
 
 const deepFreeze = <T>(value: T): T => {
@@ -52,12 +54,14 @@ const registryConfig = (config: DocBridgeConfigV1) => config.intelligence?.regis
 
 const evidenceKey = (item: RegistryAgentContext['evidence'][number]): string => `${item.source}:${item.path}:${item.lineStart ?? ''}:${item.lineEnd ?? ''}`
 
-const validateGrounding = (proposal: AgentProposalV1, snapshot: DiscoverySnapshotV1, report: ReconciliationReportV1): void => {
+const validateGrounding = (proposal: AgentProposalV1, snapshot: DiscoverySnapshotV1, report: ReconciliationReportV1, documentation?: DocumentationAuditReportV1): void => {
   const diagnosticIds = new Set(report.diagnostics.map((diagnostic) => diagnostic.id))
+  for (const finding of documentation?.findings ?? []) diagnosticIds.add(finding.id)
   const evidence = [
     ...report.diagnostics.flatMap((diagnostic) => diagnostic.evidence),
     ...snapshot.entities.flatMap((entity) => entity.evidence),
     ...snapshot.relations.flatMap((relation) => relation.evidence),
+    ...(documentation?.findings.flatMap((finding) => finding.evidence) ?? []),
   ]
   const evidenceKeys = new Set(evidence.map(evidenceKey))
   if (!proposal.evidence.length) throw new Error('Registry agent proposal must contain at least one evidence reference.')
@@ -169,14 +173,33 @@ export const createRegistryAgentAdapter = (root: string, config: DocBridgeConfig
   const deterministicCache = new Map<string, AgentProposalV1>()
   return {
     metadata,
-    run: async (snapshot, report, evidence = report.diagnostics.flatMap((diagnostic) => diagnostic.evidence).slice(0, 64)) => {
+    run: async (snapshot, report, evidence = report.diagnostics.flatMap((diagnostic) => diagnostic.evidence).slice(0, 64), documentation) => {
       if (active >= maxConcurrency) throw new Error(`Registry agent concurrency limit ${maxConcurrency} exceeded.`)
-      const cacheKey = sha256NormalizedV1({ snapshotHash: snapshot.contentHash, reportHash: report.contentHash, agentId: metadata.id, agentVersion: metadata.version, cli: settings.cli ?? null, maxInputBytes, evidence })
+      const cacheKey = sha256NormalizedV1({ snapshotHash: snapshot.contentHash, reportHash: report.contentHash, documentationAuditHash: documentation?.contentHash ?? null, agentId: metadata.id, agentVersion: metadata.version, cli: settings.cli ?? null, maxInputBytes, evidence })
       if (settings.deterministic && deterministicCache.has(cacheKey)) return deterministicCache.get(cacheKey) as AgentProposalV1
       active += 1
       let timer: ReturnType<typeof setTimeout> | undefined
       try {
-        const context = deepFreeze({ snapshot: redactValue(snapshot), report: redactValue(report), evidence: redactValue(evidence), capabilities: ['snapshot.read', 'evidence.read', 'proposal.write'] as const, network: false as const, shell: false as const, deterministic: settings.deterministic ?? true }) as RegistryAgentContext
+        const context = deepFreeze({
+          snapshot: redactValue(snapshot),
+          report: redactValue(report),
+          evidence: redactValue(evidence),
+          ...(documentation ? {
+            documentation: redactValue({
+              contentHash: documentation.contentHash,
+              sourceRevision: documentation.sourceRevision,
+              status: documentation.status,
+              findings: documentation.findings.slice(0, 64),
+              documentAssessments: documentation.documentAssessments.slice(0, 128),
+              metrics: documentation.metrics,
+              limitations: documentation.limitations,
+            }),
+          } : {}),
+          capabilities: ['snapshot.read', 'evidence.read', 'proposal.write'] as const,
+          network: false as const,
+          shell: false as const,
+          deterministic: settings.deterministic ?? true,
+        }) as RegistryAgentContext
         const localRunner = runner
         if (!settings.cli && !localRunner) throw new Error('Registry agent requires either intelligence.registry.cli or a local runner module.')
         let raw: unknown
@@ -193,8 +216,9 @@ export const createRegistryAgentAdapter = (root: string, config: DocBridgeConfig
         const proposal = AgentProposalV1Schema.parse(raw)
         if (proposal.contentHash !== contentHashForArtifactV1(proposal)) throw new Error('Registry agent proposal contentHash does not match its canonical contents.')
         if (proposal.baseSnapshotHash !== snapshot.contentHash || proposal.baseReportHash !== report.contentHash) throw new Error('Registry agent proposal is not based on the supplied snapshot/report hashes.')
+        if (documentation && proposal.baseDocumentationAuditHash !== documentation.contentHash) throw new Error('Registry agent proposal is not based on the supplied documentation audit hash.')
         if (proposal.origin.kind !== 'registry-agent' || proposal.origin.id !== metadata.id || proposal.origin.version !== metadata.version) throw new Error(`Registry agent proposal origin must be ${metadata.id}@${metadata.version}.`)
-        validateGrounding(proposal, snapshot, report)
+        validateGrounding(proposal, snapshot, report, documentation)
         if (settings.deterministic) deterministicCache.set(cacheKey, proposal)
         return proposal
       } finally {

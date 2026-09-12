@@ -49,8 +49,9 @@ flowchart LR
 ## Trust model
 
 1. **`handoffFirst`** (default): if the question mentions a known package id, attach deterministic AgentHandoff context before the model answers.
-2. RAG retrieves from the indexed agent corpus (and configured sources).
-3. CI gates still decide merge truth — chat never auto-writes docs.
+2. Deterministic local and federated retrieval use token-boundary matching (with CJK-aware handling), so substring-only decoys do not consume model context.
+3. RAG retrieves from the indexed agent corpus (and configured sources).
+4. CI gates still decide merge truth — chat never auto-writes docs.
 
 ## Commands
 

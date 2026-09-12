@@ -26,6 +26,9 @@ importers:
       '@agentskit/adapters':
         specifier: '>=0.12.0 <1'
         version: 0.13.3
+      '@agentskit/harness':
+        specifier: 0.9.0
+        version: 0.9.0(@types/react@19.2.18)
       '@agentskit/memory':
         specifier: '>=0.9.0 <1'
         version: 0.11.0
@@ -50,7 +53,7 @@ importers:
     devDependencies:
       '@agentskit/chat':
         specifier: 0.4.1
-        version: 0.4.1(@agentskit/core@1.12.8)(@agentskit/ink@0.10.9(@types/react@19.2.18)(react@19.2.8))(@agentskit/react@0.8.3(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(ink@7.1.0(@types/react@19.2.18)(react@19.2.8))(react@19.2.8)
+        version: 0.4.1(@agentskit/core@1.12.8)(@agentskit/ink@0.10.9(@types/react@19.2.18)(react@19.2.8))(@agentskit/react@0.8.3(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(ink@7.1.1(@types/react@19.2.18)(react@19.2.8))(react@19.2.8)
       '@agentskit/core':
         specifier: 1.12.8
         version: 1.12.8
@@ -199,6 +202,11 @@ packages:
 
   '@agentskit/eval@0.4.19':
     resolution: {integrity: sha512-DYjEa6bgzP/rVqTZBuguXjn+JuoPG9NfVUa/ogubm5hPlVKL0SVD1ThTDfuhTqrMqOgqHIBwIHv5yFbjnqheDg==}
+
+  '@agentskit/harness@0.9.0':
+    resolution: {integrity: sha512-oreLtpS2/MB9v/MCYoVbSaa6D+T7DD/3v38u9RlkqL7azxC9xRMfxKNPL6izm6YMCDMxdC196asQvBTFhC/8dg==}
+    engines: {node: '>=22'}
+    hasBin: true
 
   '@agentskit/ink@0.10.9':
     resolution: {integrity: sha512-g81K6uzV7TS9u970X4b7BhJxuljXDzvf1teb+QzJxLJ4ywhtB5ooffQVrK4RKwgSiCmTm+WIcpEFMibaB02OqQ==}
@@ -2227,6 +2235,10 @@ packages:
     resolution: {integrity: sha512-/rFeCpNJQbhSZjGVwO9RFV3xPqbnERS8MmIQzCtD/zl6gpJuV/bMLuN92oG3F7d8oDEHHRrujSXNUr8fpjntKw==}
     engines: {node: '>=18'}
 
+  commander@14.0.3:
+    resolution: {integrity: sha512-H+y0Jo/T1RZ9qPP4Eh1pkcQcLRglraJaSLoyOtHxu6AapkjWVCy2Sit1QQ4x3Dng8qDlSsZEet7g5Pq06MvTgw==}
+    engines: {node: '>=20'}
+
   commander@4.1.1:
     resolution: {integrity: sha512-NOKm8xhkzAjzFx8B2v5OAHT+u5pRQc2UCa2Vq9jYL/31o2wi9mxBA7LIFs3sV5VSC49z6pEhfbMULvShKj26WA==}
     engines: {node: '>= 6'}
@@ -3042,6 +3054,19 @@ packages:
 
   ink@7.1.0:
     resolution: {integrity: sha512-VWE6/yeLtFCJBNLflyI2OSylyXK1Rc24LuXup8Qt+icwkmmycFNdbn8IkSp6Frc0h1iA0NOvvi1ajW44U/w3Qg==}
+    engines: {node: '>=22'}
+    peerDependencies:
+      '@types/react': '>=19.2.0'
+      react: '>=19.2.0'
+      react-devtools-core: '>=6.1.2'
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      react-devtools-core:
+        optional: true
+
+  ink@7.1.1:
+    resolution: {integrity: sha512-Y43xxa1ZSPvpmfLHcN5o+OdP8Rf8ykkNJEuKYOUNZKT8wXVNLFTtEm1nSDMQkfBH+YANF4Xuu0hhZ4ejqAtN2w==}
     engines: {node: '>=22'}
     peerDependencies:
       '@types/react': '>=19.2.0'
@@ -4027,6 +4052,10 @@ packages:
     resolution: {integrity: sha512-PWaYA1L/q9u2u7xYQi+Y3L3Yfnie7XyLeaJICV1MGD6LprsBxcAqGjYyr0eY3p+QdsA+x/Irkt4Qif8D63+Sbw==}
     engines: {node: '>=0.10.0'}
 
+  react@19.3.0:
+    resolution: {integrity: sha512-E8LUcbtBWt20bbl2YoHfx4ZDBdxVTfOKtCZn9cDSJ4l6/nuoApcpIBcj47t2wZoVX8g2ZHuMHbiShgCR1T5Sog==}
+    engines: {node: '>=0.10.0'}
+
   readdirp@4.1.2:
     resolution: {integrity: sha512-GDhwkLfywWL2s6vEjyhri+eXmfH6j1L7JE27WhqLeYzoh/A3DBaYGEj2H/HFZCn/kMfim73FXxEJTw06WtxQwg==}
     engines: {node: '>= 14.18.0'}
@@ -4814,6 +4843,9 @@ packages:
   zod@4.5.4:
     resolution: {integrity: sha512-sC95tT5iHHH9gtpj6A81kh+NEaRAUFN+qlUPDUbRfOMvNf5QCBqsb3WgvnpVtK5Y+4UfA6KqufotuTvMGiTlsA==}
 
+  zod@4.6.2:
+    resolution: {integrity: sha512-lh5RCAGFa1Cm2hjtNwLQhSs/AsqdWnTQaBER9fEwN/88pSh7KOtJavtBx/0VlkN/uFd61SwYmljLMDAsHlvzBQ==}
+
   zwitch@2.0.4:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
 
@@ -4823,7 +4855,7 @@ snapshots:
     dependencies:
       '@agentskit/core': 1.10.0
 
-  '@agentskit/chat@0.4.1(@agentskit/core@1.12.8)(@agentskit/ink@0.10.9(@types/react@19.2.18)(react@19.2.8))(@agentskit/react@0.8.3(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(ink@7.1.0(@types/react@19.2.18)(react@19.2.8))(react@19.2.8)':
+  '@agentskit/chat@0.4.1(@agentskit/core@1.12.8)(@agentskit/ink@0.10.9(@types/react@19.2.18)(react@19.2.8))(@agentskit/react@0.8.3(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(ink@7.1.1(@types/react@19.2.18)(react@19.2.8))(react@19.2.8)':
     dependencies:
       '@agentskit/core': 1.12.8
       '@agentskit/eval': 0.4.19
@@ -4834,7 +4866,7 @@ snapshots:
     optionalDependencies:
       '@agentskit/ink': 0.10.9(@types/react@19.2.18)(react@19.2.8)
       '@agentskit/react': 0.8.3(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      ink: 7.1.0(@types/react@19.2.18)(react@19.2.8)
+      ink: 7.1.1(@types/react@19.2.18)(react@19.2.8)
       react: 19.2.8
 
   '@agentskit/core@1.10.0': {}
@@ -4846,6 +4878,19 @@ snapshots:
   '@agentskit/eval@0.4.19':
     dependencies:
       '@agentskit/core': 1.12.3
+
+  '@agentskit/harness@0.9.0(@types/react@19.2.18)':
+    dependencies:
+      commander: 14.0.3
+      ink: 7.1.1(@types/react@19.2.18)(react@19.3.0)
+      react: 19.3.0
+      yaml: 2.9.0
+      zod: 4.6.2
+    transitivePeerDependencies:
+      - '@types/react'
+      - bufferutil
+      - react-devtools-core
+      - utf-8-validate
 
   '@agentskit/ink@0.10.9(@types/react@19.2.18)(react@19.2.8)':
     dependencies:
@@ -6754,6 +6799,8 @@ snapshots:
 
   commander@13.1.0: {}
 
+  commander@14.0.3: {}
+
   commander@4.1.1: {}
 
   commander@7.2.0: {}
@@ -7708,6 +7755,75 @@ snapshots:
       patch-console: 2.0.0
       react: 19.2.8
       react-reconciler: 0.33.0(react@19.2.8)
+      scheduler: 0.27.0
+      signal-exit: 3.0.7
+      slice-ansi: 9.0.0
+      stack-utils: 2.0.6
+      string-width: 8.2.2
+      terminal-size: 4.0.1
+      type-fest: 5.8.0
+      widest-line: 6.0.0
+      wrap-ansi: 10.0.0
+      ws: 8.21.0
+      yoga-layout: 3.2.1
+    optionalDependencies:
+      '@types/react': 19.2.18
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
+
+  ink@7.1.1(@types/react@19.2.18)(react@19.2.8):
+    dependencies:
+      '@alcalzone/ansi-tokenize': 0.3.0
+      ansi-escapes: 7.3.0
+      ansi-styles: 6.2.3
+      auto-bind: 5.0.1
+      chalk: 5.6.2
+      cli-boxes: 4.0.1
+      cli-cursor: 4.0.0
+      cli-truncate: 6.1.0
+      code-excerpt: 4.0.0
+      es-toolkit: 1.49.0
+      indent-string: 5.0.0
+      is-in-ci: 2.0.0
+      patch-console: 2.0.0
+      react: 19.2.8
+      react-reconciler: 0.33.0(react@19.2.8)
+      scheduler: 0.27.0
+      signal-exit: 3.0.7
+      slice-ansi: 9.0.0
+      stack-utils: 2.0.6
+      string-width: 8.2.2
+      terminal-size: 4.0.1
+      type-fest: 5.8.0
+      widest-line: 6.0.0
+      wrap-ansi: 10.0.0
+      ws: 8.21.0
+      yoga-layout: 3.2.1
+    optionalDependencies:
+      '@types/react': 19.2.18
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
+    optional: true
+
+  ink@7.1.1(@types/react@19.2.18)(react@19.3.0):
+    dependencies:
+      '@alcalzone/ansi-tokenize': 0.3.0
+      ansi-escapes: 7.3.0
+      ansi-styles: 6.2.3
+      auto-bind: 5.0.1
+      chalk: 5.6.2
+      cli-boxes: 4.0.1
+      cli-cursor: 4.0.0
+      cli-truncate: 6.1.0
+      code-excerpt: 4.0.0
+      es-toolkit: 1.49.0
+      indent-string: 5.0.0
+      is-in-ci: 2.0.0
+      patch-console: 2.0.0
+      react: 19.3.0
+      react-reconciler: 0.33.0(react@19.3.0)
       scheduler: 0.27.0
       signal-exit: 3.0.7
       slice-ansi: 9.0.0
@@ -8891,6 +9007,11 @@ snapshots:
       react: 19.2.8
       scheduler: 0.27.0
 
+  react-reconciler@0.33.0(react@19.3.0):
+    dependencies:
+      react: 19.3.0
+      scheduler: 0.27.0
+
   react-remove-scroll-bar@2.3.8(@types/react@19.2.18)(react@19.2.8):
     dependencies:
       react: 19.2.8
@@ -8919,6 +9040,8 @@ snapshots:
       '@types/react': 19.2.18
 
   react@19.2.8: {}
+
+  react@19.3.0: {}
 
   readdirp@4.1.2: {}
 
@@ -9796,5 +9919,7 @@ snapshots:
   zod@3.25.76: {}
 
   zod@4.5.4: {}
+
+  zod@4.6.2: {}
 
   zwitch@2.0.4: {}

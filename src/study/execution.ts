@@ -96,9 +96,11 @@ export const adjudicateControlledStudyObservation = (task: StudyTaskV1, observat
   const passed = observation.measurements?.acceptanceChecksPassed
   const total = observation.measurements?.acceptanceChecksTotal
   const blocked = observation.execution.status !== 'completed' || passed === undefined || total !== task.acceptanceChecks.length
+  const evidenceIds = new Set(observation.evidenceIds)
+  const requiredEvidencePresent = task.evidenceRequirements.filter((requirement) => evidenceIds.has(requirement.id)).length
   const evaluation = evaluateStudyTask(task, {
     acceptanceChecksPassed: passed ?? 0,
-    evidenceItemsPresent: observation.evidenceIds.length,
+    evidenceItemsPresent: requiredEvidencePresent,
     blocked,
   })
   const { contentHash: _contentHash, contentHashAlgo: _contentHashAlgo, ...payload } = observation
@@ -109,7 +111,7 @@ export const adjudicateControlledStudyObservation = (task: StudyTaskV1, observat
       actor: 'deterministic-rubric-v1',
       method: 'deterministic-rubric-v1',
       outcome: evaluation.status,
-      reason: 'Independent bounded evaluation of execution status, acceptance metrics, and evidence count.',
+      reason: 'Independent bounded evaluation of execution status, acceptance metrics, and exact required evidence coverage.',
     },
   })
 }

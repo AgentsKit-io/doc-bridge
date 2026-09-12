@@ -5,18 +5,21 @@ description: Fail-closed, evidence-backed verification for humans and agents.
 
 # Verification harness
 
-`ak-verify` is the executable completion gate for work that must be proven, not merely compiled. Harness 1.3 also blocks failed contract outcomes and measured regressions.
+`ak-verify` delegates to the provider-neutral `@agentskit/harness@0.9.0`. It is the executable completion gate for work that must be proven, not merely compiled. The Doc Bridge contract enables YOLO autonomy for intermediate verification, while required UI review and external tracking remain explicit gates.
 
 ```bash
-ak-verify run --config .codex/verification.json --json
+ak-verify plan approved --allow-dirty --config .codex/verification.json --json
+ak-verify start --config .codex/verification.json --json
+ak-verify verify --config .codex/verification.json --json
 ak-verify status --config .codex/verification.json --json
 ak-verify approve <run-id> approved --by human --config .codex/verification.json
 ak-verify authorize <run-id> approved --by human --config .codex/verification.json
-ak-verify baseline replace benchmarks/new.json approved --by human --config .codex/verification.json
 ak-verify clean --periodic --config .codex/verification.json
 ```
 
-The contract is JSON so it works without adding a YAML runtime. It declares the artifact surfaces that apply to the run, executable checks, explicit non-applicable reasons, the verification profile, and tracking policy.
+The contract is JSON so it works without adding a YAML runtime. It declares the artifact surfaces that apply to the run, executable checks, explicit non-applicable reasons, the verification profile, YOLO autonomy, and tracking policy. This repository stores current official-harness artifacts under `.codex/verification-0.9/`; older `.codex/verification/` artifacts are historical and are not reused by the 0.9.0 CLI.
+
+For audit-only work, set `mode: "discovery"`. Checks remain executable and their failures remain in the evidence ledger, but they are non-blocking by default. Mark only the minimum inventory/evidence-integrity checks with `blocking: true` when a failure must prevent advancing to the next audit unit. This keeps discovery complete without treating an observed quality defect as an implementation gate.
 
 ## Global policy and project contract
 
@@ -48,7 +51,7 @@ The seven applicability surfaces are `logic`, `cli`, `mcp`, `ui`, `docs`, `endpo
 
 ## Evidence and recovery
 
-Runs live under `.codex/verification/runs/<run-id>/run.json`. The latest pointer is `.codex/verification/latest.json`. Commands are captured with exit code, duration, stdout, stderr, source revision, configuration hash, and input hash. Re-running an unchanged pending or completed run is idempotent; changed source or contract creates a new run.
+Runs live under the configured `stateDir`, currently `.codex/verification-0.9/runs/<run-id>/run.json`. The latest pointer is in that same state directory. Commands are captured with exit code, duration, stdout, stderr, source revision, configuration hash, and input hash. Re-running an unchanged pending or completed run is idempotent; changed source or contract creates a new run.
 
 Checks may emit one final JSON line with `status` set to `passed`, `failed`, or `pending-human-review`. Structured `failed` evidence blocks the run even when the process exits with code 0; structured pending evidence remains explicitly awaiting human approval. This prevents a visual checker from being mistaken for a successful verification merely because it launched.
 
@@ -64,7 +67,7 @@ When a report is shared outside its repository, configure `report.privacy: 'anon
 
 When `measurement.required` is enabled, the named required check must emit structured evidence with `status: "passed"`, a numeric `metrics` object, a `baselineHash`, and an empty `regressions` array. Missing or regressed measurements block completion. Baselines are explicit, versioned artifacts and are never updated implicitly by a verification run.
 
-Baseline replacement is an explicit, human-intended operation. `baseline replace` copies a JSON baseline into the configured target only when the source and target are inside the project root and appends a hash, actor, intent, and timestamp to `.codex/verification/baseline-audit.jsonl`.
+Baseline replacement is outside the `@agentskit/harness@0.9.0` verification CLI. Doc Bridge study tooling must treat baseline replacement as a separate, explicit, human-authorized operation and record the new artifact hash, actor, intent, and timestamp in the study evidence ledger. A normal verification run never replaces a baseline.
 
 The run JSON exposes `profile`, `profilePolicy`, `applicability`, `exemptions`, `checks`, `evidenceReferences`, `metrics`, `transitions`, `sourceRevision`, `contractHash`, `outputHash`, and the exact `runId`. Approval records are bound to the input, source, contract, and output hashes of that run.
 

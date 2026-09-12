@@ -39,13 +39,13 @@ This is an estimated reduction in serialized context payload for one historical 
 
 ### Controlled A/B signal
 
-In a controlled study with 96 anonymized executions, the deterministic Doc Bridge workflow showed a directional operational signal of:
+In the latest controlled study with 96 anonymized executions, the deterministic Doc Bridge workflow showed a directional operational signal of:
 
-- **2.29% fewer paired provider tokens**;
-- **3.15 seconds lower P95 latency**;
-- **83.3% operationally completed executions vs. 79.2%** with repository-only context.
+- **18.46% fewer paired provider token-equivalent units** across 46 token-complete pairs;
+- **39.75 seconds lower P95 latency**;
+- **87.5% operationally completed executions vs. 75.0%** with repository-only context.
 
-These are different measures: the 99% figure is an estimated context-payload reduction from anonymized dogfooding, while the 2.29% figure uses provider-token data from 47 paired observations in the controlled run. Neither result establishes semantic correctness or enterprise readiness. See the [full methodology and anonymized data](docs/study/README.md).
+These are different measures: the 99% figure is an estimated context-payload reduction from anonymized dogfooding, while the 18.46% figure uses provider-token-equivalent data from 46 paired observations in the latest controlled run. The bounded adjudicator recorded zero semantic successes in both arms, so this result is directional and inconclusive; it does not establish semantic correctness or enterprise readiness. See the [full methodology and anonymized data](docs/study/README.md).
 
 ## Why teams use it
 

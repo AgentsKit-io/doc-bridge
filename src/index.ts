@@ -240,8 +240,10 @@ export {
   compareBenchmarkSnapshots,
   formatBenchmarkText,
   measureAgentEfficiency,
+  measureAgentTaskEfficiency,
   measureBenchmark,
   type AgentEfficiencyObservation,
+  type AgentTaskEfficiencyObservation,
   type BenchmarkFixtureV1,
   type BenchmarkObservation,
   type BenchmarkResult,
@@ -383,7 +385,7 @@ export {
   type WorkflowRunV1,
   type WorkflowState,
 } from './schemas/knowledge.js'
-export { IndexNotFoundError, indexFilePath, loadDocBridgeIndex, resolveRoot } from './query/load-index.js'
+export { IndexNotFoundError, IndexStaleError, indexFilePath, loadDocBridgeIndex, loadFreshDocBridgeIndex, resolveRoot } from './query/load-index.js'
 export { runQuery, type QueryKind, type QueryRequest, type QueryResult } from './query/query.js'
 export { searchIndex, type SearchMatch } from './query/search.js'
 export {

@@ -34,7 +34,7 @@ Install the configured local Registry agent, then configure a local runner modul
 
 ```bash
 npx agentskit add ecosystem-doc-bridge-corpus-scanner
-ak-docs suggest --json
+ak-docs suggest --documentation --json
 ```
 
 Set `intelligence.registry.enabled: true` and either `runnerModule` or the generic `cli` adapter in `doc-bridge.config.json`. The runner receives redacted immutable snapshot/report/evidence context and must return `AgentProposalV1`. Network, shell, direct file mutation, and automatic approval are not available to a module runner. A CLI receives the same context as a JSON envelope on stdin and must write exactly one `AgentProposalV1` JSON object to stdout; configure the executable and argument array without shell syntax:

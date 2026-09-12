@@ -84,6 +84,56 @@ test('does not allow an outcome to depend on an optional check', () => {
   }), /non-required check/)
 })
 
+test('discovery mode records failed evidence without blocking on non-blocking checks', async () => {
+  const root = mkdtempSync(join(tmpdir(), 'ak-verify-discovery-'))
+  const configDir = join(root, '.codex')
+  mkdirSync(configDir)
+  const configPath = join(configDir, 'verification.json')
+  writeFileSync(configPath, JSON.stringify({
+    schemaVersion: 1,
+    project: 'discovery-fixture',
+    root: '..',
+    mode: 'discovery',
+    profile: 'strict',
+    contract: { intent: 'Inventory the fixture', outcomes: [{ id: 'logic', statement: 'The inventory runs.', checks: ['logic'] }, { id: 'quality', statement: 'Quality evidence is recorded.', checks: ['quality'] }] },
+    surfaces: { logic: true, endpoint: false, database: false, cli: false, mcp: false, ui: false, docs: false },
+    checks: [
+      { id: 'logic', category: 'logic', blocking: true, command: 'true' },
+      { id: 'quality', category: 'custom', command: 'node -e "process.exit(1)"' },
+    ],
+    tracking: { required: false, reason: 'fixture only' },
+  }))
+  assert.equal(await main(['run', '--config', configPath, '--json']), 0)
+  const latest = JSON.parse(readFileSync(join(root, '.codex/verification/latest.json'), 'utf8'))
+  const run = JSON.parse(readFileSync(join(root, latest.path), 'utf8'))
+  assert.equal(run.mode, 'discovery')
+  assert.equal(run.state, 'COMPLETE')
+  assert.equal(run.checks.find((check) => check.id === 'quality').status, 'failed')
+  assert.match(run.transitions.at(-1).reason, /non-blocking observations/)
+})
+
+test('discovery mode still blocks explicit blocking checks', async () => {
+  const root = mkdtempSync(join(tmpdir(), 'ak-verify-discovery-blocking-'))
+  const configDir = join(root, '.codex')
+  mkdirSync(configDir)
+  const configPath = join(configDir, 'verification.json')
+  writeFileSync(configPath, JSON.stringify({
+    schemaVersion: 1,
+    project: 'discovery-blocking-fixture',
+    root: '..',
+    mode: 'discovery',
+    profile: 'strict',
+    contract: { intent: 'Inventory the fixture', outcomes: [{ id: 'logic', statement: 'The inventory is available.', checks: ['logic'] }] },
+    surfaces: { logic: true, endpoint: false, database: false, cli: false, mcp: false, ui: false, docs: false },
+    checks: [{ id: 'logic', category: 'logic', blocking: true, command: 'node -e "process.exit(1)"' }],
+    tracking: { required: false, reason: 'fixture only' },
+  }))
+  assert.equal(await main(['run', '--config', configPath, '--json']), 1)
+  const latest = JSON.parse(readFileSync(join(root, '.codex/verification/latest.json'), 'utf8'))
+  const run = JSON.parse(readFileSync(join(root, latest.path), 'utf8'))
+  assert.equal(run.state, 'BLOCKED')
+})
+
 test('requires a reason when tracking is disabled', () => {
   assert.throws(() => base({ tracking: { required: false } }), /tracking.reason/)
 })

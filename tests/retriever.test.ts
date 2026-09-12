@@ -62,6 +62,26 @@ describe('doc-bridge retriever', () => {
     expect(chunks.map((chunk) => chunk.chunkKey)).toEqual([...new Set(chunks.map((chunk) => chunk.chunkKey))])
   })
 
+  it('does not spend federated context on substring-only decoys', async () => {
+    const config = {
+      ...loadFixtureConfig(),
+      federation: {
+        enabled: true,
+        sources: [{ id: 'remote', llmsTxt: 'https://example.com/llms.txt' }],
+      },
+    }
+    const { index } = buildDocBridgeIndex({ root: fixtureRoot, config, write: false })
+    const chunks = await retrieveHybridChunks(fixtureRoot, config, index, 'bridge', {
+      fetchText: async (url) =>
+        url.endsWith('llms.txt')
+          ? '- [Docs](https://example.com/docs.md)\n'
+          : '# Bridgeable\n\nThis is only bridgeable context.\n\n# Bridge\n\nThis is the exact bridge guide.',
+    })
+
+    expect(chunks.some((chunk) => chunk.id === 'bridge')).toBe(true)
+    expect(chunks.some((chunk) => chunk.id === 'bridgeable')).toBe(false)
+  })
+
   it('does not crawl other origins unless they are configured as sources', async () => {
     const config = {
       ...loadFixtureConfig(),
