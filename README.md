@@ -349,7 +349,7 @@ Designed for and dogfooded on open AgentsKit surfaces:
 | **Registry** | [registry.agentskit.io](https://registry.agentskit.io/) |
 | **Playbook** | [playbook.agentskit.io](https://playbook.agentskit.io/llms.txt) |
 | **AgentsKit Chat** | [documentation](https://chat.agentskit.io) · [source](https://github.com/AgentsKit-io/agentskit-chat) |
-| **Code Review** | [repository-native CLI](https://github.com/AgentsKit-io/code-review-cli) |
+| **Code Review** | [repository-native CLI](https://github.com/AgentsKit-io/code-review) |
 | **This repo** | CI green · `ak-docs gate run` on every PR |
 
 **Playbook pattern:** [`docs/playbook/doc-bridge-pattern.md`](docs/playbook/doc-bridge-pattern.md) — export with `ak-docs playbook pattern --text`

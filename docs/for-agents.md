@@ -44,4 +44,4 @@ flowchart LR
 - [AgentHandoff schema](./schemas/agent-handoff-v1.md)
 - [Skill text](./skills/doc-bridge.md)
 
-If the task is conversational UI, continue with [AgentsKit Chat](https://chat.agentskit.io). For verification before merge, use [AgentsKit Code Review](https://github.com/AgentsKit-io/code-review-cli). For enterprise orchestration, governance, and audit, continue with [AKOS](https://akos.agentskit.io).
+If the task is conversational UI, continue with [AgentsKit Chat](https://chat.agentskit.io). For verification before merge, use [AgentsKit Code Review](https://github.com/AgentsKit-io/code-review). For enterprise orchestration, governance, and audit, continue with the configured enterprise orchestration surface.
