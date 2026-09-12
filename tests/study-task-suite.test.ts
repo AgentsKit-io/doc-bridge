@@ -20,6 +20,18 @@ describe('study task suite contracts', () => {
     expect(formatStudyTaskSuiteText(suite)).toContain('Executions planned: 288')
   })
 
+  it('keeps Phase 3 coverage bound to the fixed suite', () => {
+    const suite = parseStudyTaskSuite(fixture())
+    const coverage = JSON.parse(readFileSync(new URL('../docs/study/phase3-task-coverage-v1.json', import.meta.url), 'utf8')) as {
+      suiteContentHash: string
+      documentationTaskIds: string[]
+      requiredCoverage: string[]
+    }
+    expect(coverage.suiteContentHash).toBe(suite.contentHash)
+    expect(coverage.documentationTaskIds).toHaveLength(suite.population.length)
+    expect(coverage.requiredCoverage).toEqual(expect.arrayContaining(['documentation-freshness', 'documentation-contradiction', 'documentation-missing']))
+  })
+
   it('rejects incomplete repositories and budget overruns', () => {
     const source = fixture() as Record<string, unknown>
     const tasks = [...(source.tasks as unknown[])]

@@ -5,7 +5,7 @@ description: A versioned, evidence-driven plan for reducing agent token consumpt
 
 # Token efficiency improvement plan
 
-Status: `phase-2-in-progress`
+Status: `phase-3-in-progress`
 
 ## Objective
 
@@ -264,7 +264,26 @@ Phase 1 is complete only after the final unchecked item has current evidence.
 - [x] Fail closed when the minimum grounded result cannot fit the budget.
 - [x] Measure correctness and baseline-versus-budgeted context on the public
   fixture.
-- [ ] Run the complete repository verification contract against the Phase 2
+- [x] Run the complete repository verification contract against the Phase 2
   source revision.
 
+Phase 2 evidence: run `1789254756700-26023-qpzity`, source revision
+`a292c1877eefe370be46b48d7cb6fb2bae422be3`, and verification digest
+`b2e7534a1d24535591f15c2ae0a4beadfbf9cc49748e8102bd30dfb89c6a2e88`.
+
 Phase 2 is complete only after the final unchecked item has current evidence.
+
+## Phase 3 execution checklist
+
+- [x] Bind the fixed task suite to a content hash.
+- [x] Require executable acceptance checks and evidence requirements for every
+  task.
+- [x] Require explicit success, partial, incorrect, incomplete, and blocked
+  classifications.
+- [x] Define bounded recovery and safe outcomes for every task category.
+- [x] Explicitly cover discovery, architecture, documentation freshness,
+  documentation/code contradiction, missing documentation, and implementation.
+- [ ] Run the complete repository verification contract against the Phase 3
+  source revision.
+
+Phase 3 is complete only after the final unchecked item has current evidence.
