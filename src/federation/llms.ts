@@ -4,6 +4,7 @@ import { resolve } from 'node:path'
 import type { DocBridgeConfigV1 } from '../config/schema.js'
 import { slugFromPath } from '../lib/markdown.js'
 import type { DocBridgeIndexV1 } from '../schemas/doc-bridge-index.js'
+import { hasSearchToken, tokenizeSearchText } from '../query/text.js'
 import {
   retrieveDocBridgeChunks,
   type DocBridgeRetrievedChunk,
@@ -16,12 +17,9 @@ export type FederatedRetrieverOptions = {
   readonly limit?: number
 }
 
-const tokenize = (value: string): string[] =>
-  value.toLowerCase().split(/[^a-z0-9]+/).filter((token) => token.length >= 2)
-
 const scoreText = (query: string, text: string): number => {
   const hay = text.toLowerCase()
-  return tokenize(query).reduce((score, token) => score + (hay.includes(token) ? token.length : 0), 0)
+  return tokenizeSearchText(query).reduce((score, token) => score + (hasSearchToken(hay, token) ? token.length : 0), 0)
 }
 
 const defaultFetchText: FetchText = async (url) => {

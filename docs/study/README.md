@@ -11,9 +11,9 @@ This directory contains the anonymized, versioned evidence behind the Doc Bridge
 
 An anonymized dogfooding cycle estimated up to **99% context-payload reduction** between the scanned repository corpus and the P95 payload returned to an agent. This is a context-payload measurement, not a guaranteed token reduction or correctness result, and it must not be read as a provider-token result.
 
-In a separate controlled A/B study with 96 executions, the deterministic Doc Bridge workflow showed a directional operational signal of 2.29% fewer paired provider tokens across 47 token-complete pairs, 3.15 seconds lower P95 latency, and 4.17 percentage points more operationally completed executions than repository-only context. The sample is too small for a causal, semantic-correctness, or enterprise-readiness claim.
+In the latest controlled A/B study with 96 executions, the deterministic Doc Bridge workflow showed a directional operational signal of 18.46% fewer paired provider token-equivalent units across 46 token-complete pairs and 39.75 seconds lower P95 latency than repository-only context. Operational completion was 87.5% versus 75.0%. The sample is not a causal or enterprise-readiness claim.
 
-The operationally completed-execution rate was **83.3% with Doc Bridge versus 79.2% with repository-only context**.
+The independent bounded adjudicator recorded **0 semantic successes in both arms**. Therefore, this round does not demonstrate improved task correctness; it remains `inconclusive` and should be used only as an auditable directional measurement.
 
 ![Estimated context payload reduction](../landing/assets/context-payload-reduction.svg)
 

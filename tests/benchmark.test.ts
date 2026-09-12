@@ -4,6 +4,7 @@ import {
   benchmarkFixture,
   compareBenchmarkSnapshots,
   measureAgentEfficiency,
+  measureAgentTaskEfficiency,
   measureBenchmark,
 } from '../src/metrics/benchmark.js'
 
@@ -60,4 +61,22 @@ describe('benchmark metrics', () => {
       contextReduction: 0.7,
     })
   })
+})
+
+it('measures tokens and time for correctly grounded tasks without hiding misses', () => {
+  expect(measureAgentTaskEfficiency([
+    { correct: true, latencyMs: 10, responseBytes: 100, estimatedTokens: 20 },
+    { correct: false, latencyMs: 30, responseBytes: 300, estimatedTokens: 60 },
+    { correct: true, latencyMs: 20, responseBytes: 200, estimatedTokens: 40 },
+  ])).toEqual({
+    taskCount: 3,
+    correctTaskCount: 2,
+    correctnessRate: 2 / 3,
+    latencyP95Ms: 30,
+    responseBytesP95: 300,
+    estimatedTokensP95: 60,
+    tokensToCorrectAnswerP95: 40,
+    timeToCorrectAnswerP95Ms: 20,
+  })
+  expect(measureAgentTaskEfficiency([]).tokensToCorrectAnswerP95).toBeNull()
 })

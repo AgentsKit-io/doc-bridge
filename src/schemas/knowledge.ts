@@ -276,6 +276,7 @@ export const AgentProposalV1Schema = z
     proposalId: boundedString(128),
     baseSnapshotHash: hash,
     baseReportHash: hash,
+    baseDocumentationAuditHash: hash.optional(),
     relatedDiagnosticIds: z.array(boundedString(256)).max(64),
     rationale: boundedString(4_000),
     confidence: z.number().min(0).max(1),

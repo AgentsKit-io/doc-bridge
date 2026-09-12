@@ -166,6 +166,27 @@ export const measureAgentEfficiency = (observation: AgentEfficiencyObservation) 
   contextReduction: observation.corpusBytes > 0 ? 1 - (percentile95(observation.responseBytes) / observation.corpusBytes) : 0,
 })
 
+export type AgentTaskEfficiencyObservation = {
+  readonly correct: boolean
+  readonly latencyMs: number
+  readonly responseBytes: number
+  readonly estimatedTokens: number
+}
+
+export const measureAgentTaskEfficiency = (observations: readonly AgentTaskEfficiencyObservation[]) => {
+  const correct = observations.filter((observation) => observation.correct)
+  return {
+    taskCount: observations.length,
+    correctTaskCount: correct.length,
+    correctnessRate: ratio(correct.length, observations.length),
+    latencyP95Ms: percentile95(observations.map((observation) => observation.latencyMs)),
+    responseBytesP95: percentile95(observations.map((observation) => observation.responseBytes)),
+    estimatedTokensP95: percentile95(observations.map((observation) => observation.estimatedTokens)),
+    tokensToCorrectAnswerP95: correct.length ? percentile95(correct.map((observation) => observation.estimatedTokens)) : null,
+    timeToCorrectAnswerP95Ms: correct.length ? percentile95(correct.map((observation) => observation.latencyMs)) : null,
+  }
+}
+
 export const formatBenchmarkText = (result: BenchmarkResult): string => [
   `Precision: entities ${result.quality.entities.precision.toFixed(3)}, relations ${result.quality.relations.precision.toFixed(3)}, findings ${result.quality.findings.precision.toFixed(3)}`,
   `Recall: entities ${result.quality.entities.recall.toFixed(3)}, relations ${result.quality.relations.recall.toFixed(3)}, findings ${result.quality.findings.recall.toFixed(3)}`,

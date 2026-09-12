@@ -7,11 +7,7 @@ description: Provenance, privacy, budget, recovery, and audit rules for controll
 
 `ControlledStudyVerifiedResultV1` is the publication-safe boundary for a controlled study result. It wraps a result with the exact verification run, source revision, protocol/configuration hashes, immutable baseline hash, artifact hashes, privacy scan outcome, and consumed budget.
 
-The binding is content-addressed with `sha256-normalized-v1`. It is not a baseline and cannot replace one. Baseline replacement remains available only through the explicit audited harness operation:
-
-```bash
-ak-verify baseline replace <new-baseline.json> approved --by <human> --config .codex/verification.json
-```
+The binding is content-addressed with `sha256-normalized-v1`. It is not a baseline and cannot replace one. Baseline replacement is a separate, explicit, human-authorized study operation; the `@agentskit/harness@0.9.0` verification CLI does not replace baselines during a normal run. The replacement must record the new artifact hash, actor, intent, and timestamp in the study evidence ledger.
 
 Validate a binding through the real CLI:
 

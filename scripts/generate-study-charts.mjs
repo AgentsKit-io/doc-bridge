@@ -16,16 +16,19 @@ if (!contextRecord || contextRecord.metrics?.['context-reduction'] !== 0.99) {
   throw new Error('Expected validation-cycle-02 context reduction evidence was not found')
 }
 
-const ab = readJson('docs/study/ab-baseline-result-v1.json')
+const ab = readJson('docs/study/ab-adjudicated-cost-result-v1.json')
 const repositoryOnly = ab.arms.find((arm) => arm.scenarioId === 'repository-only')
 const docBridge = ab.arms.find((arm) => arm.scenarioId === 'deterministic-doc-bridge')
 if (!repositoryOnly || !docBridge) throw new Error('Expected A/B arms were not found')
+if (ab.interpretation?.classification !== 'inconclusive' || ab.arms.some((arm) => arm.adjudicatedSuccessRate !== 0)) {
+  throw new Error('The published A/B narrative requires an inconclusive result with zero adjudicated semantic successes.')
+}
 
 const contextReduction = contextRecord.metrics['context-reduction']
 const contextPayloadPercent = (1 - contextReduction) * 100
 const formatPercent = (value, digits = 2) => `${value.toFixed(digits)}%`
 const formatSigned = (value, digits = 2, suffix = '') => `${value >= 0 ? '+' : '−'}${Math.abs(value).toFixed(digits)}${suffix}`
-const tokenDelta = ab.pairedDeltas.providerTokensRelative * 100
+const tokenDelta = ab.pairedDeltas.providerTokenCostUnitsRelative * 100
 const latencyDeltaSeconds = ab.pairedDeltas.latencyP95Ms / 1000
 const completionDeltaPoints = ab.pairedDeltas.completedRate * 100
 const evidenceDeltaPoints = ab.pairedDeltas.evidenceQualityRate * 100
@@ -70,7 +73,7 @@ const deltaRows = [
 const maxDelta = Math.max(...deltaRows.map(([, , value]) => Math.abs(value)), 1)
 const deltaChart = chart({
   title: 'Controlled A/B signal (operational)',
-  description: '96 anonymized executions · 24 tasks · 2 pinned models · one replicate',
+  description: '96 anonymized executions · 24 tasks · 2 pinned models · one replicate · bounded adjudication',
   height: 620,
   body: `
     <line x1="600" y1="158" x2="600" y2="548" stroke="#526579" stroke-width="2"/>
@@ -117,7 +120,7 @@ if (check) {
   const studyExpected = [
     formatPercent(Math.abs(tokenDelta), 2),
     `${Math.abs(latencyDeltaSeconds).toFixed(2)} seconds`,
-    `${(docBridge.completedRate * 100).toFixed(1)}% with Doc Bridge versus ${(repositoryOnly.completedRate * 100).toFixed(1)}%`,
+    `Operational completion was ${(docBridge.completedRate * 100).toFixed(1)}% versus ${(repositoryOnly.completedRate * 100).toFixed(1)}%`,
   ]
   for (const value of readmeExpected) if (!readme.includes(value)) throw new Error(`README study narrative is stale: ${value}`)
   for (const value of studyExpected) if (!studyReadme.includes(value)) throw new Error(`Study narrative is stale: ${value}`)

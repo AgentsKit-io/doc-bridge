@@ -8,7 +8,7 @@ import { retrieveDocBridgeChunks } from '../retriever/doc-bridge-retriever.js'
 import { runGates } from '../gates/run-gates.js'
 import { ingestMemoryCandidates } from '../memory/ingest.js'
 import { classifyMemoryCandidates, draftMemoryPromotion } from '../memory/pipeline.js'
-import { loadDocBridgeIndex } from '../query/load-index.js'
+import { loadFreshDocBridgeIndex } from '../query/load-index.js'
 import { runQuery } from '../query/query.js'
 import { searchIndex } from '../query/search.js'
 import type { DocBridgeIndexV1 } from '../schemas/doc-bridge-index.js'
@@ -279,7 +279,7 @@ export const handleMcpRequest = (ctx: McpContext, request: JsonRpcRequest): unkn
     const args = asRecord(params.arguments)
     if (typeof name !== 'string') throw new Error('MCP tools/call requires a tool name.')
     assertMcpToolEnabled(ctx, name)
-    const index = () => ctx.loadIndex?.() ?? loadDocBridgeIndex(ctx.root, ctx.config)
+    const index = () => ctx.loadIndex?.() ?? loadFreshDocBridgeIndex(ctx.root, ctx.config)
 
     if (name === 'handoff.resolve') {
       const parsed = parseToolArgs('handoff.resolve', HandoffResolveArgsSchema, args)

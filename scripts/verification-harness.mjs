@@ -14,7 +14,7 @@ import {
 } from 'node:fs'
 import { dirname, join, relative, resolve, sep } from 'node:path'
 
-const VERSION = '1.4.0'
+const VERSION = '1.5.0'
 const STATES = new Set(['CLARIFYING', 'PLANNED', 'VERIFYING', 'AWAITING_HUMAN_APPROVAL', 'AWAITING_AUTHORIZATION', 'COMPLETE', 'BLOCKED', 'FAILED'])
 const PROFILES = new Set(['default', 'strict', 'poc', 'custom', 'enterprise'])
 const SURFACES = ['logic', 'endpoint', 'database', 'cli', 'mcp', 'ui', 'docs']
@@ -87,7 +87,7 @@ const surfaceRequired = (value, name) => {
 
 const validateConfig = (raw, configPath) => {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) fail(`Invalid verification config: ${configPath}`)
-  assertKnownKeys(raw, new Set(['schemaVersion', 'project', 'root', 'stateDir', 'profile', 'contract', 'surfaces', 'checks', 'exemptions', 'measurement', 'tracking', 'cleanup', 'overrides', 'budget', 'benchmark']), 'verification config')
+  assertKnownKeys(raw, new Set(['schemaVersion', 'project', 'root', 'stateDir', 'profile', 'mode', 'contract', 'surfaces', 'checks', 'exemptions', 'measurement', 'tracking', 'cleanup', 'overrides', 'budget', 'benchmark']), 'verification config')
   if (raw.schemaVersion !== 1) fail('verification config schemaVersion must be 1.')
   if (typeof raw.project !== 'string' || !raw.project) fail('verification config project is required.')
   if (raw.root !== undefined && typeof raw.root !== 'string') fail('verification config root must be a string.')
@@ -105,6 +105,8 @@ const validateConfig = (raw, configPath) => {
   }
   const profile = raw.profile ?? 'default'
   if (!PROFILES.has(profile)) fail(`verification config profile must be one of: ${[...PROFILES].join(', ')}.`)
+  const mode = raw.mode ?? 'verification'
+  if (!['verification', 'discovery'].includes(mode)) fail('verification config mode must be "verification" or "discovery".')
   const policy = PROFILE_POLICIES[profile]
   if (raw.overrides !== undefined) {
     if (!raw.overrides || typeof raw.overrides !== 'object' || Array.isArray(raw.overrides)) fail('overrides must be an object.')
@@ -114,11 +116,12 @@ const validateConfig = (raw, configPath) => {
   if (!Array.isArray(raw.checks) || raw.checks.length === 0) fail('verification config requires at least one check.')
   const checks = raw.checks.map((check, index) => {
     if (!check || typeof check !== 'object' || Array.isArray(check)) fail(`checks[${index}] must be an object.`)
-    assertKnownKeys(check, new Set(['id', 'category', 'command', 'required', 'timeoutMs', 'execution', 'capabilities', 'evidence']), `checks[${index}]`)
+    assertKnownKeys(check, new Set(['id', 'category', 'command', 'required', 'blocking', 'timeoutMs', 'execution', 'capabilities', 'evidence']), `checks[${index}]`)
     if (typeof check.id !== 'string' || !check.id) fail(`checks[${index}].id is required.`)
     if (typeof check.command !== 'string' || !check.command) fail(`checks[${index}].command is required.`)
     if (!CATEGORIES.has(check.category)) fail(`checks[${index}].category is invalid.`)
     if (check.required !== undefined && typeof check.required !== 'boolean') fail(`checks[${index}].required must be boolean.`)
+    if (check.blocking !== undefined && typeof check.blocking !== 'boolean') fail(`checks[${index}].blocking must be boolean.`)
     if (check.timeoutMs !== undefined && (!Number.isInteger(check.timeoutMs) || check.timeoutMs < 1)) fail(`checks[${index}].timeoutMs must be a positive integer.`)
     if (check.evidence !== undefined && (typeof check.evidence !== 'string' || !check.evidence.trim())) fail(`checks[${index}].evidence must be a non-empty string.`)
     if (['endpoint', 'database', 'cli', 'mcp', 'ui'].includes(check.category) && check.execution !== 'real') fail(`checks[${index}] requires execution: "real".`)
@@ -126,7 +129,7 @@ const validateConfig = (raw, configPath) => {
     if (check.category === 'ui') {
       for (const capability of ['real-browser', 'screenshot']) if (!check.capabilities?.includes(capability)) fail(`checks[${index}] requires capability "${capability}".`)
     }
-    return { required: true, timeoutMs: 120_000, ...check }
+    return { required: true, blocking: mode === 'discovery' ? false : true, timeoutMs: 120_000, ...check }
   })
   if (new Set(checks.map((check) => check.id)).size !== checks.length) fail('check ids must be unique.')
   if (!raw.contract || typeof raw.contract !== 'object' || Array.isArray(raw.contract)) fail('verification contract is required.')
@@ -190,7 +193,7 @@ const validateConfig = (raw, configPath) => {
     assertKnownKeys(raw.cleanup, new Set(['roots']), 'cleanup')
     if (raw.cleanup.roots !== undefined && (!Array.isArray(raw.cleanup.roots) || raw.cleanup.roots.some((root) => typeof root !== 'string' || !root.trim()))) fail('cleanup.roots must contain non-empty strings.')
   }
-  return { ...raw, profile, checks, contract: { intent: raw.contract.intent.trim(), ...(raw.contract.scope ? { scope: raw.contract.scope } : {}), ...(raw.contract.ambiguities ? { ambiguities: raw.contract.ambiguities } : {}), outcomes }, surfaces, tracking, measurement, configPath, profilePolicy: policy }
+  return { ...raw, profile, mode, checks, contract: { intent: raw.contract.intent.trim(), ...(raw.contract.scope ? { scope: raw.contract.scope } : {}), ...(raw.contract.ambiguities ? { ambiguities: raw.contract.ambiguities } : {}), outcomes }, surfaces, tracking, measurement, configPath, profilePolicy: policy }
 }
 
 const sourceRevision = (root) => {
@@ -333,6 +336,7 @@ const runVerification = async (root, config, runId) => {
     runId: id,
     project: config.project,
     profile: config.profile,
+    mode: config.mode,
     profilePolicy: config.profilePolicy,
     sourceRevision: source,
     contractHash: hash(config.contract),
@@ -340,7 +344,7 @@ const runVerification = async (root, config, runId) => {
     state: 'PLANNED',
     configPath: relative(root, config.configPath),
     contract: config.contract,
-    checks: config.checks.map(({ id: checkId, category, command, required, timeoutMs, capabilities }) => ({ id: checkId, category, command, required, timeoutMs, ...(capabilities ? { capabilities } : {}), status: 'pending' })),
+    checks: config.checks.map(({ id: checkId, category, command, required, blocking, timeoutMs, capabilities }) => ({ id: checkId, category, command, required, blocking, timeoutMs, ...(capabilities ? { capabilities } : {}), status: 'pending' })),
     surfaces: config.surfaces,
     applicability: config.surfaces,
     tracking: config.tracking,
@@ -375,12 +379,16 @@ const runVerification = async (root, config, runId) => {
   }
   run = attachEvidence(run)
   const failedOutcomes = run.outcomes.filter((outcome) => outcome.status === 'failed')
-  const failed = run.checks.filter((check) => check.required && !['passed', 'awaiting-human-approval'].includes(check.status))
-  if (failed.length) run = transition(run, 'BLOCKED', `Required checks failed: ${failed.map((check) => check.id).join(', ')}`)
-  else if (failedOutcomes.length) run = transition(run, 'BLOCKED', `Contract outcomes failed: ${failedOutcomes.map((outcome) => outcome.id).join(', ')}`)
+  const failed = run.checks.filter((check) => check.required && check.blocking !== false && !['passed', 'awaiting-human-approval'].includes(check.status))
+  const blockingFailedOutcomes = failedOutcomes.filter((outcome) => outcome.checks.some((checkId) => run.checks.find((check) => check.id === checkId)?.blocking !== false))
+  const nonBlockingFailures = run.checks.filter((check) => check.status === 'failed' && check.blocking === false).map((check) => check.id)
+  if (failed.length) run = transition(run, 'BLOCKED', `Required blocking checks failed: ${failed.map((check) => check.id).join(', ')}`)
+  else if (blockingFailedOutcomes.length) run = transition(run, 'BLOCKED', `Blocking contract outcomes failed: ${blockingFailedOutcomes.map((outcome) => outcome.id).join(', ')}`)
   else if (config.surfaces.ui.required) run = transition(run, 'AWAITING_HUMAN_APPROVAL', 'Visual UI approval is required.')
   else if (config.tracking.required) run = transition(run, 'AWAITING_AUTHORIZATION', `Tracking authorization is required for ${config.tracking.target}.`)
-  else run = transition(run, 'COMPLETE', 'All configured verification gates passed.')
+  else run = transition(run, 'COMPLETE', nonBlockingFailures.length
+    ? `Discovery completed with non-blocking observations: ${nonBlockingFailures.join(', ')}`
+    : 'All configured verification gates passed.')
   saveRun(root, run, config.stateDir)
   return run
 }

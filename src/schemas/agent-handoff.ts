@@ -84,6 +84,14 @@ export const AgentSearchV1Schema = z
     bestMatch: AgentSearchMatchSchema.nullable(),
     matches: z.array(AgentSearchMatchSchema).max(32),
     nextCommands: z.array(z.string().min(1).max(512)).max(16),
+    telemetry: z
+      .object({
+        contextBytes: z.number().int().nonnegative(),
+        estimatedTokens: z.number().int().nonnegative(),
+        tokenMethod: z.literal('estimate'),
+      })
+      .strict()
+      .optional(),
   })
   .strict()
 

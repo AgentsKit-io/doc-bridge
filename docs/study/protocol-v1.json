@@ -56,7 +56,7 @@
   "outcomes": [
     { "id": "protocol-integrity", "statement": "The study protocol is valid, versioned, and reproducible.", "checks": [{ "id": "protocol-validation", "command": "ak-docs study protocol docs/study/protocol-v1.json --json" }] },
     { "id": "historical-evidence", "statement": "Historical observations preserve provenance, missing measurements, and limitations.", "checks": [{ "id": "history-validation", "command": "ak-docs study history docs/study/historical-evidence-v1.json --protocol docs/study/protocol-v1.json --json" }] },
-    { "id": "controlled-comparison", "statement": "Controlled task results can be compared only under a fixed protocol and source revision.", "checks": [{ "id": "controlled-run-validation", "command": "ak-verify run --config .codex/verification.json --json" }] },
+    { "id": "controlled-comparison", "statement": "Controlled task results can be compared only under a fixed protocol and source revision.", "checks": [{ "id": "controlled-run-validation", "command": "ak-verify plan approved --allow-dirty --config .codex/verification.json && ak-verify start --config .codex/verification.json && ak-verify verify --config .codex/verification.json --json" }] },
     { "id": "documentation-quality", "statement": "Documentation quality is measured for correctness, completeness, clarity, and maintainability.", "checks": [{ "id": "documentation-quality-review", "command": "pnpm docs:typecheck" }] },
     { "id": "semantic-consistency", "statement": "Documentation claims can be compared with observed repository evidence.", "checks": [{ "id": "semantic-evidence-review", "command": "ak-docs study history docs/study/historical-evidence-v1.json --protocol docs/study/protocol-v1.json --json" }] },
     { "id": "agent-efficiency", "statement": "Agent task efficiency is measured with tokens, time, evidence, and task success.", "checks": [{ "id": "efficiency-metric-contract", "command": "pnpm exec vitest run tests/study-protocol.test.ts" }] },
@@ -86,5 +86,5 @@
     ]
   },
   "contentHashAlgo": "sha256-normalized-v1",
-  "contentHash": "7a56ae4da91ae56fb8b4b7e506adce525ab6fcb637d635cafb7091c2bd437adf"
+  "contentHash": "fe26951579d9003f1cd616f12fb6d6007a60ec69db5efbb9acd5d80c817002d1"
 }

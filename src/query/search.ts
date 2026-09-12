@@ -1,4 +1,5 @@
 import type { DocBridgeIndexV1 } from '../schemas/doc-bridge-index.js'
+import { hasSearchToken, tokenizeSearchText } from './text.js'
 
 export type SearchMatch = {
   readonly type: string
@@ -8,24 +9,16 @@ export type SearchMatch = {
   readonly score: number
 }
 
-const tokenize = (value: string): string[] =>
-  value
-    .toLowerCase()
-    .split(/[^a-z0-9@/_-]+/)
-    .filter((t) => t.length >= 2)
-
 const PACKAGE_INTENT =
   /\b(package|module|pkg|edit|change|where|owns?|ownership|handoff|start)\b/i
+const CHANGE_INTENT = /\b(change|edit|modify|update|fix|migrate|replace)\b/i
 
 const scoreHay = (tokens: readonly string[], hay: string, weight = 1): number => {
   let score = 0
   for (const token of tokens) {
-    if (!hay.includes(token)) continue
+    if (!hasSearchToken(hay, token)) continue
     score += token.length * weight
-    // whole-word-ish bonus
-    if (new RegExp(`(?:^|[^a-z0-9])${token}(?:[^a-z0-9]|$)`).test(hay)) {
-      score += token.length
-    }
+    score += token.length
   }
   return score
 }
@@ -56,8 +49,11 @@ const identityBoost = (id: string, path: string, tokens: readonly string[], term
 const preferOwnership = (term: string): boolean =>
   PACKAGE_INTENT.test(term) || /^(where|how).*(edit|change|package|module)/i.test(term)
 
+const routeTitleBoost = (title: string, tokens: readonly string[]): number =>
+  tokens.length > 1 && tokens.every((token) => hasSearchToken(title.toLowerCase(), token)) ? 100 : 0
+
 export const searchIndex = (index: DocBridgeIndexV1, term: string, limit = 20): SearchMatch[] => {
-  const tokens = tokenize(term)
+  const tokens = tokenizeSearchText(term)
   if (!tokens.length) return []
 
   const wantOwnership = preferOwnership(term)
@@ -96,12 +92,15 @@ export const searchIndex = (index: DocBridgeIndexV1, term: string, limit = 20): 
 
   for (const [id, owner] of Object.entries(index.lookup?.ownership ?? {})) {
     const path = owner.agentDoc ?? owner.path
-    const hay = `${id} ${owner.path} ${owner.purpose ?? ''} ${owner.group ?? ''} ${owner.agentDoc ?? ''} ${owner.humanDoc ?? ''}`.toLowerCase()
+    const agentDoc = owner.agentDoc
+      ? index.knowledge.find((entry) => entry.path === owner.agentDoc)
+      : undefined
+    const hay = `${id} ${owner.path} ${owner.purpose ?? ''} ${owner.group ?? ''} ${owner.agentDoc ?? ''} ${owner.humanDoc ?? ''} ${agentDoc?.title ?? ''} ${agentDoc?.description ?? ''} ${agentDoc?.body ?? ''}`.toLowerCase()
     let score = scoreHay(tokens, hay, 2)
     score += identityBoost(id, path, tokens, term)
-    // Ownership is primary for routing questions
+    if (score <= 0) continue
+    // Ownership is primary for routing questions, but only after a real match.
     if (wantOwnership) score += 25
-    score += 15 // slight base preference for actionable ownership targets
     if (score > 0) {
       consider({
         type: 'ownership',
@@ -111,6 +110,19 @@ export const searchIndex = (index: DocBridgeIndexV1, term: string, limit = 20): 
         score,
       })
     }
+  }
+
+  for (const intent of Object.values(index.lookup?.intents ?? {})) {
+    const hay = `${intent.id} ${intent.title} ${intent.paths.join(' ')}`.toLowerCase()
+    const score = scoreHay(tokens, hay, 2) + routeTitleBoost(intent.title, tokens)
+    if (score > 0) consider({ type: 'intent', id: intent.id, path: intent.paths[0] ?? '', summary: intent.title, score })
+  }
+
+  for (const change of Object.values(index.lookup?.changes ?? {})) {
+    const hay = `${change.id} ${change.title} ${change.startHere} ${(change.relatedPackages ?? []).join(' ')}`.toLowerCase()
+    const titleBoost = routeTitleBoost(change.title, tokens)
+    const score = scoreHay(tokens, hay, 2) + titleBoost
+    if (score > 0 && (titleBoost > 0 || CHANGE_INTENT.test(term))) consider({ type: 'change', id: change.id, path: change.startHere, summary: change.title, score })
   }
 
   return [...byPath.values()].sort((a, b) => {

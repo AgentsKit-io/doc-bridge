@@ -35,7 +35,7 @@ import { formatDemoText, runDemo, withDemoWorkspace, type DemoFixture } from './
 import { formatDoctorText, runDoctor } from '../doctor/run-doctor.js'
 import { installMcpConfig, mcpSnippet } from '../mcp/install.js'
 import { startMcpStdioServer } from '../mcp/server.js'
-import { IndexNotFoundError, loadDocBridgeIndex } from '../query/load-index.js'
+import { IndexNotFoundError, loadFreshDocBridgeIndex } from '../query/load-index.js'
 import { runQuery, type QueryKind } from '../query/query.js'
 import { searchIndex } from '../query/search.js'
 import type { DocBridgeIndexV1 } from '../schemas/doc-bridge-index.js'
@@ -131,7 +131,7 @@ Core (no API key):
   ak-docs scan | reconcile | check | map [--text|--json] [--html] [--report-threshold <bytes>]
   ak-docs fix propose links|normalize <artifact> [--output <file>]
   ak-docs fix approve|apply <proposal.json> [--by <name>]
-  ak-docs suggest [--json|--text]   run the configured local Registry agent
+  ak-docs suggest [--documentation] [--json|--text]   run the configured Registry agent
   ak-docs query [package|ownership|intent|change] <id> [--agent] [--text]
   ak-docs search <term> [--agent] [--text]
   ak-docs list <packages|intents|changes|knowledge> [--text]
@@ -406,7 +406,7 @@ const writeAsk = (
 }
 
 const readIndexedDoc = (root: string, config: DocBridgeConfigV1, idOrPath: string): string => {
-  const index = loadDocBridgeIndex(root, config)
+  const index = loadFreshDocBridgeIndex(root, config)
   const entry = index.knowledge.find((doc) => doc.id === idOrPath || doc.path === idOrPath)
   if (!entry) throw new Error(`Unknown indexed doc "${idOrPath}". Try: search ${idOrPath}`)
 
@@ -419,7 +419,7 @@ const readIndexedDoc = (root: string, config: DocBridgeConfigV1, idOrPath: strin
 }
 
 const runAskRepl = async (root: string, config: DocBridgeConfigV1): Promise<number> => {
-  const index = loadDocBridgeIndex(root, config)
+  const index = loadFreshDocBridgeIndex(root, config)
   const rl = createInterface({ input: process.stdin, output: process.stdout, terminal: true })
   try {
     for (;;) {
@@ -661,6 +661,26 @@ const runWorkflowCommand = (
   }
 }
 
+const buildDocumentationAuditReport = (root: string, config: DocBridgeConfigV1) => {
+  const scanned = scanWorkflow(root, config)
+  const snapshot = parseDiscoverySnapshot(loadWorkflowStepOutput(scanned.stateDir, 'normalize'))
+  const analysis = applyDocumentationDeclarations(snapshot, documentationInputs(root, snapshot), { agentRoot: config.corpus.agent.root })
+  const reconciliation = reconcileKnowledge(snapshot, analysis.snapshot, {
+    ...(config.reconciliation?.scope === undefined ? {} : { scope: config.reconciliation.scope }),
+    ...(config.reconciliation?.requiredRelationKinds === undefined ? {} : { requiredRelationKinds: config.reconciliation.requiredRelationKinds }),
+    ...(config.reconciliation?.requiredRelationTargets === undefined ? {} : { requiredRelationTargets: config.reconciliation.requiredRelationTargets }),
+    includeOrphanedDocuments: config.reconciliation?.includeOrphanedDocuments ?? true,
+  })
+  return auditDocumentation({
+    root,
+    snapshot,
+    declared: analysis.snapshot,
+    reconciliation,
+    declarationDiagnostics: analysis.diagnostics,
+    ...(config.audit?.documentation ? { config: config.audit.documentation } : {}),
+  })
+}
+
 const runDocumentationAuditCommand = (
   flags: ReadonlySet<string>,
   positional: readonly string[],
@@ -672,23 +692,7 @@ const runDocumentationAuditCommand = (
   }
   try {
     const { config, root } = loadProject(configPath)
-    const scanned = scanWorkflow(root, config)
-    const snapshot = parseDiscoverySnapshot(loadWorkflowStepOutput(scanned.stateDir, 'normalize'))
-    const analysis = applyDocumentationDeclarations(snapshot, documentationInputs(root, snapshot), { agentRoot: config.corpus.agent.root })
-    const reconciliation = reconcileKnowledge(snapshot, analysis.snapshot, {
-      ...(config.reconciliation?.scope === undefined ? {} : { scope: config.reconciliation.scope }),
-      ...(config.reconciliation?.requiredRelationKinds === undefined ? {} : { requiredRelationKinds: config.reconciliation.requiredRelationKinds }),
-      ...(config.reconciliation?.requiredRelationTargets === undefined ? {} : { requiredRelationTargets: config.reconciliation.requiredRelationTargets }),
-      includeOrphanedDocuments: config.reconciliation?.includeOrphanedDocuments ?? true,
-    })
-    const report = auditDocumentation({
-      root,
-      snapshot,
-      declared: analysis.snapshot,
-      reconciliation,
-      declarationDiagnostics: analysis.diagnostics,
-      ...(config.audit?.documentation ? { config: config.audit.documentation } : {}),
-    })
+    const report = buildDocumentationAuditReport(root, config)
     if (wantsTextOutput(flags, config)) writeLines(formatDocumentationAuditText(report))
     else writeJson({ ok: report.status !== 'blocked', report })
     return report.status === 'blocked' ? 1 : 0
@@ -786,10 +790,11 @@ const runSuggestCommand = async (flags: ReadonlySet<string>, configPath: string 
     const report = parseReconciliationReport(loadWorkflowStepOutput(stateDir, 'reconcile'))
     const runner = config.intelligence?.registry?.cli ? undefined : await loadRegistryAgentRunner(root, config)
     const adapter = createRegistryAgentAdapter(root, config, runner)
-    const proposal = await adapter.run(snapshot, report)
+    const documentation = flags.has('--documentation') ? buildDocumentationAuditReport(root, config) : undefined
+    const proposal = await adapter.run(snapshot, report, undefined, documentation)
     const proposalPath = persistRegistryAgentProposal(stateDir, proposal)
-    if (flags.has('--text')) writeLines([`Agent: ${adapter.metadata.id}`, `Proposal: ${proposal.proposalId}`, `Hash: ${proposal.contentHash}`, `Saved: ${proposalPath}`])
-    else writeJson({ ok: true, proposal, proposalPath })
+    if (flags.has('--text')) writeLines([`Agent: ${adapter.metadata.id}`, ...(documentation ? [`Documentation audit: ${documentation.contentHash}`] : []), `Proposal: ${proposal.proposalId}`, `Hash: ${proposal.contentHash}`, `Saved: ${proposalPath}`])
+    else writeJson({ ok: true, ...(documentation ? { documentationAuditHash: documentation.contentHash } : {}), proposal, proposalPath })
     return 0
   } catch (error) {
     process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`)
@@ -1262,7 +1267,7 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
         writeJson({ ok: true, count: candidates.length, candidates })
         return 0
       }
-      const index = loadDocBridgeIndex(root, config)
+      const index = loadFreshDocBridgeIndex(root, config)
       const classifications = classifyMemoryCandidates(candidates, index)
       if (positional[1] === 'classify') {
         writeJson({ ok: true, count: classifications.length, classifications })
@@ -1320,7 +1325,7 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
     }
     try {
       const { config, root } = loadProject(configPath)
-      const index = loadDocBridgeIndex(root, config)
+      const index = loadFreshDocBridgeIndex(root, config)
       const draft = draftMemoryPromotion(classifyMemoryCandidates(ingestMemoryCandidates(root), index))
       writeJson({
         ...draft,
@@ -1525,7 +1530,7 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
     }
     try {
       const { config, root } = loadProject(configPath)
-      const index = loadDocBridgeIndex(root, config)
+      const index = loadFreshDocBridgeIndex(root, config)
       const result = runQuery(index, config, { kind, id, agent: flags.has('--agent') })
       if (wantsTextOutput(flags, config)) writeTextQuery(result)
       else writeJson(result)
@@ -1544,7 +1549,7 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
     }
     try {
       const { config, root } = loadProject(configPath)
-      const index = loadDocBridgeIndex(root, config)
+        const index = loadFreshDocBridgeIndex(root, config)
       if (flags.has('--agent')) {
         const result = runQuery(index, config, { kind: 'search', term, agent: true })
         writeJson(result)
@@ -1573,7 +1578,7 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
     return (async () => {
       try {
         const { config, root } = loadProject(configPath)
-        const index = loadDocBridgeIndex(root, config)
+        const index = loadFreshDocBridgeIndex(root, config)
         writeJson({ query, chunks: await retrieveHybridChunks(root, config, index, query) })
         return 0
       } catch (error) {
@@ -1592,7 +1597,7 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
     return (async () => {
       try {
         const { config, root } = loadProject(configPath)
-        const index = loadDocBridgeIndex(root, config)
+        const index = loadFreshDocBridgeIndex(root, config)
         const rag = await createDocBridgeRag(root, config, index)
         if (action === 'ingest') {
           const result = await rag.ingest()
@@ -1629,7 +1634,7 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
           )
           return 1
         }
-        const index = loadDocBridgeIndex(root, config)
+        const index = loadFreshDocBridgeIndex(root, config)
         await startInkChat(root, config, index)
         return 0
       } catch (error) {
@@ -1661,7 +1666,7 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
         }
         return (async () => {
           try {
-            const index = loadDocBridgeIndex(root, config)
+            const index = loadFreshDocBridgeIndex(root, config)
             const result = await runChatOnce(root, config, index, question)
             writeLines([result.content])
             return 0
@@ -1680,7 +1685,7 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
         process.stderr.write('Usage: ak-docs ask <question>, or run ak-docs ask in an interactive terminal.\n')
         return 1
       }
-      const index = loadDocBridgeIndex(root, config)
+      const index = loadFreshDocBridgeIndex(root, config)
       writeAsk(question, searchIndex(index, question, 8), index, config)
       return 0
     } catch (error) {
@@ -1697,7 +1702,7 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
     }
     try {
       const { config, root } = loadProject(configPath)
-      const index = loadDocBridgeIndex(root, config)
+      const index = loadFreshDocBridgeIndex(root, config)
 
       if (kind === 'packages') {
         const items = index.lookup?.packages ?? []

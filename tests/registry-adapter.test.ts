@@ -6,6 +6,7 @@ import { join } from 'node:path'
 import { applyConfigDefaults } from '../src/config/defaults.js'
 import { DocBridgeConfigV1Schema } from '../src/config/schema.js'
 import { createRegistryAgentAdapter, DEFAULT_REGISTRY_AGENT_ID, loadRegistryAgentMetadata, persistRegistryAgentProposal } from '../src/agents/registry-adapter.js'
+import { DocumentationAuditReportV1Schema } from '../src/audit/documentation.js'
 import { contentHashForArtifactV1 } from '../src/index-builder/content-hash.js'
 import { DiscoverySnapshotV1Schema, ReconciliationReportV1Schema } from '../src/schemas/knowledge.js'
 
@@ -26,6 +27,26 @@ const validProposal = (snapshot: ReturnType<typeof fixture>['snapshot'], report:
   const proposal = { type: 'agent-proposal' as const, schemaVersion: 1 as const, contentHash: '0'.repeat(64), contentHashAlgo: 'sha256-normalized-v1' as const, project: snapshot.project, sourceRevision: snapshot.sourceRevision, sourceRevisionKind: snapshot.sourceRevisionKind, configurationHash: snapshot.configurationHash, pipelineVersion: '1.0.0', analyzerVersions: { agent: '1.0.0' }, proposalId: 'p1', baseSnapshotHash: snapshot.contentHash, baseReportHash: report.contentHash, relatedDiagnosticIds: ['d1'], rationale: 'Review the finding.', confidence: 0.8, evidence: report.diagnostics[0]!.evidence, intendedChanges: ['Update the documentation.'], origin: { kind: 'registry-agent' as const, id, version: '1.0.0', capabilities: ['proposal.write'] }, checks: ['pnpm test'] }
   return { ...proposal, contentHash: contentHashForArtifactV1(proposal) }
 }
+const documentationAudit = (snapshot: ReturnType<typeof fixture>['snapshot'], report: ReturnType<typeof fixture>['report']) => DocumentationAuditReportV1Schema.parse({
+  type: 'documentation-audit-report', schemaVersion: 1, contentHash: 'd'.repeat(64), contentHashAlgo: 'sha256-normalized-v1',
+  project: snapshot.project, sourceRevision: snapshot.sourceRevision, sourceRevisionKind: snapshot.sourceRevisionKind,
+  configurationHash: snapshot.configurationHash, pipelineVersion: snapshot.pipelineVersion, analyzerVersions: snapshot.analyzerVersions,
+  snapshotHash: snapshot.contentHash, reconciliationHash: report.contentHash, status: 'needs-review',
+  findings: [{ id: 'f1'.padEnd(64, '0'), code: 'DOCUMENTATION_SEMANTICS_NOT_ANALYZED', category: 'limitation', status: 'not-analyzed', severity: 'info', confidence: 'low', blocking: false, message: 'Review required.', evidence: [{ source: 'documentation', path: 'docs/a.md' }] }],
+  metrics: {
+    documentCount: 1, generatedDocumentCount: 0, packageCount: 0, coveredPackageCount: 0, coverageRate: null,
+    documentsWithTitle: 1, titleRate: 1, documentsWithExamples: 0, examplesRate: 0, documentsMeetingRequiredSections: 0, requiredSectionsRate: 0,
+    exactDuplicateGroups: 0, structureGapCount: 0, contradictionCount: 0, staleCount: 0, notAnalyzedCount: 1, blockingCount: 0,
+    tierCounts: { 'tier-0': 0, 'tier-1': 0, 'tier-2': 1 }, criticalDocumentCount: 0, criticalDocumentsWithOwner: 0,
+    criticalDocumentsWithLifecycle: 0, criticalDocumentsWithSourceOfTruth: 0, criticalDocumentsWithValidationPath: 0,
+    dimensionStatus: {
+      correctness: { validated: 0, partial: 0, 'not-analyzed': 1 }, completeness: { validated: 0, partial: 0, 'not-analyzed': 1 },
+      clarity: { validated: 0, partial: 0, 'not-analyzed': 1 }, agentEfficiency: { validated: 0, partial: 0, 'not-analyzed': 1 },
+      maintainability: { validated: 0, partial: 0, 'not-analyzed': 1 },
+    },
+  },
+  documentAssessments: [], generatedDocuments: [], limitations: ['Semantic review is pending.'],
+})
 
 describe('AgentsKit Registry adapter', () => {
   it('requires an installed source-owned Registry agent and returns typed proposals', async () => {
@@ -87,6 +108,25 @@ process.stdout.write(${JSON.stringify(JSON.stringify(proposal))})
     const { snapshot, report } = fixture()
     const adapter = createRegistryAgentAdapter(root, config(true, { agentId: alternate }), () => validProposal(snapshot, report, alternate))
     expect((await adapter.run(snapshot, report)).origin.id).toBe(alternate)
+  })
+
+  it('binds documentation-audit evidence when the agent is asked to review documentation', async () => {
+    const root = agentRoot()
+    const { snapshot, report } = fixture()
+    const documentation = documentationAudit(snapshot, report)
+    const adapter = createRegistryAgentAdapter(root, config(), (context) => {
+      expect(context.documentation?.contentHash).toBe(documentation.contentHash)
+      const base = validProposal(snapshot, report)
+      const proposal = {
+        ...base,
+        baseDocumentationAuditHash: documentation.contentHash,
+        relatedDiagnosticIds: [documentation.findings[0]!.id],
+        evidence: documentation.findings[0]!.evidence,
+      }
+      return { ...proposal, contentHash: contentHashForArtifactV1({ ...proposal, contentHash: '0'.repeat(64) }) }
+    })
+    const proposal = await adapter.run(snapshot, report, undefined, documentation)
+    expect(proposal.baseDocumentationAuditHash).toBe(documentation.contentHash)
   })
 
   it('fails closed when disabled, unavailable or replaced by another origin', () => {
