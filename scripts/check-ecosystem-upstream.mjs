@@ -6,7 +6,12 @@ import { fileURLToPath } from 'node:url'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const metadata = JSON.parse(readFileSync(join(root, 'ecosystem-upstream.json'), 'utf8'))
-if (metadata.schemaVersion !== 1 || typeof metadata.repository !== 'string' || typeof metadata.ref !== 'string') {
+if (
+  metadata.schemaVersion !== 1 ||
+  typeof metadata.repository !== 'string' ||
+  !/^[^/]+\/[^/]+$/.test(metadata.repository) ||
+  typeof metadata.ref !== 'string'
+) {
   throw new Error('Invalid ecosystem-upstream.json metadata.')
 }
 
@@ -20,18 +25,39 @@ if (
   throw new Error('Upstream metadata must contain SHA-256 digests for both canonical files.')
 }
 
-const fetchText = async (url) => {
+const fetchText = async (url, apiUrl) => {
   let lastError
-  for (let attempt = 1; attempt <= 2; attempt += 1) {
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
     try {
-      const response = await fetch(url, { signal: AbortSignal.timeout(10_000) })
+      const response = await fetch(url, {
+        headers: { 'user-agent': 'doc-bridge-ecosystem-check' },
+        signal: AbortSignal.timeout(10_000),
+      })
       if (!response.ok) throw new Error(`HTTP ${response.status}`)
       return await response.text()
     } catch (error) {
       lastError = error
     }
   }
-  throw new Error(`Unable to verify ${url}: ${lastError instanceof Error ? lastError.message : String(lastError)}`)
+  try {
+    const response = await fetch(apiUrl, {
+      headers: {
+        accept: 'application/vnd.github+json',
+        'user-agent': 'doc-bridge-ecosystem-check',
+      },
+      signal: AbortSignal.timeout(10_000),
+    })
+    if (!response.ok) throw new Error(`HTTP ${response.status}`)
+    const payload = await response.json()
+    if (payload?.encoding !== 'base64' || typeof payload.content !== 'string') {
+      throw new Error('GitHub API response did not contain a base64 file.')
+    }
+    return Buffer.from(payload.content.replace(/\s+/g, ''), 'base64').toString('utf8')
+  } catch (error) {
+    const fallback = error instanceof Error ? error.message : String(error)
+    const primary = lastError instanceof Error ? lastError.message : String(lastError)
+    throw new Error(`Unable to verify ${url}: ${primary}; API fallback: ${fallback}`)
+  }
 }
 
 for (const file of requiredFiles) {
@@ -43,7 +69,9 @@ for (const file of requiredFiles) {
   }
   const url = new URL(`https://raw.githubusercontent.com/${metadata.repository}/${metadata.ref}/${file}`)
   if (url.hostname !== 'raw.githubusercontent.com') throw new Error('Unexpected upstream host.')
-  const upstream = await fetchText(url.href)
+  const apiUrl = new URL(`https://api.github.com/repos/${metadata.repository}/contents/${file}`)
+  apiUrl.searchParams.set('ref', metadata.ref)
+  const upstream = await fetchText(url.href, apiUrl.href)
   if (sha256(upstream) !== expectedDigest || upstream !== local) {
     throw new Error(`${file} is stale against ${metadata.repository}@${metadata.ref}. Sync the canonical snapshot and digest.`)
   }
