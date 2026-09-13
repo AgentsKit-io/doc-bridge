@@ -16,7 +16,7 @@ import {
 } from '../dist/index.js'
 
 const root = resolve(import.meta.dirname, '..')
-const outputDir = resolve(root, '.codex/verification/tmp/provider-telemetry-pilot')
+const outputDir = resolve(root, '.codex/verification/tmp/provider-telemetry-pilot-rerun')
 const ledgerPath = resolve(outputDir, 'ledger.json')
 const dryRun = process.argv.includes('--dry-run')
 const readJson = (path) => JSON.parse(readFileSync(resolve(root, path), 'utf8'))
@@ -51,9 +51,9 @@ const plan = createControlledStudyRunPlan({
   planVersion: 'phase5-provider-telemetry-v1',
   sourceRevisionHash: sha(execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim()),
   configurationHash: providerConfig.contentHash,
-  sampling: { strategy: 'pairwise-task-strata', sampleSize: 8, scenarioIds: ['repository-only', 'deterministic-doc-bridge'] },
-  budget: { ...historicalPlan.budget, maxTokens: 96_000, maxRuntimeMs: 600_000 },
-  runId: 'phase5-provider-telemetry-pilot-01',
+  sampling: { strategy: 'pairwise-task-strata', sampleSize: 4, scenarioIds: ['repository-only', 'deterministic-doc-bridge'] },
+  budget: { ...historicalPlan.budget, maxTokens: 400_000, maxRuntimeMs: 600_000 },
+  runId: 'phase5-provider-telemetry-pilot-02',
 })
 
 mkdirSync(outputDir, { recursive: true })
@@ -72,7 +72,7 @@ if (dryRun) {
   process.exit(0)
 }
 
-const ledger = parseControlledStudyLedger(readJson('.codex/verification/tmp/provider-telemetry-pilot/ledger.json'))
+const ledger = parseControlledStudyLedger(readJson('.codex/verification/tmp/provider-telemetry-pilot-rerun/ledger.json'))
 const observations = ledger.observations.filter((observation) => observation.runId === plan.runId)
 const completed = observations.filter((observation) => observation.execution.status === 'completed')
 const telemetry = completed.map((observation) => observation.measurements ?? {})
