@@ -16,7 +16,7 @@ import {
 } from '../dist/index.js'
 
 const root = resolve(import.meta.dirname, '..')
-const outputDir = resolve(root, '.codex/verification/tmp/provider-telemetry-pilot-rerun')
+const outputDir = resolve(root, '.codex/verification-0.11-round6/provider-context-pilot')
 const ledgerPath = resolve(outputDir, 'ledger.json')
 const dryRun = process.argv.includes('--dry-run')
 const readJson = (path) => JSON.parse(readFileSync(resolve(root, path), 'utf8'))
@@ -72,7 +72,7 @@ if (dryRun) {
   process.exit(0)
 }
 
-const ledger = parseControlledStudyLedger(readJson('.codex/verification/tmp/provider-telemetry-pilot-rerun/ledger.json'))
+const ledger = parseControlledStudyLedger(readJson('.codex/verification-0.11-round6/provider-context-pilot/ledger.json'))
 const observations = ledger.observations.filter((observation) => observation.runId === plan.runId)
 const completed = observations.filter((observation) => observation.execution.status === 'completed')
 const telemetry = completed.map((observation) => observation.measurements ?? {})
