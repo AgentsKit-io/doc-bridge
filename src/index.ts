@@ -332,6 +332,7 @@ export {
   persistIndependentlyAdjudicatedLedger,
   type IndependentStudyAdjudicationOptions,
 } from './study/adjudication.js'
+export { measureProviderToolTelemetry, type ProviderToolTelemetry } from './study/provider-telemetry.js'
 export {
   STUDY_REPOSITORY_CONFIG_CONTENT_HASH_ALGO,
   STUDY_REPOSITORY_CONFIG_SCHEMA_VERSION,

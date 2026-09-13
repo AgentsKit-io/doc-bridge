@@ -3,6 +3,7 @@
 import { spawn } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { fileURLToPath } from 'node:url'
+import { measureProviderToolTelemetry } from '../dist/index.js'
 
 const modelIndex = process.argv.indexOf('--model')
 const model = modelIndex >= 0 ? process.argv[modelIndex + 1] : undefined
@@ -30,6 +31,7 @@ const child = spawn('codex', [
 
 let stdout = ''
 let stderrBytes = 0
+let inputBytes = 0
 child.stdout.on('data', (chunk) => { stdout += chunk.toString('utf8') })
 child.stderr.on('data', (chunk) => { stderrBytes += Buffer.byteLength(chunk); process.stderr.write(chunk) })
 const finish = (code, output) => {
@@ -65,6 +67,7 @@ child.once('close', (code) => {
   const modelMeasurements = Array.isArray(metrics.measurements)
     ? Object.fromEntries(metrics.measurements.filter((item) => item && typeof item.name === 'string' && typeof item.value === 'number').map((item) => [item.name, item.value]))
     : {}
+  const toolTelemetry = measureProviderToolTelemetry(events)
   const evidenceIds = normalizeEvidenceIds(metrics.evidenceIds)
   finish(0, {
     ...(typeof metrics.taskOutcome === 'string' ? { taskOutcome: metrics.taskOutcome } : {}),
@@ -82,9 +85,14 @@ child.once('close', (code) => {
       ...modelMeasurements,
       ...(Number.isInteger(usage?.cached_input_tokens) ? { cachedInputTokens: usage.cached_input_tokens } : {}),
       ...(Number.isInteger(usage?.reasoning_output_tokens) ? { reasoningOutputTokens: usage.reasoning_output_tokens } : {}),
+      observedToolEventCount: toolTelemetry.observedToolEventCount,
+      observedToolInputBytes: toolTelemetry.observedToolInputBytes,
+      observedToolOutputBytes: toolTelemetry.observedToolOutputBytes,
+      observedContextBytes: inputBytes + toolTelemetry.observedToolOutputBytes,
       stderrBytes,
     },
   })
 })
 
+process.stdin.on('data', (chunk) => { inputBytes += chunk.length })
 process.stdin.pipe(child.stdin)

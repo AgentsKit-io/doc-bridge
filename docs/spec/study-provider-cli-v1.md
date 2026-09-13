@@ -83,6 +83,8 @@ The response may contain the bounded metrics below. Unknown fields are ignored b
 
 Raw prompts, responses, repository contents, paths, and credentials are not written to the observation ledger. The ledger stores status, hashes, timing, labeled token counts, context-token attribution, first-evidence latency when observed, tool counts, metric fields, and automated or pending human adjudication. The runner derives `providerTokenCostUnits` from provider-reported input plus output tokens; this is a transparent token-equivalent cost metric and must not be presented as currency. Context-token estimates are stored separately with `contextTokenMethod: "estimate"`; they are never combined with provider usage.
 
+The bundled Codex adapter also records privacy-safe aggregate context telemetry: `observedToolEventCount`, `observedToolInputBytes`, `observedToolOutputBytes`, and `observedContextBytes` (request bytes plus observed tool-output bytes). These are byte counts only; commands, paths, prompts, responses, and repository content are not emitted by the adapter.
+
 ## Independent adjudication
 
 Adjudicate a persisted ledger in a separate process:

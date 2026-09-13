@@ -16,6 +16,7 @@ import {
 } from '../src/study/execution.js'
 import { parseControlledStudyRunPlan, runControlledCommand } from '../src/study/runner.js'
 import { parseStudyTaskSuite } from '../src/study/task-suite.js'
+import { measureProviderToolTelemetry } from '../src/study/provider-telemetry.js'
 
 const plan = parseControlledStudyRunPlan(JSON.parse(readFileSync(new URL('../docs/study/run-plan-v1.json', import.meta.url), 'utf8')) as unknown)
 const suite = parseStudyTaskSuite(JSON.parse(readFileSync(new URL('../docs/study/task-suite-v1.json', import.meta.url), 'utf8')) as unknown)
@@ -44,6 +45,20 @@ const repositoryConfig = createStudyRepositoryConfig({
 })
 
 describe('study provider CLI contract', () => {
+  it('measures tool bytes without returning raw event content', () => {
+    const raw = 'private repository content that must not escape'
+    const telemetry = measureProviderToolTelemetry([
+      { type: 'item.completed', item: { type: 'command_execution', command: 'cat docs/private.md', aggregated_output: raw } },
+      { type: 'item.completed', item: { type: 'mcp_tool_call', arguments: { term: 'ownership' }, result: { content: raw } } },
+      { type: 'item.completed', item: { type: 'agent_message', text: raw } },
+      { type: 'malformed', item: { type: 'command_execution', command: raw } },
+    ])
+    expect(telemetry.observedToolEventCount).toBe(2)
+    expect(telemetry.observedToolInputBytes).toBeGreaterThan(0)
+    expect(telemetry.observedToolOutputBytes).toBeGreaterThan(0)
+    expect(JSON.stringify(telemetry)).not.toContain(raw)
+  })
+
   it('content-addresses complete model/scenario mappings', () => {
     const parsed = parseStudyProviderCliConfig(providerConfig)
     expect(parsed.providers).toHaveLength(6)
