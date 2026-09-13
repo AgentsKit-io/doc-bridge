@@ -33,7 +33,7 @@ const RepositoryConfigPayloadSchema = z.object({
   repositories: z.array(z.object({
     id: identifier,
     root: z.string().min(1).max(4_096),
-  }).strict()).length(6),
+  }).strict()).min(1).max(64),
 }).strict()
 
 export const StudyRepositoryConfigV1Schema = RepositoryConfigPayloadSchema.extend({
@@ -122,6 +122,9 @@ const assertRunInputs = (options: ControlledStudyRunOptions): Map<string, { read
   if (options.plan.scenarios.map((scenario) => scenario.id).sort().join(',') !== [...options.suite.scenarioIds].sort().join(',')) throw new Error('Run plan scenario ids do not match the task suite.')
   if (options.plan.taskIds.slice().sort().join(',') !== options.suite.tasks.map((task) => task.id).sort().join(',')) throw new Error('Run plan task ids do not match the task suite.')
   const repositories = new Map(options.repositories.repositories.map((repository) => [repository.id, repository]))
+  if (repositories.size !== options.suite.population.length || options.suite.population.some((repositoryId) => !repositories.has(repositoryId))) {
+    throw new Error('Study repository config must contain exactly one root for every task-suite population id.')
+  }
   for (const repository of options.repositories.repositories) {
     const root = resolve(repository.root)
     if (!existsSync(root) || !statSync(root).isDirectory()) throw new Error(`Study repository ${repository.id} is not available at the configured root.`)

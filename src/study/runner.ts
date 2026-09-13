@@ -87,7 +87,7 @@ const RunPlanPayloadSchema = z.object({
   docBridgeVersion: reference,
   models: z.array(ModelConfigSchema).length(2),
   scenarios: z.array(ScenarioConfigSchema).length(3),
-  taskIds: z.array(identifier).length(24),
+  taskIds: z.array(identifier).min(1).max(256),
   sampling: SamplingSchema,
   budget: RunBudgetSchema,
   runId: reference,

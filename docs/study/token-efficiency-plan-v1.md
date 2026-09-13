@@ -5,7 +5,7 @@ description: A versioned, evidence-driven plan for reducing agent token consumpt
 
 # Token efficiency improvement plan
 
-Status: `phase-4-ready`
+Status: `phase-4-pilot-awaiting-verification`
 
 ## Objective
 
@@ -184,6 +184,24 @@ Use fresh samples, randomized arm order, at least two replicates in the pilot,
 and three replicates for confirmation when the pilot has valid semantic
 successes. Report paired medians, P95 values, confidence intervals, subgroup
 results, missing data, and total cost.
+
+The first bounded public pilot is complete as an execution study: 16/16
+provider calls completed across four tasks, two models, and two paired
+scenarios. It measured a 3.15% aggregate reduction in provider-token-equivalent
+units and a 7.53% reduction in duration P95 for the deterministic Doc Bridge
+arm. The result is mixed at the task level, has one replicate, and records no
+currency or semantic-correctness claim. See the [pilot result](./phase4-public-pilot-result-v1.json).
+
+Pilot checklist:
+
+- [x] Remove the fixed six-population/24-task assumption from the reusable
+  runner while preserving the canonical suite.
+- [x] Create a public one-population pilot suite and hashed pairwise plan.
+- [x] Validate the provider and repository inputs with a real dry-run.
+- [x] Execute the bounded 16-observation pilot with both configured models.
+- [x] Record failed preparation runs and the final ledger/configuration hashes.
+- [ ] Run the complete repository verification contract against the pilot source
+  revision.
 
 ### Phase 5 — Product and publication gate
 

@@ -40,6 +40,10 @@ The independent bounded adjudicator recorded **0 semantic successes in both arms
 | [Protocol](./protocol-v1.json) | Metric definitions, scenarios, privacy boundary, and stopping rules. |
 | [Token efficiency protocol v2](./token-efficiency-protocol-v2.json) | Correct-action token metric, evidence gates, and non-regression targets. |
 | [Task suite](./task-suite-v1.json) | Fixed anonymized discovery, architecture, documentation, and implementation tasks. |
+| [Phase 4 public pilot suite](./phase4-public-pilot-task-suite-v1.json) | One public fixture, four tasks, and explicit pilot-only scope for validating the real runner without duplicating a repository. |
+| [Phase 4 public pilot plan](./phase4-public-pilot-run-plan-v1.json) | Hashed 16-observation pairwise pilot using the two configured Codex model slots. |
+| [Phase 4 public pilot ledger](./phase4-public-pilot-ledger-v1.json) | Bounded structured observations with hashes, statuses, provider usage, evidence IDs, and automated adjudication. |
+| [Phase 4 public pilot result](./phase4-public-pilot-result-v1.json) | Anonymized execution counts, paired token/latency measurements, failed preparation runs, and limitations. |
 | [A/B baseline result](./ab-baseline-result-v1.json) | Controlled repository-only versus deterministic Doc Bridge measurements. |
 | [A/B baseline analysis](./ab-baseline-analysis-v1.md) | Human-readable interpretation of the controlled baseline. |
 | [Adjudicated A/B result](./ab-adjudicated-cost-result-v1.json) | Cost-attributed execution and independent bounded adjudication. |
@@ -49,6 +53,8 @@ The independent bounded adjudicator recorded **0 semantic successes in both arms
 | [Historical evidence](./historical-evidence-v1.json) | Earlier anonymized dogfooding and validation-cycle measurements. |
 
 All publication-bound artifacts pass the deterministic privacy gate. The values are intentionally anonymized and should be interpreted together with their provenance and limitations.
+
+The Phase 4 public pilot is intentionally separate from the six-population canonical suite. It is an execution-path and measurement smoke study, not evidence of enterprise-wide documentation quality or generalization. Its local provider and repository configuration stay outside the publication artifacts; only hashes, bounded observations, and the run identifier belong in published evidence.
 
 ## Reproduce the charts
 

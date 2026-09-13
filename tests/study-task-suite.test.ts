@@ -42,6 +42,15 @@ describe('study task suite contracts', () => {
     expect(() => validateStudyTaskSuite(overBudget)).toThrow('exceeds the suite budget')
   })
 
+  it('accepts a bounded reduced pilot without weakening the canonical suite', () => {
+    const source = fixture() as Record<string, unknown>
+    const { contentHash: _contentHash, contentHashAlgo: _contentHashAlgo, ...payload } = source
+    const tasks = (source.tasks as Array<Record<string, unknown>>).slice(0, 4).map((task) => ({ ...task, repositoryId: 'public-fixture' }))
+    const pilot = createStudyTaskSuite({ ...payload, suiteVersion: 'phase4-pilot-v1', population: ['public-fixture'], tasks, maxRuns: 48, replicatesPerTask: 1 })
+    expect(pilot.tasks).toHaveLength(4)
+    expect(pilot.population).toEqual(['public-fixture'])
+  })
+
   it('assigns deterministic balanced variants without changing the execution set', () => {
     const suite = parseStudyTaskSuite(fixture())
     const first = selectTaskExecutions(suite)
