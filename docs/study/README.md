@@ -44,6 +44,7 @@ The independent bounded adjudicator recorded **0 semantic successes in both arms
 | [Phase 4 public pilot plan](./phase4-public-pilot-run-plan-v1.json) | Hashed 16-observation pairwise pilot using the two configured Codex model slots. |
 | [Phase 4 public pilot ledger](./phase4-public-pilot-ledger-v1.json) | Bounded structured observations with hashes, statuses, provider usage, evidence IDs, and automated adjudication. |
 | [Phase 4 public pilot result](./phase4-public-pilot-result-v1.json) | Anonymized execution counts, paired token/latency measurements, failed preparation runs, and limitations. |
+| [Publication gate v1](./publication-gate-v1.md) | Evidence and claim-boundary checks required before publishing study results. |
 | [A/B baseline result](./ab-baseline-result-v1.json) | Controlled repository-only versus deterministic Doc Bridge measurements. |
 | [A/B baseline analysis](./ab-baseline-analysis-v1.md) | Human-readable interpretation of the controlled baseline. |
 | [Adjudicated A/B result](./ab-adjudicated-cost-result-v1.json) | Cost-attributed execution and independent bounded adjudication. |

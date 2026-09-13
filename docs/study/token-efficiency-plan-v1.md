@@ -5,7 +5,7 @@ description: A versioned, evidence-driven plan for reducing agent token consumpt
 
 # Token efficiency improvement plan
 
-Status: `phase-4-pilot-awaiting-verification`
+Status: `phase-5-awaiting-human-publication-review`
 
 ## Objective
 
@@ -200,8 +200,12 @@ Pilot checklist:
 - [x] Validate the provider and repository inputs with a real dry-run.
 - [x] Execute the bounded 16-observation pilot with both configured models.
 - [x] Record failed preparation runs and the final ledger/configuration hashes.
-- [ ] Run the complete repository verification contract against the pilot source
+- [x] Run the complete repository verification contract against the pilot source
   revision.
+
+Phase 4 evidence: run `1789261738722-98752-ulzlls`, source revision
+`f3c91b0bf81fac526dae57987f5851ed8ee94a6e`, and verification digest
+`6a0baa2576dda2f4f3b19adebf430f9bfab1b9ba26a0ee8d3c1071f1ce2d0d3d`.
 
 ### Phase 5 — Product and publication gate
 
@@ -209,6 +213,22 @@ Expose the useful efficiency measurements through the CLI/report without
 exposing private data. Publish only claims supported by the controlled results.
 The report must separate payload reduction, provider-token reduction, and
 tokens-to-correct-action.
+
+The publication gate is defined in [Publication gate v1](./publication-gate-v1.md).
+The current implementation is ready for human publication review; it must not
+be described as a general or enterprise result until that review is recorded.
+
+Phase 5 checklist:
+
+- [x] Expose versioned study metrics through `ak-docs study metrics` with JSON
+  and text output.
+- [x] Publish the bounded pilot ledger and result as anonymized, hashed
+  artifacts.
+- [x] Keep the landing narrative separate for estimated context payload,
+  provider-token measurements, and correctness evidence.
+- [x] Validate the publication artifact set with the privacy gate and the
+  current verification harness.
+- [ ] Record the human publication decision for the public narrative.
 
 ## Initial success thresholds
 
