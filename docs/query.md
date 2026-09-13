@@ -51,6 +51,9 @@ closed instead of exceeding the budget. The response telemetry reports
 `contextBudgetTokens`, `mode`, and `truncated` so a benchmark can distinguish
 an intentionally bounded result from a complete result.
 
+Agent searches default to a compact 32-token budget. Increase it explicitly
+when the task requires additional alternatives or follow-up commands.
+
 The agent shape omits ranking scores because they are diagnostic, not routing
 instructions. `telemetry.contextBytes` and `telemetry.estimatedTokens` measure
 only the selected context fields; `tokenMethod: "estimate"` is explicit and

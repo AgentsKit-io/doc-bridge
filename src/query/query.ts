@@ -26,6 +26,8 @@ export type QueryResult =
   | AgentHandoffV1
   | AgentSearchV1
 
+export const DEFAULT_AGENT_CONTEXT_BUDGET_TOKENS = 32
+
 const handoffForPackage = (
   index: DocBridgeIndexV1,
   id: string,
@@ -154,7 +156,8 @@ export const runQuery = (
           ? `ak-docs query ownership ${m.id} --agent`
           : 'ak-docs list knowledge --text',
       ))]
-      const bounded = boundedAgentContext(agentMatches, nextCommands, req.contextBudgetTokens ?? 256)
+      const budget = req.contextBudgetTokens ?? DEFAULT_AGENT_CONTEXT_BUDGET_TOKENS
+      const bounded = boundedAgentContext(agentMatches, nextCommands, budget)
       const payload: AgentSearchV1 = {
         type: 'agent-search',
         schemaVersion: 1,
@@ -175,7 +178,7 @@ export const runQuery = (
           contextBytes: bounded.contextBytes,
           estimatedTokens: Math.ceil(bounded.contextBytes / 4),
           tokenMethod: 'estimate',
-          contextBudgetTokens: req.contextBudgetTokens ?? 256,
+          contextBudgetTokens: budget,
           mode,
           truncated: bounded.truncated,
         },

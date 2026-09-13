@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "project": "doc-bridge",
   "root": "..",
-  "stateDir": ".codex/verification-0.9",
+  "stateDir": ".codex/verification-0.11",
   "profile": "strict",
   "autonomy": "yolo",
   "contract": {
@@ -63,7 +63,7 @@
     { "id": "historical-study-immutability", "evidence": "structured", "category": "docs", "execution": "real", "command": "git diff --exit-code -- docs/study/protocol-v1.json docs/study/ab-baseline-result-v1.json docs/study/ab-adjudicated-cost-result-v1.json && node -e 'console.log(JSON.stringify({status:\"passed\",criteria:[\"token-efficiency-phase0\"]}))'", "timeoutMs": 30000 },
     { "id": "registry-cli", "evidence": "structured", "category": "logic", "execution": "real", "command": "pnpm vitest run tests/registry-adapter.test.ts && node -e 'console.log(JSON.stringify({status:\"passed\",criteria:[\"registry-cli\"]}))'", "timeoutMs": 120000 },
     { "id": "diff-clean", "evidence": "structured", "category": "custom", "command": "git diff --check && node -e 'console.log(JSON.stringify({status:\"passed\",criteria:[\"documentation\"]}))'", "timeoutMs": 30000 },
-    { "id": "report-ui", "evidence": "structured", "category": "ui", "execution": "real", "capabilities": ["real-browser", "screenshot"], "command": "node scripts/report-visual-check.mjs .doc-bridge/report.html --output .codex/verification-0.9/ui && node -e 'const fs=require(\"node:fs\"); const x=JSON.parse(fs.readFileSync(\".codex/verification-0.9/ui/result.json\",\"utf8\")); console.log(JSON.stringify({status:x.failures?.length?\"failed\":\"passed\",capability:\"real-browser\",artifacts:x.artifacts,criteria:[\"report-ui\"]}))'", "timeoutMs": 180000 }
+    { "id": "report-ui", "evidence": "structured", "category": "ui", "execution": "real", "capabilities": ["real-browser", "screenshot"], "command": "node scripts/report-visual-check.mjs .doc-bridge/report.html --output .codex/verification-0.11/ui && node -e 'const fs=require(\"node:fs\"); const x=JSON.parse(fs.readFileSync(\".codex/verification-0.11/ui/result.json\",\"utf8\")); console.log(JSON.stringify({status:x.failures?.length?\"failed\":\"passed\",capability:\"real-browser\",artifacts:x.artifacts,criteria:[\"report-ui\"]}))'", "timeoutMs": 180000 }
   ],
   "tracking": {
     "required": true,

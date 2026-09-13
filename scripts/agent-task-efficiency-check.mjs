@@ -45,7 +45,7 @@ const run = (term, extraArgs = []) => {
   }
 }
 
-const baseline = tasks.map(([term, expectedId]) => ({ ...run(term), expectedId }))
+const baseline = tasks.map(([term, expectedId]) => ({ ...run(term, ['--context-budget=256']), expectedId }))
 const optimized = tasks.map(([term, expectedId]) => ({ ...run(term, ['--mode=discovery', '--context-budget=32']), expectedId }))
 const observations = baseline.map((observation, index) => ({
   term: observation.term,
