@@ -5,7 +5,7 @@ description: A versioned, evidence-driven plan for reducing agent token consumpt
 
 # Token efficiency improvement plan
 
-Status: `phase-5-awaiting-human-publication-review`
+Status: `complete-with-bounded-publication-claims`
 
 ## Objective
 
@@ -215,8 +215,8 @@ The report must separate payload reduction, provider-token reduction, and
 tokens-to-correct-action.
 
 The publication gate is defined in [Publication gate v1](./publication-gate-v1.md).
-The current implementation is ready for human publication review; it must not
-be described as a general or enterprise result until that review is recorded.
+The current implementation was approved for publication with bounded claims;
+it must not be described as a general or enterprise result.
 
 Phase 5 checklist:
 
@@ -228,7 +228,13 @@ Phase 5 checklist:
   provider-token measurements, and correctness evidence.
 - [x] Validate the publication artifact set with the privacy gate and the
   current verification harness.
-- [ ] Record the human publication decision for the public narrative.
+- [x] Record the human publication decision for the public narrative through
+  the approved verification run `1789262169080-5193-98iuxg`.
+
+Phase 5 evidence: verification digest
+`f29172127a08a425ab0c22730f34e76b11ad6cddf427d109cf5a1d9ad1cda3cd`.
+Publication is approved only for the anonymized, bounded claims described in
+the publication gate; the study does not claim enterprise-wide generalization.
 
 ## Initial success thresholds
 
