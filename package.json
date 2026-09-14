@@ -121,9 +121,16 @@
   "dependencies": {
     "@agentskit/harness": "0.9.0",
     "github-slugger": "^2.0.0",
+    "mdast-util-to-string": "^4.0.0",
     "mermaid": "^11.17.2",
     "minimatch": "^10.2.6",
+    "remark-frontmatter": "^5.0.0",
+    "remark-gfm": "^4.0.1",
+    "remark-parse": "^11.0.0",
     "typescript": "^6.0.3",
+    "unified": "^11.0.5",
+    "unist-util-visit": "^5.1.0",
+    "yaml": "^2.9.0",
     "zod": "^4.5.4"
   },
   "peerDependencies": {
@@ -164,6 +171,7 @@
     "@lhci/cli": "^0.15.1",
     "@playwright/test": "1.62.1",
     "@tailwindcss/postcss": "4.3.3",
+    "@types/mdast": "^4.0.4",
     "@types/node": "^26.4.0",
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.5",

@@ -57,8 +57,21 @@ export const isExported = (node: ts.Node): boolean => {
   return modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword) ?? false
 }
 
+export type ExportedNamesOptions = {
+  /**
+   * Skip names the module only forwards (`export { x } from './y'`).
+   *
+   * A barrel file re-exports hundreds of names it does not define. Treating those as definitions
+   * makes almost every symbol look like it has two owners, which turns an unambiguous reference
+   * into an ambiguous one — so the callers that need "the module that defines this" ask for
+   * declarations only.
+   */
+  readonly declaredOnly?: boolean
+}
+
 /** Every name a module exports, sorted. `*` stands for a star re-export. */
-export const exportedNames = (sourceFile: ts.SourceFile): string[] => {
+export const exportedNames = (sourceFile: ts.SourceFile, options: ExportedNamesOptions = {}): string[] => {
+  const declaredOnly = options.declaredOnly ?? false
   const names = new Set<string>()
   const addDeclarationName = (node: ts.Declaration): void => {
     if (!isExported(node)) return
@@ -68,7 +81,9 @@ export const exportedNames = (sourceFile: ts.SourceFile): string[] => {
 
   const visit = (node: ts.Node): void => {
     if (ts.isExportDeclaration(node)) {
-      if (!node.exportClause) names.add('*')
+      if (declaredOnly && node.moduleSpecifier) {
+        // Forwarded from elsewhere: the other module is the one that defines it.
+      } else if (!node.exportClause) names.add('*')
       else if (ts.isNamedExports(node.exportClause)) {
         for (const element of node.exportClause.elements) names.add(element.name.text)
       }

@@ -35,6 +35,7 @@ Doc Bridge keeps **one repository** useful to people and coding agents. Pick the
 | Study verification | [Study verification v1](./spec/study-verification-v1.md) |
 | A/B baseline result | [A/B baseline result 2026-08-31](./study/ab-baseline-result-v1.json) · [analysis](./study/ab-baseline-analysis-v1.md) |
 | Documentation quality audit | [Documentation audit v1](./spec/documentation-audit-v1.md) |
+| What is read from a Markdown document | [Markdown analyzer v1](./spec/markdown-analyzer-v1.md) |
 | Current documentation audit snapshot | [Audit round 2026-08-31](./study/documentation-audit-round-2026-08-31.json) |
 | Controlled pilot evidence | [Pilot round 2026-08-31](./study/pilot-round-2026-08-31.json) |
 

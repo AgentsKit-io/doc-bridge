@@ -95,12 +95,35 @@ export {
   indexConfigurationHash,
   isProjectedEntry,
   projectRepositoryCorpus,
-  projectedEntityId,
   repositoryInputs,
   type ProjectCorpusOptions,
   type RepositoryCorpus,
   type RepositoryInputsV1,
 } from './index-builder/project-corpus.js'
+export { entityId, relationId } from './discovery/identity.js'
+export {
+  MARKDOWN_ANALYZER_VERSION,
+  MARKDOWN_RELATION_CAP,
+  analyzeMarkdownDocument,
+  declaredAudience,
+  parseMarkdownDocument,
+  type MarkdownAnalysis,
+  type MarkdownDocumentV1,
+  type MarkdownFrontmatter,
+  type MarkdownGeneratedRegion,
+  type MarkdownHeading,
+  type MarkdownNote,
+  type MarkdownReference,
+  type MarkdownResolution,
+} from './discovery/markdown.js'
+export {
+  FUZZY_RESOLUTION_THRESHOLD,
+  fuzzyMatchList,
+  jaro,
+  jaroWinkler,
+  resolveFuzzyReference,
+  type FuzzyMatch,
+} from './lib/fuzzy-match.js'
 export {
   CONFIG_EXTENSIONS,
   DOCUMENT_EXTENSIONS,

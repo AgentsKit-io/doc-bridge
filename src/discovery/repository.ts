@@ -9,6 +9,14 @@ import { detectPackageManager } from '../lib/package-manager.js'
 import { toPosix } from '../lib/paths.js'
 import { contentHashForArtifactV1, sha256NormalizedV1 } from '../index-builder/content-hash.js'
 import { safeWalkFiles } from '../safety/repository.js'
+import { entityId } from './identity.js'
+import {
+  MARKDOWN_ANALYZER_VERSION,
+  analyzeMarkdownDocument,
+  declaredAudience,
+  parseMarkdownDocument,
+  type MarkdownDocumentV1,
+} from './markdown.js'
 import {
   CONFIG_EXTENSIONS,
   DEFAULT_MAX_FILES,
@@ -30,6 +38,8 @@ import {
 const EMPTY_HASH = '0'.repeat(64)
 const DEFAULT_RUNTIME_WIRING_METHODS = ['register', 'use', 'mount', 'attach'] as const
 const TEST_MODULE_PATTERN = /(?:\.test|\.spec|__tests__)/
+/** Coverage is evidence, not a log: past this many notes the list stops informing anyone. */
+const MAX_MARKDOWN_NOTES = 32
 
 type JsonRecord = Record<string, unknown>
 
@@ -77,17 +87,6 @@ const readJson = (path: string): { readonly value?: JsonRecord; readonly error?:
 
 const relativePath = (root: string, path: string): string =>
   toPosix(relative(root, path)) || '.'
-
-const MAX_ID_LENGTH = 256
-const ID_HASH_LENGTH = 32
-
-const entityId = (kind: string, value: string): string => {
-  const fullId = `${kind}:${value}`
-  if (fullId.length <= MAX_ID_LENGTH) return fullId
-
-  const suffix = `:${sha256NormalizedV1(fullId).slice(0, ID_HASH_LENGTH)}`
-  return `${fullId.slice(0, MAX_ID_LENGTH - suffix.length)}${suffix}`
-}
 
 const lineEvidence = (
   source: 'code' | 'configuration' | 'documentation',
@@ -436,11 +435,11 @@ const artifact = (root: string, config: DocBridgeConfigV1 | undefined, files: re
     sourceRevision: revision.value,
     sourceRevisionKind: revision.kind,
     configurationHash: sha256NormalizedV1(config ?? {}),
-    pipelineVersion: '1.1.9',
-    analyzerVersions: { repository: '1.1.1', 'js-ts': '1.3.4' },
+    pipelineVersion: '1.2.0',
+    analyzerVersions: { repository: '1.1.1', 'js-ts': '1.3.4', markdown: MARKDOWN_ANALYZER_VERSION },
     entities: [...entities].sort((a, b) => a.id.localeCompare(b.id)),
     relations: [...relations].sort((a, b) => a.id.localeCompare(b.id)),
-    coverage: coverage.map((entry) => ({ ...entry, analyzerVersion: entry.analyzerVersion ?? ({ repository: '1.1.1', 'js-ts': '1.3.4' }[entry.analyzer] ?? '1.0.0') })),
+    coverage: coverage.map((entry) => ({ ...entry, analyzerVersion: entry.analyzerVersion ?? ({ repository: '1.1.1', 'js-ts': '1.3.4', markdown: MARKDOWN_ANALYZER_VERSION }[entry.analyzer] ?? '1.0.0') })),
   }
   return DiscoverySnapshotV1Schema.parse({ ...base, contentHash: contentHashForArtifactV1(base) })
 }
@@ -491,6 +490,9 @@ export const discoverRepository = (opts: DiscoveryOptions = {}): DiscoverySnapsh
   }
 
   const modules = new Map<string, ModuleInfo>()
+  const modulesByPath = new Map<string, string>()
+  const declaringModules = new Map<string, string[]>()
+  const exportingModules = new Map<string, string[]>()
   for (const absPath of sourcePaths) {
     const path = relativePath(root, absPath)
     const pkg = packageForModule(packageResult.packages, absPath)
@@ -499,13 +501,36 @@ export const discoverRepository = (opts: DiscoveryOptions = {}): DiscoverySnapsh
     const sourceFile = ts.createSourceFile(absPath, text, ts.ScriptTarget.Latest, true, scriptKind(absPath))
     const exports = exportedNames(sourceFile)
     modules.set(resolve(absPath), { absPath, path, entityId: id, ...(pkg ? { packageId: pkg.id } : {}) })
+    modulesByPath.set(path, id)
+    const declared = new Set(exportedNames(sourceFile, { declaredOnly: true }))
+    for (const name of exports) {
+      if (name === '*' || name === 'default') continue
+      const owners = declared.has(name) ? declaringModules : exportingModules
+      const existing = owners.get(name)
+      if (existing) existing.push(id)
+      else owners.set(name, [id])
+    }
     addEntity({ id, kind: 'module', name: basename(absPath), path, provenance: 'observed', evidence: [lineEvidence('code', root, absPath, 1, sourceFile.getLineAndCharacterOfPosition(sourceFile.getEnd()).line + 1)], ...(exports.length ? { metadata: { exports, test: TEST_MODULE_PATTERN.test(path) } } : {}) })
     if (pkg) addRelation({ id: entityId('relation', `${pkg.id}:contains:${id}`), kind: 'contains', from: pkg.id, to: id, provenance: 'observed', evidence: [lineEvidence('code', root, absPath, 1)] })
   }
 
+  /*
+   * Documents are parsed first and added as entities after their relations are known, because
+   * whether a document's references were truncated is part of what the entity has to say.
+   */
+  const markdownDocuments: MarkdownDocumentV1[] = []
+  const documentsByPath = new Map<string, string>()
+  const documentFiles = new Map<string, string>()
+  const unreadableDocuments: string[] = []
   for (const absPath of documentPaths) {
     const path = relativePath(root, absPath)
-    addEntity({ id: entityId('document', path), kind: 'document', name: basename(absPath), path, provenance: 'observed', evidence: [lineEvidence('documentation', root, absPath, 1)], metadata: { classification: documentClassification(path) } })
+    documentsByPath.set(path, entityId('document', path))
+    documentFiles.set(path, absPath)
+    try {
+      markdownDocuments.push(parseMarkdownDocument(path, readFileSync(absPath, 'utf8')))
+    } catch {
+      unreadableDocuments.push(path)
+    }
   }
 
   const compiler = readCompilerOptions(root)
@@ -518,6 +543,100 @@ export const discoverRepository = (opts: DiscoveryOptions = {}): DiscoverySnapsh
     { analyzer: 'js-ts', scope: 'runtime-wiring', status: 'not-applicable', reason: 'No configured runtime-wiring call was observed.' },
     { analyzer: 'js-ts', scope: 'generated-code', status: 'not-analyzed', reason: 'Generated code is not interpreted as source architecture.' },
   ]
+
+  /*
+   * What the documentation says, as edges.
+   *
+   * A link to another document, a path in inline code, an exported name in backticks: each is a
+   * claim the repository makes about itself, with a line number to check it against. Package
+   * names resolve by their manifest name and, when unambiguous, by their directory name.
+   */
+  const packageNames = new Map<string, string>()
+  const shortNames = new Map<string, string[]>()
+  for (const pkg of packageResult.packages) {
+    if (pkg.name) packageNames.set(pkg.name, pkg.id)
+    const short = pkg.name?.split('/').pop() ?? pkg.path.split('/').pop()
+    if (short) {
+      const owners = shortNames.get(short)
+      if (owners) owners.push(pkg.id)
+      else shortNames.set(short, [pkg.id])
+    }
+  }
+  for (const [short, owners] of shortNames) {
+    if (owners.length === 1 && owners[0] && !packageNames.has(short)) packageNames.set(short, owners[0])
+  }
+
+  /*
+   * A symbol resolves to the module that declares it. Only when nothing declares it — a type
+   * forwarded through a barrel, say — do the re-exporting modules stand in, and then only if
+   * there is exactly one of them.
+   */
+  const symbolModules = new Map<string, readonly string[]>()
+  for (const [name, owners] of declaringModules) symbolModules.set(name, owners)
+  for (const [name, owners] of exportingModules) if (!symbolModules.has(name)) symbolModules.set(name, owners)
+
+  const markdownResolution = {
+    documents: documentsByPath,
+    modules: modulesByPath,
+    packages: packageNames,
+    symbols: symbolModules,
+  }
+  const markdownNotes: { readonly scope: string; readonly reason: string; readonly evidence: readonly Evidence[] }[] = []
+  const truncatedDocuments = new Set<string>()
+  for (const document of markdownDocuments) {
+    const analysis = analyzeMarkdownDocument(document, entityId('document', document.path), markdownResolution)
+    for (const relation of analysis.relations) addRelation(relation)
+    markdownNotes.push(...analysis.notes)
+    if (analysis.truncated) truncatedDocuments.add(document.path)
+  }
+
+  const parsedDocuments = new Map(markdownDocuments.map((document) => [document.path, document]))
+  for (const [path, absPath] of documentFiles) {
+    const parsed = parsedDocuments.get(path)
+    addEntity({
+      id: entityId('document', path),
+      kind: 'document',
+      name: basename(absPath),
+      path,
+      provenance: 'observed',
+      evidence: [
+        {
+          ...lineEvidence('documentation', root, absPath, 1),
+          ...(parsed ? { contentHash: parsed.contentHash } : {}),
+        },
+      ],
+      metadata: {
+        classification: (parsed && declaredAudience(parsed.frontmatter)) ?? documentClassification(path),
+        ...(parsed?.title ? { title: parsed.title } : {}),
+        ...(parsed?.headings.length ? { headings: parsed.headings } : {}),
+        ...(parsed?.summary ? { summary: parsed.summary } : {}),
+        ...(parsed ? { wordCount: parsed.wordCount } : {}),
+        ...(parsed && Object.keys(parsed.frontmatter).length ? { frontmatter: parsed.frontmatter } : {}),
+        ...(parsed?.generatedRegions.length ? { generatedRegions: parsed.generatedRegions } : {}),
+        ...(truncatedDocuments.has(path) ? { evidenceTruncated: true } : {}),
+      },
+    })
+  }
+
+  coverage.push({
+    analyzer: 'markdown',
+    scope: 'documentation-relations',
+    status: unreadableDocuments.length ? 'partial' : 'complete',
+    reason: unreadableDocuments.length
+      ? `${unreadableDocuments.length} document(s) could not be read: ${unreadableDocuments.slice(0, 4).join(', ')}.`
+      : `Parsed ${markdownDocuments.length} document(s) for links, mentions and exported-symbol references.`,
+  })
+  for (const note of markdownNotes.slice(0, MAX_MARKDOWN_NOTES)) {
+    coverage.push({ analyzer: 'markdown', scope: note.scope, status: 'partial', reason: note.reason, evidence: [...note.evidence.slice(0, 32)] })
+  }
+  if (markdownNotes.length > MAX_MARKDOWN_NOTES) {
+    coverage.push({
+      analyzer: 'markdown',
+      scope: 'documentation-relations:notes',
+      status: 'partial',
+      reason: `${markdownNotes.length - MAX_MARKDOWN_NOTES} further ambiguous or truncated reference(s) were not listed.`,
+    })
+  }
 
   for (const pkg of packageResult.packages) {
     const text = readFileSync(pkg.manifestPath, 'utf8')

@@ -65,6 +65,14 @@ Rerunning an unchanged command reuses valid stage artifacts. A changed source re
 
 The first implementation analyzes JavaScript/TypeScript and Markdown. Other languages should add analyzers that emit the same canonical entity, relation, evidence, coverage, and hash contracts.
 
+## What the Markdown analyzer reads
+
+Documentation is parsed with remark (CommonMark plus GFM), so a document's own prose becomes
+evidence: links between documents, paths and package names in inline code, and exported names all
+become `observed` relations carrying the line they were claimed on. The contract — relation kinds,
+the ambiguity and near-miss rules, generated regions, the document fields and the `docbridge`
+schema — is [Markdown analyzer v1](./spec/markdown-analyzer-v1.md).
+
 ## Relation coverage policy
 
 Agent documents under the configured `corpus.agent.root` may use the conventional

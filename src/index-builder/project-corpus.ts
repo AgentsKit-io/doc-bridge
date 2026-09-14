@@ -3,6 +3,7 @@ import { basename, extname, relative, resolve, sep } from 'node:path'
 import * as ts from 'typescript'
 
 import type { DocBridgeConfigV1 } from '../config/schema.js'
+import { entityId } from '../discovery/identity.js'
 import {
   DOCUMENT_EXTENSIONS,
   SOURCE_EXTENSIONS,
@@ -120,17 +121,6 @@ const classifyInput = (path: string, name: string): InputFile['kind'] | undefine
   return CONFIG_INPUT_PATTERN.test(path) ? 'configuration' : undefined
 }
 
-const MAX_ID_LENGTH = 256
-const ID_HASH_LENGTH = 32
-
-/** Matches the discovery snapshot's entity identity, so the two can be joined on id. */
-export const projectedEntityId = (kind: string, value: string): string => {
-  const fullId = `${kind}:${value}`
-  if (fullId.length <= MAX_ID_LENGTH) return fullId
-  const suffix = `:${sha256NormalizedV1(fullId).slice(0, ID_HASH_LENGTH)}`
-  return `${fullId.slice(0, MAX_ID_LENGTH - suffix.length)}${suffix}`
-}
-
 const TEST_MODULE_PATTERN = /(?:\.test|\.spec|__tests__)/
 
 const tagList = (values: readonly (string | undefined)[]): string[] =>
@@ -145,7 +135,7 @@ const documentEntry = (file: InputFile, raw: string, contentHash: string): Knowl
     firstParagraph(raw, MAX_DESCRIPTION)
   const body = extractSearchBody(raw, DOCUMENT_BODY_LIMIT)
   return {
-    id: projectedEntityId('document', file.path),
+    id: entityId('document', file.path),
     type: 'document',
     title: title.slice(0, 256),
     path: file.path,
@@ -169,7 +159,7 @@ const moduleEntry = (file: InputFile, raw: string, contentHash: string): Knowled
     .slice(0, MAX_SYMBOLS)
   const area = file.path.split('/').slice(0, -1).pop()
   return {
-    id: projectedEntityId('module', file.path),
+    id: entityId('module', file.path),
     type: 'module',
     title: basename(file.path),
     path: file.path,

@@ -39,7 +39,12 @@ describe('repository discovery', () => {
     expect(entityIds).toContain('package:@fixture/app')
     expect(entityIds).toContain('module:packages/app/src/index.ts')
     expect(entityIds).toContain('document:docs/architecture.md')
-    expect(snapshot.entities.find((entity) => entity.id === 'document:docs/architecture.md')?.metadata).toEqual({ classification: 'human' })
+    expect(snapshot.entities.find((entity) => entity.id === 'document:docs/architecture.md')?.metadata).toEqual({
+      classification: 'human',
+      title: 'Architecture',
+      headings: [{ depth: 1, text: 'Architecture', line: 1 }],
+      wordCount: 1,
+    })
     expect(entityIds).toContain('external:external-lib')
     expect(relationKinds).toContain('contains')
     expect(relationKinds).toContain('imports')
@@ -55,7 +60,12 @@ describe('repository discovery', () => {
     writeFileSync(join(root, 'docs-archive', 'legacy.md'), '# Legacy\n')
 
     const document = discoverRepository({ root }).entities.find((entity) => entity.id === 'document:docs-archive/legacy.md')
-    expect(document?.metadata).toEqual({ classification: 'archive' })
+    expect(document?.metadata).toEqual({
+      classification: 'archive',
+      title: 'Legacy',
+      headings: [{ depth: 1, text: 'Legacy', line: 1 }],
+      wordCount: 1,
+    })
   })
 
   it('makes unsupported dynamic behavior explicit and remains deterministic', () => {
