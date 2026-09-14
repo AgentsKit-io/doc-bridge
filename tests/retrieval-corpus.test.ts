@@ -2,7 +2,7 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { applyConfigDefaults } from '../src/config/defaults.js'
 import { DocBridgeConfigV1Schema, type DocBridgeConfigV1 } from '../src/config/schema.js'
@@ -13,9 +13,9 @@ import {
   CORPUS_PROJECTION_VERSION,
   indexConfigurationHash,
   isProjectedEntry,
-  projectRepositoryCorpus,
   repositoryInputs,
 } from '../src/index-builder/project-corpus.js'
+import type { DocBridgeIndexV1 } from '../src/schemas/doc-bridge-index.js'
 import { IndexStaleError, loadFreshDocBridgeIndex } from '../src/query/load-index.js'
 import { searchIndex } from '../src/query/search.js'
 import {
@@ -31,6 +31,9 @@ import { DEFAULT_SEARCH_WEIGHTS, resolveSearchWeights } from '../src/retrieval/w
 
 const repositoryRoot = process.cwd()
 
+// The repository-level tests scan and project this whole repository; the first one pays for it.
+vi.setConfig({ testTimeout: 30_000 })
+
 const repositoryConfig = (): DocBridgeConfigV1 =>
   applyConfigDefaults(
     DocBridgeConfigV1Schema.parse(
@@ -38,6 +41,11 @@ const repositoryConfig = (): DocBridgeConfigV1 =>
       JSON.parse(readFileSync(join(repositoryRoot, 'doc-bridge.config.json'), 'utf8')) as unknown,
     ),
   )
+
+/** The repository's own index, built once per file: a scan and a projection of everything here. */
+let cachedRepositoryIndex: DocBridgeIndexV1 | undefined
+const repositoryIndex = (): DocBridgeIndexV1 =>
+  (cachedRepositoryIndex ??= buildDocBridgeIndex({ root: repositoryRoot, config: repositoryConfig(), write: false }).index)
 
 const temporary: string[] = []
 
@@ -184,9 +192,8 @@ describe('search lexicon', () => {
 describe('repository corpus projection', () => {
   // Discovery parses every source file in the repository; that is the point of the comparison.
   it('projects every document the discovery snapshot observed', () => {
-    const config = repositoryConfig()
-    const snapshot = discoverRepository({ root: repositoryRoot, config })
-    const index = buildDocBridgeIndex({ root: repositoryRoot, config, write: false }).index
+    const snapshot = discoverRepository({ root: repositoryRoot, config: repositoryConfig() })
+    const index = repositoryIndex()
     const indexed = new Set(index.knowledge.map((entry) => entry.path))
 
     const documents = snapshot.entities.filter((entity) => entity.kind === 'document')
@@ -199,12 +206,11 @@ describe('repository corpus projection', () => {
   }, 30_000)
 
   it('gives every projected entry a content hash and tags, and a module its symbols', () => {
-    const config = repositoryConfig()
-    const { entries } = projectRepositoryCorpus(repositoryRoot, config)
+    const index = repositoryIndex()
+    const entries = index.knowledge.filter(isProjectedEntry)
     expect(entries.length).toBeGreaterThan(100)
     expect(entries.every((entry) => /^[a-f0-9]{64}$/.test(entry.contentHash ?? ''))).toBe(true)
     expect(entries.every((entry) => (entry.tags ?? []).length > 0)).toBe(true)
-    expect(entries.every(isProjectedEntry)).toBe(true)
 
     const reconcile = entries.find((entry) => entry.path === 'src/reconciliation/reconcile.ts')
     expect(reconcile?.symbols).toContain('reconcileKnowledge')
@@ -213,7 +219,9 @@ describe('repository corpus projection', () => {
     const document = entries.find((entry) => entry.path === 'docs/bench/README.md')
     expect(document?.type).toBe('document')
     expect(document?.tags).toContain('human')
-    expect(document?.body?.length).toBeGreaterThan(0)
+    // Body text lives once, in the projection; the legacy record carries none.
+    expect(document?.body).toBeUndefined()
+    expect(index.projection?.entries.find((entry) => entry.path === 'docs/bench/README.md')?.fields.body.length).toBeGreaterThan(0)
   })
 
   it('hashes the same inputs identically and notices a changed file', () => {
@@ -255,6 +263,7 @@ describe('index metadata', () => {
       lookup: index.lookup,
       retrieval: index.retrieval,
       inputs: index.inputs,
+      projection: index.projection?.contentHash,
     }
     expect(sha256NormalizedV1(payload)).toBe(index.contentHash)
     expect(
@@ -289,22 +298,19 @@ describe('index metadata', () => {
 
 describe('ranking', () => {
   it('returns nothing for a query made only of stopwords', () => {
-    const config = repositoryConfig()
-    const index = buildDocBridgeIndex({ root: repositoryRoot, config, write: false }).index
+    const index = repositoryIndex()
     expect(searchIndex(index, 'and')).toEqual([])
     expect(searchIndex(index, 'how to the of')).toEqual([])
   })
 
   it('resolves an exported symbol to the module that defines it', () => {
-    const config = repositoryConfig()
-    const index = buildDocBridgeIndex({ root: repositoryRoot, config, write: false }).index
+    const index = repositoryIndex()
     expect(searchIndex(index, 'reconcileKnowledge')[0]?.id).toBe('module:src/reconciliation/reconcile.ts')
     expect(searchIndex(index, 'buildDocBridgeIndex')[0]?.id).toBe('module:src/index-builder/build-index.ts')
   })
 
   it('resolves a repository path to that file or its area', () => {
-    const config = repositoryConfig()
-    const index = buildDocBridgeIndex({ root: repositoryRoot, config, write: false }).index
+    const index = repositoryIndex()
     expect(searchIndex(index, 'src/mcp/server.ts')[0]?.id).toBe('module:src/mcp/server.ts')
     expect(searchIndex(index, 'src/query/search.ts')[0]?.path).toBe('src/query/search.ts')
   })
@@ -374,8 +380,7 @@ describe('ranking', () => {
   })
 
   it('spends no context on a query nothing answers', () => {
-    const config = repositoryConfig()
-    const index = buildDocBridgeIndex({ root: repositoryRoot, config, write: false }).index
+    const index = repositoryIndex()
     expect(searchIndex(index, 'zxqvnomatch987654321')).toEqual([])
   })
 })

@@ -4,7 +4,9 @@ export const HANDOFF_SCHEMA_VERSION = 1 as const
 
 export const HandoffTargetTypeSchema = z.enum([
   'package',
+  'area',
   'module',
+  'document',
   'app',
   'screen',
   'flow',
@@ -38,6 +40,20 @@ export const HandoffBridgeSchema = z
 
 export type HandoffBridge = z.infer<typeof HandoffBridgeSchema>
 
+/** An area or package this target's code depends on, or that depends on it, with what proves it. */
+export const HandoffRelatedSchema = z
+  .object({
+    id: z.string().min(1).max(256),
+    path: z.string().min(1).max(512),
+    direction: z.enum(['imports', 'imported-by']),
+    /** How many import edges cross the boundary. */
+    strength: z.number().int().positive(),
+    evidence: z.array(z.string().min(1).max(512)).max(8),
+  })
+  .strict()
+
+export type HandoffRelated = z.infer<typeof HandoffRelatedSchema>
+
 /** v1 — canonical AgentHandoff. Legacy payloads may omit schemaVersion. */
 export const AgentHandoffV1Schema = z
   .object({
@@ -53,6 +69,29 @@ export const AgentHandoffV1Schema = z
     bridge: HandoffBridgeSchema.optional(),
     playbookPatterns: z.array(z.string().url()).max(16).optional(),
     notes: z.array(z.string().min(1).max(1024)).max(16),
+    /*
+     * Optional additions, so a handoff built before they existed is still a valid handoff and a
+     * reader that predates them sees the same fields it always did.
+     */
+    related: z.array(HandoffRelatedSchema).max(16).optional(),
+    /** Which relations produced each field, by field name. */
+    explain: z.record(z.string().min(1).max(64), z.array(z.string().min(1).max(512)).max(16)).optional(),
+    evidence: z
+      .array(
+        z
+          .object({
+            source: z.enum(['code', 'configuration', 'documentation', 'agent', 'derived']),
+            path: z.string().min(1).max(512),
+            lineStart: z.number().int().positive().optional(),
+            lineEnd: z.number().int().positive().optional(),
+            contentHash: z.string().regex(/^[a-f0-9]{64}$/).optional(),
+            context: z.string().max(1_024).optional(),
+          })
+          .strict(),
+      )
+      .max(32)
+      .optional(),
+    metadata: z.record(z.string().min(1).max(64), z.unknown()).optional(),
   })
   .strict()
 

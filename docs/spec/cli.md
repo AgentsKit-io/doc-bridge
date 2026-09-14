@@ -58,8 +58,8 @@ pnpm add -D @agentskit/doc-bridge
 | `ak-docs doctor [--text] [--badge] [--write-badge]` | Coverage score, gaps, gates, shields.io badge |
 | `ak-docs index` | Build `DocBridgeIndex` + optional `llms.txt` |
 | `ak-docs index --watch` | Debounced rebuild on agent/human doc changes |
-| `ak-docs query <target> [--agent] [--text]` | Resolve package/module/intent/change → handoff JSON or text |
-| `ak-docs search <term> [--agent] [--text]` | Full-text search over index |
+| `ak-docs query <target> [--agent] [--text]` | Resolve package/area/module/document/intent/change → handoff JSON or text |
+| `ak-docs search <term> [--agent] [--explain] [--text]` | Ranked search over the retrieval projection; `--explain` names every scoring component and the matched terms |
 | `ak-docs ask <question>` | Human-readable local consult mode: search + best match + next handoff commands; no LLM |
 | `ak-docs ask` | Interactive local REPL in a TTY; commands: `search <term>`, `read <id-or-path>`, `open <id-or-path>`, `resolve <id>`, `gate [id]`, `exit` |
 | `ak-docs retrieve <query>` | Hybrid local/federated retriever chunks; deterministic local first |

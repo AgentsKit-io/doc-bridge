@@ -6,6 +6,7 @@ import type { DocBridgeIndexV1 } from '../schemas/doc-bridge-index.js'
 import { parseDocBridgeIndex } from '../validate.js'
 import { buildDocBridgeIndex } from '../index-builder/build-index.js'
 import { repositoryInputs } from '../index-builder/project-corpus.js'
+import { GRAPH_ANALYZER_VERSION } from '../graph/build.js'
 import { SEARCH_LEXICON_VERSION } from './text.js'
 
 export class IndexNotFoundError extends Error {
@@ -49,10 +50,19 @@ export const loadFreshDocBridgeIndex = (root: string, config: DocBridgeConfigV1)
 
   if (index.inputs && index.retrieval) {
     const inputs = repositoryInputs(root, config)
+    /*
+     * The projection is a function of the snapshot, the overlay and the configuration under a
+     * given lexicon and graph-metrics version; a change to either version changes ranking without
+     * changing a file, so both are checked next to the inputs.
+     */
+    const projectionFresh =
+      !index.projection ||
+      (index.projection.lexiconVersion === SEARCH_LEXICON_VERSION && index.projection.graphMetricsVersion === GRAPH_ANALYZER_VERSION)
     const fresh =
       index.inputs.hash === inputs.hash &&
       index.inputs.projectionVersion === inputs.projectionVersion &&
-      index.retrieval.lexiconVersion === SEARCH_LEXICON_VERSION
+      index.retrieval.lexiconVersion === SEARCH_LEXICON_VERSION &&
+      projectionFresh
     if (!fresh) throw new IndexStaleError(indexFilePath(root, config), index.inputs.hash, inputs.hash)
     return index
   }

@@ -149,7 +149,7 @@ Core (no API key):
   ak-docs fix approve|apply <proposal.json> [--by <name>]
   ak-docs suggest [--documentation] [--json|--text]   run the configured Registry agent
   ak-docs query [package|ownership|intent|change] <id> [--agent] [--text]
-  ak-docs search <term> [--agent] [--text]
+  ak-docs search <term> [--agent] [--explain] [--text]
   ak-docs list <packages|intents|changes|knowledge> [--text]
   ak-docs ask [question]          local consult (no LLM)
   ak-docs gate run [gate-id]
@@ -326,10 +326,23 @@ const formatSearchMatch = (match: {
   readonly path: string
   readonly summary?: string
   readonly score?: number
+  readonly confidence?: string
+  readonly explain?: { readonly matched: Readonly<Record<string, readonly string[]>>; readonly components: Readonly<Record<string, number>>; readonly surfacedBy?: { readonly kind: string; readonly id: string } }
 }): string => {
   const summary = match.summary ? match.summary.replace(/\s+/g, ' ').slice(0, 100) : ''
   const score = typeof match.score === 'number' ? ` score=${match.score}` : ''
-  return `  [${match.type}] ${match.id}${score}\n    ${match.path}${summary ? `\n    ${summary}` : ''}`
+  const confidence = match.confidence ? ` confidence=${match.confidence}` : ''
+  const lines = [`  [${match.type}] ${match.id}${score}${confidence}`, `    ${match.path}`, ...(summary ? [`    ${summary}`] : [])]
+  if (match.explain) {
+    // Every component with a contribution, so a wrong ranking is reportable with numbers.
+    const parts = Object.entries(match.explain.components).filter(([name, value]) => value !== 0 && name !== 'prior').map(([name, value]) => `${name}=${value}`)
+    if (match.explain.components.prior !== undefined && match.explain.components.prior !== 1) parts.push(`prior=×${match.explain.components.prior}`)
+    const matched = Object.entries(match.explain.matched).map(([field, terms]) => `${field}: ${terms.join(', ')}`)
+    lines.push(`    why: ${parts.join(' ') || 'no scoring component'}`)
+    if (matched.length) lines.push(`    matched: ${matched.join(' | ')}`)
+    if (match.explain.surfacedBy) lines.push(`    via: ${match.explain.surfacedBy.kind} from ${match.explain.surfacedBy.id}`)
+  }
+  return lines.join('\n')
 }
 
 const writeTextSearch = (
@@ -1636,7 +1649,7 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
     try {
       const { config, root } = loadProject(configPath)
       const index = loadFreshDocBridgeIndex(root, config)
-      const result = runQuery(index, config, { kind, id, agent: flags.has('--agent') })
+      const result = runQuery(index, config, { kind, id, agent: flags.has('--agent') }, { root })
       if (wantsTextOutput(flags, config)) writeTextQuery(result)
       else writeJson(result)
       return 0
@@ -1655,11 +1668,12 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
     try {
       const { config, root } = loadProject(configPath)
         const index = loadFreshDocBridgeIndex(root, config)
+      const explain = flags.has('--explain')
       if (flags.has('--agent')) {
-        const result = runQuery(index, config, { kind: 'search', term, agent: true })
+        const result = runQuery(index, config, { kind: 'search', term, agent: true, ...(explain ? { explain: true } : {}) })
         writeJson(result)
       } else {
-        const matches = searchIndex(index, term)
+        const matches = searchIndex(index, term, 20, explain ? { explain: true } : {})
         if (wantsTextOutput(flags, config)) writeTextSearch(term, matches)
         else writeJson({ term, count: matches.length, matches })
       }

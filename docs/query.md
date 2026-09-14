@@ -32,6 +32,13 @@ An **AgentHandoff** (v1) with stable fields:
 | `editRoots` | Allowed write paths |
 | `checks` | Verification commands |
 | `humanDoc` | Parallel human documentation |
+| `related` | The areas this unit's code depends on and that depend on it, with the import that proves each |
+| `explain` | Which relation produced each field |
+
+A handoff answers for a package, an area, a module or a document — by ownership id, entity id,
+alias or path (`ak-docs query ownership src/query --agent` works). `startHere` is the document that
+covers the target, then one that mentions it, then one linking to those; `checks` report their
+origin in `metadata.checksSource`. See [Retrieval index v1](./spec/retrieval-index-v1.md#handoffs-for-any-entity).
 
 Schema: [AgentHandoff v1](./schemas/agent-handoff-v1.md) · Index: [DocBridgeIndex v1](./schemas/doc-bridge-index-v1.md)
 
@@ -47,18 +54,24 @@ nothing better matches without crowding an ordinary question.
 
 ## How results are ranked
 
-Ranking is deterministic — no model, no embeddings — and has three parts.
+Ranking is deterministic — no model, no embeddings — and reads the
+[retrieval projection](./spec/retrieval-index-v1.md) of the snapshot: every document, module,
+area and package discovery observed, plus the routes the configuration declares. Each result carries
+evidence, provenance and a confidence.
 
-**Evidence** is field-weighted BM25 over each record's id, exported symbols, title, path, tags,
-description and body. BM25 is what makes a term appearing in nearly every document worth almost
+**Evidence** is field-weighted BM25 over each entry's title, headings, exported symbols, path,
+aliases, summary and body. BM25 is what makes a term appearing in nearly every document worth almost
 nothing, and a term in a short title worth more than the same term buried in a long body. Weights
 and parameters are [configuration](./spec/config-v1.md#retrieval-optional), recorded in the index
 so a retuned ranking is a visibly different artifact.
 
-**Identity** boosts a record the query names rather than describes: an exact id, an exact file
-path, a directory, or an exported symbol. This is why `reconcileKnowledge` resolves to the module
-that exports it and `src/mcp/server.ts` resolves to that file, instead of to whichever document
-mentions them most often.
+**Identity** boosts a record the query names rather than describes: an exact id or alias, an exact
+file path, a directory, or an exported symbol. This is why `reconcileKnowledge` resolves to the
+module that exports it and `src/mcp/server.ts` resolves to that file, instead of to whichever
+document mentions them most often.
+
+**Graph** signals come from the snapshot's relations: proximity to what the query clearly found,
+and canonicality — the page other pages point at outranks the leaf that mentions the same thing.
 
 **Priors** nudge toward the kind of record the query shape asks for — an ownership route for a
 routing question, a module for a symbol or path, a document for a sentence. They multiply the
@@ -67,6 +80,10 @@ never invent an answer, only order the ones that exist.
 
 Results below a third of the best score are dropped. Retrieval exists to spend fewer tokens, and
 a list of weak matches spends them for nothing.
+
+`ak-docs search <term> --explain` names every scoring component with its contribution and the
+terms that matched in each field, so a wrong ranking is reportable as a bug rather than argued as
+an opinion. Explaining never changes the ranking.
 
 ### What the lexicon does
 

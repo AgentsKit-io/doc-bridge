@@ -5,17 +5,17 @@ import type { Bm25FieldWeights, Bm25Params } from './bm25.js'
  *
  * These are a starting point, not a truth: they live in the index so a repository can retune
  * retrieval from configuration, and a tuning change shows up as a changed artifact rather than a
- * silent behaviour change. `symbols` sits near the top because an agent that types an exported
- * name wants the module that defines it; `body` sits at the bottom because a passing mention in
- * prose is the weakest evidence a record is the answer.
+ * silent behaviour change. `title` sits at the top because a record is about what its title says;
+ * `aliases` carries the ids a record answers to; `body` sits at the bottom because a passing
+ * mention in prose is the weakest evidence a record is the answer.
  */
 export const DEFAULT_SEARCH_WEIGHTS: Bm25FieldWeights = {
-  id: 8,
-  symbols: 7,
-  title: 6,
-  path: 4,
-  tags: 3,
-  description: 2,
+  title: 4,
+  headings: 3,
+  symbols: 3,
+  path: 2,
+  aliases: 2,
+  summary: 2,
   body: 1,
 }
 

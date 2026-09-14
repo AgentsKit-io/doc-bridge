@@ -242,6 +242,12 @@ const resolveEntity = (
    */
   const ownedAreas = entities.filter((entity) => entity.kind === 'area' && entity.metadata?.ownershipId === reference)
   if (ownedAreas.length === 1 && ownedAreas[0]) return ownedAreas[0]
+
+  // A path the repository knows an area, a module or a document by names that thing.
+  const path = reference.replace(/^\.\//, '').replace(/\/$/, '')
+  const byPath = entities.filter((entity) => (entity.kind === 'area' || entity.kind === 'module' || entity.kind === 'document') && entity.path === path)
+  if (byPath.length === 1 && byPath[0]) return byPath[0]
+
   const id = `unresolved:${reference}`
   const existing = unresolved.get(id)
   if (existing) return existing

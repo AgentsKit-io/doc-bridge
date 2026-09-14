@@ -9,12 +9,21 @@ humanDoc: /docs/query
 
 Owns deterministic package and document resolution. Prefer an explicit miss over an invented answer.
 
-Ranking is field-weighted BM25 (`src/retrieval/bm25.ts`) plus absolute boosts for exact identity
-and multiplicative priors for query shape. Keep the split: a prior must never be able to rank a
-record that matched nothing, and an exact id, path or exported symbol must win over prose that
-mentions it. One tokenizer (`searchTokens`) serves both indexing and querying — never tokenize
-one side differently. Changing the stopword lists, folding, or token expansion means bumping
-`SEARCH_LEXICON_VERSION`, because the index records it and the artifact hash depends on it.
+Ranking (`src/retrieval/rank.ts`) reads the retrieval projection (`src/retrieval/project.ts`),
+which is a function of the snapshot: never add a scanner to the query path, and never import
+anything under `src/agents` from it. The score is field-weighted BM25 times a prior, plus absolute
+boosts for exact identity, plus graph proximity and canonicality; every component is reported by
+`--explain`, and explaining must never change the ranking. Keep the split: a prior must never be
+able to rank a record that matched nothing, an exact id, path or exported symbol must win over
+prose that mentions it, and a result only a relation surfaced earns proximity and nothing else. One
+tokenizer (`searchTokens`) serves both indexing and querying — never tokenize one side differently.
+Changing the stopword lists, folding, or token expansion means bumping `SEARCH_LEXICON_VERSION`,
+because the index records it and the artifact hash depends on it.
+
+Handoffs (`src/query/handoff.ts`) are derived from the projection's graph for any entity — package,
+area, module, document — and every field says which relation produced it. `checks` must report
+their origin in `metadata.checksSource`; `startHere` prefers a document that covers the target over
+one that mentions it.
 
 Re-run `pnpm bench:retrieval` after any ranking change; a hit@3 regression is a blocked change,
 not a judgement call.

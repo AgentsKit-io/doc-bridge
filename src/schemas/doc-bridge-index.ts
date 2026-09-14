@@ -1,6 +1,7 @@
 import { z } from 'zod'
 
 import { AgentHandoffLegacySchema } from './agent-handoff.js'
+import { RetrievalIndexV1Schema } from './retrieval-index.js'
 
 export const INDEX_SCHEMA_VERSION = 1 as const
 
@@ -49,6 +50,8 @@ export const OwnershipRecordSchema = z
     layer: z.string().min(1).max(32).optional(),
     purpose: z.string().max(1024).optional(),
     checks: z.array(z.string().min(1).max(256)).max(32),
+    /** Where `checks` came from, decided where the decision is made rather than guessed later. */
+    checksSource: z.enum(['ownership', 'frontmatter', 'package-scripts', 'default']).optional(),
     agentDoc: z.string().min(1).max(512).optional(),
     humanDoc: z.string().min(1).max(512).optional(),
     readme: z.string().min(1).max(512).optional(),
@@ -136,6 +139,11 @@ export const DocBridgeIndexV1Schema = z
     lookup: IndexLookupSchema.optional(),
     inputs: RepositoryInputsSchema.optional(),
     retrieval: RetrievalMetadataSchema.optional(),
+    /**
+     * The retrieval projection of the snapshot: what ranking reads. `knowledge[]` stays for every
+     * reader that predates it, and the two describe the same entries.
+     */
+    projection: RetrievalIndexV1Schema.optional(),
   })
   .strict()
 

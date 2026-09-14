@@ -1,7 +1,7 @@
 {
   "type": "retrieval-benchmark-baseline",
   "schemaVersion": 1,
-  "contentHash": "0ac68119cb1f55cb5535a600fea6a84131c6707d568e0f5fcf2bb7eb13313083",
+  "contentHash": "1fd663a565dfc9c1e19a12139d45f11a7a628ad5d0fec4e549c6148056c3ac3a",
   "contentHashAlgo": "sha256-normalized-v1",
   "suite": {
     "name": "doc-bridge-retrieval-v1",
@@ -10,19 +10,19 @@
   },
   "metrics": {
     "caseCount": 60,
-    "hitAt1": 0.766667,
-    "hitAt3": 0.833333,
-    "meanReciprocalRank": 0.812103,
-    "meanContextBytes": 343,
-    "meanApproxTokens": 86,
-    "zeroResultRate": 0.05,
+    "hitAt1": 0.783333,
+    "hitAt3": 0.883333,
+    "meanReciprocalRank": 0.827593,
+    "meanContextBytes": 428,
+    "meanApproxTokens": 108,
+    "zeroResultRate": 0.066667,
     "tokenMethod": "approximate"
   },
   "approval": {
-    "approvedAt": "2026-09-14T16:34:06.074Z",
+    "approvedAt": "2026-09-14T20:12:19.833Z",
     "approvedBy": "Emerson Braun",
-    "reason": "KR-01 projects the repository corpus into the index and ranks it with field-weighted BM25",
-    "resultHash": "304faa24b37f1dc6277e999cfc4c6671ef2228b760f4f3d9afcf69f807f3f007",
-    "indexHash": "c440fe16bb2724518541228b9956d9701f62badd1db00e9ee1d8c06d4f435211"
+    "reason": "KR-06 ranks the retrieval projection of the snapshot with graph signals; hit@3 83.3% to 88.3%",
+    "resultHash": "77dbbd006ede58746913fdaf7741df48856daf5c09815c81eaac187eb9377399",
+    "indexHash": "c5600283b4c6cf5fc2546d0f8a2eb8158dcdd0e670bd1a7a070c68484dad709a"
   }
 }

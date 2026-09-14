@@ -38,6 +38,7 @@ Doc Bridge keeps **one repository** useful to people and coding agents. Pick the
 | What is read from a Markdown document | [Markdown analyzer v1](./spec/markdown-analyzer-v1.md) |
 | Canonicality, centrality, cycles and the graph as memory | [Graph signals v1](./spec/graph-signals-v1.md) |
 | Per-file hashes and reuse between scans | [Incremental scan v1](./spec/incremental-scan-v1.md) |
+| The index as a projection, explainable ranking, handoffs for any entity | [Retrieval index v1](./spec/retrieval-index-v1.md) |
 | Current documentation audit snapshot | [Audit round 2026-08-31](./study/documentation-audit-round-2026-08-31.json) |
 | Controlled pilot evidence | [Pilot round 2026-08-31](./study/pilot-round-2026-08-31.json) |
 

@@ -32,7 +32,6 @@ Portable JSON Schema export: `DocBridgeIndexV1JsonSchema`.
       "title": "Authentication",
       "path": "docs/auth.md",
       "description": "How sign-in works.",
-      "body": "…flattened text for search…",
       "tags": ["document", "human"],
       "contentHash": "2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae"
     },
@@ -92,11 +91,20 @@ Portable JSON Schema export: `DocBridgeIndexV1JsonSchema`.
 to a question.
 
 **Projected** entries (`type: "document"` or `"module"`) are every documentation file and source
-module the repository contains, produced from the same walk as the [discovery
-snapshot](../knowledge-engine-runbook.md) so the two cannot disagree about what exists. A module
-carries its exported `symbols`; a document carries a bounded `body` for search. Both carry the
-`contentHash` of the file they were projected from, so a single stale entry is detectable without
-rebuilding. `retrieval.corpus.enabled: false` omits them.
+module the [discovery snapshot](../knowledge-engine-runbook.md) observed, projected from it rather
+than scanned again, so the two cannot disagree about what exists. A module carries its exported
+`symbols`; both carry the `contentHash` of the file they were projected from, so a single stale
+entry is detectable without rebuilding. Body text is not here: it lives once, in the projection.
+`retrieval.corpus.enabled: false` omits them.
+
+## Projection
+
+`projection` is the [retrieval index](../spec/retrieval-index-v1.md): what search ranks. It holds
+every snapshot entity — documents, modules, areas, packages — and the routes the configuration
+declares, each with the text the ranker indexes, its graph position, its content hash, provenance
+and confidence. It is a pure function of the snapshot, the accepted overlay and the configuration,
+and its `contentHash` is over those three inputs. `knowledge[]` above stays in step with it for
+readers that predate it.
 
 ## Freshness
 

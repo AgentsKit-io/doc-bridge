@@ -90,16 +90,50 @@ export {
 export { buildDocBridgeIndex, type BuildIndexOptions, type BuildIndexResult } from './index-builder/build-index.js'
 export {
   CORPUS_PROJECTION_VERSION,
-  DOCUMENT_BODY_LIMIT,
   PROJECTED_ENTRY_TYPES,
   indexConfigurationHash,
   isProjectedEntry,
-  projectRepositoryCorpus,
   repositoryInputs,
-  type ProjectCorpusOptions,
-  type RepositoryCorpus,
   type RepositoryInputsV1,
 } from './index-builder/project-corpus.js'
+export {
+  DOCUMENT_BODY_LIMIT,
+  EMPTY_OVERLAY_HASH,
+  RETRIEVAL_PROJECTION_VERSION,
+  projectRetrievalIndex,
+  relationConfidence,
+  toKnowledgeEntry,
+  weakerConfidence,
+  type CuratedDocument,
+  type ProjectRetrievalOptions,
+  type RetrievalOverlayInput,
+  type RetrievalRoutes,
+} from './retrieval/project.js'
+export {
+  ACCEPTED_SIGNALS_WEIGHT,
+  RELEVANCE_FLOOR,
+  rankRetrieval,
+  type RankExplanation,
+  type RankOptions,
+  type RankedEntry,
+  type ScoreComponents,
+} from './retrieval/rank.js'
+export {
+  RETRIEVAL_INDEX_SCHEMA_VERSION,
+  RetrievalEntrySchema,
+  RetrievalIndexV1Schema,
+  RetrievalKindSchema,
+  ConfidenceSchema,
+  AudienceSchema,
+  type Audience,
+  type Confidence,
+  type RetrievalEdge,
+  type RetrievalEntry,
+  type RetrievalFields,
+  type RetrievalGraph,
+  type RetrievalIndexV1,
+  type RetrievalKind,
+} from './schemas/retrieval-index.js'
 export { entityId, relationId } from './discovery/identity.js'
 export {
   DEFAULT_COMMUNITY_SEED,
@@ -553,7 +587,8 @@ export {
 } from './schemas/knowledge.js'
 export { IndexNotFoundError, IndexStaleError, indexFilePath, loadDocBridgeIndex, loadFreshDocBridgeIndex, resolveRoot } from './query/load-index.js'
 export { runQuery, type QueryKind, type QueryRequest, type QueryResult } from './query/query.js'
-export { searchIndex, type SearchMatch } from './query/search.js'
+export { searchIndex, type SearchMatch, type SearchOptions } from './query/search.js'
+export { handoffForEntity, resolveHandoffEntry, type HandoffOptions } from './query/handoff.js'
 export {
   ingestAgentMemory,
   ingestCursorRules,
@@ -582,9 +617,13 @@ export {
 export {
   createDocBridgeRetriever,
   retrieveDocBridgeChunks,
+  retrieveDocBridgeDocuments,
   type DocBridgeRetrievedChunk,
   type DocBridgeRetriever,
   type DocBridgeRetrieverOptions,
+  type RetrievedDocument,
+  type Retriever,
+  type RetrieverRequest,
 } from './retriever/doc-bridge-retriever.js'
 
 export { PACKAGE_VERSION } from './version.js'

@@ -288,7 +288,7 @@ export const handleMcpRequest = (ctx: McpContext, request: JsonRpcRequest): unkn
           kind: parsed.kind === 'package' ? 'package' : 'ownership',
           id: parsed.id,
           agent: true,
-        }),
+        }, { root: ctx.root }),
       )
     }
 

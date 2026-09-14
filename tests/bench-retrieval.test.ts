@@ -260,12 +260,13 @@ describe('bench CLI', () => {
    * repository — so editing any file makes it stale. CI runs `ak-docs index` before the gate for
    * the same reason; these tests build it themselves so they do not depend on what ran before.
    */
+  // Building the index scans and projects the whole repository, which is slow under coverage instrumentation.
   beforeAll(() => {
     const config = applyConfigDefaults(
       DocBridgeConfigV1Schema.parse(JSON.parse(readFileSync('doc-bridge.config.json', 'utf8')) as unknown),
     )
     buildDocBridgeIndex({ root: process.cwd(), config })
-  })
+  }, 30_000)
 
   it('measures the committed suite against the committed baseline and exits zero', () => {
     const run = capture(() => runCli(['bench', 'retrieval', SUITE_PATH, '--baseline', BASELINE_PATH, '--json']))
