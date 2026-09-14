@@ -1,40 +1,61 @@
 ---
 title: Knowledge retrieval and enrichment plan
-description: Evidence-based plan to connect the deterministic knowledge graph to retrieval, then add a validated Registry enrichment overlay.
+description: Evidence-based plan to make Doc Bridge solve two problems — human ↔ documentation ↔ agent communication, and cheaper, more confident agent retrieval — with a deterministic core, borrowed libraries where they earn their place, and a validated Registry enrichment overlay.
 status: proposed
 date: 2026-09-14
+version: 2
 ---
 
 # Doc Bridge — knowledge retrieval and enrichment plan
 
-This document replaces the earlier "agent as enrichment layer" sketch with a plan grounded in what the code does today. It keeps the sketch's correct invariant (the agent is never the source of truth) and fixes its blind spot: the deterministic graph that the agent would enrich is not the graph that agents and humans query. Enriching it first would improve nothing visible.
+This document takes the earlier "agent as enrichment layer" sketch and grounds it in what the code does today, in the libraries that already solve parts of the problem, and in the AgentsKit contracts the rest of the ecosystem consumes. It keeps the sketch's invariant (the agent is never the source of truth) and fixes its blind spot: the deterministic graph the agent would enrich is not the graph agents and humans query. Enriching it first would improve nothing visible.
 
-Every claim in section 1 is reproducible from a clean checkout of `1.8.0` with the commands shown.
+Every claim in section 2 is reproducible from a clean checkout of `1.8.0` with the commands shown.
 
-## 0. Summary
+## 0. The two problems
+
+Doc Bridge exists to solve two problems. Every section below is measured against them.
+
+**Problem 1 — humans ↔ documentation ↔ agents.** Humans write Markdown; agents need structure; both need to know which document is authoritative for which part of the code and whether it is still true. Today the bridge exists in one direction only (frontmatter → handoff) and only for the 11 records a human typed into `doc-bridge.config.json`.
+
+| Success criterion | Measured by |
+| --- | --- |
+| Every document is reachable from the code it describes and every code area from its documents | connectivity metrics in the doctor (§4.8) |
+| The same artifact renders as Markdown for humans and JSON for agents, without divergence | `ak-docs render` from the projection (§3.3), golden-file tests |
+| A human can write plain Markdown and still get machine-verifiable links to code | Markdown analyzer relations (§4.1) without frontmatter |
+| Agent-produced knowledge reaches humans as reviewable Markdown, never as silent graph edits | overlay → Knap-rendered review pages, HITL approval (§5) |
+
+**Problem 2 — agents get the right information faster, with confidence, for fewer tokens.** Today an agent that asks about `reconcileKnowledge` gets nothing, an agent that asks a natural-language question gets the wrong ownership record, and the payload it does get carries no evidence, no confidence and no explanation.
+
+| Success criterion | Measured by |
+| --- | --- |
+| The first call answers the question | hit@1 / hit@3 on a golden query set, in CI (§6.1) |
+| Every answer says why it was chosen and how sure it is | `explain` and `confidence` on every result (§4.5) |
+| Payloads fit a declared budget | `compileBudget` from `@agentskit/core`; `contextBytes` telemetry per call (§4.7) |
+| Fewer tokens to the same correct answer | tokens-to-first-evidence in the study (§6.3) |
+| Works with zero network and zero model | deterministic path always available (§7) |
+
+## 1. Summary
 
 Doc Bridge has two disconnected models of a repository:
 
 | Model | Built by | Consumed by | Content on this repository |
 | --- | --- | --- | --- |
-| `DocBridgeIndexV1` | `ak-docs index` (`src/index-builder`) | `search`, `query`, `ask`, `retrieve`, MCP `handoff.resolve`, `doc.search`, `doc.get`, `retriever.query`, RAG ingest | 11 agent sidecars (3 KB total), 11 hand-written ownership records |
+| `DocBridgeIndexV1` | `ak-docs index` (`src/index-builder`) | `search`, `query`, `ask`, `retrieve`, MCP `handoff.resolve`, `doc.search`, `doc.get`, `retriever.query`, RAG ingest, **`@agentskit/harness` context provider** | 11 agent sidecars (3 KB total), 11 hand-written ownership records |
 | `DiscoverySnapshotV1` | `ak-docs scan|reconcile|check|map` (`src/discovery`, `src/reconciliation`) | `audit`, `rules`, `map --html`, `suggest`, MCP `docbridge.*` | 369 entities, 1 170 relations, 92 documents |
 
-Retrieval never reads the snapshot. The 80 human documents under `docs/` are discovered as entities but are unsearchable. The snapshot knows `module:src/reconciliation/reconcile.ts` exports `reconcileKnowledge`, but `ak-docs search reconcileKnowledge` returns nothing. The controlled study recorded zero semantic successes in both arms; this is the mechanical reason.
+Retrieval never reads the snapshot. The plan has four parts, in this order:
 
-The plan therefore has three phases, in this order:
+1. **Borrow the right primitives** (§3): Markdown parsing, template rendering, graph metrics, lexical ranking and AgentsKit contracts, chosen for determinism, size and licence.
+2. **Deterministic layer** (§4): make the snapshot the single source for retrieval; extract document→code references from Markdown; add `area`; hash every entity; project the graph into a retrieval index; rank with an explainable scorer; budget every payload.
+3. **Enrichment overlay** (§5): typed, evidence-bound Registry proposals, deterministic validators, a versioned overlay that retrieval consumes with bounded weight, approvals through the ecosystem's HITL gate.
+4. **Measure** (§6): a local retrieval benchmark in CI before any agent spend, then the `registry-assisted` study arm.
 
-1. **Deterministic first.** Make the snapshot the single source for retrieval: extract document→code references from Markdown, add an `area` level for single-package repositories, hash every entity, project the graph into the retrieval index, and rank with an explainable scorer.
-2. **Enrichment overlay.** Add typed, evidence-bound Registry proposals, deterministic validators, and a versioned `EnrichmentOverlayV1` that retrieval consumes with bounded weight.
-3. **Measure.** Ship a local retrieval benchmark that runs in CI before spending money on the agent study, then add the `registry-assisted` arm to the existing study infrastructure.
-
-Phase 1 is where the practical value is. Phase 2 is only worth doing after Phase 1 because it multiplies whatever the retrieval layer can already surface.
-
-## 1. Diagnosis with evidence
+## 2. Diagnosis with evidence
 
 All commands run from the repository root after `pnpm install && pnpm build`.
 
-### 1.1 The graph does not feed retrieval
+### 2.1 The graph does not feed retrieval
 
 ```bash
 node bin/ak-docs.js index
@@ -48,18 +69,16 @@ for (const f of fs.readdirSync(d)) if (f.startsWith("collect-")) { const s=JSON.
 
 `searchIndex` in `src/query/search.ts` iterates `index.knowledge`, `lookup.ownership`, `lookup.intents`, `lookup.changes`. None of these is derived from the snapshot. `buildDocBridgeIndex` in `src/index-builder/build-index.ts` calls `scanAgentCorpus` and `scanHumanDocs`, never `discoverRepository`. The PRD (`docs/PRD-doc-bridge-knowledge-engine.md`, "Resolved Product Boundaries") says the index is a projection of the snapshot; the code does not implement that boundary.
 
-### 1.2 Human documentation is unsearchable
+### 2.2 Human documentation is unsearchable
 
-`scanHumanDocs` returns a `HumanDocMap` (id → URL). It is used only by `resolveHumanDoc` to fill `handoff.humanDoc`. The 80 files classified `human` in the snapshot never enter `index.knowledge`, so `doc.search`, `retriever.query` and RAG ingest cannot see them. The doctor still reports:
+`scanHumanDocs` returns a `HumanDocMap` (id → URL) used only by `resolveHumanDoc` to fill `handoff.humanDoc`. The 80 files classified `human` never enter `index.knowledge`, so `doc.search`, `retriever.query`, RAG ingest and the harness context provider cannot see them. The doctor still reports:
 
 ```
 Corpus indexed:  10/10 agent docs
 Score: 100/100 (A)
 ```
 
-The denominator is the agent corpus, so the score cannot express that most documentation is unreachable.
-
-### 1.3 Lexical scoring has no stopwords, no IDF, no symbols, no paths
+### 2.3 Lexical scoring has no stopwords, no IDF, no symbols, no paths
 
 ```bash
 node bin/ak-docs.js search "and" --text            # 11 matches, every ownership row score=9
@@ -71,9 +90,9 @@ node bin/ak-docs.js retrieve "where are workflow transitions persisted"
 # one chunk: doc-bridge-conformance
 ```
 
-`scoreHay` awards `token.length * weight + token.length` for any token present in the haystack. "and" is present in every purpose sentence, so it contributes 9 points to every ownership record; long rare tokens and short common tokens are treated alike. Exported symbols (`metadata.exports` on module entities) and file paths are never indexed, so identifiers agents actually type return nothing.
+`scoreHay` awards `token.length * weight + token.length` for any token present in the haystack. "and" is present in every purpose sentence and contributes 9 points to every ownership record. Exported symbols (already in `metadata.exports`) and file paths are never indexed.
 
-### 1.4 Single-package repositories get an empty reconciliation
+### 2.4 Single-package repositories get an empty reconciliation
 
 ```bash
 node bin/ak-docs.js reconcile --json | node -e 'let s="";process.stdin.on("data",c=>s+=c).on("end",()=>{const r=JSON.parse(s);console.log(r.diagnostics.length)})'
@@ -82,353 +101,331 @@ node bin/ak-docs.js audit documentation --text
 # Packages covered: 0/0
 ```
 
-With `reconciliation.scope: "package"` and one package, every internal relation aggregates to a self-loop, which `reconcileKnowledge` skips (`relation.from !== relation.to`). The audit excludes the root package (`entity.path !== '.'`), so coverage is 0/0. Most real repositories are single-package; for them the engine has no unit between "the whole package" and "one file", although the ownership configuration already encodes that unit (`path: "src/mcp"`, `path: "src/query"`).
+With `reconciliation.scope: "package"` and one package, every internal relation aggregates to a self-loop, which `reconcileKnowledge` skips. The audit excludes the root package. Most real repositories are single-package; the ownership configuration already encodes the missing unit (`path: "src/mcp"`) but the graph has no entity for it.
 
-### 1.5 No per-entity content hash
+### 2.5 No per-entity content hash
 
 ```bash
 node -e 'const fs=require("fs");const d=".doc-bridge/workflow/artifacts";for(const f of fs.readdirSync(d)){if(!f.startsWith("collect-"))continue;const s=JSON.parse(fs.readFileSync(d+"/"+f,"utf8")).value;console.log(s.entities.filter(e=>e.evidence.some(x=>x.contentHash)).length,"/",s.entities.length)}'
 # 0 / 369
 ```
 
-`EvidenceSchema.contentHash` exists but `discoverRepository` never fills it. Only the snapshot-level `contentHash` and `sourceRevision` exist, so any cache or overlay can be keyed only on "the whole repository changed", which is always true between commits. The Codex sketch's "use `contentHash` as cache, invalidate only the affected subgraph" has no substrate.
+`EvidenceSchema.contentHash` exists but is never filled. The harness context provider already reads an optional per-entry `contentHash` from `index.knowledge[]` and falls back to the whole-index hash; Doc Bridge never supplies one.
 
-### 1.6 Markdown is parsed for frontmatter only
-
-The snapshot's `document` entities carry one metadata field, `classification`, derived from a path regex. Headings, links, code paths and identifiers in the body are discarded. Yet:
+### 2.6 Markdown is parsed for frontmatter only
 
 ```bash
 grep -rlE '\]\([^)]*\.md' docs --include=*.md | wc -l      # 23 documents link to other documents
 grep -rlE '`src/[A-Za-z0-9_./-]+' docs --include=*.md | wc -l  # 14 documents cite source paths
 ```
 
-Document→document and document→code edges are free, evidence-backed (file + line) and language-agnostic. Today the only way to link a document to code is the `docbridge:` frontmatter block or a path convention, which is why 1 of 92 documents is "documented".
+`src/discovery/documentation.ts` is a 400-line hand-written YAML-subset parser for the `docbridge` block; `src/lib/markdown.ts` is a regex frontmatter reader. Headings, links, code spans and tables in the body are discarded. 1 of 92 documents counts as "documented".
 
-### 1.7 The agent contract cannot carry enrichment
+### 2.7 The agent contract cannot carry enrichment
 
-`AgentProposalV1` (`src/schemas/knowledge.ts`) is `{ relatedDiagnosticIds, rationale, confidence, evidence, intendedChanges: string[], checks }`. It can say "review this finding"; it cannot say "this document is canonical for area X", "alias `mcp server` → `area:src/mcp`", or "relation A→B, confidence 0.9". `validateGrounding` checks only that diagnostic ids and evidence keys exist. Nothing stores accepted proposals, nothing consumes them, and the deterministic cache is an in-process `Map`. `suggest` sends the entire redacted snapshot (740 KB here) in one call.
+`AgentProposalV1` is `{ relatedDiagnosticIds, rationale, confidence, evidence, intendedChanges: string[], checks }`. It cannot express a classification, an alias, a summary or a relation. Nothing stores accepted proposals, nothing consumes them, the deterministic cache is an in-process `Map`, and `suggest` sends the entire redacted snapshot (740 KB here) in one call.
 
-### 1.8 The MCP surface mirrors the split
+### 2.8 Ecosystem contracts are reimplemented or ignored
 
-`handoff.resolve`, `doc.search`, `doc.get`, `retriever.query` read the index; `docbridge.snapshot|report|diagnostics|relations|run` read workflow artifacts. There is no tool that answers "tell me about `src/mcp`" with entity, neighbours, documents, handoff, diagnostics and evidence in one bounded response.
+| Doc Bridge today | AgentsKit already provides |
+| --- | --- |
+| `DocBridgeRetrievedChunk` (own shape) in `src/retriever` | `Retriever` / `RetrievedDocument` in `@agentskit/core`; `createHybridRetriever`, `createRerankedRetriever`, `bm25Score` in `@agentskit/rag` |
+| `contextBytes / 4` token estimate | `approximateCounter`, `compileBudget` with `drop-oldest | sliding-window | summarize` in `@agentskit/core` |
+| `fix approve` file-based approval | `createApprovalGate` / `ApprovalStore` in `@agentskit/core/hitl` |
+| `KnowledgeDiagnostic`, `RuleFinding`, `DocumentationAuditFinding` (three shapes) | `Finding` with `SEVERITY_ORDER` in `@agentskit/core/finding` |
+| `resolveEntity` exact / `endsWith` matching | `fuzzyMatchList` (Jaro-Winkler) in `@agentskit/core/fuzzy-match` |
+| no graph export | `GraphMemory` (`upsertNode`, `upsertEdge`, `traverse`) in `@agentskit/memory` |
+| ad-hoc study task suite | `EvalSuiteDoc` / `EvalCase` / `matchesExpectation` in `@agentskit/core/eval-format`; `runEval`, `replay`, `snapshot`, `diff`, `ci` in `@agentskit/eval` |
 
-## 2. Target architecture
+## 3. Build or borrow
+
+Rules: a library enters the core dependency list only if it is deterministic, has no native dependencies, is MIT or Apache-2, and replaces code Doc Bridge would otherwise maintain. Everything model-related stays behind the existing optional-peer boundary.
+
+### 3.1 Markdown → JSON: `remark` (unified / mdast)
+
+| | |
+| --- | --- |
+| Packages | `remark-parse` 11, `remark-frontmatter` 5, `remark-gfm` 4, `mdast-util-to-string` 4, `unist-util-visit` 5, `yaml` 2 |
+| Licence, deps | MIT; pure JS, ESM (Doc Bridge is already ESM) |
+| Replaces | `src/lib/markdown.ts` regex frontmatter, the 400-line `docbridge` block parser in `src/discovery/documentation.ts`, `extractSearchBody`, `firstHeading`, `firstParagraph` |
+| Gains | headings with levels, links with targets, inline code spans, tables, GFM task lists, and **line/column positions on every node** for evidence; a real YAML parser (`yaml`, already a transitive dependency via `@agentskit/harness`) for frontmatter and the `docbridge` block |
+| Determinism | parser is pure; positions are stable for identical input |
+
+The `docbridge` block schema moves to Zod (already a dependency) validating the parsed YAML object. The bespoke parser's diagnostics (`DOCBRIDGE_FIELD_UNKNOWN`, `DOCBRIDGE_DECLARATION_CONFLICT`, …) are preserved as Zod issue mappings so existing tests keep their codes.
+
+### 3.2 JSON → Markdown: `knap`
+
+| | |
+| --- | --- |
+| Package | `knap` 0.5 (Obsidian), MIT, one dependency (`dayjs`); CLI `npx knap render template.md --data data.json`; API `createEngine({ filters }).renderOrThrow(template, { variables })` |
+| Property that matters | templates parse to an AST and are interpreted **without `eval` or arbitrary JavaScript**; the application controls every variable |
+| Replaces | string-concatenation renderers in `src/index-builder/llms-txt.ts`, `src/memory/pipeline.ts` (promotion drafts), `src/memory/github-pr.ts` (PR bodies), `bootstrap agent-docs`, and the text mode of `doctor`, `audit`, `ask` |
+| Enables | one artifact, two renderings: `RetrievalIndexV1` → `llms.txt`, area pages, ownership sidecars, "what changed since last index" digest, overlay review pages; users override templates per project (`doc-bridge.config.json` → `render.templates`) |
+
+Every generated Markdown region carries `<!-- doc-bridge:generated hash=… -->` markers so the Markdown analyzer (§4.1) can recognise its own output, skip it for `mentions`, and the audit can flag manual edits inside generated regions (the `generated-freshness` category already exists).
+
+### 3.3 Graph: `graphology`
+
+| | |
+| --- | --- |
+| Packages | `graphology` 0.26 (MIT, one dependency), `graphology-metrics` 2.4 (degree, betweenness, closeness, eigenvector, PageRank, HITS), `graphology-shortest-path` 2.1, `graphology-dag` (topological sort, cycle detection), optional `graphology-communities-louvain` 2.0 with a seeded `rng` |
+| Replaces | the ad-hoc `packageLookup`, `aggregatedRelations` and centrality counting in `src/reconciliation/reconcile.ts` and `src/rules/engine.ts` |
+| Gains | `canonicality` from PageRank over `links-to` + `covers` (instead of raw inbound-link counts); `graphProximity` from bounded shortest paths; `centrality-risk` from betweenness on the `imports` graph instead of "count of undocumented findings"; import cycles as a diagnostic; Louvain communities as an **agent-facing suggestion** for areas when directories are uninformative, never as authority |
+| Determinism | all metrics are deterministic for a given graph; Louvain is seeded; node iteration order is sorted before every metric call so hashes stay stable |
+
+The `DiscoverySnapshotV1` envelope does not change. Graphology is an in-memory working structure built from the snapshot inside `src/graph/build.ts`; nothing serialises graphology's own format.
+
+### 3.4 Lexical ranking: `minisearch`
+
+| | |
+| --- | --- |
+| Package | `minisearch` 7.2, MIT, zero dependencies, Node and browser |
+| Provides | BM25+ scoring with tunable `k`, `b`, `d`; per-field `boost`; custom `tokenize` and `processTerm` (stopwords, code-identifier preservation, optional stemming); prefix and fuzzy matching; per-result `terms` and `match` (which term hit which field); `toJSON` / `loadJSON` so the index is a committed artifact |
+| Replaces | `scoreHay`, `identityBoost` and the hand-rolled tie-breaking in `src/query/search.ts` |
+| Not replaced | graph-derived boosts, audience fit, overlay signals and the explain output, which Doc Bridge computes on top (§4.5) |
+
+Considered and not chosen: `@orama/orama` (Apache-2, hybrid vector search, per-language stemmers including Portuguese; heavier, and vector search stays an optional peer concern), `flexsearch` (fast, opaque scoring), `wink-bm25-text-search` (pulls an English NLP model). If maintainers prefer zero new runtime dependencies, a 200-line BM25 with the same tokenizer is acceptable; the requirement is IDF, stopwords and field weights, not the library.
+
+### 3.5 Token counting
+
+Exact tokenizers are heavy: `js-tiktoken` 1.0 and `gpt-tokenizer` 4.0 unpack to 22–27 MB because they ship BPE ranks, and they count OpenAI tokens only. Default stays a heuristic, but the ecosystem one: `approximateCounter` from `@agentskit/core`, reported as `tokenMethod: 'approximate'`. Exact counting is an optional peer (`intelligence.tokenizer: 'js-tiktoken' | 'anthropic-count-tokens'`) used by the benchmark and the study, never by `search`.
+
+### 3.6 AgentsKit contracts to adopt
+
+| Contract | Where it plugs in |
+| --- | --- |
+| `Retriever` / `RetrievedDocument` (`@agentskit/core`) | `createDocBridgeRetriever` returns `RetrievedDocument[]` with `metadata: { kind, path, evidence, explain, confidence }`, so `createHybridRetriever`, `createRerankedRetriever`, `formatRetrievedDocuments` and `@agentskit/runtime` consume it unchanged |
+| `compileBudget`, `approximateCounter` | `knowledge.lookup` and `handoff.resolve` accept `budgetTokens`; sections are dropped in a declared order (evidence excerpts → related → neighbours → summary) until the payload fits; the result carries `tokens.total` and `fits` |
+| `createApprovalGate` / `ApprovalStore` (`@agentskit/core/hitl`) | overlay approvals (§5.2); the file-backed store lives under `.doc-bridge/approvals/`; the same gate serves CLI, MCP and a future AKOS UI |
+| `Finding` (`@agentskit/core/finding`) | `ak-docs check --json --format finding` and MCP `docbridge.diagnostics { format: 'finding' }` emit the canonical shape so Code Review, AKOS and dashboards consume Doc Bridge output without a custom parser |
+| `fuzzyMatchList` (`@agentskit/core/fuzzy-match`) | `resolveEntity` in the Markdown analyzer and the query layer: an unresolved reference within threshold 0.92 of exactly one entity resolves with `confidence: 'fuzzy'` and evidence; two candidates stay unresolved |
+| `GraphMemory` (`@agentskit/memory`) | `createDocBridgeGraphMemory(snapshot, overlay)` exposes the projected graph through `getNode`, `findEdges`, `traverse`, so agents built on AgentsKit walk the repository graph with the same API they use for their own memory |
+| `bm25Score`, `createHybridRetriever` (`@agentskit/rag`) | the optional RAG path becomes hybrid over the same `RetrievalIndexV1` entries; the vector store is never required |
+| `EvalSuiteDoc`, `matchesExpectation` (`@agentskit/core/eval-format`), `runEval`, `diff`, `ci` (`@agentskit/eval`) | the retrieval golden set is an `EvalSuiteDoc`; `ak-docs bench retrieval` is `runEval` with a deterministic agent function over the index; `@agentskit/eval/ci` produces the regression verdict |
+| Harness context provider (`createDocBridgeContextProvider`) | keeps reading `index.knowledge[]`; the projection fills `contentHash`, `tags` (kind, audience, area) and `body` per entry so the harness's substring match improves without a harness release; a follow-up in the harness can switch to `knowledge.search` |
+
+## 4. Deterministic layer
 
 ```
 Repository
    │
    ▼
-Deterministic analyzers  (js-ts, markdown, workspace, config)
+Analyzers: js-ts · markdown (remark) · workspace · config
    │  entities + relations + evidence(contentHash) + coverage
    ▼
-DiscoverySnapshotV1  ──────────────┐
-   │                               │
-   ▼                               ▼
-Reconciliation / rules       Enrichment stage (optional, explicit)
-   │                            curator + reviewer proposals
-   │                            deterministic validators
-   │                            EnrichmentOverlayV1 (accepted / rejected)
-   ▼                               │
-RetrievalIndexV1  ◄────────────────┘   projection = snapshot + overlay(accepted)
-   │
+DiscoverySnapshotV1 ─────────────┐
+   │                             │
+   ▼                             ▼
+Graph (graphology)         Enrichment stage (optional, explicit)
+ reconciliation, rules,      curator + reviewer → typed proposals
+ PageRank, proximity         validators → EnrichmentOverlayV1
+   │                             │
+   ▼                             │
+RetrievalIndexV1 ◄───────────────┘   project(snapshot, overlay.accepted, config)
+   │        (minisearch payload + graph counts + hashes)
    ▼
-Ranking (explainable, deterministic)
-   │
-   ▼
-CLI · MCP · retriever · RAG · HTML   (reporters over the same artifacts)
+Ranking → budget (compileBudget) → CLI · MCP · Retriever · RAG · Knap renderings · HTML
 ```
 
-Invariants, in addition to the ones already in the knowledge-engine PRD:
+Invariants in addition to the knowledge-engine PRD:
 
-- The retrieval index is a pure function of `(snapshot, overlay, config)`. It has no scanner of its own.
-- Overlay entries bind to the `contentHash` of the entity they describe, not to the snapshot hash. An entry expires when its entity changes; the rest survive.
-- Agent signals are additive and bounded. An accepted signal can reorder near-ties; it can never outrank an exact deterministic match, and it can never remove or rewrite deterministic facts.
-- Every ranked result can be explained term by term without calling an agent.
-- Nothing calls an agent at query time. Ever.
+1. The retrieval index has no scanner of its own; it is a pure function of `(snapshot, overlay, config)`.
+2. Overlay entries bind to the `contentHash` of the entity they describe, not to the snapshot hash.
+3. Agent signals are additive and bounded: they reorder near-ties, never outrank an exact deterministic match, never remove a fact.
+4. Every ranked result carries `explain` and `confidence` computed without an agent.
+5. Nothing calls an agent at query time.
 
-## 3. Phase 1 — deterministic layer
+### 4.1 Markdown analyzer (remark)
 
-### 3.1 Markdown analyzer
+`src/discovery/markdown.ts`, versioned in `analyzerVersions`. For every `.md`/`.mdx`:
 
-New analyzer `markdown` (versioned alongside `js-ts` in `analyzerVersions`) in `src/discovery/markdown.ts`, producing for every `.md`/`.mdx`:
+Entity metadata on `document`: `title`, `headings[]` (levels 1–3, bounded), `summary`, `wordCount`, frontmatter subset (`type`, `audience`, `owner`, `lifecycle`, `tier`), `generatedRegions[]` (from the markers in §3.2), evidence `contentHash`.
 
-Entity metadata on `document`:
-
-- `title` (frontmatter `title` or first `#` heading), `headings[]` (levels 1–3, bounded), `summary` (first paragraph, existing `firstParagraph`), `wordCount`, `frontmatter` subset (`type`, `audience`, `owner`, `lifecycle`, `tier`), `language` (best-effort from existing tokenizer signals; `unknown` allowed).
-- Evidence `contentHash` = sha256 of the file.
-
-Relations (all `provenance: observed`, evidence = file + line):
+Relations (`provenance: observed`, evidence = file + line from mdast positions):
 
 | Kind | From → To | Detection |
 | --- | --- | --- |
-| `links-to` | document → document | relative Markdown link resolving to a scanned document |
-| `mentions` | document → module / package / area | backtick or link text matching a scanned path (`src/mcp/server.ts`, `packages/auth`) or a package name |
-| `mentions-symbol` | document → module | backtick token equal to an exported name of exactly one module (ambiguous tokens are dropped, not guessed) |
-| `covers` | document → entity | unchanged: frontmatter `docbridge` block or path convention |
+| `links-to` | document → document | relative link node resolving to a scanned document |
+| `mentions` | document → module / package / area | inline-code or link text equal to a scanned path or package name; directories resolve to areas |
+| `mentions-symbol` | document → module | inline-code token equal to an exported name of exactly one module; ambiguous → no edge, one coverage note |
+| `covers` | document → entity | unchanged: `docbridge` block (now YAML + Zod) or path convention |
 
-Rules for `mentions`: exact path match after normalisation; directory paths resolve to `area` entities (3.2); ambiguous matches produce no relation and one bounded `coverage` entry with reason. A document with 40 path mentions is capped (default 64 relations, configurable) with `evidenceTruncated` metadata, mirroring `aggregatedRelations`.
+Generated regions are skipped for `mentions`. Per-document relation cap 64 with `evidenceTruncated`. Frontmatter `audience` beats the path regex. Unresolved references try `fuzzyMatchList` before becoming `unresolved-reference` entities.
 
-`documentClassification` moves from a hard-coded regex to the analyzer and gains frontmatter precedence, so `audience: agent` in frontmatter beats the path.
+### 4.2 Areas
 
-### 3.2 Areas
+Entity kind `area:<dir>`, `contains` edges package → area → module. Default: first directory level under each package's source roots plus any ownership `path`; `analysis.areas.depth` / `roots` configurable. Ownership records attach to their area (`metadata.ownershipId`); a record matching no area yields `OWNERSHIP_PATH_UNOBSERVED`. `reconciliation.scope` gains `area`. When directories are flat, Louvain communities over `imports` are emitted as `coverage` suggestions (`analyzer: graph`, `scope: area-suggestion`) that a human or the curator agent can turn into configuration; they are never areas by themselves.
 
-New entity kind `area` (`area:<dir>`), `contains` relations `package → area → module`, produced by the repository analyzer:
+### 4.3 Per-entity hashes and incremental scan
 
-- Default: the first directory level under each package's source roots (`src/*`, `lib/*`, `app/*`, plus any `routing.options.ownership[*].path`). Configurable via `analysis.areas.depth` and `analysis.areas.roots`.
-- Every ownership record whose `path` equals an area path is attached to that area (`metadata.ownershipId`). Records that match no area produce a diagnostic `OWNERSHIP_PATH_UNOBSERVED` (status `stale-or-unverified`) instead of silently passing.
-- `reconciliation.scope` gains `area`. Package-scope self-loops are replaced by area-to-area relations, so a single-package repository produces `RELATION_UNDOCUMENTED` findings at a scope a human can act on. The audit's `packageEntities` filter is extended to areas when there is exactly one package.
+Every module, document and package entity gets `evidence[0].contentHash`. `discoverRepository` accepts the previous snapshot and reuses unchanged entities and their outgoing relations; `ts.createSourceFile` and remark run only for changed files. Snapshot-level `contentHash` and `sourceRevision` semantics are unchanged.
 
-Areas are the unit that handoffs, ownership, and enrichment operate on. They are observed facts (directories exist) and cheap.
+### 4.4 Retrieval projection
 
-### 3.3 Per-entity hashes and incremental scan
-
-- Every `module`, `document` and `package` entity gets `evidence[0].contentHash` (file hash). `external` entities get none.
-- `discoverRepository` accepts an optional previous snapshot; files whose hash is unchanged reuse the previous entity and its outgoing relations instead of re-parsing (`ts.createSourceFile` is the dominant cost). Coverage notes `reusedEntities`.
-- `sourceRevision` semantics do not change; the snapshot `contentHash` is still computed over the full artifact.
-
-### 3.4 Retrieval projection
-
-`RetrievalIndexV1` (`src/schemas/retrieval-index.ts`) built by `src/retrieval/project.ts` from `(snapshot, overlay?, config)`:
+`RetrievalIndexV1` (`src/schemas/retrieval-index.ts`), built by `src/retrieval/project.ts`:
 
 ```ts
 type RetrievalEntry = {
-  id: string                 // entity id
+  id: string
   kind: 'document' | 'module' | 'area' | 'package' | 'intent' | 'change'
-  path: string
-  title: string
-  summary?: string
+  path: string; title: string; summary?: string
   audience?: 'agent' | 'human' | 'human-and-agent'
-  fields: {                  // tokenised at build time
-    title: string[]; headings: string[]; path: string[]; symbols: string[]; body: string[]; aliases: string[]
-  }
-  graph: { inboundLinks: number; coveredBy: string[]; mentionedBy: string[]; areaId?: string; packageId?: string }
+  fields: { title: string; headings: string; path: string; symbols: string; body: string; aliases: string }
+  graph: { pagerank: number; inboundLinks: number; coveredBy: string[]; mentionedBy: string[]; areaId?: string; packageId?: string }
   contentHash: string
   provenance: 'observed' | 'declared' | 'proposed'
+  confidence: 'observed' | 'declared' | 'fuzzy' | 'proposed'
 }
 ```
 
-plus `idf: Record<token, number>`, `stopwords` version, and `overlayHash`. `DocBridgeIndexV1` remains generated for compatibility; `ak-docs index` writes both, and `search`/`query`/MCP read `RetrievalIndexV1` when present. `contentHash` of the retrieval index derives from `(snapshotHash, overlayHash, configHash)`, so `IndexStaleError` keeps working.
+plus the serialised minisearch index (`toJSON`), the stopword list version, `overlayHash` and `graphMetricsVersion`. `DocBridgeIndexV1` is still written for compatibility, and its `knowledge[]` now contains **every** entry (documents, areas, modules, packages) with `contentHash` and `tags`, which is what the harness reads. `search`, `query` and MCP read `RetrievalIndexV1`. Its hash derives from `(snapshotHash, overlayHash, configHash)` so `IndexStaleError` keeps working.
 
-Body tokens for human documents are bounded (existing `extractSearchBody`, 6 000 chars) and stored once; RAG ingest reads the same entries.
-
-### 3.5 Explainable ranking
-
-`src/retrieval/rank.ts` replaces `searchIndex` internals (public signature unchanged, plus `explain?: boolean`):
+### 4.5 Explainable ranking
 
 ```
 score(entry, query) =
-    Σ_fields  w_field · BM25(field tokens, query tokens, idf)      // lexical
-  + exactId · 200 + exactPath · 150 + exactSymbol · 150             // identity
-  + graphProximity                                                   // entries covering/mentioning a top lexical hit
-  + canonicality(inboundLinks, coveredBy.length)                     // bounded log scale
-  + audienceFit(query.agent, entry.audience)
-  + acceptedAgentSignals                                             // Phase 2, capped at 15 % of the identity boost
+    minisearch BM25+ over fields (title 4 · headings 3 · symbols 3 · path 2 · aliases 2 · body 1)
+  + exactId·200 + exactPath·150 + exactSymbol·150                  // identity
+  + graphProximity      // shortest path ≤ 2 from a top-10 lexical hit, via graphology
+  + canonicality        // log-scaled PageRank over links-to + covers
+  + audienceFit         // --agent prior
+  + acceptedAgentSignals   // §5, capped at 15 % of the identity boost
 ```
 
-- Stopword lists: English and Portuguese to start (the repository already targets non-English documentation; `tokenizeSearchText` keeps CJK behaviour). Lists are versioned in the index so results are reproducible.
-- Field weights are configuration (`retrieval.weights`), with tested defaults. No algorithm internals beyond weights are exposed.
-- `--explain` (CLI) and `explain: true` (MCP) return per-term and per-component contributions for each match, so "why did this document rank first" has a deterministic answer.
-- Intent detection (`preferOwnership`, `CHANGE_INTENT`) survives as the `audienceFit`/`kind` prior; it stops being a hard filter.
+- Tokenizer keeps code identifiers whole (`reconcileKnowledge`, `src/mcp/server.ts`) and also emits their split parts (`reconcile`, `knowledge`, `mcp`, `server`); versioned English and Portuguese stopword lists.
+- `--explain` (CLI) and `explain: true` (MCP) return minisearch's `terms` and `match` plus each graph component, so "why is this first" has a deterministic answer.
+- `confidence` on every result is the minimum over the entry's provenance and the relation that brought it in (`observed` > `declared` > `fuzzy` > `proposed`).
 
-### 3.6 Graph-derived handoffs
+### 4.6 Graph-derived handoffs
 
-`handoffForPackage` becomes `handoffForEntity(id)` in `src/query/handoff.ts`, valid for package, area, module and document ids:
+`handoffForEntity(id)` in `src/query/handoff.ts` for package, area, module and document ids: `editRoots` from the area or package; `checks` from ownership override → package scripts → defaults with `checksSource`; `startHere` by `covers` > `mentions` > `links-to` proximity then canonicality; `related` from strongest `imports` edges; `explain` naming the relations used. `AgentHandoffV1` stays byte-compatible; new fields are optional.
 
-- `editRoots`: the area or package path; for a module, its area.
-- `checks`: ownership override → package `scripts` (`test`, `lint`, `typecheck`) → `defaultChecksForTarget`, with `metadata.checksSource` saying which.
-- `startHere`: highest-ranked document by `covers` > `mentions` > `links-to` proximity, then canonicality; `readBeforeEditing`: the next two plus `AGENTS.md`.
-- `related`: top imported and importing areas (bounded), each with evidence.
-- `explain`: which relations produced `startHere` and `editRoots`.
+### 4.7 Budgeted agent payloads
 
-`AgentHandoffV1` stays byte-compatible; new fields are optional additions (`related`, `explain`, `evidence`).
+`knowledge.lookup { id | path, depth?, budgetTokens? }` returns entity, neighbours by relation kind, covering and mentioning documents, handoff, open diagnostics and evidence. When `budgetTokens` is set, sections are trimmed through `compileBudget` in a declared order (evidence excerpts → related → neighbours → summary) and the response reports `tokens.total`, `fits` and what was dropped. `formatRetrievedDocuments` renders the same payload as text for clients that want prose. `knowledge.search` wraps ranking with the same budget. Old MCP tools remain as aliases.
 
-### 3.7 MCP
+### 4.8 Doctor honesty
 
-Two new tools, old ones kept as thin aliases:
+Three measured dimensions: reachability (documents present in the retrieval index), connectivity (areas with ≥ 1 covering or mentioning document; documents with ≥ 1 code edge) and the retrieval benchmark hit@3 when a golden set exists, otherwise `not-analyzed`. An "A" requires all three.
 
-- `knowledge.search { query, kinds?, limit?, explain? }` → ranked entries.
-- `knowledge.lookup { id | path, depth? }` → entity, neighbours by relation kind (bounded), covering/mentioning documents, handoff, open diagnostics, evidence. This is the single call an agent makes before editing.
+### 4.9 Human renderings (Knap)
 
-Response size stays bounded by the existing `report-threshold` style limits; `telemetry.contextBytes` is reported as today.
+`ak-docs render <template> [--data <artifact>] [--output <path>]` with bundled templates: `llms.txt`, `area.md` (one page per area: purpose, documents, related areas, checks, open findings), `ownership-sidecar.md`, `digest.md` (entities and documents whose hash changed since the last index, for a PR description or changelog), `overlay-review.md` (pending proposals with evidence links). Templates are overridable per project. Rendering is deterministic; the digest is the concrete answer to "what did this change touch and which docs need review".
 
-### 3.8 Doctor honesty
+### 4.10 Phase acceptance on this repository
 
-`run-doctor.ts` adds three measured dimensions and lowers the grade when they are poor:
+- `search reconcileKnowledge` → `module:src/reconciliation/reconcile.ts` first.
+- `search "workflow transitions persisted"` → runbook or `src/workflow/engine.ts` in the top 3 with an explanation.
+- `search and` → zero matches.
+- `reconcile` at area scope → at least one `RELATION_UNDOCUMENTED` with evidence.
+- `index` idempotent on an unchanged tree; re-parses one file on a one-file change.
+- `ak-harness` context provider returns human documents for a query that names one.
+- All 365 existing tests pass; index, handoff and MCP tool names remain compatible.
 
-- **Reachability**: share of `document` entities present in the retrieval index (target 100 %).
-- **Connectivity**: share of areas with at least one `covers`/`mentions` document; share of documents with at least one outgoing code edge.
-- **Retrieval benchmark**: hit@3 on the project's golden query set when one exists (Phase 3), otherwise `not-analyzed` and shown as such.
+## 5. Enrichment overlay
 
-An "A" requires all three. The current score becomes impossible for this repository until 80 human documents are indexed, which is the honest state.
+### 5.1 Typed proposals
 
-### 3.9 Phase 1 acceptance
+`EnrichmentProposalV1` (`src/schemas/enrichment.ts`), a discriminated union with a common envelope: `proposalId` (sha256 of kind, entity, target hash, agent id, prompt version → idempotent), `entity`, `targetContentHash`, `confidence`, `reason`, `evidence` (≥ 1, every item must exist in the snapshot or report), `origin` (agent id and version, prompt version, model, provider), `baseSnapshotHash`, `payload`.
 
-On this repository:
-
-- `ak-docs search reconcileKnowledge` returns `module:src/reconciliation/reconcile.ts` first.
-- `ak-docs search "workflow transitions persisted"` returns `docs/knowledge-engine-runbook.md` or `module:src/workflow/engine.ts` in the top 3 with an explanation.
-- `ak-docs search and` returns zero matches.
-- `ak-docs reconcile` at area scope produces at least one `RELATION_UNDOCUMENTED` finding with evidence.
-- `ak-docs index` on an unchanged tree is idempotent; on a one-file change it re-parses one module.
-- All 365 existing tests pass; `DocBridgeIndexV1`, `AgentHandoffV1` and MCP tool names remain compatible.
-
-## 4. Phase 2 — enrichment overlay
-
-This phase implements the earlier sketch, with the contract details it lacked.
-
-### 4.1 Typed proposals
-
-`EnrichmentProposalV1` (`src/schemas/enrichment.ts`) is a discriminated union. Common envelope:
-
-```ts
-{
-  type: 'enrichment-proposal', schemaVersion: 1,
-  proposalId: string,              // sha256(kind, entity, targetContentHash, agentId, promptVersion) → idempotent
-  kind: EnrichmentKind,
-  entity: string,                  // must exist in snapshot
-  targetContentHash: string,       // entity evidence hash at proposal time
-  confidence: number,              // 0..1
-  reason: string,                  // ≤ 1 000 chars
-  evidence: Evidence[],            // ≥ 1, every item must exist in snapshot/report evidence
-  origin: { agentId, agentVersion, promptVersion, model?, provider? },
-  baseSnapshotHash: string,
-  payload: … per kind
-}
-```
-
-Kinds and payloads:
-
-| Kind | Payload | Validator (deterministic) | Default policy |
+| Kind | Payload | Deterministic validator | Policy |
 | --- | --- | --- | --- |
-| `classify-document` | `{ type, audience, lifecycle, criticality }` | enum values; entity is a document | auto-accept |
-| `summarize` | `{ summary ≤ 400 chars, language }` | length; no secrets (`redactValue` scan); not identical to existing summary | auto-accept |
-| `add-alias` | `{ alias }` | ≤ 64 chars; not an existing id/alias; no collision across proposals | auto-accept |
-| `add-intent` | `{ phrase, language }` | ≤ 120 chars; language tag | auto-accept |
-| `mark-canonical` | `{ scope: entityId }` | scope exists; at most one canonical document per scope after merge, else `conflict` | human approval |
-| `propose-relation` | `{ from, to, kind, detection }` | endpoints exist; kind in allowed set; not already observed; evidence points into `from` or `to` | human approval |
-| `flag-contradiction` | `{ against: entityId, claim, observed }` | both entities exist; evidence in both | human approval |
-| `flag-redundancy` | `{ with: entityId }` | both documents exist; not exact duplicates (already deterministic) | human approval |
-| `flag-gap` | `{ area, missing: 'document' \| 'owner' \| 'checks' }` | area exists; gap not already covered | auto-accept as finding, never as fact |
-| `rank-hint` | `{ relevance: 'strong' \| 'weak' }` | entity exists | auto-accept, bounded weight |
+| `classify-document` | type, audience, lifecycle, criticality | enum values; entity is a document | auto-accept |
+| `summarize` | summary ≤ 400 chars, language | length; `redactValue` scan; differs from current | auto-accept |
+| `add-alias` | alias | ≤ 64 chars; no collision with ids or aliases (`fuzzyMatchList` ≥ 0.95 counts as collision) | auto-accept |
+| `add-intent` | phrase, language | ≤ 120 chars; language tag | auto-accept |
+| `mark-canonical` | scope entity | scope exists; one canonical per scope, else `conflict` | human approval |
+| `propose-relation` | from, to, kind, detection | endpoints exist; kind allowed; not already observed; evidence inside an endpoint | human approval |
+| `flag-contradiction` | against, claim, observed | both entities exist; evidence in both | human approval |
+| `flag-redundancy` | with | both documents exist; not an exact duplicate | human approval |
+| `flag-gap` | area, missing | area exists; gap not already covered | finding only |
+| `rank-hint` | relevance strong / weak | entity exists | bounded weight |
+| `suggest-area` | directories, name | every directory exists; no overlap with configured areas | human approval → configuration, never an entity |
 
-Anything else fails schema validation and is recorded as `rejected: invalid-kind`.
+### 5.2 Overlay artifact, stage and approvals
 
-### 4.2 Overlay artifact and stage
+`EnrichmentOverlayV1 { baseSnapshotHash, accepted[], pending[], rejected[{ proposal, reason }], stats }`, produced by the new workflow stage `enrich` between `reconcile` and `evaluate`, run only by `ak-docs enrich` or `check --enrich`. A missing or failed overlay never changes `check`. Entry-level staleness: an accepted entry whose `targetContentHash` no longer matches is treated as expired at projection time. Human approvals go through `createApprovalGate` from `@agentskit/core/hitl` with a file-backed `ApprovalStore` under `.doc-bridge/approvals/`; `ak-docs fix approve`, MCP `docbridge.proposals` and the Knap-rendered `overlay-review.md` all read and write the same store. Accepted relations carry `provenance: proposed` and render dashed in the HTML report.
 
-`EnrichmentOverlayV1`:
+### 5.3 Context packs, batching, cache
 
-```ts
-{
-  type: 'enrichment-overlay', schemaVersion: 1, contentHash, contentHashAlgo,
-  baseSnapshotHash, project, sourceRevision, sourceRevisionKind, configurationHash,
-  accepted: (EnrichmentProposalV1 & { acceptedAt, acceptedBy: 'policy' | string })[],
-  pending:  EnrichmentProposalV1[],                     // awaiting human approval
-  rejected: { proposal: EnrichmentProposalV1; reason: string }[],
-  stats: { byKind: Record<kind, { proposed, accepted, rejected, pending }>, agentRuns, cacheHits, inputBytes, outputBytes }
-}
-```
+Agents never receive the whole snapshot. One pack per target entity: the entity, depth-1 neighbours (≤ 32, from graphology), open diagnostics touching it, bounded redacted evidence excerpts; deterministic ordering; 64 KB default budget enforced with `compileBudget`. Packs batch by area. Protocol `doc-bridge.registry-agent.v2` adds `task: curate | review | adjudicate` and `packs[]`, returns `proposals[]`. Cache key = hash of task, agent id and version, prompt version, pack hash; persisted under `.doc-bridge/enrich/cache/`. Unchanged tree → zero agent calls.
 
-- New workflow stage `enrich` between `reconcile` and `evaluate`, run only by `ak-docs enrich` or by `check --enrich`. Deterministic `check` never runs it; a missing or failed overlay never changes `check` results.
-- Entry-level staleness: on every projection, an accepted entry whose `targetContentHash` no longer matches its entity's hash is moved to `expired` in the derived view and excluded from ranking. The overlay file itself is not rewritten by a read.
-- Approvals reuse the existing fix-proposal approval path (`ak-docs fix approve`, MCP `docbridge.proposals`) with `kind: enrichment`. Approval binds to `proposalId` and `targetContentHash`.
-- Overlay entries never delete or alter deterministic entities or relations. `propose-relation` accepted entries are added with `provenance: proposed` and rendered as dashed in the HTML report.
+### 5.4 Roles
 
-### 4.3 Context packs, batching, cache
+Curator (documents), graph reviewer (structure), adjudicator (only for canonical conflicts and disputed contradictions; must be a different agent id, enforced by the validator). Same adapter, three tasks, roles as configuration. Default stays `ecosystem-doc-bridge-corpus-scanner` as curator.
 
-Agents never receive the whole snapshot. `src/enrich/context-pack.ts` builds one bounded pack per target entity:
+### 5.5 What the agent should not do
 
-- target entity + its `contains`/`covers`/`mentions`/`imports` neighbours (depth 1, ≤ 32) + open diagnostics touching it + evidence excerpts (bounded lines, opt-in full snippets, redacted).
-- Deterministic ordering (entity id), deterministic truncation, byte budget default 64 KB (`intelligence.registry.maxPackBytes`).
-- Packs are grouped by area into batches; the CLI protocol becomes `doc-bridge.registry-agent.v2` with `task: 'curate' | 'review' | 'adjudicate'` and `packs: ContextPack[]`, returning `proposals: EnrichmentProposalV1[]`.
-- Cache key = `sha256(task, agentId, agentVersion, promptVersion, pack.contentHash)` where `pack.contentHash` covers the target hash and neighbour hashes. Cache persisted under `.doc-bridge/enrich/cache/`, so `ak-docs enrich` on an unchanged tree makes zero agent calls; a one-document change re-runs packs whose hash changed (the document and its immediate neighbours).
+Path and symbol mentions, document links, canonicality, package `exports` → module edges, directory areas, freshness and cycle detection are cheaper and more reliable deterministically (§3.1, §3.3, §4.1, §4.2). The agent's remaining work is genuinely semantic: summaries, natural-language aliases and intents, audience and type when paths are uninformative, contradictions between prose and observed structure, and naming a suggested area.
 
-### 4.4 Roles
+## 6. Measurement
 
-- **Curator** (documents): `classify-document`, `summarize`, `add-alias`, `add-intent`, `mark-canonical`, `flag-redundancy`, `flag-gap`.
-- **Graph reviewer** (structure): `propose-relation`, `flag-contradiction`, `flag-gap`, `rank-hint`.
-- **Adjudicator**: invoked only for `mark-canonical` conflicts and for `flag-contradiction` when the reviewer and curator disagree. Must be a different `agentId` from the proposer; the validator rejects an adjudication whose origin matches any proposal it adjudicates.
+### 6.1 Retrieval benchmark, local, in CI
 
-Same adapter, three tasks; roles are configuration (`intelligence.registry.roles.curator`, `.reviewer`, `.adjudicator`), all optional. Default remains `ecosystem-doc-bridge-corpus-scanner` as curator only.
-
-### 4.5 What the agent should not do
-
-Pushed back into Phase 1 because they are cheaper and more reliable deterministically: path and symbol mentions, document links, canonical detection by inbound links, package export → module relations (the sketch's own example is a static `package.json` `exports` read), directory areas, freshness. The agent's remaining work is genuinely semantic: summaries, natural-language aliases and intents, audience and type when paths are uninformative, and contradictions between prose and observed structure.
-
-## 5. Phase 3 — measurement
-
-### 5.1 Retrieval benchmark (local, deterministic, in CI)
-
-`ak-docs bench retrieval <golden.json> [--index <path>] [--json]`:
+The golden set is an `EvalSuiteDoc` (`@agentskit/core/eval-format`):
 
 ```json
-{ "queries": [
-  { "q": "where do I add a new MCP tool", "expect": ["area:src/mcp", "document:docs/mcp.md"], "agent": true, "lang": "en" },
-  { "q": "onde ficam as transições do workflow", "expect": ["module:src/workflow/engine.ts"], "lang": "pt" },
-  { "q": "reconcileKnowledge", "expect": ["module:src/reconciliation/reconcile.ts"] }
+{ "version": 1, "cases": [
+  { "id": "mcp-tool", "input": "where do I add a new MCP tool", "expected": { "anyOf": ["area:src/mcp", "document:docs/mcp.md"] }, "metadata": { "agent": true, "lang": "en" } },
+  { "id": "workflow-pt", "input": "onde ficam as transições do workflow", "expected": { "anyOf": ["module:src/workflow/engine.ts"] }, "metadata": { "lang": "pt" } },
+  { "id": "symbol", "input": "reconcileKnowledge", "expected": { "anyOf": ["module:src/reconciliation/reconcile.ts"] } }
 ]}
 ```
 
-Metrics: hit@1, hit@3, MRR, mean `contextBytes` of the top-3 payload, zero-result rate. A checked-in golden set for this repository (≥ 40 queries, both languages) and one per fixture. CI fails on hit@3 regression below a stored baseline; the baseline is replaced only through the same audited path used by the study.
+`ak-docs bench retrieval <suite> [--index <path>] [--json]` runs `runEval` from `@agentskit/eval` with a deterministic agent function over the index and reports hit@1, hit@3, MRR, mean `contextBytes` and approximate tokens of the top 3, and zero-result rate. `@agentskit/eval/ci` compares against a committed baseline and fails the job on hit@3 regression. A checked-in suite for this repository (≥ 40 cases, both languages) and one per fixture. This is the number the doctor consumes and the first gate for any ranking change.
 
-This is the metric the doctor consumes (3.8) and the first gate for any ranking change. It costs milliseconds and needs no agent.
+### 6.2 Overlay quality
 
-### 5.2 Overlay quality
+Emitted by `ak-docs enrich --json`: proposals per kind (proposed / accepted / rejected / pending, rejection reasons), invented relations (must trend to zero), stability (identical overlay hashes on two deterministic runs; share of identical `proposalId`s with a live model), cost (runs, bytes, cache hit rate, wall time), and retrieval delta (benchmark with and without the overlay; the overlay must not lower hit@3).
 
-Emitted by `ak-docs enrich --json` and persisted in `stats`:
+### 6.3 Controlled study arm
 
-- proposals per kind: proposed / accepted / rejected / pending, with rejection reasons histogram;
-- invented relations: `propose-relation` rejected for non-existent endpoints (must trend to zero);
-- stability: two runs on the same tree with `deterministic: true` produce identical overlay hashes; with a live model, the share of identical `proposalId`s between runs;
-- cost: agent runs, input/output bytes, cache hit rate, wall time;
-- retrieval delta: benchmark run with and without the overlay on the same index; the overlay must not lower hit@3.
+After 6.1 shows the deterministic arm answering the benchmark, add `registry-assisted` (already reserved in `task-suite-v1.json`) to the existing runner. Give every task machine-checkable expectations (`expectedEntities`, `expectedDocuments`) checked by the bench command; reserve the model adjudicator for rubric items that cannot be checked mechanically. Add tokens-to-first-evidence as a primary metric, since it is the direct measure of Problem 2.
 
-### 5.3 Controlled study arm
+## 7. Guardrails
 
-Only after 5.1 shows the deterministic arm answering the benchmark, add `registry-assisted` (already reserved in `task-suite-v1.json` `scenarioIds`) to the existing runner. Fix the adjudication that produced zero successes in both arms: every task gets machine-checkable expectations where possible (`expectedEntities`, `expectedDocuments`) checked by `ak-docs bench`, with the LLM adjudicator reserved for rubric items that cannot be checked mechanically.
+1. Enrichment never removes deterministic evidence: the projection asserts `observed ⊆ projected`.
+2. No evidence, no entry: every reference must exist in the snapshot or report.
+3. Agent unavailable never blocks: `check`, `index`, `search`, `query`, `render` and MCP work with no overlay or an expired one.
+4. Provenance on everything: origin, prompt version, target hash, base snapshot hash, status.
+5. Reproducible acceptance: re-running validators on the overlay reproduces the same partition.
+6. No self-approval: proposer id differs from approver; `acceptedBy: 'policy'` only for auto-accept kinds.
+7. Bounded influence: agent signals ≤ 15 % of the identity boost; a test asserts an exact id match outranks any boosted entry.
+8. No agent at query time: `search`, `query`, `render` and MCP handlers import nothing from `src/agents`; a lint script enforces it.
+9. Privacy: packs pass `redactValue`; full snippets opt-in; nothing leaves the process unless `intelligence.registry` is enabled.
+10. Templates cannot execute code: Knap only; no `eval`, no user functions in templates.
 
-## 6. Guardrails
-
-Carried over and made enforceable:
-
-1. Enrichment never removes deterministic evidence: overlay entries are additive; the projection asserts `observed ⊆ projected`.
-2. No evidence, no entry: `evidence.length ≥ 1` and every reference must exist in the snapshot or report (existing `validateGrounding`, extended per kind).
-3. Agent unavailable never blocks: `check`, `index`, `search`, `query`, MCP work with no overlay or with an expired one.
-4. Provenance on everything: `origin`, `promptVersion`, `targetContentHash`, `baseSnapshotHash`, `status`.
-5. Reproducible acceptance: `accepted` entries are content-addressed; re-running validators on the overlay must reproduce the same partition.
-6. No self-approval: proposer `agentId` ≠ approver; `acceptedBy: 'policy'` is only legal for auto-accept kinds.
-7. Bounded influence: `acceptedAgentSignals` ≤ 15 % of the identity boost; a test asserts an exact id match outranks any overlay-boosted entry.
-8. No agent at query time: `search`, `query`, MCP handlers import nothing from `src/agents`; a lint script (like `check:no-legacy-chat-imports`) enforces it.
-9. Privacy: packs pass `redactValue`; full snippets opt-in; nothing leaves the process unless `intelligence.registry` is explicitly enabled.
-
-## 7. Delivery
+## 8. Delivery
 
 | Step | Scope | Main files | Proof |
 | --- | --- | --- | --- |
-| 1a | Stopwords + IDF + field weights, human docs into `knowledge`, symbol/path tokens from snapshot | `src/query/text.ts`, `src/query/search.ts`, `src/index-builder/build-index.ts` | benchmark hit@3 on this repo; `search and` → 0 |
-| 1b | Markdown analyzer: links, mentions, symbols, hashes | `src/discovery/markdown.ts` (new), `src/discovery/repository.ts` | fixture with 3 docs / 4 modules; expected relation ids |
-| 1c | Areas + area scope + ownership attachment | `src/discovery/repository.ts`, `src/reconciliation/reconcile.ts`, `src/config/schema.ts` | this repo yields ≥ 1 undocumented area relation |
-| 1d | `RetrievalIndexV1` projection + explain ranking + graph handoffs | `src/retrieval/*` (new), `src/query/*` | compat tests for `DocBridgeIndexV1`/`AgentHandoffV1`; `--explain` snapshot tests |
-| 1e | MCP `knowledge.search` / `knowledge.lookup`; doctor v2 | `src/mcp/server.ts`, `src/doctor/run-doctor.ts` | MCP parity test vs CLI; doctor grade drops on unreachable docs |
-| 3a | `bench retrieval` + golden sets + CI gate | `src/bench/*` (new), `tests/fixtures/golden-*.json`, `.github/workflows/ci.yml` | baseline file committed |
-| 2a | `EnrichmentProposalV1`, validators, overlay artifact, `enrich` stage | `src/schemas/enrichment.ts`, `src/enrich/*` (new), `src/workflow/engine.ts` | deterministic fake agent fixtures per kind; expiry test |
-| 2b | Context packs, batching, persistent cache, protocol v2 | `src/enrich/context-pack.ts`, `src/agents/registry-adapter.ts` | zero calls on unchanged tree; one pack on one-doc change |
-| 2c | Roles, adjudicator, approval path, HTML dashed edges | `src/agents/*`, `src/fixes/proposals.ts`, `src/report/html.ts` | self-approval rejected; conflict routed to adjudicator |
-| 3b | Overlay stats, `registry-assisted` study arm | `src/study/*` | benchmark delta reported |
+| 1a | minisearch + tokenizer + stopwords; every document, area and module into `knowledge[]` with `contentHash` and `tags` | `src/query/text.ts`, `src/query/search.ts`, `src/index-builder/build-index.ts` | bench hit@3 on this repo; `search and` → 0; harness provider finds human docs |
+| 1b | remark-based Markdown analyzer: links, mentions, symbols, hashes; YAML + Zod `docbridge` block | `src/discovery/markdown.ts` (new), `src/discovery/documentation.ts`, `src/lib/markdown.ts` | fixture with 3 docs / 4 modules; existing `DOCBRIDGE_*` codes preserved |
+| 1c | areas, area scope, ownership attachment; graphology working graph; PageRank, proximity, cycles | `src/graph/*` (new), `src/discovery/repository.ts`, `src/reconciliation/reconcile.ts`, `src/rules/engine.ts` | ≥ 1 undocumented area relation on this repo; centrality from betweenness |
+| 1d | `RetrievalIndexV1`, explain ranking, graph handoffs, `RetrievedDocument` retriever | `src/retrieval/*` (new), `src/query/*`, `src/retriever/*` | compat tests; `--explain` snapshots; `createHybridRetriever` over the retriever |
+| 1e | MCP `knowledge.search` / `knowledge.lookup` with `compileBudget`; `Finding` output; doctor v2 | `src/mcp/server.ts`, `src/doctor/run-doctor.ts`, `src/cli/program.ts` | MCP/CLI parity; payload fits declared budget; grade drops on unreachable docs |
+| 1f | Knap renderings: `llms.txt`, area pages, sidecars, digest, overlay review | `src/render/*` (new), `templates/*.md` | golden-file tests; digest lists changed entities |
+| 3a | `bench retrieval` as `EvalSuiteDoc` + `@agentskit/eval` CI verdict | `src/bench/*` (new), `tests/fixtures/retrieval-suite-*.json`, CI workflow | baseline committed |
+| 2a | `EnrichmentProposalV1`, validators, overlay artifact, `enrich` stage, HITL approval store | `src/schemas/enrichment.ts`, `src/enrich/*` (new), `src/workflow/engine.ts` | fake-agent fixtures per kind; expiry test; approval via gate |
+| 2b | context packs, batching, persistent cache, protocol v2 | `src/enrich/context-pack.ts`, `src/agents/registry-adapter.ts` | zero calls on unchanged tree |
+| 2c | roles, adjudicator, dashed edges, `GraphMemory` export | `src/agents/*`, `src/report/html.ts`, `src/graph/memory.ts` | self-approval rejected; `traverse` over the projected graph |
+| 3b | overlay stats; `registry-assisted` arm; tokens-to-first-evidence | `src/study/*` | benchmark delta reported |
 
-Order is 1a → 1b → 1c → 1d → 1e → 3a → 2a → 2b → 2c → 3b. Steps 1a–1c are independent enough to ship as separate pull requests within a week; each keeps the 365 existing tests green and adds its own.
+Order: 1a → 1b → 1c → 1d → 1e → 1f → 3a → 2a → 2b → 2c → 3b. Each step keeps the existing tests green and adds its own.
 
-Explicitly not in this plan: a vector store by default (the optional `@agentskit/rag` path keeps consuming the same entries), calling agents from `search`, splitting the package, package-level configuration overrides, or any language analyzer beyond JS/TS and Markdown.
+Not in this plan: a vector store by default (the optional `@agentskit/rag` path becomes hybrid over the same entries), calling agents from `search` or `render`, splitting the package, package-level configuration overrides, language analyzers beyond JS/TS and Markdown, or a hosted control plane.
 
-## 8. Relation to the earlier sketch
+## 9. Relation to the earlier sketch
 
 | Earlier sketch | This plan |
 | --- | --- |
-| Agent enriches the canonical graph that retrieval views read | Same invariant, but first makes retrieval actually read the graph (§1.1, §3.4); otherwise enrichment is invisible |
-| Curator + graph reviewer + separate adjudicator | Kept (§4.4), with the self-approval rule enforced by the validator |
-| Free-form proposal `{ entity, proposal, relation, confidence, evidence, reason }` | Discriminated union with per-kind validators and policies (§4.1); idempotent `proposalId` |
-| "Use `contentHash` as cache, invalidate the affected subgraph" | Requires per-entity hashes, which do not exist today (§1.5, §3.3); cache keyed on context-pack hash (§4.3) |
-| `retrievalScore = intentMatch + ownershipMatch + …` | Defined components with BM25 lexical core, versioned stopwords, bounded agent term, and `--explain` output (§3.5) |
-| Agent proposes relations "the scanner cannot infer" | Most of those are inferable; moved to the Markdown analyzer and areas (§3.1, §3.2, §4.5) |
-| Evaluate three modes with the same task suite | Add a millisecond-scale retrieval benchmark in CI first (§5.1); fix the adjudication that scored zero in both arms before adding the third arm (§5.3) |
-| Guardrails list | Kept and made testable (§6), plus "no agent at query time" and "bounded influence" |
-| Start with a versioned overlay and two Registry agents | Start with the deterministic layer; the overlay is step 2a, after the benchmark exists |
+| Agent enriches the canonical graph that retrieval views read | Same invariant, but first makes retrieval read the graph (§2.1, §4.4); otherwise enrichment is invisible |
+| Curator, graph reviewer, separate adjudicator | Kept (§5.4), self-approval rule enforced by the validator |
+| Free-form proposal object | Discriminated union with per-kind validators and policies (§5.1); idempotent ids; approvals through the ecosystem HITL gate |
+| Use `contentHash` as cache, invalidate the affected subgraph | Needs per-entity hashes that do not exist (§2.5, §4.3); cache keyed on context-pack hash (§5.3) |
+| `retrievalScore` as a sum of named terms | BM25+ from minisearch, PageRank and proximity from graphology, bounded agent term, `--explain` (§4.5) |
+| Agent proposes relations the scanner cannot infer | Most are inferable; moved to remark, graphology and areas (§4.1–4.2, §5.5) |
+| Evaluate three modes with the same task suite | Retrieval benchmark as an `EvalSuiteDoc` in CI first (§6.1); fix adjudication before the third arm (§6.3) |
+| Guardrails list | Kept and made testable (§7), plus "no agent at query time", "bounded influence" and "templates cannot execute code" |
+| No library or ecosystem decisions | Build-or-borrow table (§3) with licence, size and what each replaces; eight AgentsKit contracts adopted (§3.6) |
+| Human side implicit | Knap renderings (§4.9) make every artifact readable and reviewable by humans; the digest answers "which docs does this change touch" |
