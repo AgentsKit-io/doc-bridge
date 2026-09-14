@@ -254,6 +254,8 @@ const diagnosticMapping = (diagnostic: ReconciliationReportV1['diagnostics'][num
   if (diagnostic.code === 'CONFLICTING_DECLARATIONS') return { category: 'contradiction', status: 'conflict', confidence: 'high', severity: diagnostic.severity }
   if (diagnostic.code === 'DECLARED_RELATION_STALE') return { category: 'stale', status: 'stale-or-unverified', confidence: 'high', severity: diagnostic.severity }
   if (diagnostic.code === 'OWNERSHIP_PATH_UNOBSERVED') return { category: 'stale', status: 'stale-or-unverified', confidence: 'high', severity: diagnostic.severity }
+  // A cycle is an architecture finding, not a documentation one: reported, never counted as a gap.
+  if (diagnostic.code === 'IMPORT_CYCLE') return undefined
   if (diagnostic.code === 'RELATION_NOT_ANALYZED') return { category: 'limitation', status: 'not-analyzed', confidence: 'low', severity: diagnostic.severity }
   if (diagnostic.code === 'UNRESOLVED_ENTITY_REFERENCE') return { category: 'contradiction', status: 'unresolved', confidence: 'high', severity: diagnostic.severity }
   return { category: 'quality', status: 'unresolved', confidence: 'high', severity: diagnostic.severity }

@@ -121,6 +121,11 @@
   "dependencies": {
     "@agentskit/harness": "0.9.0",
     "github-slugger": "^2.0.0",
+    "graphology": "~0.26.0",
+    "graphology-communities-louvain": "~2.0.2",
+    "graphology-dag": "~0.4.1",
+    "graphology-metrics": "~2.4.2",
+    "graphology-shortest-path": "~2.1.0",
     "mdast-util-to-string": "^4.0.0",
     "mermaid": "^11.17.2",
     "minimatch": "^10.2.6",

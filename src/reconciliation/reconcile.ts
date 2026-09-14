@@ -1,4 +1,5 @@
 import { unobservedOwnershipPaths } from '../discovery/areas.js'
+import { importCycles } from '../graph/build.js'
 import { contentHashForArtifactV1, sha256NormalizedV1 } from '../index-builder/content-hash.js'
 import {
   ReconciliationReportV1Schema,
@@ -27,6 +28,8 @@ export type ReconciliationOptions = {
   readonly ownership?: readonly { readonly id: string; readonly path: string }[]
   /** Where the ownership records were configured, for the evidence trail. */
   readonly ownershipSource?: string
+  /** Report import cycles. On by default; a cycle is structure, and structure is what this compares. */
+  readonly reportImportCycles?: boolean
 }
 
 const ignoredDocumentationRelations = new Set(['covers'])
@@ -383,6 +386,29 @@ export const reconcileKnowledge = (
         undefined,
         [relation.id, ...candidates.map((candidate) => candidate.id)],
         'Update the declaration or the implementation so both graphs describe the same relation.',
+      ))
+    }
+  }
+
+  /*
+   * Import cycles.
+   *
+   * A cycle is not a documentation gap, so it is not an undocumented relation; it is a structural
+   * fact worth a reader's attention, with every edge that forms it as evidence — a diagnostic
+   * whose loop a reader cannot trace is a claim, not a finding.
+   */
+  if (options.reportImportCycles !== false) {
+    for (const cycle of importCycles(observed)) {
+      diagnostics.push(reportDiagnostic(
+        'IMPORT_CYCLE',
+        'unresolved',
+        'warn',
+        `Import cycle across ${cycle.nodes.length} modules: ${cycle.nodes.join(' → ')} → ${cycle.nodes[0] ?? ''}.`,
+        cycle.evidence,
+        { cycle: cycle.nodes },
+        cycle.nodes,
+        cycle.relationIds,
+        'Break the cycle by moving the shared code into a module both sides import, or invert one dependency.',
       ))
     }
   }

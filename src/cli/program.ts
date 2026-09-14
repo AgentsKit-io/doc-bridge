@@ -17,6 +17,7 @@ import { scanHumanDocRecords } from '../index-builder/human-adapters/index.js'
 import { retrieveHybridChunks } from '../federation/llms.js'
 import { runGates, type GateId } from '../gates/run-gates.js'
 import { evaluateRules, parseRuleId, parseRuleSeverity, type RuleMode } from '../rules/engine.js'
+import { centrality } from '../graph/build.js'
 import { runChatOnce, startInkChat } from '../intelligence/chat.js'
 import { PeerMissingError, layer1InstallHint } from '../intelligence/peers.js'
 import { createDocBridgeRag } from '../intelligence/rag.js'
@@ -572,7 +573,13 @@ const checkWorkflow = (root: string, config: DocBridgeConfigV1): WorkflowExecuti
   const reconciled = reconcileWorkflow(root, config)
   const report = parseReconciliationReport(loadWorkflowStepOutput(reconciled.stateDir, 'reconcile'))
   const versions = { pipelineVersion: report.pipelineVersion, analyzerVersions: report.analyzerVersions }
-  runWorkflow(workflowOptions(root, config, report.sourceRevision, 'evaluate', { evaluate: () => evaluateRules(report, { ...(config.rules ? { config: config.rules } : {}) }) }, versions))
+  // `centrality-risk` needs betweenness over the import graph, which only the snapshot can give.
+  const snapshot = parseDiscoverySnapshot(loadWorkflowStepOutput(reconciled.stateDir, 'normalize'))
+  const evaluate = () => evaluateRules(report, {
+    ...(config.rules ? { config: config.rules } : {}),
+    centrality: centrality(snapshot),
+  })
+  runWorkflow(workflowOptions(root, config, report.sourceRevision, 'evaluate', { evaluate }, versions))
   return runWorkflow(workflowOptions(root, config, report.sourceRevision, 'report', { report: ({ input }) => input }, versions))
 }
 

@@ -9,6 +9,7 @@ import { detectPackageManager } from '../lib/package-manager.js'
 import { toPosix } from '../lib/paths.js'
 import { contentHashForArtifactV1, sha256NormalizedV1 } from '../index-builder/content-hash.js'
 import { safeWalkFiles } from '../safety/repository.js'
+import { GRAPH_ANALYZER_VERSION, areaSuggestionCoverage } from '../graph/build.js'
 import { deriveAreas, type AreaModule } from './areas.js'
 import { entityId } from './identity.js'
 import {
@@ -436,11 +437,11 @@ const artifact = (root: string, config: DocBridgeConfigV1 | undefined, files: re
     sourceRevision: revision.value,
     sourceRevisionKind: revision.kind,
     configurationHash: sha256NormalizedV1(config ?? {}),
-    pipelineVersion: '1.3.0',
-    analyzerVersions: { repository: '1.2.0', 'js-ts': '1.3.4', markdown: MARKDOWN_ANALYZER_VERSION },
+    pipelineVersion: '1.4.0',
+    analyzerVersions: { repository: '1.2.0', 'js-ts': '1.3.4', markdown: MARKDOWN_ANALYZER_VERSION, graph: GRAPH_ANALYZER_VERSION },
     entities: [...entities].sort((a, b) => a.id.localeCompare(b.id)),
     relations: [...relations].sort((a, b) => a.id.localeCompare(b.id)),
-    coverage: coverage.map((entry) => ({ ...entry, analyzerVersion: entry.analyzerVersion ?? ({ repository: '1.2.0', 'js-ts': '1.3.4', markdown: MARKDOWN_ANALYZER_VERSION }[entry.analyzer] ?? '1.0.0') })),
+    coverage: coverage.map((entry) => ({ ...entry, analyzerVersion: entry.analyzerVersion ?? ({ repository: '1.2.0', 'js-ts': '1.3.4', markdown: MARKDOWN_ANALYZER_VERSION, graph: GRAPH_ANALYZER_VERSION }[entry.analyzer] ?? '1.0.0') })),
   }
   return DiscoverySnapshotV1Schema.parse({ ...base, contentHash: contentHashForArtifactV1(base) })
 }
@@ -756,6 +757,18 @@ export const discoverRepository = (opts: DiscoveryOptions = {}): DiscoverySnapsh
     : observedRuntimeWiring
       ? { analyzer: 'js-ts', scope: 'runtime-wiring', status: 'complete', reason: 'All observed configured runtime-wiring calls resolved to static bindings.' }
       : { analyzer: 'js-ts', scope: 'runtime-wiring', status: 'not-applicable', reason: 'No configured runtime-wiring call was observed.' }
+
+  /*
+   * Community suggestions, last, because they need the finished import graph.
+   *
+   * A cluster of modules that move together is a hypothesis about where an area boundary might
+   * be. It is reported as coverage — status `not-analyzed`, because whether the cluster is an area
+   * is a question nobody has answered — and never as an area entity. A clustering algorithm does
+   * not get to name the architecture.
+   */
+  coverage.push(
+    ...areaSuggestionCoverage({ entities: [...entities.values()], relations: [...relations.values()] }),
+  )
 
   return artifact(root, opts.config, allFiles, [...entities.values()], [...relations.values()], coverage)
 }

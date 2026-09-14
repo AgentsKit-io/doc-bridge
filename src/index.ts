@@ -102,6 +102,36 @@ export {
 } from './index-builder/project-corpus.js'
 export { entityId, relationId } from './discovery/identity.js'
 export {
+  DEFAULT_COMMUNITY_SEED,
+  DEFAULT_PROXIMITY_DEPTH,
+  DOCUMENTATION_EDGE_KINDS,
+  GRAPH_ANALYZER_VERSION,
+  IMPORT_EDGE_KINDS,
+  MAX_REPORTED_CYCLES,
+  PROXIMITY_EDGE_KINDS,
+  areaSuggestionCoverage,
+  areaSuggestions,
+  buildKnowledgeGraph,
+  canonicality,
+  centrality,
+  importCycles,
+  proximity,
+  seededRandom,
+  type AreaSuggestion,
+  type BuildGraphOptions,
+  type GraphSignal,
+  type ImportCycle,
+  type ProximityOptions,
+} from './graph/build.js'
+export {
+  createDocBridgeGraphMemory,
+  type GraphEdge,
+  type GraphMemory,
+  type GraphNode,
+  type GraphQuery,
+  type KnowledgeOverlay,
+} from './graph/memory.js'
+export {
   AREA_ANALYZER_VERSION,
   DEFAULT_AREA_DEPTH,
   DEFAULT_AREA_ROOTS,
