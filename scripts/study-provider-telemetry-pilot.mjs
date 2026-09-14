@@ -9,7 +9,6 @@ import {
   createControlledStudyRunPlan,
   createStudyProviderCliConfig,
   createStudyRepositoryConfig,
-  measureProviderToolTelemetry,
   parseControlledStudyLedger,
   parseStudyTaskSuite,
   runControlledStudy,
