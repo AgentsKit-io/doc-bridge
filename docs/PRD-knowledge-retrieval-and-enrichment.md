@@ -384,7 +384,7 @@ Any other kind fails schema validation and is recorded as rejected with reason `
 
 ### Delivery workstreams
 
-Each workstream is a sub-issue of this PRD. Order is KR-01 through KR-06, then KR-07, then KR-08 through KR-10, then KR-11. Every workstream keeps the existing test suite green and adds its own tests.
+Each workstream is a sub-issue of this PRD, tracked as [#170](https://github.com/AgentsKit-io/doc-bridge/issues/170) through [#180](https://github.com/AgentsKit-io/doc-bridge/issues/180) in order. Order is KR-01 through KR-06, then KR-07, then KR-08 through KR-10, then KR-11, with the refinement that KR-07 can start immediately so the pre-change retrieval baseline exists before KR-01 lands. Every workstream keeps the existing test suite green and adds its own tests.
 
 | ID | Workstream | Main files | Proof |
 | --- | --- | --- | --- |
