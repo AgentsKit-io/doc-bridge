@@ -1,3 +1,10 @@
+---
+owner: doc-bridge-maintainers
+lifecycle: active
+sourceOfTruth: src
+validationPath: pnpm test && pnpm typecheck
+---
+
 # Knowledge Engine Runbook
 
 Doc Bridge is deterministic by default. It turns repository structure and Markdown declarations into versioned snapshot, reconciliation, rule, report, and workflow artifacts. Optional Registry assistance is explicit and never changes deterministic results.

@@ -1,3 +1,10 @@
+---
+owner: security-maintainers
+lifecycle: active
+sourceOfTruth: package.json
+validationPath: pnpm test && pnpm typecheck
+---
+
 # Security Policy
 
 ## Supported versions
