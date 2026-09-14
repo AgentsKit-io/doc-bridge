@@ -69,7 +69,9 @@ node bin/ak-docs.js bench retrieval docs/bench/retrieval-suite-v1.json \
 
 Only `hitAt3` blocks. Every other metric is reported: an improvement as `improved`, a decline as `warning`. So a change that lifts hit@3 while wrecking hit@1 passes the gate but says so out loud.
 
-## The first baseline
+## The baselines
+
+### Before KR-01
 
 Measured on `master` at 1.8.0, before any ranking work:
 
@@ -84,3 +86,37 @@ Measured on `master` at 1.8.0, before any ranking work:
 By kind: ownership 100%, question 26.9%, path 12.5%, **symbol 0%**. By language: English 20%, Portuguese 40%.
 
 Those numbers are the diagnosis in the parent PRD turned into measurements. Nearly half of all queries return nothing, and not one of the twenty exported-symbol queries finds its module, because the index holds 11 agent sidecars while the snapshot holds 369 entities. KR-01 and KR-06 have to move these; this file is how anyone can check that they did.
+
+### After KR-01
+
+The current approved baseline, with the repository corpus projected into the index and ranked by
+field-weighted BM25:
+
+| Metric | Before | After |
+| --- | --- | --- |
+| hit@1 | 21.7% | **76.7%** |
+| hit@3 | 23.3% | **83.3%** |
+| Mean reciprocal rank | 0.228 | **0.812** |
+| Zero-result rate | 46.7% | **5.0%** |
+| Mean context | 243 bytes (~61 tokens) | 343 bytes (~86 tokens) |
+
+The figures here are a summary; [`retrieval-baseline-v1.json`](./retrieval-baseline-v1.json) holds
+the approved ones. They move slightly whenever the documentation changes, because the
+documentation *is* part of the corpus being searched — which is why only hit@3 blocks.
+
+By kind: symbol **0% → 100%**, path 12.5% → **100%**, question 26.9% → **61.5%**, ownership 100%
+→ 100%. By language: English 20% → **92%**, Portuguese 40% → 40%.
+
+**On the context figure.** Mean context rose, and that is not a regression hiding in a warning.
+Before, 46.7% of queries returned nothing and cost nothing; the mean was low because retrieval
+was failing. Per *answered* query the cost went down — 243 / 0.533 ≈ 456 bytes before, 343 /
+0.95 ≈ 361 bytes now — while 78% more queries get answered. That is the trade the PRD asked
+for; the metric is reported rather than gated precisely so the shape of such a change stays
+visible.
+
+**On Portuguese.** Unchanged at 40%, and three of the ten cases still return nothing. The lexicon
+now handles Portuguese stopwords, accents and plurals, so a Portuguese query against Portuguese
+documentation ranks by the same rules as English — but this repository's documentation is in
+English, and matching `reconciliação` to `reconciliation` is a cross-language problem that
+lexical retrieval cannot solve. It needs the semantic layer in a later workstream. The suite
+segments by language so the gap stays measured instead of assumed.

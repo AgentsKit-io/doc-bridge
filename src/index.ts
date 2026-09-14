@@ -49,9 +49,13 @@ export {
 export {
   DocBridgeIndexV1Schema,
   KnowledgeEntrySchema,
+  RepositoryInputsSchema,
+  RetrievalMetadataSchema,
   INDEX_SCHEMA_VERSION,
   type DocBridgeIndexV1,
   type KnowledgeEntry,
+  type RepositoryInputs,
+  type RetrievalMetadata,
 } from './schemas/doc-bridge-index.js'
 
 export {
@@ -84,6 +88,56 @@ export {
 } from './validate.js'
 
 export { buildDocBridgeIndex, type BuildIndexOptions, type BuildIndexResult } from './index-builder/build-index.js'
+export {
+  CORPUS_PROJECTION_VERSION,
+  DOCUMENT_BODY_LIMIT,
+  PROJECTED_ENTRY_TYPES,
+  indexConfigurationHash,
+  isProjectedEntry,
+  projectRepositoryCorpus,
+  projectedEntityId,
+  repositoryInputs,
+  type ProjectCorpusOptions,
+  type RepositoryCorpus,
+  type RepositoryInputsV1,
+} from './index-builder/project-corpus.js'
+export {
+  CONFIG_EXTENSIONS,
+  DOCUMENT_EXTENSIONS,
+  SOURCE_EXTENSIONS,
+  documentClassification,
+  exportedNames,
+  safeWalkOptions,
+} from './discovery/inputs.js'
+export {
+  BM25_VERSION,
+  bm25Idf,
+  bm25Search,
+  buildBm25Index,
+  type Bm25FieldWeights,
+  type Bm25Hit,
+  type Bm25Index,
+  type Bm25Input,
+  type Bm25Params,
+} from './retrieval/bm25.js'
+export {
+  DEFAULT_SEARCH_PARAMS,
+  DEFAULT_SEARCH_WEIGHTS,
+  resolveSearchParams,
+  resolveSearchWeights,
+} from './retrieval/weights.js'
+export {
+  SEARCH_LEXICON_VERSION,
+  SEARCH_STOPWORDS,
+  expandSearchToken,
+  foldAccents,
+  hasSearchToken,
+  isSearchStopword,
+  searchTokens,
+  singularizeSearchToken,
+  tokenizeSearchText,
+  type SearchTokenizeOptions,
+} from './query/text.js'
 export { discoverRepository, type DiscoveryOptions } from './discovery/repository.js'
 export { containedPath, DEFAULT_SAFETY_EXCLUDES, redactSecrets, redactValue, safeWalkFiles, type SafeWalkOptions, type SafeWalkResult } from './safety/repository.js'
 export { DEFAULT_REGISTRY_AGENT_ID, createRegistryAgentAdapter, loadRegistryAgentMetadata, loadRegistryAgentRunner, persistRegistryAgentProposal, type RegistryAgentAdapter, type RegistryAgentContext, type RegistryAgentMetadata, type RegistryAgentRunner } from './agents/registry-adapter.js'

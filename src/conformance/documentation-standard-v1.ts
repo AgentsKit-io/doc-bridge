@@ -11,6 +11,7 @@ import { buildDocBridgeIndex } from '../index-builder/build-index.js'
 import { scanHumanDocRecords } from '../index-builder/human-adapters/index.js'
 import { renderLlmsTxt } from '../index-builder/llms-txt.js'
 import { toPosix } from '../lib/paths.js'
+import type { DocBridgeIndexV1 } from '../schemas/doc-bridge-index.js'
 
 export const DOCUMENTATION_STANDARD_V1_ID = 'documentation-standard-v1' as const
 export const DOCUMENTATION_STANDARD_V1_STATUS = 'stable' as const
@@ -186,6 +187,7 @@ const llmsRule = (
   root: string,
   config: DocBridgeConfigV1,
   options: DocumentationStandardV1Config,
+  generated: DocBridgeIndexV1,
 ): RuleDraft => {
   const llmsPath = config.index?.llmsTxt?.outFile ?? 'llms.txt'
   const llmsKey = safePath(root, llmsPath) ?? resolve(root, llmsPath)
@@ -196,7 +198,6 @@ const llmsRule = (
   }
   const paths = [llmsPath, ...rawSources.values()]
   const evidence = paths.map((path) => fileEvidence(root, path))
-  const generated = buildDocBridgeIndex({ root, config, write: false }).index
   const expectedLlms = renderLlmsTxt(config, generated.knowledge, generated.project?.name ?? 'project')
   const llmsIsFresh = evidence[0]?.content === expectedLlms
   if (evidence[0]?.exists) {
@@ -284,8 +285,7 @@ const ecosystemContract = (
   }
 }
 
-const handoffsRule = (root: string, config: DocBridgeConfigV1): RuleDraft => {
-  const index = buildDocBridgeIndex({ root, config, write: false }).index
+const handoffsRule = (index: DocBridgeIndexV1): RuleDraft => {
   const handoffs = Object.values(index.handoffs ?? {})
   const ready = handoffs.filter(
     (handoff) =>
@@ -456,10 +456,12 @@ export const runDocumentationStandardV1 = (
   config: DocBridgeConfigV1,
 ): DocumentationConformanceReportV1 => {
   const options = config.conformance?.documentationStandardV1 ?? {}
+  // Two rules need the index. Building it projects and hashes the whole repository, so build once.
+  const index = buildDocBridgeIndex({ root, config, write: false }).index
   const drafts: RuleDraft[] = [
     humanDocsRule(root, config),
-    llmsRule(root, config, options),
-    handoffsRule(root, config),
+    llmsRule(root, config, options, index),
+    handoffsRule(index),
     contributionRule(root, options),
     markersRule(root, options, 'metadata', 'required'),
     linksRule(root, options),

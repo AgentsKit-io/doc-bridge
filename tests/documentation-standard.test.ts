@@ -366,6 +366,7 @@ describe('Documentation Standard v1', () => {
     }).success).toBe(false)
   })
 
+  // Building the index for the real repository projects and hashes every input file.
   it('dogfoods the profile against the real Doc Bridge repository', () => {
     const root = join(import.meta.dirname, '..')
     const config = applyConfigDefaults(
@@ -389,5 +390,5 @@ describe('Documentation Standard v1', () => {
         renameSync(temporaryLlmsPath, llmsPath)
       }
     }
-  })
+  }, 30_000)
 })

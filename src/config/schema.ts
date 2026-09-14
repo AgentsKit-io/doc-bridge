@@ -500,6 +500,27 @@ export const DocumentationStandardV1ConfigSchema = z
     }
   })
 
+/**
+ * Retrieval tuning. Weights and parameters are configuration rather than code so a repository can
+ * change what its agents find first without a release, and so the change is recorded in the index.
+ */
+export const RetrievalConfigSchema = z
+  .object({
+    corpus: z
+      .object({
+        /** Project repository documents and modules into the index. On by default. */
+        enabled: z.boolean().optional(),
+      })
+      .strict()
+      .optional(),
+    weights: z.record(z.string().min(1).max(64), z.number().min(0).max(1_000)).optional(),
+    params: z
+      .object({ k1: z.number().min(0).max(100).optional(), b: z.number().min(0).max(1).optional() })
+      .strict()
+      .optional(),
+  })
+  .strict()
+
 export const ConformanceConfigSchema = z
   .object({
     documentationStandardV1: DocumentationStandardV1ConfigSchema.optional(),
@@ -536,6 +557,7 @@ export const DocBridgeConfigV1Schema = z
     intelligence: IntelligenceConfigSchema.optional(),
     federation: FederationConfigSchema.optional(),
     conformance: ConformanceConfigSchema.optional(),
+    retrieval: RetrievalConfigSchema.optional(),
   })
   .strict()
 
@@ -553,3 +575,4 @@ export type RulesConfig = z.infer<typeof RulesConfigSchema>
 export type WorkflowConfig = z.infer<typeof WorkflowConfigSchema>
 export type RepositorySafetyConfig = z.infer<typeof RepositorySafetyConfigSchema>
 export type ReportConfig = z.infer<typeof ReportConfigSchema>
+export type RetrievalConfig = z.infer<typeof RetrievalConfigSchema>

@@ -11,7 +11,10 @@ import { renderLlmsTxt } from './llms-txt.js'
 import { scanHumanDocs } from './human-adapters/index.js'
 import { discoverNxProjects } from './plugins/nx.js'
 import { discoverPnpmPackages } from './plugins/pnpm-monorepo.js'
+import { projectRepositoryCorpus } from './project-corpus.js'
 import { scanAgentCorpus } from './scan-corpus.js'
+import { SEARCH_LEXICON_VERSION } from '../query/text.js'
+import { resolveSearchParams, resolveSearchWeights } from '../retrieval/weights.js'
 
 export type BuildIndexOptions = {
   readonly root?: string
@@ -59,7 +62,23 @@ export const buildDocBridgeIndex = (opts: BuildIndexOptions): BuildIndexResult =
   const indexPath = join(root, outFile)
 
   const corpus = scanAgentCorpus(root, config)
-  const knowledge = corpus.map(({ absPath: _a, relPath: _r, frontmatter: _f, ...entry }) => entry)
+  const curated = corpus.map(({ absPath: _a, relPath: _r, frontmatter: _f, ...entry }) => entry)
+
+  /*
+   * Retrieval reads this index, so whatever is missing here is invisible to an agent however well
+   * it is ranked. The projection puts the repository's own documents and modules in it, next to
+   * the curated sidecars, which is what lets a query for an exported symbol resolve at all.
+   */
+  const projection =
+    config.retrieval?.corpus?.enabled === false
+      ? undefined
+      : projectRepositoryCorpus(root, config, { skipPaths: curated.map((entry) => entry.path) })
+  const knowledge = [...curated, ...(projection?.entries ?? [])]
+  const retrieval = {
+    lexiconVersion: SEARCH_LEXICON_VERSION,
+    weights: resolveSearchWeights(config.retrieval?.weights),
+    params: resolveSearchParams(config.retrieval?.params),
+  }
 
   const shouldDiscover =
     config.routing?.plugin === 'pnpm-monorepo' ||
@@ -83,6 +102,8 @@ export const buildDocBridgeIndex = (opts: BuildIndexOptions): BuildIndexResult =
     knowledge,
     handoffs,
     lookup,
+    retrieval,
+    ...(projection ? { inputs: projection.inputs } : {}),
   }
 
   const contentHash = sha256NormalizedV1(hashPayload)
@@ -95,6 +116,8 @@ export const buildDocBridgeIndex = (opts: BuildIndexOptions): BuildIndexResult =
     knowledge,
     handoffs,
     lookup,
+    ...(projection ? { inputs: projection.inputs } : {}),
+    retrieval,
   }
 
   if (write) {

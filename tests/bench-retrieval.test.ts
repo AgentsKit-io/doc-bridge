@@ -3,9 +3,12 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
 import { validateEvalSuite } from '@agentskit/core/eval-format'
-import { describe, expect, it } from 'vitest'
+import { beforeAll, describe, expect, it } from 'vitest'
 
 import { runCli } from '../src/cli/program.js'
+import { applyConfigDefaults } from '../src/config/defaults.js'
+import { DocBridgeConfigV1Schema } from '../src/config/schema.js'
+import { buildDocBridgeIndex } from '../src/index-builder/build-index.js'
 import { contentHashForArtifactV1 } from '../src/index-builder/content-hash.js'
 import {
   compareRetrievalBaseline,
@@ -252,6 +255,18 @@ describe('retrieval baseline gate', () => {
 })
 
 describe('bench CLI', () => {
+  /*
+   * The benchmark measures the index, and the index now projects every document and module in the
+   * repository — so editing any file makes it stale. CI runs `ak-docs index` before the gate for
+   * the same reason; these tests build it themselves so they do not depend on what ran before.
+   */
+  beforeAll(() => {
+    const config = applyConfigDefaults(
+      DocBridgeConfigV1Schema.parse(JSON.parse(readFileSync('doc-bridge.config.json', 'utf8')) as unknown),
+    )
+    buildDocBridgeIndex({ root: process.cwd(), config })
+  })
+
   it('measures the committed suite against the committed baseline and exits zero', () => {
     const run = capture(() => runCli(['bench', 'retrieval', SUITE_PATH, '--baseline', BASELINE_PATH, '--json']))
     expect(run.code).toBe(0)

@@ -8,7 +8,17 @@ import { expandWorkspaceGlobs } from '../lib/glob-expand.js'
 import { detectPackageManager } from '../lib/package-manager.js'
 import { toPosix } from '../lib/paths.js'
 import { contentHashForArtifactV1, sha256NormalizedV1 } from '../index-builder/content-hash.js'
-import { DEFAULT_SAFETY_EXCLUDES, safeWalkFiles } from '../safety/repository.js'
+import { safeWalkFiles } from '../safety/repository.js'
+import {
+  CONFIG_EXTENSIONS,
+  DEFAULT_MAX_FILES,
+  DOCUMENT_EXTENSIONS,
+  SOURCE_EXTENSIONS,
+  documentClassification,
+  exportedNames,
+  safeWalkOptions,
+  scriptKind,
+} from './inputs.js'
 import {
   DiscoverySnapshotV1Schema,
   type DiscoverySnapshotV1,
@@ -17,9 +27,6 @@ import {
   type KnowledgeRelation,
 } from '../schemas/knowledge.js'
 
-const SOURCE_EXTENSIONS = ['.js', '.jsx', '.mjs', '.cjs', '.ts', '.tsx', '.mts', '.cts'] as const
-const DOCUMENT_EXTENSIONS = ['.md', '.mdx'] as const
-const DEFAULT_MAX_FILES = 10_000
 const EMPTY_HASH = '0'.repeat(64)
 const DEFAULT_RUNTIME_WIRING_METHODS = ['register', 'use', 'mount', 'attach'] as const
 const TEST_MODULE_PATTERN = /(?:\.test|\.spec|__tests__)/
@@ -98,14 +105,6 @@ const lineEvidence = (
 const firstLineContaining = (text: string, pattern: string): number | undefined => {
   const line = text.split(/\r?\n/).findIndex((value) => value.includes(pattern))
   return line >= 0 ? line + 1 : undefined
-}
-
-const documentClassification = (path: string): string => {
-  if (/(^|\/)docs\/for-agents(?:\/|$)/.test(path)) return 'agent'
-  if (/(^|\/)docs-archive(?:\/|$)/.test(path)) return 'archive'
-  if (/(^|\/)docs(?:\/|$)/.test(path)) return 'human'
-  if (/(^|\/)(README|CONTRIBUTING|SECURITY|CHANGELOG)(?:\.|$)/i.test(path)) return 'project'
-  return 'unclassified'
 }
 
 const packageName = (manifest: JsonRecord, fallback: string): string | undefined =>
@@ -208,65 +207,10 @@ const readCompilerOptions = (root: string): { readonly options: ts.CompilerOptio
   return { options: config.options }
 }
 
-const scriptKind = (path: string): ts.ScriptKind => {
-  switch (extname(path)) {
-    case '.js': return ts.ScriptKind.JS
-    case '.jsx': return ts.ScriptKind.JSX
-    case '.mjs': return ts.ScriptKind.JS
-    case '.cjs': return ts.ScriptKind.JS
-    case '.ts': return ts.ScriptKind.TS
-    case '.tsx': return ts.ScriptKind.TSX
-    case '.mts': return ts.ScriptKind.TS
-    case '.cts': return ts.ScriptKind.TS
-    default: return ts.ScriptKind.Unknown
-  }
-}
-
 const nodeEvidence = (root: string, path: string, sourceFile: ts.SourceFile, node: ts.Node): Evidence => {
   const start = sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile)).line + 1
   const end = sourceFile.getLineAndCharacterOfPosition(node.getEnd()).line + 1
   return lineEvidence('code', root, path, start, end)
-}
-
-const isExported = (node: ts.Node): boolean => {
-  const modifiers = ts.canHaveModifiers(node) ? ts.getModifiers(node) : undefined
-  return modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword) ?? false
-}
-
-const exportedNames = (sourceFile: ts.SourceFile): string[] => {
-  const names = new Set<string>()
-  const addDeclarationName = (node: ts.Declaration): void => {
-    if (!isExported(node)) return
-    const name = ts.getNameOfDeclaration(node)
-    if (name && ts.isIdentifier(name)) names.add(name.text)
-  }
-
-  const visit = (node: ts.Node): void => {
-    if (ts.isExportDeclaration(node)) {
-      if (!node.exportClause) names.add('*')
-      else if (ts.isNamedExports(node.exportClause)) {
-        for (const element of node.exportClause.elements) names.add(element.name.text)
-      }
-    } else if (ts.isExportAssignment(node)) {
-      names.add('default')
-    } else if (
-      ts.isClassDeclaration(node) ||
-      ts.isFunctionDeclaration(node) ||
-      ts.isInterfaceDeclaration(node) ||
-      ts.isTypeAliasDeclaration(node) ||
-      ts.isEnumDeclaration(node) ||
-      ts.isModuleDeclaration(node)
-    ) {
-      addDeclarationName(node)
-    } else if (ts.isVariableStatement(node) && isExported(node)) {
-      for (const declaration of node.declarationList.declarations) {
-        if (ts.isIdentifier(declaration.name)) names.add(declaration.name.text)
-      }
-    }
-    ts.forEachChild(node, visit)
-  }
-  visit(sourceFile)
-  return [...names].sort()
 }
 
 const moduleReferences = (
@@ -503,22 +447,16 @@ const artifact = (root: string, config: DocBridgeConfigV1 | undefined, files: re
 
 export const discoverRepository = (opts: DiscoveryOptions = {}): DiscoverySnapshotV1 => {
   const root = resolve(opts.root ?? process.cwd())
-  const safety = opts.config?.safety
-  const maxFiles = opts.maxFiles ?? safety?.maxFiles ?? DEFAULT_MAX_FILES
-  const maxBytes = opts.maxBytes ?? safety?.maxBytes
-  const safeOptions = {
-    exclude: [...DEFAULT_SAFETY_EXCLUDES, ...(safety?.exclude ?? [])],
-    maxFiles,
-    ...(maxBytes !== undefined ? { maxBytes } : {}),
-    ...(safety?.maxTimeMs !== undefined ? { maxTimeMs: safety.maxTimeMs } : {}),
-    ...(safety?.maxMemoryMb !== undefined ? { maxMemoryMb: safety.maxMemoryMb } : {}),
-  }
+  const safeOptions = safeWalkOptions(opts.config, {
+    maxFiles: opts.maxFiles ?? opts.config?.safety?.maxFiles ?? DEFAULT_MAX_FILES,
+    ...(opts.maxBytes !== undefined ? { maxBytes: opts.maxBytes } : {}),
+  })
   const rootManifestPath = join(root, 'package.json')
   const rootManifest = readJson(rootManifestPath).value
   const packageResult = discoverPackages(root, rootManifest, opts.config)
   const sourceWalk = safeWalkFiles(root, { extensions: SOURCE_EXTENSIONS, ...safeOptions })
   const documentWalk = safeWalkFiles(root, { extensions: DOCUMENT_EXTENSIONS, ...safeOptions })
-  const configWalk = safeWalkFiles(root, { extensions: ['.json', '.yaml', '.yml', '.js', '.ts'], ...safeOptions })
+  const configWalk = safeWalkFiles(root, { extensions: CONFIG_EXTENSIONS, ...safeOptions })
   const sourcePaths = sourceWalk.files
   const documentPaths = documentWalk.files
   const configPaths = configWalk.files

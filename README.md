@@ -323,7 +323,7 @@ Gate fails with `Index is stale. Run: ak-docs index` — same check in CI annota
 | **Demo** | `ak-docs demo` — bundled fixture, no setup |
 | **Doctor** | Coverage score, missing humanDoc/agent doc, next actions |
 | **Index** | `DocBridgeIndex` + `contentHash` + `llms.txt` + capabilities |
-| **CLI** | `query` / `search` / `list` / `ask` / `gate` / `memory` / `bootstrap` |
+| **CLI** | `query` / `search` / `list` / `ask` / `gate` / `bench` / `memory` / `bootstrap` |
 | **MCP** | `handoff.resolve`, `doc.search`, `doc.get`, `gate.status`, … |
 | **Gates** | Freshness, human-link validation, optional OKF style |
 | **Adapters** | `pnpm-monorepo`, `nx`, `fumadocs`, `docusaurus`, `vitepress`, `starlight`, `nextra`, `plain-markdown` |

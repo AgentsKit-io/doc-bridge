@@ -88,6 +88,9 @@ export default {
   /** Optional reconciliation scope and orphan-document policy */
   reconciliation?: ReconciliationConfig
 
+  /** Optional retrieval tuning: corpus projection, field weights, BM25 parameters */
+  retrieval?: RetrievalConfig
+
   /** Optional resumable workflow state */
   workflow?: WorkflowConfig
 
@@ -455,6 +458,53 @@ report?: {
 ```
 
 `private` is the default and keeps local evidence useful for debugging. `anonymized` is intended for reports shared outside the repository: it preserves counts, relation kinds, topology, and coverage status while removing project-specific identity and evidence content. The generated HTML and every lazy chunk use the same mode.
+
+## `retrieval` (optional)
+
+```ts
+type RetrievalConfig = {
+  corpus?: {
+    /** Project repository documents and modules into `index.knowledge`. Default: true. */
+    enabled?: boolean
+  }
+  /** Per-field BM25 multipliers. Unknown field names are ignored. */
+  weights?: {
+    id?: number
+    symbols?: number
+    title?: number
+    path?: number
+    tags?: number
+    description?: number
+    body?: number
+  }
+  /** BM25 parameters: `k1` term-frequency saturation, `b` length-normalization strength (0–1). */
+  params?: { k1?: number; b?: number }
+}
+```
+
+Search ranks records with field-weighted BM25 plus boosts for exact identity, so an agent that
+types an exported symbol, a file path or a package name lands on that thing rather than on
+whatever mentions it most. The defaults are:
+
+| Field | Weight | Why |
+| --- | --- | --- |
+| `id` | 8 | The query names the record |
+| `symbols` | 7 | An agent that types an exported name wants the module that defines it |
+| `title` | 6 | A heading is what a document is about |
+| `path` | 4 | Location is identity for a module |
+| `tags` | 3 | Audience and kind |
+| `description` | 2 | A summary a human wrote |
+| `body` | 1 | A passing mention is the weakest evidence |
+
+Tuning is configuration, not code: the resolved weights, parameters and stopword-lexicon version
+are recorded in `index.retrieval`, so a retuned ranking is a different artifact with a different
+content hash rather than a silent behaviour change. Re-run `ak-docs index` after changing them,
+and re-approve the [retrieval benchmark](../bench/README.md) baseline if you gate on it.
+
+`corpus.enabled: false` keeps the index to the curated agent corpus only. The index is then
+smaller and builds faster, at the cost of the retrieval it exists for: an exported-symbol or
+file-path query has nothing to resolve against. Turn it off only for a repository whose source is
+not the thing agents ask about.
 
 ## `safety` (optional)
 

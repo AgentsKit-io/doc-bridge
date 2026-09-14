@@ -1,7 +1,7 @@
 {
   "type": "retrieval-benchmark-baseline",
   "schemaVersion": 1,
-  "contentHash": "3af9f8617a8502772b22029bb1b48f6e0c0eb341eb955c8496090273345cc52a",
+  "contentHash": "0ac68119cb1f55cb5535a600fea6a84131c6707d568e0f5fcf2bb7eb13313083",
   "contentHashAlgo": "sha256-normalized-v1",
   "suite": {
     "name": "doc-bridge-retrieval-v1",
@@ -10,19 +10,19 @@
   },
   "metrics": {
     "caseCount": 60,
-    "hitAt1": 0.216667,
-    "hitAt3": 0.233333,
-    "meanReciprocalRank": 0.227778,
-    "meanContextBytes": 243,
-    "meanApproxTokens": 61,
-    "zeroResultRate": 0.466667,
+    "hitAt1": 0.766667,
+    "hitAt3": 0.833333,
+    "meanReciprocalRank": 0.812103,
+    "meanContextBytes": 343,
+    "meanApproxTokens": 86,
+    "zeroResultRate": 0.05,
     "tokenMethod": "approximate"
   },
   "approval": {
-    "approvedAt": "2026-09-14T15:30:54.173Z",
+    "approvedAt": "2026-09-14T16:34:06.074Z",
     "approvedBy": "Emerson Braun",
-    "reason": "Pre-change baseline for KR-07: the ranking as shipped in 1.8.0, before KR-01 replaces it.",
-    "resultHash": "58036b18c49ad6af4e493075f25f945d01a14dbe7bc2501c0ad6a1b899152184",
-    "indexHash": "bc64a16334745e0b2b9accab05d8dfb3bd79eca5803ab003bf4b6f5d3dd99d14"
+    "reason": "KR-01 projects the repository corpus into the index and ranks it with field-weighted BM25",
+    "resultHash": "304faa24b37f1dc6277e999cfc4c6671ef2228b760f4f3d9afcf69f807f3f007",
+    "indexHash": "c440fe16bb2724518541228b9956d9701f62badd1db00e9ee1d8c06d4f435211"
   }
 }
