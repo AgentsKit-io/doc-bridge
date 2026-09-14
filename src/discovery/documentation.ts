@@ -231,6 +231,17 @@ const resolveEntity = (
   })
   const resolved = packageCandidates.length === 1 ? packageCandidates[0] : undefined
   if (resolved) return resolved
+
+  /*
+   * An ownership id resolves to the area that carries it.
+   *
+   * Agent documents declare coverage by ownership id (`editRoot: src/query` becomes ownership
+   * `doc-bridge-query`), and until areas existed there was nothing in the graph with that
+   * identity — every such declaration became an unresolved reference, and the audit reported a
+   * documented area as a gap.
+   */
+  const ownedAreas = entities.filter((entity) => entity.kind === 'area' && entity.metadata?.ownershipId === reference)
+  if (ownedAreas.length === 1 && ownedAreas[0]) return ownedAreas[0]
   const id = `unresolved:${reference}`
   const existing = unresolved.get(id)
   if (existing) return existing
@@ -357,18 +368,36 @@ const parseBlock = (
   let typeLine = -1
   let packageLine = -1
   let humanDocLine = -1
+  let editRootLine = -1
+  let idLine = -1
   for (let index = 1; index < end; index += 1) {
     const line = lines[index] ?? ''
     if (docbridgeLine < 0 && /^docbridge\s*:/.test(line)) docbridgeLine = index
     if (typeLine < 0 && /^type\s*:/.test(line)) typeLine = index
     if (packageLine < 0 && /^package\s*:/.test(line)) packageLine = index
     if (humanDocLine < 0 && /^humanDoc\s*:/.test(line)) humanDocLine = index
+    if (editRootLine < 0 && /^editRoot\s*:/.test(line)) editRootLine = index
+    if (idLine < 0 && /^id\s*:/.test(line)) idLine = index
   }
   if (docbridgeLine < 0) {
     const type = typeLine >= 0 ? scalar(lines[typeLine]?.slice('type:'.length) ?? '') : ''
     const packageReference = packageLine >= 0 ? scalar(lines[packageLine]?.slice('package:'.length) ?? '') : conventionalPath ?? ''
     if (type === 'package' && packageReference) return { covers: [{ value: packageReference, line: packageLine >= 0 ? packageLine + 1 : typeLine + 1 }], relations: [], diagnostics: [], hasDocbridge: true }
     if (conventionalPath) return { covers: [{ value: packageReference, line: humanDocLine >= 0 ? humanDocLine + 1 : 1 }], relations: [], diagnostics: [], hasDocbridge: true }
+
+    /*
+     * `id` plus `editRoot` is a coverage declaration.
+     *
+     * The corpus already uses this pair to own a directory — it is what fills the ownership map
+     * and the handoff — but discovery never read it, so the graph had no edge from the sidecar to
+     * the unit it owns. With areas in the graph the reference resolves, and a documented area
+     * stops being reported as a gap.
+     */
+    const editRoot = editRootLine >= 0 ? scalar(lines[editRootLine]?.slice('editRoot:'.length) ?? '') : ''
+    const identifier = idLine >= 0 ? scalar(lines[idLine]?.slice('id:'.length) ?? '') : ''
+    if (editRoot && identifier) {
+      return { covers: [{ value: identifier, line: editRootLine + 1 }], relations: [], diagnostics: [], hasDocbridge: true }
+    }
     return { covers: [], relations: [], diagnostics: [], hasDocbridge: false }
   }
 

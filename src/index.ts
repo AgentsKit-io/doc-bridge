@@ -102,6 +102,18 @@ export {
 } from './index-builder/project-corpus.js'
 export { entityId, relationId } from './discovery/identity.js'
 export {
+  AREA_ANALYZER_VERSION,
+  DEFAULT_AREA_DEPTH,
+  DEFAULT_AREA_ROOTS,
+  conventionalAreaPath,
+  deriveAreas,
+  unobservedOwnershipPaths,
+  type AreaModule,
+  type AreaOwnership,
+  type DeriveAreasOptions,
+  type DerivedArea,
+} from './discovery/areas.js'
+export {
   MARKDOWN_ANALYZER_VERSION,
   MARKDOWN_RELATION_CAP,
   analyzeMarkdownDocument,

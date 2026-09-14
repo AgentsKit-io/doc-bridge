@@ -1,3 +1,4 @@
+import { unobservedOwnershipPaths } from '../discovery/areas.js'
 import { contentHashForArtifactV1, sha256NormalizedV1 } from '../index-builder/content-hash.js'
 import {
   ReconciliationReportV1Schema,
@@ -12,13 +13,20 @@ type EntityResolver = (reference: string) => string
 
 export type ReconciliationOptions = {
   /** Compare declarations at a semantic level while retaining raw discovery evidence. */
-  readonly scope?: 'file' | 'module' | 'package'
+  readonly scope?: 'file' | 'module' | 'area' | 'package'
   /** Omit for backwards-compatible all-relation checking; [] disables missing-declaration findings. */
   readonly requiredRelationKinds?: readonly string[]
   /** Limit missing-declaration findings to relations between internal project entities. */
   readonly requiredRelationTargets?: 'all' | 'internal'
   /** Emit one bounded finding for each observed Markdown document without declarations. */
   readonly includeOrphanedDocuments?: boolean
+  /**
+   * Configured ownership records, so a path that matches nothing observed can be reported.
+   * Omit to skip the check.
+   */
+  readonly ownership?: readonly { readonly id: string; readonly path: string }[]
+  /** Where the ownership records were configured, for the evidence trail. */
+  readonly ownershipSource?: string
 }
 
 const ignoredDocumentationRelations = new Set(['covers'])
@@ -114,13 +122,34 @@ const semanticEntityId = (
   id: string,
   scope: NonNullable<ReconciliationOptions['scope']>,
   entities: ReadonlyMap<string, KnowledgeEntity>,
-  packageByModule: ReadonlyMap<string, string>,
+  unitByModule: ReadonlyMap<string, string>,
 ): string => {
   if (scope === 'file' || id.startsWith('external:') || id.startsWith('unresolved:')) return id
   const entity = entities.get(id)
   if (!entity || entity.kind !== 'module' || !entity.path) return id
   if (scope === 'module') return id
-  return packageByModule.get(id) ?? id
+  return unitByModule.get(id) ?? id
+}
+
+/**
+ * Which area each module belongs to, read from the containment the analyzer recorded.
+ *
+ * Areas exist so a single-package repository has something to compare. At package scope every
+ * internal relation in such a repository aggregates into one self-loop, which the comparison
+ * skips — a thousand observed relations and nothing to say. At area scope the same relations
+ * become area-to-area edges that a declaration can confirm or fail to.
+ */
+const areaLookup = (
+  scope: NonNullable<ReconciliationOptions['scope']>,
+  relations: readonly KnowledgeRelation[],
+): Map<string, string> => {
+  if (scope !== 'area') return new Map()
+  const result = new Map<string, string>()
+  for (const relation of relations) {
+    if (relation.kind !== 'contains' || !relation.from.startsWith('area:') || !relation.to.startsWith('module:')) continue
+    if (!result.has(relation.to)) result.set(relation.to, relation.from)
+  }
+  return result
 }
 
 const packageLookup = (scope: NonNullable<ReconciliationOptions['scope']>, entities: ReadonlyMap<string, KnowledgeEntity>): Map<string, string> => {
@@ -143,13 +172,13 @@ const aggregatedRelations = (
   relations: readonly KnowledgeRelation[],
   scope: NonNullable<ReconciliationOptions['scope']>,
   entities: ReadonlyMap<string, KnowledgeEntity>,
-  packageByModule: ReadonlyMap<string, string>,
+  unitByModule: ReadonlyMap<string, string>,
 ): KnowledgeRelation[] => {
   if (scope === 'file') return [...relations]
   const groups = new Map<string, KnowledgeRelation[]>()
   for (const relation of relations) {
-    const from = semanticEntityId(relation.from, scope, entities, packageByModule)
-    const to = semanticEntityId(relation.to, scope, entities, packageByModule)
+    const from = semanticEntityId(relation.from, scope, entities, unitByModule)
+    const to = semanticEntityId(relation.to, scope, entities, unitByModule)
     const detection = relationDetection(relation)
     const key = `${from}\u0000${to}\u0000${relation.kind}\u0000${detection}`
     const group = groups.get(key) ?? []
@@ -216,10 +245,10 @@ export const reconcileKnowledge = (
   const resolveEntity = entityResolver([observed, declared])
   const entities = entityById([observed, declared])
   const scope = options.scope ?? 'file'
-  const packageByModule = packageLookup(scope, entities)
+  const unitByModule = scope === 'area' ? areaLookup(scope, observed.relations) : packageLookup(scope, entities)
   const allDeclaredRelations = declared.relations.filter((relation) => relation.provenance === 'declared')
-  const observedRelations = aggregatedRelations(observed.relations.filter((relation) => relation.provenance === 'observed' && !ignoredDocumentationRelations.has(relation.kind)), scope, entities, packageByModule)
-  const declaredRelations = aggregatedRelations(declared.relations.filter((relation) => relation.provenance === 'declared' && !ignoredDocumentationRelations.has(relation.kind)), scope, entities, packageByModule)
+  const observedRelations = aggregatedRelations(observed.relations.filter((relation) => relation.provenance === 'observed' && !ignoredDocumentationRelations.has(relation.kind)), scope, entities, unitByModule)
+  const declaredRelations = aggregatedRelations(declared.relations.filter((relation) => relation.provenance === 'declared' && !ignoredDocumentationRelations.has(relation.kind)), scope, entities, unitByModule)
   const requiredRelationKinds = options.requiredRelationKinds === undefined ? undefined : new Set(options.requiredRelationKinds)
   const diagnostics: ReconciliationReportV1['diagnostics'][number][] = []
 
@@ -354,6 +383,38 @@ export const reconcileKnowledge = (
         undefined,
         [relation.id, ...candidates.map((candidate) => candidate.id)],
         'Update the declaration or the implementation so both graphs describe the same relation.',
+      ))
+    }
+  }
+
+  /*
+   * An ownership path that matches nothing observed.
+   *
+   * A renamed or mistyped directory is invisible otherwise: the handoff still resolves and still
+   * looks correct, it just points an agent at a directory that no longer holds what it claims.
+   * The evidence is the configuration, because that is where the claim was made.
+   */
+  if (options.ownership?.length) {
+    const observedPaths = observed.entities
+      .map((entity) => entity.path)
+      .filter((path): path is string => typeof path === 'string')
+    for (const record of unobservedOwnershipPaths(options.ownership, observedPaths)) {
+      diagnostics.push(reportDiagnostic(
+        'OWNERSHIP_PATH_UNOBSERVED',
+        'stale-or-unverified',
+        'warn',
+        `Ownership "${record.id}" declares path ${record.path}, which no observed module or document lives under.`,
+        [
+          {
+            source: 'configuration',
+            path: options.ownershipSource ?? 'doc-bridge.config.json',
+            context: `routing.options.ownership.${record.id}.path = ${record.path}`,
+          },
+        ],
+        { ownership: record.id, path: record.path },
+        undefined,
+        undefined,
+        'Point the ownership record at a directory that exists, or remove the record.',
       ))
     }
   }

@@ -416,7 +416,7 @@ report status, commands, and the recorded stable-publication HITL decision.
 ```ts
 type ReconciliationConfig = {
   /** Semantic comparison level; discovery still preserves raw file relations. */
-  scope?: 'file' | 'module' | 'package'
+  scope?: 'file' | 'module' | 'area' | 'package'
   /** Observed relation kinds that require documentation declarations. */
   requiredRelationKinds?: string[]
   /** Limit missing-declaration findings to relations between internal project entities. */
@@ -427,6 +427,12 @@ type ReconciliationConfig = {
 ```
 
 Use `scope: 'package'` for monorepos where file imports should be compared as package-level architecture evidence. Omit `requiredRelationKinds` to require all observed kinds; an empty array intentionally disables undocumented-relation findings and must be treated as an explicit exemption.
+
+Use `scope: 'area'` for a single-package repository. At package scope such a repository aggregates
+every internal relation into one self-loop, which the comparison skips — a thousand observed
+relations and nothing to report. At area scope the same relations become edges between
+directories, which a declaration can confirm or fail to. On this repository that is the difference
+between zero diagnostics and 177.
 
 Use `requiredRelationTargets: 'internal'` when the repository wants package or module architecture declarations without requiring Markdown to enumerate every external library import. External relations remain in the raw snapshot and report as evidence; they simply do not generate missing-declaration findings.
 
@@ -458,6 +464,37 @@ report?: {
 ```
 
 `private` is the default and keeps local evidence useful for debugging. `anonymized` is intended for reports shared outside the repository: it preserves counts, relation kinds, topology, and coverage status while removing project-specific identity and evidence content. The generated HTML and every lazy chunk use the same mode.
+
+## `analysis.areas` (optional)
+
+```ts
+areas?: {
+  /** Directory levels below a source root that form an area. Default 1. */
+  depth?: number
+  /** Directories that contain areas rather than being one. */
+  roots?: string[]
+}
+```
+
+An **area** is the unit of architecture between a package and a file: a directory that groups
+modules. `src` is not an area in any useful sense; `src/query` is. So `roots` names the
+directories that hold areas — by default `src`, `lib`, `app`, `source`, `server`, `client`,
+`packages`, `apps` — and `depth` says how many levels below such a root an area sits.
+
+Areas are derived, never declared, with one exception that matters: **any path an ownership record
+names becomes an area**, whatever the convention says. A configuration that reads
+`path: "src/mcp"` is a human stating that the directory is a unit, and the graph should have an
+entity for it. Such an area carries `metadata.ownershipId`, which is what lets an agent document
+declaring `id` plus `editRoot` resolve to the thing it owns.
+
+Each module belongs to exactly one area — the most specific one containing it — so containment
+stays a tree and an aggregation at area scope has one answer per module. Nested areas keep their
+shape: `area:src` holds what sits directly in `src`, with `area:src/query` recorded as its child.
+
+An ownership path that no observed module or document lives under is reported as
+`OWNERSHIP_PATH_UNOBSERVED` with status `stale-or-unverified`. A renamed directory is otherwise
+invisible: the handoff still resolves, it just points an agent somewhere that no longer holds what
+it claims.
 
 ## `retrieval` (optional)
 

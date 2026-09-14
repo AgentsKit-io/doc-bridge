@@ -52,6 +52,7 @@ const diagnosticRules: Readonly<Record<string, RuleId>> = {
   STALE_DOCUMENTATION: 'stale-documentation',
   FRESHNESS_FAILURE: 'freshness',
   OWNERSHIP_GAP: 'ownership',
+  OWNERSHIP_PATH_UNOBSERVED: 'ownership',
   CENTRALITY_RISK: 'centrality-risk',
   CRITICAL_PATH_RISK: 'critical-path-risk',
 }

@@ -264,6 +264,8 @@ export type MarkdownResolution = {
   readonly documents: ReadonlyMap<string, string>
   /** Repository-relative module path to entity id. */
   readonly modules: ReadonlyMap<string, string>
+  /** Repository-relative directory path to area entity id. */
+  readonly areas?: ReadonlyMap<string, string>
   /** Package name, and short name, to entity id. */
   readonly packages: ReadonlyMap<string, string>
   /** Exported symbol to the entity ids of every module exporting it. */
@@ -349,7 +351,8 @@ export const analyzeMarkdownDocument = (
     })
   }
 
-  const pathCandidates = [...resolution.documents.keys(), ...resolution.modules.keys()]
+  const areas = resolution.areas ?? new Map<string, string>()
+  const pathCandidates = [...resolution.documents.keys(), ...resolution.modules.keys(), ...areas.keys()]
 
   /** A path-shaped reference: a document link, a module mention, or an unambiguous near-miss. */
   const resolvePath = (candidate: string, line: number, linkKind: 'links-to' | 'mentions'): boolean => {
@@ -363,9 +366,16 @@ export const analyzeMarkdownDocument = (
       add('mentions', moduleEntity, line)
       return true
     }
+    // A directory is a unit of architecture now: naming one is a mention of the area.
+    const areaEntity = areas.get(candidate)
+    if (areaEntity) {
+      add('mentions', areaEntity, line)
+      return true
+    }
     const fuzzy = resolveFuzzyReference(candidate, pathCandidates)
     if (!fuzzy) return false
-    const target = resolution.documents.get(fuzzy.candidate) ?? resolution.modules.get(fuzzy.candidate)
+    const target =
+      resolution.documents.get(fuzzy.candidate) ?? resolution.modules.get(fuzzy.candidate) ?? areas.get(fuzzy.candidate)
     if (!target) return false
     add(resolution.documents.has(fuzzy.candidate) ? linkKind : 'mentions', target, line, 'fuzzy')
     return true
@@ -389,9 +399,9 @@ export const analyzeMarkdownDocument = (
     const value = raw.trim()
     if (!value || value.length > 256) return
 
-    if (pathShaped(value)) {
+    if (pathShaped(value) || areas.has(value)) {
       const direct = value.replace(/^\.\//, '')
-      if (resolution.documents.has(direct) || resolution.modules.has(direct)) {
+      if (resolution.documents.has(direct) || resolution.modules.has(direct) || areas.has(direct)) {
         resolvePath(direct, line, 'mentions')
         return
       }

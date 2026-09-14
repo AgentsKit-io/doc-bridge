@@ -182,7 +182,7 @@ export const RulesConfigSchema = z
 export const ReconciliationConfigSchema = z
   .object({
     /** Semantic comparison level. Raw discovery always keeps file-level relations. */
-    scope: z.enum(['file', 'module', 'package']).optional(),
+    scope: z.enum(['file', 'module', 'area', 'package']).optional(),
     /** Relation kinds that must have documentation declarations. Omit to require all observed kinds; [] disables this signal. */
     requiredRelationKinds: z.array(z.string().min(1).max(128)).max(128).optional(),
     /** Limit missing-declaration findings to relations whose endpoints are internal project entities. */
@@ -243,6 +243,18 @@ export const AnalysisConfigSchema = z
           .max(32)
           .optional(),
         includeTestRuntimeWiring: z.boolean().optional(),
+      })
+      .strict()
+      .optional(),
+    /**
+     * How code areas are derived — the unit of architecture between a package and a file.
+     * `roots` names directories that contain areas rather than being one (`src` holds
+     * `src/query`); `depth` is how many levels below such a root an area sits.
+     */
+    areas: z
+      .object({
+        depth: z.number().int().min(1).max(8).optional(),
+        roots: z.array(z.string().min(1).max(128)).max(32).optional(),
       })
       .strict()
       .optional(),

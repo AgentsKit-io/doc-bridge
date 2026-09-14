@@ -99,6 +99,8 @@ export const DocumentationAuditReportV1Schema = z.object({
     generatedDocumentCount: z.number().int().nonnegative(),
     packageCount: z.number().int().nonnegative(),
     coveredPackageCount: z.number().int().nonnegative(),
+    /** The unit `packageCount` counts: areas in a single-package repository, packages otherwise. */
+    coverageUnit: z.enum(['package', 'area']).optional(),
     coverageRate: z.number().min(0).max(1).nullable(),
     documentsWithTitle: z.number().int().nonnegative(),
     titleRate: z.number().min(0).max(1).nullable(),
@@ -251,6 +253,7 @@ const diagnosticMapping = (diagnostic: ReconciliationReportV1['diagnostics'][num
   if (diagnostic.code === 'RELATION_UNDOCUMENTED') return { category: 'structure-gap', status: 'undocumented', confidence: 'high', severity: diagnostic.severity }
   if (diagnostic.code === 'CONFLICTING_DECLARATIONS') return { category: 'contradiction', status: 'conflict', confidence: 'high', severity: diagnostic.severity }
   if (diagnostic.code === 'DECLARED_RELATION_STALE') return { category: 'stale', status: 'stale-or-unverified', confidence: 'high', severity: diagnostic.severity }
+  if (diagnostic.code === 'OWNERSHIP_PATH_UNOBSERVED') return { category: 'stale', status: 'stale-or-unverified', confidence: 'high', severity: diagnostic.severity }
   if (diagnostic.code === 'RELATION_NOT_ANALYZED') return { category: 'limitation', status: 'not-analyzed', confidence: 'low', severity: diagnostic.severity }
   if (diagnostic.code === 'UNRESOLVED_ENTITY_REFERENCE') return { category: 'contradiction', status: 'unresolved', confidence: 'high', severity: diagnostic.severity }
   return { category: 'quality', status: 'unresolved', confidence: 'high', severity: diagnostic.severity }
@@ -279,8 +282,21 @@ export const auditDocumentation = (options: DocumentationAuditOptions): Document
   const findings: DocumentationAuditFinding[] = []
   const generated = documents.filter((document) => matches(document.path, generatedPaths))
   const analyzed = documents.filter((document) => !matches(document.path, generatedPaths))
+  /*
+   * The unit coverage is measured against.
+   *
+   * Packages, except in a single-package repository — there the only package is the repository
+   * itself, the filter left nothing, and the audit reported "Packages covered: 0/0" while the
+   * doctor reported full health. Most repositories are one package, so for them the unit is the
+   * area: the directory level that actually has an owner and a document.
+   */
+  const packageCandidates = options.snapshot.entities.filter((entity) => entity.kind === 'package')
+  const singlePackage = packageCandidates.length === 1
+  const coverageUnitKind = singlePackage ? 'area' : 'package'
   const packageEntities = options.snapshot.entities
-    .filter((entity) => entity.kind === 'package' && entity.path !== '.')
+    .filter((entity) =>
+      singlePackage ? entity.kind === 'area' : entity.kind === 'package' && entity.path !== '.',
+    )
     .sort((a, b) => a.id.localeCompare(b.id))
   const coveredPackages = new Set(options.declared.relations.filter((relation) => relation.kind === 'covers' && relation.from.startsWith('document:')).map((relation) => relation.to))
   const requiredCriticalMetadata = config.requiredCriticalMetadata ?? ['owner', 'lifecycle', 'sourceOfTruth', 'validationPath']
@@ -364,7 +380,19 @@ export const auditDocumentation = (options: DocumentationAuditOptions): Document
   for (const packageEntity of packageEntities) {
     if (coveredPackages.has(packageEntity.id)) continue
     const evidence = packageEntity.evidence.length ? packageEntity.evidence : [derivedEvidence]
-    findings.push(createFinding('PACKAGE_DOCUMENTATION_MISSING', 'coverage', 'undocumented', 'warn', 'high', `Package ${packageEntity.name} has no documentation coverage declaration.`, evidence, packageEntity.id, criticalPaths, 'Add a docbridge covers declaration to the package documentation or explicitly exclude the package.'))
+    const label = coverageUnitKind === 'area' ? 'Area' : 'Package'
+    findings.push(createFinding(
+      coverageUnitKind === 'area' ? 'AREA_DOCUMENTATION_MISSING' : 'PACKAGE_DOCUMENTATION_MISSING',
+      'coverage',
+      'undocumented',
+      'warn',
+      'high',
+      `${label} ${packageEntity.path ?? packageEntity.name} has no documentation coverage declaration.`,
+      evidence,
+      packageEntity.id,
+      criticalPaths,
+      `Add a docbridge covers declaration to the ${coverageUnitKind} documentation or explicitly exclude the ${coverageUnitKind}.`,
+    ))
   }
 
   for (const diagnostic of options.reconciliation.diagnostics) {
@@ -404,6 +432,7 @@ export const auditDocumentation = (options: DocumentationAuditOptions): Document
     metrics: {
       documentCount: documents.length,
       generatedDocumentCount: generated.length,
+      coverageUnit: coverageUnitKind,
       packageCount: packageEntities.length,
       coveredPackageCount: packageEntities.filter((entity) => coveredPackages.has(entity.id)).length,
       coverageRate: rate(packageEntities.filter((entity) => coveredPackages.has(entity.id)).length, packageEntities.length),
@@ -414,7 +443,7 @@ export const auditDocumentation = (options: DocumentationAuditOptions): Document
       documentsMeetingRequiredSections: requiredSectionDocs,
       requiredSectionsRate: rate(requiredSectionDocs, qualityDocs),
       exactDuplicateGroups: sortedFindings.filter((finding) => finding.code === 'DOCUMENTATION_EXACT_DUPLICATE').length,
-      structureGapCount: sortedFindings.filter((finding) => finding.category === 'structure-gap' || finding.code === 'PACKAGE_DOCUMENTATION_MISSING').length,
+      structureGapCount: sortedFindings.filter((finding) => finding.category === 'structure-gap' || finding.code === 'PACKAGE_DOCUMENTATION_MISSING' || finding.code === 'AREA_DOCUMENTATION_MISSING').length,
       contradictionCount: sortedFindings.filter((finding) => finding.category === 'contradiction').length,
       staleCount: sortedFindings.filter((finding) => finding.category === 'stale').length,
       notAnalyzedCount: sortedFindings.filter((finding) => finding.status === 'not-analyzed').length,
@@ -450,7 +479,7 @@ export const auditDocumentation = (options: DocumentationAuditOptions): Document
 
 export const formatDocumentationAuditText = (report: DocumentationAuditReportV1): readonly string[] => [
   `Documentation audit: ${report.status}`,
-  `Documents: ${report.metrics.documentCount} | Packages covered: ${report.metrics.coveredPackageCount}/${report.metrics.packageCount}`,
+  `Documents: ${report.metrics.documentCount} | ${report.metrics.coverageUnit === 'area' ? 'Areas' : 'Packages'} covered: ${report.metrics.coveredPackageCount}/${report.metrics.packageCount}`,
   `Title: ${report.metrics.titleRate === null ? 'n/a' : `${Math.round(report.metrics.titleRate * 100)}%`} | Examples: ${report.metrics.examplesRate === null ? 'n/a' : `${Math.round(report.metrics.examplesRate * 100)}%`}`,
   `Gaps: ${report.metrics.structureGapCount} | Contradictions: ${report.metrics.contradictionCount} | Stale: ${report.metrics.staleCount} | Not analyzed: ${report.metrics.notAnalyzedCount}`,
   `Blocking findings: ${report.metrics.blockingCount}`,

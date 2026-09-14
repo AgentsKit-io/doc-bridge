@@ -546,6 +546,12 @@ const documentationInputs = (root: string, snapshot: DiscoverySnapshotV1) => sna
   .filter((entity) => entity.kind === 'document' && entity.path)
   .map((entity) => ({ path: entity.path as string, content: readFileSync(resolve(root, entity.path as string), 'utf8') }))
 
+/** Ownership records as reconciliation sees them, so a path matching nothing gets reported. */
+const ownershipOptions = (config: DocBridgeConfigV1): { readonly ownership?: readonly { readonly id: string; readonly path: string }[] } => {
+  const ownership = Object.entries(config.routing?.options?.ownership ?? {}).map(([id, record]) => ({ id, path: record.path }))
+  return ownership.length ? { ownership } : {}
+}
+
 const reconcileWorkflow = (root: string, config: DocBridgeConfigV1): WorkflowExecutionResult => {
   const scanned = scanWorkflow(root, config)
   const snapshot = parseDiscoverySnapshot(loadWorkflowStepOutput(scanned.stateDir, 'normalize'))
@@ -557,6 +563,7 @@ const reconcileWorkflow = (root: string, config: DocBridgeConfigV1): WorkflowExe
     ...(config.reconciliation?.requiredRelationKinds === undefined ? {} : { requiredRelationKinds: config.reconciliation.requiredRelationKinds }),
     ...(config.reconciliation?.requiredRelationTargets === undefined ? {} : { requiredRelationTargets: config.reconciliation.requiredRelationTargets }),
     ...(config.reconciliation?.includeOrphanedDocuments === undefined ? {} : { includeOrphanedDocuments: config.reconciliation.includeOrphanedDocuments }),
+    ...ownershipOptions(config),
   })
   return runWorkflow(workflowOptions(root, config, snapshot.sourceRevision, 'reconcile', { reconcile: () => report }, { pipelineVersion: snapshot.pipelineVersion, analyzerVersions: snapshot.analyzerVersions }))
 }
@@ -686,6 +693,7 @@ const buildDocumentationAuditReport = (root: string, config: DocBridgeConfigV1) 
     ...(config.reconciliation?.requiredRelationKinds === undefined ? {} : { requiredRelationKinds: config.reconciliation.requiredRelationKinds }),
     ...(config.reconciliation?.requiredRelationTargets === undefined ? {} : { requiredRelationTargets: config.reconciliation.requiredRelationTargets }),
     includeOrphanedDocuments: config.reconciliation?.includeOrphanedDocuments ?? true,
+    ...ownershipOptions(config),
   })
   return auditDocumentation({
     root,

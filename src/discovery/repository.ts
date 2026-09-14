@@ -9,6 +9,7 @@ import { detectPackageManager } from '../lib/package-manager.js'
 import { toPosix } from '../lib/paths.js'
 import { contentHashForArtifactV1, sha256NormalizedV1 } from '../index-builder/content-hash.js'
 import { safeWalkFiles } from '../safety/repository.js'
+import { deriveAreas, type AreaModule } from './areas.js'
 import { entityId } from './identity.js'
 import {
   MARKDOWN_ANALYZER_VERSION,
@@ -435,11 +436,11 @@ const artifact = (root: string, config: DocBridgeConfigV1 | undefined, files: re
     sourceRevision: revision.value,
     sourceRevisionKind: revision.kind,
     configurationHash: sha256NormalizedV1(config ?? {}),
-    pipelineVersion: '1.2.0',
-    analyzerVersions: { repository: '1.1.1', 'js-ts': '1.3.4', markdown: MARKDOWN_ANALYZER_VERSION },
+    pipelineVersion: '1.3.0',
+    analyzerVersions: { repository: '1.2.0', 'js-ts': '1.3.4', markdown: MARKDOWN_ANALYZER_VERSION },
     entities: [...entities].sort((a, b) => a.id.localeCompare(b.id)),
     relations: [...relations].sort((a, b) => a.id.localeCompare(b.id)),
-    coverage: coverage.map((entry) => ({ ...entry, analyzerVersion: entry.analyzerVersion ?? ({ repository: '1.1.1', 'js-ts': '1.3.4', markdown: MARKDOWN_ANALYZER_VERSION }[entry.analyzer] ?? '1.0.0') })),
+    coverage: coverage.map((entry) => ({ ...entry, analyzerVersion: entry.analyzerVersion ?? ({ repository: '1.2.0', 'js-ts': '1.3.4', markdown: MARKDOWN_ANALYZER_VERSION }[entry.analyzer] ?? '1.0.0') })),
   }
   return DiscoverySnapshotV1Schema.parse({ ...base, contentHash: contentHashForArtifactV1(base) })
 }
@@ -491,6 +492,7 @@ export const discoverRepository = (opts: DiscoveryOptions = {}): DiscoverySnapsh
 
   const modules = new Map<string, ModuleInfo>()
   const modulesByPath = new Map<string, string>()
+  const areaModules: AreaModule[] = []
   const declaringModules = new Map<string, string[]>()
   const exportingModules = new Map<string, string[]>()
   for (const absPath of sourcePaths) {
@@ -502,6 +504,7 @@ export const discoverRepository = (opts: DiscoveryOptions = {}): DiscoverySnapsh
     const exports = exportedNames(sourceFile)
     modules.set(resolve(absPath), { absPath, path, entityId: id, ...(pkg ? { packageId: pkg.id } : {}) })
     modulesByPath.set(path, id)
+    if (pkg) areaModules.push({ moduleId: id, path, packageId: pkg.id, packagePath: pkg.path })
     const declared = new Set(exportedNames(sourceFile, { declaredOnly: true }))
     for (const name of exports) {
       if (name === '*' || name === 'default') continue
@@ -512,6 +515,64 @@ export const discoverRepository = (opts: DiscoveryOptions = {}): DiscoverySnapsh
     }
     addEntity({ id, kind: 'module', name: basename(absPath), path, provenance: 'observed', evidence: [lineEvidence('code', root, absPath, 1, sourceFile.getLineAndCharacterOfPosition(sourceFile.getEnd()).line + 1)], ...(exports.length ? { metadata: { exports, test: TEST_MODULE_PATTERN.test(path) } } : {}) })
     if (pkg) addRelation({ id: entityId('relation', `${pkg.id}:contains:${id}`), kind: 'contains', from: pkg.id, to: id, provenance: 'observed', evidence: [lineEvidence('code', root, absPath, 1)] })
+  }
+
+  /*
+   * Areas: the directory level between a package and a file.
+   *
+   * Derived from convention and from what an ownership record already names, then attached to the
+   * graph with `contains` — package to area, area to its nested areas, area to module. Each
+   * module belongs to exactly one area, the most specific one, so an aggregation at area scope
+   * has one answer per module.
+   */
+  const areas = deriveAreas({
+    modules: areaModules,
+    ownership: Object.entries(opts.config?.routing?.options?.ownership ?? {}).map(([id, record]) => ({ id, path: record.path })),
+    ...(opts.config?.analysis?.areas?.depth !== undefined ? { depth: opts.config.analysis.areas.depth } : {}),
+    ...(opts.config?.analysis?.areas?.roots !== undefined ? { roots: opts.config.analysis.areas.roots } : {}),
+  })
+  const areasById = new Map(areas.map((area) => [area.id, area]))
+  const areasByPath = new Map(areas.map((area) => [area.path, area.id]))
+
+  for (const area of areas) {
+    addEntity({
+      id: area.id,
+      kind: 'area',
+      name: area.name,
+      path: area.path,
+      provenance: 'observed',
+      evidence: [
+        {
+          source: 'derived',
+          path: area.path,
+          context: `Directory groups ${area.moduleIds.length} module(s).`,
+        },
+      ],
+      metadata: {
+        moduleCount: area.moduleIds.length,
+        ...(area.ownershipId ? { ownershipId: area.ownershipId } : {}),
+      },
+    })
+
+    const parent = area.parentId && areasById.has(area.parentId) ? area.parentId : area.packageId
+    addRelation({
+      id: entityId('relation', `${parent}:contains:${area.id}`),
+      kind: 'contains',
+      from: parent,
+      to: area.id,
+      provenance: 'observed',
+      evidence: [{ source: 'derived', path: area.path }],
+    })
+    for (const moduleId of area.moduleIds) {
+      addRelation({
+        id: entityId('relation', `${area.id}:contains:${moduleId}`),
+        kind: 'contains',
+        from: area.id,
+        to: moduleId,
+        provenance: 'observed',
+        evidence: [{ source: 'derived', path: area.path }],
+      })
+    }
   }
 
   /*
@@ -578,6 +639,8 @@ export const discoverRepository = (opts: DiscoveryOptions = {}): DiscoverySnapsh
   const markdownResolution = {
     documents: documentsByPath,
     modules: modulesByPath,
+    // Areas exist now, so a document naming a directory resolves to the unit, not to nothing.
+    areas: areasByPath,
     packages: packageNames,
     symbols: symbolModules,
   }
