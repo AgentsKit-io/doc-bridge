@@ -55,7 +55,7 @@ ak-docs mcp
 
 ## Configuration
 
-Configuration is discovered in the order documented in [config-v1](./spec/config-v1.md); `doc-bridge.config.json` is the simplest supported fallback (along with `.ts`, `.js`, and `package.json#docBridge`).
+Configuration is discovered in the order defined by the configuration specification; `doc-bridge.config.json` is the simplest supported fallback (along with `.ts`, `.js`, and `package.json#docBridge`).
 
 **Required:** `schemaVersion: 1` + `corpus.agent.root`.
 

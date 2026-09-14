@@ -36,6 +36,13 @@ jobs:
       - run: npm pack --dry-run
       - name: Packaged smoke (2-min path + MCP)
         run: pnpm smoke:packaged
+      - name: Dogfood gate (doc-bridge on itself)
+        run: |
+          node bin/ak-docs.js index
+          node bin/ak-docs.js gate run
+          node bin/ak-docs.js doctor --text
+          node bin/ak-docs.js doctor --write-badge
+          node bin/ak-docs.js doctor --badge
       - name: Resolve a published version for the pre-release Action smoke
         id: published-doc-bridge
         run: echo "version=$(npm view @agentskit/doc-bridge version)" >> "$GITHUB_OUTPUT"
@@ -44,13 +51,6 @@ jobs:
         with:
           config-path: doc-bridge.config.json
           package-version: ${{ steps.published-doc-bridge.outputs.version }}
-      - name: Dogfood gate (doc-bridge on itself)
-        run: |
-          node bin/ak-docs.js index
-          node bin/ak-docs.js gate run
-          node bin/ak-docs.js doctor --text
-          node bin/ak-docs.js doctor --write-badge
-          node bin/ak-docs.js doctor --badge
       - name: Ollama smoke (optional)
         continue-on-error: true
         run: pnpm smoke:ollama

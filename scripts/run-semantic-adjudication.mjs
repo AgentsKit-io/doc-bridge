@@ -32,7 +32,7 @@ if (staleSourceHashes) throw new Error('The README Standard gate still fails aft
 
 const ciRunsReadmeGateOnPullRequest = /on:\s*\n\s+pull_request:/.test(ci) && ci.includes('pnpm check:readme-standard')
 if (!ciRunsReadmeGateOnPullRequest) throw new Error('CI evidence does not prove the README gate runs on pull requests.')
-const actionBeforeDogfood = ci.indexOf('Run the public composite Action contract') < ci.indexOf('Dogfood gate (doc-bridge on itself)')
+const dogfoodBeforeAction = ci.indexOf('Dogfood gate (doc-bridge on itself)') < ci.indexOf('Run the public composite Action contract')
 
 const duplicateDemo = readme.includes('## 60-second proof') && read('docs/getting-started.md').includes('60-second demo (zero setup)')
 if (duplicateDemo) throw new Error('The legacy onboarding duplication is still present.')
@@ -40,7 +40,7 @@ const semanticFindings = priorReview.results.flatMap((result) => result.findings
 const quickstartOverlap = semanticFindings.some((finding) => finding.id === 'quickstart-duplication-001')
 const remediation = {
   binarySurface: /publishes two executables[\s\S]*`ak-docs`[\s\S]*`ak-verify`/.test(cliSpec),
-  ciClaim: readme.includes('verifies the committed index and configured') && ciRunsReadmeGateOnPullRequest && actionBeforeDogfood,
+  ciClaim: readme.includes('verifies the committed index and configured') && ciRunsReadmeGateOnPullRequest && dogfoodBeforeAction,
   platformClaim: !readme.includes('portable, fail-closed handoffs for Cursor, Pi, Hermes, and ClawHub-compatible clients'),
   onboardingCanonical: installGuide.includes('[Getting started guide](../getting-started.md)') && !installGuide.includes('npx ak-docs demo') && !installGuide.includes('ak-docs init'),
   corpusExample: corpusOverview.includes('The command returns a bounded handoff similar to:') && corpusOverview.includes('"startHere": "docs/agent-corpus/doc-bridge.md"'),
