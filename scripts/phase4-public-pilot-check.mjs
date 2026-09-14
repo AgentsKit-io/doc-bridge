@@ -29,6 +29,16 @@ if (plan.sampling.sampleSize !== 16 || result.execution.observations !== 16 || r
 if (ledger.contentHash !== result.run.ledgerHash || ledger.observations.length !== result.execution.observations) failures.push('pilot result is not bound to the published ledger')
 if (result.execution.failed !== 0 || result.execution.budgetExceeded !== 0) failures.push('final pilot contains failed observations')
 if (result.pairedMetrics.pairs !== 8) failures.push('pilot pair count is not eight')
+const acceptanceInstrumentation = ledger.observations.filter((observation) => {
+  const measurements = observation.measurements ?? {}
+  return Number.isInteger(measurements.acceptanceChecksPassed)
+    && Number.isInteger(measurements.acceptanceChecksTotal)
+    && Number.isInteger(measurements.acceptanceChecksExecuted)
+    && measurements.acceptanceChecksTotal > 0
+    && measurements.acceptanceChecksExecuted <= measurements.acceptanceChecksTotal
+    && measurements.acceptanceChecksPassed <= measurements.acceptanceChecksExecuted
+}).length
+if (acceptanceInstrumentation !== ledger.observations.length) failures.push('pilot acceptance instrumentation is incomplete')
 const baseline = result.pairedMetrics.repositoryOnly.providerTokenEquivalentUnits
 const docBridge = result.pairedMetrics.deterministicDocBridge.providerTokenEquivalentUnits
 const expectedTokenReduction = (1 - docBridge / baseline) * 100
@@ -44,6 +54,7 @@ console.log(JSON.stringify({
   runId: result.run.runId,
   planned: plan.sampling.sampleSize,
   completed: result.execution.completed,
+  acceptanceInstrumentation: { complete: acceptanceInstrumentation, observations: ledger.observations.length },
   failures,
 }))
 if (failures.length > 0) process.exitCode = 1

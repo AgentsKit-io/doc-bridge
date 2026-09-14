@@ -1,12 +1,19 @@
 #!/usr/bin/env node
 
-import { spawn } from 'node:child_process'
+import { spawn, spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
+import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
+import { resolve } from 'node:path'
 import { measureProviderToolTelemetry } from '../dist/index.js'
+import { resolveDocBridgeQueryId } from './study-doc-bridge-query.mjs'
 
 const modelIndex = process.argv.indexOf('--model')
 const model = modelIndex >= 0 ? process.argv[modelIndex + 1] : undefined
+const docBridgeQueryIndex = process.argv.indexOf('--doc-bridge-query')
+const docBridgeQuery = docBridgeQueryIndex >= 0
+  ? process.argv.slice(docBridgeQueryIndex + 1, docBridgeQueryIndex + 3)
+  : []
 
 if (!model || !/^[a-z0-9][a-z0-9._:/-]{0,255}$/.test(model)) {
   process.stderr.write('A valid Codex model is required.\n')
@@ -32,7 +39,24 @@ const child = spawn('codex', [
 let stdout = ''
 let stderrBytes = 0
 let inputBytes = 0
+let docBridgeHandoffBytes = 0
+const providerStartedAt = performance.now()
+let firstToolEventLatencyMs
+let pendingLine = ''
+const isToolEvent = (event) => event?.type === 'item.completed' && [
+  'command_execution', 'mcp_tool_call', 'web_search_call', 'file_search_call', 'computer_call',
+].includes(event.item?.type)
 child.stdout.on('data', (chunk) => { stdout += chunk.toString('utf8') })
+child.stdout.on('data', (chunk) => {
+  pendingLine += chunk.toString('utf8')
+  const lines = pendingLine.split('\n')
+  pendingLine = lines.pop() ?? ''
+  for (const line of lines) {
+    try {
+      if (firstToolEventLatencyMs === undefined && isToolEvent(JSON.parse(line))) firstToolEventLatencyMs = Math.round(performance.now() - providerStartedAt)
+    } catch {}
+  }
+})
 child.stderr.on('data', (chunk) => { stderrBytes += Buffer.byteLength(chunk); process.stderr.write(chunk) })
 const finish = (code, output) => {
   if (output !== undefined) process.stdout.write(`${JSON.stringify(output)}\n`)
@@ -88,11 +112,60 @@ child.once('close', (code) => {
       observedToolEventCount: toolTelemetry.observedToolEventCount,
       observedToolInputBytes: toolTelemetry.observedToolInputBytes,
       observedToolOutputBytes: toolTelemetry.observedToolOutputBytes,
+      observedProviderInputBytes: inputBytes,
+      observedAgentMessageBytes: Buffer.byteLength(message ?? '', 'utf8'),
       observedContextBytes: inputBytes + toolTelemetry.observedToolOutputBytes,
+      observedProviderDurationMs: Math.round(performance.now() - providerStartedAt),
+      ...(firstToolEventLatencyMs === undefined ? {} : { timeToFirstToolEventMs: firstToolEventLatencyMs }),
+      ...(docBridgeQuery.length === 2 ? { docBridgeQueryCount: 1, docBridgeHandoffBytes } : {}),
       stderrBytes,
     },
   })
 })
 
-process.stdin.on('data', (chunk) => { inputBytes += chunk.length })
-process.stdin.pipe(child.stdin)
+let requestInput = ''
+process.stdin.on('data', (chunk) => { requestInput += chunk.toString('utf8') })
+process.stdin.once('end', () => {
+  let providerInput = requestInput
+  if (docBridgeQuery.length === 2) {
+    const queryType = docBridgeQuery[0]
+    const queryId = resolveDocBridgeQueryId(JSON.parse(readFileSync(resolve(process.cwd(), '.doc-bridge/index.json'), 'utf8')), queryType, docBridgeQuery[1])
+    if (typeof queryId !== 'string' || queryId.length === 0) {
+      child.stdin.destroy()
+      child.kill('SIGTERM')
+      finish(1)
+      return
+    }
+    const query = spawnSync(process.execPath, [
+      fileURLToPath(new URL('../bin/ak-docs.js', import.meta.url)),
+      'query', queryType, queryId, '--agent',
+    ], {
+      cwd: process.cwd(),
+      encoding: 'utf8',
+      maxBuffer: 64 * 1024,
+      shell: false,
+    })
+    if (query.status !== 0 || query.error) {
+      child.stdin.destroy()
+      child.kill('SIGTERM')
+      finish(1)
+      return
+    }
+    try {
+      const compactHandoff = JSON.stringify(JSON.parse(query.stdout))
+      docBridgeHandoffBytes = Buffer.byteLength(compactHandoff, 'utf8')
+      providerInput = JSON.stringify({
+        ...JSON.parse(requestInput),
+        deterministicDocBridgeInstruction: 'Use deterministicDocBridgeHandoff as the first evidence source. Follow its startHere and readBeforeEditing paths, then use repository tools only to verify gaps or acceptance checks.',
+        deterministicDocBridgeHandoff: compactHandoff,
+      })
+    } catch {
+      child.stdin.destroy()
+      child.kill('SIGTERM')
+      finish(1)
+      return
+    }
+  }
+  inputBytes = Buffer.byteLength(providerInput, 'utf8')
+  child.stdin.end(providerInput)
+})

@@ -14,11 +14,17 @@ This directory contains the anonymized, versioned evidence behind the Doc Bridge
 
 ## Executive summary
 
-An anonymized dogfooding cycle estimated up to **99% context-payload reduction** between the scanned repository corpus and the P95 payload returned to an agent. This is a context-payload measurement, not a guaranteed token reduction or correctness result, and it must not be read as a provider-token result.
+An earlier anonymized dogfooding cycle estimated up to **99% context-payload reduction** between the scanned repository corpus and the P95 payload returned to an agent. This is a historical context-payload measurement, not a guaranteed token reduction or correctness result, and it must not be read as a provider-token result.
 
-In the latest controlled A/B study with 96 executions, the deterministic Doc Bridge workflow showed a directional operational signal of 18.46% fewer paired provider token-equivalent units across 46 token-complete pairs and 39.75 seconds lower P95 latency than repository-only context. Operational completion was 87.5% versus 75.0%. The sample is not a causal or enterprise-readiness claim.
+The published controlled A/B study with 96 executions showed a directional operational signal of 18.46% fewer paired provider token-equivalent units across 46 token-complete pairs and 39.75 seconds lower P95 latency than repository-only context. Operational completion was 87.5% versus 75.0%. The sample is not a causal or enterprise-readiness claim.
 
-The independent bounded adjudicator recorded **0 semantic successes in both arms**. Therefore, this round does not demonstrate improved task correctness; it remains `inconclusive` and should be used only as an auditable directional measurement.
+The independent bounded adjudicator recorded **0 adjudicator-success outcomes in both arms**. Because this adjudicator is mechanical and does not independently judge semantic correctness, this round does not demonstrate improved task correctness; it remains `inconclusive` and should be used only as an auditable historical directional measurement. A newer local pilot is not included in the public narrative until its semantic evaluation and publication review are complete.
+
+Acceptance telemetry is now checked separately from task correctness: every pilot observation records passed, total, and executed acceptance-check counts, while the deterministic adjudicator blocks a success when any declared check was not observed as executed. This prevents a missing execution measurement from being mistaken for a passing task.
+
+Semantic correctness and natural-language contradiction detection are explicit
+limitations of this study, not missing evidence hidden by the publication
+artifacts. They remain open validation work for a future adjudicated corpus.
 
 ![Estimated context payload reduction](../landing/assets/context-payload-reduction.svg)
 

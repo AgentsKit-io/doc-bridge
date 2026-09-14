@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync, readFileSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
@@ -93,6 +93,18 @@ describe('study provider CLI contract', () => {
     expect(existsSync(ledgerPath)).toBe(false)
   })
 
+  it('resumes a completed study without invoking the provider twice', async () => {
+    const ledgerPath = join(process.cwd(), '.tmp-study-provider-resume-ledger.json')
+    try {
+      const first = await runControlledStudy({ plan, suite, providers: providerConfig, repositories: repositoryConfig, ledgerPath })
+      const second = await runControlledStudy({ plan, suite, providers: providerConfig, repositories: repositoryConfig, ledgerPath })
+      expect(first.executed).toBe(first.planned)
+      expect(second).toMatchObject({ executed: 0, skipped: first.planned })
+    } finally {
+      rmSync(ledgerPath, { force: true })
+    }
+  })
+
   it('records an independent deterministic adjudication without trusting provider outcome', async () => {
     const task = suite.tasks[0]!
     const execution = { taskId: task.id, repositoryId: task.repositoryId, category: task.category, scenarioId: 'repository-only' as const, modelId: 'low-cost-model', replicate: 0, variantId: task.variants[0]!.id }
@@ -100,7 +112,7 @@ describe('study provider CLI contract', () => {
       plan,
       execution,
       command: process.execPath,
-      args: ['-e', "process.stdout.write(JSON.stringify({taskOutcome: 'success', evidenceQuality: 'high', safetyOutcome: 'safe', evidenceIds: ['entrypoint-evidence'], clarificationRequests: 0, reworkCount: 0, inputTokens: 3, outputTokens: 5, tokenMethod: 'provider', measurements: {acceptanceChecksPassed: 1, acceptanceChecksTotal: 1}}))"],
+      args: ['-e', "process.stdout.write(JSON.stringify({taskOutcome: 'success', evidenceQuality: 'high', safetyOutcome: 'safe', evidenceIds: ['entrypoint-evidence'], clarificationRequests: 0, reworkCount: 0, inputTokens: 3, outputTokens: 5, tokenMethod: 'provider', measurements: {acceptanceChecksPassed: 1, acceptanceChecksTotal: 1, acceptanceChecksExecuted: 1}}))"],
       cwd: process.cwd(),
       contextBytes: 128,
     })
@@ -110,6 +122,22 @@ describe('study provider CLI contract', () => {
     expect(adjudicated.measurements?.providerTokenCostUnits).toBe(8)
   })
 
+  it('blocks a claimed pass when acceptance checks were not observed as executed', async () => {
+    const task = suite.tasks[0]!
+    const execution = { taskId: task.id, repositoryId: task.repositoryId, category: task.category, scenarioId: 'repository-only' as const, modelId: 'low-cost-model', replicate: 0, variantId: task.variants[0]!.id }
+    const observation = await runControlledCommand({
+      plan,
+      execution,
+      command: process.execPath,
+      args: ['-e', "process.stdout.write(JSON.stringify({taskOutcome: 'success', evidenceQuality: 'high', safetyOutcome: 'safe', evidenceIds: ['entrypoint-evidence'], measurements: {acceptanceChecksPassed: 1, acceptanceChecksTotal: 1}}))"],
+      cwd: process.cwd(),
+      contextBytes: 128,
+    })
+
+    const adjudicated = adjudicateControlledStudyObservation(task, observation)
+    expect(adjudicated.adjudication.outcome).toBe('blocked')
+  })
+
   it('does not treat an unrelated evidence id as satisfying a requirement', async () => {
     const task = suite.tasks[0]!
     const execution = { taskId: task.id, repositoryId: task.repositoryId, category: task.category, scenarioId: 'repository-only' as const, modelId: 'low-cost-model', replicate: 0, variantId: task.variants[0]!.id }
@@ -117,7 +145,7 @@ describe('study provider CLI contract', () => {
       plan,
       execution,
       command: process.execPath,
-      args: ['-e', "process.stdout.write(JSON.stringify({taskOutcome: 'success', evidenceQuality: 'high', safetyOutcome: 'safe', evidenceIds: ['unrelated-evidence'], clarificationRequests: 0, reworkCount: 0, inputTokens: 3, outputTokens: 5, tokenMethod: 'provider', measurements: {acceptanceChecksPassed: 1, acceptanceChecksTotal: 1}}))"],
+      args: ['-e', "process.stdout.write(JSON.stringify({taskOutcome: 'success', evidenceQuality: 'high', safetyOutcome: 'safe', evidenceIds: ['unrelated-evidence'], clarificationRequests: 0, reworkCount: 0, inputTokens: 3, outputTokens: 5, tokenMethod: 'provider', measurements: {acceptanceChecksPassed: 1, acceptanceChecksTotal: 1, acceptanceChecksExecuted: 1}}))"],
       cwd: process.cwd(),
       contextBytes: 128,
     })
@@ -136,7 +164,7 @@ describe('study provider CLI contract', () => {
       plan,
       execution,
       command: process.execPath,
-      args: ['-e', "process.stdout.write(JSON.stringify({taskOutcome: 'success', evidenceQuality: 'high', safetyOutcome: 'safe', evidenceIds: ['bounded-evidence'], clarificationRequests: 0, reworkCount: 0, inputTokens: 3, outputTokens: 5, tokenMethod: 'provider', measurements: {acceptanceChecksPassed: 1, acceptanceChecksTotal: 1}}))"],
+      args: ['-e', "process.stdout.write(JSON.stringify({taskOutcome: 'success', evidenceQuality: 'high', safetyOutcome: 'safe', evidenceIds: ['bounded-evidence'], clarificationRequests: 0, reworkCount: 0, inputTokens: 3, outputTokens: 5, tokenMethod: 'provider', measurements: {acceptanceChecksPassed: 1, acceptanceChecksTotal: 1, acceptanceChecksExecuted: 1}}))"],
       cwd: process.cwd(),
       contextBytes: 128,
     })

@@ -216,6 +216,7 @@ export {
   type DoctorBadgeMetrics,
 } from './doctor/badge.js'
 export { watchDocBridgeIndex, type WatchIndexOptions } from './index-builder/watch-index.js'
+export { evaluateQualityScorecard, type QualityScorecard, type QualityScorecardInput, type ScorecardCriterion, type ScorecardDimension, type ScorecardStatus } from './study/quality-scorecard.js'
 export {
   promoteMemoryToGithubPr,
   writePromotionDraft,

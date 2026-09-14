@@ -58,6 +58,16 @@ describe('github PR memory promotion', () => {
     )
   })
 
+  it('does not execute git or gh during a dry run', () => {
+    const root = mkdtempSync(join(tmpdir(), 'ak-docs-gh-dry-run-'))
+
+    const result = promoteMemoryToGithubPr(root, draft, { dryRun: true })
+
+    expect(result).toMatchObject({ ok: true, dryRun: true })
+    expect(childProcess.spawnSync).not.toHaveBeenCalled()
+    expect(childProcess.execFileSync).not.toHaveBeenCalled()
+  })
+
   it('reports gh auth and git operation failures clearly', () => {
     const root = mkdtempSync(join(tmpdir(), 'ak-docs-gh-fail-'))
     mkdirSync(join(root, '.git'))

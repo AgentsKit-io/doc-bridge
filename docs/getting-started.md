@@ -26,14 +26,7 @@ pnpm add -D @agentskit/doc-bridge
 
 CLI binary: **`ak-docs`**.
 
-## 60-second demo (zero setup)
-
-```bash
-npx ak-docs demo --text
-npx ak-docs demo --fixture monorepo --text   # auth + billing monorepo
-```
-
-Prints before/after, a real handoff, gate red→green, and the MCP snippet.
+For the canonical zero-setup proof, see the [README's 60-second proof](../README.md#60-second-proof).
 
 ## Two-minute path (no API key)
 
@@ -62,7 +55,7 @@ ak-docs mcp
 
 ## Configuration
 
-Default: `doc-bridge.config.json` (also `.ts` / `.js` / `package.json#docBridge`).
+Configuration is discovered in the order documented in [config-v1](./spec/config-v1.md); `doc-bridge.config.json` is the simplest supported fallback (along with `.ts`, `.js`, and `package.json#docBridge`).
 
 **Required:** `schemaVersion: 1` + `corpus.agent.root`.
 
@@ -82,7 +75,7 @@ See [config-v1](./spec/config-v1.md) and [examples](./examples.md).
 |---------|-------------|---------|
 | CLI | You want to inspect or debug the bridge yourself | `ak-docs query package <id> --agent` |
 | MCP | You want coding agents to resolve handoffs before editing | `ak-docs mcp install --cursor` |
-| CI | You want stale indexes and broken links to fail PRs | `ak-docs index && ak-docs gate run` |
+| CI | You want stale indexes and explicitly configured documentation gates to fail PRs | `ak-docs gate run` (the PR action checks the committed index) |
 | Adapters | You already have Fumadocs, Docusaurus, or markdown docs | configure `corpus.human` |
 | Memory pipeline | You want agent notes turned into reviewable docs | `ak-docs memory promote --pr --dry-run` |
 | Optional RAG/chat | You want a terminal assistant grounded in the same index | `ak-docs rag ingest && ak-docs chat` |
@@ -118,7 +111,7 @@ ak-docs bootstrap agent-docs         # draft agent docs from human site
 ak-docs memory ingest
 ak-docs memory classify
 ak-docs memory promote              # prints a safe draft body
-ak-docs memory promote --pr --dry-run
+ak-docs memory promote --pr --dry-run  # writes a local draft and prints commands only
 ak-docs memory promote --pr         # opens a GitHub draft PR via gh
 ```
 

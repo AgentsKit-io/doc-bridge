@@ -17,6 +17,7 @@ const percentile95 = (values) => {
 }
 
 const run = (term, extraArgs = []) => {
+  const startedAt = performance.now()
   const result = spawnSync(process.execPath, [
     join(root, '..', 'bin', 'ak-docs.js'),
     'search',
@@ -26,22 +27,29 @@ const run = (term, extraArgs = []) => {
     '--config',
     config,
   ], { encoding: 'utf8' })
+  const latencyMs = Math.round(performance.now() - startedAt)
 
   if (result.status !== 0) {
-    return { term, correct: false, error: result.stderr.trim() || `exit ${result.status}` }
+    return { term, correct: false, latencyMs, error: result.stderr.trim() || `exit ${result.status}` }
   }
 
   try {
     const payload = JSON.parse(result.stdout)
+    const compactWireBytes = Buffer.byteLength(JSON.stringify(payload), 'utf8')
+    const formattedWireBytes = Buffer.byteLength(JSON.stringify(payload, null, 2), 'utf8')
     return {
       term,
       correct: payload.bestMatch?.id,
+      latencyMs,
       responseBytes: payload.telemetry?.contextBytes ?? null,
       estimatedTokens: payload.telemetry?.estimatedTokens ?? null,
+      wireBytes: Buffer.byteLength(result.stdout, 'utf8'),
+      compactWireBytes,
+      formattedWireBytes,
       truncated: payload.telemetry?.truncated ?? false,
     }
   } catch (error) {
-    return { term, correct: false, error: error instanceof Error ? error.message : String(error) }
+    return { term, correct: false, latencyMs, error: error instanceof Error ? error.message : String(error) }
   }
 }
 
@@ -55,6 +63,12 @@ const observations = baseline.map((observation, index) => ({
   optimizedEstimatedTokens: optimized[index]?.estimatedTokens ?? null,
   baselineResponseBytes: observation.responseBytes,
   optimizedResponseBytes: optimized[index]?.responseBytes ?? null,
+  baselineWireBytes: observation.wireBytes,
+  optimizedWireBytes: optimized[index]?.wireBytes ?? null,
+  baselineLatencyMs: observation.latencyMs,
+  optimizedLatencyMs: optimized[index]?.latencyMs ?? null,
+  compactWireBytes: optimized[index]?.compactWireBytes ?? null,
+  formattedWireBytes: optimized[index]?.formattedWireBytes ?? null,
   truncated: optimized[index]?.truncated ?? false,
 }))
 
@@ -63,6 +77,12 @@ const baselineTokens = observations.flatMap((observation) => observation.baselin
 const optimizedTokens = observations.flatMap((observation) => observation.optimizedEstimatedTokens === null ? [] : [observation.optimizedEstimatedTokens])
 const baselineBytes = observations.flatMap((observation) => observation.baselineResponseBytes === null ? [] : [observation.baselineResponseBytes])
 const optimizedBytes = observations.flatMap((observation) => observation.optimizedResponseBytes === null ? [] : [observation.optimizedResponseBytes])
+const baselineWireBytes = observations.flatMap((observation) => observation.baselineWireBytes === null ? [] : [observation.baselineWireBytes])
+const optimizedWireBytes = observations.flatMap((observation) => observation.optimizedWireBytes === null ? [] : [observation.optimizedWireBytes])
+const compactWireBytes = observations.flatMap((observation) => observation.compactWireBytes === null ? [] : [observation.compactWireBytes])
+const formattedWireBytes = observations.flatMap((observation) => observation.formattedWireBytes === null ? [] : [observation.formattedWireBytes])
+const baselineLatencyMs = observations.flatMap((observation) => observation.baselineLatencyMs === undefined ? [] : [observation.baselineLatencyMs])
+const optimizedLatencyMs = observations.flatMap((observation) => observation.optimizedLatencyMs === null ? [] : [observation.optimizedLatencyMs])
 const baselineP95 = percentile95(baselineTokens)
 const optimizedP95 = percentile95(optimizedTokens)
 const report = {
@@ -81,6 +101,16 @@ const report = {
   baselineResponseBytesP95: percentile95(baselineBytes),
   optimizedResponseBytesP95: percentile95(optimizedBytes),
   responseBytesP95: percentile95(optimizedBytes),
+  baselineWireBytesP95: percentile95(baselineWireBytes),
+  optimizedWireBytesP95: percentile95(optimizedWireBytes),
+  baselineLatencyMsP95: percentile95(baselineLatencyMs),
+  optimizedLatencyMsP95: percentile95(optimizedLatencyMs),
+  latencyMeasurement: 'wall-clock per isolated CLI invocation; latency is reported separately from context reduction',
+  compactWireBytesP95: percentile95(compactWireBytes),
+  formattedWireBytesP95: percentile95(formattedWireBytes),
+  agentJsonWhitespaceReduction: percentile95(formattedWireBytes) && percentile95(compactWireBytes) !== null
+    ? 1 - percentile95(compactWireBytes) / percentile95(formattedWireBytes)
+    : null,
   truncatedCount: observations.filter((observation) => observation.truncated).length,
   observations,
 }

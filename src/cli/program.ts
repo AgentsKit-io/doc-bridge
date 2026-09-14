@@ -264,6 +264,10 @@ const writeJson = (payload: unknown): void => {
   process.stdout.write(`${JSON.stringify(payload, null, 2)}\n`)
 }
 
+const writeAgentJson = (payload: unknown): void => {
+  process.stdout.write(`${JSON.stringify(payload)}\n`)
+}
+
 const writeLines = (lines: readonly string[]): void => {
   process.stdout.write(lines.length ? `${lines.join('\n')}\n` : '')
 }
@@ -1539,6 +1543,7 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
       const index = loadFreshDocBridgeIndex(root, config)
       const result = runQuery(index, config, { kind, id, agent: flags.has('--agent') })
       if (wantsTextOutput(flags, config)) writeTextQuery(result)
+      else if (flags.has('--agent')) writeAgentJson(result)
       else writeJson(result)
       return 0
     } catch (error) {
@@ -1567,7 +1572,7 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
           ...(mode === undefined ? {} : { mode: mode as 'discovery' | 'editing' | 'debugging' | 'documentation' }),
           ...(contextBudgetTokens === undefined ? {} : { contextBudgetTokens }),
         })
-        writeJson(result)
+        writeAgentJson(result)
       } else {
         const matches = searchIndex(index, term)
         if (wantsTextOutput(flags, config)) writeTextSearch(term, matches)

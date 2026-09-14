@@ -1,0 +1,40 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["summary", "findings", "gaps", "openQuestions", "requiresReview", "metrics"],
+  "properties": {
+    "summary": {"type": "string"},
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "kind", "severity", "document", "evidence", "message", "recommendation"],
+        "properties": {
+          "id": {"type": "string"},
+          "kind": {"type": "string", "enum": ["contradiction", "redundancy", "missing", "style", "claim"]},
+          "severity": {"type": "string", "enum": ["critical", "high", "medium", "low", "info"]},
+          "document": {"type": "string"},
+          "evidence": {"type": "array", "items": {"type": "string"}},
+          "message": {"type": "string"},
+          "recommendation": {"type": "string"}
+        }
+      }
+    },
+    "gaps": {"type": "array", "items": {"type": "string"}},
+    "openQuestions": {"type": "array", "items": {"type": "string"}},
+    "requiresReview": {"type": "boolean", "const": true},
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["documentsReviewed", "findingsCount", "contradictionCandidates", "redundancyCandidates", "missingCandidates"],
+      "properties": {
+        "documentsReviewed": {"type": "integer", "minimum": 1},
+        "findingsCount": {"type": "integer", "minimum": 0},
+        "contradictionCandidates": {"type": "integer", "minimum": 0},
+        "redundancyCandidates": {"type": "integer", "minimum": 0},
+        "missingCandidates": {"type": "integer", "minimum": 0}
+      }
+    }
+  }
+}

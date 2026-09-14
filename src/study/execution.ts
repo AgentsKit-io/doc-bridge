@@ -17,7 +17,7 @@ import {
 import { providerForStudyExecution, parseStudyProviderCliConfig, validateStudyProviderCommand, type StudyProviderCliConfigV1 } from './provider-cli.js'
 import { evaluateStudyTask, parseStudyTaskSuite, selectTaskExecutions, type StudyTaskSuiteV1, type StudyTaskV1 } from './task-suite.js'
 
-const PROVIDER_RESPONSE_CONTRACT = 'Return ONLY one JSON object with exactly these required keys: taskOutcome, evidenceQuality, safetyOutcome, evidenceIds, clarificationRequests, reworkCount, and measurements. measurements must be an array of objects with name (string) and value (non-negative number). Before returning, execute each listed acceptance check when the repository contract makes it available; report acceptanceChecksPassed and acceptanceChecksTotal from observed execution, and report zero passed when a required check is unavailable or blocked. Report firstEvidenceLatencyMs only when observed. Use canonical measurement names when observed: searchHitRate, acceptanceChecksPassed, acceptanceChecksTotal, acceptanceChecksExecuted, entrypointEvidenceCount, ownershipEvidenceCount, architectureRelationCount, documentationClaimEvidenceCount, sourceComparisonEvidenceCount, verificationEvidenceCount, errorRate, documentationFindingCount, documentationExampleRate, documentationFreshnessRate, documentationCorrectnessRate, documentationCompletenessRate, documentationClarityRate, documentationMaintainabilityRate, timeToFirstEvidenceMs, analysisCostUsd, and agentCostUsd. Omit a measurement when it cannot be established; never invent values. Do not include markdown, prose, logs, token counts, or extra top-level keys; never emit logs on stdout.'
+const PROVIDER_RESPONSE_CONTRACT = 'Return one JSON object matching the output schema. Required keys: taskOutcome, evidenceQuality, safetyOutcome, evidenceIds, clarificationRequests, reworkCount, and measurements. Each measurement is {name:string,value:number>=0}. Run every available acceptance check and report observed acceptanceChecksPassed, acceptanceChecksTotal, and acceptanceChecksExecuted; include firstEvidenceLatencyMs only when observed. Use canonical names when observed: searchHitRate, acceptanceChecksPassed, acceptanceChecksTotal, acceptanceChecksExecuted, entrypointEvidenceCount, ownershipEvidenceCount, architectureRelationCount, documentationClaimEvidenceCount, sourceComparisonEvidenceCount, verificationEvidenceCount, errorRate, documentationFindingCount, documentationExampleRate, documentationFreshnessRate, documentationCorrectnessRate, documentationCompletenessRate, documentationClarityRate, documentationMaintainabilityRate, timeToFirstEvidenceMs, analysisCostUsd, and agentCostUsd. Omit unknown values; never invent. Output no markdown, prose, logs, token counts, or extra keys; stdout must contain only the JSON object.'
 
 export const STUDY_REPOSITORY_CONFIG_SCHEMA_VERSION = 1 as const
 export const STUDY_REPOSITORY_CONFIG_CONTENT_HASH_ALGO = 'sha256-normalized-v1' as const
@@ -90,12 +90,25 @@ const loadLedger = (path: string): ControlledStudyObservationLedgerV1 => {
   return parseControlledStudyLedger(JSON.parse(readFileSync(path, 'utf8')) as unknown)
 }
 
-const executionKey = (execution: { readonly taskId: string; readonly scenarioId: string; readonly modelId: string; readonly replicate: number }): string => sha256NormalizedV1(execution)
+const executionKey = (execution: { readonly taskId: string; readonly repositoryId: string; readonly scenarioId: string; readonly modelId: string; readonly replicate: number; readonly variantId: string }): string => sha256NormalizedV1({
+  taskId: execution.taskId,
+  repositoryId: execution.repositoryId,
+  scenarioId: execution.scenarioId,
+  modelId: execution.modelId,
+  replicate: execution.replicate,
+  variantId: execution.variantId,
+})
 
 export const adjudicateControlledStudyObservation = (task: StudyTaskV1, observation: ControlledStudyObservationV1): ControlledStudyObservationV1 => {
   const passed = observation.measurements?.acceptanceChecksPassed
   const total = observation.measurements?.acceptanceChecksTotal
-  const blocked = observation.execution.status !== 'completed' || passed === undefined || total !== task.acceptanceChecks.length
+  const executed = observation.measurements?.acceptanceChecksExecuted
+  const acceptanceTotal = task.acceptanceChecks.length
+  const blocked = observation.execution.status !== 'completed'
+    || passed === undefined
+    || total !== acceptanceTotal
+    || executed !== acceptanceTotal
+    || passed > executed
   const evidenceIds = new Set(observation.evidenceIds)
   const requiredEvidencePresent = task.evidenceRequirements.filter((requirement) => evidenceIds.has(requirement.id)).length
   const evaluation = evaluateStudyTask(task, {

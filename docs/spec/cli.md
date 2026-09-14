@@ -5,7 +5,7 @@ description: Complete command reference for indexing, querying, gates, doctor, m
 
 # ak-docs CLI
 
-Command-line interface for **`@agentskit/doc-bridge`**. The npm package is scoped; the **only published binary** is `ak-docs`.
+Command-line interface for **`@agentskit/doc-bridge`**. The package publishes two executables: `ak-docs` is the product CLI and `ak-verify` is the verification-harness wrapper.
 
 ## Naming
 
@@ -13,10 +13,16 @@ Command-line interface for **`@agentskit/doc-bridge`**. The npm package is scope
 |------|------|
 | npm package | `@agentskit/doc-bridge` |
 | CLI binary | `ak-docs` |
-| Config file | `doc-bridge.config.ts` |
+| Verification binary | `ak-verify` |
+| Primary config filename | `doc-bridge.config.ts` |
 | GitHub repo | `AgentsKit-io/doc-bridge` |
 
 Install the package, run `ak-docs` — not `doc-bridge` on the shell.
+
+The primary filename is shown for readability. Discovery also accepts
+`doc-bridge.config.mts`, `.js`, `.mjs`, `.json`, and the `docBridge` field in
+`package.json`; see the [configuration contract](./config-v1.md#discovery-order)
+for the authoritative order.
 
 ## Why a separate binary
 
@@ -39,7 +45,8 @@ pnpm add -D @agentskit/doc-bridge
 {
   "name": "@agentskit/doc-bridge",
   "bin": {
-    "ak-docs": "./bin/ak-docs.js"
+    "ak-docs": "./bin/ak-docs.js",
+    "ak-verify": "./bin/ak-verify.js"
   }
 }
 ```
@@ -68,13 +75,14 @@ pnpm add -D @agentskit/doc-bridge
 | `ak-docs memory ingest` | Normalize local memory files (`.agent-memory/**/*.md`, `.cursor/rules/*.mdc`) into `MemoryCandidate[]` |
 | `ak-docs memory classify` | Deterministically route candidates to agent/human/playbook/discard |
 | `ak-docs memory promote` | Build draft-only promotion body with safety scan; never auto-merges |
-| `ak-docs memory promote --pr [--dry-run] [--force]` | Write draft + open GitHub draft PR via `gh` |
+| `ak-docs memory promote --pr --dry-run [--force]` | Write a local draft and print the `git`/`gh` commands; does not execute them |
+| `ak-docs memory promote --pr [--force]` | Write the draft, commit/push it, and open a GitHub draft PR via `gh` |
 | `ak-docs registry topology` | Print the `doc-curator` topology for AgentsKit/Registry composition |
 | `ak-docs suggest [--documentation] --json` | Run the configured Registry agent module or CLI and persist its typed proposal; optionally include the bounded documentation-audit context |
 | `ak-docs playbook draft` | Build a draft Playbook feedback payload from local memory candidates |
 | `ak-docs playbook pattern [--text]` | Export published Doc Bridge Playbook pattern (OKF markdown / JSON) |
 | `ak-docs list <kind> [--text]` | List packages, apps, intents, … |
-| `ak-docs gate run [index-freshness]` | Check generated index freshness |
+| `ak-docs gate run [gate-id]` | Run resolved configured documentation gates; an optional id narrows the run to one gate |
 | `ak-docs conformance run documentation-standard-v1 [--text\|--json]` | Run the stable ecosystem documentation profile with evidence and remediation |
 | `ak-docs audit documentation [--text\|--json]` | Measure documentation quality and compare documentation claims with the observed project graph |
 | `ak-docs mcp` | Start MCP server (stdio default) |
@@ -96,7 +104,7 @@ Peers: `@agentskit/rag`, `@agentskit/ink`, `@agentskit/adapters`, `@agentskit/me
 | Flag | Description |
 |------|-------------|
 | `--config <path>` | Config file (default: auto-discover) |
-| `--json` / `--text` | Output format for non-agent commands (default: json); `--agent` always emits agent JSON |
+| `--json` / `--text` | Output format for non-agent commands (default: formatted json); `--agent` emits compact machine-readable JSON, while `--text` remains human-readable |
 | `--chat` | Request planned intelligence-backed ask mode; errors clearly until `intelligence.adapter` and RAG/chat support are configured |
 | `--help` | Command help |
 
@@ -143,7 +151,7 @@ CLI is a thin wrapper over the same exports.
 pnpm docs:internal:query …   # private dogfood wrapper → ak-docs query …
 ```
 
-Private repo wrappers stay private. `ak-docs` is the only public binary.
+`ak-docs` is the primary product CLI. `ak-verify` is the portable verification-harness entry point used to prove repository work against a declared contract.
 
 ## See also
 

@@ -36,6 +36,6 @@ ak-docs study select docs/study/task-suite-v1.json --json
 
 ## Adjudication
 
-Agent output is never the adjudication result. During a real run, the deterministic evaluator receives the execution status, the bounded acceptance-check measurements, and the number of evidence items, then records an `automated` adjudication with method `deterministic-rubric-v1`. It returns one of the five rubric statuses without reading the provider's self-reported `taskOutcome`. Human adjudication remains required for semantic correctness, documentation quality, and any claim that cannot be proven by the declared artifact checks.
+Agent output is never the adjudication result. During a real run, the deterministic evaluator receives the execution status, the bounded acceptance-check measurements (`acceptanceChecksPassed`, `acceptanceChecksTotal`, and `acceptanceChecksExecuted`), and the number of evidence items, then records an `automated` adjudication with method `deterministic-rubric-v1`. A success requires every declared check to be observed as executed and passed; missing execution telemetry is blocked rather than inferred. The evaluator returns one of the five rubric statuses without reading the provider's self-reported `taskOutcome`. Human adjudication remains required for semantic correctness, documentation quality, and any claim that cannot be proven by the declared artifact checks.
 
 No baseline is approved by creating or selecting the suite. Baseline execution, comparison, and immutable approval are separate phases.
