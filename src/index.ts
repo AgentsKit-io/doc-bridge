@@ -252,6 +252,38 @@ export {
   type BenchmarkSnapshotDiff,
 } from './metrics/benchmark.js'
 export {
+  EVAL_FORMAT_VERSION,
+  RETRIEVAL_BENCH_SCHEMA_VERSION,
+  RetrievalBenchResultV1Schema,
+  RetrievalSuiteCaseSchema,
+  RetrievalSuiteSchema,
+  formatRetrievalBenchText,
+  matchesRetrievalExpectation,
+  parseRetrievalBenchResult,
+  parseRetrievalSuite,
+  rankedOutput,
+  runRetrievalBench,
+  type RetrievalBenchResultV1,
+  type RetrievalCaseOutcome,
+  type RetrievalMetrics,
+  type RetrievalSuite,
+  type RetrievalSuiteCase,
+  type RunRetrievalBenchOptions,
+} from './bench/retrieval.js'
+export {
+  RetrievalBaselineV1Schema,
+  compareRetrievalBaseline,
+  createRetrievalBaseline,
+  formatRetrievalComparisonText,
+  parseRetrievalBaseline,
+  type CompareRetrievalBaselineOptions,
+  type CreateRetrievalBaselineOptions,
+  type RetrievalBaselineV1,
+  type RetrievalComparison,
+  type RetrievalComparisonStatus,
+  type RetrievalMetricDelta,
+} from './bench/baseline.js'
+export {
   STUDY_PROTOCOL_CONTENT_HASH_ALGO,
   STUDY_PROTOCOL_SCHEMA_VERSION,
   StudyProtocolV1Schema,

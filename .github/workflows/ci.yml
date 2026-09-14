@@ -43,6 +43,10 @@ jobs:
           node bin/ak-docs.js doctor --text
           node bin/ak-docs.js doctor --write-badge
           node bin/ak-docs.js doctor --badge
+      - name: Retrieval benchmark gate (fails on a hit@3 regression)
+        run: |
+          node bin/ak-docs.js bench retrieval docs/bench/retrieval-suite-v1.json \
+            --baseline docs/bench/retrieval-baseline-v1.json --text
       - name: Resolve a published version for the pre-release Action smoke
         id: published-doc-bridge
         run: echo "version=$(npm view @agentskit/doc-bridge version)" >> "$GITHUB_OUTPUT"

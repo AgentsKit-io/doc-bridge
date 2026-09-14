@@ -1,0 +1,1033 @@
+{
+  "evalFormatVersion": "2026-04",
+  "name": "doc-bridge-retrieval-v1",
+  "description": "Golden retrieval queries for this repository: exported symbols, file and directory paths, natural-language questions in English and Portuguese, and ownership routing. A case passes when one of its expected targets appears in the ranking; a target matches a result by entity id or by repository path, so the suite survives the entity-identity changes in KR-01 through KR-06.",
+  "tags": [
+    "retrieval",
+    "doc-bridge",
+    "deterministic"
+  ],
+  "cases": [
+    {
+      "id": "symbol-search-index",
+      "input": "searchIndex",
+      "expected": {
+        "regex": {
+          "body": "src/query/search\\.ts"
+        }
+      },
+      "metadata": {
+        "expectedTargets": [
+          "src/query/search.ts"
+        ],
+        "lang": "en",
+        "kind": "symbol"
+      }
+    },
+    {
+      "id": "symbol-reconcile-knowledge",
+      "input": "reconcileKnowledge",
+      "expected": {
+        "regex": {
+          "body": "src/reconciliation/reconcile\\.ts"
+        }
+      },
+      "metadata": {
+        "expectedTargets": [
+          "src/reconciliation/reconcile.ts"
+        ],
+        "lang": "en",
+        "kind": "symbol"
+      }
+    },
+    {
+      "id": "symbol-discover-repository",
+      "input": "discoverRepository",
+      "expected": {
+        "regex": {
+          "body": "src/discovery/repository\\.ts"
+        }
+      },
+      "metadata": {
+        "expectedTargets": [
+          "src/discovery/repository.ts"
+        ],
+        "lang": "en",
+        "kind": "symbol"
+      }
+    },
+    {
+      "id": "symbol-build-index",
+      "input": "buildDocBridgeIndex",
+      "expected": {
+        "regex": {
+          "body": "src/index-builder/build-index\\.ts"
+        }
+      },
+      "metadata": {
+        "expectedTargets": [
+          "src/index-builder/build-index.ts"
+        ],
+        "lang": "en",
+        "kind": "symbol"
+      }
+    },
+    {
+      "id": "symbol-run-workflow",
+      "input": "runWorkflow",
+      "expected": {
+        "regex": {
+          "body": "src/workflow/engine\\.ts"
+        }
+      },
+      "metadata": {
+        "expectedTargets": [
+          "src/workflow/engine.ts"
+        ],
+        "lang": "en",
+        "kind": "symbol"
+      }
+    },
+    {
+      "id": "symbol-handle-mcp-request",
+      "input": "handleMcpRequest",
+      "expected": {
+        "regex": {
+          "body": "src/mcp/server\\.ts"
+        }
+      },
+      "metadata": {
+        "expectedTargets": [
+          "src/mcp/server.ts"
+        ],
+        "lang": "en",
+        "kind": "symbol"
+      }
+    },
+    {
+      "id": "symbol-audit-documentation",
+      "input": "auditDocumentation",
+      "expected": {
+        "regex": {
+          "body": "src/audit/documentation\\.ts"
+        }
+      },
+      "metadata": {
+        "expectedTargets": [
+          "src/audit/documentation.ts"
+        ],
+        "lang": "en",
+        "kind": "symbol"
+      }
+    },
+    {
+      "id": "symbol-evaluate-rules",
+      "input": "evaluateRules",
+      "expected": {
+        "regex": {
+          "body": "src/rules/engine\\.ts"
+        }
+      },
+      "metadata": {
+        "expectedTargets": [
+          "src/rules/engine.ts"
+        ],
+        "lang": "en",
+        "kind": "symbol"
+      }
+    },
+    {
+      "id": "symbol-run-doctor",
+      "input": "runDoctor",
+      "expected": {
+        "regex": {
+          "body": "src/doctor/run-doctor\\.ts"
+        }
+      },
+      "metadata": {
+        "expectedTargets": [
+          "src/doctor/run-doctor.ts"
+        ],
+        "lang": "en",
+        "kind": "symbol"
+      }
+    },
+    {
+      "id": "symbol-run-gates",
+      "input": "runGates",
+      "expected": {
+        "regex": {
+          "body": "src/gates/run-gates\\.ts"
+        }
+      },
+      "metadata": {
+        "expectedTargets": [
+          "src/gates/run-gates.ts"
+        ],
+        "lang": "en",
+        "kind": "symbol"
+      }
+    },
+    {
+      "id": "symbol-apply-fix-proposal",
+      "input": "applyFixProposal",
+      "expected": {
+        "regex": {
+          "body": "src/fixes/proposals\\.ts"
+        }
+      },
+      "metadata": {
+        "expectedTargets": [
+          "src/fixes/proposals.ts"
+        ],
+        "lang": "en",
+        "kind": "symbol"
+      }
+    },
+    {
+      "id": "symbol-create-registry-adapter",
+      "input": "createRegistryAgentAdapter",
+      "expected": {
+        "regex": {
+          "body": "src/agents/registry-adapter\\.ts"
+        }
+      },
+      "metadata": {
+        "expectedTargets": [
+          "src/agents/registry-adapter.ts"
+        ],
+        "lang": "en",
+        "kind": "symbol"
+      }
+    },
+    {
+      "id": "symbol-retrieve-chunks",
+      "input": "retrieveDocBridgeChunks",
+      "expected": {
+        "regex": {
+          "body": "src/retriever/doc-bridge-retriever\\.ts"
+        }
+      },
+      "metadata": {
+        "expectedTargets": [
+          "src/retriever/doc-bridge-retriever.ts"
+        ],
+        "lang": "en",
+        "kind": "symbol"
+      }
+    },
+    {
+      "id": "symbol-scan-agent-corpus",
+      "input": "scanAgentCorpus",
+      "expected": {
+        "regex": {
+          "body": "src/index-builder/scan-corpus\\.ts"
+        }
+      },
+      "metadata": {
+        "expectedTargets": [
+          "src/index-builder/scan-corpus.ts"
+        ],
+        "lang": "en",
+        "kind": "symbol"
+      }
+    },
+    {
+      "id": "symbol-parse-frontmatter",
+      "input": "parseFrontmatter",
+      "expected": {
+        "regex": {
+          "body": "src/lib/markdown\\.ts"
+        }
+      },
+      "metadata": {
+        "expectedTargets": [
+          "src/lib/markdown.ts"
+        ],
+        "lang": "en",
+        "kind": "symbol"
+      }
+    },
+    {
+      "id": "symbol-index-stale-error",
+      "input": "IndexStaleError",
+      "expected": {
+        "regex": {
+          "body": "src/query/load-index\\.ts"
+        }
+      },
+      "metadata": {
+        "expectedTargets": [
+          "src/query/load-index.ts"
+        ],
+        "lang": "en",
+        "kind": "symbol"
+      }
+    },
+    {
+      "id": "symbol-classify-memory",
+      "input": "classifyMemoryCandidates",
+      "expected": {
+        "regex": {
+          "body": "src/memory/pipeline\\.ts"
+        }
+      },
+      "metadata": {
+        "expectedTargets": [
+          "src/memory/pipeline.ts"
+        ],
+        "lang": "en",
+        "kind": "symbol"
+      }
+    },
+    {
+      "id": "symbol-parse-declarations",
+      "input": "parseDocumentationDeclarations",
+      "expected": {
+        "regex": {
+          "body": "src/discovery/documentation\\.ts"
+        }
+      },
+      "metadata": {
+        "expectedTargets": [
+          "src/discovery/documentation.ts"
+        ],
+        "lang": "en",
+        "kind": "symbol"
+      }
+    },
+    {
+      "id": "symbol-run-retrieval-bench",
+      "input": "runRetrievalBench",
+      "expected": {
+        "regex": {
+          "body": "src/bench/retrieval\\.ts"
+        }
+      },
+      "metadata": {
+        "expectedTargets": [
+          "src/bench/retrieval.ts"
+        ],
+        "lang": "en",
+        "kind": "symbol"
+      }
+    },
+    {
+      "id": "symbol-mcp-tools",
+      "input": "MCP_TOOLS",
+      "expected": {
+        "regex": {
+          "body": "src/mcp/server\\.ts"
+        }
+      },
+      "metadata": {
+        "expectedTargets": [
+          "src/mcp/server.ts"
+        ],
+        "lang": "en",
+        "kind": "symbol"
+      }
+    },
+    {
+      "id": "path-mcp-server",
+      "input": "src/mcp/server.ts",
+      "expected": {
+        "regex": {
+          "body": "src/mcp/server\\.ts"
+        }
+      },
+      "metadata": {
+        "expectedTargets": [
+          "src/mcp/server.ts"
+        ],
+        "lang": "en",
+        "kind": "path"
+      }
+    },
+    {
+      "id": "path-query-dir",
+      "input": "src/query",
+      "expected": {
+        "regex": {
+          "body": "src/query|src/query/search\\.ts|src/query/query\\.ts|doc-bridge-query"
+        }
+      },
+      "metadata": {
+        "expectedTargets": [
+          "src/query",
+          "src/query/search.ts",
+          "src/query/query.ts",
+          "doc-bridge-query"
+        ],
+        "lang": "en",
+        "kind": "path"
+      }
+    },
+    {
+      "id": "path-reconcile",
+      "input": "src/reconciliation/reconcile.ts",
+      "expected": {
+        "regex": {
+          "body": "src/reconciliation/reconcile\\.ts"
+        }
+      },
+      "metadata": {
+        "expectedTargets": [
+          "src/reconciliation/reconcile.ts"
+        ],
+        "lang": "en",
+        "kind": "path"
+      }
+    },
+    {
+      "id": "path-workflow-engine",
+      "input": "src/workflow/engine.ts",
+      "expected": {
+        "regex": {
+          "body": "src/workflow/engine\\.ts"
+        }
+      },
+      "metadata": {
+        "expectedTargets": [
+          "src/workflow/engine.ts"
+        ],
+        "lang": "en",
+        "kind": "path"
+      }
+    },
+    {
+      "id": "path-knowledge-schema",
+      "input": "src/schemas/knowledge.ts",
+      "expected": {
+        "regex": {
+          "body": "src/schemas/knowledge\\.ts"
+        }
+      },
+      "metadata": {
+        "expectedTargets": [
+          "src/schemas/knowledge.ts"
+        ],
+        "lang": "en",
+        "kind": "path"
+      }
+    },
+    {
+      "id": "path-config-schema",
+      "input": "src/config/schema.ts",
+      "expected": {
+        "regex": {
+          "body": "src/config/schema\\.ts"
+        }
+      },
+      "metadata": {
+        "expectedTargets": [
+          "src/config/schema.ts"
+        ],
+        "lang": "en",
+        "kind": "path"
+      }
+    },
+    {
+      "id": "path-report-html",
+      "input": "src/report/html.ts",
+      "expected": {
+        "regex": {
+          "body": "src/report/html\\.ts"
+        }
+      },
+      "metadata": {
+        "expectedTargets": [
+          "src/report/html.ts"
+        ],
+        "lang": "en",
+        "kind": "path"
+      }
+    },
+    {
+      "id": "path-runbook-doc",
+      "input": "docs/knowledge-engine-runbook.md",
+      "expected": {
+        "regex": {
+          "body": "docs/knowledge-engine-runbook\\.md"
+        }
+      },
+      "metadata": {
+        "expectedTargets": [
+          "docs/knowledge-engine-runbook.md"
+        ],
+        "lang": "en",
+        "kind": "path"
+      }
+    },
+    {
+      "id": "q-add-mcp-tool",
+      "input": "where do I add a new MCP tool",
+      "expected": {
+        "regex": {
+          "body": "src/mcp|src/mcp/server\\.ts|docs/mcp\\.md|doc-bridge-mcp|docs/agent-corpus/mcp\\.md"
+        }
+      },
+      "metadata": {
+        "expectedTargets": [
+          "src/mcp",
+          "src/mcp/server.ts",
+          "docs/mcp.md",
+          "doc-bridge-mcp",
+          "docs/agent-corpus/mcp.md"
+        ],
+        "lang": "en",
+        "kind": "question"
+      }
+    },
+    {
+      "id": "q-workflow-transitions",
+      "input": "where are workflow transitions persisted",
+      "expected": {
+        "regex": {
+          "body": "src/workflow/engine\\.ts|docs/knowledge-engine-runbook\\.md"
+        }
+      },
+      "metadata": {
+        "expectedTargets": [
+          "src/workflow/engine.ts",
+          "docs/knowledge-engine-runbook.md"
+        ],
+        "lang": "en",
+        "kind": "question"
+      }
+    },
+    {
+      "id": "q-reconcile-declared-observed",
+      "input": "how does reconciliation compare declared and observed relations",
+      "expected": {
+        "regex": {
+          "body": "src/reconciliation/reconcile\\.ts|docs/knowledge-engine-runbook\\.md"
+        }
+      },
+      "metadata": {
+        "expectedTargets": [
+          "src/reconciliation/reconcile.ts",
+          "docs/knowledge-engine-runbook.md"
+        ],
+        "lang": "en",
+        "kind": "question"
+      }
+    },
+    {
+      "id": "q-index-freshness",
+      "input": "how does the gate detect a stale index",
+      "expected": {
+        "regex": {
+          "body": "src/gates/run-gates\\.ts|src/query/load-index\\.ts|docs/guides/gate-ci\\.md|doc-bridge-gates"
+        }
+      },
+      "metadata": {
+        "expectedTargets": [
+          "src/gates/run-gates.ts",
+          "src/query/load-index.ts",
+          "docs/guides/gate-ci.md",
+          "doc-bridge-gates"
+        ],
+        "lang": "en",
+        "kind": "question"
+      }
+    },
+    {
+      "id": "q-registry-agent-grounding",
+      "input": "how is a registry agent proposal validated against evidence",
+      "expected": {
+        "regex": {
+          "body": "src/agents/registry-adapter\\.ts|docs/adr/0006-registry-semantic-grounding\\.md"
+        }
+      },
+      "metadata": {
+        "expectedTargets": [
+          "src/agents/registry-adapter.ts",
+          "docs/adr/0006-registry-semantic-grounding.md"
+        ],
+        "lang": "en",
+        "kind": "question"
+      }
+    },
+    {
+      "id": "q-handoff-shape",
+      "input": "what fields does an agent handoff contain",
+      "expected": {
+        "regex": {
+          "body": "docs/schemas/agent-handoff-v1\\.md|src/schemas/agent-handoff\\.ts"
+        }
+      },
+      "metadata": {
+        "expectedTargets": [
+          "docs/schemas/agent-handoff-v1.md",
+          "src/schemas/agent-handoff.ts"
+        ],
+        "lang": "en",
+        "kind": "question"
+      }
+    },
+    {
+      "id": "q-memory-promotion",
+      "input": "how does agent memory become a documentation draft",
+      "expected": {
+        "regex": {
+          "body": "src/memory/pipeline\\.ts|docs/guides/memory-pipeline\\.md|doc-bridge-memory|docs/agent-corpus/memory\\.md"
+        }
+      },
+      "metadata": {
+        "expectedTargets": [
+          "src/memory/pipeline.ts",
+          "docs/guides/memory-pipeline.md",
+          "doc-bridge-memory",
+          "docs/agent-corpus/memory.md"
+        ],
+        "lang": "en",
+        "kind": "question"
+      }
+    },
+    {
+      "id": "q-doc-audit-limits",
+      "input": "what does the documentation audit leave not analyzed",
+      "expected": {
+        "regex": {
+          "body": "src/audit/documentation\\.ts|docs/adr/0002-documentation-audit-boundary\\.md"
+        }
+      },
+      "metadata": {
+        "expectedTargets": [
+          "src/audit/documentation.ts",
+          "docs/adr/0002-documentation-audit-boundary.md"
+        ],
+        "lang": "en",
+        "kind": "question"
+      }
+    },
+    {
+      "id": "q-configure-ownership",
+      "input": "how do I configure ownership and checks for a package",
+      "expected": {
+        "regex": {
+          "body": "docs/spec/config-v1\\.md|src/config/schema\\.ts|doc-bridge\\.config\\.json"
+        }
+      },
+      "metadata": {
+        "expectedTargets": [
+          "docs/spec/config-v1.md",
+          "src/config/schema.ts",
+          "doc-bridge.config.json"
+        ],
+        "lang": "en",
+        "kind": "question"
+      }
+    },
+    {
+      "id": "q-install-and-run",
+      "input": "how do I install and run doc bridge for the first time",
+      "expected": {
+        "regex": {
+          "body": "docs/getting-started\\.md|docs/guides/install-and-run\\.md"
+        }
+      },
+      "metadata": {
+        "expectedTargets": [
+          "docs/getting-started.md",
+          "docs/guides/install-and-run.md"
+        ],
+        "lang": "en",
+        "kind": "question"
+      }
+    },
+    {
+      "id": "q-chat-and-rag",
+      "input": "how do I enable optional chat and rag",
+      "expected": {
+        "regex": {
+          "body": "docs/chat-and-rag\\.md|src/intelligence/rag\\.ts|doc-bridge-chat|docs/agent-corpus/chat\\.md"
+        }
+      },
+      "metadata": {
+        "expectedTargets": [
+          "docs/chat-and-rag.md",
+          "src/intelligence/rag.ts",
+          "doc-bridge-chat",
+          "docs/agent-corpus/chat.md"
+        ],
+        "lang": "en",
+        "kind": "question"
+      }
+    },
+    {
+      "id": "q-contribute",
+      "input": "how do I run the tests before opening a pull request",
+      "expected": {
+        "regex": {
+          "body": "CONTRIBUTING\\.md"
+        }
+      },
+      "metadata": {
+        "expectedTargets": [
+          "CONTRIBUTING.md"
+        ],
+        "lang": "en",
+        "kind": "question"
+      }
+    },
+    {
+      "id": "q-report-offline",
+      "input": "how is the html report rendered offline",
+      "expected": {
+        "regex": {
+          "body": "src/report/html\\.ts|docs/knowledge-engine-runbook\\.md"
+        }
+      },
+      "metadata": {
+        "expectedTargets": [
+          "src/report/html.ts",
+          "docs/knowledge-engine-runbook.md"
+        ],
+        "lang": "en",
+        "kind": "question"
+      }
+    },
+    {
+      "id": "q-analyzer-plugin",
+      "input": "how do I add an analyzer for another language",
+      "expected": {
+        "regex": {
+          "body": "docs/spec/analyzer-plugin-v1\\.md|src/plugins/contract\\.ts"
+        }
+      },
+      "metadata": {
+        "expectedTargets": [
+          "docs/spec/analyzer-plugin-v1.md",
+          "src/plugins/contract.ts"
+        ],
+        "lang": "en",
+        "kind": "question"
+      }
+    },
+    {
+      "id": "q-study-method",
+      "input": "what does the efficiency study actually measure",
+      "expected": {
+        "regex": {
+          "body": "docs/study/README\\.md"
+        }
+      },
+      "metadata": {
+        "expectedTargets": [
+          "docs/study/README.md"
+        ],
+        "lang": "en",
+        "kind": "question"
+      }
+    },
+    {
+      "id": "q-privacy",
+      "input": "what does the mcp server read from my repository",
+      "expected": {
+        "regex": {
+          "body": "PRIVACY\\.md|docs/mcp\\.md"
+        }
+      },
+      "metadata": {
+        "expectedTargets": [
+          "PRIVACY.md",
+          "docs/mcp.md"
+        ],
+        "lang": "en",
+        "kind": "question"
+      }
+    },
+    {
+      "id": "pt-workflow-transitions",
+      "input": "onde ficam as transições do workflow",
+      "expected": {
+        "regex": {
+          "body": "src/workflow/engine\\.ts|docs/knowledge-engine-runbook\\.md"
+        }
+      },
+      "metadata": {
+        "expectedTargets": [
+          "src/workflow/engine.ts",
+          "docs/knowledge-engine-runbook.md"
+        ],
+        "lang": "pt",
+        "kind": "question"
+      }
+    },
+    {
+      "id": "pt-add-mcp-tool",
+      "input": "como adiciono uma nova ferramenta MCP",
+      "expected": {
+        "regex": {
+          "body": "src/mcp|src/mcp/server\\.ts|docs/mcp\\.md|doc-bridge-mcp|docs/agent-corpus/mcp\\.md"
+        }
+      },
+      "metadata": {
+        "expectedTargets": [
+          "src/mcp",
+          "src/mcp/server.ts",
+          "docs/mcp.md",
+          "doc-bridge-mcp",
+          "docs/agent-corpus/mcp.md"
+        ],
+        "lang": "pt",
+        "kind": "question"
+      }
+    },
+    {
+      "id": "pt-index-build",
+      "input": "como o índice é construído a partir da documentação",
+      "expected": {
+        "regex": {
+          "body": "src/index-builder/build-index\\.ts|docs/recipes/index-pipeline\\.md|doc-bridge-index|docs/agent-corpus/INDEX\\.md"
+        }
+      },
+      "metadata": {
+        "expectedTargets": [
+          "src/index-builder/build-index.ts",
+          "docs/recipes/index-pipeline.md",
+          "doc-bridge-index",
+          "docs/agent-corpus/INDEX.md"
+        ],
+        "lang": "pt",
+        "kind": "question"
+      }
+    },
+    {
+      "id": "pt-ownership-config",
+      "input": "onde configuro o dono e os checks de um pacote",
+      "expected": {
+        "regex": {
+          "body": "docs/spec/config-v1\\.md|src/config/schema\\.ts|doc-bridge\\.config\\.json"
+        }
+      },
+      "metadata": {
+        "expectedTargets": [
+          "docs/spec/config-v1.md",
+          "src/config/schema.ts",
+          "doc-bridge.config.json"
+        ],
+        "lang": "pt",
+        "kind": "question"
+      }
+    },
+    {
+      "id": "pt-reconcile",
+      "input": "como a reconciliação compara documentação e código",
+      "expected": {
+        "regex": {
+          "body": "src/reconciliation/reconcile\\.ts|docs/knowledge-engine-runbook\\.md"
+        }
+      },
+      "metadata": {
+        "expectedTargets": [
+          "src/reconciliation/reconcile.ts",
+          "docs/knowledge-engine-runbook.md"
+        ],
+        "lang": "pt",
+        "kind": "question"
+      }
+    },
+    {
+      "id": "pt-gate-stale",
+      "input": "como o gate descobre que o índice está velho",
+      "expected": {
+        "regex": {
+          "body": "src/gates/run-gates\\.ts|src/query/load-index\\.ts|docs/guides/gate-ci\\.md|doc-bridge-gates"
+        }
+      },
+      "metadata": {
+        "expectedTargets": [
+          "src/gates/run-gates.ts",
+          "src/query/load-index.ts",
+          "docs/guides/gate-ci.md",
+          "doc-bridge-gates"
+        ],
+        "lang": "pt",
+        "kind": "question"
+      }
+    },
+    {
+      "id": "pt-memory",
+      "input": "como a memória do agente vira documentação",
+      "expected": {
+        "regex": {
+          "body": "src/memory/pipeline\\.ts|docs/guides/memory-pipeline\\.md|doc-bridge-memory|docs/agent-corpus/memory\\.md"
+        }
+      },
+      "metadata": {
+        "expectedTargets": [
+          "src/memory/pipeline.ts",
+          "docs/guides/memory-pipeline.md",
+          "doc-bridge-memory",
+          "docs/agent-corpus/memory.md"
+        ],
+        "lang": "pt",
+        "kind": "question"
+      }
+    },
+    {
+      "id": "pt-doctor-score",
+      "input": "como a nota do doctor é calculada",
+      "expected": {
+        "regex": {
+          "body": "src/doctor/run-doctor\\.ts|doc-bridge-doctor|docs/agent-corpus/doctor\\.md"
+        }
+      },
+      "metadata": {
+        "expectedTargets": [
+          "src/doctor/run-doctor.ts",
+          "doc-bridge-doctor",
+          "docs/agent-corpus/doctor.md"
+        ],
+        "lang": "pt",
+        "kind": "question"
+      }
+    },
+    {
+      "id": "pt-primeiros-passos",
+      "input": "como começo a usar o doc bridge no meu repositório",
+      "expected": {
+        "regex": {
+          "body": "docs/getting-started\\.md|docs/guides/install-and-run\\.md"
+        }
+      },
+      "metadata": {
+        "expectedTargets": [
+          "docs/getting-started.md",
+          "docs/guides/install-and-run.md"
+        ],
+        "lang": "pt",
+        "kind": "question"
+      }
+    },
+    {
+      "id": "pt-conformance",
+      "input": "como rodo a conformidade do padrão de documentação",
+      "expected": {
+        "regex": {
+          "body": "src/conformance/documentation-standard-v1\\.ts|doc-bridge-conformance|docs/agent-corpus/conformance\\.md"
+        }
+      },
+      "metadata": {
+        "expectedTargets": [
+          "src/conformance/documentation-standard-v1.ts",
+          "doc-bridge-conformance",
+          "docs/agent-corpus/conformance.md"
+        ],
+        "lang": "pt",
+        "kind": "question"
+      }
+    },
+    {
+      "id": "own-cli",
+      "input": "who owns the ak-docs command line surface",
+      "expected": {
+        "regex": {
+          "body": "doc-bridge-cli|src/cli|docs/agent-corpus/cli\\.md"
+        }
+      },
+      "metadata": {
+        "expectedTargets": [
+          "doc-bridge-cli",
+          "src/cli",
+          "docs/agent-corpus/cli.md"
+        ],
+        "lang": "en",
+        "kind": "ownership"
+      }
+    },
+    {
+      "id": "own-mcp",
+      "input": "who owns the mcp stdio server",
+      "expected": {
+        "regex": {
+          "body": "doc-bridge-mcp|src/mcp|docs/agent-corpus/mcp\\.md"
+        }
+      },
+      "metadata": {
+        "expectedTargets": [
+          "doc-bridge-mcp",
+          "src/mcp",
+          "docs/agent-corpus/mcp.md"
+        ],
+        "lang": "en",
+        "kind": "ownership"
+      }
+    },
+    {
+      "id": "own-index",
+      "input": "who owns corpus scanning and handoff generation",
+      "expected": {
+        "regex": {
+          "body": "doc-bridge-index|src/index-builder|docs/agent-corpus/INDEX\\.md"
+        }
+      },
+      "metadata": {
+        "expectedTargets": [
+          "doc-bridge-index",
+          "src/index-builder",
+          "docs/agent-corpus/INDEX.md"
+        ],
+        "lang": "en",
+        "kind": "ownership"
+      }
+    },
+    {
+      "id": "own-query",
+      "input": "who owns deterministic package queries and document search",
+      "expected": {
+        "regex": {
+          "body": "doc-bridge-query|src/query|docs/agent-corpus/query\\.md"
+        }
+      },
+      "metadata": {
+        "expectedTargets": [
+          "doc-bridge-query",
+          "src/query",
+          "docs/agent-corpus/query.md"
+        ],
+        "lang": "en",
+        "kind": "ownership"
+      }
+    },
+    {
+      "id": "own-gates",
+      "input": "who owns freshness and link quality gates",
+      "expected": {
+        "regex": {
+          "body": "doc-bridge-gates|src/gates|docs/agent-corpus/gates\\.md"
+        }
+      },
+      "metadata": {
+        "expectedTargets": [
+          "doc-bridge-gates",
+          "src/gates",
+          "docs/agent-corpus/gates.md"
+        ],
+        "lang": "en",
+        "kind": "ownership"
+      }
+    },
+    {
+      "id": "own-memory",
+      "input": "who owns the memory ingestion and promotion pipeline",
+      "expected": {
+        "regex": {
+          "body": "doc-bridge-memory|src/memory|docs/agent-corpus/memory\\.md"
+        }
+      },
+      "metadata": {
+        "expectedTargets": [
+          "doc-bridge-memory",
+          "src/memory",
+          "docs/agent-corpus/memory.md"
+        ],
+        "lang": "en",
+        "kind": "ownership"
+      }
+    }
+  ]
+}

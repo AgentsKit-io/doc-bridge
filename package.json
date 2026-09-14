@@ -51,6 +51,7 @@
     "test": "vitest run && pnpm test:cursor-plugin && pnpm test:claude-plugin && pnpm test:copilot-plugin && pnpm test:portable-skill",
     "test:watch": "vitest",
     "coverage": "vitest run --coverage",
+    "bench:retrieval": "node bin/ak-docs.js bench retrieval docs/bench/retrieval-suite-v1.json --baseline docs/bench/retrieval-baseline-v1.json --text",
     "check:ecosystem-upstream": "node scripts/check-ecosystem-upstream.mjs",
     "check:no-legacy-chat-imports": "node scripts/check-no-legacy-chat-imports.mjs",
     "typecheck": "tsc --noEmit",

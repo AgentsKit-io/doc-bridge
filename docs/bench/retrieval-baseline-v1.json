@@ -1,0 +1,28 @@
+{
+  "type": "retrieval-benchmark-baseline",
+  "schemaVersion": 1,
+  "contentHash": "3af9f8617a8502772b22029bb1b48f6e0c0eb341eb955c8496090273345cc52a",
+  "contentHashAlgo": "sha256-normalized-v1",
+  "suite": {
+    "name": "doc-bridge-retrieval-v1",
+    "caseCount": 60,
+    "contentHash": "8f789470ce0fca41154474191fed0163869518b278f7c91d6b5370b919cde072"
+  },
+  "metrics": {
+    "caseCount": 60,
+    "hitAt1": 0.216667,
+    "hitAt3": 0.233333,
+    "meanReciprocalRank": 0.227778,
+    "meanContextBytes": 243,
+    "meanApproxTokens": 61,
+    "zeroResultRate": 0.466667,
+    "tokenMethod": "approximate"
+  },
+  "approval": {
+    "approvedAt": "2026-09-14T15:30:54.173Z",
+    "approvedBy": "Emerson Braun",
+    "reason": "Pre-change baseline for KR-07: the ranking as shipped in 1.8.0, before KR-01 replaces it.",
+    "resultHash": "58036b18c49ad6af4e493075f25f945d01a14dbe7bc2501c0ad6a1b899152184",
+    "indexHash": "bc64a16334745e0b2b9accab05d8dfb3bd79eca5803ab003bf4b6f5d3dd99d14"
+  }
+}

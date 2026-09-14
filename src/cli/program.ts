@@ -39,8 +39,20 @@ import { IndexNotFoundError, loadFreshDocBridgeIndex } from '../query/load-index
 import { runQuery, type QueryKind } from '../query/query.js'
 import { searchIndex } from '../query/search.js'
 import type { DocBridgeIndexV1 } from '../schemas/doc-bridge-index.js'
-import { parseAgentHandoff, parseDocBridgeConfig, parseReconciliationReport } from '../validate.js'
+import { parseAgentHandoff, parseDocBridgeConfig, parseDocBridgeIndex, parseReconciliationReport } from '../validate.js'
 import { parseDiscoverySnapshot } from '../validate.js'
+import {
+  formatRetrievalBenchText,
+  parseRetrievalSuite,
+  runRetrievalBench,
+  type RetrievalBenchResultV1,
+} from '../bench/retrieval.js'
+import {
+  compareRetrievalBaseline,
+  createRetrievalBaseline,
+  formatRetrievalComparisonText,
+  parseRetrievalBaseline,
+} from '../bench/baseline.js'
 import { reconcileKnowledge } from '../reconciliation/reconcile.js'
 import type { DiscoverySnapshotV1, ReconciliationReportV1 } from '../schemas/knowledge.js'
 import { sha256NormalizedV1 } from '../index-builder/content-hash.js'
@@ -85,6 +97,7 @@ type Command =
   | 'registry'
   | 'discover'
   | 'benchmark'
+  | 'bench'
   | 'study'
   | 'scan'
   | 'reconcile'
@@ -117,6 +130,8 @@ Core (no API key):
   ak-docs index [--watch]
   ak-docs discover [--text|--json]
   ak-docs benchmark <fixture.json> <observation.json> [--text|--json]
+  ak-docs bench retrieval <suite.json> [--index <file>] [--baseline <file>] [--limit <n>] [--text|--json]
+  ak-docs bench retrieval <suite.json> --update-baseline --by <name> [--reason <text>]
   ak-docs study protocol <protocol.json> [--text|--json]
   ak-docs study history <registry.json> [--protocol <protocol.json>] [--text|--json]
   ak-docs study tasks <task-suite.json> [--text|--json]
@@ -204,6 +219,7 @@ const parseArgs = (argv: readonly string[]) => {
   else if (positional[0] === 'registry') command = 'registry'
   else if (positional[0] === 'discover') command = 'discover'
   else if (positional[0] === 'benchmark') command = 'benchmark'
+  else if (positional[0] === 'bench') command = 'bench'
   else if (positional[0] === 'study') command = 'study'
   else if (positional[0] === 'scan') command = 'scan'
   else if (positional[0] === 'reconcile') command = 'reconcile'
@@ -679,6 +695,79 @@ const buildDocumentationAuditReport = (root: string, config: DocBridgeConfigV1) 
     declarationDiagnostics: analysis.diagnostics,
     ...(config.audit?.documentation ? { config: config.audit.documentation } : {}),
   })
+}
+
+const BENCH_USAGE = [
+  'Usage: ak-docs bench retrieval <suite.json> [--index <file>] [--baseline <file>] [--limit <n>] [--text|--json]',
+  '       ak-docs bench retrieval <suite.json> --baseline <file> --update-baseline --by <name> [--reason <text>]',
+].join('\n')
+
+const runBenchCommand = (
+  flags: ReadonlySet<string>,
+  positional: readonly string[],
+  configPath: string | undefined,
+  argv: readonly string[],
+): number => {
+  if (positional[1] !== 'retrieval' || !positional[2]) {
+    process.stderr.write(`${BENCH_USAGE}\n`)
+    return 1
+  }
+  try {
+    const { config, root } = loadProject(configPath)
+    const suite = parseRetrievalSuite(JSON.parse(readFileSync(resolve(root, positional[2]), 'utf8')) as unknown)
+    const indexOption = optionValues(argv, '--index')[0]
+    const index = indexOption
+      ? parseDocBridgeIndex(JSON.parse(readFileSync(resolve(root, indexOption), 'utf8')) as unknown)
+      : loadFreshDocBridgeIndex(root, config)
+
+    const limitOption = optionValues(argv, '--limit')[0]
+    const limit = limitOption === undefined ? undefined : Number(limitOption)
+    if (limit !== undefined && (!Number.isInteger(limit) || limit <= 0)) {
+      throw new Error('--limit must be a positive integer.')
+    }
+
+    const result: RetrievalBenchResultV1 = runRetrievalBench({
+      index,
+      suite,
+      ...(limit === undefined ? {} : { limit }),
+    })
+
+    const baselineOption = optionValues(argv, '--baseline')[0]
+    const baselinePath = baselineOption ? resolve(root, baselineOption) : undefined
+
+    if (flags.has('--update-baseline')) {
+      const approvedBy = optionValues(argv, '--by')[0]
+      if (!baselinePath) throw new Error('--update-baseline requires --baseline <file>.')
+      if (!approvedBy) throw new Error('--update-baseline requires --by <name>: a baseline is an approved figure, not a side effect of a run.')
+      const reason = optionValues(argv, '--reason')[0]
+      const baseline = createRetrievalBaseline({ result, approvedBy, ...(reason ? { reason } : {}) })
+      mkdirSync(dirname(baselinePath), { recursive: true })
+      writeFileSync(baselinePath, `${JSON.stringify(baseline, null, 2)}\n`, 'utf8')
+      if (wantsTextOutput(flags, config)) {
+        writeLines([...formatRetrievalBenchText(result), `Baseline written: ${relative(root, baselinePath)} (approved by ${approvedBy})`])
+      } else writeJson({ ok: true, result, baseline, baselinePath })
+      return 0
+    }
+
+    if (baselinePath && !existsSync(baselinePath)) {
+      throw new Error(
+        `No baseline at ${relative(root, baselinePath)}. Record the current figures with: ak-docs bench retrieval ${positional[2]} --baseline ${baselineOption} --update-baseline --by <name>`,
+      )
+    }
+    const comparison = baselinePath
+      ? compareRetrievalBaseline(result, parseRetrievalBaseline(JSON.parse(readFileSync(baselinePath, 'utf8')) as unknown))
+      : undefined
+
+    if (wantsTextOutput(flags, config)) {
+      writeLines([...formatRetrievalBenchText(result), ...(comparison ? formatRetrievalComparisonText(comparison) : [])])
+    } else {
+      writeJson({ ok: !comparison?.blocking, result, ...(comparison ? { comparison } : {}) })
+    }
+    return comparison?.blocking ? 1 : 0
+  } catch (error) {
+    process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`)
+    return 2
+  }
 }
 
 const runDocumentationAuditCommand = (
@@ -1194,6 +1283,7 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
     return runWorkflowCommand(command, flags, configPath, argv)
   }
   if (command === 'audit') return runDocumentationAuditCommand(flags, positional, configPath)
+  if (command === 'bench') return runBenchCommand(flags, positional, configPath, argv)
 
   if (command === 'fix') return runFixCommand(argv, positional, configPath)
   if (command === 'suggest') return runSuggestCommand(flags, configPath)
