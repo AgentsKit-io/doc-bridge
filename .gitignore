@@ -18,3 +18,9 @@ node_modules
 .mcpb-deploy/
 .mcpb-output/
 .mcpb-runtime/
+
+# @agentskit/harness keep-pushing loop.
+# loop.config.yaml identifies a Linear workspace and person; only the example is tracked.
+loop.config.yaml
+loop.config.local.yaml
+.codex/loop/
