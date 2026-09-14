@@ -188,6 +188,15 @@ const generatedRegions = (tree: Root, totalLines: number): MarkdownGeneratedRegi
   return regions
 }
 
+/**
+ * The hash of a document's content, as the entity records it.
+ *
+ * A byte-order mark is not content — a file that only gained one parses to the same tree — so it
+ * is stripped before hashing. Exported because deciding whether a document needs parsing at all
+ * means computing the same hash without parsing it.
+ */
+export const markdownContentHash = (content: string): string => sha256NormalizedV1(content.replace(/^\uFEFF/, ''))
+
 export const parseMarkdownDocument = (path: string, content: string): MarkdownDocumentV1 => {
   const normalized = content.replace(/^\uFEFF/, '')
   const tree = processor.parse(normalized) as Root
@@ -248,7 +257,7 @@ export const parseMarkdownDocument = (path: string, content: string): MarkdownDo
     wordCount,
     frontmatter,
     generatedRegions: regions,
-    contentHash: sha256NormalizedV1(normalized),
+    contentHash: markdownContentHash(normalized),
     links,
     codeTokens,
     ...(frontmatterNode

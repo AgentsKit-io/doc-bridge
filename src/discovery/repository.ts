@@ -13,9 +13,24 @@ import { GRAPH_ANALYZER_VERSION, areaSuggestionCoverage } from '../graph/build.j
 import { deriveAreas, type AreaModule } from './areas.js'
 import { entityId } from './identity.js'
 import {
+  emptyLedger,
+  exportsOf,
+  declaredExportsOf,
+  fileContentHash,
+  indexPriorSnapshot,
+  moduleUniverseFingerprint,
+  replayableRelations,
+  resolutionFingerprint,
+  reuseCoverage,
+  reuseRefusal,
+  type PreviousSnapshot,
+  type PriorFile,
+} from './incremental.js'
+import {
   MARKDOWN_ANALYZER_VERSION,
   analyzeMarkdownDocument,
   declaredAudience,
+  markdownContentHash,
   parseMarkdownDocument,
   type MarkdownDocumentV1,
 } from './markdown.js'
@@ -73,6 +88,14 @@ type DiscoveryOptions = {
   readonly config?: DocBridgeConfigV1
   readonly maxFiles?: number
   readonly maxBytes?: number
+  /**
+   * A snapshot from a previous scan.
+   *
+   * Entities whose file hash is unchanged are taken from it instead of parsed again. Supplying one
+   * cannot change the result: a reused run either produces the same snapshot a cold run would, or
+   * the reuse is refused. Omit it to scan from scratch.
+   */
+  readonly previous?: PreviousSnapshot
 }
 
 const isRecord = (value: unknown): value is JsonRecord =>
@@ -310,6 +333,14 @@ const moduleReferences = (
         const argument = node.arguments[0]
         const specifier = argument ? resolveStaticString(argument) : undefined
         if (specifier !== undefined) {
+          /*
+           * A literal `require` is a dynamic load that resolved, so it counts as one.
+           *
+           * The evidence was always recorded here and the flag was not, which left the aggregate
+           * entry sampling a file that had no per-file entry of its own — and made the aggregate
+           * unreproducible from the per-file facts, which is exactly what a reused scan replays.
+           */
+          hasLiteralDynamic = true
           dynamicEvidence.push(nodeEvidence(root, path, sourceFile, node))
           addReference({ text: specifier } as ts.StringLiteralLike, 'imports', node)
         } else {
@@ -426,6 +457,10 @@ const hasPackageManagerMetadata = (root: string, rootManifest: JsonRecord | unde
       existsSync(join(root, 'package-lock.json')),
   )
 
+const PIPELINE_VERSION = '1.5.0'
+const ANALYZER_VERSIONS: Readonly<Record<string, string>> = { repository: '1.3.0', 'js-ts': '1.3.5', markdown: MARKDOWN_ANALYZER_VERSION, graph: GRAPH_ANALYZER_VERSION }
+const configurationHashOf = (config: DocBridgeConfigV1 | undefined): string => sha256NormalizedV1(config ?? {})
+
 const artifact = (root: string, config: DocBridgeConfigV1 | undefined, files: readonly string[], entities: readonly KnowledgeEntity[], relations: readonly KnowledgeRelation[], coverage: DiscoverySnapshotV1['coverage']): DiscoverySnapshotV1 => {
   const revision = sourceRevision(root, files)
   const base = {
@@ -436,12 +471,12 @@ const artifact = (root: string, config: DocBridgeConfigV1 | undefined, files: re
     project: { name: (entities.find((entity) => entity.kind === 'package' && entity.path === '.')?.name ?? basename(root)), root: '.' },
     sourceRevision: revision.value,
     sourceRevisionKind: revision.kind,
-    configurationHash: sha256NormalizedV1(config ?? {}),
-    pipelineVersion: '1.4.0',
-    analyzerVersions: { repository: '1.2.0', 'js-ts': '1.3.4', markdown: MARKDOWN_ANALYZER_VERSION, graph: GRAPH_ANALYZER_VERSION },
+    configurationHash: configurationHashOf(config),
+    pipelineVersion: PIPELINE_VERSION,
+    analyzerVersions: ANALYZER_VERSIONS,
     entities: [...entities].sort((a, b) => a.id.localeCompare(b.id)),
     relations: [...relations].sort((a, b) => a.id.localeCompare(b.id)),
-    coverage: coverage.map((entry) => ({ ...entry, analyzerVersion: entry.analyzerVersion ?? ({ repository: '1.2.0', 'js-ts': '1.3.4', markdown: MARKDOWN_ANALYZER_VERSION, graph: GRAPH_ANALYZER_VERSION }[entry.analyzer] ?? '1.0.0') })),
+    coverage: coverage.map((entry) => ({ ...entry, analyzerVersion: entry.analyzerVersion ?? (ANALYZER_VERSIONS[entry.analyzer] ?? '1.0.0') })),
   }
   return DiscoverySnapshotV1Schema.parse({ ...base, contentHash: contentHashForArtifactV1(base) })
 }
@@ -488,25 +523,61 @@ export const discoverRepository = (opts: DiscoveryOptions = {}): DiscoverySnapsh
 
   for (const pkg of packageResult.packages) {
     const text = readFileSync(pkg.manifestPath, 'utf8')
-    addEntity({ id: pkg.id, kind: 'package', name: pkg.name ?? pkg.path, path: pkg.path, provenance: 'observed', evidence: [lineEvidence('configuration', root, pkg.manifestPath, firstLineContaining(text, '"name"'))] })
+    addEntity({
+      id: pkg.id,
+      kind: 'package',
+      name: pkg.name ?? pkg.path,
+      path: pkg.path,
+      provenance: 'observed',
+      evidence: [
+        {
+          ...lineEvidence('configuration', root, pkg.manifestPath, firstLineContaining(text, '"name"')),
+          contentHash: fileContentHash(text),
+        },
+      ],
+    })
+  }
+
+  const compiler = readCompilerOptions(root)
+  /*
+   * What the previous scan already knows.
+   *
+   * Indexed before anything is parsed, because the decision to parse a file at all depends on
+   * whether its hash matches what that scan recorded.
+   */
+  const ledger = emptyLedger()
+  const refusal = opts.previous
+    ? reuseRefusal(opts.previous, { pipelineVersion: PIPELINE_VERSION, analyzerVersions: ANALYZER_VERSIONS, configurationHash: configurationHashOf(opts.config) })
+    : undefined
+  if (refusal) ledger.invalidated.push(refusal)
+  const prior = opts.previous && !refusal ? indexPriorSnapshot(opts.previous, compiler.options) : undefined
+
+  /*
+   * Whether a reference can resolve differently than it did last time.
+   *
+   * A module's own bytes decide its entity; what it resolves *to* depends on which modules and
+   * packages exist and on the compiler options that turn a specifier into a path. If any of that
+   * moved, nothing is reused however unchanged a file is — an import of `./new.js` resolved to
+   * nothing yesterday and resolves to a module today. Reusing the entity alone would save no
+   * parse, because the pass that reads references would have to build the tree regardless.
+   */
+  const moduleUniverse = moduleUniverseFingerprint({
+    modulePaths: sourcePaths.map((absPath) => relativePath(root, absPath)),
+    packages: packageResult.packages.map((pkg) => ({ id: pkg.id, path: pkg.path, ...(pkg.name ? { name: pkg.name } : {}) })),
+    compilerOptions: compiler.options,
+  })
+  const reuseModuleRelations = Boolean(prior) && prior?.moduleUniverse === moduleUniverse
+  if (prior && !reuseModuleRelations) {
+    ledger.invalidated.push('the set of modules, packages or compiler options changed')
   }
 
   const modules = new Map<string, ModuleInfo>()
   const modulesByPath = new Map<string, string>()
+  const reusedModules = new Set<string>()
   const areaModules: AreaModule[] = []
   const declaringModules = new Map<string, string[]>()
   const exportingModules = new Map<string, string[]>()
-  for (const absPath of sourcePaths) {
-    const path = relativePath(root, absPath)
-    const pkg = packageForModule(packageResult.packages, absPath)
-    const id = entityId('module', path)
-    const text = readFileSync(absPath, 'utf8')
-    const sourceFile = ts.createSourceFile(absPath, text, ts.ScriptTarget.Latest, true, scriptKind(absPath))
-    const exports = exportedNames(sourceFile)
-    modules.set(resolve(absPath), { absPath, path, entityId: id, ...(pkg ? { packageId: pkg.id } : {}) })
-    modulesByPath.set(path, id)
-    if (pkg) areaModules.push({ moduleId: id, path, packageId: pkg.id, packagePath: pkg.path })
-    const declared = new Set(exportedNames(sourceFile, { declaredOnly: true }))
+  const registerSymbols = (id: string, exports: readonly string[], declared: ReadonlySet<string>): void => {
     for (const name of exports) {
       if (name === '*' || name === 'default') continue
       const owners = declared.has(name) ? declaringModules : exportingModules
@@ -514,7 +585,52 @@ export const discoverRepository = (opts: DiscoveryOptions = {}): DiscoverySnapsh
       if (existing) existing.push(id)
       else owners.set(name, [id])
     }
-    addEntity({ id, kind: 'module', name: basename(absPath), path, provenance: 'observed', evidence: [lineEvidence('code', root, absPath, 1, sourceFile.getLineAndCharacterOfPosition(sourceFile.getEnd()).line + 1)], ...(exports.length ? { metadata: { exports, test: TEST_MODULE_PATTERN.test(path) } } : {}) })
+  }
+
+  for (const absPath of sourcePaths) {
+    const path = relativePath(root, absPath)
+    const pkg = packageForModule(packageResult.packages, absPath)
+    const id = entityId('module', path)
+    const text = readFileSync(absPath, 'utf8')
+    const contentHash = fileContentHash(text)
+    modules.set(resolve(absPath), { absPath, path, entityId: id, ...(pkg ? { packageId: pkg.id } : {}) })
+    modulesByPath.set(path, id)
+    if (pkg) areaModules.push({ moduleId: id, path, packageId: pkg.id, packagePath: pkg.path })
+
+    const priorModule = reuseModuleRelations ? prior?.modules.get(path) : undefined
+    if (priorModule && priorModule.contentHash === contentHash) {
+      /*
+       * The file is byte-identical to the one that produced this entity, so the entity is the
+       * answer — no syntax tree needed. Which names it declares as opposed to forwards is read
+       * back from `reexports`, because that distinction only exists in the tree.
+       */
+      addEntity(priorModule.entity)
+      reusedModules.add(path)
+      ledger.reusedEntities += 1
+      registerSymbols(id, exportsOf(priorModule.entity), new Set(declaredExportsOf(priorModule.entity)))
+    } else {
+      const sourceFile = ts.createSourceFile(absPath, text, ts.ScriptTarget.Latest, true, scriptKind(absPath))
+      const exports = exportedNames(sourceFile)
+      const declared = new Set(exportedNames(sourceFile, { declaredOnly: true }))
+      const reexports = exports.filter((name) => !declared.has(name))
+      registerSymbols(id, exports, declared)
+      addEntity({
+        id,
+        kind: 'module',
+        name: basename(absPath),
+        path,
+        provenance: 'observed',
+        evidence: [
+          {
+            ...lineEvidence('code', root, absPath, 1, sourceFile.getLineAndCharacterOfPosition(sourceFile.getEnd()).line + 1),
+            contentHash,
+          },
+        ],
+        ...(exports.length
+          ? { metadata: { exports, ...(reexports.length ? { reexports } : {}), test: TEST_MODULE_PATTERN.test(path) } }
+          : {}),
+      })
+    }
     if (pkg) addRelation({ id: entityId('relation', `${pkg.id}:contains:${id}`), kind: 'contains', from: pkg.id, to: id, provenance: 'observed', evidence: [lineEvidence('code', root, absPath, 1)] })
   }
 
@@ -577,6 +693,15 @@ export const discoverRepository = (opts: DiscoveryOptions = {}): DiscoverySnapsh
   }
 
   /*
+   * A symbol resolves to the module that declares it. Only when nothing declares it — a type
+   * forwarded through a barrel, say — do the re-exporting modules stand in, and then only if
+   * there is exactly one of them.
+   */
+  const symbolModules = new Map<string, readonly string[]>()
+  for (const [name, owners] of declaringModules) symbolModules.set(name, owners)
+  for (const [name, owners] of exportingModules) if (!symbolModules.has(name)) symbolModules.set(name, owners)
+
+  /*
    * Documents are parsed first and added as entities after their relations are known, because
    * whether a document's references were truncated is part of what the entity has to say.
    */
@@ -585,17 +710,93 @@ export const discoverRepository = (opts: DiscoveryOptions = {}): DiscoverySnapsh
   const documentFiles = new Map<string, string>()
   const unreadableDocuments: string[] = []
   for (const absPath of documentPaths) {
-    const path = relativePath(root, absPath)
-    documentsByPath.set(path, entityId('document', path))
-    documentFiles.set(path, absPath)
+    documentFiles.set(relativePath(root, absPath), absPath)
+  }
+  for (const path of documentFiles.keys()) documentsByPath.set(path, entityId('document', path))
+
+  /*
+   * Whether an id will be in this snapshot.
+   *
+   * A replayed relation is checked against what the scan is going to produce, not against what it
+   * has produced so far: documents and modules get their entities late, and an edge to a file that
+   * plainly exists must not be dropped for arriving early.
+   */
+  const plannedIds = new Set([...modulesByPath.values(), ...documentsByPath.values()])
+  const willExist = (id: string): boolean => entities.has(id) || plannedIds.has(id)
+
+  /**
+   * Put a reused entity's edges back.
+   *
+   * An edge whose internal target is gone is dropped — the file it pointed at was renamed or
+   * deleted, and a graph that keeps the edge is lying about the repository. An external or
+   * unresolved endpoint is re-created instead, because such an entity is in the snapshot only
+   * because something referenced it, and that something is exactly what was reused.
+   */
+  const replayRelations = (prior: PriorFile): readonly KnowledgeRelation[] => {
+    const replay = replayableRelations(prior.outgoing, willExist)
+    for (const id of replay.missingEndpoints) {
+      if (entities.has(id)) continue
+      const relation = prior.outgoing.find((item) => item.to === id)
+      addEntity({
+        id,
+        kind: id.startsWith('external:') ? 'external' : 'unresolved-reference',
+        name: id.replace(/^(?:external|unresolved):/, ''),
+        provenance: 'observed',
+        evidence: relation?.evidence[0] ? [relation.evidence[0]] : [],
+      })
+    }
+    for (const relation of replay.relations) addRelation(relation)
+    return replay.relations
+  }
+
+  /*
+   * Whether a document's references can resolve differently than they did last time.
+   *
+   * A document resolves against more than a module does: it can name another document, an area,
+   * a package or an exported symbol. So document reuse is refused unless all of that is identical
+   * — a symbol that moved from one module to another changes where a mention points without
+   * changing a single byte of the document that mentions it.
+   */
+  const resolution = resolutionFingerprint({
+    moduleUniverse,
+    documentPaths: [...documentFiles.keys()],
+    areaPaths: areas.map((area) => area.path),
+    symbols: symbolModules,
+  })
+  const reuseDocumentRelations = Boolean(prior) && prior?.resolution === resolution
+  if (prior && reuseModuleRelations && !reuseDocumentRelations) {
+    ledger.invalidated.push('the set of documents, areas or exported symbols changed')
+  }
+
+  const reusedDocuments = new Map<string, PriorFile>()
+  for (const [path, absPath] of documentFiles) {
+    let text: string
     try {
-      markdownDocuments.push(parseMarkdownDocument(path, readFileSync(absPath, 'utf8')))
+      text = readFileSync(absPath, 'utf8')
+    } catch {
+      unreadableDocuments.push(path)
+      ledger.parsedFiles.push(path)
+      continue
+    }
+    const priorDocument = prior?.documents.get(path)
+    if (reuseDocumentRelations && priorDocument && priorDocument.contentHash === markdownContentHash(text)) {
+      /*
+       * Byte-identical, resolving against an identical universe: last scan's answer is this
+       * scan's answer, and the Markdown tree is never built.
+       */
+      reusedDocuments.set(path, priorDocument)
+      ledger.reusedEntities += 1
+      ledger.skippedFiles.push(path)
+      continue
+    }
+    ledger.parsedFiles.push(path)
+    try {
+      markdownDocuments.push(parseMarkdownDocument(path, text))
     } catch {
       unreadableDocuments.push(path)
     }
   }
 
-  const compiler = readCompilerOptions(root)
   const coverage: DiscoverySnapshotV1['coverage'] = [
     ...[sourceWalk, documentWalk, configWalk].flatMap((walk, index) => walk.incomplete ? [{ analyzer: 'repository', scope: `limits:${['source', 'documentation', 'configuration'][index]}`, status: 'partial' as const, reason: walk.reason }] : []),
     { analyzer: 'repository', scope: 'package-manager', status: hasPackageManagerMetadata(root, rootManifest) ? 'complete' : 'partial', ...(!hasPackageManagerMetadata(root, rootManifest) ? { reason: `No package manager metadata found; default helper would fall back to ${detectPackageManager(root)}.` } : {}) },
@@ -628,15 +829,6 @@ export const discoverRepository = (opts: DiscoveryOptions = {}): DiscoverySnapsh
     if (owners.length === 1 && owners[0] && !packageNames.has(short)) packageNames.set(short, owners[0])
   }
 
-  /*
-   * A symbol resolves to the module that declares it. Only when nothing declares it — a type
-   * forwarded through a barrel, say — do the re-exporting modules stand in, and then only if
-   * there is exactly one of them.
-   */
-  const symbolModules = new Map<string, readonly string[]>()
-  for (const [name, owners] of declaringModules) symbolModules.set(name, owners)
-  for (const [name, owners] of exportingModules) if (!symbolModules.has(name)) symbolModules.set(name, owners)
-
   const markdownResolution = {
     documents: documentsByPath,
     modules: modulesByPath,
@@ -645,17 +837,35 @@ export const discoverRepository = (opts: DiscoveryOptions = {}): DiscoverySnapsh
     packages: packageNames,
     symbols: symbolModules,
   }
-  const markdownNotes: { readonly scope: string; readonly reason: string; readonly evidence: readonly Evidence[] }[] = []
+  type MarkdownNote = { readonly scope: string; readonly reason: string; readonly evidence: readonly Evidence[] }
+  const notesByDocument = new Map<string, readonly MarkdownNote[]>()
   const truncatedDocuments = new Set<string>()
   for (const document of markdownDocuments) {
     const analysis = analyzeMarkdownDocument(document, entityId('document', document.path), markdownResolution)
     for (const relation of analysis.relations) addRelation(relation)
-    markdownNotes.push(...analysis.notes)
+    notesByDocument.set(document.path, analysis.notes)
     if (analysis.truncated) truncatedDocuments.add(document.path)
   }
 
+  for (const [path, priorDocument] of reusedDocuments) {
+    // The resolution universe is identical, so every edge this document recorded still resolves the same way.
+    replayRelations(priorDocument)
+    notesByDocument.set(
+      path,
+      priorDocument.coverage.map((entry) => ({ scope: entry.scope, reason: entry.reason ?? '', evidence: entry.evidence ?? [] })),
+    )
+  }
+
+  // Notes follow the walk, not the order documents happened to be parsed in, so reuse cannot move them.
+  const markdownNotes: readonly MarkdownNote[] = [...documentFiles.keys()].flatMap((path) => [...(notesByDocument.get(path) ?? [])])
+
   const parsedDocuments = new Map(markdownDocuments.map((document) => [document.path, document]))
   for (const [path, absPath] of documentFiles) {
+    const reused = reusedDocuments.get(path)
+    if (reused) {
+      addEntity(reused.entity)
+      continue
+    }
     const parsed = parsedDocuments.get(path)
     addEntity({
       id: entityId('document', path),
@@ -688,7 +898,7 @@ export const discoverRepository = (opts: DiscoveryOptions = {}): DiscoverySnapsh
     status: unreadableDocuments.length ? 'partial' : 'complete',
     reason: unreadableDocuments.length
       ? `${unreadableDocuments.length} document(s) could not be read: ${unreadableDocuments.slice(0, 4).join(', ')}.`
-      : `Parsed ${markdownDocuments.length} document(s) for links, mentions and exported-symbol references.`,
+      : `Analyzed ${markdownDocuments.length + reusedDocuments.size} document(s) for links, mentions and exported-symbol references.`,
   })
   for (const note of markdownNotes.slice(0, MAX_MARKDOWN_NOTES)) {
     coverage.push({ analyzer: 'markdown', scope: note.scope, status: 'partial', reason: note.reason, evidence: [...note.evidence.slice(0, 32)] })
@@ -724,10 +934,33 @@ export const discoverRepository = (opts: DiscoveryOptions = {}): DiscoverySnapsh
   let observedRuntimeWiring = false
   let observedUnresolvedRuntimeWiring = false
   for (const module of modules.values()) {
+    const priorModule = prior?.modules.get(module.path)
+    if (reuseModuleRelations && priorModule && reusedModules.has(module.path)) {
+      // Replay what this module said last time, then the facts the aggregate entries are built from.
+      replayRelations(priorModule)
+
+      const dynamicEntry = priorModule.coverage.find((entry) => entry.scope === `dynamic-imports:${module.path}`)
+      const wiringEntry = priorModule.coverage.find((entry) => entry.scope === `runtime-wiring:${module.path}`)
+      if (dynamicEntry) {
+        coverage.push(dynamicEntry)
+        observedUnresolvedDynamic ||= dynamicEntry.status === 'not-analyzed'
+        observedLiteralDynamic ||= dynamicEntry.status === 'complete'
+        observedDynamicEvidence.push(...(dynamicEntry.evidence ?? []))
+      }
+      if (wiringEntry) {
+        coverage.push(wiringEntry)
+        observedRuntimeWiring = true
+        observedUnresolvedRuntimeWiring ||= wiringEntry.status === 'not-analyzed'
+      }
+      ledger.skippedFiles.push(module.path)
+      continue
+    }
+
     const text = readFileSync(module.absPath, 'utf8')
     const sourceFile = ts.createSourceFile(module.absPath, text, ts.ScriptTarget.Latest, true, scriptKind(module.absPath))
     const runtimeWiringMethods = includeTestRuntimeWiring || !TEST_MODULE_PATTERN.test(module.path) ? configuredRuntimeWiringMethods : new Set<string>()
     const references = moduleReferences(root, module.absPath, sourceFile, runtimeWiringMethods)
+    ledger.parsedFiles.push(module.path)
     observedLiteralDynamic ||= references.hasLiteralDynamic
     observedUnresolvedDynamic ||= references.hasDynamic
     observedDynamicEvidence.push(...references.dynamicEvidence)
@@ -743,7 +976,12 @@ export const discoverRepository = (opts: DiscoveryOptions = {}): DiscoverySnapsh
       addRelation({ id: entityId('relation', `${module.entityId}:${reference.kind}:${target.targetId}`), kind: reference.kind, from: module.entityId, to: target.targetId, provenance: 'observed', evidence: [reference.evidence], ...(reference.detection ? { metadata: { detection: reference.detection } } : {}) })
     }
     if (references.hasLiteralDynamic || references.hasDynamic) coverage.push({ analyzer: 'js-ts', scope: `dynamic-imports:${module.path}`, status: references.hasDynamic ? 'not-analyzed' : 'complete', reason: references.hasDynamic ? 'A non-literal dynamic import was found; the target is unresolved.' : 'Literal dynamic imports were resolved.', evidence: [...references.dynamicEvidence.slice(0, 32)] })
-    if (references.hasUnresolvedRuntimeWiring) coverage.push({ analyzer: 'js-ts', scope: `runtime-wiring:${module.path}`, status: 'not-analyzed', reason: 'A runtime registration/wiring call was found without a statically imported target.', evidence: [lineEvidence('code', root, module.absPath)] })
+    /*
+     * Every observed wiring call leaves a per-file record, resolved or not — the aggregate entry
+     * below is derived from these, and a fact that exists only in a local variable cannot be
+     * replayed by a scan that skipped the parse.
+     */
+    if (references.hasRuntimeWiring) coverage.push({ analyzer: 'js-ts', scope: `runtime-wiring:${module.path}`, status: references.hasUnresolvedRuntimeWiring ? 'not-analyzed' : 'complete', reason: references.hasUnresolvedRuntimeWiring ? 'A runtime registration/wiring call was found without a statically imported target.' : 'Configured runtime-wiring call(s) were found with statically known targets.', evidence: [lineEvidence('code', root, module.absPath)] })
   }
 
   if (dynamicCoverageIndex >= 0) coverage[dynamicCoverageIndex] = observedUnresolvedDynamic
@@ -769,6 +1007,15 @@ export const discoverRepository = (opts: DiscoveryOptions = {}): DiscoverySnapsh
   coverage.push(
     ...areaSuggestionCoverage({ entities: [...entities.values()], relations: [...relations.values()] }),
   )
+
+  /*
+   * What this run reused, last, because only now is it known.
+   *
+   * A run that finishes in a tenth of the time has to be able to say why. This entry is the one
+   * part of the snapshot that describes the run rather than the repository — the entities, the
+   * relations and every other coverage entry are identical to what a cold scan would produce.
+   */
+  coverage.push(reuseCoverage(ledger))
 
   return artifact(root, opts.config, allFiles, [...entities.values()], [...relations.values()], coverage)
 }

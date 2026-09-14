@@ -135,8 +135,9 @@ describe('repository discovery', () => {
     const configured = discoverRepository({ root, config: { analysis: { jsTs: { runtimeWiringMethods: ['register'], runtimeWiringAdapters: [{ id: 'node-runtime', methods: ['listen'] }] } } } as DocBridgeConfigV1 })
     expect(configured.relations).toContainEqual(expect.objectContaining({ from: 'module:packages/edge/src/imports.ts', to: 'external:listen-runtime', kind: 'runtime-wiring', metadata: { detection: 'runtime-wiring-static' } }))
 
+    // A test module is out of wiring analysis entirely; a locally resolved call is observed, and reported as resolved rather than as a gap.
     expect(snapshot.coverage.some((entry) => entry.scope === 'runtime-wiring:packages/edge/src/wiring.test.ts')).toBe(false)
-    expect(snapshot.coverage.some((entry) => entry.scope === 'runtime-wiring:packages/edge/src/local-wiring.ts')).toBe(false)
+    expect(snapshot.coverage.find((entry) => entry.scope === 'runtime-wiring:packages/edge/src/local-wiring.ts')?.status).toBe('complete')
     const configuredTests = discoverRepository({ root, config: { analysis: { jsTs: { includeTestRuntimeWiring: true } } } as DocBridgeConfigV1 })
     expect(configuredTests.relations).toContainEqual(expect.objectContaining({ from: 'module:packages/edge/src/wiring.test.ts', to: 'package:@fixture/edge', kind: 'runtime-wiring', metadata: { detection: 'runtime-wiring-static' } }))
   })

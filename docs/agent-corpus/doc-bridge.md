@@ -23,3 +23,8 @@ Graph signals live in `src/graph/` and are computed on demand, never stored: sor
 insertion before any metric, round every score, and keep graphology's format out of every artifact.
 A clustering result is a suggestion in `coverage`, never an entity. A static signal must not be
 worded as a runtime claim.
+
+A file-backed entity carries its file's hash, and a second scan may reuse an entity whose hash is
+unchanged — but only while the universe its references resolve against is identical, and only from
+a snapshot produced by this pipeline, these analyzers and this configuration. Reuse either
+reproduces a cold scan exactly or it is refused, and the run reports what it reused as `coverage`.

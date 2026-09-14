@@ -148,6 +148,7 @@ export {
   MARKDOWN_RELATION_CAP,
   analyzeMarkdownDocument,
   declaredAudience,
+  markdownContentHash,
   parseMarkdownDocument,
   type MarkdownAnalysis,
   type MarkdownDocumentV1,
@@ -204,6 +205,20 @@ export {
   type SearchTokenizeOptions,
 } from './query/text.js'
 export { discoverRepository, type DiscoveryOptions } from './discovery/repository.js'
+export {
+  FILE_BACKED_KINDS,
+  declaredExportsOf,
+  exportsOf,
+  fileContentHash,
+  indexPriorSnapshot,
+  moduleUniverseFingerprint,
+  replayableRelations,
+  resolutionFingerprint,
+  reuseCoverage,
+  type PriorFile,
+  type PriorSnapshot,
+  type ReuseLedger,
+} from './discovery/incremental.js'
 export { containedPath, DEFAULT_SAFETY_EXCLUDES, redactSecrets, redactValue, safeWalkFiles, type SafeWalkOptions, type SafeWalkResult } from './safety/repository.js'
 export { DEFAULT_REGISTRY_AGENT_ID, createRegistryAgentAdapter, loadRegistryAgentMetadata, loadRegistryAgentRunner, persistRegistryAgentProposal, type RegistryAgentAdapter, type RegistryAgentContext, type RegistryAgentMetadata, type RegistryAgentRunner } from './agents/registry-adapter.js'
 export {
