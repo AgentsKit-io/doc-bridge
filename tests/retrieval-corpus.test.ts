@@ -32,7 +32,12 @@ import { DEFAULT_SEARCH_WEIGHTS, resolveSearchWeights } from '../src/retrieval/w
 const repositoryRoot = process.cwd()
 
 // The repository-level tests scan and project this whole repository; the first one pays for it.
-vi.setConfig({ testTimeout: 30_000 })
+/*
+ * These tests scan and project the whole repository. Uninstrumented that is a few seconds; under
+ * the coverage reporter's instrumentation it is tens, and it grows with the repository. The
+ * generous timeout is for the reporter, not for a slow assertion.
+ */
+vi.setConfig({ testTimeout: 120_000 })
 
 const repositoryConfig = (): DocBridgeConfigV1 =>
   applyConfigDefaults(
@@ -203,7 +208,7 @@ describe('repository corpus projection', () => {
 
     const modules = snapshot.entities.filter((entity) => entity.kind === 'module')
     expect(modules.filter((entity) => !indexed.has(entity.path ?? ''))).toEqual([])
-  }, 30_000)
+  }, 120_000)
 
   it('gives every projected entry a content hash and tags, and a module its symbols', () => {
     const index = repositoryIndex()

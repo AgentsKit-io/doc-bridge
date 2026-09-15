@@ -71,6 +71,9 @@ pnpm add -D @agentskit/doc-bridge
 | `ak-docs memory promote --pr [--dry-run] [--force]` | Write draft + open GitHub draft PR via `gh` |
 | `ak-docs registry topology` | Print the `doc-curator` topology for AgentsKit/Registry composition |
 | `ak-docs suggest [--documentation] --json` | Run the configured Registry agent module or CLI and persist its typed proposal; optionally include the bounded documentation-audit context |
+| `ak-docs enrich [--json\|--text]` | Run the enrichment stage: context packs to the configured Registry roles, deterministic validators, the overlay at `.doc-bridge/enrich/overlay.json`. Zero agent calls over an unchanged repository |
+| `ak-docs enrich list \| approve <proposalId> --by <name> \| reject <proposalId> --by <name> [--reason <text>]` | Review pending enrichment proposals; a decision is recorded through the ecosystem approval gate under `.doc-bridge/approvals/`, bound to the proposal id and the target content hash |
+| `ak-docs check --enrich` | `check` with the `enrich` stage between `reconcile` and `evaluate`; a failed enrichment is reported in `enrichment` and never changes the check result |
 | `ak-docs playbook draft` | Build a draft Playbook feedback payload from local memory candidates |
 | `ak-docs playbook pattern [--text]` | Export published Doc Bridge Playbook pattern (OKF markdown / JSON) |
 | `ak-docs list <kind> [--text]` | List packages, apps, intents, … |

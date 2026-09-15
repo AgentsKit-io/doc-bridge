@@ -52,10 +52,15 @@ const CANONICALITY_SCALE = 4
 const AUDIENCE_FIT = 25
 
 /**
- * Accepted agent signals are carried at zero weight until the overlay workstream lands. The term
- * exists so the code path, the explain view and the schema are already in place when it does.
+ * Accepted agent signals: bounded influence.
+ *
+ * An entry's signal is a share in 0..1 of this weight, and the weight is 15% of the exact-id
+ * boost. That is the whole contract: an accepted rank hint or canonical marker can reorder
+ * near-ties among lexical hits, and can never lift an entry past one the query named exactly.
+ * Signals apply to lexical hits only, like every other tie-breaker.
  */
-export const ACCEPTED_SIGNALS_WEIGHT = 0
+export const ACCEPTED_SIGNALS_SHARE = 0.15
+export const ACCEPTED_SIGNALS_WEIGHT = Math.round(EXACT_ID * ACCEPTED_SIGNALS_SHARE)
 
 const CURATED_FACTOR = 1.15
 const OWNERSHIP_FACTOR = 1.1
@@ -115,7 +120,7 @@ export type RankOptions = {
   readonly limit?: number
   /** The `--agent` prior: favour documentation written for an agent. */
   readonly agent?: boolean
-  /** Per-entry accepted overlay signals, by entry id. Zero-weighted until the overlay lands. */
+  /** Per-entry accepted overlay signals (0..1), by entry id. Overrides the `agentSignal` the projection carries. */
   readonly signals?: ReadonlyMap<string, number>
   /**
    * Results scoring below this share of the best score are dropped. The default spends context
@@ -323,7 +328,8 @@ export const rankRetrieval = (index: RetrievalIndexV1, term: string, options: Ra
     const graphProximity = near ? round((near.hops === 1 ? PROXIMITY_ONE_HOP : PROXIMITY_TWO_HOPS) * near.anchorShare) : 0
     const canonicality = round(canonicalityBoost(entry.graph.pagerank, ready.entryCount))
     const audienceFit = options.agent && (entry.audience === 'agent' || entry.audience === 'human-and-agent') ? AUDIENCE_FIT : 0
-    const acceptedAgentSignals = round((options.signals?.get(id) ?? 0) * ACCEPTED_SIGNALS_WEIGHT)
+    const signal = Math.min(1, Math.max(0, options.signals?.get(id) ?? entry.agentSignal ?? 0))
+    const acceptedAgentSignals = round(signal * ACCEPTED_SIGNALS_WEIGHT)
 
     /*
      * A record nothing matched lexically is only here because of proximity. It earns proximity

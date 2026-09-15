@@ -734,7 +734,25 @@ type IntelligenceConfig = {
     maxTokens?: number
     maxResponseBytes?: number
     maxConcurrency?: number
+    /** Byte budget of one enrichment context pack. Default 65536 (4096..4000000). */
+    maxPackBytes?: number
+    /**
+     * Which installed agent plays which enrichment role (see Enrichment overlay v1).
+     * Default: the configured agent as curator only. The adjudicator must be a
+     * different identity from the curator and the reviewer.
+     */
+    roles?: {
+      curator?: EnrichmentRole
+      reviewer?: EnrichmentRole
+      adjudicator?: EnrichmentRole
+    }
   }
+}
+
+type EnrichmentRole = {
+  enabled?: boolean               // default: true when the role is declared; curator on by default
+  agentId?: string                // default: intelligence.registry.agentId
+  promptVersion?: string          // default: '1'; part of every proposal id and cache key
 }
 
 type MemoryAdapterId =

@@ -14,3 +14,6 @@ rank with the same `searchIndex` as the CLI; a test compares the two. A `budgetT
 sections only in the declared order — evidence excerpts, related, neighbours, summaries — and
 never the entity, the evidence paths and hashes, the handoff fields or the diagnostics; a payload
 that cannot fit says `fits: false`. Existing tool names, arguments and payloads do not change.
+`docbridge.proposals` carries enrichment review as `enrich-list`, `enrich-approve` and
+`enrich-reject`; a decision goes through `decideEnrichment` and the shared approval gate, never
+through a direct overlay edit.

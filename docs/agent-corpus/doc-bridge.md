@@ -34,3 +34,11 @@ sees only the variables `src/render/data.ts` computes, sorted and without timest
 synchronous evaluator in `src/render/engine.ts` must keep rendering what knap renders. Every
 generated region carries a `<!-- doc-bridge:generated hash=… -->` marker so the analyzer skips it
 and the audit can report a hand edit inside it; `llms.txt` is the exception and stays byte-identical.
+Enrichment (`src/enrich/`, `src/schemas/enrichment.ts`) is advisory by construction. A proposal is
+a typed claim with one deterministic validator per kind; a validator checks, it never judges. An
+accepted entry binds to the content hash of the entity it describes and expires when that moves;
+no entry deletes or alters observed data, and the projection asserts it. The overlay is read only
+while `intelligence.registry.enabled` is true, a read never writes, and a corrupt overlay is no
+overlay. No agent approves anything — not its own output, not another's — and human approvals go
+through the ecosystem approval gate. Adding a proposal kind means a schema, a validator, a policy,
+a valid fixture and a rejection fixture, and a row in `docs/spec/enrichment-overlay-v1.md`.

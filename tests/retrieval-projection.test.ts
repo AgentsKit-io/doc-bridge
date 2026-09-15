@@ -22,7 +22,12 @@ import type { DiscoverySnapshotV1 } from '../src/schemas/knowledge.js'
 import { RetrievalIndexV1Schema } from '../src/schemas/retrieval-index.js'
 
 // The repository-level tests scan and project this whole repository; the first one pays for it.
-vi.setConfig({ testTimeout: 30_000 })
+/*
+ * These tests scan and project the whole repository. Uninstrumented that is a few seconds; under
+ * the coverage reporter's instrumentation it is tens, and it grows with the repository. The
+ * generous timeout is for the reporter, not for a slow assertion.
+ */
+vi.setConfig({ testTimeout: 120_000 })
 
 const repositoryRoot = process.cwd()
 const temporary: string[] = []

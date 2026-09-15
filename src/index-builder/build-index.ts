@@ -21,6 +21,7 @@ import { scanAgentCorpus } from './scan-corpus.js'
 import { SEARCH_LEXICON_VERSION } from '../query/text.js'
 import { projectRetrievalIndex, toKnowledgeEntry } from '../retrieval/project.js'
 import { resolveSearchParams, resolveSearchWeights } from '../retrieval/weights.js'
+import { projectEnrichmentOverlay, readEnrichmentOverlay } from '../enrich/overlay.js'
 
 export type BuildIndexOptions = {
   readonly root?: string
@@ -83,11 +84,18 @@ const projectFromSnapshot = (
     [...contents.entries()].map(([path, content]) => ({ path, content })),
     { agentRoot: config.corpus.agent.root },
   ).snapshot
+  /*
+   * The accepted enrichment overlay is consulted only while the Registry is enabled: switching it
+   * off restores the deterministic baseline exactly. The read never writes, and an entry whose
+   * target moved since it was accepted is expired here rather than ranked.
+   */
+  const overlay = config.intelligence?.registry?.enabled ? projectEnrichmentOverlay(readEnrichmentOverlay(root), declared) : undefined
   const projection = projectRetrievalIndex({
     snapshot: declared,
     config,
     routes: lookup,
     curated: curated.map((entry) => ({ id: entry.id, path: entry.path, title: entry.title, ...(entry.description ? { description: entry.description } : {}) })),
+    ...(overlay ? { overlay } : {}),
     readDocument: (path) => contents.get(path),
   })
   return { projection }

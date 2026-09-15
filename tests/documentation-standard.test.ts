@@ -390,5 +390,5 @@ describe('Documentation Standard v1', () => {
         renameSync(temporaryLlmsPath, llmsPath)
       }
     }
-  }, 30_000)
+  }, 120_000)
 })
