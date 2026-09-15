@@ -1,0 +1,34 @@
+{
+  "type": "phase3-task-coverage",
+  "schemaVersion": 1,
+  "suitePath": "docs/study/task-suite-v1.json",
+  "suiteContentHash": "d7810828bce3c6616f00897fd7c92dfa4ecdf12e549923795cd95cc81a2b0029",
+  "requiredCoverage": [
+    "discovery",
+    "architecture",
+    "documentation-freshness",
+    "documentation-contradiction",
+    "documentation-missing",
+    "implementation"
+  ],
+  "documentationTaskIds": [
+    "consumer-01-documentation",
+    "consumer-02-documentation",
+    "consumer-03-documentation",
+    "consumer-04-documentation",
+    "consumer-05-documentation",
+    "consumer-06-documentation"
+  ],
+  "recoveryByCategory": {
+    "discovery": "Rerun the declared discovery check; if evidence is unavailable, classify the task as blocked and preserve the failed run.",
+    "architecture": "Rerun the declared architecture check with the same snapshot; if a relation is unsupported, classify it as incomplete rather than infer it.",
+    "documentation": "Rerun the declared documentation audit; if semantic evidence is insufficient, classify the task as partial or blocked and request review.",
+    "implementation": "Do not modify source; rerun the declared proposal check and classify an unsafe target as incorrect or blocked."
+  },
+  "safeOutcomeByCategory": {
+    "discovery": "Evidence-backed map of entrypoints and ownership, with unsupported claims excluded.",
+    "architecture": "Evidence-backed bounded component map, with uncertain edges called out.",
+    "documentation": "Evidence-backed issue classification with confidence and limitations, without editing files.",
+    "implementation": "A minimal documentation-only proposal with a verification command, without source changes."
+  }
+}

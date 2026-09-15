@@ -49,6 +49,14 @@ real CLI artifact (`scripts/agent-task-efficiency-check.mjs`). This is a
 required regression gate for bounded retrieval and measurement, but it remains
 separate from semantic adjudication of an agent's prose or implementation.
 
+The CLI check also records p95 wall-clock latency for each isolated baseline and
+optimized invocation. These latency values are operational measurements, not a
+claim that the optimized context is faster: process startup, indexing, and host
+load are included, so latency must be compared separately from token and
+context-size reduction. The provider pilot independently records process
+duration and time to the first observed tool event; neither is a semantic
+correctness metric.
+
 ## Semantic reconciliation gate
 
 The semantic gate runs labeled, synthetic cases through the real reconciliation implementation. The required v1 cases are `confirmed`, `undocumented`, `stale`, `not-analyzed`, `conflict`, and `unresolved`. Each case declares its exact expected diagnostic-code set and requires every emitted diagnostic to contain evidence.

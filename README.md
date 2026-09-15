@@ -31,21 +31,21 @@ It is not a wiki or hosted RAG. The core works **without any LLM or API key**; t
 
 Doc Bridge turns large repository structure and documentation into compact, evidence-linked context that humans and coding agents can query instead of repeatedly traversing the full repository.
 
-### Up to 99% less context payload
+### Historical context-payload estimate
 
-This is an estimated reduction in serialized context payload for one historical benchmark—not a guarantee of token savings or answer quality. It is not the same measure as provider-token usage below.
+An earlier anonymized dogfooding cycle estimated up to **99% less serialized context payload**. This is a historical payload estimate—not a guarantee of provider-token savings, answer quality, or semantic correctness. It is not the same measure as provider-token usage.
 
 ![Estimated context payload reduction](docs/landing/assets/context-payload-reduction.svg)
 
-### Controlled A/B signal
+### Historical controlled A/B signal
 
-In the latest controlled study with 96 anonymized executions, the deterministic Doc Bridge workflow showed a directional operational signal of:
+The published controlled study with 96 anonymized executions reported a directional operational signal of:
 
 - **18.46% fewer paired provider token-equivalent units** across 46 token-complete pairs;
 - **39.75 seconds lower P95 latency**;
 - **87.5% operationally completed executions vs. 75.0%** with repository-only context.
 
-These are different measures: the 99% figure is an estimated context-payload reduction from anonymized dogfooding, while the 18.46% figure uses provider-token-equivalent data from 46 paired observations in the latest controlled run. The bounded adjudicator recorded zero semantic successes in both arms, so this result is directional and inconclusive; it does not establish semantic correctness or enterprise readiness. See the [full methodology and anonymized data](docs/study/README.md).
+These are historical, separately defined measures: the 99% figure is an estimated context-payload reduction, while the 18.46% figure uses provider-token-equivalent data from 46 paired observations. The bounded adjudicator recorded zero adjudicator-success outcomes in both arms; because that adjudicator is mechanical and does not independently judge semantic correctness, this result is directional and inconclusive. A newer local pilot is intentionally not promoted here while its semantic evaluation and publication review remain incomplete. See the [full methodology and anonymized data](docs/study/README.md).
 
 ## Why teams use it
 
@@ -95,6 +95,9 @@ Example finding (anonymized)
 
 ## 60-second proof
 
+This README owns the one-command proof; the [Getting started guide](docs/getting-started.md)
+owns the complete repository setup and first-index workflow.
+
 ```bash
 npm i -D @agentskit/doc-bridge
 npx ak-docs demo --text
@@ -113,15 +116,15 @@ After (handoff.resolve / query --agent)
 Gate: red → green
 ```
 
-Monorepo fixture with auth + billing:
-
-```bash
-npx ak-docs demo --fixture monorepo --text
-```
-
 ### Verify the real handoff path
 
-This checked example runs the bundled demo through the public CLI. The README gate compares this block byte-for-byte with the executable fixture and runs it on every PR.
+This checked example runs the bundled demo through the public CLI. The
+repository's `scripts/check-readme-standard.mjs` gate compares this block byte-for-byte
+with the executable fixture; `.github/workflows/ci.yml` runs that gate and its
+executable tests on every pull request.
+
+The study figures below are not recomputed by the README gate; their protocol,
+privacy checks, and limitations are documented in the linked study artifacts.
 
 <!-- readme-command:verify-handoff -->
 <!-- readme-example:verify-handoff -->
@@ -137,14 +140,7 @@ execFileSync(process.execPath, ['bin/ak-docs.js', 'demo', '--text'], {
 node examples/verify-handoff.mjs
 ```
 
-Full setup in your repo:
-
-```bash
-npx ak-docs init
-npx ak-docs index
-npx ak-docs query package example --agent
-ak-docs mcp install --cursor   # wires MCP into .cursor/mcp.json
-```
+For the complete repository setup, follow the [Getting started guide](docs/getting-started.md).
 
 Using Cline? Follow the deterministic [`llms-install.md`](llms-install.md) setup. It runs the pinned MCP server through `pnpm dlx` without adding Doc Bridge to your repository dependencies.
 
@@ -156,7 +152,7 @@ See the [surface map](docs/landing/assets/doc-bridge-surfaces.webp) for a visual
 |---------|------------|--------------------|
 | **CLI** | Inspect ownership, search docs, run gates, ask local questions | `ak-docs query`, `search`, `ask`, `doctor`, `gate` |
 | **MCP server** | Let Cursor, Claude Code, Codex-style agents resolve handoffs before editing | `ak-docs mcp`, `handoff.resolve` |
-| **GitHub Action / CI** | Fail stale indexes and broken human-doc links on PRs | `AgentsKit-io/doc-bridge@ee756a13c006c597445c31e2643c1e8cece715d7` |
+| **GitHub Action / CI** | Fail stale indexes and configured documentation gates on PRs | `AgentsKit-io/doc-bridge@ee756a13c006c597445c31e2643c1e8cece715d7` |
 | **Documentation conformance** | Check the stable ecosystem standard with auditable evidence | `ak-docs conformance run documentation-standard-v1 --text` |
 | **Documentation audit** | Measure documentation quality and compare docs with the observed project graph | `ak-docs audit documentation --json` |
 | **Doc adapters** | Link human docs to agent docs | `fumadocs`, `docusaurus`, `vitepress`, `starlight`, `nextra`, `plain-markdown` |
@@ -168,11 +164,11 @@ See [docs/getting-started.md](docs/getting-started.md), [docs/mcp.md](docs/mcp.m
 
 ### Cursor plugin
 
-This repository also contains a Cursor plugin that pairs the read-only Doc Bridge MCP server with a handoff skill. It resolves `startHere`, `readBeforeEditing`, `editRoots`, and `checks` before Cursor edits a routed repository. The plugin does not request credentials or write project files through MCP.
+This repository also contains a Cursor plugin that pairs the Doc Bridge MCP server (read-only except for the explicit proposal tool) with a handoff skill. It resolves `startHere`, `readBeforeEditing`, `editRoots`, and `checks` before Cursor edits a routed repository. The plugin does not request credentials or write project files through MCP.
 
 ### GitHub Copilot plugin
 
-The root Agent Plugins manifest exposes the same portable handoff skill and read-only MCP server to GitHub Copilot CLI. Copilot discovers `skills/` and `.mcp.json` from the standard plugin layout, so the integration stays source-owned instead of copying prompts into another repository.
+The root Agent Plugins manifest exposes the same portable handoff skill and MCP server to GitHub Copilot CLI. Copilot discovers `skills/` and `.mcp.json` from the standard plugin layout, so the integration stays source-owned instead of copying prompts into another repository.
 
 ```bash
 copilot plugin install AgentsKit-io/doc-bridge
@@ -196,7 +192,7 @@ pi install npm:@agentskit/doc-bridge
 
 ## Claude Desktop MCP Bundle
 
-Doc Bridge can be packaged as a local MCP Bundle for Claude Desktop. The bundle keeps the eight MCP tools read-only and asks the user to select the repository's `doc-bridge.config.json`; that file defines the project boundary Doc Bridge may read.
+Doc Bridge can be packaged as a local MCP Bundle for Claude Desktop. The bundle advertises 14 MCP tools, exercises 8 of them in its smoke test, and marks every tool except `docbridge.proposals` read-only. It asks the user to select the repository's `doc-bridge.config.json`; that file defines the project boundary Doc Bridge may read.
 
 From a clean checkout:
 
@@ -207,7 +203,7 @@ pnpm mcpb:pack
 
 The command builds Doc Bridge, creates a production-only staging directory, validates the MCPB manifest, packs the extension, checks its file inventory, and writes the local artifact under `.mcpb-output/`. Generated bundles and staging directories are intentionally excluded from Git.
 
-Current packaged compatibility is macOS. Other operating systems will be declared only after the exact bundle passes an independent installation test there.
+The current packaged compatibility declaration is macOS-only; this project does not claim bundle support for other operating systems until the exact artifact passes an independent installation test there.
 
 ## Why this exists
 
@@ -262,6 +258,9 @@ ak-docs ask "who owns schemas"
 
 ## Coverage your team checks daily
 
+The following is illustrative output from the command, not a measurement of
+this repository. Run the command locally or in CI for current values.
+
 ```bash
 ak-docs doctor --text
 ak-docs doctor --badge          # shields.io markdown for README
@@ -289,22 +288,20 @@ Next actions
 
 Reuse the bundled GitHub Action on every PR:
 
-```yaml
-permissions:
-  contents: read
+Follow the [canonical Gate and CI guide](docs/guides/gate-ci.md), which includes
+the complete workflow and pins the published Action release.
 
-steps:
-  - uses: actions/checkout@v4
-  - uses: AgentsKit-io/doc-bridge@ee756a13c006c597445c31e2643c1e8cece715d7 # v1.7.45
-    with:
-      config-path: doc-bridge.config.json
-```
+The Action installs the exact configured package (or the workspace package when
+dogfooding this repository), then verifies the committed index and configured
+gates without silently rebuilding them. It rejects non-exact package versions.
+See the [Marketplace guide](docs/MARKETPLACE.md).
 
-The Action checks the committed index before changing anything, pins the matching npm package, and rejects non-exact package versions. See the [Marketplace guide](docs/MARKETPLACE.md).
+The guide is pinned to the published stable Action release `v1.7.45`; the
+checked-in package version is `1.8.0`.
 
-![handoff coverage](https://img.shields.io/badge/handoff_coverage-100%25-2ea44f?style=flat-square) ![human bridge](https://img.shields.io/badge/human_bridge-0%25-cb2431?style=flat-square)
-
-Run `ak-docs doctor --badge` locally to refresh — or `pnpm coverage:badge` in CI.
+Coverage is repository-specific. Run `ak-docs doctor --badge` locally to emit
+current handoff and human-bridge badges, or `pnpm coverage:badge` in CI; this
+README intentionally avoids publishing a stale static percentage.
 
 Or locally:
 
@@ -380,7 +377,15 @@ ak-docs memory promote --pr              # opens draft PR via gh
 
 ## Status
 
-**Current npm package: v1.7.45 stable** — portable, fail-closed handoffs for Cursor, Pi, Hermes, and ClawHub-compatible clients; deterministic Documentation Standard v1 conformance; verified release provenance; Marketplace Action; doctor + CI + skill; and documentation-quality audit tooling.
+**Published npm package: v1.7.45 stable.** The working-tree package version is
+`1.8.0` and is not published yet. The Action example below intentionally pins
+the latest published stable release; the release workflow updates the package
+and Action version together when a new release is published.
+
+The published package provides portable, fail-closed handoffs through the CLI,
+MCP server, CI action, and packaged skill; deterministic Documentation Standard
+v1 conformance; verified release provenance; and documentation-quality audit
+tooling.
 
 ```bash
 pnpm install && pnpm build && pnpm test
@@ -391,7 +396,7 @@ pnpm smoke:ollama    # optional — skips if Ollama/peers unavailable
 
 ## Privacy Policy
 
-The local MCP server reads only the project selected through `doc-bridge.config.json`. It does not require an API key, send project data to AgentsKit, collect telemetry, or write project files through its eight MCP tools. See the complete [Privacy Policy](PRIVACY.md) for accessed paths, use, storage, sharing, retention, optional integrations, and contact information.
+The local MCP server reads only the project selected through `doc-bridge.config.json`. It does not require an API key, send project data to AgentsKit, collect telemetry, or write project files through its MCP tools. See the complete [Privacy Policy](PRIVACY.md) for accessed paths, use, storage, sharing, retention, optional integrations, and contact information.
 
 ## Contributing
 

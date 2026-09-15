@@ -52,7 +52,7 @@ describe('query + search', () => {
     expect(searchIndex(index, 'find package')[0]).toMatchObject({ type: 'intent', id: 'find-package' })
     expect(searchIndex(index, 'change zod schema')[0]).toMatchObject({ type: 'change', id: 'zod-schema' })
 
-    const result = runQuery(index, config, { kind: 'search', term: 'find package', agent: true })
+    const result = runQuery(index, config, { kind: 'search', term: 'find package', agent: true, contextBudgetTokens: 256 })
     expect(result).toMatchObject({ bestMatch: { type: 'intent', id: 'find-package' } })
     if ('nextCommands' in result) expect(result.nextCommands[0]).toBe('ak-docs query intent find-package --agent')
   })
@@ -182,6 +182,7 @@ describe('query + search', () => {
     if ('nextCommands' in result) {
       expect(result.nextCommands).toEqual([...new Set(result.nextCommands)])
       expect(result.telemetry).toMatchObject({ tokenMethod: 'estimate' })
+      expect(result.telemetry?.contextBudgetTokens).toBe(32)
       expect(result.telemetry?.estimatedTokens).toBeGreaterThan(0)
       expect(result.matches[0]).not.toHaveProperty('score')
     }
@@ -192,7 +193,7 @@ describe('query + search', () => {
     const index = buildDocBridgeIndex({ root: fixtureRoot, config, write: false }).index
     const queries = ['schema', 'ownership', 'os-core', 'find package']
     const observations = queries.map((term) => {
-      const result = runQuery(index, config, { kind: 'search', term, agent: true })
+      const result = runQuery(index, config, { kind: 'search', term, agent: true, contextBudgetTokens: 256 })
       if (!('telemetry' in result) || !result.telemetry) throw new Error(`Missing telemetry for ${term}`)
       return {
         hit: result.bestMatch !== null,
@@ -216,6 +217,19 @@ describe('query + search', () => {
     console.error(JSON.stringify({ benchmark: 'agent-retrieval-v1', queries: queries.length, hitRate: metrics.hitRate, estimatedTokensP95: metrics.estimatedTokensP95, contextReduction: metrics.contextReduction }))
   })
 
+  it('enforces an explicit agent context budget and reports truncation', () => {
+    const config = loadFixtureConfig()
+    const index = buildDocBridgeIndex({ root: fixtureRoot, config, write: false }).index
+    const result = runQuery(index, config, { kind: 'search', term: 'schema', agent: true, mode: 'documentation', contextBudgetTokens: 32 })
+    expect(result).toMatchObject({ type: 'agent-search', telemetry: { contextBudgetTokens: 32, mode: 'documentation', truncated: true } })
+    if ('telemetry' in result && result.telemetry) {
+      expect(result.telemetry.estimatedTokens).toBeGreaterThan(0)
+      expect(result.telemetry.estimatedTokens).toBeLessThanOrEqual(32)
+      expect(result.bestMatch?.id).toBe('os-core')
+    }
+    expect(() => runQuery(index, config, { kind: 'search', term: 'schema', agent: true, contextBudgetTokens: 8 })).toThrow('too small for the minimum grounded result')
+  })
+
   it('measures correctly grounded tasks separately from retrieval hits', () => {
     const config = loadFixtureConfig()
     const index = buildDocBridgeIndex({ root: fixtureRoot, config, write: false }).index
@@ -226,7 +240,7 @@ describe('query + search', () => {
       { term: 'routing', expectedId: 'INDEX' },
     ]
     const observations = tasks.map(({ term, expectedId }) => {
-      const result = runQuery(index, config, { kind: 'search', term, agent: true })
+      const result = runQuery(index, config, { kind: 'search', term, agent: true, contextBudgetTokens: 256 })
       if (!('telemetry' in result) || !result.telemetry) throw new Error(`Missing telemetry for ${term}`)
       return {
         correct: result.bestMatch?.id === expectedId,

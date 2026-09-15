@@ -21,6 +21,11 @@
   "safety": {
     "exclude": ["**/examples/**", "**/public/raw/**", ".changeset/**", ".impeccable.md", "**/CLAUDE.md"]
   },
+  "audit": {
+    "documentation": {
+      "generatedPaths": ["apps/docs/AGENTS.md"]
+    }
+  },
   "routing": {
     "options": {
       "ownership": {

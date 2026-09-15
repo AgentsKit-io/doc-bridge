@@ -132,4 +132,18 @@ describe('documentation audit', () => {
     })
     expect(reclassified.documentAssessments.find((assessment) => assessment.path === 'docs/copy-a.md')?.classification.critical).toBe(false)
   })
+
+  it('keeps generated critical documents on the freshness boundary', () => {
+    const value = fixture()
+    writeFileSync(join(value.root, 'docs', 'generated.md'), '# Generated\n')
+    const report = auditDocumentation({
+      root: value.root,
+      snapshot: { ...value.snapshot, entities: [...value.snapshot.entities, { id: 'document:generated', kind: 'document', name: 'generated', path: 'docs/generated.md', provenance: 'observed', evidence: [] }] },
+      declared: value.analysis.snapshot,
+      reconciliation: value.reconciliation,
+      config: { generatedPaths: ['docs/generated.md'], tierRules: [{ pattern: 'docs/generated.md', tier: 'tier-0', critical: true }] },
+    })
+    expect(report.findings.some((finding) => finding.code === 'DOCUMENTATION_CRITICAL_METADATA_MISSING' && finding.evidence.some((item) => item.path === 'docs/generated.md'))).toBe(false)
+    expect(report.findings.some((finding) => finding.code === 'GENERATED_DOCUMENT_FRESHNESS_UNVERIFIED' && finding.evidence.some((item) => item.path === 'docs/generated.md'))).toBe(true)
+  })
 })

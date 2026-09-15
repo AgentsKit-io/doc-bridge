@@ -3,6 +3,10 @@ type: package
 package: '@agentskit/doc-bridge'
 editRoot: src
 humanDoc: /docs/POSITIONING
+owner: doc-bridge-maintainers
+lifecycle: active
+sourceOfTruth: src
+validationPath: pnpm test && pnpm typecheck
 ---
 
 # Doc Bridge core
