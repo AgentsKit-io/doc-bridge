@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join, relative, resolve } from 'node:path'
 
 import type { DocBridgeConfigV1 } from '../config/schema.js'
@@ -182,14 +182,28 @@ export const renderArtifact = (options: RenderArtifactOptions): RenderArtifactRe
  */
 export const writeRenderedPages = (result: RenderArtifactResult, target: string, root: string): string[] => {
   const single = result.pages.length === 1 && !RENDER_TEMPLATES[result.template].multiPage
-  // One stat, not exists-then-stat: the answer must describe a single moment on disk.
-  const isDirectory = statSync(target, { throwIfNoEntry: false })?.isDirectory() === true
   const written: string[] = []
-  for (const page of result.pages) {
-    const path = single && !isDirectory ? target : join(target, page.path)
+  const write = (path: string, content: string): string => {
     mkdirSync(dirname(path), { recursive: true })
-    writeFileSync(path, page.content, 'utf8')
-    written.push(toPosix(relative(root, path)))
+    writeFileSync(path, content, 'utf8')
+    return toPosix(relative(root, path))
+  }
+  for (const page of result.pages) {
+    if (!single) {
+      written.push(write(join(target, page.path), page.content))
+      continue
+    }
+    /*
+     * A single page is written to `target` itself, and lands inside it when `target` is already a
+     * directory. The write is what asks: a stat first would decide from one moment on disk and
+     * act in another, and between the two the path can become — or stop being — a directory.
+     */
+    try {
+      written.push(write(target, page.content))
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'EISDIR') throw error
+      written.push(write(join(target, page.path), page.content))
+    }
   }
   return written
 }
