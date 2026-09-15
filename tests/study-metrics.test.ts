@@ -25,6 +25,12 @@ const observation = (round: string, outcome: 'success' | 'partial', tokens: numb
   execution: { status: 'completed', exitCode: 0, signal: null, durationMs: tokens, responseBytes: tokens, stderrBytes: 0, inputTokens: tokens, outputTokens: 10, tokenMethod: 'provider', toolCalls: 1 }, contextBytes: tokens * 2, evidenceIds: ['evidence-1'], adjudication: { status: 'human-approved', actor: 'reviewer' },
 })
 
+/** An observation with its seal removed, so a variant of it can be re-sealed. */
+const unsealed = (value: Record<string, unknown>): Record<string, unknown> => {
+  const { contentHash: _hash, contentHashAlgo: _algo, ...payload } = value
+  return payload
+}
+
 describe('controlled study metrics', () => {
   it('compares rounds with denominators, uncertainty, and quality hard constraints', () => {
     const report = calculateStudyMetrics([
@@ -97,5 +103,57 @@ describe('controlled study metrics', () => {
     ], { baselineRound: 'ab-baseline', currentRound: 'ab-baseline', currentRunId: 'recovery-run' })
     expect(report.observationCount).toBe(1)
     expect(report.groups.find((group) => group.scope === 'aggregate')?.metrics.providerTokens).toBe(210)
+  })
+
+  /*
+   * Tokens to first evidence, and the enrichment agent's own bill.
+   *
+   * "Fewer tokens" is the claim the study exists to test, and the token count at the end of a task
+   * does not test it: a run that wandered for ten thousand tokens and then found the answer looks
+   * the same as one that landed on it immediately. The p95 of tokens consumed before grounded
+   * evidence was in hand is the number that separates them. The assisted arm's agent cost is
+   * reported apart from the model's, and still lands in the total, so the arm cannot look cheap by
+   * charging its work to a line nobody adds up.
+   */
+  it('reports tokens to first evidence and the registry agent cost apart from the model cost', () => {
+    const assisted = (round: string, toFirstEvidence: number, runId = `${round}-assisted-${toFirstEvidence}`) => {
+      const base = unsealed(observation(round, 'success', 100, runId))
+      return createControlledStudyObservation({
+        ...base,
+        task: { ...base.task, scenarioId: 'registry-assisted' },
+        scenario: plan.scenarios[2]!,
+        measurements: { ...base.measurements, tokensToFirstEvidence: toFirstEvidence, registryAgentInputTokens: 900, registryAgentOutputTokens: 100, registryAgentCostUsd: 0.004, registryAgentRuns: 2 },
+      })
+    }
+    const report = calculateStudyMetrics([assisted('baseline', 800), assisted('baseline', 900), assisted('cycle-1', 120), assisted('cycle-1', 150)], { currentRound: 'cycle-1' })
+    const group = (round: string) => report.groups.find((entry) => entry.scope === 'aggregate' && entry.round === round)?.metrics
+
+    expect(group('baseline')?.tokensToFirstEvidenceP95).toBe(900)
+    expect(group('cycle-1')?.tokensToFirstEvidenceP95).toBe(150)
+    expect(group('cycle-1')?.missingMetrics).not.toContain('tokensToFirstEvidence')
+    expect(group('cycle-1')?.registryAgentCostUsd).toBeCloseTo(0.008, 6)
+    expect(group('cycle-1')?.registryAgentRuns).toBe(4)
+    // The agent's cost is its own line and part of the total: 2 × (0.01 analysis + 0.02 agent) + 0.008.
+    expect(group('cycle-1')?.totalCostUsd).toBeCloseTo(0.068, 6)
+
+    const aggregate = report.comparisons.find((comparison) => comparison.scope === 'aggregate' && comparison.key === 'all')
+    expect(aggregate?.metrics.tokensToFirstEvidenceP95).toMatchObject({ baseline: 900, current: 150, absoluteChange: -750 })
+    // Fewer tokens before evidence, everything else equal: the comparison reads as an improvement.
+    expect(aggregate?.regressions).toEqual([])
+    expect(aggregate?.status).toBe('improved')
+    const text = formatStudyMetricsText(report).join('\n')
+    // Reported per scenario: the arm is the unit the claim is about.
+    expect(text).toContain('Tokens to first evidence (p95) registry-assisted @ cycle-1: 150')
+    expect(text).toContain('registry agent cost')
+  })
+
+  it('marks tokens to first evidence as missing when no observation reports it, and partial when some do', () => {
+    const withValue = createControlledStudyObservation({ ...unsealed(observation('cycle-1', 'success', 100, 'with-value')), measurements: { ...observation('cycle-1', 'success', 100).measurements, tokensToFirstEvidence: 300 } })
+    const none = calculateStudyMetrics([observation('cycle-1', 'success', 100)])
+    expect(none.groups[0]?.metrics.missingMetrics).toContain('tokensToFirstEvidence')
+    expect(none.groups[0]?.metrics.tokensToFirstEvidenceP95).toBeNull()
+    const partial = calculateStudyMetrics([withValue, observation('cycle-1', 'success', 110, 'without-value')])
+    expect(partial.groups.find((group) => group.scope === 'aggregate')?.metrics.missingMetrics).toContain('tokensToFirstEvidence-partial')
+    expect(partial.groups.find((group) => group.scope === 'aggregate')?.metrics.tokensToFirstEvidenceP95).toBe(300)
   })
 })

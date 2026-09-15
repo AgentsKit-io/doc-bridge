@@ -33,9 +33,12 @@ import {
 } from '../doctor/badge.js'
 import { docBridgePatternMarkdown, docBridgePatternPayload } from '../playbook/doc-bridge-pattern.js'
 import { formatDemoText, runDemo, withDemoWorkspace, type DemoFixture } from './demo.js'
-import { formatDoctorText, runDoctor } from '../doctor/run-doctor.js'
+import { DEFAULT_RETRIEVAL_SUITE, formatDoctorText, runDoctor } from '../doctor/run-doctor.js'
 import { installMcpConfig, mcpSnippet } from '../mcp/install.js'
 import { startMcpStdioServer } from '../mcp/server.js'
+import { measureOverlayRetrievalDelta, formatOverlayRetrievalDeltaText } from '../bench/overlay-delta.js'
+import { enrichmentCost } from '../enrich/stats.js'
+import { checkStudyExpectations, formatStudyExpectationsText, parseStudyExpectations } from '../study/expectations.js'
 import { IndexNotFoundError, loadFreshDocBridgeIndex } from '../query/load-index.js'
 import { runQuery, type QueryKind } from '../query/query.js'
 import { searchIndex } from '../query/search.js'
@@ -156,6 +159,9 @@ Core (no API key):
   ak-docs study metrics <observation-ledger.json> [--baseline-round <id>] [--current-round <id>] [--baseline-run-id <id>] [--current-run-id <id>] [--allow-regressions] [--text|--json]
   ak-docs scan | reconcile | check | map [--text|--json] [--html] [--report-threshold <bytes>]
   ak-docs check --json --format finding             emit diagnostics in the ecosystem Finding shape
+  ak-docs bench retrieval <suite> --overlay        measure the suite with and without the accepted overlay
+  ak-docs enrich --retrieval-delta                 run the overlay through the golden suite after enriching
+  ak-docs study expectations <suite> --expectations <file>   check the study's mechanical retrieval expectations
   ak-docs check --enrich          run the enrichment stage between reconcile and evaluate
   ak-docs enrich [--json|--text]  run the configured Registry roles over context packs
   ak-docs enrich list | approve <proposalId> --by <name> | reject <proposalId> --by <name> [--reason <text>]
@@ -860,16 +866,38 @@ const runBenchCommand = (
   try {
     const { config, root } = loadProject(configPath)
     const suite = parseRetrievalSuite(JSON.parse(readFileSync(resolve(root, positional[2]), 'utf8')) as unknown)
-    const indexOption = optionValues(argv, '--index')[0]
-    const index = indexOption
-      ? parseDocBridgeIndex(JSON.parse(readFileSync(resolve(root, indexOption), 'utf8')) as unknown)
-      : loadFreshDocBridgeIndex(root, config)
 
     const limitOption = optionValues(argv, '--limit')[0]
     const limit = limitOption === undefined ? undefined : Number(limitOption)
     if (limit !== undefined && (!Number.isInteger(limit) || limit <= 0)) {
       throw new Error('--limit must be a positive integer.')
     }
+
+    if (flags.has('--overlay')) {
+      /*
+       * Does the accepted overlay earn its cost? The same suite over the same snapshot, once with
+       * the overlay projected and once without. A drop in hit@3 exits non-zero: an overlay that
+       * makes retrieval worse is a finding about the agent, not a new baseline.
+       *
+       * Both indexes are projected here, from the snapshot, so this answer needs no index on disk.
+       */
+      const overlay = readEnrichmentOverlay(root)
+      if (!overlay) throw new Error('No enrichment overlay at .doc-bridge/enrich/overlay.json. Run: ak-docs enrich')
+      const stateDir = resolve(root, config.workflow?.stateDir ?? '.doc-bridge/workflow')
+      const snapshot = (() => {
+        try { return parseDiscoverySnapshot(loadWorkflowStepOutput(stateDir, 'normalize')) }
+        catch { return discoverRepository({ root, config }) }
+      })()
+      const delta = measureOverlayRetrievalDelta({ root, config, snapshot, overlay, suite, ...(limit === undefined ? {} : { limit }) })
+      if (wantsTextOutput(flags, config)) writeLines(formatOverlayRetrievalDeltaText(delta))
+      else writeJson({ ok: !delta.regression, overlayDelta: delta })
+      return delta.regression ? 1 : 0
+    }
+
+    const indexOption = optionValues(argv, '--index')[0]
+    const index = indexOption
+      ? parseDocBridgeIndex(JSON.parse(readFileSync(resolve(root, indexOption), 'utf8')) as unknown)
+      : loadFreshDocBridgeIndex(root, config)
 
     const result: RetrievalBenchResultV1 = runRetrievalBench({
       index,
@@ -1096,9 +1124,40 @@ const runEnrichCommand = async (flags: ReadonlySet<string>, positional: readonly
     const report = parseReconciliationReport(loadWorkflowStepOutput(reconciled.stateDir, 'reconcile'))
     const result = await runEnrichment({ root, config, snapshot, report })
     attachEnrichmentStage(root, config, report, result)
-    if (wantsTextOutput(flags, config)) writeLines(formatEnrichmentText(result))
-    else writeJson({ ok: true, overlayPath: result.overlayPath, overlayHash: result.overlay.contentHash, baseSnapshotHash: result.overlay.baseSnapshotHash, roles: result.roles, packs: result.packs, agentCalls: result.agentCalls, cacheHits: result.cacheHits, rerun: result.rerun, expired: result.expired, stats: result.overlay.stats, accepted: result.overlay.accepted.length, pending: result.overlay.pending.length, rejected: result.overlay.rejected.length })
-    return 0
+    /*
+     * The retrieval delta is opt-in: it runs the golden suite twice, which is the right cost for
+     * an answer about whether the overlay helped and the wrong cost for every routine run.
+     */
+    const delta = flags.has('--retrieval-delta')
+      ? measureOverlayRetrievalDelta({
+          root,
+          config,
+          snapshot,
+          overlay: result.overlay,
+          suite: parseRetrievalSuite(JSON.parse(readFileSync(resolve(root, config.retrieval?.benchmark?.suite ?? DEFAULT_RETRIEVAL_SUITE), 'utf8')) as unknown),
+        })
+      : undefined
+    if (wantsTextOutput(flags, config)) writeLines([...formatEnrichmentText(result), ...(delta ? formatOverlayRetrievalDeltaText(delta) : [])])
+    else writeJson({
+      ok: !delta?.regression,
+      overlayPath: result.overlayPath,
+      overlayHash: result.overlay.contentHash,
+      baseSnapshotHash: result.overlay.baseSnapshotHash,
+      roles: result.roles,
+      packs: result.packs,
+      agentCalls: result.agentCalls,
+      cacheHits: result.cacheHits,
+      rerun: result.rerun,
+      expired: result.expired,
+      stats: result.overlay.stats,
+      cost: enrichmentCost(result.overlay.stats),
+      stability: result.stability,
+      accepted: result.overlay.accepted.length,
+      pending: result.overlay.pending.length,
+      rejected: result.overlay.rejected.length,
+      ...(delta ? { retrievalDelta: delta } : {}),
+    })
+    return delta?.regression ? 1 : 0
   } catch (error) {
     process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`)
     return 2
@@ -1306,14 +1365,35 @@ const registryTopology = () => ({
   mergePolicy: { autoMerge: false, requiresHuman: true },
 })
 
-const runStudyCommand = async (flags: ReadonlySet<string>, positional: readonly string[], argv: readonly string[]): Promise<number> => {
+const runStudyCommand = async (flags: ReadonlySet<string>, positional: readonly string[], argv: readonly string[], configPath: string | undefined): Promise<number> => {
   const action = positional[1]
   const inputPath = positional[2]
-  if (!inputPath || !['protocol', 'history', 'tasks', 'select', 'plan', 'providers', 'run', 'adjudicate', 'ledger', 'metrics', 'verification'].includes(action ?? '')) {
-    process.stderr.write('Usage: ak-docs study protocol|history|tasks|select|plan|providers|run|adjudicate|ledger|metrics|verification <artifact.json> [--protocol <protocol.json>] [--providers <provider-cli.json>] [--adjudicator <provider-cli.json>] [--repositories <repositories.json>] [--ledger <ledger.json>] [--output <ledger.json>] [--run-id <id>] [--limit <n>] [--round <id>] [--dry-run] [--baseline-round <id>] [--current-round <id>] [--text|--json]\n')
+  if (!inputPath || !['protocol', 'history', 'tasks', 'select', 'plan', 'providers', 'run', 'adjudicate', 'ledger', 'metrics', 'verification', 'expectations'].includes(action ?? '')) {
+    process.stderr.write('Usage: ak-docs study protocol|history|tasks|select|plan|providers|run|adjudicate|ledger|metrics|verification|expectations <artifact.json> [--protocol <protocol.json>] [--providers <provider-cli.json>] [--adjudicator <provider-cli.json>] [--repositories <repositories.json>] [--ledger <ledger.json>] [--output <ledger.json>] [--run-id <id>] [--limit <n>] [--round <id>] [--dry-run] [--baseline-round <id>] [--current-round <id>] [--expectations <expectations.json>] [--index <index.json>] [--repository <id>] [--text|--json]\n')
     return 1
   }
   try {
+    if (action === 'expectations') {
+      /*
+       * The mechanical half of the study, checked by the same benchmark that gates this
+       * repository's retrieval. The suite carries opaque references; the local expectations file
+       * resolves them to entities and documents, which is why it is never published.
+       */
+      const expectationsPath = optionValues(argv, '--expectations')[0]
+      if (!expectationsPath) throw new Error('Study expectations require --expectations <expectations.json>.')
+      const suite = parseStudyTaskSuite(JSON.parse(readFileSync(resolve(inputPath), 'utf8')) as unknown)
+      const expectations = parseStudyExpectations(JSON.parse(readFileSync(resolve(expectationsPath), 'utf8')) as unknown)
+      const repositoryId = optionValues(argv, '--repository')[0]
+      const indexOption = optionValues(argv, '--index')[0]
+      const { config, root } = loadProject(configPath)
+      const index = indexOption
+        ? parseDocBridgeIndex(JSON.parse(readFileSync(resolve(root, indexOption), 'utf8')) as unknown)
+        : loadFreshDocBridgeIndex(root, config)
+      const check = checkStudyExpectations({ taskSuite: suite, expectations, index, ...(repositoryId ? { repositoryId } : {}) })
+      if (flags.has('--text')) writeLines(formatStudyExpectationsText(check))
+      else writeJson({ ok: check.ok, expectations: check })
+      return check.ok ? 0 : 1
+    }
     if (action === 'run') {
       const taskSuitePath = positional[3]
       const providersPath = optionValues(argv, '--providers')[0]
@@ -1511,7 +1591,7 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
     }
   }
 
-  if (command === 'study') return runStudyCommand(flags, positional, argv)
+  if (command === 'study') return runStudyCommand(flags, positional, argv, configPath)
 
   if (command === 'scan' || command === 'reconcile' || command === 'check' || command === 'map') {
     return runWorkflowCommand(command, flags, configPath, argv)

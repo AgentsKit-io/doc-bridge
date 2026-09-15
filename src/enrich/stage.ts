@@ -15,6 +15,7 @@ import {
 import type { DiscoverySnapshotV1, ReconciliationReportV1 } from '../schemas/knowledge.js'
 import { approvalsDir, createFileApprovalStore, enrichmentApprovalId, loadApprovalGate, ENRICHMENT_APPROVAL_GATE, type ApprovalGate } from './approvals.js'
 import { createEnrichmentCache, type EnrichmentCache } from './cache.js'
+import { cacheHitRate, enrichmentStability, formatEnrichmentStatsText, inventedReferenceCount, type EnrichmentStability } from './stats.js'
 import { batchContextPacks, buildContextPacks, type ContextPack, type EnrichmentTask } from './context-pack.js'
 import { effectiveEnrichment, readEnrichmentOverlay, sealEnrichmentOverlay, writeEnrichmentOverlay } from './overlay.js'
 import { applyEnrichmentAdjudication, partitionEnrichmentProposals, validateEnrichmentAdjudication } from './validate.js'
@@ -81,6 +82,8 @@ export type EnrichmentRunOptions = {
   /** File contents by path, for packs. Defaults to reading under `root`. */
   readonly readFile?: (path: string) => string | undefined
   readonly now?: () => string
+  /** Monotonic milliseconds, for wall time. A test passes a stub so the figure is deterministic. */
+  readonly clock?: () => number
   /** Persist the overlay under `.doc-bridge/enrich/`. Default true. */
   readonly write?: boolean
 }
@@ -95,9 +98,23 @@ export type EnrichmentRunResult = {
   readonly rerun: readonly string[]
   readonly expired: number
   readonly roles: readonly ResolvedRole[]
+  /** This run against the one before it: one hash for a deterministic agent, a share for a live one. */
+  readonly stability: EnrichmentStability
 }
 
-const emptyStats = (): EnrichmentStats => ({ byKind: {}, rejectionReasons: {}, agentRuns: 0, cacheHits: 0, packs: 0, inputBytes: 0, outputBytes: 0, expired: 0 })
+const emptyStats = (): EnrichmentStats => ({
+  byKind: {},
+  rejectionReasons: {},
+  inventedReferences: 0,
+  agentRuns: 0,
+  cacheHits: 0,
+  cacheHitRate: 0,
+  packs: 0,
+  inputBytes: 0,
+  outputBytes: 0,
+  wallTimeMs: 0,
+  expired: 0,
+})
 
 const configWithAgent = (config: DocBridgeConfigV1, agentId: string): DocBridgeConfigV1 => ({
   ...config,
@@ -164,6 +181,8 @@ export const runEnrichment = async (options: EnrichmentRunOptions): Promise<Enri
   const { root, config, snapshot, report } = options
   if (!config.intelligence?.registry?.enabled) throw new Error('Registry agents are disabled. Set intelligence.registry.enabled: true to run enrichment.')
   const roles = resolveEnrichmentRoles(config)
+  // Wall time is measured, not derived: it is the number a person weighs the overlay's cost against.
+  const startedAt = options.clock?.() ?? Date.now()
   const now = options.now ?? (() => new Date().toISOString())
   const cache = options.cache ?? createEnrichmentCache(root)
   const agent = options.agent ?? (await registryAgent(root, config))
@@ -315,10 +334,23 @@ export const runEnrichment = async (options: EnrichmentRunOptions): Promise<Enri
   }
   stats.byKind = Object.fromEntries(Object.entries(stats.byKind).sort(([left], [right]) => left.localeCompare(right)))
   stats.rejectionReasons = Object.fromEntries(Object.entries(stats.rejectionReasons).sort(([left], [right]) => left.localeCompare(right)))
+  stats.inventedReferences = inventedReferenceCount(rejected)
+  stats.cacheHitRate = cacheHitRate(stats.cacheHits, stats.agentRuns)
+  stats.wallTimeMs = Math.max(0, (options.clock?.() ?? Date.now()) - startedAt)
 
   const overlay = sealEnrichmentOverlay({ ...overlayBase(options), accepted, pending, rejected, stats })
   const overlayPath = options.write === false ? undefined : writeEnrichmentOverlay(root, overlay)
-  return { overlay, ...(overlayPath ? { overlayPath } : {}), agentCalls: stats.agentRuns, cacheHits: stats.cacheHits, packs: stats.packs, rerun: [...new Set(rerun)].sort(), expired: expired.length, roles }
+  return {
+    overlay,
+    ...(overlayPath ? { overlayPath } : {}),
+    agentCalls: stats.agentRuns,
+    cacheHits: stats.cacheHits,
+    packs: stats.packs,
+    rerun: [...new Set(rerun)].sort(),
+    expired: expired.length,
+    roles,
+    stability: enrichmentStability(overlay, previous),
+  }
 }
 
 const count = (stats: EnrichmentStats, kind: string, bucket: 'accepted' | 'pending' | 'rejected'): void => {
@@ -335,7 +367,8 @@ export const formatEnrichmentText = (result: EnrichmentRunResult): string[] => {
     `Roles: ${result.roles.map((role) => `${role.role}=${role.agentId}`).join(', ')}`,
     `Packs: ${result.packs} (agent calls ${result.agentCalls}, cache hits ${result.cacheHits}, re-run ${result.rerun.length})`,
     `Accepted: ${overlay.accepted.length}  Pending: ${overlay.pending.length}  Rejected: ${overlay.rejected.length}  Expired: ${result.expired}`,
-    ...Object.entries(overlay.stats.byKind).map(([kind, counts]) => `  ${kind}: accepted ${counts.accepted}, pending ${counts.pending}, rejected ${counts.rejected}`),
+    ...Object.entries(overlay.stats.byKind).map(([kind, counts]) => `  ${kind}: proposed ${counts.proposed}, accepted ${counts.accepted}, pending ${counts.pending}, rejected ${counts.rejected}`),
+    ...formatEnrichmentStatsText(overlay.stats, result.stability),
     `Overlay: ${overlay.contentHash}${result.overlayPath ? ` (${basename(result.overlayPath)})` : ''}`,
   ]
 }

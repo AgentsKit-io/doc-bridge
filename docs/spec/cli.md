@@ -74,6 +74,9 @@ pnpm add -D @agentskit/doc-bridge
 | `ak-docs enrich [--json\|--text]` | Run the enrichment stage: context packs to the configured Registry roles, deterministic validators, the overlay at `.doc-bridge/enrich/overlay.json`. Zero agent calls over an unchanged repository |
 | `ak-docs enrich list \| approve <proposalId> --by <name> \| reject <proposalId> --by <name> [--reason <text>]` | Review pending enrichment proposals; a decision is recorded through the ecosystem approval gate under `.doc-bridge/approvals/`, bound to the proposal id and the target content hash |
 | `ak-docs check --enrich` | `check` with the `enrich` stage between `reconcile` and `evaluate`; a failed enrichment is reported in `enrichment` and never changes the check result |
+| `ak-docs enrich --retrieval-delta [--json\|--text]` | `enrich`, then the golden suite with and without the accepted overlay on the same snapshot. Exits 1 when the overlay lowers hit@3 |
+| `ak-docs bench retrieval <suite.json> --overlay [--json\|--text]` | The overlay on disk measured against a suite: both indexes projected from one snapshot, no index on disk required. Exits 1 on a hit@3 regression |
+| `ak-docs study expectations <task-suite.json> --expectations <local.json> [--index <index.json>] [--repository <id>]` | Check a study round's mechanical retrieval expectations through the benchmark. Exits 1 when a reference does not resolve or a case misses |
 | `ak-docs playbook draft` | Build a draft Playbook feedback payload from local memory candidates |
 | `ak-docs playbook pattern [--text]` | Export published Doc Bridge Playbook pattern (OKF markdown / JSON) |
 | `ak-docs list <kind> [--text]` | List packages, apps, intents, … |

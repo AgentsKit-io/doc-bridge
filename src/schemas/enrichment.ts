@@ -274,15 +274,31 @@ export type RejectedEnrichment = z.infer<typeof RejectedEnrichmentSchema>
 
 const count = z.number().int().nonnegative()
 
+/**
+ * A rejection that means the agent named something that does not exist.
+ *
+ * It is counted on its own rather than folded into the rejection total, because it is the one
+ * number that says whether an agent is inventing structure. A curator that classifies a document
+ * badly is wrong about a judgement; one that proposes a relation to a module the repository does
+ * not contain is making things up, and that number must trend to zero or the agent is unusable.
+ */
+export const INVENTED_RELATION_REASONS = ['unknown-endpoint', 'unknown-entity', 'unknown-scope', 'unknown-directory', 'unknown-diagnostic'] as const
+
 export const EnrichmentStatsSchema = z
   .object({
     byKind: z.record(z.string().max(128), z.object({ proposed: count, accepted: count, pending: count, rejected: count }).strict()),
     rejectionReasons: z.record(z.string().max(128), count),
+    /** Rejections that named a non-existent entity, endpoint, scope, directory or diagnostic. */
+    inventedReferences: count,
     agentRuns: count,
     cacheHits: count,
+    /** Cache hits over cache lookups, rounded to six places. 1 means the run asked no agent anything. */
+    cacheHitRate: z.number().min(0).max(1),
     packs: count,
     inputBytes: count,
     outputBytes: count,
+    /** Wall time of the run. Outside the overlay's content hash, like every other cost figure. */
+    wallTimeMs: count,
     expired: count,
   })
   .strict()

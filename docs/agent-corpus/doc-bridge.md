@@ -42,3 +42,12 @@ while `intelligence.registry.enabled` is true, a read never writes, and a corrup
 overlay. No agent approves anything — not its own output, not another's — and human approvals go
 through the ecosystem approval gate. Adding a proposal kind means a schema, a validator, a policy,
 a valid fixture and a rejection fixture, and a row in `docs/spec/enrichment-overlay-v1.md`.
+
+An enrichment run reports its own shape (`src/enrich/stats.ts`): counts per kind, a rejection
+histogram, invented references counted apart from other rejections, cost, and stability against the
+previous run. `stats` stays outside the overlay's content hash — two runs that decided identically
+must agree on their hash while disagreeing about how long they took. The overlay may leave retrieval
+unchanged or improve it; it may not lower hit@3, and `measureOverlayRetrievalDelta`
+(`src/bench/overlay-delta.ts`) projects both indexes from one snapshot so the only difference
+between the two runs is the overlay. A drop is a finding about the agent, never a new baseline.
+See [Measured enrichment v1](../spec/measured-enrichment-v1.md).

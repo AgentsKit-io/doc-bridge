@@ -5,6 +5,7 @@ import { dirname, join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { createRegistryAgentAdapter, REGISTRY_AGENT_PROTOCOL_V2 } from '../src/agents/registry-adapter.js'
+import { EVAL_FORMAT_VERSION } from '../src/bench/retrieval.js'
 import { runCli } from '../src/cli/program.js'
 import { applyConfigDefaults } from '../src/config/defaults.js'
 import { DocBridgeConfigV1Schema, type DocBridgeConfigV1 } from '../src/config/schema.js'
@@ -467,5 +468,61 @@ describe('entity content hashes', () => {
     const area = snapshot.entities.find((entity) => entity.kind === 'area')!
     expect(entityContentHash(area)).toMatch(/^[a-f0-9]{64}$/)
     expect(entityContentHash({ ...area, name: 'renamed' })).not.toBe(entityContentHash(area))
+  })
+})
+
+/**
+ * `ak-docs enrich --retrieval-delta`: the overlay measured against the golden suite.
+ *
+ * Opt-in, because it runs the suite twice, and that is the right cost for an answer about whether
+ * the overlay helped and the wrong cost for every routine run. What it reports is the whole case
+ * for the stage: the same snapshot, once with the accepted overlay and once without.
+ */
+describe('ak-docs enrich --retrieval-delta', () => {
+  it('reports the delta, the cost and the stability of the run, in both output modes', async () => {
+    const { root, config, configPath } = repository()
+    write(root, 'docs/bench/retrieval-suite-v1.json', JSON.stringify({
+      evalFormatVersion: EVAL_FORMAT_VERSION,
+      name: 'enrich-delta-fixture',
+      cases: [
+        { id: 'query-guide', input: 'query guide', metadata: { expectedTargets: ['docs/for-agents/query.md'], kind: 'question' } },
+        { id: 'bm25', input: 'bm25', metadata: { expectedTargets: ['src/ranking/bm25.ts'], kind: 'symbol' } },
+      ],
+    }))
+    const previous = process.cwd()
+    try {
+      process.chdir(root)
+      const json = await capture(() => runCli(['enrich', '--retrieval-delta', '--config', configPath, '--json']))
+      expect(json.code, json.err).toBe(0)
+      const payload = JSON.parse(json.out) as {
+        ok: boolean
+        cost: { agentRuns: number; cacheHitRate: number; wallTimeMs: number }
+        stability: { overlayHashIdentical: boolean; proposalIdShare: number }
+        stats: { inventedReferences: number }
+        retrievalDelta: { status: string; regression: boolean; overlayHash: string; deltas: { metric: string }[]; suite: { caseCount: number } }
+      }
+      expect(payload.ok).toBe(true)
+      // The overlay must not lower hit@3; leaving it unchanged is allowed.
+      expect(payload.retrievalDelta.regression).toBe(false)
+      expect(['improved', 'unchanged']).toContain(payload.retrievalDelta.status)
+      expect(payload.retrievalDelta.suite.caseCount).toBe(2)
+      expect(payload.retrievalDelta.deltas.map((entry) => entry.metric)).toContain('hitAt3')
+      expect(payload.retrievalDelta.overlayHash).toBe(readEnrichmentOverlay(root)?.contentHash)
+      // Cost and stability travel with the run, not just the delta.
+      expect(payload.cost).toMatchObject({ agentRuns: 1, cacheHitRate: 0 })
+      expect(payload.cost.wallTimeMs).toBeGreaterThanOrEqual(0)
+      expect(payload.stability).toMatchObject({ overlayHashIdentical: false, proposalIdShare: 0 })
+      expect(payload.stats.inventedReferences).toBe(0)
+
+      const text = await capture(() => runCli(['enrich', '--retrieval-delta', '--config', configPath, '--text']))
+      expect(text.code, text.err).toBe(0)
+      expect(text.out).toContain('Overlay retrieval delta:')
+      expect(text.out).toContain('Invented references: 0')
+      expect(text.out).toContain('Cost: ')
+      // The second run is answered from the cache and reaches the same overlay.
+      expect(text.out).toContain('Stability: overlay hash identical to the previous run')
+    } finally {
+      process.chdir(previous)
+    }
   })
 })

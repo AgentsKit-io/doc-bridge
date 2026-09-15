@@ -240,7 +240,7 @@ const overlayFor = (snapshot: DiscoverySnapshotV1, entries: { accepted?: Accepte
     accepted: entries.accepted ?? [],
     pending: entries.pending ?? [],
     rejected: [],
-    stats: { byKind: {}, rejectionReasons: {}, agentRuns: 0, cacheHits: 0, packs: 0, inputBytes: 0, outputBytes: 0, expired: 0 },
+    stats: { byKind: {}, rejectionReasons: {}, inventedReferences: 0, agentRuns: 0, cacheHits: 0, cacheHitRate: 0, packs: 0, inputBytes: 0, outputBytes: 0, wallTimeMs: 0, expired: 0 },
   })
 
 const temp = (prefix: string): string => {

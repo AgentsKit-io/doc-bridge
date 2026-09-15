@@ -835,3 +835,55 @@ export {
 export { decideEnrichment, listEnrichment, type DecideEnrichmentOptions, type DecideEnrichmentResult, type EnrichmentReview } from './enrich/review.js'
 export { REGISTRY_AGENT_PROTOCOL_V2, type RegistryEnrichmentContext } from './agents/registry-adapter.js'
 export { ACCEPTED_SIGNALS_SHARE } from './retrieval/rank.js'
+
+// KR-11: overlay statistics, the assisted study arm, tokens to first evidence
+export {
+  INVENTED_RELATION_REASONS,
+} from './schemas/enrichment.js'
+export {
+  cacheHitRate,
+  enrichmentCost,
+  enrichmentStability,
+  formatEnrichmentStatsText,
+  inventedReferenceCount,
+  overlayProposalIds,
+  type EnrichmentStability,
+} from './enrich/stats.js'
+export {
+  OVERLAY_BLOCKING_METRIC,
+  OVERLAY_DELTA_METRICS,
+  formatOverlayRetrievalDeltaText,
+  measureOverlayRetrievalDelta,
+  type MeasureOverlayRetrievalDeltaOptions,
+  type OverlayMetricDelta,
+  type OverlayRetrievalDelta,
+} from './bench/overlay-delta.js'
+export {
+  RUBRIC_MECHANICAL_CHECKS,
+  hasRetrievalExpectations,
+  mechanicalRubricItems,
+  modelRubricItems,
+  rubricItemCheck,
+  rubricItemText,
+  taskRetrievalQueries,
+  type RubricItem,
+  type RubricMechanicalCheck,
+  type ValidateStudyTaskSuiteOptions,
+} from './study/task-suite.js'
+export {
+  STUDY_EXPECTATIONS_SCHEMA_VERSION,
+  StudyExpectationsV1Schema,
+  checkStudyExpectations,
+  createStudyExpectations,
+  formatStudyExpectationsText,
+  parseStudyExpectations,
+  studyRetrievalSuite,
+  type CheckStudyExpectationsOptions,
+  type StudyExpectationCheck,
+  type StudyExpectationOutcome,
+  type StudyExpectationsV1,
+  type StudyRetrievalSuite,
+  type UnresolvedExpectation,
+} from './study/expectations.js'
+export { ASSISTED_SCENARIO, assistedArmReadiness, type AssistedArmStatus } from './study/execution.js'
+export { adjudicatorRubric } from './study/adjudication.js'

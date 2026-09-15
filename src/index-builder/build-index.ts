@@ -22,6 +22,7 @@ import { SEARCH_LEXICON_VERSION } from '../query/text.js'
 import { projectRetrievalIndex, toKnowledgeEntry } from '../retrieval/project.js'
 import { resolveSearchParams, resolveSearchWeights } from '../retrieval/weights.js'
 import { projectEnrichmentOverlay, readEnrichmentOverlay } from '../enrich/overlay.js'
+import type { EnrichmentOverlayV1 } from '../schemas/enrichment.js'
 
 export type BuildIndexOptions = {
   readonly root?: string
@@ -33,6 +34,15 @@ export type BuildIndexOptions = {
    * artifacts it sits next to describe the same observation.
    */
   readonly snapshot?: DiscoverySnapshotV1
+  /**
+   * Which enrichment overlay the projection reads.
+   *
+   * Omitted, the builder reads the one on disk while the Registry is enabled — the normal path.
+   * `'ignore'` builds the deterministic baseline even then, and an overlay object projects that
+   * one instead. Both exist so the retrieval delta can measure the same snapshot twice, with the
+   * overlay and without it, rather than comparing two different repositories.
+   */
+  readonly overlay?: EnrichmentOverlayV1 | 'ignore'
 }
 
 export type BuildIndexResult = {
@@ -67,6 +77,7 @@ const projectFromSnapshot = (
   given: DiscoverySnapshotV1 | undefined,
   lookup: ReturnType<typeof buildLookup>['lookup'],
   curated: readonly KnowledgeEntry[],
+  requested: BuildIndexOptions['overlay'],
 ): { readonly projection: RetrievalIndexV1 } => {
   const observed = given ?? discoverRepository({ root, config })
   const budget: TextReadBudget = { used: 0 }
@@ -89,7 +100,10 @@ const projectFromSnapshot = (
    * off restores the deterministic baseline exactly. The read never writes, and an entry whose
    * target moved since it was accepted is expired here rather than ranked.
    */
-  const overlay = config.intelligence?.registry?.enabled ? projectEnrichmentOverlay(readEnrichmentOverlay(root), declared) : undefined
+  const accepted = requested === 'ignore'
+    ? undefined
+    : (requested ?? (config.intelligence?.registry?.enabled ? readEnrichmentOverlay(root) : undefined))
+  const overlay = accepted ? projectEnrichmentOverlay(accepted, declared) : undefined
   const projection = projectRetrievalIndex({
     snapshot: declared,
     config,
@@ -154,7 +168,7 @@ export const buildDocBridgeIndex = (opts: BuildIndexOptions): BuildIndexResult =
    * the snapshot: the index has no scanner of its own, so a record retrieval can find is an entity
    * discovery observed, with the same id and the same content hash.
    */
-  const projected = config.retrieval?.corpus?.enabled === false ? undefined : projectFromSnapshot(root, config, opts.snapshot, lookup, curated)
+  const projected = config.retrieval?.corpus?.enabled === false ? undefined : projectFromSnapshot(root, config, opts.snapshot, lookup, curated, opts.overlay)
   const projection = projected?.projection
   const inputs = projected ? repositoryInputs(root, config) : undefined
   const curatedPaths = new Set(curated.map((entry) => entry.path))

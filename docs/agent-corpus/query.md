@@ -32,3 +32,8 @@ Accepted agent signals (`agentSignal` on an entry) are a share of `ACCEPTED_SIGN
 is 15% of the exact-id boost and must stay there: a signal may reorder near-ties among lexical hits
 and must never outrank an exact identifier, path or symbol match. Without an overlay the ranking is
 byte-identical to the ranking before enrichment existed, and the bench baseline must not move.
+
+`ak-docs bench retrieval <suite> --overlay` answers whether the accepted overlay earns its cost:
+the same suite over the same snapshot, once with the overlay projected and once without. It needs
+no index on disk, and it exits non-zero when hit@3 falls. Adding an overlay-consuming ranking
+signal means re-running it, not only `pnpm bench:retrieval`.

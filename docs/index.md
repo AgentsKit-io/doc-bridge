@@ -42,6 +42,7 @@ Doc Bridge keeps **one repository** useful to people and coding agents. Pick the
 | Budgeted `knowledge.search` / `knowledge.lookup`, canonical findings, the measured doctor | [MCP knowledge tools v1](./spec/mcp-knowledge-tools-v1.md) |
 | Markdown renderings from templates: area pages, sidecars, change digest, overlay review | [Render v1](./spec/render-v1.md) |
 | Typed agent proposals, validators, the overlay and bounded influence | [Enrichment overlay v1](./spec/enrichment-overlay-v1.md) |
+| What the overlay cost, whether it helped, and the study measurements | [Measured enrichment v1](./spec/measured-enrichment-v1.md) |
 | Current documentation audit snapshot | [Audit round 2026-08-31](./study/documentation-audit-round-2026-08-31.json) |
 | Controlled pilot evidence | [Pilot round 2026-08-31](./study/pilot-round-2026-08-31.json) |
 
