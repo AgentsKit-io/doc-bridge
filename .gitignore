@@ -19,6 +19,10 @@ node_modules
 .mcpb-output/
 .mcpb-runtime/
 
+# Claude Code creates a git worktree per isolated agent run under here. Transient session
+# state, never source — and a checkout inside the checkout, which nothing should track.
+.claude/worktrees/
+
 # @agentskit/harness keep-pushing loop.
 # loop.config.yaml identifies a Linear workspace and person; only the example is tracked.
 loop.config.yaml
