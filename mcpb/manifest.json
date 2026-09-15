@@ -87,6 +87,14 @@
     {
       "name": "docbridge.proposals",
       "description": "Create, inspect, approve, and apply human-gated Doc Bridge proposals."
+    },
+    {
+      "name": "knowledge.search",
+      "description": "Rank every indexed entity for a query, optionally by kind, with an explanation and within a token budget."
+    },
+    {
+      "name": "knowledge.lookup",
+      "description": "Return an entity with its neighbours, documents, handoff, open diagnostics and evidence, within a token budget."
     }
   ],
   "tools_generated": false,

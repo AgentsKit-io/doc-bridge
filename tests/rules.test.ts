@@ -70,10 +70,18 @@ describe('rule engine', () => {
       preset: 'default',
       severity: { 'graph-undocumented-relation': 'warn' },
       criticalPaths: ['src/**'],
+      // Centrality is betweenness over the import graph now, not a count of open findings: a
+      // module every import path runs through is central whether or not it is documented.
+      centrality: new Map([['module:core', 0.42], ['module:leaf', 0]]),
     })
 
     expect(result.findings.some((finding) => finding.ruleId === 'critical-path-risk')).toBe(true)
-    expect(result.findings.some((finding) => finding.ruleId === 'centrality-risk')).toBe(true)
+    const centralityFinding = result.findings.find((finding) => finding.ruleId === 'centrality-risk')
+    expect(centralityFinding?.message).toContain('betweenness 0.42')
+    expect(centralityFinding?.message).toContain('review signal, not a runtime availability claim')
+    expect(centralityFinding?.entityIds).toEqual(['module:core'])
+    // An entity with no betweenness is not central, however many findings it carries.
+    expect(result.findings.filter((finding) => finding.ruleId === 'centrality-risk')).toHaveLength(1)
     expect(result.findings.filter((finding) => finding.ruleId === 'graph-undocumented-relation')).toHaveLength(3)
     expect(result.findings.filter((finding) => finding.ruleId === 'graph-undocumented-relation').every((finding) => finding.severity === 'warn')).toBe(true)
     expect(result.exitCode).toBe(0)

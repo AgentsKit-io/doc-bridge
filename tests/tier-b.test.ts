@@ -120,6 +120,8 @@ describe('Tier B — doctor badge', () => {
       const originalCwd = process.cwd()
       process.chdir(fixtureRoot)
       try {
+        // Build first: the fixture index is gitignored, and one left by older code is stale by version.
+        expect(runCli(['index'])).toBe(0)
         expect(runCli(['doctor', '--write-badge'])).toBe(0)
         const badgePath = join(fixtureRoot, '.doc-bridge', 'coverage-badge.json')
         expect(existsSync(badgePath)).toBe(true)

@@ -30,6 +30,14 @@ const StudyMetricSetSchema = z.object({
   providerTokens: z.number().int().nonnegative().nullable(),
   estimatedTokens: z.number().int().nonnegative().nullable(),
   tokensToCorrectAnswerP95: z.number().int().nonnegative().nullable(),
+  /**
+   * Tokens spent before the agent had correct grounded evidence in hand.
+   *
+   * The primary measure of the second problem this product exists for: an agent that reaches the
+   * right evidence for fewer tokens than reading the repository costs. It is null when no
+   * provider reported it, never zero, because an unmeasured cost is not a free one.
+   */
+  tokensToFirstEvidenceP95: z.number().int().nonnegative().nullable(),
   latencyP95Ms: z.number().int().nonnegative(),
   timeToCorrectAnswerP95Ms: z.number().int().nonnegative().nullable(),
   contextBytesP95: z.number().int().nonnegative(),
@@ -39,6 +47,14 @@ const StudyMetricSetSchema = z.object({
   reworkRate: z.number().min(0).max(1).nullable(),
   analysisCostUsd: z.number().nonnegative().nullable(),
   agentCostUsd: z.number().nonnegative().nullable(),
+  /**
+   * What the Registry agent cost, apart from the model under test.
+   *
+   * The assisted arm runs two agents, and folding their cost together would make the arm look
+   * cheap or expensive for the wrong reason. This is the enrichment side alone.
+   */
+  registryAgentCostUsd: z.number().nonnegative().nullable(),
+  registryAgentRuns: z.number().int().nonnegative().nullable(),
   totalCostUsd: z.number().nonnegative().nullable(),
   providerTokenCostUnits: z.number().int().nonnegative().nullable(),
   missingMetrics: z.array(z.string().min(1).max(128)).max(32),
@@ -85,6 +101,8 @@ const StudyMetricComparisonSchema = z.object({
     providerTokens: MetricDeltaSchema,
     estimatedTokens: MetricDeltaSchema,
     tokensToCorrectAnswerP95: MetricDeltaSchema,
+    tokensToFirstEvidenceP95: MetricDeltaSchema,
+    registryAgentCostUsd: MetricDeltaSchema,
     latencyP95Ms: MetricDeltaSchema,
     timeToCorrectAnswerP95Ms: MetricDeltaSchema,
     contextBytesP95: MetricDeltaSchema,
@@ -224,8 +242,19 @@ const metricsFor = (observations: readonly ControlledStudyObservationV1[]): Stud
   else if (safety.some((value) => value === undefined)) missingMetrics.push('safetyOutcome-partial')
   if (knownTools.every((value) => value === undefined)) missingMetrics.push('toolCalls')
   else if (knownTools.some((value) => value === undefined)) missingMetrics.push('toolCalls-partial')
+  /*
+   * Reported by the provider as `tokensToFirstEvidence`, rounded up to whole tokens: a study
+   * observation is the only place that knows when the agent first held evidence it could cite.
+   */
+  const tokensToFirstEvidence = measurementValues(observations, 'tokensToFirstEvidence').map((value) => Math.ceil(value))
+  if (tokensToFirstEvidence.length === 0) missingMetrics.push('tokensToFirstEvidence')
+  else if (tokensToFirstEvidence.length !== observations.length) missingMetrics.push('tokensToFirstEvidence-partial')
   const analysisCostUsd = measurementSum(observations, 'analysisCostUsd')
   const agentCostUsd = measurementSum(observations, 'agentCostUsd')
+  const registryAgentCostUsd = measurementSum(observations, 'registryAgentCostUsd')
+  const registryAgentRuns = measurementSum(observations, 'registryAgentRuns')
+  // Only the assisted arm has a Registry agent; elsewhere the absence is the correct answer.
+  if (observations.some((observation) => observation.scenario.id === 'registry-assisted') && registryAgentCostUsd === null) missingMetrics.push('registryAgentCostUsd')
   const providerTokenCostUnits = measurementSum(observations, 'providerTokenCostUnits')
   if (providerTokenCostUnits === null) missingMetrics.push('providerTokenCostUnits')
   else if (observations.some((observation) => observation.execution.tokenMethod === 'provider' && observation.measurements?.providerTokenCostUnits === undefined)) missingMetrics.push('providerTokenCostUnits-partial')
@@ -253,6 +282,7 @@ const metricsFor = (observations: readonly ControlledStudyObservationV1[]): Stud
     providerTokens,
     estimatedTokens,
     tokensToCorrectAnswerP95: successfulTokens.length ? percentile95(successfulTokens) : null,
+    tokensToFirstEvidenceP95: tokensToFirstEvidence.length ? percentile95(tokensToFirstEvidence) : null,
     latencyP95Ms: percentile95(observations.map((observation) => observation.execution.durationMs)),
     timeToCorrectAnswerP95Ms: successfulDurations.length ? percentile95(successfulDurations) : null,
     contextBytesP95: percentile95(observations.map((observation) => observation.contextBytes)),
@@ -262,7 +292,9 @@ const metricsFor = (observations: readonly ControlledStudyObservationV1[]): Stud
     reworkRate: rateMetric(knownRework.map((value) => value === undefined ? undefined : value > 0 ? 1 : 0)),
     analysisCostUsd,
     agentCostUsd,
-    totalCostUsd: analysisCostUsd === null || agentCostUsd === null ? null : analysisCostUsd + agentCostUsd,
+    registryAgentCostUsd,
+    registryAgentRuns: registryAgentRuns === null ? null : Math.round(registryAgentRuns),
+    totalCostUsd: analysisCostUsd === null || agentCostUsd === null ? null : analysisCostUsd + agentCostUsd + (registryAgentCostUsd ?? 0),
     providerTokenCostUnits,
     missingMetrics,
   }
@@ -305,6 +337,8 @@ const comparisonFor = (baseline: StudyMetricGroupV1 | undefined, current: StudyM
     providerTokens: delta(numeric(baselineMetrics ?? emptyMetrics(), 'providerTokens'), numeric(currentMetrics ?? emptyMetrics(), 'providerTokens')),
     estimatedTokens: delta(numeric(baselineMetrics ?? emptyMetrics(), 'estimatedTokens'), numeric(currentMetrics ?? emptyMetrics(), 'estimatedTokens')),
     tokensToCorrectAnswerP95: delta(numeric(baselineMetrics ?? emptyMetrics(), 'tokensToCorrectAnswerP95'), numeric(currentMetrics ?? emptyMetrics(), 'tokensToCorrectAnswerP95')),
+    tokensToFirstEvidenceP95: delta(numeric(baselineMetrics ?? emptyMetrics(), 'tokensToFirstEvidenceP95'), numeric(currentMetrics ?? emptyMetrics(), 'tokensToFirstEvidenceP95')),
+    registryAgentCostUsd: delta(numeric(baselineMetrics ?? emptyMetrics(), 'registryAgentCostUsd'), numeric(currentMetrics ?? emptyMetrics(), 'registryAgentCostUsd')),
     latencyP95Ms: delta(numeric(baselineMetrics ?? emptyMetrics(), 'latencyP95Ms'), numeric(currentMetrics ?? emptyMetrics(), 'latencyP95Ms')),
     timeToCorrectAnswerP95Ms: delta(numeric(baselineMetrics ?? emptyMetrics(), 'timeToCorrectAnswerP95Ms'), numeric(currentMetrics ?? emptyMetrics(), 'timeToCorrectAnswerP95Ms')),
     contextBytesP95: delta(numeric(baselineMetrics ?? emptyMetrics(), 'contextBytesP95'), numeric(currentMetrics ?? emptyMetrics(), 'contextBytesP95')),
@@ -324,13 +358,13 @@ const comparisonFor = (baseline: StudyMetricGroupV1 | undefined, current: StudyM
     if (metrics.evidenceQualityRate.baseline !== null && metrics.evidenceQualityRate.current !== null && metrics.evidenceQualityRate.current < metrics.evidenceQualityRate.baseline) regressions.push('evidenceQualityRate')
     if (metrics.safetyRate.baseline !== null && metrics.safetyRate.current !== null && metrics.safetyRate.current < metrics.safetyRate.baseline) regressions.push('safetyRate')
     if (metrics.acceptanceCheckRate.baseline !== null && metrics.acceptanceCheckRate.current !== null && metrics.acceptanceCheckRate.current < metrics.acceptanceCheckRate.baseline) regressions.push('acceptanceCheckRate')
-    for (const name of ['providerTokens', 'estimatedTokens', 'tokensToCorrectAnswerP95', 'latencyP95Ms', 'timeToCorrectAnswerP95Ms', 'contextBytesP95', 'responseBytesP95', 'clarificationRate', 'reworkRate', 'analysisCostUsd', 'agentCostUsd', 'totalCostUsd', 'providerTokenCostUnits'] as const) {
+    for (const name of ['providerTokens', 'estimatedTokens', 'tokensToCorrectAnswerP95', 'tokensToFirstEvidenceP95', 'latencyP95Ms', 'timeToCorrectAnswerP95Ms', 'contextBytesP95', 'responseBytesP95', 'clarificationRate', 'reworkRate', 'analysisCostUsd', 'agentCostUsd', 'registryAgentCostUsd', 'totalCostUsd', 'providerTokenCostUnits'] as const) {
       const change = metrics[name]
       if (change.baseline !== null && change.current !== null && change.current > change.baseline * 1.05) regressions.push(name)
     }
   }
   const comparable = Object.values(metrics).some((value) => value.baseline !== null && value.current !== null)
-  const improved = ['providerTokens', 'estimatedTokens', 'tokensToCorrectAnswerP95', 'latencyP95Ms', 'timeToCorrectAnswerP95Ms', 'contextBytesP95', 'responseBytesP95', 'clarificationRate', 'reworkRate', 'analysisCostUsd', 'agentCostUsd', 'totalCostUsd', 'providerTokenCostUnits'].some((name) => {
+  const improved = ['providerTokens', 'estimatedTokens', 'tokensToCorrectAnswerP95', 'tokensToFirstEvidenceP95', 'latencyP95Ms', 'timeToCorrectAnswerP95Ms', 'contextBytesP95', 'responseBytesP95', 'clarificationRate', 'reworkRate', 'analysisCostUsd', 'agentCostUsd', 'registryAgentCostUsd', 'totalCostUsd', 'providerTokenCostUnits'].some((name) => {
     const change = metrics[name as keyof typeof metrics]
     return change.baseline !== null && change.current !== null && change.current < change.baseline * 0.95
   }) || ['successRate', 'adjudicatedSuccessRate', 'evidenceCitationRate', 'evidenceQualityRate'].some((name) => {
@@ -353,7 +387,7 @@ const comparisonFor = (baseline: StudyMetricGroupV1 | undefined, current: StudyM
 }
 
 const emptyMetrics = (): StudyMetricSetV1 => ({
-  observationCount: 0, completedRate: 0, completedConfidence95: { low: 0, high: 0 }, adjudicatedRate: 0, successRate: null, successConfidence95: null, evidenceCitationRate: 0, evidenceQualityRate: null, searchHitRate: null, acceptanceCheckRate: null, errorRate: null, safetyRate: null, adjudicatedSuccessRate: null, documentationFindingCount: null, documentationExampleRate: null, documentationFreshnessRate: null, documentationCorrectnessRate: null, documentationCompletenessRate: null, documentationClarityRate: null, documentationMaintainabilityRate: null, providerTokens: null, estimatedTokens: null, tokensToCorrectAnswerP95: null, latencyP95Ms: 0, timeToCorrectAnswerP95Ms: null, contextBytesP95: 0, responseBytesP95: 0, averageToolCalls: null, clarificationRate: null, reworkRate: null, analysisCostUsd: null, agentCostUsd: null, totalCostUsd: null, providerTokenCostUnits: null, missingMetrics: [],
+  observationCount: 0, completedRate: 0, completedConfidence95: { low: 0, high: 0 }, adjudicatedRate: 0, successRate: null, successConfidence95: null, evidenceCitationRate: 0, evidenceQualityRate: null, searchHitRate: null, acceptanceCheckRate: null, errorRate: null, safetyRate: null, adjudicatedSuccessRate: null, documentationFindingCount: null, documentationExampleRate: null, documentationFreshnessRate: null, documentationCorrectnessRate: null, documentationCompletenessRate: null, documentationClarityRate: null, documentationMaintainabilityRate: null, providerTokens: null, estimatedTokens: null, tokensToCorrectAnswerP95: null, tokensToFirstEvidenceP95: null, latencyP95Ms: 0, timeToCorrectAnswerP95Ms: null, contextBytesP95: 0, responseBytesP95: 0, averageToolCalls: null, clarificationRate: null, reworkRate: null, analysisCostUsd: null, agentCostUsd: null, registryAgentCostUsd: null, registryAgentRuns: null, totalCostUsd: null, providerTokenCostUnits: null, missingMetrics: [],
 })
 
 export const calculateStudyMetrics = (observations: readonly ControlledStudyObservationV1[], options: { readonly baselineRound?: string; readonly currentRound?: string; readonly baselineRunId?: string; readonly currentRunId?: string } = {}): StudyMetricsReportV1 => {
@@ -425,6 +459,9 @@ export const formatStudyMetricsText = (report: StudyMetricsReportV1): readonly s
   `Groups: ${report.groups.length} | Comparisons: ${report.comparisons.length}`,
   `Regressions: ${report.comparisons.filter((comparison) => comparison.status === 'regressed').length} | Inconclusive: ${report.comparisons.filter((comparison) => comparison.status === 'inconclusive').length}`,
   `Content hash: ${report.contentHash}`,
+  ...report.groups
+    .filter((group) => group.scope === 'scenario')
+    .map((group) => `Tokens to first evidence (p95) ${group.key} @ ${group.round}: ${group.metrics.tokensToFirstEvidenceP95 ?? 'not-analyzed'}${group.metrics.registryAgentCostUsd === null ? '' : ` | registry agent cost ${group.metrics.registryAgentCostUsd} USD over ${group.metrics.registryAgentRuns ?? 0} run(s)`}`),
   ...report.groups.map((group) => `Group ${group.scope}/${group.key} @ ${group.round}: ${JSON.stringify(group.metrics)}`),
   ...report.comparisons.map((comparison) => `Comparison ${comparison.scope}/${comparison.key}: ${JSON.stringify({ status: comparison.status, metrics: comparison.metrics, regressions: comparison.regressions })}`),
 ]
