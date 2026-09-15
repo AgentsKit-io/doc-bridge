@@ -88,8 +88,14 @@ export default {
   /** Optional reconciliation scope and orphan-document policy */
   reconciliation?: ReconciliationConfig
 
+  /** Optional retrieval tuning: corpus projection, field weights, BM25 parameters */
+  retrieval?: RetrievalConfig
+
   /** Optional resumable workflow state */
   workflow?: WorkflowConfig
+
+  /** Optional project templates for `ak-docs render`, by template name */
+  render?: RenderConfig
 
   /** Optional report publication privacy; private is the default */
   report?: { privacy?: 'private' | 'anonymized' }
@@ -415,7 +421,7 @@ report status, commands, and the recorded stable-publication HITL decision.
 ```ts
 type ReconciliationConfig = {
   /** Semantic comparison level; discovery still preserves raw file relations. */
-  scope?: 'file' | 'module' | 'package'
+  scope?: 'file' | 'module' | 'area' | 'package'
   /** Observed relation kinds that require documentation declarations. */
   requiredRelationKinds?: string[]
   /** Limit missing-declaration findings to relations between internal project entities. */
@@ -426,6 +432,12 @@ type ReconciliationConfig = {
 ```
 
 Use `scope: 'package'` for monorepos where file imports should be compared as package-level architecture evidence. Omit `requiredRelationKinds` to require all observed kinds; an empty array intentionally disables undocumented-relation findings and must be treated as an explicit exemption.
+
+Use `scope: 'area'` for a single-package repository. At package scope such a repository aggregates
+every internal relation into one self-loop, which the comparison skips — a thousand observed
+relations and nothing to report. At area scope the same relations become edges between
+directories, which a declaration can confirm or fail to. On this repository that is the difference
+between zero diagnostics and 177.
 
 Use `requiredRelationTargets: 'internal'` when the repository wants package or module architecture declarations without requiring Markdown to enumerate every external library import. External relations remain in the raw snapshot and report as evidence; they simply do not generate missing-declaration findings.
 
@@ -457,6 +469,107 @@ report?: {
 ```
 
 `private` is the default and keeps local evidence useful for debugging. `anonymized` is intended for reports shared outside the repository: it preserves counts, relation kinds, topology, and coverage status while removing project-specific identity and evidence content. The generated HTML and every lazy chunk use the same mode.
+
+## `analysis.areas` (optional)
+
+```ts
+areas?: {
+  /** Directory levels below a source root that form an area. Default 1. */
+  depth?: number
+  /** Directories that contain areas rather than being one. */
+  roots?: string[]
+}
+```
+
+An **area** is the unit of architecture between a package and a file: a directory that groups
+modules. `src` is not an area in any useful sense; `src/query` is. So `roots` names the
+directories that hold areas — by default `src`, `lib`, `app`, `source`, `server`, `client`,
+`packages`, `apps` — and `depth` says how many levels below such a root an area sits.
+
+Areas are derived, never declared, with one exception that matters: **any path an ownership record
+names becomes an area**, whatever the convention says. A configuration that reads
+`path: "src/mcp"` is a human stating that the directory is a unit, and the graph should have an
+entity for it. Such an area carries `metadata.ownershipId`, which is what lets an agent document
+declaring `id` plus `editRoot` resolve to the thing it owns.
+
+Each module belongs to exactly one area — the most specific one containing it — so containment
+stays a tree and an aggregation at area scope has one answer per module. Nested areas keep their
+shape: `area:src` holds what sits directly in `src`, with `area:src/query` recorded as its child.
+
+An ownership path that no observed module or document lives under is reported as
+`OWNERSHIP_PATH_UNOBSERVED` with status `stale-or-unverified`. A renamed directory is otherwise
+invisible: the handoff still resolves, it just points an agent somewhere that no longer holds what
+it claims.
+
+## `retrieval` (optional)
+
+```ts
+type RetrievalConfig = {
+  corpus?: {
+    /** Project repository documents and modules into `index.knowledge`. Default: true. */
+    enabled?: boolean
+  }
+  /** Per-field BM25 multipliers. Unknown field names are ignored. */
+  weights?: {
+    id?: number
+    symbols?: number
+    title?: number
+    path?: number
+    tags?: number
+    description?: number
+    body?: number
+  }
+  /** BM25 parameters: `k1` term-frequency saturation, `b` length-normalization strength (0–1). */
+  params?: { k1?: number; b?: number }
+}
+```
+
+Search ranks records with field-weighted BM25 plus boosts for exact identity, so an agent that
+types an exported symbol, a file path or a package name lands on that thing rather than on
+whatever mentions it most. The defaults are:
+
+| Field | Weight | Why |
+| --- | --- | --- |
+| `id` | 8 | The query names the record |
+| `symbols` | 7 | An agent that types an exported name wants the module that defines it |
+| `title` | 6 | A heading is what a document is about |
+| `path` | 4 | Location is identity for a module |
+| `tags` | 3 | Audience and kind |
+| `description` | 2 | A summary a human wrote |
+| `body` | 1 | A passing mention is the weakest evidence |
+
+Tuning is configuration, not code: the resolved weights, parameters and stopword-lexicon version
+are recorded in `index.retrieval`, so a retuned ranking is a different artifact with a different
+content hash rather than a silent behaviour change. Re-run `ak-docs index` after changing them,
+and re-approve the [retrieval benchmark](../bench/README.md) baseline if you gate on it.
+
+`corpus.enabled: false` keeps the index to the curated agent corpus only. The index is then
+smaller and builds faster, at the cost of the retrieval it exists for: an exported-symbol or
+file-path query has nothing to resolve against. Turn it off only for a repository whose source is
+not the thing agents ask about.
+
+## `render` (optional)
+
+```ts
+type RenderConfig = {
+  /** Project templates that replace the bundled ones, by name, as paths relative to the project root. */
+  templates?: Partial<Record<'llms.txt' | 'area' | 'ownership' | 'change-digest' | 'overlay-review', string>>
+}
+```
+
+`ak-docs render <name>` renders the canonical artifacts as Markdown from a bundled template; a
+path under `templates` replaces that template entirely, without a code change. Templates use
+knap syntax and see only the variables Doc Bridge computes — see [Render v1](./render-v1.md) for
+each template's variables and `ak-docs render <name> --print-template` for the bundled source.
+The `llms.txt` override is also what `ak-docs index` writes.
+
+```json
+{
+  "render": {
+    "templates": { "area": "templates/area.md" }
+  }
+}
+```
 
 ## `safety` (optional)
 
@@ -623,7 +736,25 @@ type IntelligenceConfig = {
     maxTokens?: number
     maxResponseBytes?: number
     maxConcurrency?: number
+    /** Byte budget of one enrichment context pack. Default 65536 (4096..4000000). */
+    maxPackBytes?: number
+    /**
+     * Which installed agent plays which enrichment role (see Enrichment overlay v1).
+     * Default: the configured agent as curator only. The adjudicator must be a
+     * different identity from the curator and the reviewer.
+     */
+    roles?: {
+      curator?: EnrichmentRole
+      reviewer?: EnrichmentRole
+      adjudicator?: EnrichmentRole
+    }
   }
+}
+
+type EnrichmentRole = {
+  enabled?: boolean               // default: true when the role is declared; curator on by default
+  agentId?: string                // default: intelligence.registry.agentId
+  promptVersion?: string          // default: '1'; part of every proposal id and cache key
 }
 
 type MemoryAdapterId =

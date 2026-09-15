@@ -14,6 +14,16 @@ export type RuleMode = 'default' | 'recommended' | 'strict'
 
 export type RuleEngineOptions = {
   readonly config?: RulesConfig
+  /**
+   * Betweenness per entity, from `centrality` in the graph layer.
+   *
+   * Required for `centrality-risk`: without it the rule reports nothing. It used to count how
+   * many undocumented-relation findings an entity had, which measures documentation debt and
+   * calls it architecture — a module every import path runs through scored zero if it happened to
+   * be documented. Reporting nothing is better than reporting the wrong thing under a name people
+   * will act on.
+   */
+  readonly centrality?: ReadonlyMap<string, number>
   readonly preset?: RuleMode
   readonly severity?: Partial<Record<RuleId, RuleSeverity>>
   readonly ignore?: readonly RuleId[]
@@ -52,6 +62,8 @@ const diagnosticRules: Readonly<Record<string, RuleId>> = {
   STALE_DOCUMENTATION: 'stale-documentation',
   FRESHNESS_FAILURE: 'freshness',
   OWNERSHIP_GAP: 'ownership',
+  OWNERSHIP_PATH_UNOBSERVED: 'ownership',
+  IMPORT_CYCLE: 'centrality-risk',
   CENTRALITY_RISK: 'centrality-risk',
   CRITICAL_PATH_RISK: 'critical-path-risk',
 }
@@ -149,23 +161,31 @@ export const evaluateRules = (
     }
   }
 
-  const centralityThreshold = resolved.warningThresholds['centrality-risk'] ?? 3
+  /*
+   * Centrality risk: how much of the dependency structure runs through one entity.
+   *
+   * The threshold reads as a rank when it is 1 or more — "flag the three most central entities",
+   * which is what the previous count-based threshold meant to say — and as a minimum betweenness
+   * when it is below 1, for a repository that would rather set an absolute bar.
+   */
   const centralitySeverity = severityFor('centrality-risk', resolved.mode, resolved.severity)
-  if (!resolved.ignore.has('centrality-risk') && centralitySeverity !== 'off') {
-    const counts = new Map<string, number>()
-    for (const finding of findings.filter((item) => item.ruleId === 'graph-undocumented-relation')) {
-      for (const entityId of finding.entityIds ?? []) counts.set(entityId, (counts.get(entityId) ?? 0) + 1)
-    }
-    for (const [entityId, count] of [...counts.entries()].sort(([a], [b]) => a.localeCompare(b))) {
-      if (count < centralityThreshold || !criticalEntitySet.has(entityId)) continue
+  if (options.centrality?.size && !resolved.ignore.has('centrality-risk') && centralitySeverity !== 'off') {
+    const threshold = resolved.warningThresholds['centrality-risk'] ?? 3
+    const ranked = [...options.centrality.entries()]
+      .filter(([, score]) => score > 0)
+      .sort(([leftId, left], [rightId, right]) => right - left || leftId.localeCompare(rightId))
+    const flagged = threshold >= 1 ? ranked.slice(0, Math.floor(threshold)) : ranked.filter(([, score]) => score >= threshold)
+
+    for (const [entityId, score] of [...flagged].sort(([a], [b]) => a.localeCompare(b))) {
+      const related = findings.filter((item) => item.entityIds?.includes(entityId))
       findings.push({
         id: `centrality-risk:${entityId}`,
         ruleId: 'centrality-risk',
         code: 'centrality-risk',
         status: 'unresolved',
         severity: centralitySeverity,
-        message: `Critical entity has ${count} undocumented relation finding(s); static centrality is a review signal, not a runtime availability claim.`,
-        evidence: findings.filter((item) => item.ruleId === 'graph-undocumented-relation' && item.entityIds?.includes(entityId)).flatMap((item) => item.evidence),
+        message: `${entityId} carries betweenness ${score} on the import graph${criticalEntitySet.has(entityId) ? ' and is declared critical' : ''}; static centrality is a review signal, not a runtime availability claim.`,
+        evidence: related.flatMap((item) => item.evidence).slice(0, 16),
         entityIds: [entityId],
         remediation: 'Review ownership, dependency boundaries, and runtime availability before declaring an SPOF.',
       })

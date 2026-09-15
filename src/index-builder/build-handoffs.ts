@@ -24,6 +24,7 @@ export type OwnershipRecord = {
   layer?: string
   purpose?: string
   checks: string[]
+  checksSource?: 'ownership' | 'frontmatter' | 'package-scripts' | 'default'
   agentDoc?: string
   humanDoc?: string
   readme?: string
@@ -161,22 +162,32 @@ export const buildLookup = (
     const startHere = agentDoc ?? ''
     const purpose = override?.purpose ?? fm?.purpose
     const path = override?.path ?? fm?.path ?? pkg.path
-    const checks = [
-      ...(override?.checks ??
-        fm?.checks ??
-        pkg.checks ??
-        defaultChecksForTarget(root, {
-          packageId: pkg.id,
-          packagePath: path,
-          ...(pkg.name ? { packageName: pkg.name } : {}),
-          strict,
-        })),
-    ]
+    /*
+     * Where the checks come from is decided here, and recorded here: a handoff that reports its
+     * checks' origin cannot reconstruct it later from the merged list.
+     */
+    const resolvedChecks: { readonly checks: readonly string[]; readonly source: OwnershipRecord['checksSource'] } = override?.checks
+      ? { checks: override.checks, source: 'ownership' }
+      : fm?.checks
+        ? { checks: fm.checks, source: 'frontmatter' }
+        : pkg.checks
+          ? { checks: pkg.checks, source: 'package-scripts' }
+          : {
+              checks: defaultChecksForTarget(root, {
+                packageId: pkg.id,
+                packagePath: path,
+                ...(pkg.name ? { packageName: pkg.name } : {}),
+                strict,
+              }),
+              source: 'default',
+            }
+    const checks = [...resolvedChecks.checks]
     const humanDoc = resolveHumanDoc(pkg.id, override?.humanDoc, fm?.humanDoc, humanDocs)
     const record: OwnershipRecord = {
       id: pkg.id,
       path,
       checks,
+      ...(resolvedChecks.source ? { checksSource: resolvedChecks.source } : {}),
       ...(override?.group ? { group: override.group } : {}),
       ...(override?.layer ? { layer: override.layer } : {}),
       ...(purpose ? { purpose } : {}),

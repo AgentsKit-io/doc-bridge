@@ -72,6 +72,14 @@ Rerunning an unchanged command reuses valid stage artifacts. A changed source re
 
 The first implementation analyzes JavaScript/TypeScript and Markdown. Other languages should add analyzers that emit the same canonical entity, relation, evidence, coverage, and hash contracts.
 
+## What the Markdown analyzer reads
+
+Documentation is parsed with remark (CommonMark plus GFM), so a document's own prose becomes
+evidence: links between documents, paths and package names in inline code, and exported names all
+become `observed` relations carrying the line they were claimed on. The contract — relation kinds,
+the ambiguity and near-miss rules, generated regions, the document fields and the `docbridge`
+schema — is [Markdown analyzer v1](./spec/markdown-analyzer-v1.md).
+
 ## Relation coverage policy
 
 Agent documents under the configured `corpus.agent.root` may use the conventional
@@ -79,7 +87,7 @@ Agent documents under the configured `corpus.agent.root` may use the conventiona
 `humanDoc` field. This is intentionally separate from the human bridge: `humanDoc`
 still reports whether an agent has a resolvable human-facing guide.
 
-Missing declarations are configurable because not every implementation import is useful documentation. In the root configuration, `reconciliation.scope` selects the semantic comparison level while `reconciliation.requiredRelationKinds` selects the observed relation kinds that must be declared in Markdown. Raw file relations remain available in the snapshot and report for evidence and exploration:
+Missing declarations are configurable because not every implementation import is useful documentation. In the root configuration, `reconciliation.scope` selects the semantic comparison level while `reconciliation.requiredRelationKinds` selects the observed relation kinds that must be declared in Markdown. A single-package repository wants `scope: "area"`: at package scope its internal relations aggregate into one self-loop the comparison skips, so nothing is reported. See [areas](./spec/config-v1.md#analysisareas-optional). Raw file relations remain available in the snapshot and report for evidence and exploration:
 
 ```json
 {

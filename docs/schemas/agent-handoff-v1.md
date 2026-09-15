@@ -26,6 +26,21 @@ Portable JSON Schema export: `AgentHandoffV1JsonSchema`.
 }
 ```
 
+## Optional additions
+
+`related`, `explain`, `evidence` and `metadata` are optional, and `target.type` also accepts `area`
+and `document`. A handoff written without them is still a valid handoff, and a reader that predates
+them sees the same fields it always did.
+
+```json
+{
+  "related": [{ "id": "area:src/ranking", "path": "src/ranking", "direction": "imports", "strength": 3, "evidence": ["src/query/search.ts → src/ranking/bm25.ts"] }],
+  "explain": { "startHere": ["covers area:src/query"], "checks": ["routing.options.ownership.doc-bridge-query.checks"] },
+  "evidence": [{ "source": "derived", "path": "src/query", "contentHash": "…" }],
+  "metadata": { "entityId": "area:src/query", "kind": "area", "checksSource": "ownership", "confidence": "observed" }
+}
+```
+
 ## Legacy compatibility
 
 Legacy `--agent` payloads may omit `schemaVersion`. Use `normalizeAgentHandoff()` or `safeParseAgentHandoff()` to upgrade.

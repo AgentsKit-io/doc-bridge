@@ -62,7 +62,7 @@ describe('persistent workflow engine', () => {
     expect(failed.state).toBe('failed')
     const resumed = runWorkflow({ root, sourceRevision: 'revision-1', configurationHash: hash('a'), handlers: handlers() })
     expect(resumed.run.state).toBe('delivered')
-    expect(resumed.reusedStages).toEqual(['collect', 'normalize', 'reconcile', 'evaluate'])
+    expect(resumed.reusedStages).toEqual(['collect', 'normalize', 'reconcile', 'enrich', 'evaluate'])
   })
 
   it('invalidates a failed run when its source changes before retry', () => {

@@ -39,10 +39,20 @@ const ScenarioConfigSchema = z.object({
   id: z.enum(['repository-only', 'deterministic-doc-bridge', 'registry-assisted']),
   agentId: identifier.optional(),
   agentVersion: reference.optional(),
+  /**
+   * The enrichment prompt the assisted arm ran under, and the budget that arm alone may spend.
+   *
+   * Both are optional in the schema so a plan written before them stays valid, and both are
+   * required for the arm to execute: an assisted run whose prompt version nobody recorded cannot
+   * be reproduced, and one with no budget of its own cannot be costed apart from the model under
+   * test. A plan missing either records the arm as unavailable rather than running it blind.
+   */
+  promptVersion: reference.optional(),
+  agentBudget: z.object({ maxTokens: z.number().int().positive(), maxRuntimeMs: z.number().int().positive() }).strict().optional(),
   network: z.literal(false),
 }).strict().superRefine((value, context) => {
   if (value.id === 'registry-assisted' && (!value.agentId || !value.agentVersion)) context.addIssue({ code: z.ZodIssueCode.custom, message: 'Registry-assisted scenarios require agent identity and version.' })
-  if (value.id !== 'registry-assisted' && (value.agentId || value.agentVersion)) context.addIssue({ code: z.ZodIssueCode.custom, message: 'Only registry-assisted scenarios may declare an agent.' })
+  if (value.id !== 'registry-assisted' && (value.agentId || value.agentVersion || value.promptVersion || value.agentBudget)) context.addIssue({ code: z.ZodIssueCode.custom, message: 'Only registry-assisted scenarios may declare an agent.' })
 })
 
 const TaskExecutionSchema = z.object({
