@@ -28,3 +28,12 @@ A file-backed entity carries its file's hash, and a second scan may reuse an ent
 unchanged — but only while the universe its references resolve against is identical, and only from
 a snapshot produced by this pipeline, these analyzers and this configuration. Reuse either
 reproduces a cold scan exactly or it is refused, and the run reports what it reused as `coverage`.
+
+Enrichment (`src/enrich/`, `src/schemas/enrichment.ts`) is advisory by construction. A proposal is
+a typed claim with one deterministic validator per kind; a validator checks, it never judges. An
+accepted entry binds to the content hash of the entity it describes and expires when that moves;
+no entry deletes or alters observed data, and the projection asserts it. The overlay is read only
+while `intelligence.registry.enabled` is true, a read never writes, and a corrupt overlay is no
+overlay. No agent approves anything — not its own output, not another's — and human approvals go
+through the ecosystem approval gate. Adding a proposal kind means a schema, a validator, a policy,
+a valid fixture and a rejection fixture, and a row in `docs/spec/enrichment-overlay-v1.md`.

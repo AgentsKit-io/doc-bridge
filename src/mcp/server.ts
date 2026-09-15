@@ -17,6 +17,7 @@ import { loadWorkflowManifest, loadWorkflowStepOutput } from '../workflow/engine
 import { parseDiscoverySnapshot, parseReconciliationReport } from '../validate.js'
 import { applyFixProposal, approveFixProposal, createArtifactNormalizationProposal, createMarkdownLinkFixProposal } from '../fixes/proposals.js'
 import { createRegistryAgentAdapter, loadRegistryAgentRunner, persistRegistryAgentProposal } from '../agents/registry-adapter.js'
+import { decideEnrichment, listEnrichment } from '../enrich/review.js'
 import { sha256NormalizedV1 } from '../index-builder/content-hash.js'
 import { discoverRepository } from '../discovery/repository.js'
 import { FixProposalV1Schema, type DiscoverySnapshotV1, type ReconciliationReportV1, type FixProposalV1 } from '../schemas/knowledge.js'
@@ -146,7 +147,7 @@ export const MCP_TOOLS = [
     name: 'docbridge.proposals',
     title: 'Read or approve proposals',
     description: 'Create, inspect, approve and apply deterministic proposals through the shared human-gated workflow.',
-    inputSchema: { type: 'object', properties: { action: { type: 'string', enum: ['list', 'propose-links', 'propose-normalize', 'suggest', 'approve', 'apply'] }, proposalHash: { type: 'string' }, artifactPath: { type: 'string' }, approvedBy: { type: 'string' }, proposal: { type: 'object' } } },
+    inputSchema: { type: 'object', properties: { action: { type: 'string', enum: ['list', 'propose-links', 'propose-normalize', 'suggest', 'approve', 'apply', 'enrich-list', 'enrich-approve', 'enrich-reject'] }, proposalHash: { type: 'string' }, artifactPath: { type: 'string' }, approvedBy: { type: 'string' }, proposal: { type: 'object' }, proposalId: { type: 'string' }, reason: { type: 'string' } } },
   },
 ] as const
 
@@ -178,7 +179,7 @@ const DocGetArgsSchema = z
 const WorkflowRunArgsSchema = z.object({ runId: z.string().min(1).optional() })
 const DiagnosticsArgsSchema = z.object({ status: z.string().min(1).optional(), severity: z.string().min(1).optional() })
 const RelationsArgsSchema = z.object({ kind: z.string().min(1).optional(), limit: z.number().int().positive().max(500).optional() })
-const ProposalsArgsSchema = z.object({ action: z.enum(['list', 'propose-links', 'propose-normalize', 'suggest', 'approve', 'apply']).optional(), proposalHash: z.string().min(1).optional(), artifactPath: z.string().min(1).optional(), approvedBy: z.string().min(1).optional(), proposal: z.unknown().optional() })
+const ProposalsArgsSchema = z.object({ action: z.enum(['list', 'propose-links', 'propose-normalize', 'suggest', 'approve', 'apply', 'enrich-list', 'enrich-approve', 'enrich-reject']).optional(), proposalHash: z.string().min(1).optional(), artifactPath: z.string().min(1).optional(), approvedBy: z.string().min(1).optional(), proposal: z.unknown().optional(), proposalId: z.string().min(1).optional(), reason: z.string().max(1_024).optional() })
 
 const parseToolArgs = <T>(tool: string, schema: z.ZodType<T>, value: unknown): T => {
   try {
@@ -359,6 +360,17 @@ export const handleMcpRequest = (ctx: McpContext, request: JsonRpcRequest): unkn
     if (name === 'docbridge.proposals') {
       const parsed = parseToolArgs('docbridge.proposals', ProposalsArgsSchema, args)
       const run = (() => { try { return workflowRun(ctx) } catch { return undefined } })()
+      // KR-10: enrichment proposals share this tool; a decision goes through the ecosystem approval gate.
+      if (parsed.action === 'enrich-list') return textResult(redactValue({ ...(run ? { runId: run.runId } : {}), enrichment: listEnrichment(ctx.root) ?? null }))
+      if (parsed.action === 'enrich-approve' || parsed.action === 'enrich-reject') {
+        if (!parsed.proposalId) throw new Error(`docbridge.proposals ${parsed.action} requires proposalId`)
+        const proposalId = parsed.proposalId
+        return (async () => {
+          const snapshot = (() => { try { return workflowSnapshot(ctx) } catch { return undefined } })()
+          const decided = await decideEnrichment({ root: ctx.root, proposalId, decision: parsed.action === 'enrich-approve' ? 'approved' : 'rejected', by: parsed.approvedBy ?? 'human', ...(parsed.reason ? { reason: parsed.reason } : {}), ...(snapshot ? { snapshot } : {}) })
+          return textResult(redactValue({ ...(run ? { runId: run.runId } : {}), approvalId: decided.approvalId, entry: decided.entry, overlayHash: decided.overlay.contentHash }))
+        })()
+      }
       if (!parsed.action || parsed.action === 'list') {
         let proposal: FixProposalV1 | undefined
         try { proposal = readSavedProposal(ctx, undefined) } catch { proposal = undefined }

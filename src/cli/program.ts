@@ -59,6 +59,10 @@ import type { DiscoverySnapshotV1, ReconciliationReportV1 } from '../schemas/kno
 import { sha256NormalizedV1 } from '../index-builder/content-hash.js'
 import { applyFixProposal, approveFixProposal, createArtifactNormalizationProposal, createMarkdownLinkFixProposal } from '../fixes/proposals.js'
 import { createRegistryAgentAdapter, loadRegistryAgentRunner, persistRegistryAgentProposal } from '../agents/registry-adapter.js'
+import { fixApprovalId, recordApproval, FIX_APPROVAL_GATE } from '../enrich/approvals.js'
+import { readEnrichmentOverlay, withAcceptedRelations } from '../enrich/overlay.js'
+import { decideEnrichment, listEnrichment } from '../enrich/review.js'
+import { formatEnrichmentText, runEnrichment, type EnrichmentRunResult } from '../enrich/stage.js'
 import { renderOfflineReportArtifact } from '../report/html.js'
 import { benchmarkFixture, formatBenchmarkText, measureBenchmark } from '../metrics/benchmark.js'
 import { PACKAGE_VERSION } from '../version.js'
@@ -106,6 +110,7 @@ type Command =
   | 'map'
   | 'fix'
   | 'suggest'
+  | 'enrich'
   | 'index'
   | 'gate'
   | 'rules'
@@ -145,6 +150,9 @@ Core (no API key):
   ak-docs study verification <binding.json> [--text|--json]
   ak-docs study metrics <observation-ledger.json> [--baseline-round <id>] [--current-round <id>] [--baseline-run-id <id>] [--current-run-id <id>] [--allow-regressions] [--text|--json]
   ak-docs scan | reconcile | check | map [--text|--json] [--html] [--report-threshold <bytes>]
+  ak-docs check --enrich          run the enrichment stage between reconcile and evaluate
+  ak-docs enrich [--json|--text]  run the configured Registry roles over context packs
+  ak-docs enrich list | approve <proposalId> --by <name> | reject <proposalId> --by <name> [--reason <text>]
   ak-docs fix propose links|normalize <artifact> [--output <file>]
   ak-docs fix approve|apply <proposal.json> [--by <name>]
   ak-docs suggest [--documentation] [--json|--text]   run the configured Registry agent
@@ -228,6 +236,7 @@ const parseArgs = (argv: readonly string[]) => {
   else if (positional[0] === 'map') command = 'map'
   else if (positional[0] === 'fix') command = 'fix'
   else if (positional[0] === 'suggest') command = 'suggest'
+  else if (positional[0] === 'enrich') command = 'enrich'
   else if (positional[0] === 'index') command = 'index'
   else if (positional[0] === 'gate') command = 'gate'
   else if (positional[0] === 'rules') command = 'rules'
@@ -534,7 +543,7 @@ const workflowOptions = (
   root: string,
   config: DocBridgeConfigV1,
   sourceRevision: string,
-  stage: 'collect' | 'normalize' | 'reconcile' | 'evaluate' | 'report',
+  stage: 'collect' | 'normalize' | 'reconcile' | 'enrich' | 'evaluate' | 'report',
   handlers: Parameters<typeof runWorkflow>[0]['handlers'],
   versions?: Pick<Parameters<typeof runWorkflow>[0], 'pipelineVersion' | 'analyzerVersions'>,
 ): Parameters<typeof runWorkflow>[0] => ({
@@ -582,8 +591,37 @@ const reconcileWorkflow = (root: string, config: DocBridgeConfigV1): WorkflowExe
   return runWorkflow(workflowOptions(root, config, snapshot.sourceRevision, 'reconcile', { reconcile: () => report }, { pipelineVersion: snapshot.pipelineVersion, analyzerVersions: snapshot.analyzerVersions }))
 }
 
-const checkWorkflow = (root: string, config: DocBridgeConfigV1): WorkflowExecutionResult => {
-  const reconciled = reconcileWorkflow(root, config)
+/**
+ * Record the overlay as the enrich step of the current run.
+ *
+ * The step's input names the overlay it attaches, not only the report it was made from: a person
+ * approving a proposal changes the overlay without changing the report, and the engine refuses a
+ * step whose input has not moved but whose output has. Keying on the overlay's own hash keeps that
+ * rule honest — same overlay, same artifact; a new overlay, a new one.
+ */
+const attachEnrichmentStage = (root: string, config: DocBridgeConfigV1, report: ReconciliationReportV1, result: EnrichmentRunResult): WorkflowExecutionResult =>
+  runWorkflow({
+    ...workflowOptions(root, config, report.sourceRevision, 'enrich', { enrich: () => result.overlay }, { pipelineVersion: report.pipelineVersion, analyzerVersions: report.analyzerVersions }),
+    inputs: { enrich: { reportHash: report.contentHash, overlayHash: result.overlay.contentHash } },
+  })
+
+/**
+ * The enrich stage, run only on request. Its failure is reported, never propagated: a `check`
+ * that asked for enrichment and did not get it is still a `check`, with the same result.
+ */
+const enrichWorkflow = async (root: string, config: DocBridgeConfigV1, reconciled: WorkflowExecutionResult): Promise<{ readonly status: 'ok' | 'failed'; readonly result?: EnrichmentRunResult; readonly error?: string }> => {
+  try {
+    const snapshot = parseDiscoverySnapshot(loadWorkflowStepOutput(reconciled.stateDir, 'normalize'))
+    const report = parseReconciliationReport(loadWorkflowStepOutput(reconciled.stateDir, 'reconcile'))
+    const result = await runEnrichment({ root, config, snapshot, report })
+    attachEnrichmentStage(root, config, report, result)
+    return { status: 'ok', result }
+  } catch (error) {
+    return { status: 'failed', error: error instanceof Error ? error.message : String(error) }
+  }
+}
+
+const checkWorkflow = (root: string, config: DocBridgeConfigV1, reconciled = reconcileWorkflow(root, config)): WorkflowExecutionResult => {
   const report = parseReconciliationReport(loadWorkflowStepOutput(reconciled.stateDir, 'reconcile'))
   const versions = { pipelineVersion: report.pipelineVersion, analyzerVersions: report.analyzerVersions }
   // `centrality-risk` needs betweenness over the import graph, which only the snapshot can give.
@@ -674,14 +712,50 @@ const runWorkflowCommand = (
   flags: ReadonlySet<string>,
   configPath: string | undefined,
   argv: readonly string[],
-): number => {
+): number | Promise<number> => {
+  if (command === 'check' && flags.has('--enrich')) {
+    return (async () => {
+      try {
+        const { config, root } = loadProject(configPath)
+        const reconciled = reconcileWorkflow(root, config)
+        const enrichment = await enrichWorkflow(root, config, reconciled)
+        return finishWorkflowCommand(command, flags, argv, config, root, checkWorkflow(root, config, reconciled), {
+          enrichment: enrichment.status === 'ok' && enrichment.result
+            ? { status: 'ok', overlayHash: enrichment.result.overlay.contentHash, agentCalls: enrichment.result.agentCalls, cacheHits: enrichment.result.cacheHits, accepted: enrichment.result.overlay.accepted.length, pending: enrichment.result.overlay.pending.length, rejected: enrichment.result.overlay.rejected.length }
+            : { status: 'failed', error: enrichment.error },
+        })
+      } catch (error) {
+        process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`)
+        return 2
+      }
+    })()
+  }
   try {
     const { config, root } = loadProject(configPath)
     const result = command === 'scan' ? scanWorkflow(root, config) : command === 'reconcile' ? reconcileWorkflow(root, config) : checkWorkflow(root, config)
-    const output = workflowOutput(result)
+    return finishWorkflowCommand(command, flags, argv, config, root, result, {})
+  } catch (error) {
+    process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`)
+    return 2
+  }
+}
+
+const finishWorkflowCommand = (
+  command: 'scan' | 'reconcile' | 'check' | 'map',
+  flags: ReadonlySet<string>,
+  argv: readonly string[],
+  config: DocBridgeConfigV1,
+  root: string,
+  result: WorkflowExecutionResult,
+  extra: Record<string, unknown>,
+): number => {
+  try {
+    const output = { ...workflowOutput(result), ...extra }
     if (command === 'map') output.kind = 'architecture-map'
     if (command === 'map' && flags.has('--html')) {
-      const snapshot = parseDiscoverySnapshot(loadWorkflowStepOutput(result.stateDir, 'normalize'))
+      const observed = parseDiscoverySnapshot(loadWorkflowStepOutput(result.stateDir, 'normalize'))
+      // Accepted proposed relations render as dashed edges; nothing observed is removed or redrawn.
+      const snapshot = config.intelligence?.registry?.enabled ? withAcceptedRelations(observed, readEnrichmentOverlay(root)) : observed
       const report = parseReconciliationReport(loadWorkflowStepOutput(result.stateDir, 'reconcile'))
       const outputPath = optionValues(argv, '--output')[0] ?? '.doc-bridge/report.html'
       const htmlPath = resolve(root, outputPath)
@@ -869,7 +943,7 @@ const runRulesCommand = (
   }
 }
 
-const runFixCommand = (argv: readonly string[], positional: readonly string[], configPath: string | undefined): number => {
+const runFixCommand = async (argv: readonly string[], positional: readonly string[], configPath: string | undefined): Promise<number> => {
   try {
     const { config, root } = loadProject(configPath)
     const action = positional[1]
@@ -890,8 +964,53 @@ const runFixCommand = (argv: readonly string[], positional: readonly string[], c
     const file = resolve(root, proposalPath)
     const proposal = JSON.parse(readFileSync(file, 'utf8')) as unknown
     const result = action === 'approve' ? approveFixProposal(proposal, optionValues(argv, '--by')[0] ?? 'human') : applyFixProposal(root, proposal, { currentRevision: sourceRevision })
+    // An approval is recorded through the ecosystem gate too, bound to the proposal and its exact content hash.
+    const recorded = action === 'approve' && result.approval
+      ? await recordApproval(root, { id: fixApprovalId(result.proposalId, result.approval.proposalHash), name: FIX_APPROVAL_GATE, payload: { proposalId: result.proposalId, proposalHash: result.approval.proposalHash }, decision: 'approved', by: result.approval.approvedBy })
+      : undefined
     writeFileSync(file, `${JSON.stringify(result, null, 2)}\n`, 'utf8')
-    writeJson({ ok: true, proposal: result, proposalPath: file })
+    writeJson({ ok: true, proposal: result, proposalPath: file, ...(recorded ? { approvalId: recorded.approval.id } : {}) })
+    return 0
+  } catch (error) {
+    process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`)
+    return 2
+  }
+}
+
+const runEnrichCommand = async (flags: ReadonlySet<string>, positional: readonly string[], argv: readonly string[], configPath: string | undefined): Promise<number> => {
+  try {
+    const { config, root } = loadProject(configPath)
+    const action = positional[1]
+    if (action === 'list') {
+      const review = listEnrichment(root)
+      if (wantsTextOutput(flags, config)) {
+        writeLines(review
+          ? [`Overlay: ${review.overlayHash}`, `Accepted: ${review.accepted.length}  Pending: ${review.pending.length}  Rejected: ${review.rejected.length}`, ...review.pending.map((entry) => `  pending ${entry.proposal.proposalId.slice(0, 16)} ${entry.proposal.kind} ${entry.proposal.entity}${entry.note ? ` (${entry.note})` : ''}`)]
+          : ['No enrichment overlay. Run `ak-docs enrich` first.'])
+      } else writeJson({ ok: true, enrichment: review ?? null })
+      return 0
+    }
+    if (action === 'approve' || action === 'reject') {
+      const proposalId = positional[2]
+      const by = optionValues(argv, '--by')[0]
+      if (!proposalId || !by) throw new Error('Usage: ak-docs enrich approve|reject <proposalId> --by <name> [--reason <text>]')
+      const stateDir = resolve(root, config.workflow?.stateDir ?? '.doc-bridge/workflow')
+      const snapshot = (() => { try { return parseDiscoverySnapshot(loadWorkflowStepOutput(stateDir, 'normalize')) } catch { return undefined } })()
+      const reason = optionValues(argv, '--reason')[0]
+      const decided = await decideEnrichment({ root, proposalId, decision: action === 'approve' ? 'approved' : 'rejected', by, ...(reason ? { reason } : {}), ...(snapshot ? { snapshot } : {}) })
+      const decidedId = 'proposal' in decided.entry ? decided.entry.proposal.proposalId : decided.entry.proposalId
+      if (wantsTextOutput(flags, config)) writeLines([`${action === 'approve' ? 'Approved' : 'Rejected'}: ${decidedId}`, `Approval: ${decided.approvalId} (${decided.gateSource})`, `Overlay: ${decided.overlay.contentHash}`])
+      else writeJson({ ok: true, approvalId: decided.approvalId, gate: decided.gateSource, entry: decided.entry, overlayHash: decided.overlay.contentHash })
+      return 0
+    }
+    if (action !== undefined) throw new Error('Usage: ak-docs enrich [list | approve <proposalId> --by <name> | reject <proposalId> --by <name>] [--json|--text]')
+    const reconciled = reconcileWorkflow(root, config)
+    const snapshot = parseDiscoverySnapshot(loadWorkflowStepOutput(reconciled.stateDir, 'normalize'))
+    const report = parseReconciliationReport(loadWorkflowStepOutput(reconciled.stateDir, 'reconcile'))
+    const result = await runEnrichment({ root, config, snapshot, report })
+    attachEnrichmentStage(root, config, report, result)
+    if (wantsTextOutput(flags, config)) writeLines(formatEnrichmentText(result))
+    else writeJson({ ok: true, overlayPath: result.overlayPath, overlayHash: result.overlay.contentHash, baseSnapshotHash: result.overlay.baseSnapshotHash, roles: result.roles, packs: result.packs, agentCalls: result.agentCalls, cacheHits: result.cacheHits, rerun: result.rerun, expired: result.expired, stats: result.overlay.stats, accepted: result.overlay.accepted.length, pending: result.overlay.pending.length, rejected: result.overlay.rejected.length })
     return 0
   } catch (error) {
     process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`)
@@ -1315,6 +1434,7 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
 
   if (command === 'fix') return runFixCommand(argv, positional, configPath)
   if (command === 'suggest') return runSuggestCommand(flags, configPath)
+  if (command === 'enrich') return runEnrichCommand(flags, positional, argv, configPath)
 
   if (command === 'init') {
     const root = process.cwd()

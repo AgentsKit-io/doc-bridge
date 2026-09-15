@@ -27,3 +27,8 @@ one that mentions it.
 
 Re-run `pnpm bench:retrieval` after any ranking change; a hit@3 regression is a blocked change,
 not a judgement call.
+
+Accepted agent signals (`agentSignal` on an entry) are a share of `ACCEPTED_SIGNALS_WEIGHT`, which
+is 15% of the exact-id boost and must stay there: a signal may reorder near-ties among lexical hits
+and must never outrank an exact identifier, path or symbol match. Without an overlay the ranking is
+byte-identical to the ranking before enrichment existed, and the bench baseline must not move.

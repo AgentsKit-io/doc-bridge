@@ -333,6 +333,16 @@ export const SurfacesConfigSchema = z
   })
   .strict()
 
+/** One enrichment role: an installed Registry agent and the prompt version it is run with. */
+export const EnrichmentRoleSchema = z
+  .object({
+    enabled: z.boolean().optional(),
+    /** Defaults to `intelligence.registry.agentId`. */
+    agentId: z.string().min(1).max(256).optional(),
+    promptVersion: z.string().min(1).max(64).optional(),
+  })
+  .strict()
+
 export const IntelligenceConfigSchema = z
   .object({
     enabled: z.boolean().optional(),
@@ -406,6 +416,20 @@ export const IntelligenceConfigSchema = z
         maxTokens: z.number().int().positive().max(1_000_000).optional(),
         maxResponseBytes: z.number().int().positive().max(10_000_000).optional(),
         maxConcurrency: z.number().int().positive().max(64).optional(),
+        /** Byte budget of one enrichment context pack. Default 65536. */
+        maxPackBytes: z.number().int().min(4_096).max(4_000_000).optional(),
+        /**
+         * Which installed agent plays which enrichment role. The default is the configured agent
+         * as curator only. The adjudicator must be a different identity from both others.
+         */
+        roles: z
+          .object({
+            curator: EnrichmentRoleSchema.optional(),
+            reviewer: EnrichmentRoleSchema.optional(),
+            adjudicator: EnrichmentRoleSchema.optional(),
+          })
+          .strict()
+          .optional(),
       })
       .strict()
       .optional(),

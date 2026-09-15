@@ -94,6 +94,11 @@ export const RetrievalEntrySchema = z
     confidence: ConfidenceSchema,
     /** The ownership record this entry stands for, when one is attached to it. */
     ownershipId: z.string().min(1).max(256).optional(),
+    /**
+     * The accepted enrichment overlay's share of the bounded agent weight for this entry, 0..1.
+     * Absent when no live accepted entry names it; the ranker treats absent as zero.
+     */
+    agentSignal: z.number().min(0).max(1).optional(),
   })
   .strict()
 export type RetrievalEntry = z.infer<typeof RetrievalEntrySchema>

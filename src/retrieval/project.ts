@@ -92,15 +92,26 @@ export type CuratedDocument = {
 }
 
 /**
- * The accepted enrichment overlay, as much of it as the projection reads today.
+ * The accepted enrichment overlay, as the projection reads it.
  *
- * The overlay arrives with its own workstream; until then this is the hook it plugs into: its
- * hash is part of the projection's identity, and its per-entry signals are carried at zero
- * weight so the ranking code path exists before anything feeds it.
+ * Already expired against the snapshot by `projectEnrichmentOverlay`: every map here names an
+ * entity whose content hash still matches the entry that describes it. The hash is part of the
+ * projection's identity; everything else is additive — an alias joins the entity's own, a
+ * summary fills a gap, a relation is one more edge with `provenance: proposed` — and nothing
+ * here can remove or rewrite what the snapshot observed.
  */
 export type RetrievalOverlayInput = {
   readonly hash: string
+  /** Per-entry share of the bounded agent weight, 0..1. */
   readonly signals?: ReadonlyMap<string, number>
+  readonly aliases?: ReadonlyMap<string, readonly string[]>
+  /** Used only when the entity has no summary of its own; ranked in either case. */
+  readonly summaries?: ReadonlyMap<string, string>
+  /** Entity id → the scope it is canonical for. */
+  readonly canonical?: ReadonlyMap<string, string>
+  readonly intents?: readonly { readonly id: string; readonly title: string; readonly paths: readonly string[] }[]
+  /** Accepted relations, `provenance: proposed`. Added next to the observed ones, never in place of any. */
+  readonly relations?: readonly KnowledgeRelation[]
 }
 
 export type ProjectRetrievalOptions = {
@@ -174,6 +185,9 @@ export const projectRetrievalIndex = (options: ProjectRetrievalOptions): Retriev
   const { snapshot, config } = options
   const routes = options.routes ?? {}
   const overlayHash = options.overlay?.hash ?? EMPTY_OVERLAY_HASH
+  const overlay = options.overlay
+  // Proposed relations sit next to the observed ones: one more edge each, with its own confidence.
+  const relations = overlay?.relations?.length ? [...snapshot.relations, ...overlay.relations] : snapshot.relations
   const entities = new Map(snapshot.entities.map((entity) => [entity.id, entity]))
   const byPath = new Map<string, KnowledgeEntity>()
   for (const entity of snapshot.entities) if (entity.path && !byPath.has(entity.path)) byPath.set(entity.path, entity)
@@ -198,7 +212,7 @@ export const projectRetrievalIndex = (options: ProjectRetrievalOptions): Retriev
   // Containment, for area and package ids.
   const parentOf = new Map<string, string>()
   const packageOfArea = new Map<string, string>()
-  for (const relation of snapshot.relations) {
+  for (const relation of relations) {
     if (relation.kind !== 'contains') continue
     const parent = entities.get(relation.from)
     const child = entities.get(relation.to)
@@ -236,7 +250,7 @@ export const projectRetrievalIndex = (options: ProjectRetrievalOptions): Retriev
     if (list) list.push(edge)
     else map.set(key, [edge])
   }
-  for (const relation of snapshot.relations) {
+  for (const relation of relations) {
     const confidence = relationConfidence(relation)
     if (relation.kind === 'covers' || relation.kind === 'mentions' || relation.kind === 'mentions-symbol' || relation.kind === 'links-to') {
       push(inbound, relation.to, { kind: relation.kind, id: relation.from, confidence })
@@ -253,7 +267,7 @@ export const projectRetrievalIndex = (options: ProjectRetrievalOptions): Retriev
       .filter((edge, index, all) => index === 0 || edge.kind !== all[index - 1]?.kind || edge.id !== all[index - 1]?.id)
       .slice(0, MAX_EDGES)
 
-  const pagerank = canonicality(snapshot)
+  const pagerank = canonicality({ entities: snapshot.entities, relations })
 
   const drafts: EntryDraft[] = []
 
@@ -298,7 +312,8 @@ export const projectRetrievalIndex = (options: ProjectRetrievalOptions): Retriev
       curated?.description ??
       agentDocCurated?.description ??
       (typeof entity.metadata?.summary === 'string' ? entity.metadata.summary : undefined) ??
-      (typeof agentDoc?.metadata?.summary === 'string' ? agentDoc.metadata.summary : undefined)
+      (typeof agentDoc?.metadata?.summary === 'string' ? agentDoc.metadata.summary : undefined) ??
+      overlay?.summaries?.get(entity.id)
     const shortName = kind === 'package' ? entity.name.split('/').pop() : undefined
 
     drafts.push({
@@ -312,11 +327,11 @@ export const projectRetrievalIndex = (options: ProjectRetrievalOptions): Retriev
         return audience ? { audience } : {}
       })(),
       aliases: unique(
-        [ownership?.id, ...(ownershipAliases.get(entity.id) ?? []), curated?.id, shortName, kind === 'package' ? entity.name : undefined, ...(entity.aliases ?? [])],
+        [ownership?.id, ...(ownershipAliases.get(entity.id) ?? []), curated?.id, shortName, kind === 'package' ? entity.name : undefined, ...(entity.aliases ?? []), ...(overlay?.aliases?.get(entity.id) ?? [])],
         MAX_ALIASES,
       ),
       ...(symbols?.length ? { symbols } : {}),
-      tags: tagsFor(kind, entity, entity.path, [ownership ? 'ownership' : undefined, ownership?.group, ownership?.layer]),
+      tags: tagsFor(kind, entity, entity.path, [ownership ? 'ownership' : undefined, ownership?.group, ownership?.layer, overlay?.canonical?.has(entity.id) ? 'canonical' : undefined]),
       contentHash: hash ?? derivedHash({ id: entity.id, kind, path: entity.path, name: entity.name, metadata: entity.metadata ?? {} }),
       provenance: entity.provenance,
       ...(ownership ? { ownershipId: ownership.id } : {}),
@@ -358,6 +373,23 @@ export const projectRetrievalIndex = (options: ProjectRetrievalOptions): Retriev
     })
   }
 
+  // An accepted intent is a route an agent proposed and a validator let through: declared by it, not observed.
+  for (const intent of overlay?.intents ?? []) {
+    drafts.push({
+      id: intent.id,
+      kind: 'intent',
+      path: intent.paths[0] ?? intent.id,
+      title: intent.title,
+      summary: intent.title,
+      aliases: [intent.id],
+      tags: ['intent', 'proposed'],
+      contentHash: derivedHash(intent),
+      provenance: 'proposed',
+      bodyText: intent.paths.join(' '),
+      headingText: '',
+    })
+  }
+
   for (const change of Object.values(routes.changes ?? {})) {
     drafts.push({
       id: change.id,
@@ -383,9 +415,11 @@ export const projectRetrievalIndex = (options: ProjectRetrievalOptions): Retriev
       const areaId = areaOf(draft.id)
       const packageId = packageOf(draft.id)
       const confidence: Confidence = draft.provenance as Provenance
+      const agentSignal = overlay?.signals?.get(draft.id)
       return {
         ...rest,
         fields: fieldsFor(draft),
+        ...(agentSignal ? { agentSignal: Math.min(1, Math.max(0, Math.round(agentSignal * 1_000) / 1_000)) } : {}),
         graph: {
           pagerank: pagerank.get(draft.id) ?? 0,
           inboundLinks: into.filter((edge) => edge.kind === 'links-to' || edge.kind === 'covers' || edge.kind === 'mentions' || edge.kind === 'mentions-symbol').length,
