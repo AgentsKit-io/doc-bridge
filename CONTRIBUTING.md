@@ -1,3 +1,10 @@
+---
+owner: maintainers
+lifecycle: active
+sourceOfTruth: CONTRIBUTING.md
+validationPath: pnpm typecheck && pnpm test
+---
+
 # Contributing
 
 Thanks for helping improve `@agentskit/doc-bridge`.

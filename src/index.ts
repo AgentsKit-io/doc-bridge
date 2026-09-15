@@ -35,6 +35,7 @@ export {
   AgentHandoffV1Schema,
   AgentHandoffLegacySchema,
   AgentSearchV1Schema,
+  AgentQueryModeSchema,
   HandoffTargetTypeSchema,
   HANDOFF_SCHEMA_VERSION,
   normalizeAgentHandoff,
@@ -42,6 +43,7 @@ export {
   type AgentHandoffV1,
   type HandoffBridge,
   type AgentSearchV1,
+  type AgentQueryMode,
   type HandoffTarget,
   type HandoffTargetType,
 } from './schemas/agent-handoff.js'
@@ -214,6 +216,7 @@ export {
   type DoctorBadgeMetrics,
 } from './doctor/badge.js'
 export { watchDocBridgeIndex, type WatchIndexOptions } from './index-builder/watch-index.js'
+export { evaluateQualityScorecard, type QualityScorecard, type QualityScorecardInput, type ScorecardCriterion, type ScorecardDimension, type ScorecardStatus } from './study/quality-scorecard.js'
 export {
   promoteMemoryToGithubPr,
   writePromotionDraft,
@@ -330,6 +333,7 @@ export {
   persistIndependentlyAdjudicatedLedger,
   type IndependentStudyAdjudicationOptions,
 } from './study/adjudication.js'
+export { measureProviderToolTelemetry, type ProviderToolTelemetry } from './study/provider-telemetry.js'
 export {
   STUDY_REPOSITORY_CONFIG_CONTENT_HASH_ALGO,
   STUDY_REPOSITORY_CONFIG_SCHEMA_VERSION,

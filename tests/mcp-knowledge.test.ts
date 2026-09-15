@@ -8,6 +8,7 @@ import { applyConfigDefaults } from '../src/config/defaults.js'
 import { DocBridgeConfigV1Schema } from '../src/config/schema.js'
 import { applyDocumentationDeclarations } from '../src/discovery/documentation.js'
 import { discoverRepository } from '../src/discovery/repository.js'
+import { buildDocBridgeIndex } from '../src/index-builder/build-index.js'
 import { reconcileKnowledge } from '../src/reconciliation/reconcile.js'
 import { handleMcpRequest } from '../src/mcp/server.js'
 import { sha256NormalizedV1 } from '../src/index-builder/content-hash.js'
@@ -34,7 +35,7 @@ describe('MCP knowledge parity', () => {
     workflow('collect', () => observed)
     workflow('normalize', (input) => input)
     const result = workflow('reconcile', () => report)
-    const ctx = { root, config }
+    const ctx = { root, config, loadIndex: () => buildDocBridgeIndex({ root, config, write: false }).index }
 
     expect(call(ctx, 'docbridge.snapshot')).toEqual(loadWorkflowStepOutput(result.stateDir, 'normalize'))
     expect(call(ctx, 'docbridge.report')).toEqual(report)
@@ -42,6 +43,7 @@ describe('MCP knowledge parity', () => {
     expect(call(ctx, 'docbridge.relations')).toMatchObject({ snapshotHash: observed.contentHash, relations: observed.relations })
     expect(call(ctx, 'docbridge.run')).toMatchObject({ runId: result.run.runId, state: result.run.state })
     expect(call(ctx, 'docbridge.proposals')).toEqual({ runId: result.run.runId, proposals: [] })
+    expect(call(ctx, 'doc.search', { term: 'guide', agent: true, mode: 'documentation', contextBudgetTokens: 64 })).toMatchObject({ type: 'agent-search', telemetry: { mode: 'documentation', contextBudgetTokens: 64 } })
   })
 
   it('fails closed for missing artifacts, invalid arguments and approval shortcuts', () => {

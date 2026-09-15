@@ -8,6 +8,7 @@
     "evidenceIds",
     "clarificationRequests",
     "reworkCount",
+    "firstEvidenceLatencyMs",
     "measurements"
   ],
   "properties": {
@@ -17,6 +18,7 @@
     "evidenceIds": { "type": "array", "items": { "type": "string", "maxLength": 2048 }, "maxItems": 128 },
     "clarificationRequests": { "type": "integer", "minimum": 0 },
     "reworkCount": { "type": "integer", "minimum": 0 },
+    "firstEvidenceLatencyMs": { "type": ["integer", "null"], "minimum": 0 },
     "measurements": {
       "type": "array",
       "maxItems": 64,

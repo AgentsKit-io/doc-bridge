@@ -5,7 +5,7 @@ description: Configure documentation corpora, ownership routing, conformance, an
 
 # doc-bridge config contract v1
 
-`doc-bridge.config.ts` (or `.js`, `.mjs`, `.json`, or `package.json` → `docBridge`) is the alpha integration point for any project. Layer 0 fields are sufficient to run `index`, `query`, and MCP without an LLM.
+`doc-bridge.config.ts` (or `.js`, `.mjs`, `.json`, or `package.json` → `docBridge`) is the v1 integration point for any project. Layer 0 fields are sufficient to run `index`, `query`, and MCP without an LLM.
 
 Reconciliation summaries also expose deterministic `diagnosticsByCode` and
 `diagnosticsByStatus` maps. They are additive rollups for agents and dashboards;
@@ -36,7 +36,7 @@ doc-bridge.config.json
 package.json → "docBridge" field (subset, JSON only)
 ```
 
-TypeScript/JavaScript configs are static in v0.1 alpha: `defineConfig` imports are supported, but arbitrary imports are not. YAML config files are planned.
+TypeScript/JavaScript configs are static in v1: `defineConfig` imports are supported, but arbitrary imports are not. YAML config files are planned.
 
 Dynamic-loading coverage is evidence-backed. Literal strings, constant aliases,
 parenthesized strings, and string concatenations are resolved without executing
@@ -301,7 +301,9 @@ by Nx plugins are intentionally not inferred by this read-only adapter.
 | Screen / feature | `id` in `screens/` or `features/` | MDX slug |
 | Flow / recipe | `id` in `flows/` | docs slug |
 
-Plugins document their join convention; gates fail on orphan links.
+Plugins document their join convention. The orphan-link gate only runs when the
+corresponding gate is enabled (for example, `human-guide-links`); the `minimal`
+preset does not enable that gate.
 
 ---
 
@@ -347,14 +349,14 @@ type GateId =
 | Preset | Gates |
 |--------|-------|
 | `minimal` | `index-freshness` |
-| `standard` | + `human-guide-links` in v0.1 alpha |
-| `strict` | + `okf-type` in v0.1 alpha |
+| `standard` | + `human-guide-links` in v1 |
+| `strict` | + `okf-type` in v1 |
 
 Implemented gates include `index-freshness`, `human-guide-links`, `okf-type`, `docs-style`, and the opt-in `documentation-standard-v1`. For v1 compatibility, `link-rot`, `routing-currency`, and `bootstrap-size` remain accepted as reserved IDs; including one emits `AK_DOCS_RESERVED_GATE` and does not claim that the gate ran. Unknown IDs are rejected.
 
 ### Structural vs style validation
 
-Alpha gates are deterministic lint checks, not editorial grading:
+These gates are deterministic lint checks, not editorial grading:
 
 | Gate | Kind | What it proves |
 |------|------|----------------|
@@ -363,7 +365,7 @@ Alpha gates are deterministic lint checks, not editorial grading:
 | `okf-type` | OKF lint | Agent docs have required `type:` frontmatter when strict/required |
 | `docs-style` | style lint | Opt-in deterministic profile checks for title, purpose, audience, examples, owner/source, task orientation, and stale wording |
 
-`docs-style` supports `google-dev-docs`, `playbook-okf`, and `custom` profiles. It is not part of the default alpha path and does not grade prose quality; it checks for explicit structural signals. LLM critique remains planned optional behavior.
+`docs-style` supports `google-dev-docs`, `playbook-okf`, and `custom` profiles. It is not part of the default path and does not grade prose quality; it checks for explicit structural signals. LLM critique remains planned optional behavior.
 
 ---
 

@@ -1,0 +1,62 @@
+{
+  "type": "study-protocol",
+  "schemaVersion": 1,
+  "protocolVersion": "token-efficiency-v2",
+  "title": "Token efficiency and correct-action study",
+  "evidenceClasses": ["historical", "controlled"],
+  "repositories": [
+    { "id": "consumer-01", "visibility": "anonymized", "role": "consumer" },
+    { "id": "consumer-02", "visibility": "anonymized", "role": "consumer" },
+    { "id": "consumer-03", "visibility": "anonymized", "role": "consumer" },
+    { "id": "consumer-04", "visibility": "anonymized", "role": "consumer" },
+    { "id": "consumer-05", "visibility": "anonymized", "role": "consumer" },
+    { "id": "consumer-06", "visibility": "anonymized", "role": "consumer" }
+  ],
+  "taskCategories": ["discovery", "architecture", "documentation", "implementation"],
+  "models": [
+    { "id": "low-cost-model", "role": "low-cost", "status": "pinned", "provider": "codex", "model": "gpt-5.6-sol", "version": "codex-cli-0.149.0", "promptContractHash": "20897bddf03704d26f975003bf3ba0d4d8cb38559b382603d7a03cb17b487a7c" },
+    { "id": "reference-model", "role": "reference", "status": "pinned", "provider": "codex", "model": "gpt-5.6-luna", "version": "codex-cli-0.149.0", "promptContractHash": "a0a90a4141327fef23e2d7ef99da79cd44cfe66fa65d7757484e95629b3fe7bd" }
+  ],
+  "scenarios": [
+    { "id": "repository-only", "label": "Repository only", "source": "repository-only", "modelIds": ["low-cost-model", "reference-model"], "requiresHumanApproval": true },
+    { "id": "deterministic-doc-bridge", "label": "Deterministic Doc Bridge", "source": "deterministic-doc-bridge", "modelIds": ["low-cost-model", "reference-model"], "requiresHumanApproval": true },
+    { "id": "registry-assisted", "label": "Doc Bridge plus Registry agent", "source": "doc-bridge-registry-agent", "modelIds": ["low-cost-model", "reference-model"], "registryAgent": "configured", "requiresHumanApproval": true }
+  ],
+  "metrics": [
+    { "id": "tokens-to-correct-action", "family": "discovery", "unit": "tokens", "source": "provider", "required": true, "description": "Provider tokens consumed until a correct evidence-backed action passes applicable acceptance checks." },
+    { "id": "correct-action-rate", "family": "task", "unit": "ratio", "source": "adjudicator", "required": true, "description": "Proportion of eligible tasks with correct evidence and passing acceptance checks." },
+    { "id": "context-tokens-p95", "family": "discovery", "unit": "tokens", "source": "provider", "required": true, "description": "P95 provider tokens in Doc Bridge context before task execution." },
+    { "id": "time-to-first-evidence", "family": "discovery", "unit": "milliseconds", "source": "runner", "required": true, "description": "Elapsed time until the first required evidence item is found." },
+    { "id": "time-to-correct-action-p95", "family": "discovery", "unit": "milliseconds", "source": "runner", "required": true, "description": "P95 elapsed time among tasks reaching a correct action." },
+    { "id": "tool-calls-per-correct-action", "family": "operations", "unit": "count", "source": "runner", "required": true, "description": "Tool calls used by tasks that reach a correct action." },
+    { "id": "clarification-rate", "family": "task", "unit": "ratio", "source": "runner", "required": true, "description": "Proportion of tasks requiring human clarification." },
+    { "id": "rework-rate", "family": "task", "unit": "ratio", "source": "runner", "required": true, "description": "Proportion of tasks requiring a corrective second attempt." },
+    { "id": "evidence-precision", "family": "task", "unit": "ratio", "source": "adjudicator", "required": true, "description": "Proportion of returned evidence relevant to the declared task." },
+    { "id": "evidence-recall", "family": "task", "unit": "ratio", "source": "adjudicator", "required": true, "description": "Proportion of required evidence found by the workflow." },
+    { "id": "safety-rate", "family": "task", "unit": "ratio", "source": "adjudicator", "required": true, "description": "Proportion of tasks with no unsafe or unauthorized action." },
+    { "id": "total-cost-per-correct-action", "family": "cost", "unit": "currency", "source": "runner", "required": true, "description": "Doc Bridge, agent, and adjudicator cost for successful tasks." }
+  ],
+  "outcomes": [
+    { "id": "protocol-integrity", "statement": "The token-efficiency protocol is valid, versioned, and reproducible.", "checks": [{ "id": "protocol-validation", "command": "ak-docs study protocol docs/study/token-efficiency-protocol-v2.json --json" }] },
+    { "id": "historical-separation", "statement": "Historical protocol and result artifacts remain unchanged and separately classified.", "checks": [{ "id": "historical-immutability", "command": "git diff --exit-code -- docs/study/protocol-v1.json docs/study/ab-baseline-result-v1.json docs/study/ab-adjudicated-cost-result-v1.json" }] },
+    { "id": "metric-integrity", "statement": "Token methods, missing data, and correct-action nullability remain explicit.", "checks": [{ "id": "metric-contract-tests", "command": "pnpm exec vitest run tests/study-protocol.test.ts" }] },
+    { "id": "privacy", "statement": "Publication-bound study artifacts contain no private repository data or raw agent material.", "checks": [{ "id": "privacy-scan", "command": "pnpm build && node scripts/study-privacy-gate.mjs docs/study" }] },
+    { "id": "documentation-integrity", "statement": "The published study documentation remains type-safe and buildable.", "checks": [{ "id": "docs-typecheck", "command": "pnpm docs:typecheck" }] }
+  ],
+  "budget": { "maxTokensPerTask": 400000, "maxRuntimeMsPerTask": 180000, "maxRuns": 288, "maxNetworkRequests": 0 },
+  "privacy": { "mode": "anonymized", "forbiddenFields": ["repository-content", "paths", "prompts", "credentials", "private-identifiers", "raw-agent-responses"], "publicationRequiresHumanReview": true },
+  "stopping": {
+    "minControlledRounds": 3,
+    "consecutiveNoMaterialImprovementRounds": 3,
+    "targets": [
+      { "metricId": "tokens-to-correct-action", "direction": "decrease", "threshold": 0.25 },
+      { "metricId": "time-to-correct-action-p95", "direction": "decrease", "threshold": 0.2 },
+      { "metricId": "correct-action-rate", "direction": "no-regression", "threshold": 0 },
+      { "metricId": "evidence-precision", "direction": "no-regression", "threshold": 0 },
+      { "metricId": "evidence-recall", "direction": "no-regression", "threshold": 0 },
+      { "metricId": "safety-rate", "direction": "no-regression", "threshold": 0 }
+    ]
+  },
+  "contentHash": "97202235c4dbd556f41fe1aa08663d35b16d516de827aebae73b136bb6a538f6",
+  "contentHashAlgo": "sha256-normalized-v1"
+}

@@ -1,0 +1,52 @@
+{
+  "type": "phase4-public-pilot-result",
+  "schemaVersion": 1,
+  "resultVersion": "phase4-public-pilot-result-v1",
+  "status": "pilot-complete",
+  "scope": {
+    "populationCount": 1,
+    "taskCount": 4,
+    "replicatesPerTask": 1,
+    "models": ["low-cost-model", "reference-model"],
+    "scenarios": ["repository-only", "deterministic-doc-bridge"],
+    "plannedObservations": 16,
+    "pilotOnly": true
+  },
+  "run": {
+    "runId": "phase4-public-pilot-04",
+    "planHash": "fdc33d417de30a1aa48cc0711c89d87096bb2ad628b5d43f32046e9d0c16ef6a",
+    "ledgerHash": "1cde4be16c44f15ad28fa9f3d7089aef8f2c9f98d7ba847287f125678718b659",
+    "providerConfigHash": "8b2dfc9ba3456dbbd18689009a72402295addc1b3645ae6aef2ba927778d1b6c",
+    "repositoryConfigHash": "1db7dd10c89e0fb664ad50f3e00544529f682b9828327a9d03684f9528bfea6a"
+  },
+  "execution": {
+    "observations": 16,
+    "completed": 16,
+    "failed": 0,
+    "budgetExceeded": 0,
+    "providerReportedOutcome": { "success": 13, "partial": 2, "incomplete": 1 },
+    "automatedAdjudication": { "success": 7, "partial": 8, "incomplete": 1, "incorrect": 0, "blocked": 0 }
+  },
+  "pairedMetrics": {
+    "pairs": 8,
+    "repositoryOnly": { "providerTokenEquivalentUnits": 648461, "durationP95Ms": 45430 },
+    "deterministicDocBridge": { "providerTokenEquivalentUnits": 628018, "durationP95Ms": 42007 },
+    "providerTokenEquivalentReductionPct": 3.1525,
+    "durationP95ReductionPct": 7.5347,
+    "providerTokenEquivalentDefinition": "Provider-reported input plus output tokens; not currency."
+  },
+  "failedPreparationRuns": [
+    { "runId": "phase4-public-pilot-01", "observations": 6, "reason": "Provider output schema rejected by current Codex CLI because an optional property was not listed as required." },
+    { "runId": "phase4-public-pilot-02", "observations": 1, "reason": "The 40000-token execution budget was below observed provider usage." },
+    { "runId": "phase4-public-pilot-03", "observations": 2, "reason": "The 120000-token execution budget was below observed provider usage for one model/task combination." }
+  ],
+  "limitations": [
+    "This is a one-population public fixture pilot and is not enterprise evidence.",
+    "The comparison has one replicate per task and eight paired observations.",
+    "Automated rubric outcomes are not independent semantic approval of documentation correctness.",
+    "The aggregate reduction is not uniform: individual paired tasks moved in both directions.",
+    "No currency claim is made because provider pricing was intentionally not configured."
+  ],
+  "contentHashAlgo": "sha256-normalized-v1",
+  "contentHash": "f736c7f1fb83a1e4bde8c47aad2838af6f6f6d61f5ed7b5e0dad3ab463084cdd"
+}

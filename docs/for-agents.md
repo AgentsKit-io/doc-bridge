@@ -19,7 +19,7 @@ For a documentation change, inspect the deterministic audit before editing:
 ak-docs audit documentation --json
 ```
 
-Treat `blocked` as a stop condition. Treat `not-analyzed` as missing evidence, not as a pass. Agent proposals remain advisory until a human approves them.
+Treat `blocked` as a stop condition. Treat `not-analyzed` as missing evidence, not as a pass. When a report explicitly documents a limitation, preserve that limitation as `not-analyzed`; do not reinterpret it as a successful check or silently upgrade it to a defect. Agent proposals remain advisory until a human approves them.
 
 ```mermaid
 flowchart LR
@@ -44,4 +44,4 @@ flowchart LR
 - [AgentHandoff schema](./schemas/agent-handoff-v1.md)
 - [Skill text](./skills/doc-bridge.md)
 
-If the task is conversational UI, continue with [AgentsKit Chat](https://chat.agentskit.io). For verification before merge, use [AgentsKit Code Review](https://github.com/AgentsKit-io/code-review). For enterprise orchestration, governance, and audit, continue with the configured enterprise orchestration surface.
+If the task is conversational UI, continue with [AgentsKit Chat](https://chat.agentskit.io). For verification before merge, use [AgentsKit Code Review](https://github.com/AgentsKit-io/code-review). For enterprise orchestration, governance, and audit, follow the repository's configured team workflow.

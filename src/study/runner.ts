@@ -17,6 +17,7 @@ const evidenceId = z.string().min(1).max(256).refine((value) => !/[\u0000\r\n]/.
 const reference = z.string().regex(/^[a-z0-9][a-z0-9._:-]{0,255}$/)
 const outcome = z.enum(['success', 'partial', 'incorrect', 'incomplete', 'blocked'])
 const modelReference = z.string().regex(/^[a-z0-9][a-z0-9._:/-]{0,255}$/)
+const tokenMethod = z.enum(['provider', 'estimate'])
 const safeText = z.string().min(1).max(2_048).refine(
   isSafeStudyText,
   'Public study text cannot contain paths, URLs, credentials, or secret material',
@@ -86,7 +87,7 @@ const RunPlanPayloadSchema = z.object({
   docBridgeVersion: reference,
   models: z.array(ModelConfigSchema).length(2),
   scenarios: z.array(ScenarioConfigSchema).length(3),
-  taskIds: z.array(identifier).length(24),
+  taskIds: z.array(identifier).min(1).max(256),
   sampling: SamplingSchema,
   budget: RunBudgetSchema,
   runId: reference,
@@ -111,8 +112,9 @@ const ExecutionResultSchema = z.object({
   stderrHash: hash.optional(),
   inputTokens: z.number().int().nonnegative().optional(),
   outputTokens: z.number().int().nonnegative().optional(),
-  tokenMethod: z.enum(['provider', 'estimate']).optional(),
+  tokenMethod: tokenMethod.optional(),
   toolCalls: z.number().int().nonnegative().optional(),
+  firstEvidenceLatencyMs: z.number().int().nonnegative().optional(),
   errorCode: identifier.optional(),
 }).strict().superRefine((value, context) => {
   if ((value.inputTokens !== undefined || value.outputTokens !== undefined) && !value.tokenMethod) context.addIssue({ code: z.ZodIssueCode.custom, path: ['tokenMethod'], message: 'Token counts require a provider or estimate method.' })
@@ -128,8 +130,9 @@ const AgentMetricsSchema = z.object({
   measurements: z.record(z.string().min(1).max(128), z.number().finite().nonnegative()).optional(),
   inputTokens: z.number().int().nonnegative().optional(),
   outputTokens: z.number().int().nonnegative().optional(),
-  tokenMethod: z.enum(['provider', 'estimate']).optional(),
+  tokenMethod: tokenMethod.optional(),
   toolCalls: z.number().int().nonnegative().optional(),
+  firstEvidenceLatencyMs: z.number().int().nonnegative().optional(),
 })
 
 const ObservationPayloadSchema = z.object({
@@ -144,11 +147,14 @@ const ObservationPayloadSchema = z.object({
   scenario: ScenarioConfigSchema,
   execution: ExecutionResultSchema,
   contextBytes: z.number().int().nonnegative(),
+  contextTokens: z.number().int().nonnegative().optional(),
+  contextTokenMethod: tokenMethod.optional(),
   evidenceIds: z.array(evidenceId).max(128),
   round: reference.optional(),
   taskOutcome: z.enum(['success', 'partial', 'incorrect', 'incomplete', 'blocked']).optional(),
   evidenceQuality: z.enum(['high', 'medium', 'low']).optional(),
   safetyOutcome: z.enum(['safe', 'unsafe', 'not-applicable']).optional(),
+  firstEvidenceLatencyMs: z.number().int().nonnegative().optional(),
   clarificationRequests: z.number().int().nonnegative().optional(),
   reworkCount: z.number().int().nonnegative().optional(),
   measurements: z.record(z.string().min(1).max(128), z.number().finite().nonnegative()).optional(),
@@ -159,12 +165,15 @@ const ObservationPayloadSchema = z.object({
     outcome: outcome.optional(),
     confidence: z.number().min(0).max(1).optional(),
     reasonCodes: z.array(identifier).max(16).optional(),
+    tokenMethod: tokenMethod.optional(),
     configurationHash: hash.optional(),
     reason: safeText.optional(),
   }).strict().superRefine((value, context) => {
     if (value.status === 'automated' && (!value.actor || !value.method || !value.outcome)) context.addIssue({ code: z.ZodIssueCode.custom, message: 'Automated adjudication requires actor, method, and outcome.' })
   }),
-}).strict()
+}).strict().superRefine((value, context) => {
+  if (value.contextTokens !== undefined && value.contextTokenMethod === undefined) context.addIssue({ code: z.ZodIssueCode.custom, path: ['contextTokenMethod'], message: 'Context token counts require a provider or estimate method.' })
+})
 
 export const ControlledStudyObservationV1Schema = ObservationPayloadSchema.extend({
   contentHash: hash,
@@ -271,10 +280,13 @@ export type ControlledCommandRequest = {
   readonly maxRuntimeMs?: number
   readonly maxOutputBytes?: number
   readonly contextBytes: number
+  readonly contextTokens?: number
+  readonly contextTokenMethod?: 'provider' | 'estimate'
   readonly round?: string
   readonly taskOutcome?: 'success' | 'partial' | 'incorrect' | 'incomplete' | 'blocked'
   readonly evidenceQuality?: 'high' | 'medium' | 'low'
   readonly safetyOutcome?: 'safe' | 'unsafe' | 'not-applicable'
+  readonly firstEvidenceLatencyMs?: number
   readonly clarificationRequests?: number
   readonly reworkCount?: number
   readonly measurements?: Readonly<Record<string, number>>
@@ -358,6 +370,9 @@ export const runControlledCommand = async (request: ControlledCommandRequest): P
     ? { ...result, status: 'invalid-output' as const, errorCode: 'invalid-metrics' }
     : result
   const output = parsedMetrics.success ? parsedMetrics.data : {}
+  if (request.contextTokens !== undefined && request.contextTokenMethod === undefined) throw new Error('Context token counts require a provider or estimate method.')
+  const contextTokens = request.contextTokens ?? Math.ceil(request.contextBytes / 4)
+  const contextTokenMethod = request.contextTokenMethod ?? 'estimate'
   const providerTokenTotal = output.tokenMethod === 'provider' && output.inputTokens !== undefined && output.outputTokens !== undefined
     ? output.inputTokens + output.outputTokens
     : undefined
@@ -384,6 +399,7 @@ export const runControlledCommand = async (request: ControlledCommandRequest): P
     ...(output.outputTokens === undefined ? {} : { outputTokens: output.outputTokens }),
     ...(output.tokenMethod === undefined ? {} : { tokenMethod: output.tokenMethod }),
     ...(output.toolCalls === undefined ? {} : { toolCalls: output.toolCalls }),
+    ...(output.firstEvidenceLatencyMs === undefined ? {} : { firstEvidenceLatencyMs: output.firstEvidenceLatencyMs }),
     ...(effectiveResult.errorCode === undefined ? {} : { errorCode: effectiveResult.errorCode }),
   }
   if ((executionResult.inputTokens ?? 0) + (executionResult.outputTokens ?? 0) > request.plan.budget.maxTokens) {
@@ -402,11 +418,14 @@ export const runControlledCommand = async (request: ControlledCommandRequest): P
     scenario: request.plan.scenarios.find((scenario) => scenario.id === request.execution.scenarioId),
     execution: executionResult,
     contextBytes: request.contextBytes,
+    contextTokens,
+    contextTokenMethod,
     evidenceIds: output.evidenceIds ?? [],
     ...(request.round === undefined ? {} : { round: request.round }),
     ...(output.taskOutcome === undefined ? request.taskOutcome === undefined ? {} : { taskOutcome: request.taskOutcome } : { taskOutcome: output.taskOutcome }),
     ...(output.evidenceQuality === undefined ? request.evidenceQuality === undefined ? {} : { evidenceQuality: request.evidenceQuality } : { evidenceQuality: output.evidenceQuality }),
     ...(output.safetyOutcome === undefined ? request.safetyOutcome === undefined ? {} : { safetyOutcome: request.safetyOutcome } : { safetyOutcome: output.safetyOutcome }),
+    ...(output.firstEvidenceLatencyMs === undefined ? request.firstEvidenceLatencyMs === undefined ? {} : { firstEvidenceLatencyMs: request.firstEvidenceLatencyMs } : { firstEvidenceLatencyMs: output.firstEvidenceLatencyMs }),
     ...(output.clarificationRequests === undefined ? request.clarificationRequests === undefined ? {} : { clarificationRequests: request.clarificationRequests } : { clarificationRequests: output.clarificationRequests }),
     ...(output.reworkCount === undefined ? request.reworkCount === undefined ? {} : { reworkCount: request.reworkCount } : { reworkCount: output.reworkCount }),
     ...(Object.keys(measurements).length === 0 ? {} : { measurements }),
