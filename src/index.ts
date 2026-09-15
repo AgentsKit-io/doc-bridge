@@ -51,9 +51,13 @@ export {
 export {
   DocBridgeIndexV1Schema,
   KnowledgeEntrySchema,
+  RepositoryInputsSchema,
+  RetrievalMetadataSchema,
   INDEX_SCHEMA_VERSION,
   type DocBridgeIndexV1,
   type KnowledgeEntry,
+  type RepositoryInputs,
+  type RetrievalMetadata,
 } from './schemas/doc-bridge-index.js'
 
 export {
@@ -86,7 +90,171 @@ export {
 } from './validate.js'
 
 export { buildDocBridgeIndex, type BuildIndexOptions, type BuildIndexResult } from './index-builder/build-index.js'
+export {
+  CORPUS_PROJECTION_VERSION,
+  PROJECTED_ENTRY_TYPES,
+  indexConfigurationHash,
+  isProjectedEntry,
+  repositoryInputs,
+  type RepositoryInputsV1,
+} from './index-builder/project-corpus.js'
+export {
+  DOCUMENT_BODY_LIMIT,
+  EMPTY_OVERLAY_HASH,
+  RETRIEVAL_PROJECTION_VERSION,
+  projectRetrievalIndex,
+  relationConfidence,
+  toKnowledgeEntry,
+  weakerConfidence,
+  type CuratedDocument,
+  type ProjectRetrievalOptions,
+  type RetrievalOverlayInput,
+  type RetrievalRoutes,
+} from './retrieval/project.js'
+export {
+  ACCEPTED_SIGNALS_WEIGHT,
+  RELEVANCE_FLOOR,
+  rankRetrieval,
+  type RankExplanation,
+  type RankOptions,
+  type RankedEntry,
+  type ScoreComponents,
+} from './retrieval/rank.js'
+export {
+  RETRIEVAL_INDEX_SCHEMA_VERSION,
+  RetrievalEntrySchema,
+  RetrievalIndexV1Schema,
+  RetrievalKindSchema,
+  ConfidenceSchema,
+  AudienceSchema,
+  type Audience,
+  type Confidence,
+  type RetrievalEdge,
+  type RetrievalEntry,
+  type RetrievalFields,
+  type RetrievalGraph,
+  type RetrievalIndexV1,
+  type RetrievalKind,
+} from './schemas/retrieval-index.js'
+export { entityId, relationId } from './discovery/identity.js'
+export {
+  DEFAULT_COMMUNITY_SEED,
+  DEFAULT_PROXIMITY_DEPTH,
+  DOCUMENTATION_EDGE_KINDS,
+  GRAPH_ANALYZER_VERSION,
+  IMPORT_EDGE_KINDS,
+  MAX_REPORTED_CYCLES,
+  PROXIMITY_EDGE_KINDS,
+  areaSuggestionCoverage,
+  areaSuggestions,
+  buildKnowledgeGraph,
+  canonicality,
+  centrality,
+  importCycles,
+  proximity,
+  seededRandom,
+  type AreaSuggestion,
+  type BuildGraphOptions,
+  type GraphSignal,
+  type ImportCycle,
+  type ProximityOptions,
+} from './graph/build.js'
+export {
+  createDocBridgeGraphMemory,
+  type GraphEdge,
+  type GraphMemory,
+  type GraphNode,
+  type GraphQuery,
+  type KnowledgeOverlay,
+} from './graph/memory.js'
+export {
+  AREA_ANALYZER_VERSION,
+  DEFAULT_AREA_DEPTH,
+  DEFAULT_AREA_ROOTS,
+  conventionalAreaPath,
+  deriveAreas,
+  unobservedOwnershipPaths,
+  type AreaModule,
+  type AreaOwnership,
+  type DeriveAreasOptions,
+  type DerivedArea,
+} from './discovery/areas.js'
+export {
+  MARKDOWN_ANALYZER_VERSION,
+  MARKDOWN_RELATION_CAP,
+  analyzeMarkdownDocument,
+  declaredAudience,
+  markdownContentHash,
+  parseMarkdownDocument,
+  type MarkdownAnalysis,
+  type MarkdownDocumentV1,
+  type MarkdownFrontmatter,
+  type MarkdownGeneratedRegion,
+  type MarkdownHeading,
+  type MarkdownNote,
+  type MarkdownReference,
+  type MarkdownResolution,
+} from './discovery/markdown.js'
+export {
+  FUZZY_RESOLUTION_THRESHOLD,
+  fuzzyMatchList,
+  jaro,
+  jaroWinkler,
+  resolveFuzzyReference,
+  type FuzzyMatch,
+} from './lib/fuzzy-match.js'
+export {
+  CONFIG_EXTENSIONS,
+  DOCUMENT_EXTENSIONS,
+  SOURCE_EXTENSIONS,
+  documentClassification,
+  exportedNames,
+  safeWalkOptions,
+} from './discovery/inputs.js'
+export {
+  BM25_VERSION,
+  bm25Idf,
+  bm25Search,
+  buildBm25Index,
+  type Bm25FieldWeights,
+  type Bm25Hit,
+  type Bm25Index,
+  type Bm25Input,
+  type Bm25Params,
+} from './retrieval/bm25.js'
+export {
+  DEFAULT_SEARCH_PARAMS,
+  DEFAULT_SEARCH_WEIGHTS,
+  resolveSearchParams,
+  resolveSearchWeights,
+} from './retrieval/weights.js'
+export {
+  SEARCH_LEXICON_VERSION,
+  SEARCH_STOPWORDS,
+  expandSearchToken,
+  foldAccents,
+  hasSearchToken,
+  isSearchStopword,
+  searchTokens,
+  singularizeSearchToken,
+  tokenizeSearchText,
+  type SearchTokenizeOptions,
+} from './query/text.js'
 export { discoverRepository, type DiscoveryOptions } from './discovery/repository.js'
+export {
+  FILE_BACKED_KINDS,
+  declaredExportsOf,
+  exportsOf,
+  fileContentHash,
+  indexPriorSnapshot,
+  moduleUniverseFingerprint,
+  replayableRelations,
+  resolutionFingerprint,
+  reuseCoverage,
+  type PriorFile,
+  type PriorSnapshot,
+  type ReuseLedger,
+} from './discovery/incremental.js'
 export { containedPath, DEFAULT_SAFETY_EXCLUDES, redactSecrets, redactValue, safeWalkFiles, type SafeWalkOptions, type SafeWalkResult } from './safety/repository.js'
 export { DEFAULT_REGISTRY_AGENT_ID, createRegistryAgentAdapter, loadRegistryAgentMetadata, loadRegistryAgentRunner, persistRegistryAgentProposal, type RegistryAgentAdapter, type RegistryAgentContext, type RegistryAgentMetadata, type RegistryAgentRunner } from './agents/registry-adapter.js'
 export {
@@ -255,6 +423,38 @@ export {
   type BenchmarkSnapshotDiff,
 } from './metrics/benchmark.js'
 export {
+  EVAL_FORMAT_VERSION,
+  RETRIEVAL_BENCH_SCHEMA_VERSION,
+  RetrievalBenchResultV1Schema,
+  RetrievalSuiteCaseSchema,
+  RetrievalSuiteSchema,
+  formatRetrievalBenchText,
+  matchesRetrievalExpectation,
+  parseRetrievalBenchResult,
+  parseRetrievalSuite,
+  rankedOutput,
+  runRetrievalBench,
+  type RetrievalBenchResultV1,
+  type RetrievalCaseOutcome,
+  type RetrievalMetrics,
+  type RetrievalSuite,
+  type RetrievalSuiteCase,
+  type RunRetrievalBenchOptions,
+} from './bench/retrieval.js'
+export {
+  RetrievalBaselineV1Schema,
+  compareRetrievalBaseline,
+  createRetrievalBaseline,
+  formatRetrievalComparisonText,
+  parseRetrievalBaseline,
+  type CompareRetrievalBaselineOptions,
+  type CreateRetrievalBaselineOptions,
+  type RetrievalBaselineV1,
+  type RetrievalComparison,
+  type RetrievalComparisonStatus,
+  type RetrievalMetricDelta,
+} from './bench/baseline.js'
+export {
   STUDY_PROTOCOL_CONTENT_HASH_ALGO,
   STUDY_PROTOCOL_SCHEMA_VERSION,
   StudyProtocolV1Schema,
@@ -391,7 +591,8 @@ export {
 } from './schemas/knowledge.js'
 export { IndexNotFoundError, IndexStaleError, indexFilePath, loadDocBridgeIndex, loadFreshDocBridgeIndex, resolveRoot } from './query/load-index.js'
 export { runQuery, type QueryKind, type QueryRequest, type QueryResult } from './query/query.js'
-export { searchIndex, type SearchMatch } from './query/search.js'
+export { searchIndex, type SearchMatch, type SearchOptions } from './query/search.js'
+export { handoffForEntity, resolveHandoffEntry, type HandoffOptions } from './query/handoff.js'
 export {
   ingestAgentMemory,
   ingestCursorRules,
@@ -420,9 +621,13 @@ export {
 export {
   createDocBridgeRetriever,
   retrieveDocBridgeChunks,
+  retrieveDocBridgeDocuments,
   type DocBridgeRetrievedChunk,
   type DocBridgeRetriever,
   type DocBridgeRetrieverOptions,
+  type RetrievedDocument,
+  type Retriever,
+  type RetrieverRequest,
 } from './retriever/doc-bridge-retriever.js'
 
 export { PACKAGE_VERSION } from './version.js'
@@ -439,3 +644,250 @@ export {
   docBridgePatternMarkdown,
   docBridgePatternPayload,
 } from './playbook/doc-bridge-pattern.js'
+
+// KR-08: MCP knowledge tools, findings reporter, measured doctor
+export {
+  approximateCounter,
+  compileBudget,
+  TOKEN_METHOD,
+  type BudgetMessage,
+  type BudgetTokenCounter,
+  type CompileBudgetInput,
+  type CompileBudgetResult,
+} from './budget/compile.js'
+export { applyBudget, type BudgetedSection } from './budget/sections.js'
+export { BUDGET_SECTION_ORDER, BudgetReportSchema, BudgetSectionSchema, type BudgetReport, type BudgetSection } from './schemas/budget.js'
+export {
+  budgetedHandoff,
+  formatKnowledgeLookupText,
+  formatKnowledgeSearchText,
+  knowledgeLookup,
+  knowledgeSearch,
+  KNOWLEDGE_TOOLS_SCHEMA_VERSION,
+  MAX_LOOKUP_DEPTH,
+  resolveLookupEntry,
+  type KnowledgeDocumentRef,
+  type KnowledgeLookupEntity,
+  type KnowledgeEvidence,
+  type KnowledgeLookupOptions,
+  type KnowledgeLookupRequest,
+  type KnowledgeLookupResponse,
+  type KnowledgeNeighbour,
+  type KnowledgeSearchRequest,
+  type KnowledgeSearchResponse,
+  type KnowledgeSearchResult,
+} from './mcp/knowledge.js'
+export { findingFromDiagnostic, findingsFromDiagnostics, SEVERITY_ORDER, type Finding, type ReportableDiagnostic, type Severity } from './findings/report.js'
+export { formatRetrievedDocuments } from './retriever/doc-bridge-retriever.js'
+// KR-09: Markdown renderings
+export {
+  compileTemplate,
+  renderCompiledTemplate,
+  renderTemplate,
+  renderTemplateWithKnap,
+  TemplateError,
+  type CompiledTemplate,
+  type TemplateVariables,
+} from './render/engine.js'
+export {
+  GENERATED_REGION_CLOSE,
+  generatedRegionHash,
+  generatedRegionOpen,
+  verifyGeneratedRegions,
+  wrapGeneratedRegion,
+  type GeneratedRegionMismatch,
+  type GeneratedRegionRef,
+} from './render/generated.js'
+export {
+  BUNDLED_TEMPLATES,
+  RENDER_TEMPLATES,
+  RENDER_TEMPLATE_NAMES,
+  isRenderTemplateName,
+  type RenderTemplateInfo,
+  type RenderTemplateName,
+} from './render/templates.js'
+export { renderNamedTemplate, resolveTemplateSource, type TemplateSource } from './render/template-source.js'
+export {
+  areaPagesView,
+  changeDigestView,
+  overlayReviewView,
+  ownershipPagesView,
+  pageFileName,
+  type AreaPageView,
+  type ChangeDigestView,
+  type OverlayReviewInput,
+  type OverlayReviewView,
+  type OwnershipPageView,
+  type RenderedPage,
+  type SnapshotForDigest,
+} from './render/data.js'
+export {
+  applyGeneratedRegions,
+  renderArtifact,
+  writeRenderedPages,
+  type RenderArtifactOptions,
+  type RenderArtifactResult,
+} from './render/render.js'
+export { llmsTxtVariables, type LlmsTxtEntry, type LlmsTxtVariables } from './index-builder/llms-txt.js'
+// KR-10: enrichment overlay
+export {
+  ALIAS_MAX,
+  ENRICHMENT_KINDS,
+  ENRICHMENT_POLICY,
+  ENRICHMENT_REJECTION_REASONS,
+  ENRICHMENT_SCHEMA_VERSION,
+  INTENT_MAX,
+  PROPOSABLE_RELATION_KINDS,
+  SUMMARY_MAX,
+  AcceptedEnrichmentSchema,
+  EnrichmentAdjudicationV1Schema,
+  EnrichmentOriginSchema,
+  EnrichmentOverlayV1Schema,
+  EnrichmentProposalV1Schema,
+  PendingEnrichmentSchema,
+  RejectedEnrichmentSchema,
+  enrichmentAdjudicationId,
+  enrichmentOverlayContentHash,
+  enrichmentProposalId,
+  enrichmentProposalKey,
+  isEnrichmentKind,
+  type AcceptedEnrichment,
+  type EnrichmentAdjudicationV1,
+  type EnrichmentKind,
+  type EnrichmentOrigin,
+  type EnrichmentOverlayV1,
+  type EnrichmentPayloads,
+  type EnrichmentPolicy,
+  type EnrichmentProposalOf,
+  type EnrichmentProposalV1,
+  type EnrichmentRejectionReason,
+  type EnrichmentStats,
+  type PendingEnrichment,
+  type RejectedEnrichment,
+} from './schemas/enrichment.js'
+export {
+  ALIAS_COLLISION_THRESHOLD,
+  applyEnrichmentAdjudication,
+  entityContentHash,
+  partitionEnrichmentProposals,
+  revalidateEnrichmentOverlay,
+  validateEnrichmentAdjudication,
+  validateEnrichmentProposal,
+  type EnrichmentPartition,
+  type EnrichmentValidationContext,
+  type EnrichmentVerdict,
+} from './enrich/validate.js'
+export {
+  ENRICHMENT_DIR,
+  ENRICHMENT_OVERLAY_FILE,
+  assertObservedSurvive,
+  effectiveEnrichment,
+  enrichmentFindings,
+  enrichmentOverlayHash,
+  enrichmentOverlayPath,
+  parseEnrichmentOverlay,
+  projectEnrichmentOverlay,
+  readEnrichmentOverlay,
+  sealEnrichmentOverlay,
+  withAcceptedRelations,
+  writeEnrichmentOverlay,
+  type EffectiveOverlay,
+} from './enrich/overlay.js'
+export {
+  CONTEXT_PACK_VERSION,
+  DEFAULT_PACK_BYTES,
+  MAX_PACK_NEIGHBOURS,
+  batchContextPacks,
+  buildContextPacks,
+  contextPackHash,
+  fitContextPack,
+  packByteBudget,
+  type BuildContextPacksOptions,
+  type ContextPack,
+  type EnrichmentTask,
+} from './enrich/context-pack.js'
+export { createEnrichmentCache, createMemoryEnrichmentCache, enrichmentCacheKey, type EnrichmentCache, type EnrichmentCacheKeyInput } from './enrich/cache.js'
+export {
+  APPROVALS_DIR,
+  ENRICHMENT_APPROVAL_GATE,
+  FIX_APPROVAL_GATE,
+  approvalsDir,
+  createApprovalGateMirror,
+  createFileApprovalStore,
+  enrichmentApprovalId,
+  fixApprovalId,
+  listApprovals,
+  loadApprovalGate,
+  recordApproval,
+  type Approval,
+  type ApprovalDecision,
+  type ApprovalGate,
+  type ApprovalStore,
+} from './enrich/approvals.js'
+export {
+  ROLE_TARGET_KINDS,
+  ROLE_TASK,
+  formatEnrichmentText,
+  resolveEnrichmentRoles,
+  runEnrichment,
+  type EnrichmentAgent,
+  type EnrichmentRole,
+  type EnrichmentRunOptions,
+  type EnrichmentRunResult,
+  type ResolvedRole,
+} from './enrich/stage.js'
+export { decideEnrichment, listEnrichment, type DecideEnrichmentOptions, type DecideEnrichmentResult, type EnrichmentReview } from './enrich/review.js'
+export { REGISTRY_AGENT_PROTOCOL_V2, type RegistryEnrichmentContext } from './agents/registry-adapter.js'
+export { ACCEPTED_SIGNALS_SHARE } from './retrieval/rank.js'
+
+// KR-11: overlay statistics, the assisted study arm, tokens to first evidence
+export {
+  INVENTED_RELATION_REASONS,
+} from './schemas/enrichment.js'
+export {
+  cacheHitRate,
+  enrichmentCost,
+  enrichmentStability,
+  formatEnrichmentStatsText,
+  inventedReferenceCount,
+  overlayProposalIds,
+  type EnrichmentStability,
+} from './enrich/stats.js'
+export {
+  OVERLAY_BLOCKING_METRIC,
+  OVERLAY_DELTA_METRICS,
+  formatOverlayRetrievalDeltaText,
+  measureOverlayRetrievalDelta,
+  type MeasureOverlayRetrievalDeltaOptions,
+  type OverlayMetricDelta,
+  type OverlayRetrievalDelta,
+} from './bench/overlay-delta.js'
+export {
+  RUBRIC_MECHANICAL_CHECKS,
+  hasRetrievalExpectations,
+  mechanicalRubricItems,
+  modelRubricItems,
+  rubricItemCheck,
+  rubricItemText,
+  taskRetrievalQueries,
+  type RubricItem,
+  type RubricMechanicalCheck,
+  type ValidateStudyTaskSuiteOptions,
+} from './study/task-suite.js'
+export {
+  STUDY_EXPECTATIONS_SCHEMA_VERSION,
+  StudyExpectationsV1Schema,
+  checkStudyExpectations,
+  createStudyExpectations,
+  formatStudyExpectationsText,
+  parseStudyExpectations,
+  studyRetrievalSuite,
+  type CheckStudyExpectationsOptions,
+  type StudyExpectationCheck,
+  type StudyExpectationOutcome,
+  type StudyExpectationsV1,
+  type StudyRetrievalSuite,
+  type UnresolvedExpectation,
+} from './study/expectations.js'
+export { ASSISTED_SCENARIO, assistedArmReadiness, type AssistedArmStatus } from './study/execution.js'
+export { adjudicatorRubric } from './study/adjudication.js'

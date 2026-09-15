@@ -1,0 +1,192 @@
+# @agentskit/harness — keep-pushing loop configuration for Doc Bridge.
+#
+# Copy to loop.config.yaml (gitignored) and fill in the Linear identity block below.
+# Everything else is already tuned for this repository and needs no change.
+#
+#   cp loop.config.example.yaml loop.config.yaml
+#   ak-harness loop install -f loop.config.yaml   # discovers the identity block interactively
+#
+# Drains the knowledge-retrieval workstreams (KR-01 … KR-11) one at a time through Orca worktrees.
+# Parent PRD: https://github.com/AgentsKit-io/doc-bridge/issues/169
+# Operating notes, prerequisites and escalation paths: docs/loop-workflow.md
+#
+# Never put secrets in either file: `envKeys` are the NAMES of environment variables the loop checks,
+# not their values. The real loop.config.yaml is gitignored because its Linear block identifies a
+# workspace and a person, and this repository is public.
+schemaVersion: 1
+
+project:
+  name: doc-bridge
+  repo: AgentsKit-io/doc-bridge
+  baseBranch: master
+  root: .
+  stateDir: .codex/loop
+  setup:
+    # A fresh Orca worktree has no node_modules; without this the worker spends its first minutes installing.
+    command: [pnpm, install, --frozen-lockfile]
+    timeoutSec: 600
+    required: true
+
+orca:
+  # On Linux outside an Orca terminal use `orca-ide`: bare `orca` is the GNOME screen reader.
+  bin: orca
+  minVersion: 1.4.200
+  timeoutMs: 20000
+
+# --- Identity block: the only section you must fill in ---
+# workspaceId / people ids:  orca linear team list --workspace all --json
+#                            orca linear team members <team> --json
+# person:                    the Linear display name whose queue THIS machine drains
+linear:
+  workspaceId: <linear-workspace-id>
+  teamKey: <TEAM-KEY>
+  person: <linear-display-name>
+  people:
+    <linear-display-name>: <linear-user-id>
+  states: [Todo, Ready]
+  excludeLabels: [blocked, needs-info]
+  requireLabels: []
+  projects: []
+  order: [priority, updatedAt]
+  maxQueue: 50
+  inProgressState: In Progress
+  reviewState: In Review
+  doneState: Done
+  blockedLabel: blocked
+  needsInfoLabel: needs-info
+
+models:
+  routing:
+    mode: hybrid
+    usageMetric: max
+    preferKnownUsage: true
+  orchestrator: [[codex/gpt-5.6-sol, claude/opus], [opencode/opencode-go/glm-5.3], [grok/grok-4-fast]]
+  reviewer:     [[codex/gpt-5.6-sol, claude/opus], [opencode/opencode-go/glm-5.3], [grok/grok-4-fast]]
+  builder:      [[codex/gpt-5.6-luna, claude/sonnet, claude/haiku], [opencode/opencode-go/glm-5.3-flash], [grok/grok-4-fast]]
+  watcher:      [[claude/haiku, codex/gpt-5.6-luna], [opencode/opencode-go/glm-5.3-flash]]
+  cooldown:
+    initialMin: 30
+    maxMin: 240
+    probeBeforeReenable: true
+    exhaustedPercent: 100
+  effort:
+    # These workstreams are contract-heavy: schema compatibility, hashing, determinism. Builders get more
+    # reasoning than the harness default, since a wrong contract costs a full fix round.
+    orchestrator: high
+    reviewer: high
+    builder: high
+    watcher: low
+  providers:
+    claude:
+      bin: claude
+      auth: subscription
+      envKeys: [ANTHROPIC_API_KEY]
+      tui: "claude --model {model} --permission-mode auto"
+      headless: [claude, -p, "{prompt}", --model, "{model}", --permission-mode, plan, --output-format, text]
+    codex:
+      bin: codex
+      auth: subscription
+      envKeys: [OPENAI_API_KEY]
+      tui: "codex -m {model} --full-auto"
+      headless: [codex, exec, -m, "{model}", -s, read-only, --skip-git-repo-check, "{prompt}"]
+      effortFlag: "-c model_reasoning_effort={effort}"
+    opencode:
+      bin: opencode
+      auth: none
+      orcaUsageKey: opencodeGo
+      tui: "opencode -m {model}"
+      headless: [opencode, run, -m, "{model}", --agent, plan, "{prompt}"]
+    grok:
+      bin: grok
+      auth: subscription
+      tui: "grok -m {model}"
+      headless: [grok, -p, "{prompt}", -m, "{model}"]
+      effortFlag: "--reasoning-effort {effort}"
+
+machine:
+  floor: 1
+  # One workstream at a time. KR-04, KR-06, KR-08, KR-09, KR-10 and KR-11 each build on an earlier
+  # workstream's contract, so two concurrent workers would write conflicting schemas and rank formulas.
+  ceiling: 1
+  minFreeRamGb: 4
+  warningPercent: 75
+  criticalPercent: 90
+  agentRssMb: 1400
+  wslCap: 1
+
+delivery:
+  # doc-bridge has no lint script; typecheck plus the full suite is what CI enforces on master.
+  verifyCommand: "pnpm typecheck && pnpm test"
+  review:
+    cli: agentskit-review
+    mode: trusted-local
+    profile: fast
+    votes: 1
+    concurrency: 4
+    minSeverity: med
+    deadlineMs: 600000
+  merge:
+    auto: true
+    method: squash
+    requireChecks: true
+  maxFixRounds: 2
+  workerIdleTimeoutMin: 45
+  handoff: { enabled: true, maxHandoffs: 2, onlyWhenProviderUnavailable: true }
+  # A PR that rewrites the loop's own config, CI, the verification contract or the PRD is never auto-merged.
+  selfEditPaths:
+    - loop.config.yaml
+    - loop.config.example.yaml
+    - ".github/**"
+    - .codex/verification.json
+    - docs/PRD-knowledge-retrieval-and-enrichment.md
+  ignoreChecks: []
+  requiredChecks: []
+  cleanupWorktree: true
+  returnState: Todo
+
+memory:
+  enabled: false
+
+contract:
+  maxIssueChars: 12000
+  timeoutMs: 300000
+  maxContextReferences: 6
+  reuseHours: 72
+  docBridgeMaxAgeHours: 168
+  # Deterministic context is a nice-to-have here, not a gate: the point of these workstreams is that
+  # Doc Bridge retrieval is currently weak. Revisit after KR-01 and KR-06 land.
+  requireDocBridge: false
+  # doc-bridge indexes only its own agent corpus (corpus.agent.root = docs/agent-corpus), so that is the
+  # one scope whose titles and paths are worth listing in a worker brief.
+  briefScopes: [agent-corpus]
+  maxBriefReferences: 4
+  contextProviders: [doc-bridge]
+
+github:
+  intakeLabel: loop:review
+  reviewOnly: true
+
+resilience:
+  maxConsecutiveFailures: 3
+  pausedLabel: loop:paused
+  stagePauseAfterRuns: 3
+
+brief:
+  # Pinned verbatim into every worker brief. Each file is hashed into dispatch.json, and a missing or
+  # unreadable path fails the dispatch rather than sending a worker without the guidance it was promised.
+  # This repository has no root AGENTS.md, so the routing convention comes from the corpus overview instead.
+  skills:
+    - CONTRIBUTING.md
+    - docs/for-agents.md
+    - docs/agent-corpus/OVERVIEW.md
+    - docs/skills/doc-bridge.md
+  maxSkillChars: 6000
+
+schedule:
+  tick: "*/5 * * * *"
+  deliver: "*/10 * * * *"
+  precheckTimeoutSec: 120
+  harnessCommand: ak-harness
+  namePrefix: loop-docbridge
+  runner: precheck
+  stageTimeoutSec: 600

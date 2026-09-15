@@ -5,6 +5,10 @@ coverage/
 .DS_Store
 .doc-bridge/
 llms.txt
+# …except a golden: that one is a fixture the render tests compare against, not an artifact a
+# build wrote. The pattern above is unanchored on purpose, since every fixture project a test
+# indexes writes its own llms.txt.
+!tests/golden/**/llms.txt
 *.tgz
 apps/docs/.next/
 apps/docs/.source/
@@ -18,3 +22,13 @@ node_modules
 .mcpb-deploy/
 .mcpb-output/
 .mcpb-runtime/
+
+# Claude Code creates a git worktree per isolated agent run under here. Transient session
+# state, never source — and a checkout inside the checkout, which nothing should track.
+.claude/worktrees/
+
+# @agentskit/harness keep-pushing loop.
+# loop.config.yaml identifies a Linear workspace and person; only the example is tracked.
+loop.config.yaml
+loop.config.local.yaml
+.codex/loop/

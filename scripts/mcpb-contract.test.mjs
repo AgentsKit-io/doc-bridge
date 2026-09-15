@@ -24,6 +24,8 @@ const expectedTools = [
   'docbridge.relations',
   'docbridge.run',
   'docbridge.proposals',
+  'knowledge.search',
+  'knowledge.lookup',
 ]
 
 test('MCPB manifest pins the local read-only Doc Bridge entrypoint', () => {

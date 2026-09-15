@@ -5,6 +5,7 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 import { runCli } from '../src/cli/program.js'
+import { discoverRepository } from '../src/discovery/repository.js'
 
 const capture = (fn: () => number | undefined): { readonly code: number | undefined; readonly out: string; readonly err: string } => {
   const stdout = process.stdout.write
@@ -69,7 +70,8 @@ describe('workflow CLI', () => {
       expect(htmlSource).toContain('data-level="module"')
       expect(htmlSource).not.toContain('.level{display:none!important}')
       expect(readFileSync(join(root, '.doc-bridge', 'workflow', 'manifest.json'), 'utf8')).toContain(checkPayload.runId)
-      expect(JSON.parse(readFileSync(join(root, '.doc-bridge', 'workflow', 'manifest.json'), 'utf8')).analyzerVersions['js-ts']).toBe('1.3.4')
+      // The manifest must carry discovery's own analyzer version, whatever that version is.
+      expect(JSON.parse(readFileSync(join(root, '.doc-bridge', 'workflow', 'manifest.json'), 'utf8')).analyzerVersions['js-ts']).toBe(discoverRepository({ root }).analyzerVersions['js-ts'])
 
       const reportPath = join(root, '.doc-bridge', 'transition-report.html')
       const large = capture(() => runCli(['map', '--html', '--output', reportPath, '--report-threshold', '1', '--json']))
