@@ -134,3 +134,14 @@ export const createDocBridgeRetriever = (index: DocBridgeIndexV1, options: DocBr
       : retrieveDocBridgeDocuments(index, request.query, options)
   return { retrieve: retrieve as DocBridgeRetriever['retrieve'] }
 }
+
+/**
+ * The prose rendering of retrieved documents, as `formatRetrievedDocuments` in `@agentskit/core`
+ * renders them: a numbered block per document, its source when it has one, then its content.
+ * Mirrored for the same reason the types above are — the peer is optional and the knowledge
+ * tools must render text without it — and asserted identical to the real function by test.
+ */
+export const formatRetrievedDocuments = (documents: readonly RetrievedDocument[]): string =>
+  documents.length === 0
+    ? ''
+    : documents.map((document, position) => `[${position + 1}]\n${document.source ? `Source: ${document.source}\n` : ''}${document.content}`).join('\n\n')

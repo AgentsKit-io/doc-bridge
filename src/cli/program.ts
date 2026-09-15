@@ -42,6 +42,7 @@ import { searchIndex } from '../query/search.js'
 import type { DocBridgeIndexV1 } from '../schemas/doc-bridge-index.js'
 import { parseAgentHandoff, parseDocBridgeConfig, parseDocBridgeIndex, parseReconciliationReport } from '../validate.js'
 import { parseDiscoverySnapshot } from '../validate.js'
+import { findingsFromDiagnostics } from '../findings/report.js'
 import {
   formatRetrievalBenchText,
   parseRetrievalSuite,
@@ -145,6 +146,7 @@ Core (no API key):
   ak-docs study verification <binding.json> [--text|--json]
   ak-docs study metrics <observation-ledger.json> [--baseline-round <id>] [--current-round <id>] [--baseline-run-id <id>] [--current-run-id <id>] [--allow-regressions] [--text|--json]
   ak-docs scan | reconcile | check | map [--text|--json] [--html] [--report-threshold <bytes>]
+  ak-docs check --json --format finding             emit diagnostics in the ecosystem Finding shape
   ak-docs fix propose links|normalize <artifact> [--output <file>]
   ak-docs fix approve|apply <proposal.json> [--by <name>]
   ak-docs suggest [--documentation] [--json|--text]   run the configured Registry agent
@@ -677,9 +679,31 @@ const runWorkflowCommand = (
 ): number => {
   try {
     const { config, root } = loadProject(configPath)
+    const format = optionValues(argv, '--format')[0]
+    if (format !== undefined && format !== 'json' && format !== 'finding') throw new Error('--format must be json or finding.')
+    if (format === 'finding' && command !== 'check') throw new Error('--format finding is only available for ak-docs check.')
     const result = command === 'scan' ? scanWorkflow(root, config) : command === 'reconcile' ? reconcileWorkflow(root, config) : checkWorkflow(root, config)
     const output = workflowOutput(result)
     if (command === 'map') output.kind = 'architecture-map'
+    if (format === 'finding') {
+      /*
+       * The canonical shape the ecosystem consumes: every reconciliation diagnostic as a `Finding`
+       * with a severity from `SEVERITY_ORDER`. The rule verdict still decides the exit code, so a
+       * dashboard reading findings and a CI job reading the exit code agree on what failed.
+       */
+      const diagnostics = Array.isArray(output.diagnostics) ? (output.diagnostics as Parameters<typeof findingsFromDiagnostics>[0]) : []
+      writeJson({
+        ok: output.ok,
+        runId: output.runId,
+        state: output.state,
+        ...(output.snapshotHash ? { snapshotHash: output.snapshotHash } : {}),
+        ...(output.reportHash ? { reportHash: output.reportHash } : {}),
+        format: 'finding',
+        findings: findingsFromDiagnostics(diagnostics),
+      })
+      const exitCode = output.rules && typeof output.rules === 'object' && 'exitCode' in output.rules && (output.rules as { exitCode?: unknown }).exitCode === 1 ? 1 : 0
+      return result.run.state === 'failed' ? 1 : exitCode
+    }
     if (command === 'map' && flags.has('--html')) {
       const snapshot = parseDiscoverySnapshot(loadWorkflowStepOutput(result.stateDir, 'normalize'))
       const report = parseReconciliationReport(loadWorkflowStepOutput(result.stateDir, 'reconcile'))

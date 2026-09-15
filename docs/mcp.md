@@ -67,6 +67,11 @@ The stdio server accepts the newline-delimited JSON transport used by current MC
 | `retriever.query` | Local retriever chunks |
 | `memory.classify` / `memory.promoteDraft` | Memory pipeline |
 | `registry.topology` | Static curator and delegate topology |
+| `knowledge.search` | Ranked entries for a query, by kind, explained, within a `budgetTokens` |
+| `knowledge.lookup` | One entity with neighbours, documents, handoff, open diagnostics and evidence, within a `budgetTokens` |
+| `docbridge.diagnostics { format: 'finding' }` | Diagnostics as ecosystem `Finding`s |
+
+Budgets, the drop order and the lookup shape are specified in [MCP knowledge tools v1](./spec/mcp-knowledge-tools-v1.md).
 
 Every tool is annotated read-only. None of these MCP calls writes project files or publishes a memory promotion.
 

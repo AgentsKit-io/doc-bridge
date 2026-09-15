@@ -315,9 +315,11 @@ export const SurfacesConfigSchema = z
               'docbridge.relations',
               'docbridge.run',
               'docbridge.proposals',
+              'knowledge.search',
+              'knowledge.lookup',
             ]),
           )
-          .max(16)
+          .max(18)
           .optional(),
         transport: z.enum(['stdio', 'http']).optional(),
         http: z
@@ -528,6 +530,13 @@ export const RetrievalConfigSchema = z
     weights: z.record(z.string().min(1).max(64), z.number().min(0).max(1_000)).optional(),
     params: z
       .object({ k1: z.number().min(0).max(100).optional(), b: z.number().min(0).max(1).optional() })
+      .strict()
+      .optional(),
+    benchmark: z
+      .object({
+        /** The golden retrieval suite the doctor measures hit@3 against. `docs/bench/retrieval-suite-v1.json` by default. */
+        suite: z.string().min(1).max(512).optional(),
+      })
       .strict()
       .optional(),
   })

@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+import { BudgetReportSchema } from './budget.js'
+
 export const HANDOFF_SCHEMA_VERSION = 1 as const
 
 export const HandoffTargetTypeSchema = z.enum([
@@ -92,6 +94,8 @@ export const AgentHandoffV1Schema = z
       .max(32)
       .optional(),
     metadata: z.record(z.string().min(1).max(64), z.unknown()).optional(),
+    /** Present only when the caller declared `budgetTokens`: what the payload cost and what it shed to fit. */
+    budget: BudgetReportSchema.optional(),
   })
   .strict()
 

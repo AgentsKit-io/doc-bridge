@@ -11,6 +11,10 @@ import { classifyMemoryCandidates, draftMemoryPromotion } from '../memory/pipeli
 import { loadFreshDocBridgeIndex } from '../query/load-index.js'
 import { runQuery } from '../query/query.js'
 import { searchIndex } from '../query/search.js'
+import { findingsFromDiagnostics } from '../findings/report.js'
+import { budgetedHandoff, formatKnowledgeLookupText, formatKnowledgeSearchText, knowledgeLookup, knowledgeSearch, MAX_LOOKUP_DEPTH } from './knowledge.js'
+import type { AgentHandoffV1 } from '../schemas/agent-handoff.js'
+import { RetrievalKindSchema } from '../schemas/retrieval-index.js'
 import type { DocBridgeIndexV1 } from '../schemas/doc-bridge-index.js'
 import { PACKAGE_VERSION } from '../version.js'
 import { loadWorkflowManifest, loadWorkflowStepOutput } from '../workflow/engine.js'
@@ -43,7 +47,7 @@ export const MCP_TOOLS = [
     annotations: { readOnlyHint: true },
     inputSchema: {
       type: 'object',
-      properties: { id: { type: 'string' }, kind: { type: 'string', enum: ['package', 'ownership'] } },
+      properties: { id: { type: 'string' }, kind: { type: 'string', enum: ['package', 'ownership'] }, budgetTokens: { type: 'number' } },
       required: ['id'],
     },
   },
@@ -126,7 +130,7 @@ export const MCP_TOOLS = [
     title: 'Read reconciliation diagnostics',
     description: 'Read bounded diagnostics from the latest canonical reconciliation report.',
     annotations: { readOnlyHint: true },
-    inputSchema: { type: 'object', properties: { status: { type: 'string' }, severity: { type: 'string' } } },
+    inputSchema: { type: 'object', properties: { status: { type: 'string' }, severity: { type: 'string' }, format: { type: 'string', enum: ['diagnostic', 'finding'] } } },
   },
   {
     name: 'docbridge.relations',
@@ -148,15 +152,72 @@ export const MCP_TOOLS = [
     description: 'Create, inspect, approve and apply deterministic proposals through the shared human-gated workflow.',
     inputSchema: { type: 'object', properties: { action: { type: 'string', enum: ['list', 'propose-links', 'propose-normalize', 'suggest', 'approve', 'apply'] }, proposalHash: { type: 'string' }, artifactPath: { type: 'string' }, approvedBy: { type: 'string' }, proposal: { type: 'object' } } },
   },
+  {
+    name: 'knowledge.search',
+    title: 'Search the knowledge graph',
+    description: 'Rank every indexed entity for a query, optionally by kind, with an explanation and within a token budget.',
+    annotations: { readOnlyHint: true },
+    inputSchema: {
+      type: 'object',
+      properties: {
+        query: { type: 'string' },
+        kinds: { type: 'array', items: { type: 'string', enum: ['document', 'module', 'area', 'package', 'intent', 'change'] } },
+        limit: { type: 'number' },
+        explain: { type: 'boolean' },
+        budgetTokens: { type: 'number' },
+        format: { type: 'string', enum: ['json', 'text'] },
+      },
+      required: ['query'],
+    },
+  },
+  {
+    name: 'knowledge.lookup',
+    title: 'Look up one entity',
+    description: 'Return an entity with its neighbours by relation kind, the documents about it, its handoff, its open diagnostics and its evidence, within a token budget.',
+    annotations: { readOnlyHint: true },
+    inputSchema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string' },
+        path: { type: 'string' },
+        depth: { type: 'number' },
+        budgetTokens: { type: 'number' },
+        format: { type: 'string', enum: ['json', 'text'] },
+      },
+    },
+  },
 ] as const
 
 const asRecord = (value: unknown): Record<string, unknown> =>
   value && typeof value === 'object' ? (value as Record<string, unknown>) : {}
 
+/** A budget is a positive count of tokens; the upper bound keeps a typo from meaning "unbounded". */
+const BudgetTokensSchema = z.number().int().positive().max(1_000_000)
+
 const HandoffResolveArgsSchema = z.object({
   id: z.string().min(1),
   kind: z.enum(['package', 'ownership']).optional(),
+  budgetTokens: BudgetTokensSchema.optional(),
 })
+
+const KnowledgeSearchArgsSchema = z.object({
+  query: z.string().min(1),
+  kinds: z.array(RetrievalKindSchema).max(6).optional(),
+  limit: z.number().int().positive().max(100).optional(),
+  explain: z.boolean().optional(),
+  budgetTokens: BudgetTokensSchema.optional(),
+  format: z.enum(['json', 'text']).optional(),
+})
+
+const KnowledgeLookupArgsSchema = z
+  .object({
+    id: z.string().min(1).optional(),
+    path: z.string().min(1).optional(),
+    depth: z.number().int().min(1).max(MAX_LOOKUP_DEPTH).optional(),
+    budgetTokens: BudgetTokensSchema.optional(),
+    format: z.enum(['json', 'text']).optional(),
+  })
+  .refine((args) => args.id || args.path, 'knowledge.lookup requires id or path')
 
 const DocSearchArgsSchema = z.object({
   term: z.string().min(1),
@@ -176,7 +237,7 @@ const DocGetArgsSchema = z
   .refine((args) => args.id || args.path, 'doc.get requires id or path')
 
 const WorkflowRunArgsSchema = z.object({ runId: z.string().min(1).optional() })
-const DiagnosticsArgsSchema = z.object({ status: z.string().min(1).optional(), severity: z.string().min(1).optional() })
+const DiagnosticsArgsSchema = z.object({ status: z.string().min(1).optional(), severity: z.string().min(1).optional(), format: z.enum(['diagnostic', 'finding']).optional() })
 const RelationsArgsSchema = z.object({ kind: z.string().min(1).optional(), limit: z.number().int().positive().max(500).optional() })
 const ProposalsArgsSchema = z.object({ action: z.enum(['list', 'propose-links', 'propose-normalize', 'suggest', 'approve', 'apply']).optional(), proposalHash: z.string().min(1).optional(), artifactPath: z.string().min(1).optional(), approvedBy: z.string().min(1).optional(), proposal: z.unknown().optional() })
 
@@ -283,13 +344,28 @@ export const handleMcpRequest = (ctx: McpContext, request: JsonRpcRequest): unkn
 
     if (name === 'handoff.resolve') {
       const parsed = parseToolArgs('handoff.resolve', HandoffResolveArgsSchema, args)
-      return textResult(
-        runQuery(index(), ctx.config, {
-          kind: parsed.kind === 'package' ? 'package' : 'ownership',
-          id: parsed.id,
-          agent: true,
-        }, { root: ctx.root }),
-      )
+      const loaded = index()
+      const handoff = runQuery(loaded, ctx.config, {
+        kind: parsed.kind === 'package' ? 'package' : 'ownership',
+        id: parsed.id,
+        agent: true,
+      }, { root: ctx.root })
+      // The payload is the handoff it always was; a declared budget adds `budget` and may shed `related` and the summary note.
+      return textResult(parsed.budgetTokens === undefined ? handoff : budgetedHandoff(loaded, handoff as AgentHandoffV1, parsed.budgetTokens))
+    }
+
+    if (name === 'knowledge.search') {
+      const { format, ...parsed } = parseToolArgs('knowledge.search', KnowledgeSearchArgsSchema, args)
+      const response = knowledgeSearch(index(), parsed)
+      return textResult(format === 'text' ? formatKnowledgeSearchText(response) : response)
+    }
+
+    if (name === 'knowledge.lookup') {
+      const { format, ...parsed } = parseToolArgs('knowledge.lookup', KnowledgeLookupArgsSchema, args)
+      // Diagnostics come from the latest workflow run when there is one; a repository never checked still gets its lookup.
+      const report = () => { try { return workflowReport(ctx) } catch { return undefined } }
+      const response = knowledgeLookup(index(), ctx.config, parsed, { root: ctx.root, report })
+      return textResult(format === 'text' ? formatKnowledgeLookupText(response) : response)
     }
 
     if (name === 'doc.search') {
@@ -342,6 +418,8 @@ export const handleMcpRequest = (ctx: McpContext, request: JsonRpcRequest): unkn
       const diagnostics = workflowReport(ctx).diagnostics.filter((diagnostic) =>
         (!parsed.status || diagnostic.status === parsed.status) && (!parsed.severity || diagnostic.severity === parsed.severity),
       )
+      // `finding` is the ecosystem shape; the filters above still speak the internal vocabulary.
+      if (parsed.format === 'finding') return textResult(redactValue({ reportHash: workflowReport(ctx).contentHash, findings: findingsFromDiagnostics(diagnostics) }))
       return textResult(redactValue({ reportHash: workflowReport(ctx).contentHash, diagnostics }))
     }
 

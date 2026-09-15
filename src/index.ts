@@ -640,3 +640,38 @@ export {
   docBridgePatternMarkdown,
   docBridgePatternPayload,
 } from './playbook/doc-bridge-pattern.js'
+
+// KR-08: MCP knowledge tools, findings reporter, measured doctor
+export {
+  approximateCounter,
+  compileBudget,
+  TOKEN_METHOD,
+  type BudgetMessage,
+  type BudgetTokenCounter,
+  type CompileBudgetInput,
+  type CompileBudgetResult,
+} from './budget/compile.js'
+export { applyBudget, type BudgetedSection } from './budget/sections.js'
+export { BUDGET_SECTION_ORDER, BudgetReportSchema, BudgetSectionSchema, type BudgetReport, type BudgetSection } from './schemas/budget.js'
+export {
+  budgetedHandoff,
+  formatKnowledgeLookupText,
+  formatKnowledgeSearchText,
+  knowledgeLookup,
+  knowledgeSearch,
+  KNOWLEDGE_TOOLS_SCHEMA_VERSION,
+  MAX_LOOKUP_DEPTH,
+  resolveLookupEntry,
+  type KnowledgeDocumentRef,
+  type KnowledgeLookupEntity,
+  type KnowledgeEvidence,
+  type KnowledgeLookupOptions,
+  type KnowledgeLookupRequest,
+  type KnowledgeLookupResponse,
+  type KnowledgeNeighbour,
+  type KnowledgeSearchRequest,
+  type KnowledgeSearchResponse,
+  type KnowledgeSearchResult,
+} from './mcp/knowledge.js'
+export { findingFromDiagnostic, findingsFromDiagnostics, SEVERITY_ORDER, type Finding, type ReportableDiagnostic, type Severity } from './findings/report.js'
+export { formatRetrievedDocuments } from './retriever/doc-bridge-retriever.js'
