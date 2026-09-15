@@ -28,3 +28,9 @@ A file-backed entity carries its file's hash, and a second scan may reuse an ent
 unchanged — but only while the universe its references resolve against is identical, and only from
 a snapshot produced by this pipeline, these analyzers and this configuration. Reuse either
 reproduces a cold scan exactly or it is refused, and the run reports what it reused as `coverage`.
+
+Markdown for people is rendered from templates in `src/render/`, never concatenated: a template
+sees only the variables `src/render/data.ts` computes, sorted and without timestamps, and the
+synchronous evaluator in `src/render/engine.ts` must keep rendering what knap renders. Every
+generated region carries a `<!-- doc-bridge:generated hash=… -->` marker so the analyzer skips it
+and the audit can report a hand edit inside it; `llms.txt` is the exception and stays byte-identical.

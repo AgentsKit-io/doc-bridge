@@ -94,6 +94,9 @@ export default {
   /** Optional resumable workflow state */
   workflow?: WorkflowConfig
 
+  /** Optional project templates for `ak-docs render`, by template name */
+  render?: RenderConfig
+
   /** Optional report publication privacy; private is the default */
   report?: { privacy?: 'private' | 'anonymized' }
 } satisfies DocBridgeConfigV1
@@ -542,6 +545,29 @@ and re-approve the [retrieval benchmark](../bench/README.md) baseline if you gat
 smaller and builds faster, at the cost of the retrieval it exists for: an exported-symbol or
 file-path query has nothing to resolve against. Turn it off only for a repository whose source is
 not the thing agents ask about.
+
+## `render` (optional)
+
+```ts
+type RenderConfig = {
+  /** Project templates that replace the bundled ones, by name, as paths relative to the project root. */
+  templates?: Partial<Record<'llms.txt' | 'area' | 'ownership' | 'change-digest' | 'overlay-review', string>>
+}
+```
+
+`ak-docs render <name>` renders the canonical artifacts as Markdown from a bundled template; a
+path under `templates` replaces that template entirely, without a code change. Templates use
+knap syntax and see only the variables Doc Bridge computes — see [Render v1](./render-v1.md) for
+each template's variables and `ak-docs render <name> --print-template` for the bundled source.
+The `llms.txt` override is also what `ak-docs index` writes.
+
+```json
+{
+  "render": {
+    "templates": { "area": "templates/area.md" }
+  }
+}
+```
 
 ## `safety` (optional)
 

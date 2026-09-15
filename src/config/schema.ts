@@ -539,6 +539,19 @@ export const ConformanceConfigSchema = z
   })
   .strict()
 
+export const RenderTemplateNameSchema = z.enum(['llms.txt', 'area', 'ownership', 'change-digest', 'overlay-review'])
+
+export const RenderConfigSchema = z
+  .object({
+    /**
+     * Project templates that replace the bundled ones, by template name, as paths relative to
+     * the project root. `ak-docs render <name> --print-template` prints the bundled template to
+     * start from.
+     */
+    templates: z.partialRecord(RenderTemplateNameSchema, z.string().min(1).max(512)).optional(),
+  })
+  .strict()
+
 export const DocBridgeConfigV1Schema = z
   .object({
     schemaVersion: z.literal(CONFIG_SCHEMA_VERSION),
@@ -570,10 +583,12 @@ export const DocBridgeConfigV1Schema = z
     federation: FederationConfigSchema.optional(),
     conformance: ConformanceConfigSchema.optional(),
     retrieval: RetrievalConfigSchema.optional(),
+    render: RenderConfigSchema.optional(),
   })
   .strict()
 
 export type DocBridgeConfigV1 = z.infer<typeof DocBridgeConfigV1Schema>
+export type RenderConfig = z.infer<typeof RenderConfigSchema>
 export type AgentCorpusConfig = z.infer<typeof AgentCorpusConfigSchema>
 export type HumanCorpusConfig = z.infer<typeof HumanCorpusConfigSchema>
 export type DocumentationStandardV1Config = z.infer<typeof DocumentationStandardV1ConfigSchema>

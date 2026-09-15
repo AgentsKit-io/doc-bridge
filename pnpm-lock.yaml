@@ -53,6 +53,9 @@ importers:
       graphology-shortest-path:
         specifier: ~2.1.0
         version: 2.1.0(graphology-types@0.24.8)
+      knap:
+        specifier: ~0.5.1
+        version: 0.5.1
       mdast-util-to-string:
         specifier: ^4.0.0
         version: 4.0.0
@@ -2516,6 +2519,9 @@ packages:
   dayjs@1.11.21:
     resolution: {integrity: sha512-98IT+HOahAisibz/yjKbzuOBwYcjJ7BCLPzARyHiyEBmRz4fatF+KPJszEHXsGYjUG234aH/cOjW1wwTbKUZlA==}
 
+  dayjs@1.11.23:
+    resolution: {integrity: sha512-QDTCU0M0MxR3hQfnlDJfwekQiaanm1ubOD231u73WBckQ/fsamwRLiE2GBz6D3a/xF1NgfiDLJjXBa1hYOYTtQ==}
+
   debug@2.6.9:
     resolution: {integrity: sha512-bC7ElrdJaJnPbAP+1EotYvqZsb3ecl5wi6Bfi6BJTUcNowp6cvspg0jXznRTKDjm/E7AdgFBVeAPVMNcKGsHMA==}
     peerDependencies:
@@ -3295,6 +3301,11 @@ packages:
 
   khroma@2.1.0:
     resolution: {integrity: sha512-Ls993zuzfayK269Svk9hzpeGUKob/sIgZzyHYdjQoAdQetRKpOLj+k/QQQ/6Qi0Yz65mlROrfd+Ev+1+7dz9Kw==}
+
+  knap@0.5.1:
+    resolution: {integrity: sha512-t2w9XIdtMrI8q6WhUu9tN74BRI42z/HqSi6wpVI1S1dslb/VlUg5a8XohQ2GeYHr2l4FYacz36Zq7j92bHlDbg==}
+    engines: {node: '>=20'}
+    hasBin: true
 
   launch-editor@2.14.1:
     resolution: {integrity: sha512-QWBrQsMpH7gPr965dsKD/3cKWiNoTjpATQf++Xq63N6sKRGMwlVXz41O1IZTMfZQgBctD/K5Zt06+/I6pP6+HA==}
@@ -7165,6 +7176,8 @@ snapshots:
 
   dayjs@1.11.21: {}
 
+  dayjs@1.11.23: {}
+
   debug@2.6.9:
     dependencies:
       ms: 2.0.0
@@ -8120,6 +8133,10 @@ snapshots:
       commander: 8.3.0
 
   khroma@2.1.0: {}
+
+  knap@0.5.1:
+    dependencies:
+      dayjs: 1.11.23
 
   launch-editor@2.14.1:
     dependencies:

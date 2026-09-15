@@ -63,6 +63,9 @@ import { renderOfflineReportArtifact } from '../report/html.js'
 import { benchmarkFixture, formatBenchmarkText, measureBenchmark } from '../metrics/benchmark.js'
 import { PACKAGE_VERSION } from '../version.js'
 import { auditDocumentation, formatDocumentationAuditText } from '../audit/documentation.js'
+import { renderArtifact, writeRenderedPages } from '../render/render.js'
+import { resolveTemplateSource } from '../render/template-source.js'
+import { RENDER_TEMPLATE_NAMES, RENDER_TEMPLATES, isRenderTemplateName } from '../render/templates.js'
 import {
   formatHistoricalEvidenceText,
   formatStudyProtocolText,
@@ -121,6 +124,7 @@ type Command =
   | 'list'
   | 'conformance'
   | 'audit'
+  | 'render'
 
 const usage = `ak-docs — human↔agent documentation bridge (@agentskit/doc-bridge)
 
@@ -156,6 +160,7 @@ Core (no API key):
   ak-docs rules run <report.json> [--preset default|recommended|strict] [--severity rule=level] [--ignore rule]
   ak-docs conformance run documentation-standard-v1 [--text|--json]
   ak-docs audit documentation [--text|--json]
+  ak-docs render <llms.txt|area|ownership|change-digest|overlay-review> [--data <artifact>] [--output <path>] [--print-template] [--json]
   ak-docs mcp
   ak-docs mcp install --cursor | --claude
   ak-docs memory ingest|classify|promote [--pr] [--dry-run]
@@ -243,6 +248,7 @@ const parseArgs = (argv: readonly string[]) => {
   else if (positional[0] === 'list') command = 'list'
   else if (positional[0] === 'conformance') command = 'conformance'
   else if (positional[0] === 'audit') command = 'audit'
+  else if (positional[0] === 'render') command = 'render'
 
   return { command, flags, configPath, positional }
 }
@@ -819,6 +825,50 @@ const runDocumentationAuditCommand = (
   }
 }
 
+const RENDER_USAGE = [
+  `Usage: ak-docs render <${RENDER_TEMPLATE_NAMES.join('|')}> [--data <artifact>] [--output <path>] [--print-template] [--json]`,
+  ...RENDER_TEMPLATE_NAMES.map((name) => `  ${name.padEnd(16)} ${RENDER_TEMPLATES[name].description} (--data: ${RENDER_TEMPLATES[name].data})`),
+].join('\n')
+
+const runRenderCommand = (
+  flags: ReadonlySet<string>,
+  positional: readonly string[],
+  configPath: string | undefined,
+  argv: readonly string[],
+): number => {
+  // parseArgs files option values as positionals; the template name is the first one no option consumed.
+  const dataPath = optionValues(argv, '--data')[0]
+  const outputPath = optionValues(argv, '--output')[0]
+  const consumed = new Set([dataPath, outputPath].filter(Boolean))
+  const name = positional.slice(1).find((value) => !consumed.has(value))
+  if (!name || !isRenderTemplateName(name)) {
+    process.stderr.write(`${name ? `Unknown template "${name}".\n` : ''}${RENDER_USAGE}\n`)
+    return 1
+  }
+  try {
+    const { config, root } = loadProject(configPath)
+    if (flags.has('--print-template')) {
+      process.stdout.write(resolveTemplateSource(name, config, root).source)
+      return 0
+    }
+    const result = renderArtifact({ root, config, template: name, ...(dataPath ? { dataPath } : {}) })
+    if (outputPath) {
+      const written = writeRenderedPages(result, resolve(root, outputPath), root)
+      writeJson({ ok: true, template: name, source: result.origin, written })
+      return 0
+    }
+    if (flags.has('--json')) {
+      writeJson({ ok: true, template: name, source: result.origin, pages: result.pages })
+      return 0
+    }
+    process.stdout.write(result.pages.map((page) => page.content).join('\n'))
+    return 0
+  } catch (error) {
+    process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`)
+    return 2
+  }
+}
+
 const runRulesCommand = (
   argv: readonly string[],
   flags: ReadonlySet<string>,
@@ -1311,6 +1361,7 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
     return runWorkflowCommand(command, flags, configPath, argv)
   }
   if (command === 'audit') return runDocumentationAuditCommand(flags, positional, configPath)
+  if (command === 'render') return runRenderCommand(flags, positional, configPath, argv)
   if (command === 'bench') return runBenchCommand(flags, positional, configPath, argv)
 
   if (command === 'fix') return runFixCommand(argv, positional, configPath)

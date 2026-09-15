@@ -203,7 +203,7 @@ export const buildDocBridgeIndex = (opts: BuildIndexOptions): BuildIndexResult =
     if (write) {
       writeFileSync(
         llmsTxtPath,
-        renderLlmsTxt(config, knowledge, index.project?.name ?? 'project'),
+        renderLlmsTxt(config, knowledge, index.project?.name ?? 'project', { root }),
         'utf8',
       )
     }

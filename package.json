@@ -126,6 +126,7 @@
     "graphology-dag": "~0.4.1",
     "graphology-metrics": "~2.4.2",
     "graphology-shortest-path": "~2.1.0",
+    "knap": "~0.5.1",
     "mdast-util-to-string": "^4.0.0",
     "mermaid": "^11.17.2",
     "minimatch": "^10.2.6",
