@@ -54,7 +54,7 @@ export const MCP_TOOLS = [
     annotations: { readOnlyHint: true },
     inputSchema: {
       type: 'object',
-      properties: { term: { type: 'string' }, limit: { type: 'number' } },
+      properties: { term: { type: 'string' }, limit: { type: 'number' }, agent: { type: 'boolean' }, mode: { type: 'string', enum: ['discovery', 'editing', 'debugging', 'documentation'] }, contextBudgetTokens: { type: 'number' } },
       required: ['term'],
     },
   },
@@ -161,6 +161,9 @@ const HandoffResolveArgsSchema = z.object({
 const DocSearchArgsSchema = z.object({
   term: z.string().min(1),
   limit: z.number().int().positive().max(100).optional(),
+  agent: z.boolean().optional(),
+  mode: z.enum(['discovery', 'editing', 'debugging', 'documentation']).optional(),
+  contextBudgetTokens: z.number().int().positive().max(1_000_000).optional(),
 })
 
 const RetrieverQueryArgsSchema = z.object({
@@ -294,6 +297,7 @@ export const handleMcpRequest = (ctx: McpContext, request: JsonRpcRequest): unkn
 
     if (name === 'doc.search') {
       const parsed = parseToolArgs('doc.search', DocSearchArgsSchema, args)
+      if (parsed.agent) return textResult(runQuery(index(), ctx.config, { kind: 'search', term: parsed.term, agent: true, ...(parsed.mode === undefined ? {} : { mode: parsed.mode }), ...(parsed.contextBudgetTokens === undefined ? {} : { contextBudgetTokens: parsed.contextBudgetTokens }) }))
       return textResult(searchIndex(index(), parsed.term, parsed.limit ?? 20))
     }
 

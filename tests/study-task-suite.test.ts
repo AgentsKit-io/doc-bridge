@@ -20,6 +20,18 @@ describe('study task suite contracts', () => {
     expect(formatStudyTaskSuiteText(suite)).toContain('Executions planned: 288')
   })
 
+  it('keeps Phase 3 coverage bound to the fixed suite', () => {
+    const suite = parseStudyTaskSuite(fixture())
+    const coverage = JSON.parse(readFileSync(new URL('../docs/study/phase3-task-coverage-v1.json', import.meta.url), 'utf8')) as {
+      suiteContentHash: string
+      documentationTaskIds: string[]
+      requiredCoverage: string[]
+    }
+    expect(coverage.suiteContentHash).toBe(suite.contentHash)
+    expect(coverage.documentationTaskIds).toHaveLength(suite.population.length)
+    expect(coverage.requiredCoverage).toEqual(expect.arrayContaining(['documentation-freshness', 'documentation-contradiction', 'documentation-missing']))
+  })
+
   it('rejects incomplete repositories and budget overruns', () => {
     const source = fixture() as Record<string, unknown>
     const tasks = [...(source.tasks as unknown[])]
@@ -28,6 +40,15 @@ describe('study task suite contracts', () => {
     const suite = parseStudyTaskSuite(fixture())
     const overBudget = { ...suite, tasks: suite.tasks.map((task, index) => index === 0 ? { ...task, budget: { maxTokens: suite.maxTokensPerTask + 1, maxRuntimeMs: task.budget.maxRuntimeMs } } : task) }
     expect(() => validateStudyTaskSuite(overBudget)).toThrow('exceeds the suite budget')
+  })
+
+  it('accepts a bounded reduced pilot without weakening the canonical suite', () => {
+    const source = fixture() as Record<string, unknown>
+    const { contentHash: _contentHash, contentHashAlgo: _contentHashAlgo, ...payload } = source
+    const tasks = (source.tasks as Array<Record<string, unknown>>).slice(0, 4).map((task) => ({ ...task, repositoryId: 'public-fixture' }))
+    const pilot = createStudyTaskSuite({ ...payload, suiteVersion: 'phase4-pilot-v1', population: ['public-fixture'], tasks, maxRuns: 48, replicatesPerTask: 1 })
+    expect(pilot.tasks).toHaveLength(4)
+    expect(pilot.population).toEqual(['public-fixture'])
   })
 
   it('assigns deterministic balanced variants without changing the execution set', () => {

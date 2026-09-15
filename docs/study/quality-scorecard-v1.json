@@ -1,0 +1,38 @@
+{
+  "type": "doc-bridge-quality-scorecard-matrix",
+  "schemaVersion": 1,
+  "matrixVersion": "v1.2",
+  "policy": {
+    "statuses": ["pass", "partial", "not-analyzed", "fail"],
+    "requiredCriteriaMustPassForReady": true,
+    "missingEvidenceIsNotPass": true,
+    "currencyClaimsRequireObservedUsd": true
+  },
+  "thresholds": {
+    "fixturePrecision": 1,
+    "fixtureRecall": 1,
+    "fixtureEvidenceRatio": 1,
+    "taskSuccessRate": 0.95,
+    "tokenReductionPct": 0,
+    "tokenReplicates": 3,
+    "populationCount": 3,
+    "modelCount": 2,
+    "generalizationReplicates": 3,
+    "documentationRate": 0.95,
+    "examplesRate": 0.8,
+    "criticalMetadataCoverage": 1,
+    "semanticNotAnalyzedMaximum": 0,
+    "semanticReviewCoverage": 1,
+    "acceptanceInstrumentationCoverage": 1,
+    "latencyReductionPct": 0
+  },
+  "dimensions": [
+    "semantic-correctness",
+    "token-efficiency",
+    "cost",
+    "generalization",
+    "documentation-quality",
+    "evidence-quality",
+    "agent-efficiency"
+  ]
+}

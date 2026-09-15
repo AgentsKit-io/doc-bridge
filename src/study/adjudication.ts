@@ -89,7 +89,10 @@ const adjudicatorInput = (task: StudyTaskV1, observation: ControlledStudyObserva
       status: observation.execution.status,
       passed: observation.measurements?.acceptanceChecksPassed ?? null,
       total: observation.measurements?.acceptanceChecksTotal ?? null,
-      measurementPresent: observation.measurements?.acceptanceChecksPassed !== undefined && observation.measurements?.acceptanceChecksTotal !== undefined,
+      executed: observation.measurements?.acceptanceChecksExecuted ?? null,
+      measurementPresent: observation.measurements?.acceptanceChecksPassed !== undefined
+        && observation.measurements?.acceptanceChecksTotal !== undefined
+        && observation.measurements?.acceptanceChecksExecuted !== undefined,
     },
     measurements: observation.measurements ?? {},
     execution: { status: observation.execution.status, durationMs: observation.execution.durationMs, responseBytes: observation.execution.responseBytes },
@@ -125,6 +128,7 @@ export const independentlyAdjudicateStudyObservation = async (task: StudyTaskV1,
     outcome: output.outcome,
     confidence: output.confidence,
     reasonCodes: output.reasonCodes,
+    ...(output.tokenMethod === undefined ? {} : { tokenMethod: output.tokenMethod }),
     reason: 'Independent adjudicator evaluated the anonymized bounded candidate record against the task rubric.',
   }, {
     ...baseMeasurements,

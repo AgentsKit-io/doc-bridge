@@ -59,7 +59,9 @@ The parser rejects stale content hashes, duplicate model/scenario mappings, unsa
 
 The child process receives one JSON request on stdin and must emit exactly one JSON object on stdout. Human-readable logs must go to stderr. The request contains the task, scenario, expected outcome, evidence requirements, acceptance checks, allowed tools, and forbidden actions. It does not contain the configured repository path.
 
-The response may contain the bounded metrics below. Unknown fields are ignored by the generic runner, while unknown numeric measurements are preserved by the observation schema for future metric versions. The bundled Codex adapter additionally passes a JSON Schema to the provider CLI and requires the semantic fields (`taskOutcome`, `evidenceQuality`, `safetyOutcome`, evidence IDs, clarification/rework counts, and measurements) so missing output is visible as a provider failure rather than silently becoming an empty result. When observed, measurements must use canonical names: `searchHitRate`, `acceptanceChecksPassed`, `acceptanceChecksTotal`, `errorRate`, `documentationFindingCount`, the documentation `*Rate` fields, `analysisCostUsd`, and `agentCostUsd`.
+The generic runner does not enforce scenario tool semantics. A provider mapping must enforce its own scenario contract: a `repository-only` command must not query Doc Bridge, while a `deterministic-doc-bridge` command must execute the configured deterministic query or handoff and pass its bounded result to the model. A scenario label or `allowedTools` field alone is not evidence that Doc Bridge was used.
+
+The response may contain the bounded metrics below. Unknown fields are ignored by the generic runner, while unknown numeric measurements are preserved by the observation schema for future metric versions. The bundled Codex adapter additionally passes a JSON Schema to the provider CLI and requires the semantic fields (`taskOutcome`, `evidenceQuality`, `safetyOutcome`, evidence IDs, clarification/rework counts, an observed latency or explicit `null`, and measurements) so missing output is visible as a provider failure rather than silently becoming an empty result. When observed, measurements must use canonical names: `searchHitRate`, `acceptanceChecksPassed`, `acceptanceChecksTotal`, `errorRate`, `documentationFindingCount`, the documentation `*Rate` fields, `analysisCostUsd`, and `agentCostUsd`.
 
 ```json
 {
@@ -67,6 +69,7 @@ The response may contain the bounded metrics below. Unknown fields are ignored b
   "outputTokens": 340,
   "tokenMethod": "provider",
   "toolCalls": 4,
+  "firstEvidenceLatencyMs": 820,
   "taskOutcome": "success",
   "evidenceQuality": "high",
   "safetyOutcome": "safe",
@@ -80,7 +83,9 @@ The response may contain the bounded metrics below. Unknown fields are ignored b
 }
 ```
 
-Raw prompts, responses, repository contents, paths, and credentials are not written to the observation ledger. The ledger stores status, hashes, timing, labeled token counts, tool counts, metric fields, and automated or pending human adjudication. The runner derives `providerTokenCostUnits` from provider-reported input plus output tokens; this is a transparent token-equivalent cost metric and must not be presented as currency.
+Raw prompts, responses, repository contents, paths, and credentials are not written to the observation ledger. The ledger stores status, hashes, timing, labeled token counts, context-token attribution, first-evidence latency when observed, tool counts, metric fields, and automated or pending human adjudication. The runner derives `providerTokenCostUnits` from provider-reported input plus output tokens; this is a transparent token-equivalent cost metric and must not be presented as currency. Context-token estimates are stored separately with `contextTokenMethod: "estimate"`; they are never combined with provider usage.
+
+The bundled Codex adapter also records privacy-safe aggregate context telemetry: `observedToolEventCount`, `observedToolInputBytes`, `observedToolOutputBytes`, `observedProviderInputBytes`, `observedAgentMessageBytes`, `observedContextBytes`, `observedProviderDurationMs`, and (when a tool event is observed) `timeToFirstToolEventMs`. These are byte counts and durations only; commands, paths, prompts, responses, and repository content are not emitted by the adapter. The duration is wall-clock time for the isolated provider process, while `timeToFirstToolEventMs` measures the first observed tool event, not semantic answer quality. The deterministic handoff is serialized as compact JSON before it is passed to the model, and the adapter explicitly tells the model to use its `startHere` and `readBeforeEditing` paths before exploring the repository. This preserves canonical content while removing formatting-only bytes and makes the intended low-context path measurable. Gzip and a cross-process cache are intentionally not used for model context: the model must receive readable content, and the current adapter starts an isolated process per observation, so either mechanism would add complexity without reducing billed model tokens. The public `--agent` CLI path also emits compact JSON, so machine consumers do not pay for presentation-only whitespace.
 
 ## Independent adjudication
 
@@ -106,6 +111,6 @@ ak-docs study run docs/study/run-plan-v1.json docs/study/task-suite-v1.json \
   --dry-run --text
 ```
 
-The current run plan dry run validates the configured 24-task balanced sample, repository roots, executable commands, and input limits. It writes no ledger and makes no provider call. To execute, omit `--dry-run`. The ledger is persisted after each observation, so an interrupted run can resume and skip completed task executions idempotently. A full 288-execution matrix requires a separately hashed run plan with `sampling.sampleSize` set to 288.
+The canonical run plan dry run validates the configured 24-task balanced sample, repository roots, executable commands, and input limits. It writes no ledger and makes no provider call. To execute, omit `--dry-run`. The ledger is persisted after each observation, so an interrupted run can resume and skip completed task executions idempotently. Reduced pilots may use fewer population identifiers and tasks, but require their own hashed suite, run plan, repository configuration, run ID, and explicit pilot label. A full 288-execution matrix requires a separately hashed run plan with `sampling.sampleSize` set to 288.
 
 Provider configuration and repository-root configuration are local operational inputs. Do not commit credentials, private paths, raw provider output, or consumer repository content to a publication artifact.

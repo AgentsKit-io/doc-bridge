@@ -607,6 +607,7 @@ export default (context) => {
   it('routes natural-language CLI searches to focused intent and change handoffs', () => {
     const intent = captureStdout(() => runCli(['search', 'find package', '--agent']))
     expect(intent.code).toBe(0)
+    expect(intent.out.trim()).not.toContain('\n')
     expect(JSON.parse(intent.out)).toMatchObject({ bestMatch: { type: 'intent', id: 'find-package' }, matches: [{ type: 'intent' }] })
 
     const change = captureStdout(() => runCli(['search', 'change zod schema', '--agent']))
