@@ -6,6 +6,8 @@ import type { DocumentationAuditConfig } from '../config/schema.js'
 import { contentHashForArtifactV1, sha256NormalizedV1 } from '../index-builder/content-hash.js'
 import { frontmatterString, parseFrontmatter } from '../lib/markdown.js'
 import type { DocumentationDiagnostic } from '../discovery/documentation.js'
+import { generatedRegionsOf } from '../render/data.js'
+import { verifyGeneratedRegions } from '../render/generated.js'
 import {
   DiagnosticSeveritySchema,
   EvidenceSchema,
@@ -284,6 +286,29 @@ export const auditDocumentation = (options: DocumentationAuditOptions): Document
   const findings: DocumentationAuditFinding[] = []
   const generated = documents.filter((document) => matches(document.path, generatedPaths))
   const analyzed = documents.filter((document) => !matches(document.path, generatedPaths))
+
+  /*
+   * A generated region whose body no longer hashes to what its marker claims was edited by hand
+   * (or written by a different generator). The analyzer records the regions on the document
+   * entity; the audit only recomputes the hash of the lines between the markers. Regenerating
+   * the region would silently discard the edit, which is why it is a finding first.
+   */
+  const documentEntities = new Map(
+    options.snapshot.entities
+      .filter((entity) => entity.kind === 'document' && entity.path)
+      .map((entity) => [normalizedPath(entity.path as string), entity] as const),
+  )
+  for (const document of documents) {
+    for (const mismatch of verifyGeneratedRegions(document.content, generatedRegionsOf(documentEntities.get(document.path)))) {
+      findings.push(createFinding(
+        'GENERATED_REGION_EDITED', 'generated-freshness', 'stale-or-unverified', 'warn', 'high',
+        `Generated region at ${document.path}:${mismatch.lineStart}-${mismatch.lineEnd} no longer matches its marker: the marker says hash=${mismatch.expected}, the content hashes to ${mismatch.actual}. It was edited by hand or written by a different generator.`,
+        [{ source: 'documentation', path: document.path, lineStart: mismatch.lineStart, lineEnd: mismatch.lineEnd }],
+        `${document.path}:${mismatch.lineStart}`, criticalPaths,
+        'Regenerate the region with ak-docs render, or move the manual text outside the generated markers so it is kept.',
+      ))
+    }
+  }
   /*
    * The unit coverage is measured against.
    *

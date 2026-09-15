@@ -77,6 +77,7 @@ pnpm add -D @agentskit/doc-bridge
 | `ak-docs gate run [index-freshness]` | Check generated index freshness |
 | `ak-docs conformance run documentation-standard-v1 [--text\|--json]` | Run the stable ecosystem documentation profile with evidence and remediation |
 | `ak-docs audit documentation [--text\|--json]` | Measure documentation quality and compare documentation claims with the observed project graph |
+| `ak-docs render <llms.txt\|area\|ownership\|change-digest\|overlay-review> [--data <artifact>] [--output <path>] [--print-template] [--json]` | Render the canonical artifacts as Markdown from bundled or project templates (`render.templates`); deterministic, no agent. See [Render v1](./render-v1.md) |
 | `ak-docs bench retrieval <suite.json> [--index <file>] [--baseline <file>] [--limit <n>] [--text\|--json]` | Measure retrieval quality against a golden query suite: hit@1, hit@3, mean reciprocal rank, context bytes and approximate tokens. Exits non-zero on a hit@3 regression against the baseline. No model, no network |
 | `ak-docs bench retrieval <suite.json> --baseline <file> --update-baseline --by <name> [--reason <text>]` | Record the measured figures as the approved baseline. A normal run never writes one |
 | `ak-docs mcp` | Start MCP server (stdio default) |

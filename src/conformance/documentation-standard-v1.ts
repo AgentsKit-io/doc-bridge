@@ -198,7 +198,7 @@ const llmsRule = (
   }
   const paths = [llmsPath, ...rawSources.values()]
   const evidence = paths.map((path) => fileEvidence(root, path))
-  const expectedLlms = renderLlmsTxt(config, generated.knowledge, generated.project?.name ?? 'project')
+  const expectedLlms = renderLlmsTxt(config, generated.knowledge, generated.project?.name ?? 'project', { root })
   const llmsIsFresh = evidence[0]?.content === expectedLlms
   if (evidence[0]?.exists) {
     evidence[0] = {

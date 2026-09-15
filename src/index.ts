@@ -675,3 +675,53 @@ export {
 } from './mcp/knowledge.js'
 export { findingFromDiagnostic, findingsFromDiagnostics, SEVERITY_ORDER, type Finding, type ReportableDiagnostic, type Severity } from './findings/report.js'
 export { formatRetrievedDocuments } from './retriever/doc-bridge-retriever.js'
+// KR-09: Markdown renderings
+export {
+  compileTemplate,
+  renderCompiledTemplate,
+  renderTemplate,
+  renderTemplateWithKnap,
+  TemplateError,
+  type CompiledTemplate,
+  type TemplateVariables,
+} from './render/engine.js'
+export {
+  GENERATED_REGION_CLOSE,
+  generatedRegionHash,
+  generatedRegionOpen,
+  verifyGeneratedRegions,
+  wrapGeneratedRegion,
+  type GeneratedRegionMismatch,
+  type GeneratedRegionRef,
+} from './render/generated.js'
+export {
+  BUNDLED_TEMPLATES,
+  RENDER_TEMPLATES,
+  RENDER_TEMPLATE_NAMES,
+  isRenderTemplateName,
+  type RenderTemplateInfo,
+  type RenderTemplateName,
+} from './render/templates.js'
+export { renderNamedTemplate, resolveTemplateSource, type TemplateSource } from './render/template-source.js'
+export {
+  areaPagesView,
+  changeDigestView,
+  overlayReviewView,
+  ownershipPagesView,
+  pageFileName,
+  type AreaPageView,
+  type ChangeDigestView,
+  type OverlayReviewInput,
+  type OverlayReviewView,
+  type OwnershipPageView,
+  type RenderedPage,
+  type SnapshotForDigest,
+} from './render/data.js'
+export {
+  applyGeneratedRegions,
+  renderArtifact,
+  writeRenderedPages,
+  type RenderArtifactOptions,
+  type RenderArtifactResult,
+} from './render/render.js'
+export { llmsTxtVariables, type LlmsTxtEntry, type LlmsTxtVariables } from './index-builder/llms-txt.js'
