@@ -3,6 +3,10 @@ type: module
 id: doc-bridge-cli
 editRoot: src/cli
 humanDoc: /docs/spec/cli
+owner: doc-bridge-maintainers
+lifecycle: active
+sourceOfTruth: src/cli
+validationPath: pnpm test && pnpm typecheck
 ---
 
 # CLI

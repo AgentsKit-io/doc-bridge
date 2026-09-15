@@ -1,0 +1,71 @@
+{
+  "type": "study-task-suite",
+  "schemaVersion": 1,
+  "suiteVersion": "phase4-public-pilot-v1",
+  "protocolVersion": "v2",
+  "title": "Bounded public pilot for documentation and knowledge discovery",
+  "population": ["public-fixture"],
+  "modelIds": ["low-cost-model", "reference-model"],
+  "scenarioIds": ["repository-only", "deterministic-doc-bridge", "registry-assisted"],
+  "maxTokensPerTask": 12000,
+  "maxRuntimeMsPerTask": 120000,
+  "maxRuns": 48,
+  "replicatesPerTask": 1,
+  "ordering": { "strategy": "balanced-counter-order", "seed": "phase4-public-pilot-v1" },
+  "tasks": [
+    {
+      "id": "public-fixture-discovery", "repositoryId": "public-fixture", "category": "discovery", "difficulty": "easy",
+      "objective": "Locate the public fixture entrypoints, ownership boundary, and canonical agent documentation.",
+      "initialContext": ["Start with the repository root and declared documentation."],
+      "allowedTools": ["repository-read", "doc-bridge-query", "shell-read"], "forbiddenActions": ["Modify files", "Invent undocumented ownership"],
+      "expectedOutcome": "A concise map names the fixture entrypoints, owner, and evidence without unsupported claims.",
+      "evidenceRequirements": [{ "id": "entrypoint-evidence", "description": "Observed declarations supporting the fixture entrypoint and ownership.", "source": "artifact" }],
+      "acceptanceChecks": [{ "id": "fixture-discovery-check", "command": "node -e \"const fs=require('node:fs'); if(!fs.existsSync('doc-bridge.config.json')||!fs.existsSync('llms.txt')) process.exit(1)\"", "expected": "The public fixture declares its Doc Bridge configuration and agent-readable index." }],
+      "budget": { "maxTokens": 6000, "maxRuntimeMs": 60000 },
+      "surfaces": { "logic": { "required": true }, "endpoint": { "required": false, "reason": "The public fixture has no endpoint." }, "database": { "required": false, "reason": "The public fixture has no database." }, "cli": { "required": true }, "mcp": { "required": false, "reason": "MCP is not required for this bounded discovery task." }, "ui": { "required": false, "reason": "The public fixture has no UI." }, "docs": { "required": true } },
+      "rubric": { "success": ["The entrypoint and owner are correct and evidenced."], "partial": ["The primary entrypoint is correct but one non-critical citation is missing."], "incorrect": ["The answer identifies an unsupported entrypoint or owner."], "incomplete": ["The answer does not cover the fixture scope."], "blocked": ["Required fixture evidence cannot be accessed."] },
+      "variantGroup": "public-fixture-discovery", "variants": [{ "id": "variant-a", "label": "Entrypoint-first wording", "context": "Begin with the declared configuration and package entrypoint." }, { "id": "variant-b", "label": "Documentation-first wording", "context": "Begin with the agent-readable index and trace ownership." }]
+    },
+    {
+      "id": "public-fixture-architecture", "repositoryId": "public-fixture", "category": "architecture", "difficulty": "medium",
+      "objective": "Describe the public fixture architecture as connected components and identify one evidence-backed boundary.",
+      "initialContext": ["Use workspace metadata, routing configuration, and agent documentation."],
+      "allowedTools": ["repository-read", "doc-bridge-map", "shell-read"], "forbiddenActions": ["Modify files", "Infer runtime edges without evidence"],
+      "expectedOutcome": "A bounded architecture view identifies the package, documentation corpus, and routing relationship.",
+      "evidenceRequirements": [{ "id": "architecture-evidence", "description": "Observed configuration and documentation supporting the architecture view.", "source": "artifact" }],
+      "acceptanceChecks": [{ "id": "fixture-architecture-check", "command": "node -e \"const fs=require('node:fs'); const c=JSON.parse(fs.readFileSync('doc-bridge.config.json')); if(c.routing?.plugin!=='pnpm-monorepo'||!c.corpus?.agent?.index) process.exit(1)\"", "expected": "The fixture declares a routing plugin and an agent documentation index." }],
+      "budget": { "maxTokens": 8000, "maxRuntimeMs": 90000 },
+      "surfaces": { "logic": { "required": true }, "endpoint": { "required": false, "reason": "The architecture task is static." }, "database": { "required": false, "reason": "The public fixture has no database." }, "cli": { "required": true }, "mcp": { "required": false, "reason": "MCP is not required for this bounded architecture task." }, "ui": { "required": false, "reason": "The public fixture has no UI." }, "docs": { "required": true } },
+      "rubric": { "success": ["The map is bounded, directional, and every relation has evidence."], "partial": ["The main components are correct but one relation or limitation is missing."], "incorrect": ["The map asserts an unsupported component or relation."], "incomplete": ["The answer is a list without connected evidence."], "blocked": ["The architecture evidence cannot be inspected."] },
+      "variantGroup": "public-fixture-architecture", "variants": [{ "id": "variant-a", "label": "Component-first wording", "context": "Start by grouping the observed fixture components." }, { "id": "variant-b", "label": "Relation-first wording", "context": "Start by tracing the strongest observed connection." }]
+    },
+    {
+      "id": "public-fixture-documentation", "repositoryId": "public-fixture", "category": "documentation", "difficulty": "hard",
+      "objective": "Find one stale, missing, unclear, redundant, or contradictory documentation claim in the public fixture and classify it with evidence.",
+      "initialContext": ["Compare the agent-readable index, human documentation metadata, and routing configuration."],
+      "allowedTools": ["repository-read", "doc-bridge-audit", "shell-read"], "forbiddenActions": ["Edit documentation", "Treat an unverified semantic inference as fact"],
+      "expectedOutcome": "The review reports a precise documentation issue, evidence, confidence, limitation, and next action.",
+      "evidenceRequirements": [{ "id": "documentation-evidence", "description": "Document and configuration evidence for the classified documentation issue.", "source": "artifact" }, { "id": "review-limitation", "description": "A limitation or confidence statement for the semantic judgment.", "source": "human" }],
+      "acceptanceChecks": [{ "id": "fixture-documentation-check", "command": "node -e \"const fs=require('node:fs'); if(!fs.existsSync('docs/for-agents/INDEX.md')||!fs.existsSync('llms.txt')||!fs.existsSync('doc-bridge.config.json')) process.exit(1)\"", "expected": "The fixture exposes the documentation surfaces required for a bounded comparison." }],
+      "budget": { "maxTokens": 10000, "maxRuntimeMs": 120000 },
+      "surfaces": { "logic": { "required": true }, "endpoint": { "required": false, "reason": "Documentation classification does not require an endpoint." }, "database": { "required": false, "reason": "Documentation classification does not require a database." }, "cli": { "required": true }, "mcp": { "required": false, "reason": "MCP is not required for this bounded audit task." }, "ui": { "required": false, "reason": "Documentation classification is not a UI task." }, "docs": { "required": true } },
+      "rubric": { "success": ["The issue category, evidence, confidence, and limitation are correct."], "partial": ["The issue is real but its category or limitation needs correction."], "incorrect": ["The claimed issue is contradicted by current evidence."], "incomplete": ["The answer names a concern without enough evidence."], "blocked": ["The documentation corpus cannot be compared."] },
+      "variantGroup": "public-fixture-documentation", "variants": [{ "id": "variant-a", "label": "Claim-first wording", "context": "Begin with a documentation claim and trace it to configuration." }, { "id": "variant-b", "label": "Evidence-first wording", "context": "Begin with observed configuration and find its documentation coverage." }]
+    },
+    {
+      "id": "public-fixture-implementation", "repositoryId": "public-fixture", "category": "implementation", "difficulty": "hard",
+      "objective": "Propose a minimal documentation-only correction for a verified public fixture knowledge gap without changing source code.",
+      "initialContext": ["Use the preceding discovery, architecture, and documentation evidence as context."],
+      "allowedTools": ["repository-read", "doc-bridge-query", "shell-read"], "forbiddenActions": ["Modify files", "Invent behavior not present in evidence"],
+      "expectedOutcome": "A minimal proposal identifies the documentation location, preserves conventions, and states how it would be verified.",
+      "evidenceRequirements": [{ "id": "patch-evidence", "description": "Evidence identifying the target document and verified knowledge gap.", "source": "artifact" }, { "id": "verification-plan", "description": "A real command or review step that would validate the proposal.", "source": "runner" }],
+      "acceptanceChecks": [{ "id": "fixture-proposal-check", "command": "node -e \"const fs=require('node:fs'); if(!fs.existsSync('.doc-bridge/index.json')||!fs.existsSync('docs/for-agents/INDEX.md')) process.exit(1)\"", "expected": "The fixture has a generated index and canonical agent documentation for proposal verification." }],
+      "budget": { "maxTokens": 10000, "maxRuntimeMs": 120000 },
+      "surfaces": { "logic": { "required": true }, "endpoint": { "required": false, "reason": "The proposal is documentation-only." }, "database": { "required": false, "reason": "The proposal is documentation-only." }, "cli": { "required": true }, "mcp": { "required": false, "reason": "MCP is not required for a bounded proposal." }, "ui": { "required": false, "reason": "The proposal does not change UI." }, "docs": { "required": true } },
+      "rubric": { "success": ["The proposal is minimal, correctly scoped, evidence-backed, and verifiable."], "partial": ["The proposal is safe but needs a location or verification correction."], "incorrect": ["The proposal targets the wrong document or asserts unsupported behavior."], "incomplete": ["The proposal lacks a usable change or verification plan."], "blocked": ["The target documentation cannot be safely identified."] },
+      "variantGroup": "public-fixture-implementation", "variants": [{ "id": "variant-a", "label": "Gap-to-patch wording", "context": "Start from the verified gap and derive the smallest correction." }, { "id": "variant-b", "label": "Patch-to-proof wording", "context": "Start from the expected proof and identify the smallest documentation change." }]
+    }
+  ],
+  "contentHashAlgo": "sha256-normalized-v1",
+  "contentHash": "226cd26a07fd0bd811fcc8ccf0eee8ef0f9813f68aa9c53d465f98dad44f62a7"
+}

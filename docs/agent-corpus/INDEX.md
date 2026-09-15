@@ -3,6 +3,10 @@ type: module
 id: doc-bridge-index
 editRoot: src/index-builder
 humanDoc: /docs/recipes/index-pipeline
+owner: doc-bridge-maintainers
+lifecycle: active
+sourceOfTruth: src/index-builder
+validationPath: pnpm test && pnpm typecheck && node bin/ak-docs.js index
 ---
 
 # Index builder

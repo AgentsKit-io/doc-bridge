@@ -100,7 +100,7 @@ describe('demo and mcp install', () => {
         return true
       }) as typeof process.stdout.write
       try {
-        expect(runCli(['doctor', '--text'])).toBe(0)
+        expect(runCli(['doctor', '--text', '--config', join(fixtureRoot, 'doc-bridge.config.json')])).toBe(0)
       } finally {
         process.stdout.write = write
       }
