@@ -317,7 +317,8 @@ const parseDocbridgeYaml = (
    */
   const covers: { value: string; line: number }[] = []
   const relations: RelationFields[] = []
-  const record = typeof raw === 'object' && raw !== null && !Array.isArray(raw) ? (raw as Record<string, unknown>) : undefined
+  // `raw` is neither null nor undefined here: the early return above settled that.
+  const record = typeof raw === 'object' && !Array.isArray(raw) ? (raw as Record<string, unknown>) : undefined
 
   if (Array.isArray(record?.covers)) {
     for (const [index, entry] of record.covers.entries()) {

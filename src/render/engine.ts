@@ -70,7 +70,19 @@ type RenderState = {
 
 // --- knap's value semantics, ported verbatim so `{{ x }}` prints what knap would print.
 
-const trimTrailingWhitespace = (value: string): string => value.replace(/[\t ]*\r?\n?$/, '')
+/*
+ * What /[\t ]*\r?\n?$/ did, without the backtracking: a quantified class anchored at the end runs
+ * quadratically on a template line of blanks, and a template is repository input.
+ */
+const trimTrailingWhitespace = (value: string): string => {
+  let end = value.length
+  if (end > 0 && value[end - 1] === '\n') {
+    end -= 1
+    if (end > 0 && value[end - 1] === '\r') end -= 1
+  }
+  while (end > 0 && (value[end - 1] === ' ' || value[end - 1] === '\t')) end -= 1
+  return value.slice(0, end)
+}
 const trimLeadingWhitespace = (value: string): string => value.replace(/^[\t ]*\r?\n?/, '')
 
 const isTruthy = (value: unknown): boolean => {
@@ -232,7 +244,7 @@ const evaluateFilter = (expression: Extract<Expression, { type: 'filter' }>, sta
         .map((argument) => {
           if (typeof argument === 'string') {
             if (isQuotedString(argument)) return argument
-            if (/\s*\w+\s*=>/.test(argument)) return argument
+            if (/\w\s*=>/.test(argument)) return argument
             if (/^[\w.:+\-*/]+$/.test(argument)) return argument
             return `"${argument}"`
           }

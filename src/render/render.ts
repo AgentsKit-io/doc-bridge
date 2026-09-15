@@ -21,7 +21,7 @@ import {
   type RenderedPage,
   type SnapshotForDigest,
 } from './data.js'
-import { GENERATED_REGION_CLOSE, generatedRegionHash, generatedRegionOpen } from './generated.js'
+import { GENERATED_REGION_CLOSE, generatedRegionHash, generatedRegionOpen, trimRegionBlankLines } from './generated.js'
 import { renderNamedTemplate, resolveTemplateSource } from './template-source.js'
 import { RENDER_TEMPLATES, type RenderTemplateName } from './templates.js'
 
@@ -59,7 +59,7 @@ const CLOSE_PLACEHOLDER = '@@doc-bridge:generated-close@@'
 
 export const REGION_VARIABLES = { open: OPEN_PLACEHOLDER, close: CLOSE_PLACEHOLDER } as const
 
-const trimRegionBody = (body: string): string => body.replace(/^\n+/, '').replace(/\n+$/, '')
+const trimRegionBody = trimRegionBlankLines
 
 export const applyGeneratedRegions = (output: string, name: string): string => {
   if (!output.includes(OPEN_PLACEHOLDER)) {
@@ -182,7 +182,8 @@ export const renderArtifact = (options: RenderArtifactOptions): RenderArtifactRe
  */
 export const writeRenderedPages = (result: RenderArtifactResult, target: string, root: string): string[] => {
   const single = result.pages.length === 1 && !RENDER_TEMPLATES[result.template].multiPage
-  const isDirectory = existsSync(target) && statSync(target).isDirectory()
+  // One stat, not exists-then-stat: the answer must describe a single moment on disk.
+  const isDirectory = statSync(target, { throwIfNoEntry: false })?.isDirectory() === true
   const written: string[] = []
   for (const page of result.pages) {
     const path = single && !isDirectory ? target : join(target, page.path)

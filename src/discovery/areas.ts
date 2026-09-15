@@ -60,7 +60,17 @@ export type DeriveAreasOptions = {
   readonly roots?: readonly string[]
 }
 
-const normalize = (path: string): string => toPosix(path).replace(/^\.\//, '').replace(/\/+$/, '')
+/*
+ * Trailing separators are trimmed with a loop rather than /\/+$/: a quantified group anchored at
+ * the end backtracks quadratically on a path that is mostly separators, and a module path comes
+ * from the repository being scanned.
+ */
+const normalize = (path: string): string => {
+  const posix = toPosix(path).replace(/^\.\//, '')
+  let end = posix.length
+  while (end > 0 && posix[end - 1] === '/') end -= 1
+  return posix.slice(0, end)
+}
 
 const relativeToPackage = (modulePath: string, packagePath: string): string | undefined => {
   if (packagePath === '.' || packagePath === '') return modulePath

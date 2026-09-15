@@ -28,8 +28,19 @@ const SHORT_HASH = 12
 
 const byPath = <T extends { readonly path: string }>(a: T, b: T): number => a.path.localeCompare(b.path) || 0
 
-/** A file name for a unit: `src/query` becomes `src-query.md`, and nothing escapes the output directory. */
-export const pageFileName = (value: string): string => `${value.replace(/[^A-Za-z0-9._-]+/g, '-').replace(/^[-.]+|-+$/g, '') || 'root'}.md`
+/**
+ * A file name for a unit: `src/query` becomes `src-query.md`, and nothing escapes the output
+ * directory. The ends are trimmed with a loop, because an alternation anchored at the end
+ * backtracks quadratically on a value that is mostly separators.
+ */
+export const pageFileName = (value: string): string => {
+  const slug = value.replace(/[^A-Za-z0-9._-]+/g, '-')
+  let start = 0
+  while (start < slug.length && (slug[start] === '-' || slug[start] === '.')) start += 1
+  let end = slug.length
+  while (end > start && slug[end - 1] === '-') end -= 1
+  return `${slug.slice(start, end) || 'root'}.md`
+}
 
 const shortHash = (hash: string | undefined): string => (hash ? hash.slice(0, SHORT_HASH) : '(none)')
 

@@ -23,9 +23,23 @@ export const generatedRegionOpen = (hash: string): string => `<!-- doc-bridge:ge
 export const generatedRegionHash = (body: string): string =>
   createHash('sha256').update(body.replace(/\r\n/g, '\n'), 'utf8').digest('hex').slice(0, GENERATED_REGION_HASH_LENGTH)
 
+/**
+ * Strip the blank lines around a region body.
+ *
+ * A loop rather than /\n+$/: a quantified group anchored at the end backtracks quadratically on a
+ * body of newlines, and a rendered body comes from a repository's own template.
+ */
+export const trimRegionBlankLines = (body: string): string => {
+  let start = 0
+  while (start < body.length && body[start] === '\n') start += 1
+  let end = body.length
+  while (end > start && body[end - 1] === '\n') end -= 1
+  return body.slice(start, end)
+}
+
 /** Wrap a body in markers. The body is stripped of surrounding blank lines so the hash covers exactly the lines between the markers. */
 export const wrapGeneratedRegion = (body: string): string => {
-  const inner = body.replace(/^\n+/, '').replace(/\n+$/, '')
+  const inner = trimRegionBlankLines(body)
   return `${generatedRegionOpen(generatedRegionHash(inner))}\n${inner}\n${GENERATED_REGION_CLOSE}\n`
 }
 
