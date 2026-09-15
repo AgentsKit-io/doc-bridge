@@ -3,6 +3,8 @@ import { z } from 'zod'
 import { BudgetReportSchema } from './budget.js'
 
 export const HANDOFF_SCHEMA_VERSION = 1 as const
+export const AgentQueryModeSchema = z.enum(['discovery', 'editing', 'debugging', 'documentation'])
+export type AgentQueryMode = z.infer<typeof AgentQueryModeSchema>
 
 export const HandoffTargetTypeSchema = z.enum([
   'package',
@@ -132,6 +134,9 @@ export const AgentSearchV1Schema = z
         contextBytes: z.number().int().nonnegative(),
         estimatedTokens: z.number().int().nonnegative(),
         tokenMethod: z.literal('estimate'),
+        contextBudgetTokens: z.number().int().positive(),
+        mode: AgentQueryModeSchema,
+        truncated: z.boolean(),
       })
       .strict()
       .optional(),

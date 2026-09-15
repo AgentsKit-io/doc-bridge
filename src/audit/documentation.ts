@@ -363,7 +363,7 @@ export const auditDocumentation = (options: DocumentationAuditOptions): Document
       },
       example: { present: examples, validation: 'not-analyzed' },
     }
-    if (tiering.critical && missing.length > 0) findings.push(createFinding(
+    if (tiering.critical && qualityAnalyzed && missing.length > 0) findings.push(createFinding(
       'DOCUMENTATION_CRITICAL_METADATA_MISSING', 'quality', 'undocumented', 'warn', 'high',
       `Critical ${document.path} is missing maintainability metadata: ${missing.join(', ')}.`,
       [evidenceFor(document.path)], [document.path, missing], criticalPaths,

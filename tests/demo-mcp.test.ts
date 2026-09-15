@@ -101,8 +101,8 @@ describe('demo and mcp install', () => {
       }) as typeof process.stdout.write
       try {
         // Build first: the fixture index is gitignored, and one left by older code is stale by version.
-        expect(runCli(['index'])).toBe(0)
-        expect(runCli(['doctor', '--text'])).toBe(0)
+        expect(runCli(['index', '--config', join(fixtureRoot, 'doc-bridge.config.json')])).toBe(0)
+        expect(runCli(['doctor', '--text', '--config', join(fixtureRoot, 'doc-bridge.config.json')])).toBe(0)
       } finally {
         process.stdout.write = write
       }

@@ -3,6 +3,10 @@ type: module
 id: doc-bridge-query
 editRoot: src/query
 humanDoc: /docs/query
+owner: doc-bridge-maintainers
+lifecycle: active
+sourceOfTruth: src/query
+validationPath: pnpm test && pnpm typecheck
 ---
 
 # Query

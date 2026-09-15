@@ -130,7 +130,7 @@ const TaskSuitePayloadSchema = z.object({
   suiteVersion: reference,
   protocolVersion: reference,
   title: safeText,
-  population: z.array(identifier).length(6),
+  population: z.array(identifier).min(1).max(64),
   modelIds: z.array(identifier).length(2),
   scenarioIds: z.array(identifier).length(3),
   maxTokensPerTask: z.number().int().positive(),
@@ -200,7 +200,8 @@ export const validateStudyTaskSuite = (suite: StudyTaskSuiteV1, options: Validat
   uniqueIds(suite.modelIds, 'model')
   uniqueIds(suite.scenarioIds, 'scenario')
   uniqueIds(suite.tasks.map((task) => task.id), 'task')
-  if (suite.tasks.length !== 24) throw new Error(`The controlled task suite must contain exactly 24 tasks; received ${suite.tasks.length}.`)
+  const expectedTaskCount = suite.population.length * categories.length
+  if (suite.tasks.length !== expectedTaskCount) throw new Error(`The controlled task suite must contain exactly ${expectedTaskCount} tasks; received ${suite.tasks.length}.`)
   const expectedCategories = new Set(categories)
   for (const repositoryId of suite.population) {
     const repositoryTasks = suite.tasks.filter((task) => task.repositoryId === repositoryId)

@@ -61,7 +61,7 @@ The stdio server accepts the newline-delimited JSON transport used by current MC
 | Tool | Purpose |
 |------|---------|
 | `handoff.resolve` | Package/ownership → AgentHandoff |
-| `doc.search` | Deterministic index search |
+| `doc.search` | Deterministic index search; set `agent: true` with `mode` and `contextBudgetTokens` for bounded agent context |
 | `doc.get` | Read an indexed agent doc |
 | `gate.status` | Freshness / configured gates |
 | `retriever.query` | Local retriever chunks |

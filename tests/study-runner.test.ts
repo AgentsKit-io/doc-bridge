@@ -53,16 +53,36 @@ describe('controlled study runner', () => {
   it('runs a real isolated CLI command and records bounded provenance without raw output', async () => {
     const value = plan()
     const execution = { taskId: value.taskIds[0]!, repositoryId: 'consumer-01', category: 'discovery' as const, scenarioId: 'repository-only' as const, modelId: 'low-cost-model', replicate: 0, variantId: 'variant-a' }
-    const observation = await runControlledCommand({ plan: value, execution, command: process.execPath, args: ['-e', "process.stdout.write(JSON.stringify({inputTokens: 3, outputTokens: 5, tokenMethod: 'provider', toolCalls: 2, taskOutcome: 'success', evidenceQuality: 'high', evidenceIds: ['src/index.ts'], measurements: {searchHitRate: 1}}))"], cwd: process.cwd(), contextBytes: 128, maxOutputBytes: 256 })
+    const observation = await runControlledCommand({ plan: value, execution, command: process.execPath, args: ['-e', "process.stdout.write(JSON.stringify({inputTokens: 3, outputTokens: 5, tokenMethod: 'provider', toolCalls: 2, firstEvidenceLatencyMs: 17, taskOutcome: 'success', evidenceQuality: 'high', evidenceIds: ['src/index.ts'], measurements: {searchHitRate: 1}}))"], cwd: process.cwd(), contextBytes: 128, maxOutputBytes: 256 })
     expect(observation.execution.status).toBe('completed')
     expect(observation.execution.inputTokens).toBe(3)
     expect(observation.execution.outputTokens).toBe(5)
     expect(observation.taskOutcome).toBe('success')
     expect(observation.evidenceQuality).toBe('high')
     expect(observation.evidenceIds).toEqual(['src/index.ts'])
+    expect(observation.contextTokens).toBe(32)
+    expect(observation.contextTokenMethod).toBe('estimate')
+    expect(observation.firstEvidenceLatencyMs).toBe(17)
     expect(observation.measurements).toEqual({ searchHitRate: 1, providerTokenCostUnits: 8 })
     expect(observation.execution.stdoutHash).toMatch(/^[a-f0-9]{64}$/)
     expect(observation).not.toHaveProperty('stdout')
+  })
+
+  it('keeps provider context usage distinct from the byte-based estimate', async () => {
+    const value = plan()
+    const execution = { taskId: value.taskIds[0]!, repositoryId: 'consumer-01', category: 'discovery' as const, scenarioId: 'repository-only' as const, modelId: 'low-cost-model', replicate: 0, variantId: 'variant-a' }
+    const observation = await runControlledCommand({
+      plan: value,
+      execution,
+      command: process.execPath,
+      args: ['-e', 'process.stdout.write("{}")'],
+      cwd: process.cwd(),
+      contextBytes: 128,
+      contextTokens: 29,
+      contextTokenMethod: 'provider',
+    })
+    expect(observation.contextTokens).toBe(29)
+    expect(observation.contextTokenMethod).toBe('provider')
   })
 
   it('fails closed for timeouts, unavailable commands, and token budgets', async () => {

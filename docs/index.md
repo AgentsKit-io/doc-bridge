@@ -28,6 +28,7 @@ Doc Bridge keeps **one repository** useful to people and coding agents. Pick the
 | Optional chat / RAG | [Chat and RAG](./chat-and-rag.md) · [Ollama demo](./ollama-demo.md) |
 | Study and measurement | [Study overview and anonymized data](./study/README.md) · [Study protocol v1](./spec/study-protocol-v1.md) |
 | Controlled task suite | [Study task suite v1](./spec/study-task-suite-v1.md) |
+| Phase 3 task coverage | [Task coverage contract v1](./study/phase3-task-coverage-v1.json) |
 | Controlled study runner | [Study runner v1](./spec/study-runner-v1.md) |
 | Provider CLI adapter | [Study provider CLI v1](./spec/study-provider-cli-v1.md) |
 | Round 1 instrumentation | [Instrumentation plan v1](./study/round-1-instrumentation-plan-v1.md) · [adjudicated smoke ledger](./study/round-1-adjudicated-smoke-v1.json) |
