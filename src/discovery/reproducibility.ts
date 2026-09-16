@@ -97,12 +97,21 @@ export const checkIndexReproducibility = (
   })
   if (output === undefined) return NOT_CHECKED('no-git')
 
-  /* `-z --verbose` emits four NUL-terminated fields per match: source, line, pattern, path. */
+  /*
+   * `-z --verbose` emits four NUL-terminated fields per match: source, line, pattern, path.
+   *
+   * A record is not the same as an answer. `--verbose` also emits the path a `!` rule rescues,
+   * with that negation as the pattern — and such a path is precisely one Git does *not* ignore.
+   * Reading the record without reading the pattern reported it as unreproducible, which is the
+   * opposite of what the rule says. It only shows up while the rescued path is untracked, since
+   * `check-ignore` stops reporting it once it is committed, so the window is narrow and the wrong
+   * answer inside it was confident.
+   */
   const fields = output.split('\0')
   const ignored: IgnoredIndexEntry[] = []
   for (let index = 0; index + 3 < fields.length; index += 4) {
     const [source, line, pattern, path] = [fields[index], fields[index + 1], fields[index + 2], fields[index + 3]]
-    if (!path) continue
+    if (!path || pattern?.startsWith('!')) continue
     ignored.push({ path, rule: `${source ?? '?'}:${line ?? '?'}:${pattern ?? '?'}` })
   }
   return { checked: true, ignored: ignored.sort((left, right) => left.path.localeCompare(right.path)) }

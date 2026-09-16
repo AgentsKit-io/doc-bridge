@@ -41,9 +41,12 @@ jobs:
       - run: npm pack --dry-run
       - name: Packaged smoke (2-min path + MCP)
         run: pnpm smoke:packaged
-      - name: Dogfood gate (doc-bridge on itself)
+      # `index` used to run first, which made `index-freshness` a tautology: it compared an
+      # artifact written seconds earlier against a rebuild of the same tree, and could not fail.
+      # The committed index is what consumers are told to verify, so verify that one. The badge
+      # writes into `.doc-bridge/`, which the scan excludes, and runs after the gate regardless.
+      - name: Dogfood gate (doc-bridge on itself, against the committed index)
         run: |
-          node bin/ak-docs.js index
           node bin/ak-docs.js gate run
           node bin/ak-docs.js doctor --text
           node bin/ak-docs.js doctor --write-badge
