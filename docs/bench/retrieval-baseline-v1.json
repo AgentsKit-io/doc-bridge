@@ -1,0 +1,28 @@
+{
+  "type": "retrieval-benchmark-baseline",
+  "schemaVersion": 1,
+  "contentHash": "1fd663a565dfc9c1e19a12139d45f11a7a628ad5d0fec4e549c6148056c3ac3a",
+  "contentHashAlgo": "sha256-normalized-v1",
+  "suite": {
+    "name": "doc-bridge-retrieval-v1",
+    "caseCount": 60,
+    "contentHash": "8f789470ce0fca41154474191fed0163869518b278f7c91d6b5370b919cde072"
+  },
+  "metrics": {
+    "caseCount": 60,
+    "hitAt1": 0.783333,
+    "hitAt3": 0.883333,
+    "meanReciprocalRank": 0.827593,
+    "meanContextBytes": 428,
+    "meanApproxTokens": 108,
+    "zeroResultRate": 0.066667,
+    "tokenMethod": "approximate"
+  },
+  "approval": {
+    "approvedAt": "2026-09-14T20:12:19.833Z",
+    "approvedBy": "Emerson Braun",
+    "reason": "KR-06 ranks the retrieval projection of the snapshot with graph signals; hit@3 83.3% to 88.3%",
+    "resultHash": "77dbbd006ede58746913fdaf7741df48856daf5c09815c81eaac187eb9377399",
+    "indexHash": "c5600283b4c6cf5fc2546d0f8a2eb8158dcdd0e670bd1a7a070c68484dad709a"
+  }
+}

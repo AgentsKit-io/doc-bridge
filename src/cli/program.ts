@@ -17,6 +17,7 @@ import { scanHumanDocRecords } from '../index-builder/human-adapters/index.js'
 import { retrieveHybridChunks } from '../federation/llms.js'
 import { runGates, type GateId } from '../gates/run-gates.js'
 import { evaluateRules, parseRuleId, parseRuleSeverity, type RuleMode } from '../rules/engine.js'
+import { centrality } from '../graph/build.js'
 import { runChatOnce, startInkChat } from '../intelligence/chat.js'
 import { PeerMissingError, layer1InstallHint } from '../intelligence/peers.js'
 import { createDocBridgeRag } from '../intelligence/rag.js'
@@ -32,24 +33,47 @@ import {
 } from '../doctor/badge.js'
 import { docBridgePatternMarkdown, docBridgePatternPayload } from '../playbook/doc-bridge-pattern.js'
 import { formatDemoText, runDemo, withDemoWorkspace, type DemoFixture } from './demo.js'
-import { formatDoctorText, runDoctor } from '../doctor/run-doctor.js'
+import { DEFAULT_RETRIEVAL_SUITE, formatDoctorText, runDoctor } from '../doctor/run-doctor.js'
 import { installMcpConfig, mcpSnippet } from '../mcp/install.js'
 import { startMcpStdioServer } from '../mcp/server.js'
+import { measureOverlayRetrievalDelta, formatOverlayRetrievalDeltaText } from '../bench/overlay-delta.js'
+import { enrichmentCost } from '../enrich/stats.js'
+import { checkStudyExpectations, formatStudyExpectationsText, parseStudyExpectations } from '../study/expectations.js'
 import { IndexNotFoundError, loadFreshDocBridgeIndex } from '../query/load-index.js'
 import { runQuery, type QueryKind } from '../query/query.js'
 import { searchIndex } from '../query/search.js'
 import type { DocBridgeIndexV1 } from '../schemas/doc-bridge-index.js'
-import { parseAgentHandoff, parseDocBridgeConfig, parseReconciliationReport } from '../validate.js'
+import { parseAgentHandoff, parseDocBridgeConfig, parseDocBridgeIndex, parseReconciliationReport } from '../validate.js'
 import { parseDiscoverySnapshot } from '../validate.js'
+import { findingsFromDiagnostics } from '../findings/report.js'
+import {
+  formatRetrievalBenchText,
+  parseRetrievalSuite,
+  runRetrievalBench,
+  type RetrievalBenchResultV1,
+} from '../bench/retrieval.js'
+import {
+  compareRetrievalBaseline,
+  createRetrievalBaseline,
+  formatRetrievalComparisonText,
+  parseRetrievalBaseline,
+} from '../bench/baseline.js'
 import { reconcileKnowledge } from '../reconciliation/reconcile.js'
 import type { DiscoverySnapshotV1, ReconciliationReportV1 } from '../schemas/knowledge.js'
 import { sha256NormalizedV1 } from '../index-builder/content-hash.js'
 import { applyFixProposal, approveFixProposal, createArtifactNormalizationProposal, createMarkdownLinkFixProposal } from '../fixes/proposals.js'
 import { createRegistryAgentAdapter, loadRegistryAgentRunner, persistRegistryAgentProposal } from '../agents/registry-adapter.js'
+import { fixApprovalId, recordApproval, FIX_APPROVAL_GATE } from '../enrich/approvals.js'
+import { readEnrichmentOverlay, withAcceptedRelations } from '../enrich/overlay.js'
+import { decideEnrichment, listEnrichment } from '../enrich/review.js'
+import { formatEnrichmentText, runEnrichment, type EnrichmentRunResult } from '../enrich/stage.js'
 import { renderOfflineReportArtifact } from '../report/html.js'
 import { benchmarkFixture, formatBenchmarkText, measureBenchmark } from '../metrics/benchmark.js'
 import { PACKAGE_VERSION } from '../version.js'
 import { auditDocumentation, formatDocumentationAuditText } from '../audit/documentation.js'
+import { renderArtifact, writeRenderedPages } from '../render/render.js'
+import { resolveTemplateSource } from '../render/template-source.js'
+import { RENDER_TEMPLATE_NAMES, RENDER_TEMPLATES, isRenderTemplateName } from '../render/templates.js'
 import {
   formatHistoricalEvidenceText,
   formatStudyProtocolText,
@@ -85,6 +109,7 @@ type Command =
   | 'registry'
   | 'discover'
   | 'benchmark'
+  | 'bench'
   | 'study'
   | 'scan'
   | 'reconcile'
@@ -92,6 +117,7 @@ type Command =
   | 'map'
   | 'fix'
   | 'suggest'
+  | 'enrich'
   | 'index'
   | 'gate'
   | 'rules'
@@ -107,6 +133,7 @@ type Command =
   | 'list'
   | 'conformance'
   | 'audit'
+  | 'render'
 
 const usage = `ak-docs — human↔agent documentation bridge (@agentskit/doc-bridge)
 
@@ -117,6 +144,8 @@ Core (no API key):
   ak-docs index [--watch]
   ak-docs discover [--text|--json]
   ak-docs benchmark <fixture.json> <observation.json> [--text|--json]
+  ak-docs bench retrieval <suite.json> [--index <file>] [--baseline <file>] [--limit <n>] [--text|--json]
+  ak-docs bench retrieval <suite.json> --update-baseline --by <name> [--reason <text>]
   ak-docs study protocol <protocol.json> [--text|--json]
   ak-docs study history <registry.json> [--protocol <protocol.json>] [--text|--json]
   ak-docs study tasks <task-suite.json> [--text|--json]
@@ -129,17 +158,25 @@ Core (no API key):
   ak-docs study verification <binding.json> [--text|--json]
   ak-docs study metrics <observation-ledger.json> [--baseline-round <id>] [--current-round <id>] [--baseline-run-id <id>] [--current-run-id <id>] [--allow-regressions] [--text|--json]
   ak-docs scan | reconcile | check | map [--text|--json] [--html] [--report-threshold <bytes>]
+  ak-docs check --json --format finding             emit diagnostics in the ecosystem Finding shape
+  ak-docs bench retrieval <suite> --overlay        measure the suite with and without the accepted overlay
+  ak-docs enrich --retrieval-delta                 run the overlay through the golden suite after enriching
+  ak-docs study expectations <suite> --expectations <file>   check the study's mechanical retrieval expectations
+  ak-docs check --enrich          run the enrichment stage between reconcile and evaluate
+  ak-docs enrich [--json|--text]  run the configured Registry roles over context packs
+  ak-docs enrich list | approve <proposalId> --by <name> | reject <proposalId> --by <name> [--reason <text>]
   ak-docs fix propose links|normalize <artifact> [--output <file>]
   ak-docs fix approve|apply <proposal.json> [--by <name>]
   ak-docs suggest [--documentation] [--json|--text]   run the configured Registry agent
   ak-docs query [package|ownership|intent|change] <id> [--agent] [--text]
-  ak-docs search <term> [--agent] [--mode=<mode>] [--context-budget=<tokens>] [--text]
+  ak-docs search <term> [--agent] [--explain] [--mode=<mode>] [--context-budget=<tokens>] [--text]
   ak-docs list <packages|intents|changes|knowledge> [--text]
   ak-docs ask [question]          local consult (no LLM)
   ak-docs gate run [gate-id]
   ak-docs rules run <report.json> [--preset default|recommended|strict] [--severity rule=level] [--ignore rule]
   ak-docs conformance run documentation-standard-v1 [--text|--json]
   ak-docs audit documentation [--text|--json]
+  ak-docs render <llms.txt|area|ownership|change-digest|overlay-review> [--data <artifact>] [--output <path>] [--print-template] [--json]
   ak-docs mcp
   ak-docs mcp install --cursor | --claude
   ak-docs memory ingest|classify|promote [--pr] [--dry-run]
@@ -210,6 +247,7 @@ const parseArgs = (argv: readonly string[]) => {
   else if (positional[0] === 'registry') command = 'registry'
   else if (positional[0] === 'discover') command = 'discover'
   else if (positional[0] === 'benchmark') command = 'benchmark'
+  else if (positional[0] === 'bench') command = 'bench'
   else if (positional[0] === 'study') command = 'study'
   else if (positional[0] === 'scan') command = 'scan'
   else if (positional[0] === 'reconcile') command = 'reconcile'
@@ -217,6 +255,7 @@ const parseArgs = (argv: readonly string[]) => {
   else if (positional[0] === 'map') command = 'map'
   else if (positional[0] === 'fix') command = 'fix'
   else if (positional[0] === 'suggest') command = 'suggest'
+  else if (positional[0] === 'enrich') command = 'enrich'
   else if (positional[0] === 'index') command = 'index'
   else if (positional[0] === 'gate') command = 'gate'
   else if (positional[0] === 'rules') command = 'rules'
@@ -232,6 +271,7 @@ const parseArgs = (argv: readonly string[]) => {
   else if (positional[0] === 'list') command = 'list'
   else if (positional[0] === 'conformance') command = 'conformance'
   else if (positional[0] === 'audit') command = 'audit'
+  else if (positional[0] === 'render') command = 'render'
 
   return { command, flags, configPath, positional }
 }
@@ -319,10 +359,23 @@ const formatSearchMatch = (match: {
   readonly path: string
   readonly summary?: string
   readonly score?: number
+  readonly confidence?: string
+  readonly explain?: { readonly matched: Readonly<Record<string, readonly string[]>>; readonly components: Readonly<Record<string, number>>; readonly surfacedBy?: { readonly kind: string; readonly id: string } }
 }): string => {
   const summary = match.summary ? match.summary.replace(/\s+/g, ' ').slice(0, 100) : ''
   const score = typeof match.score === 'number' ? ` score=${match.score}` : ''
-  return `  [${match.type}] ${match.id}${score}\n    ${match.path}${summary ? `\n    ${summary}` : ''}`
+  const confidence = match.confidence ? ` confidence=${match.confidence}` : ''
+  const lines = [`  [${match.type}] ${match.id}${score}${confidence}`, `    ${match.path}`, ...(summary ? [`    ${summary}`] : [])]
+  if (match.explain) {
+    // Every component with a contribution, so a wrong ranking is reportable with numbers.
+    const parts = Object.entries(match.explain.components).filter(([name, value]) => value !== 0 && name !== 'prior').map(([name, value]) => `${name}=${value}`)
+    if (match.explain.components.prior !== undefined && match.explain.components.prior !== 1) parts.push(`prior=×${match.explain.components.prior}`)
+    const matched = Object.entries(match.explain.matched).map(([field, terms]) => `${field}: ${terms.join(', ')}`)
+    lines.push(`    why: ${parts.join(' ') || 'no scoring component'}`)
+    if (matched.length) lines.push(`    matched: ${matched.join(' | ')}`)
+    if (match.explain.surfacedBy) lines.push(`    via: ${match.explain.surfacedBy.kind} from ${match.explain.surfacedBy.id}`)
+  }
+  return lines.join('\n')
 }
 
 const writeTextSearch = (
@@ -514,7 +567,7 @@ const workflowOptions = (
   root: string,
   config: DocBridgeConfigV1,
   sourceRevision: string,
-  stage: 'collect' | 'normalize' | 'reconcile' | 'evaluate' | 'report',
+  stage: 'collect' | 'normalize' | 'reconcile' | 'enrich' | 'evaluate' | 'report',
   handlers: Parameters<typeof runWorkflow>[0]['handlers'],
   versions?: Pick<Parameters<typeof runWorkflow>[0], 'pipelineVersion' | 'analyzerVersions'>,
 ): Parameters<typeof runWorkflow>[0] => ({
@@ -540,6 +593,12 @@ const documentationInputs = (root: string, snapshot: DiscoverySnapshotV1) => sna
   .filter((entity) => entity.kind === 'document' && entity.path)
   .map((entity) => ({ path: entity.path as string, content: readFileSync(resolve(root, entity.path as string), 'utf8') }))
 
+/** Ownership records as reconciliation sees them, so a path matching nothing gets reported. */
+const ownershipOptions = (config: DocBridgeConfigV1): { readonly ownership?: readonly { readonly id: string; readonly path: string }[] } => {
+  const ownership = Object.entries(config.routing?.options?.ownership ?? {}).map(([id, record]) => ({ id, path: record.path }))
+  return ownership.length ? { ownership } : {}
+}
+
 const reconcileWorkflow = (root: string, config: DocBridgeConfigV1): WorkflowExecutionResult => {
   const scanned = scanWorkflow(root, config)
   const snapshot = parseDiscoverySnapshot(loadWorkflowStepOutput(scanned.stateDir, 'normalize'))
@@ -551,15 +610,51 @@ const reconcileWorkflow = (root: string, config: DocBridgeConfigV1): WorkflowExe
     ...(config.reconciliation?.requiredRelationKinds === undefined ? {} : { requiredRelationKinds: config.reconciliation.requiredRelationKinds }),
     ...(config.reconciliation?.requiredRelationTargets === undefined ? {} : { requiredRelationTargets: config.reconciliation.requiredRelationTargets }),
     ...(config.reconciliation?.includeOrphanedDocuments === undefined ? {} : { includeOrphanedDocuments: config.reconciliation.includeOrphanedDocuments }),
+    ...ownershipOptions(config),
   })
   return runWorkflow(workflowOptions(root, config, snapshot.sourceRevision, 'reconcile', { reconcile: () => report }, { pipelineVersion: snapshot.pipelineVersion, analyzerVersions: snapshot.analyzerVersions }))
 }
 
-const checkWorkflow = (root: string, config: DocBridgeConfigV1): WorkflowExecutionResult => {
-  const reconciled = reconcileWorkflow(root, config)
+/**
+ * Record the overlay as the enrich step of the current run.
+ *
+ * The step's input names the overlay it attaches, not only the report it was made from: a person
+ * approving a proposal changes the overlay without changing the report, and the engine refuses a
+ * step whose input has not moved but whose output has. Keying on the overlay's own hash keeps that
+ * rule honest — same overlay, same artifact; a new overlay, a new one.
+ */
+const attachEnrichmentStage = (root: string, config: DocBridgeConfigV1, report: ReconciliationReportV1, result: EnrichmentRunResult): WorkflowExecutionResult =>
+  runWorkflow({
+    ...workflowOptions(root, config, report.sourceRevision, 'enrich', { enrich: () => result.overlay }, { pipelineVersion: report.pipelineVersion, analyzerVersions: report.analyzerVersions }),
+    inputs: { enrich: { reportHash: report.contentHash, overlayHash: result.overlay.contentHash } },
+  })
+
+/**
+ * The enrich stage, run only on request. Its failure is reported, never propagated: a `check`
+ * that asked for enrichment and did not get it is still a `check`, with the same result.
+ */
+const enrichWorkflow = async (root: string, config: DocBridgeConfigV1, reconciled: WorkflowExecutionResult): Promise<{ readonly status: 'ok' | 'failed'; readonly result?: EnrichmentRunResult; readonly error?: string }> => {
+  try {
+    const snapshot = parseDiscoverySnapshot(loadWorkflowStepOutput(reconciled.stateDir, 'normalize'))
+    const report = parseReconciliationReport(loadWorkflowStepOutput(reconciled.stateDir, 'reconcile'))
+    const result = await runEnrichment({ root, config, snapshot, report })
+    attachEnrichmentStage(root, config, report, result)
+    return { status: 'ok', result }
+  } catch (error) {
+    return { status: 'failed', error: error instanceof Error ? error.message : String(error) }
+  }
+}
+
+const checkWorkflow = (root: string, config: DocBridgeConfigV1, reconciled = reconcileWorkflow(root, config)): WorkflowExecutionResult => {
   const report = parseReconciliationReport(loadWorkflowStepOutput(reconciled.stateDir, 'reconcile'))
   const versions = { pipelineVersion: report.pipelineVersion, analyzerVersions: report.analyzerVersions }
-  runWorkflow(workflowOptions(root, config, report.sourceRevision, 'evaluate', { evaluate: () => evaluateRules(report, { ...(config.rules ? { config: config.rules } : {}) }) }, versions))
+  // `centrality-risk` needs betweenness over the import graph, which only the snapshot can give.
+  const snapshot = parseDiscoverySnapshot(loadWorkflowStepOutput(reconciled.stateDir, 'normalize'))
+  const evaluate = () => evaluateRules(report, {
+    ...(config.rules ? { config: config.rules } : {}),
+    centrality: centrality(snapshot),
+  })
+  runWorkflow(workflowOptions(root, config, report.sourceRevision, 'evaluate', { evaluate }, versions))
   return runWorkflow(workflowOptions(root, config, report.sourceRevision, 'report', { report: ({ input }) => input }, versions))
 }
 
@@ -641,14 +736,85 @@ const runWorkflowCommand = (
   flags: ReadonlySet<string>,
   configPath: string | undefined,
   argv: readonly string[],
-): number => {
+): number | Promise<number> => {
+  /*
+   * Validated before anything runs, and for every path: `--enrich` returns early, and a run that
+   * ends up printing findings must have been allowed to ask for them.
+   */
+  const format = optionValues(argv, '--format')[0]
+  if (format !== undefined && format !== 'json' && format !== 'finding') {
+    process.stderr.write('--format must be json or finding.\n')
+    return 2
+  }
+  if (format === 'finding' && command !== 'check') {
+    process.stderr.write('--format finding is only available for ak-docs check.\n')
+    return 2
+  }
+
+  if (command === 'check' && flags.has('--enrich')) {
+    return (async () => {
+      try {
+        const { config, root } = loadProject(configPath)
+        const reconciled = reconcileWorkflow(root, config)
+        const enrichment = await enrichWorkflow(root, config, reconciled)
+        return finishWorkflowCommand(command, flags, argv, config, root, checkWorkflow(root, config, reconciled), {
+          enrichment: enrichment.status === 'ok' && enrichment.result
+            ? { status: 'ok', overlayHash: enrichment.result.overlay.contentHash, agentCalls: enrichment.result.agentCalls, cacheHits: enrichment.result.cacheHits, accepted: enrichment.result.overlay.accepted.length, pending: enrichment.result.overlay.pending.length, rejected: enrichment.result.overlay.rejected.length }
+            : { status: 'failed', error: enrichment.error },
+        })
+      } catch (error) {
+        process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`)
+        return 2
+      }
+    })()
+  }
   try {
     const { config, root } = loadProject(configPath)
     const result = command === 'scan' ? scanWorkflow(root, config) : command === 'reconcile' ? reconcileWorkflow(root, config) : checkWorkflow(root, config)
-    const output = workflowOutput(result)
+    return finishWorkflowCommand(command, flags, argv, config, root, result, {})
+  } catch (error) {
+    process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`)
+    return 2
+  }
+}
+
+const finishWorkflowCommand = (
+  command: 'scan' | 'reconcile' | 'check' | 'map',
+  flags: ReadonlySet<string>,
+  argv: readonly string[],
+  config: DocBridgeConfigV1,
+  root: string,
+  result: WorkflowExecutionResult,
+  extra: Record<string, unknown>,
+): number => {
+  try {
+    const output = { ...workflowOutput(result), ...extra }
     if (command === 'map') output.kind = 'architecture-map'
+    // Read from argv rather than taken as an argument: every caller already passes argv, and the
+    // flag is validated where the command is dispatched.
+    if (optionValues(argv, '--format')[0] === 'finding') {
+      /*
+       * The canonical shape the ecosystem consumes: every reconciliation diagnostic as a `Finding`
+       * with a severity from `SEVERITY_ORDER`. The rule verdict still decides the exit code, so a
+       * dashboard reading findings and a CI job reading the exit code agree on what failed.
+       */
+      const diagnostics = Array.isArray(output.diagnostics) ? (output.diagnostics as Parameters<typeof findingsFromDiagnostics>[0]) : []
+      writeJson({
+        ok: output.ok,
+        runId: output.runId,
+        state: output.state,
+        ...(output.snapshotHash ? { snapshotHash: output.snapshotHash } : {}),
+        ...(output.reportHash ? { reportHash: output.reportHash } : {}),
+        format: 'finding',
+        findings: findingsFromDiagnostics(diagnostics),
+      })
+      const exitCode = output.rules && typeof output.rules === 'object' && 'exitCode' in output.rules && (output.rules as { exitCode?: unknown }).exitCode === 1 ? 1 : 0
+      return result.run.state === 'failed' ? 1 : exitCode
+    }
     if (command === 'map' && flags.has('--html')) {
-      const snapshot = parseDiscoverySnapshot(loadWorkflowStepOutput(result.stateDir, 'normalize'))
+      const observed = parseDiscoverySnapshot(loadWorkflowStepOutput(result.stateDir, 'normalize'))
+      // Accepted proposed relations render as dashed edges; nothing observed is removed or redrawn.
+      const snapshot = config.intelligence?.registry?.enabled ? withAcceptedRelations(observed, readEnrichmentOverlay(root)) : observed
       const report = parseReconciliationReport(loadWorkflowStepOutput(result.stateDir, 'reconcile'))
       const outputPath = optionValues(argv, '--output')[0] ?? '.doc-bridge/report.html'
       const htmlPath = resolve(root, outputPath)
@@ -680,6 +846,7 @@ const buildDocumentationAuditReport = (root: string, config: DocBridgeConfigV1) 
     ...(config.reconciliation?.requiredRelationKinds === undefined ? {} : { requiredRelationKinds: config.reconciliation.requiredRelationKinds }),
     ...(config.reconciliation?.requiredRelationTargets === undefined ? {} : { requiredRelationTargets: config.reconciliation.requiredRelationTargets }),
     includeOrphanedDocuments: config.reconciliation?.includeOrphanedDocuments ?? true,
+    ...ownershipOptions(config),
   })
   return auditDocumentation({
     root,
@@ -689,6 +856,101 @@ const buildDocumentationAuditReport = (root: string, config: DocBridgeConfigV1) 
     declarationDiagnostics: analysis.diagnostics,
     ...(config.audit?.documentation ? { config: config.audit.documentation } : {}),
   })
+}
+
+const BENCH_USAGE = [
+  'Usage: ak-docs bench retrieval <suite.json> [--index <file>] [--baseline <file>] [--limit <n>] [--text|--json]',
+  '       ak-docs bench retrieval <suite.json> --baseline <file> --update-baseline --by <name> [--reason <text>]',
+].join('\n')
+
+const runBenchCommand = (
+  flags: ReadonlySet<string>,
+  positional: readonly string[],
+  configPath: string | undefined,
+  argv: readonly string[],
+): number => {
+  if (positional[1] !== 'retrieval' || !positional[2]) {
+    process.stderr.write(`${BENCH_USAGE}\n`)
+    return 1
+  }
+  try {
+    const { config, root } = loadProject(configPath)
+    const suite = parseRetrievalSuite(JSON.parse(readFileSync(resolve(root, positional[2]), 'utf8')) as unknown)
+
+    const limitOption = optionValues(argv, '--limit')[0]
+    const limit = limitOption === undefined ? undefined : Number(limitOption)
+    if (limit !== undefined && (!Number.isInteger(limit) || limit <= 0)) {
+      throw new Error('--limit must be a positive integer.')
+    }
+
+    if (flags.has('--overlay')) {
+      /*
+       * Does the accepted overlay earn its cost? The same suite over the same snapshot, once with
+       * the overlay projected and once without. A drop in hit@3 exits non-zero: an overlay that
+       * makes retrieval worse is a finding about the agent, not a new baseline.
+       *
+       * Both indexes are projected here, from the snapshot, so this answer needs no index on disk.
+       */
+      const overlay = readEnrichmentOverlay(root)
+      if (!overlay) throw new Error('No enrichment overlay at .doc-bridge/enrich/overlay.json. Run: ak-docs enrich')
+      const stateDir = resolve(root, config.workflow?.stateDir ?? '.doc-bridge/workflow')
+      const snapshot = (() => {
+        try { return parseDiscoverySnapshot(loadWorkflowStepOutput(stateDir, 'normalize')) }
+        catch { return discoverRepository({ root, config }) }
+      })()
+      const delta = measureOverlayRetrievalDelta({ root, config, snapshot, overlay, suite, ...(limit === undefined ? {} : { limit }) })
+      if (wantsTextOutput(flags, config)) writeLines(formatOverlayRetrievalDeltaText(delta))
+      else writeJson({ ok: !delta.regression, overlayDelta: delta })
+      return delta.regression ? 1 : 0
+    }
+
+    const indexOption = optionValues(argv, '--index')[0]
+    const index = indexOption
+      ? parseDocBridgeIndex(JSON.parse(readFileSync(resolve(root, indexOption), 'utf8')) as unknown)
+      : loadFreshDocBridgeIndex(root, config)
+
+    const result: RetrievalBenchResultV1 = runRetrievalBench({
+      index,
+      suite,
+      ...(limit === undefined ? {} : { limit }),
+    })
+
+    const baselineOption = optionValues(argv, '--baseline')[0]
+    const baselinePath = baselineOption ? resolve(root, baselineOption) : undefined
+
+    if (flags.has('--update-baseline')) {
+      const approvedBy = optionValues(argv, '--by')[0]
+      if (!baselinePath) throw new Error('--update-baseline requires --baseline <file>.')
+      if (!approvedBy) throw new Error('--update-baseline requires --by <name>: a baseline is an approved figure, not a side effect of a run.')
+      const reason = optionValues(argv, '--reason')[0]
+      const baseline = createRetrievalBaseline({ result, approvedBy, ...(reason ? { reason } : {}) })
+      mkdirSync(dirname(baselinePath), { recursive: true })
+      writeFileSync(baselinePath, `${JSON.stringify(baseline, null, 2)}\n`, 'utf8')
+      if (wantsTextOutput(flags, config)) {
+        writeLines([...formatRetrievalBenchText(result), `Baseline written: ${relative(root, baselinePath)} (approved by ${approvedBy})`])
+      } else writeJson({ ok: true, result, baseline, baselinePath })
+      return 0
+    }
+
+    if (baselinePath && !existsSync(baselinePath)) {
+      throw new Error(
+        `No baseline at ${relative(root, baselinePath)}. Record the current figures with: ak-docs bench retrieval ${positional[2]} --baseline ${baselineOption} --update-baseline --by <name>`,
+      )
+    }
+    const comparison = baselinePath
+      ? compareRetrievalBaseline(result, parseRetrievalBaseline(JSON.parse(readFileSync(baselinePath, 'utf8')) as unknown))
+      : undefined
+
+    if (wantsTextOutput(flags, config)) {
+      writeLines([...formatRetrievalBenchText(result), ...(comparison ? formatRetrievalComparisonText(comparison) : [])])
+    } else {
+      writeJson({ ok: !comparison?.blocking, result, ...(comparison ? { comparison } : {}) })
+    }
+    return comparison?.blocking ? 1 : 0
+  } catch (error) {
+    process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`)
+    return 2
+  }
 }
 
 const runDocumentationAuditCommand = (
@@ -706,6 +968,50 @@ const runDocumentationAuditCommand = (
     if (wantsTextOutput(flags, config)) writeLines(formatDocumentationAuditText(report))
     else writeJson({ ok: report.status !== 'blocked', report })
     return report.status === 'blocked' ? 1 : 0
+  } catch (error) {
+    process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`)
+    return 2
+  }
+}
+
+const RENDER_USAGE = [
+  `Usage: ak-docs render <${RENDER_TEMPLATE_NAMES.join('|')}> [--data <artifact>] [--output <path>] [--print-template] [--json]`,
+  ...RENDER_TEMPLATE_NAMES.map((name) => `  ${name.padEnd(16)} ${RENDER_TEMPLATES[name].description} (--data: ${RENDER_TEMPLATES[name].data})`),
+].join('\n')
+
+const runRenderCommand = (
+  flags: ReadonlySet<string>,
+  positional: readonly string[],
+  configPath: string | undefined,
+  argv: readonly string[],
+): number => {
+  // parseArgs files option values as positionals; the template name is the first one no option consumed.
+  const dataPath = optionValues(argv, '--data')[0]
+  const outputPath = optionValues(argv, '--output')[0]
+  const consumed = new Set([dataPath, outputPath].filter(Boolean))
+  const name = positional.slice(1).find((value) => !consumed.has(value))
+  if (!name || !isRenderTemplateName(name)) {
+    process.stderr.write(`${name ? `Unknown template "${name}".\n` : ''}${RENDER_USAGE}\n`)
+    return 1
+  }
+  try {
+    const { config, root } = loadProject(configPath)
+    if (flags.has('--print-template')) {
+      process.stdout.write(resolveTemplateSource(name, config, root).source)
+      return 0
+    }
+    const result = renderArtifact({ root, config, template: name, ...(dataPath ? { dataPath } : {}) })
+    if (outputPath) {
+      const written = writeRenderedPages(result, resolve(root, outputPath), root)
+      writeJson({ ok: true, template: name, source: result.origin, written })
+      return 0
+    }
+    if (flags.has('--json')) {
+      writeJson({ ok: true, template: name, source: result.origin, pages: result.pages })
+      return 0
+    }
+    process.stdout.write(result.pages.map((page) => page.content).join('\n'))
+    return 0
   } catch (error) {
     process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`)
     return 2
@@ -762,7 +1068,7 @@ const runRulesCommand = (
   }
 }
 
-const runFixCommand = (argv: readonly string[], positional: readonly string[], configPath: string | undefined): number => {
+const runFixCommand = async (argv: readonly string[], positional: readonly string[], configPath: string | undefined): Promise<number> => {
   try {
     const { config, root } = loadProject(configPath)
     const action = positional[1]
@@ -783,9 +1089,85 @@ const runFixCommand = (argv: readonly string[], positional: readonly string[], c
     const file = resolve(root, proposalPath)
     const proposal = JSON.parse(readFileSync(file, 'utf8')) as unknown
     const result = action === 'approve' ? approveFixProposal(proposal, optionValues(argv, '--by')[0] ?? 'human') : applyFixProposal(root, proposal, { currentRevision: sourceRevision })
+    // An approval is recorded through the ecosystem gate too, bound to the proposal and its exact content hash.
+    const recorded = action === 'approve' && result.approval
+      ? await recordApproval(root, { id: fixApprovalId(result.proposalId, result.approval.proposalHash), name: FIX_APPROVAL_GATE, payload: { proposalId: result.proposalId, proposalHash: result.approval.proposalHash }, decision: 'approved', by: result.approval.approvedBy })
+      : undefined
     writeFileSync(file, `${JSON.stringify(result, null, 2)}\n`, 'utf8')
-    writeJson({ ok: true, proposal: result, proposalPath: file })
+    writeJson({ ok: true, proposal: result, proposalPath: file, ...(recorded ? { approvalId: recorded.approval.id } : {}) })
     return 0
+  } catch (error) {
+    process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`)
+    return 2
+  }
+}
+
+const runEnrichCommand = async (flags: ReadonlySet<string>, positional: readonly string[], argv: readonly string[], configPath: string | undefined): Promise<number> => {
+  try {
+    const { config, root } = loadProject(configPath)
+    const action = positional[1]
+    if (action === 'list') {
+      const review = listEnrichment(root)
+      if (wantsTextOutput(flags, config)) {
+        writeLines(review
+          ? [`Overlay: ${review.overlayHash}`, `Accepted: ${review.accepted.length}  Pending: ${review.pending.length}  Rejected: ${review.rejected.length}`, ...review.pending.map((entry) => `  pending ${entry.proposal.proposalId.slice(0, 16)} ${entry.proposal.kind} ${entry.proposal.entity}${entry.note ? ` (${entry.note})` : ''}`)]
+          : ['No enrichment overlay. Run `ak-docs enrich` first.'])
+      } else writeJson({ ok: true, enrichment: review ?? null })
+      return 0
+    }
+    if (action === 'approve' || action === 'reject') {
+      const proposalId = positional[2]
+      const by = optionValues(argv, '--by')[0]
+      if (!proposalId || !by) throw new Error('Usage: ak-docs enrich approve|reject <proposalId> --by <name> [--reason <text>]')
+      const stateDir = resolve(root, config.workflow?.stateDir ?? '.doc-bridge/workflow')
+      const snapshot = (() => { try { return parseDiscoverySnapshot(loadWorkflowStepOutput(stateDir, 'normalize')) } catch { return undefined } })()
+      const reason = optionValues(argv, '--reason')[0]
+      const decided = await decideEnrichment({ root, proposalId, decision: action === 'approve' ? 'approved' : 'rejected', by, ...(reason ? { reason } : {}), ...(snapshot ? { snapshot } : {}) })
+      const decidedId = 'proposal' in decided.entry ? decided.entry.proposal.proposalId : decided.entry.proposalId
+      if (wantsTextOutput(flags, config)) writeLines([`${action === 'approve' ? 'Approved' : 'Rejected'}: ${decidedId}`, `Approval: ${decided.approvalId} (${decided.gateSource})`, `Overlay: ${decided.overlay.contentHash}`])
+      else writeJson({ ok: true, approvalId: decided.approvalId, gate: decided.gateSource, entry: decided.entry, overlayHash: decided.overlay.contentHash })
+      return 0
+    }
+    if (action !== undefined) throw new Error('Usage: ak-docs enrich [list | approve <proposalId> --by <name> | reject <proposalId> --by <name>] [--json|--text]')
+    const reconciled = reconcileWorkflow(root, config)
+    const snapshot = parseDiscoverySnapshot(loadWorkflowStepOutput(reconciled.stateDir, 'normalize'))
+    const report = parseReconciliationReport(loadWorkflowStepOutput(reconciled.stateDir, 'reconcile'))
+    const result = await runEnrichment({ root, config, snapshot, report })
+    attachEnrichmentStage(root, config, report, result)
+    /*
+     * The retrieval delta is opt-in: it runs the golden suite twice, which is the right cost for
+     * an answer about whether the overlay helped and the wrong cost for every routine run.
+     */
+    const delta = flags.has('--retrieval-delta')
+      ? measureOverlayRetrievalDelta({
+          root,
+          config,
+          snapshot,
+          overlay: result.overlay,
+          suite: parseRetrievalSuite(JSON.parse(readFileSync(resolve(root, config.retrieval?.benchmark?.suite ?? DEFAULT_RETRIEVAL_SUITE), 'utf8')) as unknown),
+        })
+      : undefined
+    if (wantsTextOutput(flags, config)) writeLines([...formatEnrichmentText(result), ...(delta ? formatOverlayRetrievalDeltaText(delta) : [])])
+    else writeJson({
+      ok: !delta?.regression,
+      overlayPath: result.overlayPath,
+      overlayHash: result.overlay.contentHash,
+      baseSnapshotHash: result.overlay.baseSnapshotHash,
+      roles: result.roles,
+      packs: result.packs,
+      agentCalls: result.agentCalls,
+      cacheHits: result.cacheHits,
+      rerun: result.rerun,
+      expired: result.expired,
+      stats: result.overlay.stats,
+      cost: enrichmentCost(result.overlay.stats),
+      stability: result.stability,
+      accepted: result.overlay.accepted.length,
+      pending: result.overlay.pending.length,
+      rejected: result.overlay.rejected.length,
+      ...(delta ? { retrievalDelta: delta } : {}),
+    })
+    return delta?.regression ? 1 : 0
   } catch (error) {
     process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`)
     return 2
@@ -993,14 +1375,35 @@ const registryTopology = () => ({
   mergePolicy: { autoMerge: false, requiresHuman: true },
 })
 
-const runStudyCommand = async (flags: ReadonlySet<string>, positional: readonly string[], argv: readonly string[]): Promise<number> => {
+const runStudyCommand = async (flags: ReadonlySet<string>, positional: readonly string[], argv: readonly string[], configPath: string | undefined): Promise<number> => {
   const action = positional[1]
   const inputPath = positional[2]
-  if (!inputPath || !['protocol', 'history', 'tasks', 'select', 'plan', 'providers', 'run', 'adjudicate', 'ledger', 'metrics', 'verification'].includes(action ?? '')) {
-    process.stderr.write('Usage: ak-docs study protocol|history|tasks|select|plan|providers|run|adjudicate|ledger|metrics|verification <artifact.json> [--protocol <protocol.json>] [--providers <provider-cli.json>] [--adjudicator <provider-cli.json>] [--repositories <repositories.json>] [--ledger <ledger.json>] [--output <ledger.json>] [--run-id <id>] [--limit <n>] [--round <id>] [--dry-run] [--baseline-round <id>] [--current-round <id>] [--text|--json]\n')
+  if (!inputPath || !['protocol', 'history', 'tasks', 'select', 'plan', 'providers', 'run', 'adjudicate', 'ledger', 'metrics', 'verification', 'expectations'].includes(action ?? '')) {
+    process.stderr.write('Usage: ak-docs study protocol|history|tasks|select|plan|providers|run|adjudicate|ledger|metrics|verification|expectations <artifact.json> [--protocol <protocol.json>] [--providers <provider-cli.json>] [--adjudicator <provider-cli.json>] [--repositories <repositories.json>] [--ledger <ledger.json>] [--output <ledger.json>] [--run-id <id>] [--limit <n>] [--round <id>] [--dry-run] [--baseline-round <id>] [--current-round <id>] [--expectations <expectations.json>] [--index <index.json>] [--repository <id>] [--text|--json]\n')
     return 1
   }
   try {
+    if (action === 'expectations') {
+      /*
+       * The mechanical half of the study, checked by the same benchmark that gates this
+       * repository's retrieval. The suite carries opaque references; the local expectations file
+       * resolves them to entities and documents, which is why it is never published.
+       */
+      const expectationsPath = optionValues(argv, '--expectations')[0]
+      if (!expectationsPath) throw new Error('Study expectations require --expectations <expectations.json>.')
+      const suite = parseStudyTaskSuite(JSON.parse(readFileSync(resolve(inputPath), 'utf8')) as unknown)
+      const expectations = parseStudyExpectations(JSON.parse(readFileSync(resolve(expectationsPath), 'utf8')) as unknown)
+      const repositoryId = optionValues(argv, '--repository')[0]
+      const indexOption = optionValues(argv, '--index')[0]
+      const { config, root } = loadProject(configPath)
+      const index = indexOption
+        ? parseDocBridgeIndex(JSON.parse(readFileSync(resolve(root, indexOption), 'utf8')) as unknown)
+        : loadFreshDocBridgeIndex(root, config)
+      const check = checkStudyExpectations({ taskSuite: suite, expectations, index, ...(repositoryId ? { repositoryId } : {}) })
+      if (flags.has('--text')) writeLines(formatStudyExpectationsText(check))
+      else writeJson({ ok: check.ok, expectations: check })
+      return check.ok ? 0 : 1
+    }
     if (action === 'run') {
       const taskSuitePath = positional[3]
       const providersPath = optionValues(argv, '--providers')[0]
@@ -1198,15 +1601,18 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
     }
   }
 
-  if (command === 'study') return runStudyCommand(flags, positional, argv)
+  if (command === 'study') return runStudyCommand(flags, positional, argv, configPath)
 
   if (command === 'scan' || command === 'reconcile' || command === 'check' || command === 'map') {
     return runWorkflowCommand(command, flags, configPath, argv)
   }
   if (command === 'audit') return runDocumentationAuditCommand(flags, positional, configPath)
+  if (command === 'render') return runRenderCommand(flags, positional, configPath, argv)
+  if (command === 'bench') return runBenchCommand(flags, positional, configPath, argv)
 
   if (command === 'fix') return runFixCommand(argv, positional, configPath)
   if (command === 'suggest') return runSuggestCommand(flags, configPath)
+  if (command === 'enrich') return runEnrichCommand(flags, positional, argv, configPath)
 
   if (command === 'init') {
     const root = process.cwd()
@@ -1541,7 +1947,7 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
     try {
       const { config, root } = loadProject(configPath)
       const index = loadFreshDocBridgeIndex(root, config)
-      const result = runQuery(index, config, { kind, id, agent: flags.has('--agent') })
+      const result = runQuery(index, config, { kind, id, agent: flags.has('--agent') }, { root })
       if (wantsTextOutput(flags, config)) writeTextQuery(result)
       else if (flags.has('--agent')) writeAgentJson(result)
       else writeJson(result)
@@ -1561,6 +1967,7 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
     try {
       const { config, root } = loadProject(configPath)
         const index = loadFreshDocBridgeIndex(root, config)
+      const explain = flags.has('--explain')
       if (flags.has('--agent')) {
         const mode = optionValues(argv, '--mode')[0]
         const budgetValue = optionValues(argv, '--context-budget')[0]
@@ -1569,12 +1976,13 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
           kind: 'search',
           term,
           agent: true,
+          ...(explain ? { explain: true } : {}),
           ...(mode === undefined ? {} : { mode: mode as 'discovery' | 'editing' | 'debugging' | 'documentation' }),
           ...(contextBudgetTokens === undefined ? {} : { contextBudgetTokens }),
         })
         writeAgentJson(result)
       } else {
-        const matches = searchIndex(index, term)
+        const matches = searchIndex(index, term, 20, explain ? { explain: true } : {})
         if (wantsTextOutput(flags, config)) writeTextSearch(term, matches)
         else writeJson({ term, count: matches.length, matches })
       }

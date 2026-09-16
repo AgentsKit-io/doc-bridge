@@ -17,6 +17,7 @@ export {
   EcosystemContractEvidenceSchema,
   ConformanceConfigSchema,
   ReportConfigSchema,
+  RetrievalConfigSchema,
   type DocBridgeConfigV1,
   type DocumentationAuditConfig,
   type AgentCorpusConfig,
@@ -24,4 +25,5 @@ export {
   type DocumentationStandardV1Config,
   type ReconciliationConfig,
   type ReportConfig,
+  type RetrievalConfig,
 } from './schema.js'

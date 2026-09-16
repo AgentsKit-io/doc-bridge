@@ -192,15 +192,15 @@
         }
       ],
       "freshness": {
-        "reviewedOn": "2026-07-16",
-        "reviewDueOn": "2026-10-12",
+        "reviewedOn": "2026-09-14",
+        "reviewDueOn": "2026-12-13",
         "sources": [
           "README.md",
           "doc-bridge.config.json",
           "examples/verify-handoff.mjs",
           "package.json"
         ],
-      "sourceHash": "sha256:c26d043e8d9f66a06f18ff51b48bfda20c3bc76536c714b3860f5386d46bf5a2"
+        "sourceHash": "sha256:cc6fb1bb6247e66c9ead48847565c22882063f09f84273bc25348298352b0584"
       },
       "exceptions": []
     },
@@ -271,15 +271,15 @@
         }
       ],
       "freshness": {
-        "reviewedOn": "2026-07-16",
-        "reviewDueOn": "2026-10-12",
+        "reviewedOn": "2026-09-14",
+        "reviewDueOn": "2026-12-13",
         "sources": [
           "README.md",
           "doc-bridge.config.json",
           "examples/verify-handoff.mjs",
           "package.json"
         ],
-      "sourceHash": "sha256:c26d043e8d9f66a06f18ff51b48bfda20c3bc76536c714b3860f5386d46bf5a2"
+        "sourceHash": "sha256:cc6fb1bb6247e66c9ead48847565c22882063f09f84273bc25348298352b0584"
       },
       "exceptions": []
     },
@@ -350,15 +350,15 @@
         }
       ],
       "freshness": {
-        "reviewedOn": "2026-07-16",
-        "reviewDueOn": "2026-11-11",
+        "reviewedOn": "2026-09-14",
+        "reviewDueOn": "2027-01-12",
         "sources": [
           "README.md",
           "doc-bridge.config.json",
           "examples/verify-handoff.mjs",
           "package.json"
         ],
-      "sourceHash": "sha256:c26d043e8d9f66a06f18ff51b48bfda20c3bc76536c714b3860f5386d46bf5a2"
+        "sourceHash": "sha256:cc6fb1bb6247e66c9ead48847565c22882063f09f84273bc25348298352b0584"
       },
       "exceptions": []
     }

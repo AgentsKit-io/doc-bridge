@@ -2,8 +2,13 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 
 import type { DocBridgeConfigV1 } from '../config/schema.js'
+import { applyDocumentationDeclarations } from '../discovery/documentation.js'
+import { discoverRepository } from '../discovery/repository.js'
+import { readBoundedText, type TextReadBudget } from '../lib/bounded-text.js'
 import { toPosix } from '../lib/paths.js'
-import type { DocBridgeIndexV1 } from '../schemas/doc-bridge-index.js'
+import type { DocBridgeIndexV1, KnowledgeEntry } from '../schemas/doc-bridge-index.js'
+import type { DiscoverySnapshotV1 } from '../schemas/knowledge.js'
+import type { RetrievalIndexV1 } from '../schemas/retrieval-index.js'
 import { buildLookup, collectPackages } from './build-handoffs.js'
 import { renderCapabilitiesJson } from './capabilities.js'
 import { sha256NormalizedV1 } from './content-hash.js'
@@ -11,12 +16,33 @@ import { renderLlmsTxt } from './llms-txt.js'
 import { scanHumanDocs } from './human-adapters/index.js'
 import { discoverNxProjects } from './plugins/nx.js'
 import { discoverPnpmPackages } from './plugins/pnpm-monorepo.js'
+import { repositoryInputs } from './project-corpus.js'
 import { scanAgentCorpus } from './scan-corpus.js'
+import { SEARCH_LEXICON_VERSION } from '../query/text.js'
+import { projectRetrievalIndex, toKnowledgeEntry } from '../retrieval/project.js'
+import { resolveSearchParams, resolveSearchWeights } from '../retrieval/weights.js'
+import { projectEnrichmentOverlay, readEnrichmentOverlay } from '../enrich/overlay.js'
+import type { EnrichmentOverlayV1 } from '../schemas/enrichment.js'
 
 export type BuildIndexOptions = {
   readonly root?: string
   readonly config: DocBridgeConfigV1
   readonly write?: boolean
+  /**
+   * A snapshot to project instead of scanning. The build scans when none is given; a caller that
+   * already holds the snapshot — a workflow stage, a test — passes it so the index and the
+   * artifacts it sits next to describe the same observation.
+   */
+  readonly snapshot?: DiscoverySnapshotV1
+  /**
+   * Which enrichment overlay the projection reads.
+   *
+   * Omitted, the builder reads the one on disk while the Registry is enabled — the normal path.
+   * `'ignore'` builds the deterministic baseline even then, and an overlay object projects that
+   * one instead. Both exist so the retrieval delta can measure the same snapshot twice, with the
+   * overlay and without it, rather than comparing two different repositories.
+   */
+  readonly overlay?: EnrichmentOverlayV1 | 'ignore'
 }
 
 export type BuildIndexResult = {
@@ -35,6 +61,58 @@ const projectName = (root: string, config: DocBridgeConfigV1): string => {
     // ignore
   }
   return toPosix(root.split('/').pop() ?? 'project')
+}
+
+/**
+ * Observe, declare, project.
+ *
+ * The snapshot is the observation; documentation declarations (`covers`, frontmatter relations)
+ * are applied on top of it so a document's declared coverage ranks and routes like an observed
+ * edge; the projection is computed from the result. Document bodies are read once, bounded, and
+ * handed to both steps by path.
+ */
+const projectFromSnapshot = (
+  root: string,
+  config: DocBridgeConfigV1,
+  given: DiscoverySnapshotV1 | undefined,
+  lookup: ReturnType<typeof buildLookup>['lookup'],
+  curated: readonly KnowledgeEntry[],
+  requested: BuildIndexOptions['overlay'],
+): { readonly projection: RetrievalIndexV1 } => {
+  const observed = given ?? discoverRepository({ root, config })
+  const budget: TextReadBudget = { used: 0 }
+  const contents = new Map<string, string>()
+  for (const entity of observed.entities) {
+    if (entity.kind !== 'document' || !entity.path) continue
+    try {
+      contents.set(entity.path, readBoundedText(join(root, entity.path), budget))
+    } catch {
+      // Unreadable now: the entity still projects from what the snapshot recorded about it.
+    }
+  }
+  const declared = applyDocumentationDeclarations(
+    observed,
+    [...contents.entries()].map(([path, content]) => ({ path, content })),
+    { agentRoot: config.corpus.agent.root },
+  ).snapshot
+  /*
+   * The accepted enrichment overlay is consulted only while the Registry is enabled: switching it
+   * off restores the deterministic baseline exactly. The read never writes, and an entry whose
+   * target moved since it was accepted is expired here rather than ranked.
+   */
+  const accepted = requested === 'ignore'
+    ? undefined
+    : (requested ?? (config.intelligence?.registry?.enabled ? readEnrichmentOverlay(root) : undefined))
+  const overlay = accepted ? projectEnrichmentOverlay(accepted, declared) : undefined
+  const projection = projectRetrievalIndex({
+    snapshot: declared,
+    config,
+    routes: lookup,
+    curated: curated.map((entry) => ({ id: entry.id, path: entry.path, title: entry.title, ...(entry.description ? { description: entry.description } : {}) })),
+    ...(overlay ? { overlay } : {}),
+    readDocument: (path) => contents.get(path),
+  })
+  return { projection }
 }
 
 const existingGeneratedAt = (indexPath: string, contentHash: string): string | undefined => {
@@ -59,7 +137,12 @@ export const buildDocBridgeIndex = (opts: BuildIndexOptions): BuildIndexResult =
   const indexPath = join(root, outFile)
 
   const corpus = scanAgentCorpus(root, config)
-  const knowledge = corpus.map(({ absPath: _a, relPath: _r, frontmatter: _f, ...entry }) => entry)
+  const curated = corpus.map(({ absPath: _a, relPath: _r, frontmatter: _f, ...entry }) => entry)
+  const retrieval = {
+    lexiconVersion: SEARCH_LEXICON_VERSION,
+    weights: resolveSearchWeights(config.retrieval?.weights),
+    params: resolveSearchParams(config.retrieval?.params),
+  }
 
   const shouldDiscover =
     config.routing?.plugin === 'pnpm-monorepo' ||
@@ -78,11 +161,39 @@ export const buildDocBridgeIndex = (opts: BuildIndexOptions): BuildIndexResult =
 
   const { lookup, handoffs } = buildLookup(config, packages, corpus, outFile, humanDocs, root)
 
+  /*
+   * Retrieval reads this index, so whatever is missing here is invisible to an agent however well
+   * it is ranked. The projection puts every entity the snapshot observed in it — documents,
+   * modules, areas, packages — next to the routes the configuration declares. It is a function of
+   * the snapshot: the index has no scanner of its own, so a record retrieval can find is an entity
+   * discovery observed, with the same id and the same content hash.
+   */
+  const projected = config.retrieval?.corpus?.enabled === false ? undefined : projectFromSnapshot(root, config, opts.snapshot, lookup, curated, opts.overlay)
+  const projection = projected?.projection
+  const inputs = projected ? repositoryInputs(root, config) : undefined
+  const curatedPaths = new Set(curated.map((entry) => entry.path))
+  /*
+   * `knowledge[]` keeps every reader that predates the projection working: the curated sidecars
+   * first, in reading order, then every projected document and module. Body text lives once, in
+   * the projection, so a projected index carries no bodies here.
+   */
+  const knowledge: KnowledgeEntry[] = projection
+    ? [
+        ...curated.map(({ body: _body, ...entry }) => entry),
+        ...projection.entries
+          .filter((entry) => (entry.kind === 'document' || entry.kind === 'module') && !curatedPaths.has(entry.path))
+          .map(toKnowledgeEntry),
+      ]
+    : curated
+
   const hashPayload = {
     schemaVersion: 1,
     knowledge,
     handoffs,
     lookup,
+    retrieval,
+    ...(inputs ? { inputs } : {}),
+    ...(projection ? { projection: projection.contentHash } : {}),
   }
 
   const contentHash = sha256NormalizedV1(hashPayload)
@@ -95,6 +206,9 @@ export const buildDocBridgeIndex = (opts: BuildIndexOptions): BuildIndexResult =
     knowledge,
     handoffs,
     lookup,
+    ...(inputs ? { inputs } : {}),
+    retrieval,
+    ...(projection ? { projection } : {}),
   }
 
   if (write) {
@@ -111,7 +225,7 @@ export const buildDocBridgeIndex = (opts: BuildIndexOptions): BuildIndexResult =
     if (write) {
       writeFileSync(
         llmsTxtPath,
-        renderLlmsTxt(config, knowledge, index.project?.name ?? 'project'),
+        renderLlmsTxt(config, knowledge, index.project?.name ?? 'project', { root }),
         'utf8',
       )
     }

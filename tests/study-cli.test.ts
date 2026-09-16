@@ -7,6 +7,9 @@ import { describe, expect, it } from 'vitest'
 import { runCli } from '../src/cli/program.js'
 import { createStudyProviderCliConfig } from '../src/study/provider-cli.js'
 import { createStudyRepositoryConfig } from '../src/study/execution.js'
+import { createStudyExpectations } from '../src/study/expectations.js'
+import { createStudyTaskSuite } from '../src/study/task-suite.js'
+import { contentHashForArtifactV1 } from '../src/index-builder/content-hash.js'
 
 const root = process.cwd()
 const artifact = (name: string) => join(root, 'docs', 'study', name)
@@ -79,5 +82,98 @@ describe('study CLI artifact contracts', () => {
     const adjudicated = await capture(() => runCli(['study', 'adjudicate', artifact('observation-ledger-v1.json'), artifact('task-suite-v1.json'), '--adjudicator', providersPath, '--output', adjudicatedPath, '--limit', '1']))
     expect(adjudicated.code).toBe(0)
     expect(existsSync(adjudicatedPath)).toBe(true)
+  })
+})
+
+/**
+ * `ak-docs study expectations` — the mechanical half, checked by the retrieval benchmark.
+ *
+ * The suite that ships here declares no expectations, because its hash is bound to published
+ * artifacts and its references would have to name repositories that are not in this one. So the
+ * command is exercised against a suite built in the test, which is also what an operator does:
+ * the suite is published, the resolution is local, and the two are bound by the suite hash.
+ */
+describe('ak-docs study expectations', () => {
+  const fixtureProject = (): { readonly dir: string; readonly configPath: string; readonly indexPath: string } => {
+    const dir = mkdtempSync(join(tmpdir(), 'doc-bridge-study-expect-'))
+    writeFileSync(join(dir, 'package.json'), JSON.stringify({ name: 'fixture', version: '0.0.0' }))
+    const configPath = join(dir, 'doc-bridge.config.json')
+    writeFileSync(configPath, JSON.stringify({ schemaVersion: 1, corpus: { agent: { root: 'docs' } } }))
+    const indexPath = join(dir, 'index.json')
+    const index = {
+      schemaVersion: 1,
+      contentHashAlgo: 'sha256-normalized-v1',
+      project: { name: 'fixture', root: '.' },
+      knowledge: [
+        { id: 'alpha', type: 'agent-doc', title: 'Alpha', path: 'docs/alpha.md', description: 'Alpha covers the subsystem entrypoints.' },
+        { id: 'beta', type: 'agent-doc', title: 'Beta', path: 'docs/beta.md', description: 'Beta explains ranking.' },
+      ],
+      lookup: { packages: [] },
+    }
+    writeFileSync(indexPath, JSON.stringify({ ...index, contentHash: contentHashForArtifactV1({ ...index, contentHash: 'x' }) }))
+    return { dir, configPath, indexPath }
+  }
+
+  const suiteWithExpectations = () => {
+    const { contentHash: _hash, contentHashAlgo: _algo, ...payload } = JSON.parse(readFileSync(artifact('task-suite-v1.json'), 'utf8')) as Record<string, unknown>
+    const tasks = (payload.tasks as Record<string, unknown>[]).map((task) =>
+      task.id === 'consumer-01-discovery' ? { ...task, expectedDocuments: ['primary-entrypoint'], retrievalQueries: ['alpha subsystem'] } : task,
+    )
+    return createStudyTaskSuite({ ...payload, tasks })
+  }
+
+  const expectationsFile = (dir: string, suite: { contentHash: string }, targets: Record<string, string[]>): string => {
+    const path = join(dir, 'expectations.json')
+    writeFileSync(path, `${JSON.stringify(createStudyExpectations({
+      type: 'controlled-study-expectations',
+      schemaVersion: 1,
+      configVersion: 'cli-contract-test',
+      scope: 'local',
+      taskSuiteHash: suite.contentHash,
+      repositories: [{ id: 'consumer-01', targets }],
+    }))}\n`)
+    return path
+  }
+
+  it('passes when the resolved references are retrieved, in both output modes', async () => {
+    const { dir, configPath, indexPath } = fixtureProject()
+    const suite = suiteWithExpectations()
+    const suitePath = join(dir, 'task-suite.json')
+    writeFileSync(suitePath, `${JSON.stringify(suite)}\n`)
+    const expectations = expectationsFile(dir, suite, { 'primary-entrypoint': ['docs/alpha.md'] })
+
+    const json = await capture(() => runCli(['study', 'expectations', suitePath, '--expectations', expectations, '--index', indexPath, '--config', configPath]))
+    expect(json.code).toBe(0)
+    const payload = JSON.parse(json.output) as { ok: boolean; expectations: { checkedTasks: number; outcomes: { caseId: string; hit: boolean }[]; withoutExpectations: string[] } }
+    expect(payload.ok).toBe(true)
+    expect(payload.expectations.checkedTasks).toBe(1)
+    expect(payload.expectations.outcomes).toEqual([{ taskId: 'consumer-01-discovery', repositoryId: 'consumer-01', caseId: 'consumer-01-discovery', hit: true, rank: 1, expectedTargets: ['docs/alpha.md'], rankedTargets: expect.any(Array) }])
+    expect(payload.expectations.withoutExpectations).toHaveLength(23)
+
+    const text = await capture(() => runCli(['study', 'expectations', suitePath, '--expectations', expectations, '--index', indexPath, '--config', configPath, '--text']))
+    expect(text.code).toBe(0)
+    expect(text.output).toContain('Study expectations: pass')
+    expect(text.output).toContain('hit@3: 100.0% over 1 case(s)')
+  })
+
+  it('exits non-zero when a reference does not resolve or retrieval misses it', async () => {
+    const { dir, configPath, indexPath } = fixtureProject()
+    const suite = suiteWithExpectations()
+    const suitePath = join(dir, 'task-suite.json')
+    writeFileSync(suitePath, `${JSON.stringify(suite)}\n`)
+
+    const missed = expectationsFile(dir, suite, { 'primary-entrypoint': ['docs/beta.md'] })
+    const miss = await capture(() => runCli(['study', 'expectations', suitePath, '--expectations', missed, '--index', indexPath, '--config', configPath]))
+    expect(miss.code).toBe(1)
+    expect((JSON.parse(miss.output) as { ok: boolean }).ok).toBe(false)
+
+    const unresolved = expectationsFile(dir, suite, { 'something-else': ['docs/alpha.md'] })
+    const unresolvedRun = await capture(() => runCli(['study', 'expectations', suitePath, '--expectations', unresolved, '--index', indexPath, '--config', configPath, '--text']))
+    expect(unresolvedRun.code).toBe(1)
+    expect(unresolvedRun.output).toContain('unresolved document reference "primary-entrypoint"')
+
+    const noFile = await capture(() => runCli(['study', 'expectations', suitePath, '--index', indexPath, '--config', configPath]))
+    expect(noFile.code).toBe(2)
+    expect(noFile.errors).toContain('--expectations')
   })
 })

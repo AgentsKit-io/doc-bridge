@@ -39,7 +39,12 @@ describe('repository discovery', () => {
     expect(entityIds).toContain('package:@fixture/app')
     expect(entityIds).toContain('module:packages/app/src/index.ts')
     expect(entityIds).toContain('document:docs/architecture.md')
-    expect(snapshot.entities.find((entity) => entity.id === 'document:docs/architecture.md')?.metadata).toEqual({ classification: 'human' })
+    expect(snapshot.entities.find((entity) => entity.id === 'document:docs/architecture.md')?.metadata).toEqual({
+      classification: 'human',
+      title: 'Architecture',
+      headings: [{ depth: 1, text: 'Architecture', line: 1 }],
+      wordCount: 1,
+    })
     expect(entityIds).toContain('external:external-lib')
     expect(relationKinds).toContain('contains')
     expect(relationKinds).toContain('imports')
@@ -55,7 +60,12 @@ describe('repository discovery', () => {
     writeFileSync(join(root, 'docs-archive', 'legacy.md'), '# Legacy\n')
 
     const document = discoverRepository({ root }).entities.find((entity) => entity.id === 'document:docs-archive/legacy.md')
-    expect(document?.metadata).toEqual({ classification: 'archive' })
+    expect(document?.metadata).toEqual({
+      classification: 'archive',
+      title: 'Legacy',
+      headings: [{ depth: 1, text: 'Legacy', line: 1 }],
+      wordCount: 1,
+    })
   })
 
   it('makes unsupported dynamic behavior explicit and remains deterministic', () => {
@@ -125,8 +135,9 @@ describe('repository discovery', () => {
     const configured = discoverRepository({ root, config: { analysis: { jsTs: { runtimeWiringMethods: ['register'], runtimeWiringAdapters: [{ id: 'node-runtime', methods: ['listen'] }] } } } as DocBridgeConfigV1 })
     expect(configured.relations).toContainEqual(expect.objectContaining({ from: 'module:packages/edge/src/imports.ts', to: 'external:listen-runtime', kind: 'runtime-wiring', metadata: { detection: 'runtime-wiring-static' } }))
 
+    // A test module is out of wiring analysis entirely; a locally resolved call is observed, and reported as resolved rather than as a gap.
     expect(snapshot.coverage.some((entry) => entry.scope === 'runtime-wiring:packages/edge/src/wiring.test.ts')).toBe(false)
-    expect(snapshot.coverage.some((entry) => entry.scope === 'runtime-wiring:packages/edge/src/local-wiring.ts')).toBe(false)
+    expect(snapshot.coverage.find((entry) => entry.scope === 'runtime-wiring:packages/edge/src/local-wiring.ts')?.status).toBe('complete')
     const configuredTests = discoverRepository({ root, config: { analysis: { jsTs: { includeTestRuntimeWiring: true } } } as DocBridgeConfigV1 })
     expect(configuredTests.relations).toContainEqual(expect.objectContaining({ from: 'module:packages/edge/src/wiring.test.ts', to: 'package:@fixture/edge', kind: 'runtime-wiring', metadata: { detection: 'runtime-wiring-static' } }))
   })
