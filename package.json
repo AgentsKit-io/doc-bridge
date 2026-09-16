@@ -132,7 +132,7 @@
     "graphology-shortest-path": "~2.1.0",
     "knap": "~0.5.1",
     "mdast-util-to-string": "^4.0.0",
-    "mermaid": "^11.17.2",
+    "mermaid": "^12.0.0",
     "minimatch": "^10.2.6",
     "remark-frontmatter": "^5.0.0",
     "remark-gfm": "^4.0.1",
