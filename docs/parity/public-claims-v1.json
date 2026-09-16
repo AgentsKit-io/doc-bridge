@@ -1,0 +1,145 @@
+{
+  "type": "public-claims",
+  "schemaVersion": 1,
+  "registryVersion": "v1",
+  "claims": [
+    {
+      "claimId": "study-token-reduction",
+      "statement": "The published A/B round measured fewer paired provider token-equivalent units for the deterministic arm",
+      "owner": "platform",
+      "valueType": "percent",
+      "template": "{value}% fewer paired provider token-equivalent units",
+      "evidence": {
+        "kind": "artifact-field",
+        "path": "docs/study/ab-adjudicated-cost-result-v1.json",
+        "field": "pairedDeltas.providerTokenCostUnitsRelative",
+        "transform": "negative-percent-2dp"
+      },
+      "required": [
+        "README.md",
+        "docs/study/README.md"
+      ],
+      "severity": "error",
+      "remediation": "Restate the figure from pairedDeltas.providerTokenCostUnitsRelative in the published A/B result, on every surface that quotes it."
+    },
+    {
+      "claimId": "study-token-pairs",
+      "statement": "The token comparison rests on the token-complete pairs the round recorded",
+      "owner": "platform",
+      "valueType": "number",
+      "template": "across {value} token-complete pairs",
+      "evidence": {
+        "kind": "artifact-field",
+        "path": "docs/study/ab-adjudicated-cost-result-v1.json",
+        "field": "pairedDeltas.providerTokenPairCount"
+      },
+      "required": [
+        "README.md",
+        "docs/study/README.md"
+      ],
+      "severity": "error",
+      "remediation": "Restate the pair count from pairedDeltas.providerTokenPairCount; a denominator that drifts makes the percentage unreadable."
+    },
+    {
+      "claimId": "study-completion-bridge",
+      "statement": "Operational completion in the deterministic Doc Bridge arm",
+      "owner": "platform",
+      "valueType": "percent",
+      "template": "{value}% operationally completed executions",
+      "evidence": {
+        "kind": "artifact-field",
+        "path": "docs/study/ab-adjudicated-cost-result-v1.json",
+        "field": "arms.1.completedRate",
+        "transform": "percent-1dp"
+      },
+      "templates": {
+        "docs/study/README.md": "Operational completion was {value}% versus"
+      },
+      "required": [
+        "README.md",
+        "docs/study/README.md"
+      ],
+      "severity": "error",
+      "remediation": "Restate the completion rate from arms[1].completedRate in the published A/B result."
+    },
+    {
+      "claimId": "study-completion-baseline",
+      "statement": "Operational completion in the repository-only arm",
+      "owner": "platform",
+      "valueType": "percent",
+      "template": "operationally completed executions vs. {value}%",
+      "evidence": {
+        "kind": "artifact-field",
+        "path": "docs/study/ab-adjudicated-cost-result-v1.json",
+        "field": "arms.0.completedRate",
+        "transform": "percent-1dp"
+      },
+      "templates": {
+        "docs/study/README.md": "versus {value}%"
+      },
+      "required": [
+        "README.md",
+        "docs/study/README.md"
+      ],
+      "severity": "error",
+      "remediation": "Restate the baseline completion rate from arms[0].completedRate; a comparison needs both arms."
+    },
+    {
+      "claimId": "study-latency-p95",
+      "statement": "The P95 latency difference the round measured",
+      "owner": "platform",
+      "valueType": "number",
+      "template": "{value} seconds lower P95 latency",
+      "evidence": {
+        "kind": "artifact-field",
+        "path": "docs/study/ab-adjudicated-cost-result-v1.json",
+        "field": "pairedDeltas.latencyP95Ms",
+        "transform": "negative-seconds-2dp"
+      },
+      "required": [
+        "docs/study/README.md"
+      ],
+      "optional": [
+        "README.md"
+      ],
+      "severity": "error",
+      "remediation": "Restate the P95 difference from pairedDeltas.latencyP95Ms, in seconds, and drop the word \"lower\" if the sign ever turns."
+    },
+    {
+      "claimId": "study-executions",
+      "statement": "The size of the published controlled round",
+      "owner": "platform",
+      "valueType": "number",
+      "template": "controlled A/B study with {value} executions",
+      "evidence": {
+        "kind": "artifact-sum",
+        "path": "docs/study/ab-adjudicated-cost-result-v1.json",
+        "arrayField": "arms",
+        "field": "observationCount"
+      },
+      "required": [
+        "docs/study/README.md"
+      ],
+      "severity": "warn",
+      "remediation": "Restate the execution count as the sum of both arms' observationCount in the published A/B result."
+    },
+    {
+      "claimId": "cli-parity-command",
+      "statement": "The CLI offers the parity gate this registry drives",
+      "owner": "platform",
+      "valueType": "text",
+      "evidence": {
+        "kind": "cli-command",
+        "command": "ak-docs parity"
+      },
+      "required": [
+        "docs/spec/cli.md"
+      ],
+      "severity": "error",
+      "remediation": "Document `ak-docs parity` in the CLI reference, or remove the command."
+    }
+  ],
+  "exceptions": [],
+  "contentHash": "e188a7b2776a3c7c495016b462fd2c053faec9d29d0b824b607458b922fbd118",
+  "contentHashAlgo": "sha256-normalized-v1"
+}

@@ -43,6 +43,8 @@ jobs:
           node bin/ak-docs.js doctor --text
           node bin/ak-docs.js doctor --write-badge
           node bin/ak-docs.js doctor --badge
+      - name: Public parity gate (fails on a stale or contradictory public claim)
+        run: node bin/ak-docs.js parity --text
       - name: Retrieval benchmark gate (fails on a hit@3 regression)
         run: |
           node bin/ak-docs.js bench retrieval docs/bench/retrieval-suite-v1.json \
