@@ -37,7 +37,7 @@ import { resolveSearchParams, resolveSearchWeights } from './weights.js'
  * from what the snapshot says about it rather than from what is on disk now.
  */
 
-export const RETRIEVAL_PROJECTION_VERSION = 1 as const
+export const RETRIEVAL_PROJECTION_VERSION = 2 as const
 
 /** Documentation body kept for search. Long enough to answer a question, short enough to ship. */
 export const DOCUMENT_BODY_LIMIT = 4_000
@@ -50,6 +50,31 @@ const MAX_SUMMARY = 400
 
 /** The overlay hash when there is no overlay: the hash of an empty accepted set. */
 export const EMPTY_OVERLAY_HASH = sha256NormalizedV1({ accepted: [] })
+
+/**
+ * What the snapshot observed, without the revision it observed it at.
+ *
+ * `snapshot.contentHash` seals the whole artifact, `sourceRevision` included — the commit SHA when
+ * the working tree is clean, a digest of the scanned files when it is not. That is right for an
+ * artifact whose job is to say what one revision looked like, and wrong as a projection input: the
+ * projection is a function of what was found, not of where it was found. Sealing the revision into
+ * it made an index that any commit invalidates without one thing it describes having changed — so
+ * an index committed to a repository was stale the moment it landed, because landing it is a
+ * commit, and a freshness gate could never pass twice.
+ *
+ * Entities and relations are the projection's whole input; the analyzer identity comes with them,
+ * because two analyzer versions that observe the same entities and relations have nothing left to
+ * disagree about, and one that observes different ones is caught by the entities.
+ */
+export const snapshotObservationHash = (
+  snapshot: Pick<DiscoverySnapshotV1, 'entities' | 'relations' | 'pipelineVersion' | 'analyzerVersions'>,
+): string =>
+  sha256NormalizedV1({
+    pipelineVersion: snapshot.pipelineVersion,
+    analyzerVersions: snapshot.analyzerVersions,
+    entities: snapshot.entities,
+    relations: snapshot.relations,
+  })
 
 const CONFIDENCE_RANK: Readonly<Record<Confidence, number>> = { observed: 0, declared: 1, fuzzy: 2, proposed: 3 }
 
@@ -115,7 +140,7 @@ export type RetrievalOverlayInput = {
 }
 
 export type ProjectRetrievalOptions = {
-  readonly snapshot: Pick<DiscoverySnapshotV1, 'contentHash' | 'entities' | 'relations'>
+  readonly snapshot: Pick<DiscoverySnapshotV1, 'contentHash' | 'entities' | 'relations' | 'pipelineVersion' | 'analyzerVersions'>
   readonly config: DocBridgeConfigV1 | undefined
   readonly routes?: RetrievalRoutes
   readonly curated?: readonly CuratedDocument[]
@@ -459,13 +484,15 @@ export const projectRetrievalIndex = (options: ProjectRetrievalOptions): Retriev
     entries,
   }
   /*
-   * The hash is over the inputs, not the output: the projection is a function, so three equal
-   * input hashes mean an equal artifact, and a reader checking freshness compares three hashes
-   * instead of re-projecting.
+   * The hash is over the inputs, not the output: the projection is a function, so equal input
+   * hashes mean an equal artifact, and a reader checking freshness compares hashes instead of
+   * re-projecting. `snapshotHash` stays on the artifact as provenance — which snapshot this came
+   * from — but the seal uses the observation, so the same repository projects to the same hash
+   * whatever revision it was scanned at.
    */
   const contentHash = sha256NormalizedV1({
     projectionVersion: RETRIEVAL_PROJECTION_VERSION,
-    snapshotHash: base.snapshotHash,
+    observationHash: snapshotObservationHash(snapshot),
     overlayHash: base.overlayHash,
     configurationHash: base.configurationHash,
     lexiconVersion: base.lexiconVersion,

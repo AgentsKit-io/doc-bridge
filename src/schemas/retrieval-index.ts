@@ -136,8 +136,13 @@ export const RetrievalIndexV1Schema = z
     schemaVersion: z.literal(RETRIEVAL_INDEX_SCHEMA_VERSION),
     contentHash: hash,
     contentHashAlgo: z.literal('sha256-normalized-v1'),
-    /** The three inputs the projection is a function of. Same three hashes, same projection. */
+    /**
+     * Which snapshot this was projected from. Provenance, not a seal input: it carries the
+     * snapshot's `sourceRevision`, and the projection is a function of what the snapshot observed
+     * rather than of the revision it was observed at.
+     */
     snapshotHash: hash,
+    /** The inputs the projection is a function of. Same hashes, same projection. */
     overlayHash: hash,
     configurationHash: hash,
     lexiconVersion: z.number().int().nonnegative().max(1_000),

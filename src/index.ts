@@ -104,6 +104,7 @@ export {
   RETRIEVAL_PROJECTION_VERSION,
   projectRetrievalIndex,
   relationConfidence,
+  snapshotObservationHash,
   toKnowledgeEntry,
   weakerConfidence,
   type CuratedDocument,

@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process'
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
@@ -13,12 +14,12 @@ import { handoffForEntity } from '../src/query/handoff.js'
 import { IndexStaleError, loadFreshDocBridgeIndex } from '../src/query/load-index.js'
 import { runQuery } from '../src/query/query.js'
 import { searchIndex } from '../src/query/search.js'
-import { projectRetrievalIndex, weakerConfidence } from '../src/retrieval/project.js'
+import { projectRetrievalIndex, snapshotObservationHash, weakerConfidence } from '../src/retrieval/project.js'
 import { rankRetrieval } from '../src/retrieval/rank.js'
 import { createDocBridgeRetriever, retrieveDocBridgeDocuments, type Retriever } from '../src/retriever/doc-bridge-retriever.js'
 import { AgentHandoffV1Schema, normalizeAgentHandoff } from '../src/schemas/agent-handoff.js'
 import { DocBridgeIndexV1Schema, type DocBridgeIndexV1 } from '../src/schemas/doc-bridge-index.js'
-import type { DiscoverySnapshotV1 } from '../src/schemas/knowledge.js'
+import type { DiscoverySnapshotV1, KnowledgeEntity } from '../src/schemas/knowledge.js'
 import { RetrievalIndexV1Schema } from '../src/schemas/retrieval-index.js'
 
 // The repository-level tests scan and project this whole repository; the first one pays for it.
@@ -82,6 +83,29 @@ const fixture = (): { readonly root: string; readonly config: DocBridgeConfigV1 
   return { root, config }
 }
 
+/** A fixture that is also a Git checkout, with identity supplied so the test needs no user config. */
+const gitFixture = (): { readonly root: string; readonly config: DocBridgeConfigV1; readonly commit: (message: string) => string } => {
+  const { root, config } = fixture()
+  const git = (...args: readonly string[]): string =>
+    execFileSync('git', ['-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid', '-c', 'commit.gpgsign=false', ...args], {
+      cwd: root,
+      encoding: 'utf8',
+      env: { ...process.env, GIT_CONFIG_GLOBAL: '/dev/null', GIT_CONFIG_SYSTEM: '/dev/null' },
+      stdio: ['ignore', 'pipe', 'pipe'],
+    }).trim()
+  git('init', '--quiet', '--initial-branch=main')
+  git('add', '--all')
+  git('commit', '--quiet', '--message', 'fixture')
+  return {
+    root,
+    config,
+    commit: (message: string): string => {
+      git('commit', '--quiet', '--allow-empty', '--message', message)
+      return git('rev-parse', 'HEAD')
+    },
+  }
+}
+
 describe('the projection is a function of the snapshot', () => {
   it('produces identical content hashes from the same snapshot, overlay and configuration', () => {
     const { root, config } = fixture()
@@ -95,6 +119,42 @@ describe('the projection is a function of the snapshot', () => {
     // The hash is over the three inputs: a different overlay is a different projection.
     expect(projectRetrievalIndex({ snapshot, config, overlay: { hash: 'f'.repeat(64) } }).contentHash).not.toBe(first.contentHash)
     expect(projectRetrievalIndex({ snapshot, config: { ...config, retrieval: { weights: { body: 9 } } } }).contentHash).not.toBe(first.contentHash)
+  })
+
+  /*
+   * The revision is provenance, not an input. It used to reach the seal through
+   * `snapshot.contentHash`, which meant an index committed to a repository went stale the moment
+   * it landed — landing it is a commit, and the commit is what the next run hashes.
+   */
+  it('projects the same hash from the same observation at a different revision', () => {
+    const { root, config } = fixture()
+    const snapshot = discoverRepository({ root, config })
+    const elsewhere: DiscoverySnapshotV1 = { ...snapshot, sourceRevision: 'f'.repeat(40), sourceRevisionKind: 'git' }
+
+    expect(elsewhere.contentHash).toBe(snapshot.contentHash)
+    expect(snapshotObservationHash(elsewhere)).toBe(snapshotObservationHash(snapshot))
+    expect(projectRetrievalIndex({ snapshot: elsewhere, config }).contentHash).toBe(projectRetrievalIndex({ snapshot, config }).contentHash)
+
+    // And it is still a seal: one changed entity is a different projection.
+    const [head, ...rest] = snapshot.entities
+    const changed: DiscoverySnapshotV1 = { ...snapshot, entities: [{ ...(head as KnowledgeEntity), name: 'renamed' }, ...rest] }
+    expect(snapshotObservationHash(changed)).not.toBe(snapshotObservationHash(snapshot))
+    expect(projectRetrievalIndex({ snapshot: changed, config }).contentHash).not.toBe(projectRetrievalIndex({ snapshot, config }).contentHash)
+  })
+
+  it('keeps a committed index fresh across a commit that changes no scanned file', () => {
+    const { root, config, commit } = gitFixture()
+    const before = buildDocBridgeIndex({ root, config, write: false }).index
+
+    const head = commit('a commit that touches nothing the scan reads')
+    const after = buildDocBridgeIndex({ root, config, write: false }).index
+
+    // The scan did see the new revision, and the snapshot is a different artifact because of it.
+    expect(discoverRepository({ root, config }).sourceRevision).toBe(head)
+    expect(after.projection?.snapshotHash).not.toBe(before.projection?.snapshotHash)
+    // The projection and the index are not, because nothing they describe changed.
+    expect(after.projection?.contentHash).toBe(before.projection?.contentHash)
+    expect(after.contentHash).toBe(before.contentHash)
   })
 
   it('projects every observed entity of the repository, as a set', () => {
