@@ -19,7 +19,8 @@
     "requiredRelationTargets": "internal"
   },
   "safety": {
-    "exclude": ["**/examples/**", "**/public/raw/**", ".changeset/**", ".impeccable.md", "**/CLAUDE.md"]
+    "exclude": ["**/.source/**",
+      "**/examples/**", "**/public/raw/**", ".changeset/**", ".impeccable.md", "**/CLAUDE.md"]
   },
   "audit": {
     "documentation": {

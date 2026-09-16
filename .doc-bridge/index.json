@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "contentHash": "db594d467484f8ff7ef5fa908d8619b10c3dd557a714badc0c2394713a01706e",
+  "contentHash": "f889c908e5a26c98609766d967da27a48179f54f676fecdf5cb651cb6a813300",
   "contentHashAlgo": "sha256-normalized-v1",
-  "generatedAt": "2026-09-16T23:28:10.336Z",
+  "generatedAt": "2026-09-16T23:30:51.697Z",
   "project": {
     "name": "@agentskit/doc-bridge",
     "root": "."
@@ -1456,64 +1456,6 @@
         "ecosystem-doc-bridge-corpus-scanner"
       ],
       "contentHash": "92d31f0df2a6c1da1835984b36e4f76a83fa7417dd5949871022a550bb94d2bb"
-    },
-    {
-      "id": "module:apps/docs/.source/browser.ts",
-      "type": "module",
-      "title": "browser.ts",
-      "path": "apps/docs/.source/browser.ts",
-      "symbols": [
-        "default"
-      ],
-      "tags": [
-        "module",
-        "ts",
-        ".source"
-      ],
-      "contentHash": "58179d7c974007209eb509f6402f544162c98c095bb712eb79eedf109d60efa1"
-    },
-    {
-      "id": "module:apps/docs/.source/dynamic.ts",
-      "type": "module",
-      "title": "dynamic.ts",
-      "path": "apps/docs/.source/dynamic.ts",
-      "tags": [
-        "module",
-        "ts",
-        ".source"
-      ],
-      "contentHash": "0ff21819df5dda39f12fe7e7eae5482b63657a898ea63de4136ee6b2c91ccbb8"
-    },
-    {
-      "id": "module:apps/docs/.source/server.ts",
-      "type": "module",
-      "title": "server.ts",
-      "path": "apps/docs/.source/server.ts",
-      "symbols": [
-        "docs"
-      ],
-      "tags": [
-        "module",
-        "ts",
-        ".source"
-      ],
-      "contentHash": "3bdf7c59aa8e42eaa1135fa0a16452ea7ae1d515951f5a09e0326ce314766861"
-    },
-    {
-      "id": "module:apps/docs/.source/source.config.mjs",
-      "type": "module",
-      "title": "source.config.mjs",
-      "path": "apps/docs/.source/source.config.mjs",
-      "symbols": [
-        "default",
-        "docs"
-      ],
-      "tags": [
-        "module",
-        "mjs",
-        ".source"
-      ],
-      "contentHash": "eaea4158895c6e2b4ccbdd3c0fce9d9c2ef90745d1a266cfbb47b68adb2f8415"
     },
     {
       "id": "module:apps/docs/app/api/search/route.ts",
@@ -7072,8 +7014,8 @@
     "changes": {}
   },
   "inputs": {
-    "hash": "96105f76c2bfcf45cc70e9318a2655853048f14ae71df1a00ee78e46a8d7fd64",
-    "fileCount": 416,
+    "hash": "cb5fe5f58771fa52733371b6648bf6b8cc0b4a88c82241f77acfc641dc3de925",
+    "fileCount": 412,
     "projectionVersion": 2
   },
   "retrieval": {
@@ -7095,11 +7037,11 @@
   "projection": {
     "type": "retrieval-index",
     "schemaVersion": 1,
-    "contentHash": "3ebce989002bb1444807776b3d6b93fbcd0ec084b0d712bc76bfe544b80dcafa",
+    "contentHash": "19089eb238a5a8e5cd27dfcb6b7c66ac25c6651c2d6a504989ac5e1f0f461025",
     "contentHashAlgo": "sha256-normalized-v1",
-    "snapshotHash": "7f1fb3be94f3263530abd250f555b84653d35af29175ada5e700e7c396ef8719",
+    "snapshotHash": "7b9907f5a34ecf645010ae6bf638755f2d1fc0990b7dc7549025b0653b4ac729",
     "overlayHash": "f99666ff9119084dd25c2974ae64eb6935ec2aa785ff5ad478fb9d541f7a5e94",
-    "configurationHash": "793f26cb0db7d7dbf48c1fb95382e4200ef06de57323fc025a5fa113dccc9875",
+    "configurationHash": "91d46a4ecbfe3b55878e0b3c7608819775cf7b18aeafcc8f689eddfa462622b4",
     "lexiconVersion": 1,
     "graphMetricsVersion": "1.0.0",
     "weights": {
@@ -7117,7 +7059,7 @@
     },
     "lexical": {
       "version": 1,
-      "documentCount": 444,
+      "documentCount": 440,
       "fieldNames": [
         "aliases",
         "body",
@@ -7128,13 +7070,13 @@
         "title"
       ],
       "averageFieldLength": {
-        "aliases": 3.099099099099099,
-        "body": 66.35135135135135,
-        "headings": 4.7725225225225225,
-        "path": 5.666666666666667,
-        "summary": 4.538288288288288,
-        "symbols": 12.29954954954955,
-        "title": 3.2004504504504503
+        "aliases": 3.1,
+        "body": 66.95454545454545,
+        "headings": 4.8159090909090905,
+        "path": 5.654545454545454,
+        "summary": 4.579545454545454,
+        "symbols": 12.402272727272727,
+        "title": 3.209090909090909
       }
     },
     "entries": [
@@ -7242,7 +7184,7 @@
           ],
           "outbound": []
         },
-        "contentHash": "25c8dab3e42b46aad864f8b5b7cdb446bc0b2f9401021db0408e52169d15fa0e",
+        "contentHash": "899e1305eed84b1c28dd91400137b7b733c4a3399bc9f595152c95a615309352",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -15471,7 +15413,13 @@
           "coveredBy": [],
           "mentionedBy": [],
           "inbound": [],
-          "outbound": []
+          "outbound": [
+            {
+              "kind": "mentions-symbol",
+              "id": "module:apps/docs/source.config.ts",
+              "confidence": "observed"
+            }
+          ]
         },
         "contentHash": "072ffec5dd458dd234af42d4f36df06dfd904072202b3aec467fd8711f968c24",
         "provenance": "observed",
@@ -16646,170 +16594,6 @@
         "confidence": "observed"
       },
       {
-        "id": "module:apps/docs/.source/browser.ts",
-        "kind": "module",
-        "path": "apps/docs/.source/browser.ts",
-        "title": "browser.ts",
-        "aliases": [],
-        "symbols": [
-          "default"
-        ],
-        "tags": [
-          "module",
-          "ts",
-          ".source"
-        ],
-        "fields": {
-          "title": "browser.ts",
-          "headings": "",
-          "path": "apps/docs/.source/browser.ts",
-          "symbols": "default",
-          "summary": "",
-          "body": "",
-          "aliases": "module ts .source"
-        },
-        "graph": {
-          "pagerank": 0,
-          "inboundLinks": 0,
-          "coveredBy": [],
-          "mentionedBy": [],
-          "areaId": "area:apps/docs",
-          "packageId": "package:@agentskit/doc-bridge",
-          "inbound": [],
-          "outbound": [
-            {
-              "kind": "imports",
-              "id": "module:apps/docs/source.config.ts",
-              "confidence": "observed"
-            }
-          ]
-        },
-        "contentHash": "58179d7c974007209eb509f6402f544162c98c095bb712eb79eedf109d60efa1",
-        "provenance": "observed",
-        "confidence": "observed"
-      },
-      {
-        "id": "module:apps/docs/.source/dynamic.ts",
-        "kind": "module",
-        "path": "apps/docs/.source/dynamic.ts",
-        "title": "dynamic.ts",
-        "aliases": [],
-        "tags": [
-          "module",
-          "ts",
-          ".source"
-        ],
-        "fields": {
-          "title": "dynamic.ts",
-          "headings": "",
-          "path": "apps/docs/.source/dynamic.ts",
-          "symbols": "",
-          "summary": "",
-          "body": "",
-          "aliases": "module ts .source"
-        },
-        "graph": {
-          "pagerank": 0,
-          "inboundLinks": 0,
-          "coveredBy": [],
-          "mentionedBy": [],
-          "areaId": "area:apps/docs",
-          "packageId": "package:@agentskit/doc-bridge",
-          "inbound": [],
-          "outbound": [
-            {
-              "kind": "imports",
-              "id": "module:apps/docs/source.config.ts",
-              "confidence": "observed"
-            }
-          ]
-        },
-        "contentHash": "0ff21819df5dda39f12fe7e7eae5482b63657a898ea63de4136ee6b2c91ccbb8",
-        "provenance": "observed",
-        "confidence": "observed"
-      },
-      {
-        "id": "module:apps/docs/.source/server.ts",
-        "kind": "module",
-        "path": "apps/docs/.source/server.ts",
-        "title": "server.ts",
-        "aliases": [],
-        "symbols": [
-          "docs"
-        ],
-        "tags": [
-          "module",
-          "ts",
-          ".source"
-        ],
-        "fields": {
-          "title": "server.ts",
-          "headings": "",
-          "path": "apps/docs/.source/server.ts",
-          "symbols": "docs",
-          "summary": "",
-          "body": "",
-          "aliases": "module ts .source"
-        },
-        "graph": {
-          "pagerank": 0,
-          "inboundLinks": 0,
-          "coveredBy": [],
-          "mentionedBy": [],
-          "areaId": "area:apps/docs",
-          "packageId": "package:@agentskit/doc-bridge",
-          "inbound": [],
-          "outbound": [
-            {
-              "kind": "imports",
-              "id": "module:apps/docs/source.config.ts",
-              "confidence": "observed"
-            }
-          ]
-        },
-        "contentHash": "3bdf7c59aa8e42eaa1135fa0a16452ea7ae1d515951f5a09e0326ce314766861",
-        "provenance": "observed",
-        "confidence": "observed"
-      },
-      {
-        "id": "module:apps/docs/.source/source.config.mjs",
-        "kind": "module",
-        "path": "apps/docs/.source/source.config.mjs",
-        "title": "source.config.mjs",
-        "aliases": [],
-        "symbols": [
-          "default",
-          "docs"
-        ],
-        "tags": [
-          "module",
-          "mjs",
-          ".source"
-        ],
-        "fields": {
-          "title": "source.config.mjs",
-          "headings": "",
-          "path": "apps/docs/.source/source.config.mjs",
-          "symbols": "default docs",
-          "summary": "",
-          "body": "",
-          "aliases": "module mjs .source"
-        },
-        "graph": {
-          "pagerank": 0,
-          "inboundLinks": 0,
-          "coveredBy": [],
-          "mentionedBy": [],
-          "areaId": "area:apps/docs",
-          "packageId": "package:@agentskit/doc-bridge",
-          "inbound": [],
-          "outbound": []
-        },
-        "contentHash": "eaea4158895c6e2b4ccbdd3c0fce9d9c2ef90745d1a266cfbb47b68adb2f8415",
-        "provenance": "observed",
-        "confidence": "observed"
-      },
-      {
         "id": "module:apps/docs/app/api/search/route.ts",
         "kind": "module",
         "path": "apps/docs/app/api/search/route.ts",
@@ -17945,25 +17729,17 @@
         },
         "graph": {
           "pagerank": 0,
-          "inboundLinks": 0,
+          "inboundLinks": 1,
           "coveredBy": [],
-          "mentionedBy": [],
+          "mentionedBy": [
+            "document:docs/verification-harness.md"
+          ],
           "areaId": "area:apps/docs",
           "packageId": "package:@agentskit/doc-bridge",
           "inbound": [
             {
-              "kind": "imports",
-              "id": "module:apps/docs/.source/browser.ts",
-              "confidence": "observed"
-            },
-            {
-              "kind": "imports",
-              "id": "module:apps/docs/.source/dynamic.ts",
-              "confidence": "observed"
-            },
-            {
-              "kind": "imports",
-              "id": "module:apps/docs/.source/server.ts",
+              "kind": "mentions-symbol",
+              "id": "document:docs/verification-harness.md",
               "confidence": "observed"
             }
           ],
