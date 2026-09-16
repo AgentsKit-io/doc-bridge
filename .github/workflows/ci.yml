@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v4
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v4
         with:
           version: 10.19.0
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
@@ -43,6 +43,10 @@ jobs:
           node bin/ak-docs.js doctor --text
           node bin/ak-docs.js doctor --write-badge
           node bin/ak-docs.js doctor --badge
+      - name: Retrieval benchmark gate (fails on a hit@3 regression)
+        run: |
+          node bin/ak-docs.js bench retrieval docs/bench/retrieval-suite-v1.json \
+            --baseline docs/bench/retrieval-baseline-v1.json --text
       - name: Resolve a published version for the pre-release Action smoke
         id: published-doc-bridge
         run: echo "version=$(npm view @agentskit/doc-bridge version)" >> "$GITHUB_OUTPUT"
@@ -61,7 +65,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v4
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v4
         with:
           version: 10.33.0
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0

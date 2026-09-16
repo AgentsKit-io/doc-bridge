@@ -166,7 +166,7 @@ export const ReconciliationReportV1Schema = z
         entityCount: z.number().int().nonnegative(),
         relationCount: z.number().int().nonnegative(),
         diagnosticCount: z.number().int().nonnegative(),
-        scope: z.enum(['file', 'module', 'package']).optional(),
+        scope: z.enum(['file', 'module', 'area', 'package']).optional(),
         requiredRelationKinds: z.array(boundedString(128)).max(128).optional(),
         requiredRelationTargets: z.enum(['all', 'internal']).optional(),
         diagnosticsByCode: z.record(z.string().max(128), z.number().int().nonnegative()).optional(),

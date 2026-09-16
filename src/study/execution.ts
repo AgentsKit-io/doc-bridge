@@ -13,11 +13,12 @@ import {
   type ControlledStudyObservationLedgerV1,
   type ControlledStudyObservationV1,
   type ControlledStudyRunPlanV1,
+  type TaskExecutionV1,
 } from './runner.js'
 import { providerForStudyExecution, parseStudyProviderCliConfig, validateStudyProviderCommand, type StudyProviderCliConfigV1 } from './provider-cli.js'
 import { evaluateStudyTask, parseStudyTaskSuite, selectTaskExecutions, type StudyTaskSuiteV1, type StudyTaskV1 } from './task-suite.js'
 
-const PROVIDER_RESPONSE_CONTRACT = 'Return one JSON object matching the output schema. Required keys: taskOutcome, evidenceQuality, safetyOutcome, evidenceIds, clarificationRequests, reworkCount, and measurements. Each measurement is {name:string,value:number>=0}. Run every available acceptance check and report observed acceptanceChecksPassed, acceptanceChecksTotal, and acceptanceChecksExecuted; include firstEvidenceLatencyMs only when observed. Use canonical names when observed: searchHitRate, acceptanceChecksPassed, acceptanceChecksTotal, acceptanceChecksExecuted, entrypointEvidenceCount, ownershipEvidenceCount, architectureRelationCount, documentationClaimEvidenceCount, sourceComparisonEvidenceCount, verificationEvidenceCount, errorRate, documentationFindingCount, documentationExampleRate, documentationFreshnessRate, documentationCorrectnessRate, documentationCompletenessRate, documentationClarityRate, documentationMaintainabilityRate, timeToFirstEvidenceMs, analysisCostUsd, and agentCostUsd. Omit unknown values; never invent. Output no markdown, prose, logs, token counts, or extra keys; stdout must contain only the JSON object.'
+const PROVIDER_RESPONSE_CONTRACT = 'Return one JSON object matching the output schema. Required keys: taskOutcome, evidenceQuality, safetyOutcome, evidenceIds, clarificationRequests, reworkCount, and measurements. Each measurement is {name:string,value:number>=0}. Run every available acceptance check and report observed acceptanceChecksPassed, acceptanceChecksTotal, and acceptanceChecksExecuted; include firstEvidenceLatencyMs only when observed. Use canonical names when observed: tokensToFirstEvidence (tokens consumed before correct grounded evidence was in hand), registryAgentInputTokens, registryAgentOutputTokens, registryAgentCostUsd, registryAgentRuns (the enrichment agent of the assisted arm, reported apart from your own cost), searchHitRate, acceptanceChecksPassed, acceptanceChecksTotal, acceptanceChecksExecuted, entrypointEvidenceCount, ownershipEvidenceCount, architectureRelationCount, documentationClaimEvidenceCount, sourceComparisonEvidenceCount, verificationEvidenceCount, errorRate, documentationFindingCount, documentationExampleRate, documentationFreshnessRate, documentationCorrectnessRate, documentationCompletenessRate, documentationClarityRate, documentationMaintainabilityRate, timeToFirstEvidenceMs, analysisCostUsd, and agentCostUsd. Omit unknown values; never invent. Output no markdown, prose, logs, token counts, or extra keys; stdout must contain only the JSON object.'
 
 export const STUDY_REPOSITORY_CONFIG_SCHEMA_VERSION = 1 as const
 export const STUDY_REPOSITORY_CONFIG_CONTENT_HASH_ALGO = 'sha256-normalized-v1' as const
@@ -53,6 +54,27 @@ export type ControlledStudyRunOptions = {
   readonly dryRun?: boolean
 }
 
+/**
+ * Whether the assisted arm can run at all, and why not when it cannot.
+ *
+ * The `registry-assisted` scenario has been reserved since the first suite and has never
+ * executed. It must be possible to run a study without it — a missing Registry is a fact about
+ * the environment, not a reason to lose the other two arms — so the arm reports itself
+ * unavailable and its executions are recorded as unavailable observations.
+ */
+export type AssistedArmStatus = {
+  readonly status: 'ready' | 'unavailable'
+  readonly reason?: string
+  /**
+   * Fields the arm ran without: `promptVersion`, `agentBudget`. It still runs — losing the third
+   * arm over a missing declaration would be worse than running it — but a run that cannot name
+   * the prompt it used, or cost the enrichment agent apart from the model, says so here.
+   */
+  readonly undeclared?: readonly string[]
+  /** Executions recorded as unavailable because the arm could not run. */
+  readonly recorded: number
+}
+
 export type ControlledStudyRunSummary = {
   readonly status: 'dry-run' | 'completed'
   readonly runId: string
@@ -63,6 +85,7 @@ export type ControlledStudyRunSummary = {
   readonly ledgerHash?: string
   readonly providerConfigHash: string
   readonly repositoryConfigHash: string
+  readonly assistedArm: AssistedArmStatus
 }
 
 export const createStudyRepositoryConfig = (input: unknown): StudyRepositoryConfigV1 => {
@@ -97,6 +120,66 @@ const executionKey = (execution: { readonly taskId: string; readonly repositoryI
   modelId: execution.modelId,
   replicate: execution.replicate,
   variantId: execution.variantId,
+})
+
+export const ASSISTED_SCENARIO = 'registry-assisted' as const
+
+/**
+ * What the assisted arm needs before it is allowed to run: a provider for every model, and a
+ * scenario that declares the agent, its version, its prompt version and its own budget.
+ */
+export const assistedArmReadiness = (
+  plan: ControlledStudyRunPlanV1,
+  providers: StudyProviderCliConfigV1,
+  suite: StudyTaskSuiteV1,
+): Omit<AssistedArmStatus, 'recorded'> => {
+  const scenario = plan.scenarios.find((entry) => entry.id === ASSISTED_SCENARIO)
+  if (!scenario) return { status: 'unavailable', reason: 'The run plan declares no registry-assisted scenario.' }
+  if (!scenario.agentId || !scenario.agentVersion) {
+    return { status: 'unavailable', reason: 'The registry-assisted scenario names no agent identity and version, so nothing it produced could be attributed.' }
+  }
+  const withoutProvider = suite.modelIds.filter((modelId) => !providers.providers.some((provider) => provider.modelId === modelId && provider.scenarioIds.includes(ASSISTED_SCENARIO)))
+  if (withoutProvider.length) {
+    return { status: 'unavailable', reason: `No provider CLI is configured for the registry-assisted scenario and model(s) ${withoutProvider.join(', ')}.` }
+  }
+  const undeclared = [...(scenario.promptVersion ? [] : ['promptVersion']), ...(scenario.agentBudget ? [] : ['agentBudget'])]
+  return {
+    status: 'ready',
+    ...(undeclared.length
+      ? {
+          undeclared,
+          reason: `The registry-assisted scenario declares no ${undeclared.join(' or ')}; the arm runs, but it cannot be ${undeclared.includes('promptVersion') ? 'reproduced' : 'costed'} from this ledger alone.`,
+        }
+      : {}),
+  }
+}
+
+/**
+ * The observation an unavailable arm leaves behind.
+ *
+ * Recorded rather than skipped: a scenario absent from the ledger is indistinguishable from one
+ * that was never planned, and the study's whole purpose is to compare the arms it planned.
+ */
+const unavailableObservation = (
+  plan: ControlledStudyRunPlanV1,
+  execution: TaskExecutionV1,
+  reason: string,
+  round: string | undefined,
+): ControlledStudyObservationV1 => createControlledStudyObservation({
+  type: 'controlled-study-observation',
+  schemaVersion: 1,
+  observationVersion: 'v1',
+  observedAt: new Date().toISOString(),
+  runId: plan.runId,
+  planHash: plan.contentHash,
+  task: execution,
+  model: plan.models.find((model) => model.id === execution.modelId),
+  scenario: plan.scenarios.find((scenario) => scenario.id === execution.scenarioId),
+  execution: { status: 'unavailable', exitCode: null, signal: null, durationMs: 0, responseBytes: 0, stderrBytes: 0, errorCode: 'registry-unavailable' },
+  contextBytes: 0,
+  evidenceIds: [],
+  ...(round === undefined ? {} : { round }),
+  adjudication: { status: 'automated', actor: 'deterministic-rubric-v1', method: 'deterministic-rubric-v1', outcome: 'blocked', reason },
 })
 
 export const adjudicateControlledStudyObservation = (task: StudyTaskV1, observation: ControlledStudyObservationV1): ControlledStudyObservationV1 => {
@@ -143,9 +226,12 @@ const assertRunInputs = (options: ControlledStudyRunOptions): Map<string, { read
     if (!existsSync(root) || !statSync(root).isDirectory()) throw new Error(`Study repository ${repository.id} is not available at the configured root.`)
   }
   const executions = selectTaskExecutions(options.suite, options.plan.sampling.sampleSize, options.plan.sampling)
+  const assisted = assistedArmReadiness(options.plan, options.providers, options.suite)
   for (const execution of executions) {
     const repository = repositories.get(execution.repositoryId)
     if (!repository) throw new Error(`No repository root is configured for ${execution.repositoryId}.`)
+    // An unavailable assisted arm is recorded, not validated: the other two arms still run.
+    if (execution.scenarioId === ASSISTED_SCENARIO && assisted.status === 'unavailable') continue
     const provider = providerForStudyExecution(options.providers, execution.modelId, execution.scenarioId as 'repository-only' | 'deterministic-doc-bridge' | 'registry-assisted')
     validateStudyProviderCommand(provider, repository.root)
     const task = options.suite.tasks.find((item) => item.id === execution.taskId)
@@ -174,6 +260,7 @@ export const runControlledStudy = async (options: ControlledStudyRunOptions): Pr
   const repositories = parseStudyRepositoryConfig(options.repositories)
   const executions = selectTaskExecutions(suite, plan.sampling.sampleSize, plan.sampling)
   const repositoryMap = assertRunInputs({ ...options, plan, suite, providers, repositories })
+  const assisted = assistedArmReadiness(plan, providers, suite)
   if (options.dryRun) return {
     status: 'dry-run',
     runId: plan.runId,
@@ -182,15 +269,24 @@ export const runControlledStudy = async (options: ControlledStudyRunOptions): Pr
     skipped: 0,
     providerConfigHash: providers.contentHash,
     repositoryConfigHash: repositories.contentHash,
+    assistedArm: { ...assisted, recorded: 0 },
   }
 
   let ledger = loadLedger(resolve(options.ledgerPath))
   if (ledger.observations.some((observation) => observation.runId === plan.runId && observation.planHash !== plan.contentHash)) throw new Error(`Ledger already contains run ${plan.runId} with a different plan hash.`)
   let executed = 0
   let skipped = 0
+  let unavailableRecorded = 0
   for (const execution of executions) {
     const existing = ledger.observations.find((observation) => observation.runId === plan.runId && executionKey(observation.task) === executionKey(execution))
     if (existing) { skipped += 1; continue }
+    if (execution.scenarioId === ASSISTED_SCENARIO && assisted.status === 'unavailable') {
+      const typedUnavailable = { ...execution, difficulty: suite.tasks.find((item) => item.id === execution.taskId)?.difficulty, scenarioId: ASSISTED_SCENARIO } as TaskExecutionV1
+      ledger = upsertControlledStudyObservation(ledger, unavailableObservation(plan, typedUnavailable, assisted.reason ?? 'The registry-assisted arm is unavailable.', options.round))
+      persistControlledStudyLedger(options.ledgerPath, ledger)
+      unavailableRecorded += 1
+      continue
+    }
     const repository = repositoryMap.get(execution.repositoryId)
     if (!repository) throw new Error(`No repository root is configured for ${execution.repositoryId}.`)
     const provider = providerForStudyExecution(providers, execution.modelId, execution.scenarioId as 'repository-only' | 'deterministic-doc-bridge' | 'registry-assisted')
@@ -236,6 +332,7 @@ export const runControlledStudy = async (options: ControlledStudyRunOptions): Pr
     ledgerHash: ledger.contentHash,
     providerConfigHash: providers.contentHash,
     repositoryConfigHash: repositories.contentHash,
+    assistedArm: { ...assisted, recorded: unavailableRecorded },
   }
 }
 
@@ -248,4 +345,6 @@ export const formatControlledStudyRunText = (summary: ControlledStudyRunSummary)
   ...(summary.ledgerPath === undefined ? [] : [`Ledger: ${summary.ledgerPath}`, `Ledger hash: ${summary.ledgerHash}`]),
   `Provider config hash: ${summary.providerConfigHash}`,
   `Repository config hash: ${summary.repositoryConfigHash}`,
+  `Assisted arm: ${summary.assistedArm.status}${summary.assistedArm.recorded ? ` (${summary.assistedArm.recorded} execution(s) recorded as unavailable)` : ''}${summary.assistedArm.undeclared?.length ? ` (undeclared: ${summary.assistedArm.undeclared.join(', ')})` : ''}`,
+  ...(summary.assistedArm.reason ? [`  ${summary.assistedArm.reason}`] : []),
 ]

@@ -35,7 +35,7 @@ export const AgentHandoffV1JsonSchema = {
       required: ['type', 'id'],
       properties: {
         type: {
-          enum: ['package', 'module', 'app', 'screen', 'flow', 'component', 'intent', 'change', 'search'],
+          enum: ['package', 'area', 'module', 'document', 'app', 'screen', 'flow', 'component', 'intent', 'change', 'search'],
         },
         id: { type: 'string', minLength: 1, maxLength: 256 },
         path: { type: 'string', minLength: 1, maxLength: 512 },
@@ -50,6 +50,41 @@ export const AgentHandoffV1JsonSchema = {
     humanDoc: { anyOf: [{ type: 'string', minLength: 1, maxLength: 512 }, { type: 'null' }] },
     playbookPatterns: { type: 'array', items: { type: 'string', format: 'uri' }, maxItems: 16 },
     notes: stringArray(16),
+    related: {
+      type: 'array',
+      maxItems: 16,
+      items: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['id', 'path', 'direction', 'strength', 'evidence'],
+        properties: {
+          id: { type: 'string', minLength: 1, maxLength: 256 },
+          path: { type: 'string', minLength: 1, maxLength: 512 },
+          direction: { enum: ['imports', 'imported-by'] },
+          strength: { type: 'integer', minimum: 1 },
+          evidence: stringArray(8),
+        },
+      },
+    },
+    explain: { type: 'object', additionalProperties: stringArray(16) },
+    evidence: {
+      type: 'array',
+      maxItems: 32,
+      items: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['source', 'path'],
+        properties: {
+          source: { enum: ['code', 'configuration', 'documentation', 'agent', 'derived'] },
+          path: { type: 'string', minLength: 1, maxLength: 512 },
+          lineStart: { type: 'integer', minimum: 1 },
+          lineEnd: { type: 'integer', minimum: 1 },
+          contentHash: { type: 'string', pattern: '^[a-f0-9]{64}$' },
+          context: { type: 'string', maxLength: 1024 },
+        },
+      },
+    },
+    metadata: { type: 'object' },
   },
 } as const satisfies JsonSchema
 

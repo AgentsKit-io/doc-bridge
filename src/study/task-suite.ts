@@ -44,12 +44,41 @@ const VariantSchema = z.object({
   context: safeText,
 }).strict()
 
+/**
+ * What mechanically checks a rubric item, when anything does.
+ *
+ * `acceptance-checks` is the task's own commands and their exit status; `evidence-coverage` is
+ * whether each required evidence id was cited; `retrieval-expectations` is the entities and
+ * documents the task expects retrieval to return, measured by `ak-docs bench retrieval`. An item
+ * that names one of these is decided by the runner and never shown to the model adjudicator.
+ */
+export const RUBRIC_MECHANICAL_CHECKS = ['acceptance-checks', 'evidence-coverage', 'retrieval-expectations'] as const
+export type RubricMechanicalCheck = (typeof RUBRIC_MECHANICAL_CHECKS)[number]
+
+/**
+ * A rubric item: prose, or prose with the mechanical check that decides it.
+ *
+ * The plain string is kept because most of a rubric is a judgement — "the answer identifies a
+ * wrong entrypoint" is not something a checker can settle — and a suite written before this
+ * existed stays valid, with every item going to the adjudicator exactly as before.
+ */
+const RubricItemSchema = z.union([
+  safeText,
+  z.object({ text: safeText, check: z.enum(RUBRIC_MECHANICAL_CHECKS) }).strict(),
+])
+const RubricItemListSchema = z.array(RubricItemSchema).min(1).max(32)
+
+export type RubricItem = z.infer<typeof RubricItemSchema>
+
+export const rubricItemText = (item: RubricItem): string => (typeof item === 'string' ? item : item.text)
+export const rubricItemCheck = (item: RubricItem): RubricMechanicalCheck | undefined => (typeof item === 'string' ? undefined : item.check)
+
 const RubricSchema = z.object({
-  success: safeTextList,
-  partial: safeTextList,
-  incorrect: safeTextList,
-  incomplete: safeTextList,
-  blocked: safeTextList,
+  success: RubricItemListSchema,
+  partial: RubricItemListSchema,
+  incorrect: RubricItemListSchema,
+  incomplete: RubricItemListSchema,
+  blocked: RubricItemListSchema,
 }).strict()
 
 const BudgetSchema = z.object({
@@ -74,7 +103,26 @@ const TaskSchema = z.object({
   rubric: RubricSchema,
   variantGroup: identifier,
   variants: z.array(VariantSchema).length(2),
-}).strict()
+  /*
+   * What retrieval is expected to return for this task, as opaque references.
+   *
+   * The last study round recorded zero semantic successes because success was only ever a model's
+   * opinion, and an opinion produces no signal. These are the mechanical half: the references are
+   * resolved to concrete entities and documents by a local expectations file — never here, since
+   * this suite is publication-bound and a repository path in it is a privacy failure — and the
+   * resolved targets are checked by `ak-docs bench retrieval`.
+   */
+  expectedEntities: z.array(reference).max(16).optional(),
+  expectedDocuments: z.array(reference).max(16).optional(),
+  /** What to ask retrieval. Defaults to the task's objective, which is already stated above. */
+  retrievalQueries: z.array(safeText).min(1).max(8).optional(),
+}).strict().superRefine((value, context) => {
+  if (value.expectedEntities?.length === 0) context.addIssue({ code: z.ZodIssueCode.custom, path: ['expectedEntities'], message: 'Declare at least one expected entity or omit the field.' })
+  if (value.expectedDocuments?.length === 0) context.addIssue({ code: z.ZodIssueCode.custom, path: ['expectedDocuments'], message: 'Declare at least one expected document or omit the field.' })
+  if (value.retrievalQueries && !value.expectedEntities && !value.expectedDocuments) {
+    context.addIssue({ code: z.ZodIssueCode.custom, path: ['retrievalQueries'], message: 'A retrieval query needs expected entities or documents; a query with nothing expected checks nothing.' })
+  }
+})
 
 const TaskSuitePayloadSchema = z.object({
   type: z.literal('study-task-suite'),
@@ -105,11 +153,49 @@ export type StudyTaskSuiteV1 = z.infer<typeof StudyTaskSuiteV1Schema>
 export type StudyTaskV1 = StudyTaskSuiteV1['tasks'][number]
 export type TaskOutcomeStatus = typeof outcomes[number]
 
+/** Whether a task can be checked without asking a model anything. */
+export const hasRetrievalExpectations = (task: StudyTaskV1): boolean =>
+  (task.expectedEntities?.length ?? 0) > 0 || (task.expectedDocuments?.length ?? 0) > 0
+
+/** The queries a task is checked with: its own, or its objective. */
+export const taskRetrievalQueries = (task: StudyTaskV1): readonly string[] => task.retrievalQueries ?? [task.objective]
+
+/** The rubric items a checker decides, by outcome. */
+export const mechanicalRubricItems = (task: StudyTaskV1): readonly { readonly outcome: TaskOutcomeStatus; readonly text: string; readonly check: RubricMechanicalCheck }[] =>
+  outcomes.flatMap((outcome) =>
+    task.rubric[outcome].flatMap((item) => {
+      const check = rubricItemCheck(item)
+      return check === undefined ? [] : [{ outcome, text: rubricItemText(item), check }]
+    }),
+  )
+
+/**
+ * The rubric items no checker can decide — the only ones a model adjudicator should ever see.
+ *
+ * Handing a model an item the runner already settled invites it to disagree with a measurement,
+ * which is how a study ends up with an opinion where it had a number.
+ */
+export const modelRubricItems = (task: StudyTaskV1): Readonly<Record<TaskOutcomeStatus, readonly string[]>> => {
+  const judged = (outcome: TaskOutcomeStatus): readonly string[] =>
+    task.rubric[outcome].filter((item) => rubricItemCheck(item) === undefined).map(rubricItemText)
+  return { success: judged('success'), partial: judged('partial'), incorrect: judged('incorrect'), incomplete: judged('incomplete'), blocked: judged('blocked') }
+}
+
 const uniqueIds = (values: readonly string[], label: string): void => {
   if (new Set(values).size !== values.length) throw new Error(`Duplicate ${label} id.`)
 }
 
-export const validateStudyTaskSuite = (suite: StudyTaskSuiteV1): void => {
+export type ValidateStudyTaskSuiteOptions = {
+  /**
+   * Require every task to declare retrieval expectations.
+   *
+   * Off by default, because a suite written before expectations existed is still a valid suite.
+   * A study that wants a mechanical answer turns it on and finds out which tasks cannot give one.
+   */
+  readonly requireExpectations?: boolean
+}
+
+export const validateStudyTaskSuite = (suite: StudyTaskSuiteV1, options: ValidateStudyTaskSuiteOptions = {}): void => {
   uniqueIds(suite.population, 'population')
   uniqueIds(suite.modelIds, 'model')
   uniqueIds(suite.scenarioIds, 'scenario')
@@ -136,6 +222,10 @@ export const validateStudyTaskSuite = (suite: StudyTaskSuiteV1): void => {
   }
   const plannedRuns = suite.tasks.length * suite.modelIds.length * suite.scenarioIds.length * suite.replicatesPerTask
   if (plannedRuns > suite.maxRuns) throw new Error(`Planned runs ${plannedRuns} exceed maxRuns ${suite.maxRuns}.`)
+  if (options.requireExpectations) {
+    const without = suite.tasks.filter((task) => !hasRetrievalExpectations(task)).map((task) => task.id)
+    if (without.length) throw new Error(`These tasks declare no expected entities or documents, so nothing about them can be checked mechanically: ${without.join(', ')}.`)
+  }
 }
 
 export const createStudyTaskSuite = (input: unknown): StudyTaskSuiteV1 => {
@@ -222,6 +312,7 @@ export const evaluateStudyTask = (task: StudyTaskV1, result: TaskEvaluationInput
 
 export const formatStudyTaskSuiteText = (suite: StudyTaskSuiteV1): readonly string[] => [
   `Task suite: ${suite.suiteVersion}`,
+  `Mechanically checkable tasks: ${suite.tasks.filter(hasRetrievalExpectations).length}/${suite.tasks.length}`,
   `Tasks: ${suite.tasks.length} (${suite.population.length} repositories × ${categories.length} categories)`,
   `Executions planned: ${suite.tasks.length * suite.modelIds.length * suite.scenarioIds.length * suite.replicatesPerTask}`,
   `Ordering: ${suite.ordering.strategy} (${suite.ordering.seed})`,

@@ -7,6 +7,7 @@ import {
   type AgentSearchV1,
 } from '../schemas/agent-handoff.js'
 import type { DocBridgeIndexV1 } from '../schemas/doc-bridge-index.js'
+import { handoffForEntity, type HandoffOptions } from './handoff.js'
 import { searchIndex } from './search.js'
 import { Buffer } from 'node:buffer'
 
@@ -17,6 +18,8 @@ export type QueryRequest = {
   readonly id?: string
   readonly term?: string
   readonly agent?: boolean
+  /** Attach the matched terms and scoring components to search results. Never changes the ranking. */
+  readonly explain?: boolean
   readonly mode?: AgentQueryMode
   readonly contextBudgetTokens?: number
 }
@@ -27,54 +30,6 @@ export type QueryResult =
   | AgentSearchV1
 
 export const DEFAULT_AGENT_CONTEXT_BUDGET_TOKENS = 32
-
-const handoffForPackage = (
-  index: DocBridgeIndexV1,
-  id: string,
-  config: DocBridgeConfigV1,
-): AgentHandoffV1 => {
-  const fromIndex = index.handoffs?.[id]
-  if (fromIndex) return normalizeAgentHandoff(fromIndex)
-
-  const owner = index.lookup?.ownership?.[id]
-  if (!owner) throw new Error(`Unknown package/ownership id "${id}". Try: ak-docs list packages`)
-
-  const bridge = owner.humanDoc
-    ? /^https?:\/\//.test(owner.humanDoc)
-      ? { humanDoc: 'external' as const }
-      : { humanDoc: 'linked' as const }
-    : config.corpus.human
-      ? {
-          humanDoc: 'missing' as const,
-          action: 'ak-docs bootstrap agent-docs',
-          bootstrap: `docs/for-agents/human/${id}.md`,
-        }
-      : undefined
-
-  return normalizeAgentHandoff({
-    type: 'agent-handoff',
-    source: config.index?.outFile ?? '.doc-bridge/index.json',
-    target: {
-      type: 'package',
-      id,
-      path: owner.path,
-      ...(owner.group ? { group: owner.group } : {}),
-      ...(owner.layer ? { layer: owner.layer } : {}),
-    },
-    startHere: owner.agentDoc ?? config.corpus.agent.index ?? '',
-    readBeforeEditing: [owner.agentDoc, 'AGENTS.md'].filter(Boolean),
-    editRoots: [owner.path],
-    checks: [...owner.checks],
-    ...(owner.humanDoc ? { humanDoc: owner.humanDoc } : {}),
-    ...(bridge ? { bridge } : {}),
-    notes: [
-      ...(owner.purpose ? [owner.purpose] : []),
-      ...(!owner.humanDoc && config.corpus.human
-        ? [`Human guide missing for ${id}. Run: ak-docs bootstrap agent-docs`]
-        : []),
-    ],
-  })
-}
 
 const modeLimits: Record<AgentQueryMode, { readonly matches: number; readonly nextCommands: number }> = {
   discovery: { matches: 8, nextCommands: 5 },
@@ -131,10 +86,11 @@ export const runQuery = (
   index: DocBridgeIndexV1,
   config: DocBridgeConfigV1,
   req: QueryRequest,
+  options: HandoffOptions = {},
 ): QueryResult => {
   if (req.kind === 'search') {
     const term = req.term ?? req.id ?? ''
-    const matches = searchIndex(index, term)
+    const matches = searchIndex(index, term, 20, { ...(req.explain ? { explain: true } : {}), ...(req.agent ? { agent: true } : {}) })
     if (req.agent) {
       const mode = AgentQueryModeSchema.parse(req.mode ?? 'discovery')
       const limits = modeLimits[mode]
@@ -192,7 +148,7 @@ export const runQuery = (
   if (!id) throw new Error(`Missing id for query kind "${req.kind}"`)
 
   if (req.kind === 'package' || req.kind === 'ownership') {
-    if (req.agent) return handoffForPackage(index, id, config)
+    if (req.agent) return handoffForEntity(index, id, config, options)
     const owner = index.lookup?.ownership?.[id]
     return { type: req.kind, data: owner ?? index.handoffs?.[id] ?? null }
   }

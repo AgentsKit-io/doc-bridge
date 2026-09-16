@@ -65,8 +65,8 @@ pnpm add -D @agentskit/doc-bridge
 | `ak-docs doctor [--text] [--badge] [--write-badge]` | Coverage score, gaps, gates, shields.io badge |
 | `ak-docs index` | Build `DocBridgeIndex` + optional `llms.txt` |
 | `ak-docs index --watch` | Debounced rebuild on agent/human doc changes |
-| `ak-docs query <target> [--agent] [--text]` | Resolve package/module/intent/change → handoff JSON or text |
-| `ak-docs search <term> [--agent] [--mode=<mode>] [--context-budget=<tokens>] [--text]` | Full-text search over index; agent mode supports bounded task-specific context |
+| `ak-docs query <target> [--agent] [--text]` | Resolve package/area/module/document/intent/change → handoff JSON or text |
+| `ak-docs search <term> [--agent] [--explain] [--mode=<mode>] [--context-budget=<tokens>] [--text]` | Ranked search over the retrieval projection; `--explain` names every scoring component and the matched terms, and agent mode bounds the context it returns to a task-specific budget |
 | `ak-docs ask <question>` | Human-readable local consult mode: search + best match + next handoff commands; no LLM |
 | `ak-docs ask` | Interactive local REPL in a TTY; commands: `search <term>`, `read <id-or-path>`, `open <id-or-path>`, `resolve <id>`, `gate [id]`, `exit` |
 | `ak-docs retrieve <query>` | Hybrid local/federated retriever chunks; deterministic local first |
@@ -79,12 +79,21 @@ pnpm add -D @agentskit/doc-bridge
 | `ak-docs memory promote --pr [--force]` | Write the draft, commit/push it, and open a GitHub draft PR via `gh` |
 | `ak-docs registry topology` | Print the `doc-curator` topology for AgentsKit/Registry composition |
 | `ak-docs suggest [--documentation] --json` | Run the configured Registry agent module or CLI and persist its typed proposal; optionally include the bounded documentation-audit context |
+| `ak-docs enrich [--json\|--text]` | Run the enrichment stage: context packs to the configured Registry roles, deterministic validators, the overlay at `.doc-bridge/enrich/overlay.json`. Zero agent calls over an unchanged repository |
+| `ak-docs enrich list \| approve <proposalId> --by <name> \| reject <proposalId> --by <name> [--reason <text>]` | Review pending enrichment proposals; a decision is recorded through the ecosystem approval gate under `.doc-bridge/approvals/`, bound to the proposal id and the target content hash |
+| `ak-docs check --enrich` | `check` with the `enrich` stage between `reconcile` and `evaluate`; a failed enrichment is reported in `enrichment` and never changes the check result |
+| `ak-docs enrich --retrieval-delta [--json\|--text]` | `enrich`, then the golden suite with and without the accepted overlay on the same snapshot. Exits 1 when the overlay lowers hit@3 |
+| `ak-docs bench retrieval <suite.json> --overlay [--json\|--text]` | The overlay on disk measured against a suite: both indexes projected from one snapshot, no index on disk required. Exits 1 on a hit@3 regression |
+| `ak-docs study expectations <task-suite.json> --expectations <local.json> [--index <index.json>] [--repository <id>]` | Check a study round's mechanical retrieval expectations through the benchmark. Exits 1 when a reference does not resolve or a case misses |
 | `ak-docs playbook draft` | Build a draft Playbook feedback payload from local memory candidates |
 | `ak-docs playbook pattern [--text]` | Export published Doc Bridge Playbook pattern (OKF markdown / JSON) |
 | `ak-docs list <kind> [--text]` | List packages, apps, intents, … |
 | `ak-docs gate run [gate-id]` | Run resolved configured documentation gates; an optional id narrows the run to one gate |
 | `ak-docs conformance run documentation-standard-v1 [--text\|--json]` | Run the stable ecosystem documentation profile with evidence and remediation |
 | `ak-docs audit documentation [--text\|--json]` | Measure documentation quality and compare documentation claims with the observed project graph |
+| `ak-docs render <llms.txt\|area\|ownership\|change-digest\|overlay-review> [--data <artifact>] [--output <path>] [--print-template] [--json]` | Render the canonical artifacts as Markdown from bundled or project templates (`render.templates`); deterministic, no agent. See [Render v1](./render-v1.md) |
+| `ak-docs bench retrieval <suite.json> [--index <file>] [--baseline <file>] [--limit <n>] [--text\|--json]` | Measure retrieval quality against a golden query suite: hit@1, hit@3, mean reciprocal rank, context bytes and approximate tokens. Exits non-zero on a hit@3 regression against the baseline. No model, no network |
+| `ak-docs bench retrieval <suite.json> --baseline <file> --update-baseline --by <name> [--reason <text>]` | Record the measured figures as the approved baseline. A normal run never writes one |
 | `ak-docs mcp` | Start MCP server (stdio default) |
 | `ak-docs mcp install --cursor \| --claude` | Write MCP server config for Cursor or Claude Desktop |
 

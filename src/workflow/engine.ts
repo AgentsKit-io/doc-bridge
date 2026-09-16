@@ -4,8 +4,21 @@ import { join, relative, resolve } from 'node:path'
 import { contentHashForArtifactV1, sha256NormalizedV1 } from '../index-builder/content-hash.js'
 import { WorkflowRunV1Schema, type CorrelationContextV1, type WorkflowRunV1, type WorkflowState, type WorkflowStep } from '../schemas/knowledge.js'
 
-export const WORKFLOW_STAGES = ['collect', 'normalize', 'reconcile', 'evaluate', 'report'] as const
+/**
+ * `enrich` sits between `reconcile` and `evaluate` and is run only by `ak-docs enrich` or
+ * `check --enrich`: a plain `check` leaves its step pending, and `evaluate` reads a null
+ * previous output rather than an overlay. A missing, failed or stale enrich step never changes
+ * what `evaluate` or `report` produce.
+ */
+export const WORKFLOW_STAGES = ['collect', 'normalize', 'reconcile', 'enrich', 'evaluate', 'report'] as const
 export type WorkflowStage = (typeof WORKFLOW_STAGES)[number]
+
+/**
+ * Stages a run may complete without. Given no handler, an optional stage is skipped rather than
+ * demanded, and the stage after it reads the output of the last stage that did run — so a caller
+ * that never heard of enrichment drives the workflow exactly as before.
+ */
+export const OPTIONAL_WORKFLOW_STAGES: readonly WorkflowStage[] = ['enrich']
 
 export type WorkflowStageContext = {
   readonly root: string
@@ -50,6 +63,7 @@ const stageState: Record<WorkflowStage, WorkflowState> = {
   collect: 'discovering',
   normalize: 'analyzed',
   reconcile: 'compared',
+  enrich: 'awaiting-agent',
   evaluate: 'proposed',
   report: 'delivered',
 }
@@ -75,14 +89,15 @@ const transition = (run: WorkflowRunV1, to: WorkflowState, reason?: string): Wor
     created: ['created', 'discovering', 'failed', 'cancelled'],
     discovering: ['discovering', 'analyzed', 'failed', 'cancelled', 'stale'],
     analyzed: ['analyzed', 'compared', 'failed', 'cancelled', 'stale'],
-    compared: ['compared', 'proposed', 'failed', 'cancelled', 'stale'],
+    compared: ['compared', 'awaiting-agent', 'proposed', 'failed', 'cancelled', 'stale'],
     'awaiting-agent': ['awaiting-agent', 'proposed', 'failed', 'cancelled', 'stale'],
-    proposed: ['proposed', 'validating', 'delivered', 'failed', 'cancelled', 'stale'],
+    // A delivered run can still be enriched; the stages after the overlay then re-run on their new input.
+    proposed: ['proposed', 'awaiting-agent', 'validating', 'delivered', 'failed', 'cancelled', 'stale'],
     'awaiting-approval': ['awaiting-approval', 'validating', 'failed', 'cancelled', 'stale'],
     validating: ['validating', 'delivered', 'failed', 'cancelled', 'stale'],
-    delivered: ['delivered', 'stale', 'failed', 'cancelled'],
-    failed: ['failed', 'discovering', 'analyzed', 'compared', 'proposed', 'validating', 'delivered', 'cancelled', 'stale'],
-    cancelled: ['cancelled', 'discovering', 'analyzed', 'compared', 'proposed', 'validating', 'delivered', 'stale'],
+    delivered: ['delivered', 'awaiting-agent', 'stale', 'failed', 'cancelled'],
+    failed: ['failed', 'discovering', 'analyzed', 'compared', 'awaiting-agent', 'proposed', 'validating', 'delivered', 'cancelled', 'stale'],
+    cancelled: ['cancelled', 'discovering', 'analyzed', 'compared', 'awaiting-agent', 'proposed', 'validating', 'delivered', 'stale'],
     stale: [],
     superseded: [],
   }
@@ -207,7 +222,11 @@ export const runWorkflow = (options: WorkflowOptions): WorkflowExecutionResult =
 
     if (!run) throw new Error('Workflow manifest was not initialized.')
     const firstSelectedStage = selectedStages(options.stage)[0]
-    const previousStageIndex = firstSelectedStage ? WORKFLOW_STAGES.indexOf(firstSelectedStage) - 1 : -1
+    let previousStageIndex = firstSelectedStage ? WORKFLOW_STAGES.indexOf(firstSelectedStage) - 1 : -1
+    // An optional stage that never ran is transparent: the input comes from the stage before it.
+    while (previousStageIndex >= 0 && OPTIONAL_WORKFLOW_STAGES.includes(WORKFLOW_STAGES[previousStageIndex]!) && run.steps.find((step) => step.name === WORKFLOW_STAGES[previousStageIndex])?.status !== 'completed') {
+      previousStageIndex -= 1
+    }
     let previousOutput: unknown = null
     if (previousStageIndex >= 0) {
       try {
@@ -224,7 +243,8 @@ export const runWorkflow = (options: WorkflowOptions): WorkflowExecutionResult =
       const input = options.inputs?.[stage] ?? previousOutput
       const inputHash = stageInputHash(options, stage, input)
       const existing = run.steps.find((step) => step.name === stage)
-      const artifactPath = existing?.artifactRefs?.[0] ? resolve(stateDir, existing.artifactRefs[0]) : stageArtifactPath(stateDir, stage, inputHash)
+      // A step whose input moved is a new step: its artifact is keyed on the new input, not on the old ref.
+      const artifactPath = existing?.artifactRefs?.[0] && existing.inputHash === inputHash ? resolve(stateDir, existing.artifactRefs[0]) : stageArtifactPath(stateDir, stage, inputHash)
       if (existing?.status === 'completed' && existing.inputHash === inputHash && existing.outputHash && existsSync(artifactPath)) {
         try {
           previousOutput = readVerifiedArtifact(artifactPath, stage, existing).value
@@ -246,6 +266,7 @@ export const runWorkflow = (options: WorkflowOptions): WorkflowExecutionResult =
       }
 
       const handler = options.handlers[stage]
+      if (!handler && OPTIONAL_WORKFLOW_STAGES.includes(stage)) continue
       if (!handler) throw new Error(`No handler configured for workflow stage "${stage}".`)
       run = withHash(transition(run, stageState[stage]))
       appendTransition(stateDir, run.transitions[run.transitions.length - 1]!)
@@ -276,7 +297,9 @@ export const runWorkflow = (options: WorkflowOptions): WorkflowExecutionResult =
       }
     }
 
-    if (selectedStages(options.stage).every((stage) => run!.steps.find((step) => step.name === stage)?.status === 'completed')) {
+    const satisfied = (stage: WorkflowStage): boolean =>
+      run!.steps.find((step) => step.name === stage)?.status === 'completed' || (OPTIONAL_WORKFLOW_STAGES.includes(stage) && !options.handlers[stage])
+    if (selectedStages(options.stage).every(satisfied)) {
       const complete = selectedStages(options.stage).includes('report') && run.state !== 'delivered' ? withHash(transition(run, 'delivered')) : run
       if (complete !== run) {
         appendTransition(stateDir, complete.transitions[complete.transitions.length - 1]!)

@@ -182,7 +182,7 @@ export const RulesConfigSchema = z
 export const ReconciliationConfigSchema = z
   .object({
     /** Semantic comparison level. Raw discovery always keeps file-level relations. */
-    scope: z.enum(['file', 'module', 'package']).optional(),
+    scope: z.enum(['file', 'module', 'area', 'package']).optional(),
     /** Relation kinds that must have documentation declarations. Omit to require all observed kinds; [] disables this signal. */
     requiredRelationKinds: z.array(z.string().min(1).max(128)).max(128).optional(),
     /** Limit missing-declaration findings to relations whose endpoints are internal project entities. */
@@ -246,6 +246,18 @@ export const AnalysisConfigSchema = z
       })
       .strict()
       .optional(),
+    /**
+     * How code areas are derived — the unit of architecture between a package and a file.
+     * `roots` names directories that contain areas rather than being one (`src` holds
+     * `src/query`); `depth` is how many levels below such a root an area sits.
+     */
+    areas: z
+      .object({
+        depth: z.number().int().min(1).max(8).optional(),
+        roots: z.array(z.string().min(1).max(128)).max(32).optional(),
+      })
+      .strict()
+      .optional(),
   })
   .strict()
 
@@ -303,9 +315,11 @@ export const SurfacesConfigSchema = z
               'docbridge.relations',
               'docbridge.run',
               'docbridge.proposals',
+              'knowledge.search',
+              'knowledge.lookup',
             ]),
           )
-          .max(16)
+          .max(18)
           .optional(),
         transport: z.enum(['stdio', 'http']).optional(),
         http: z
@@ -318,6 +332,16 @@ export const SurfacesConfigSchema = z
       })
       .strict()
       .optional(),
+  })
+  .strict()
+
+/** One enrichment role: an installed Registry agent and the prompt version it is run with. */
+export const EnrichmentRoleSchema = z
+  .object({
+    enabled: z.boolean().optional(),
+    /** Defaults to `intelligence.registry.agentId`. */
+    agentId: z.string().min(1).max(256).optional(),
+    promptVersion: z.string().min(1).max(64).optional(),
   })
   .strict()
 
@@ -394,6 +418,20 @@ export const IntelligenceConfigSchema = z
         maxTokens: z.number().int().positive().max(1_000_000).optional(),
         maxResponseBytes: z.number().int().positive().max(10_000_000).optional(),
         maxConcurrency: z.number().int().positive().max(64).optional(),
+        /** Byte budget of one enrichment context pack. Default 65536. */
+        maxPackBytes: z.number().int().min(4_096).max(4_000_000).optional(),
+        /**
+         * Which installed agent plays which enrichment role. The default is the configured agent
+         * as curator only. The adjudicator must be a different identity from both others.
+         */
+        roles: z
+          .object({
+            curator: EnrichmentRoleSchema.optional(),
+            reviewer: EnrichmentRoleSchema.optional(),
+            adjudicator: EnrichmentRoleSchema.optional(),
+          })
+          .strict()
+          .optional(),
       })
       .strict()
       .optional(),
@@ -500,9 +538,50 @@ export const DocumentationStandardV1ConfigSchema = z
     }
   })
 
+/**
+ * Retrieval tuning. Weights and parameters are configuration rather than code so a repository can
+ * change what its agents find first without a release, and so the change is recorded in the index.
+ */
+export const RetrievalConfigSchema = z
+  .object({
+    corpus: z
+      .object({
+        /** Project repository documents and modules into the index. On by default. */
+        enabled: z.boolean().optional(),
+      })
+      .strict()
+      .optional(),
+    weights: z.record(z.string().min(1).max(64), z.number().min(0).max(1_000)).optional(),
+    params: z
+      .object({ k1: z.number().min(0).max(100).optional(), b: z.number().min(0).max(1).optional() })
+      .strict()
+      .optional(),
+    benchmark: z
+      .object({
+        /** The golden retrieval suite the doctor measures hit@3 against. `docs/bench/retrieval-suite-v1.json` by default. */
+        suite: z.string().min(1).max(512).optional(),
+      })
+      .strict()
+      .optional(),
+  })
+  .strict()
+
 export const ConformanceConfigSchema = z
   .object({
     documentationStandardV1: DocumentationStandardV1ConfigSchema.optional(),
+  })
+  .strict()
+
+export const RenderTemplateNameSchema = z.enum(['llms.txt', 'area', 'ownership', 'change-digest', 'overlay-review'])
+
+export const RenderConfigSchema = z
+  .object({
+    /**
+     * Project templates that replace the bundled ones, by template name, as paths relative to
+     * the project root. `ak-docs render <name> --print-template` prints the bundled template to
+     * start from.
+     */
+    templates: z.partialRecord(RenderTemplateNameSchema, z.string().min(1).max(512)).optional(),
   })
   .strict()
 
@@ -536,10 +615,13 @@ export const DocBridgeConfigV1Schema = z
     intelligence: IntelligenceConfigSchema.optional(),
     federation: FederationConfigSchema.optional(),
     conformance: ConformanceConfigSchema.optional(),
+    retrieval: RetrievalConfigSchema.optional(),
+    render: RenderConfigSchema.optional(),
   })
   .strict()
 
 export type DocBridgeConfigV1 = z.infer<typeof DocBridgeConfigV1Schema>
+export type RenderConfig = z.infer<typeof RenderConfigSchema>
 export type AgentCorpusConfig = z.infer<typeof AgentCorpusConfigSchema>
 export type HumanCorpusConfig = z.infer<typeof HumanCorpusConfigSchema>
 export type DocumentationStandardV1Config = z.infer<typeof DocumentationStandardV1ConfigSchema>
@@ -553,3 +635,4 @@ export type RulesConfig = z.infer<typeof RulesConfigSchema>
 export type WorkflowConfig = z.infer<typeof WorkflowConfigSchema>
 export type RepositorySafetyConfig = z.infer<typeof RepositorySafetyConfigSchema>
 export type ReportConfig = z.infer<typeof ReportConfigSchema>
+export type RetrievalConfig = z.infer<typeof RetrievalConfigSchema>

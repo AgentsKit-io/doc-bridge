@@ -11,10 +11,13 @@ import {
   runControlledCommand,
   upsertControlledStudyObservation,
 } from '../src/study/runner.js'
-import { formatControlledStudyRunText } from '../src/study/execution.js'
+import { assistedArmReadiness, formatControlledStudyRunText } from '../src/study/execution.js'
+import { createStudyProviderCliConfig } from '../src/study/provider-cli.js'
+import { parseStudyTaskSuite } from '../src/study/task-suite.js'
 
 const fixture = () => JSON.parse(readFileSync(new URL('../docs/study/run-plan-v1.json', import.meta.url), 'utf8')) as Record<string, unknown>
 const plan = () => parseControlledStudyRunPlan(fixture())
+const suite = parseStudyTaskSuite(JSON.parse(readFileSync(new URL('../docs/study/task-suite-v1.json', import.meta.url), 'utf8')) as unknown)
 const rehash = (value: Record<string, unknown>) => {
   const { contentHash: _contentHash, contentHashAlgo: _contentHashAlgo, ...payload } = value
   return createControlledStudyRunPlan(payload)
@@ -26,7 +29,20 @@ describe('controlled study runner', () => {
     expect(value.models).toHaveLength(2)
     expect(value.scenarios).toHaveLength(3)
     expect(value.taskIds).toHaveLength(24)
-    expect(formatControlledStudyRunText({ status: 'dry-run', runId: value.runId, planned: 24, executed: 0, skipped: 0, providerConfigHash: 'a'.repeat(64), repositoryConfigHash: 'b'.repeat(64) })).toContain('Status: dry-run')
+    const text = formatControlledStudyRunText({
+      status: 'dry-run',
+      runId: value.runId,
+      planned: 24,
+      executed: 0,
+      skipped: 0,
+      providerConfigHash: 'a'.repeat(64),
+      repositoryConfigHash: 'b'.repeat(64),
+      assistedArm: { status: 'unavailable', reason: 'No provider CLI is configured for the registry-assisted scenario.', recorded: 8 },
+    })
+    expect(text).toContain('Status: dry-run')
+    // An arm that could not run says so, with its reason: a silent third arm is what produced no signal.
+    expect(text).toContain('Assisted arm: unavailable (8 execution(s) recorded as unavailable)')
+    expect(text.some((line) => line.includes('No provider CLI is configured'))).toBe(true)
   })
 
   it('accepts a pairwise sampling plan without weakening the three-scenario suite', () => {
@@ -123,5 +139,100 @@ describe('controlled study runner', () => {
     expect(() => parseControlledStudyObservation({ ...observation, contentHash: 'a'.repeat(64) })).toThrow('Invalid controlled observation content hash')
     expect(() => parseControlledStudyLedger({ ...first, contentHash: 'a'.repeat(64) })).toThrow('Invalid observation-ledger content hash')
     expect(createControlledStudyLedger({ type: 'controlled-study-observation-ledger', schemaVersion: 1, ledgerVersion: 'v1', observations: [] }).observations).toEqual([])
+  })
+})
+
+/**
+ * The third arm: reserved since the first suite, never executed.
+ *
+ * A study that quietly drops an arm cannot report on it, which is how the assisted arm stayed
+ * unmeasured across four rounds. So readiness is a declared status with a reason, an arm that
+ * cannot run records unavailable observations instead of vanishing, and a missing declaration is
+ * reported without costing the arm its run.
+ */
+describe('the assisted arm reports its own readiness', () => {
+  const providersFor = (entries: readonly { readonly modelId: string; readonly scenarioIds: readonly string[] }[]) =>
+    createStudyProviderCliConfig({
+      type: 'study-provider-cli-config',
+      schemaVersion: 1,
+      configVersion: 'assisted-arm-fixture',
+      providers: entries.map((entry) => ({
+        modelId: entry.modelId,
+        scenarioIds: [...entry.scenarioIds],
+        command: process.execPath,
+        args: ['-e', 'process.stdout.write(JSON.stringify({}))'],
+        envAllowlist: [],
+        providerNetwork: false,
+        maxInputBytes: 1_000_000,
+        maxOutputBytes: 10_000,
+      })),
+    })
+
+  const everyScenario = () => providersFor(suite.modelIds.flatMap((modelId) => [{ modelId, scenarioIds: [...suite.scenarioIds] }]))
+
+  it('is unavailable — with the reason — when no provider, no scenario, or no agent identity exists', () => {
+    const withoutAssistedProvider = providersFor(suite.modelIds.map((modelId) => ({ modelId, scenarioIds: ['repository-only', 'deterministic-doc-bridge'] })))
+    expect(assistedArmReadiness(plan(), withoutAssistedProvider, suite)).toMatchObject({
+      status: 'unavailable',
+      reason: expect.stringContaining('No provider CLI is configured for the registry-assisted scenario'),
+    })
+
+    const oneModelShort = providersFor([
+      { modelId: suite.modelIds[0]!, scenarioIds: [...suite.scenarioIds] },
+      { modelId: suite.modelIds[1]!, scenarioIds: ['repository-only', 'deterministic-doc-bridge'] },
+    ])
+    expect(assistedArmReadiness(plan(), oneModelShort, suite).reason).toContain(suite.modelIds[1]!)
+
+    // The plan schema pins three scenarios, so an absent third arm can only reach the check here.
+    const withoutScenario = { ...plan(), scenarios: plan().scenarios.filter((scenario) => scenario.id !== 'registry-assisted') }
+    expect(assistedArmReadiness(withoutScenario, everyScenario(), suite)).toMatchObject({ status: 'unavailable', reason: 'The run plan declares no registry-assisted scenario.' })
+
+    // The plan schema already refuses an assisted scenario with no agent; the check says so too.
+    expect(() =>
+      rehash({
+        ...fixture(),
+        scenarios: (fixture().scenarios as Record<string, unknown>[]).map((scenario) => (scenario.id === 'registry-assisted' ? { id: scenario.id, network: false } : scenario)),
+      }),
+    ).toThrow('require agent identity and version')
+    const withoutAgent = { ...plan(), scenarios: plan().scenarios.map((scenario) => (scenario.id === 'registry-assisted' ? { id: scenario.id, network: false } : scenario)) }
+    expect(assistedArmReadiness(withoutAgent, everyScenario(), suite).reason).toContain('names no agent identity and version')
+  })
+
+  it('runs with a missing prompt version or agent budget, and reports what it could not name', () => {
+    // The committed plan declares the agent but neither the prompt version nor the agent budget.
+    const ready = assistedArmReadiness(plan(), everyScenario(), suite)
+    expect(ready.status).toBe('ready')
+    expect(ready.undeclared).toEqual(['promptVersion', 'agentBudget'])
+    expect(ready.reason).toContain('cannot be reproduced')
+
+    const declared = rehash({
+      ...fixture(),
+      scenarios: (fixture().scenarios as Record<string, unknown>[]).map((scenario) =>
+        scenario.id === 'registry-assisted' ? { ...scenario, promptVersion: 'v2', agentBudget: { maxTokens: 4_000, maxRuntimeMs: 60_000 } } : scenario,
+      ),
+    })
+    const complete = assistedArmReadiness(declared, everyScenario(), suite)
+    expect(complete).toEqual({ status: 'ready' })
+    expect(formatControlledStudyRunText({
+      status: 'completed',
+      runId: declared.runId,
+      planned: 1,
+      executed: 1,
+      skipped: 0,
+      providerConfigHash: 'a'.repeat(64),
+      repositoryConfigHash: 'b'.repeat(64),
+      assistedArm: { ...ready, recorded: 0 },
+    }).join('\n')).toContain('undeclared: promptVersion, agentBudget')
+  })
+
+  it('refuses the declarations on any other scenario: only the assisted arm has an agent to budget', () => {
+    expect(() =>
+      rehash({
+        ...fixture(),
+        scenarios: (fixture().scenarios as Record<string, unknown>[]).map((scenario) =>
+          scenario.id === 'repository-only' ? { ...scenario, promptVersion: 'v2' } : scenario,
+        ),
+      }),
+    ).toThrow()
   })
 })

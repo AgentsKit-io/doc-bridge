@@ -16,7 +16,7 @@ import {
   type ControlledStudyObservationLedgerV1,
   type ControlledStudyObservationV1,
 } from './runner.js'
-import { parseStudyTaskSuite, type StudyTaskV1 } from './task-suite.js'
+import { mechanicalRubricItems, modelRubricItems, parseStudyTaskSuite, type StudyTaskV1 } from './task-suite.js'
 
 export const STUDY_ADJUDICATION_METHOD = 'independent-rubric-v1' as const
 
@@ -72,10 +72,24 @@ const runAdjudicatorProcess = (config: StudyAdjudicatorCli, cwd: string, input: 
   child.stdin.end(input)
 })
 
+/**
+ * What the adjudicator is asked, and what it is not.
+ *
+ * A rubric item with a mechanical check has already been decided by the runner — acceptance
+ * commands and their exit status, evidence coverage, retrieval expectations. Showing such an item
+ * to a model invites it to disagree with a measurement, which is how a study ends up with an
+ * opinion where it had a number. So the input carries only the items no checker can settle, and
+ * the settled ones travel next to them as `mechanical`: verdicts, for context, not for review.
+ */
+export const adjudicatorRubric = (task: StudyTaskV1): {
+  readonly rubric: ReturnType<typeof modelRubricItems>
+  readonly mechanical: ReturnType<typeof mechanicalRubricItems>
+} => ({ rubric: modelRubricItems(task), mechanical: mechanicalRubricItems(task) })
+
 const adjudicatorInput = (task: StudyTaskV1, observation: ControlledStudyObservationV1): string => JSON.stringify({
   protocol: 'doc-bridge.study-adjudicator.v1',
-  instruction: 'Evaluate only the bounded candidate record against the task rubric. Use evidenceCoverage and acceptanceExecution to distinguish missing evidence from unexecuted checks. Do not infer missing evidence. Return one JSON object and no prose.',
-  task: { id: task.id, category: task.category, difficulty: task.difficulty, objective: task.objective, expectedOutcome: task.expectedOutcome, evidenceRequirements: task.evidenceRequirements, acceptanceChecks: task.acceptanceChecks, rubric: task.rubric },
+  instruction: 'Evaluate only the bounded candidate record against the rubric items supplied. Items already decided by a mechanical check are listed under mechanical and are not yours to re-decide. Use evidenceCoverage and acceptanceExecution to distinguish missing evidence from unexecuted checks. Do not infer missing evidence. Return one JSON object and no prose.',
+  task: { id: task.id, category: task.category, difficulty: task.difficulty, objective: task.objective, expectedOutcome: task.expectedOutcome, evidenceRequirements: task.evidenceRequirements, acceptanceChecks: task.acceptanceChecks, ...adjudicatorRubric(task) },
   candidate: {
     taskOutcome: observation.taskOutcome ?? null,
     evidenceQuality: observation.evidenceQuality ?? null,

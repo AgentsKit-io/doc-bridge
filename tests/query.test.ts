@@ -66,8 +66,10 @@ describe('query + search', () => {
   it('does not spend context on substring-only decoys', () => {
     const config = loadFixtureConfig()
     const index = buildDocBridgeIndex({ root: fixtureRoot, config, write: false }).index
+    // Rewrites `knowledge[]`, which only the pre-projection ranking reads: this exercises the compatibility path.
     const decoyIndex = {
       ...index,
+      projection: undefined,
       knowledge: [
         { ...index.knowledge[0]!, id: 'auth', title: 'Auth', path: 'docs/auth.md', body: 'Authentication boundaries.' },
         { ...index.knowledge[0]!, id: 'billing', title: 'Billing', path: 'docs/billing.md', body: 'Authoritative billing notes.' },
@@ -91,9 +93,11 @@ describe('query + search', () => {
   it('ranks exact package id above mentions in other summaries', () => {
     const config = loadFixtureConfig()
     const index = buildDocBridgeIndex({ root: fixtureRoot, config, write: false }).index
-    // Inject a decoy ownership that mentions os-core in purpose (like angular mentioning @agentskit/core)
+    // Inject a decoy ownership that mentions os-core in purpose (like angular mentioning @agentskit/core).
+    // Rewrites the lookup, which only the pre-projection ranking reads: this exercises the compatibility path.
     const poisoned = {
       ...index,
+      projection: undefined,
       lookup: {
         ...index.lookup!,
         packages: [...(index.lookup?.packages ?? []), 'decoy'],
@@ -151,8 +155,10 @@ describe('query + search', () => {
     const config = loadFixtureConfig()
     const index = buildDocBridgeIndex({ root: fixtureRoot, config, write: false }).index
     const knowledge = index.knowledge[0]
+    // Rewrites `knowledge[]`, which only the pre-projection ranking reads: this exercises the compatibility path.
     const localized = {
       ...index,
+      projection: undefined,
       knowledge: [
         ...index.knowledge,
         {
@@ -251,7 +257,8 @@ describe('query + search', () => {
     })
     const metrics = measureAgentTaskEfficiency(observations)
 
-    expect(metrics).toMatchObject({ taskCount: 4, correctTaskCount: 4, correctnessRate: 1, tokensToCorrectAnswerP95: 51 })
+    // 58 estimated tokens: the agent payload for these four queries, measured, so a payload that grows is noticed.
+    expect(metrics).toMatchObject({ taskCount: 4, correctTaskCount: 4, correctnessRate: 1, tokensToCorrectAnswerP95: 58 })
     console.error(JSON.stringify({ benchmark: 'agent-task-efficiency-v1', tasks: metrics.taskCount, correctTasks: metrics.correctTaskCount, correctnessRate: metrics.correctnessRate, tokensToCorrectAnswerP95: metrics.tokensToCorrectAnswerP95 }))
   })
 
