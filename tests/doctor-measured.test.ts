@@ -11,8 +11,14 @@ import { A_GRADE_REQUIREMENTS, computeScore, formatDoctorText, gradeFor, measure
 import { buildDocBridgeIndex } from '../src/index-builder/build-index.js'
 import type { DocBridgeIndexV1 } from '../src/schemas/doc-bridge-index.js'
 
-// The repository-level test discovers and projects this whole repository.
-vi.setConfig({ testTimeout: 30_000 })
+/*
+ * The repository-level test discovers and projects this whole repository, then measures
+ * reachability, connectivity and the benchmark over it. The budget is for the machine, not for a
+ * slow assertion: it fits in seconds locally and crossed 30s on a two-core CI runner once the
+ * corpus passed a hundred documents, which is the same reason tests/retrieval-corpus.test.ts and
+ * tests/retrieval-projection.test.ts already sit at two minutes.
+ */
+vi.setConfig({ testTimeout: 120_000 })
 
 const repositoryRoot = process.cwd()
 const temporary: string[] = []
