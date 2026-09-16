@@ -54,13 +54,16 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm build
+      # changesets/action 2.x renamed every script and pull-request input; the 1.x names now fail
+      # the step outright. CI never exercises this workflow, so the rename only surfaced on the
+      # first push to master after the major bump.
       - name: Version or publish packages
         uses: changesets/action@ae32849d5ba541f9ae29e40e22a623bc13562f51
         with:
-          version: pnpm version-packages
-          publish: pnpm release
-          title: "chore: version packages"
-          commit: "chore: version packages"
+          version-script: pnpm version-packages
+          publish-script: pnpm release
+          pr-title: "chore: version packages"
+          commit-message: "chore: version packages"
           github-token: ${{ github.token }}
         env:
           GITHUB_TOKEN: ${{ github.token }}
