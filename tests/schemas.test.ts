@@ -8,6 +8,7 @@ import { loadConfig, projectRootFromConfigPath, resolveProjectRoot } from '../sr
 import { parseStaticJsObject } from '../src/lib/static-js-literal.js'
 import { normalizeAgentHandoff } from '../src/schemas/agent-handoff.js'
 import { DocBridgeJsonSchemas } from '../src/schemas/json-schemas.js'
+import { RETRIEVAL_MAX_ENTRIES } from '../src/schemas/retrieval-index.js'
 import { parseAgentHandoff, safeParseAgentHandoff } from '../src/validate.js'
 import { parseAgentProposal, parseAgentSearch, parseDocBridgeConfig, parseFixProposal, parseWorkflowRun } from '../src/validate.js'
 import { parseDocBridgeIndex } from '../src/validate.js'
@@ -77,6 +78,38 @@ describe('DocBridgeIndex v1', () => {
       ],
     })
     expect(index.knowledge).toHaveLength(1)
+  })
+
+  it('accepts as many knowledge entries as the projection it mirrors', () => {
+    /*
+     * `knowledge[]` and `projection.entries` describe the same entries, and their bounds used to
+     * disagree: a monorepo projecting 10 909 entries got an index the builder wrote happily and
+     * every reader refused. One constant now, and this asserts the agreement rather than the
+     * number, so raising the bound cannot leave one side behind.
+     */
+    expect(DocBridgeJsonSchemas.docBridgeIndexV1.properties.knowledge.maxItems).toBe(RETRIEVAL_MAX_ENTRIES)
+    const entry = (ordinal: number): unknown => ({
+      id: `module:src/m${ordinal}.ts`,
+      type: 'module',
+      title: `m${ordinal}.ts`,
+      path: `src/m${ordinal}.ts`,
+    })
+    const knowledge = Array.from({ length: 10_909 }, (_value, ordinal) => entry(ordinal))
+    const index = parseDocBridgeIndex({
+      schemaVersion: 1,
+      contentHash: 'a'.repeat(64),
+      contentHashAlgo: 'sha256-normalized-v1',
+      knowledge,
+    })
+    expect(index.knowledge).toHaveLength(10_909)
+    expect(() =>
+      parseDocBridgeIndex({
+        schemaVersion: 1,
+        contentHash: 'a'.repeat(64),
+        contentHashAlgo: 'sha256-normalized-v1',
+        knowledge: Array.from({ length: RETRIEVAL_MAX_ENTRIES + 1 }, (_value, ordinal) => entry(ordinal)),
+      }),
+    ).toThrow()
   })
 })
 
