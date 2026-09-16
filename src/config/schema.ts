@@ -249,12 +249,21 @@ export const AnalysisConfigSchema = z
     /**
      * How code areas are derived — the unit of architecture between a package and a file.
      * `roots` names directories that contain areas rather than being one (`src` holds
-     * `src/query`); `depth` is how many levels below such a root an area sits.
+     * `src/query`); `depth` is how many levels below such a root an area sits; `exclude`
+     * names directories that hold code without being a unit of architecture.
      */
     areas: z
       .object({
         depth: z.number().int().min(1).max(8).optional(),
         roots: z.array(z.string().min(1).max(128)).max(32).optional(),
+        /**
+         * Glob patterns for directories that are not areas. A monorepo where every package
+         * keeps `tests/` and `fixtures/` beside `src/` derives one area per directory, and
+         * then connectivity asks for a document about a folder of test data. An ownership
+         * record naming an excluded path still makes it an area: a person saying a directory
+         * is a unit outranks a pattern saying it is not.
+         */
+        exclude: z.array(z.string().min(1).max(256)).max(64).optional(),
       })
       .strict()
       .optional(),

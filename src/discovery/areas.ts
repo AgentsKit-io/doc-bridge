@@ -1,3 +1,5 @@
+import { minimatch } from 'minimatch'
+
 import { toPosix } from '../lib/paths.js'
 import { entityId } from './identity.js'
 
@@ -58,6 +60,15 @@ export type DeriveAreasOptions = {
   readonly ownership?: readonly AreaOwnership[]
   readonly depth?: number
   readonly roots?: readonly string[]
+  /**
+   * Glob patterns for directories that hold code without being a unit of architecture.
+   *
+   * A candidate that matches is not derived as an area, and its modules fall to the most
+   * specific area that still encloses them — or to none, which is the honest answer for a
+   * folder of fixtures. An ownership record naming the same path still wins: a person saying
+   * a directory is a unit outranks a pattern saying it is not.
+   */
+  readonly exclude?: readonly string[]
 }
 
 /*
@@ -124,11 +135,15 @@ export const deriveAreas = (options: DeriveAreasOptions): readonly DerivedArea[]
   const roots = options.roots ?? [...DEFAULT_AREA_ROOTS]
   const ownership = (options.ownership ?? []).map((record) => ({ ...record, path: normalize(record.path) }))
 
+  const excluded = options.exclude ?? []
+  const isExcluded = (path: string): boolean =>
+    excluded.some((pattern) => minimatch(path, pattern, { dot: true }))
+
   /** Candidate path to the package it belongs to. */
   const candidates = new Map<string, string>()
   for (const module of options.modules) {
     const path = conventionalAreaPath(module, depth, roots)
-    if (path && !candidates.has(path)) candidates.set(path, module.packageId)
+    if (path && !candidates.has(path) && !isExcluded(path)) candidates.set(path, module.packageId)
   }
   // An ownership record naming a directory that holds observed code is an area by declaration.
   for (const record of ownership) {

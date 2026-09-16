@@ -119,6 +119,34 @@ describe('area derivation', () => {
     expect(areas[1]).toMatchObject({ id: 'area:src/query', parentId: 'area:src', moduleIds: ['module:src/query/search.ts'] })
   })
 
+  it('drops an excluded directory, and keeps one an ownership record names', () => {
+    /*
+     * A monorepo where every package keeps `tests/` and `fixtures/` beside `src/` derives one
+     * area per directory, and connectivity then asks for a document about a folder of test
+     * data. On the AgentsKit monorepo that was 43 of 81 undocumented areas.
+     */
+    const modules = [
+      { moduleId: 'm1', path: 'packages/app/src/routes/home.ts', packageId: 'package:app', packagePath: 'packages/app' },
+      { moduleId: 'm2', path: 'packages/app/tests/home.test.ts', packageId: 'package:app', packagePath: 'packages/app' },
+      { moduleId: 'm3', path: 'packages/app/fixtures/payload.ts', packageId: 'package:app', packagePath: 'packages/app' },
+    ]
+    expect(deriveAreas({ modules }).map((area) => area.path)).toEqual([
+      'packages/app/fixtures',
+      'packages/app/src/routes',
+      'packages/app/tests',
+    ])
+
+    const excluded = deriveAreas({ modules, exclude: ['**/tests', '**/fixtures'] })
+    expect(excluded.map((area) => area.path)).toEqual(['packages/app/src/routes'])
+    /* The excluded directories' modules belong to no area rather than to a wrong one. */
+    expect(excluded.flatMap((area) => area.moduleIds)).toEqual(['m1'])
+
+    /* A person naming the directory outranks a pattern saying it is not a unit. */
+    const declared = deriveAreas({ modules, exclude: ['**/tests'], ownership: [{ id: 'qa', path: 'packages/app/tests' }] })
+    expect(declared.map((area) => area.path)).toEqual(['packages/app/fixtures', 'packages/app/src/routes', 'packages/app/tests'])
+    expect(declared.find((area) => area.path === 'packages/app/tests')?.ownershipId).toBe('qa')
+  })
+
   it('ignores an ownership path that holds no code, and reports one that holds nothing at all', () => {
     const modules = [{ moduleId: 'module:src/query/search.ts', path: 'src/query/search.ts', packageId: 'package:fixture', packagePath: '.' }]
     expect(deriveAreas({ modules, ownership: [{ id: 'docs', path: 'docs' }] }).map((area) => area.path)).toEqual(['src/query'])
