@@ -29,6 +29,7 @@ import {
 import {
   MARKDOWN_ANALYZER_VERSION,
   analyzeMarkdownDocument,
+  markdownPathCandidateIndex,
   declaredAudience,
   markdownContentHash,
   parseMarkdownDocument,
@@ -836,6 +837,8 @@ export const discoverRepository = (opts: DiscoveryOptions = {}): DiscoverySnapsh
     areas: areasByPath,
     packages: packageNames,
     symbols: symbolModules,
+    // One index for the whole run: the analyzer used to rebuild this per document.
+    pathIndex: markdownPathCandidateIndex({ documents: documentsByPath, modules: modulesByPath, areas: areasByPath }),
   }
   type MarkdownNote = { readonly scope: string; readonly reason: string; readonly evidence: readonly Evidence[] }
   const notesByDocument = new Map<string, readonly MarkdownNote[]>()

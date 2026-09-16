@@ -8,7 +8,7 @@ import { parse as parseYaml } from 'yaml'
 import type { Root, RootContent } from 'mdast'
 
 import { sha256NormalizedV1 } from '../index-builder/content-hash.js'
-import { resolveFuzzyReference } from '../lib/fuzzy-match.js'
+import { createFuzzyCandidateIndex, resolveFuzzyReference, type FuzzyCandidateIndex } from '../lib/fuzzy-match.js'
 import { toPosix } from '../lib/paths.js'
 import type { Evidence, KnowledgeRelation } from '../schemas/knowledge.js'
 import { relationId } from './identity.js'
@@ -280,7 +280,27 @@ export type MarkdownResolution = {
   /** Exported symbol to the entity ids of every module exporting it. */
   readonly symbols: ReadonlyMap<string, readonly string[]>
   readonly relationCap?: number
+  /**
+   * Path candidates for near-miss resolution, indexed by length.
+   *
+   * Built once per snapshot by the caller. Deriving it here meant rebuilding it for every document
+   * — with four thousand documents and nine thousand modules, fifty-five million string copies
+   * before any analysis, and a similarity scan over the whole universe per unresolved reference.
+   * `markdownPathCandidateIndex` builds it from the same three maps, so a caller that omits it
+   * still gets identical results, only slowly.
+   */
+  readonly pathIndex?: FuzzyCandidateIndex
 }
+
+/** The candidate index the analyzer wants, built once from a resolution universe. */
+export const markdownPathCandidateIndex = (
+  resolution: Pick<MarkdownResolution, 'documents' | 'modules' | 'areas'>,
+): FuzzyCandidateIndex =>
+  createFuzzyCandidateIndex([
+    ...resolution.documents.keys(),
+    ...resolution.modules.keys(),
+    ...(resolution.areas ?? new Map<string, string>()).keys(),
+  ])
 
 export type MarkdownNote = {
   readonly scope: string
@@ -361,7 +381,7 @@ export const analyzeMarkdownDocument = (
   }
 
   const areas = resolution.areas ?? new Map<string, string>()
-  const pathCandidates = [...resolution.documents.keys(), ...resolution.modules.keys(), ...areas.keys()]
+  const pathCandidates = resolution.pathIndex ?? markdownPathCandidateIndex(resolution)
 
   /** A path-shaped reference: a document link, a module mention, or an unambiguous near-miss. */
   const resolvePath = (candidate: string, line: number, linkKind: 'links-to' | 'mentions'): boolean => {
