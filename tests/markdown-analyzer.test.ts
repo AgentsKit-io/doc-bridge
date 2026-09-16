@@ -13,7 +13,7 @@ import {
   declaredAudience,
   parseMarkdownDocument,
 } from '../src/discovery/markdown.js'
-import { FUZZY_RESOLUTION_THRESHOLD, fuzzyMatchList, jaroWinkler, resolveFuzzyReference } from '../src/lib/fuzzy-match.js'
+import { FUZZY_RESOLUTION_THRESHOLD, createFuzzyCandidateIndex, fuzzyLengthWindow, fuzzyMatchList, jaroWinkler, resolveFuzzyReference } from '../src/lib/fuzzy-match.js'
 import type { KnowledgeEntity } from '../src/schemas/knowledge.js'
 
 const temporary: string[] = []
@@ -297,6 +297,65 @@ describe('fuzzy matching', () => {
     expect(fuzzyMatchList('src/reconcil.ts', candidates, { threshold: 0.9 })).toEqual(
       core.fuzzyMatchList('src/reconcil.ts', candidates, { threshold: 0.9 }),
     )
+  })
+
+  it('answers identically whether the universe is a list or an index', () => {
+    /*
+     * The index exists to skip candidates that cannot reach the threshold, and it is only allowed to
+     * skip those: the length window and the shared-character bound are both upper bounds on Jaro, so
+     * a candidate they drop could not have matched. This asserts that, over a universe large enough
+     * for the filter to actually bite, at four thresholds, including the ties the prefilter reorders
+     * buckets for.
+     */
+    let seed = 0x2f6e2b1
+    const next = (limit: number): number => {
+      seed = (seed * 1_103_515_245 + 12_345) & 0x7fffffff
+      return seed % limit
+    }
+    const words = ['reconcile', 'knowledge', 'search', 'index', 'render', 'discovery', 'overlay', 'parity', 'doctor', 'bench', 'study', 'agent']
+    const universe: string[] = []
+    for (let count = 0; count < 600; count += 1) {
+      const parts = 1 + next(3)
+      const segments: string[] = []
+      for (let part = 0; part < parts; part += 1) segments.push(words[next(words.length)] ?? 'x')
+      universe.push(`src/${segments.join('-')}${next(4) === 0 ? '' : String(next(40))}.ts`)
+    }
+    /* Duplicates on purpose: identical candidates score identically, which is the tie case. */
+    universe.push(...universe.slice(0, 40))
+    /*
+     * Whitespace, case and non-ASCII: the similarity compares normalized strings, so a bound built
+     * on the raw ones would skip a padded candidate that matches.
+     */
+    universe.push('  src/RENDER   engine.ts  ', 'SRC/Render-Engine.ts', 'src/renderização.ts', 'src/rendering.ts', '   ', '')
+    const index = createFuzzyCandidateIndex(universe)
+
+    const queries = [
+      ...universe.slice(0, 12).map((value) => value.replace('e', '')),
+      'src/reconcil-knowledg.ts',
+      'src/SEARCH-INDEX.ts',
+      'nothing-remotely-alike',
+      'src/a.ts',
+      '  src/render engine.ts ',
+      'SRC/RENDER-ENGINE.TS',
+      'src/renderizaçao.ts',
+      '',
+    ]
+    for (const threshold of [0.6, 0.8, 0.92, 0.97]) {
+      for (const query of queries) {
+        expect(fuzzyMatchList(query, index, { threshold, topK: 8 })).toEqual(
+          fuzzyMatchList(query, universe, { threshold, topK: 8 }),
+        )
+      }
+    }
+  })
+
+  it('bounds the lengths a candidate can have, and stops bounding below 0.6', () => {
+    /* At 0.92 the window is 0.6x to 1.67x the query's length. */
+    const window = fuzzyLengthWindow(10, 0.92)
+    expect(window.min).toBeCloseTo(6, 9)
+    expect(window.max).toBeCloseTo(16.6667, 4)
+    /* At 0.6 the inequality constrains nothing: a low threshold has to scan the whole universe. */
+    expect(fuzzyLengthWindow(10, 0.6)).toEqual({ min: 0, max: Number.POSITIVE_INFINITY })
   })
 
   it('requires a high score and a single candidate', () => {
