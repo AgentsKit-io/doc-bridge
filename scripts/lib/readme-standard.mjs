@@ -2,9 +2,34 @@ import { createHash } from 'node:crypto'
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
+/** Selected fields of a JSON file, ordered by name so the hash is a function of values only. */
+const fieldProjection = (root, path, fields) => {
+  const json = JSON.parse(readFileSync(join(root, path), 'utf8'))
+  return JSON.stringify([...fields].sort().map((field) => [field, json[field] ?? null]))
+}
+
+/**
+ * The facts a README surface was reviewed against, hashed in a stable order.
+ *
+ * A source is a path, or `{ path, fields }` to cover only part of a JSON file. `package.json`
+ * needs the second form: the whole file records every dependency version, so hashing it made a
+ * devDependency bump report "this README has not been reviewed since" — which is not true of any
+ * bump, and which re-reviewing does not stop from happening on the next one. Hashing the fields
+ * the README actually states about the package keeps what the check is for: a changed
+ * description, binary, entry point or engine range still expires the review, a bumped lockfile
+ * does not.
+ *
+ * `version` is deliberately not among those fields. The README carries the version only as a live
+ * npm badge, and `ak-docs parity` is what holds a stated version to the package. Hashing it here
+ * would put every release back on the same treadmill, for a fact the README never spells out.
+ */
 export const computeSourceHash = (root, sources) => {
   const hash = createHash('sha256')
-  for (const source of [...sources].sort()) hash.update(source).update('\0').update(readFileSync(join(root, source))).update('\0')
+  const normalized = sources.map((source) => (typeof source === 'string' ? { path: source } : source))
+  for (const source of [...normalized].sort((left, right) => (left.path < right.path ? -1 : left.path > right.path ? 1 : 0))) {
+    const content = source.fields ? Buffer.from(fieldProjection(root, source.path, source.fields), 'utf8') : readFileSync(join(root, source.path))
+    hash.update(source.path).update('\0').update(content).update('\0')
+  }
   return `sha256:${hash.digest('hex')}`
 }
 
