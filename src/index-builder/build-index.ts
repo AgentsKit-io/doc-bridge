@@ -7,6 +7,7 @@ import { discoverRepository } from '../discovery/repository.js'
 import { readBoundedText, type TextReadBudget } from '../lib/bounded-text.js'
 import { toPosix } from '../lib/paths.js'
 import type { DocBridgeIndexV1, KnowledgeEntry } from '../schemas/doc-bridge-index.js'
+import { RETRIEVAL_MAX_ENTRIES } from '../schemas/retrieval-index.js'
 import type { DiscoverySnapshotV1 } from '../schemas/knowledge.js'
 import type { RetrievalIndexV1 } from '../schemas/retrieval-index.js'
 import { buildLookup, collectPackages } from './build-handoffs.js'
@@ -209,6 +210,20 @@ export const buildDocBridgeIndex = (opts: BuildIndexOptions): BuildIndexResult =
     ...(inputs ? { inputs } : {}),
     retrieval,
     ...(projection ? { projection } : {}),
+  }
+
+  /*
+   * An artifact its own parser refuses is not an artifact. The bound on `knowledge[]` used to be
+   * lower than the bound on the projection it mirrors, so a large repository got an index that
+   * `index` reported writing and every reader — `doctor`, `search`, the MCP server — then rejected,
+   * with a schema dump naming an array instead of a corpus. The bounds are one constant now; this
+   * says so at the point of production, where the numbers and the remedy are both known.
+   */
+  if (knowledge.length > RETRIEVAL_MAX_ENTRIES) {
+    throw new Error(
+      `The index would carry ${knowledge.length} knowledge entries, above the ${RETRIEVAL_MAX_ENTRIES} an index may hold. ` +
+        'Narrow the corpus with `corpus.*.include` or `corpus.*.exclude`, or split the repository into more than one index.',
+    )
   }
 
   if (write) {

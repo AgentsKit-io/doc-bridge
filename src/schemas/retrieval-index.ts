@@ -120,6 +120,16 @@ export const RetrievalLexicalSchema = z
   })
   .strict()
 
+/**
+ * The most entries one index can carry.
+ *
+ * A bound, because an unbounded artifact is not an artifact: a reader has to be able to refuse a
+ * file before parsing it all. It is deliberately above what a large monorepo produces — the
+ * repository that first exceeded the previous bound projects about eleven thousand entries — so the
+ * limit reports a corpus nobody meant to index rather than a corpus that is merely big.
+ */
+export const RETRIEVAL_MAX_ENTRIES = 50_000
+
 export const RetrievalIndexV1Schema = z
   .object({
     type: z.literal('retrieval-index'),
@@ -135,7 +145,7 @@ export const RetrievalIndexV1Schema = z
     weights: z.record(z.string().min(1).max(64), z.number().min(0).max(1_000)),
     params: z.object({ k1: z.number().min(0).max(100), b: z.number().min(0).max(1) }).strict(),
     lexical: RetrievalLexicalSchema,
-    entries: z.array(RetrievalEntrySchema).max(50_000),
+    entries: z.array(RetrievalEntrySchema).max(RETRIEVAL_MAX_ENTRIES),
   })
   .strict()
 

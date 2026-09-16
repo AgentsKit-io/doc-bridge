@@ -52,3 +52,22 @@ multi-line strings work as they do in every other tool. Schema violations report
 repository failing its build on one keeps failing on the same one — and a block YAML cannot read
 at all falls back to the line-oriented scanner, because on a mangled block a diagnostic per line
 helps the author more than a single parser error.
+
+## The cost of a near-miss
+
+Near-miss resolution is the analyzer's only super-linear step: every unresolved path-shaped
+reference is a query against every document, module and area path in the repository. On a monorepo
+of 4 100 documents and 9 240 modules the naive form of that — rebuilding the candidate list per
+document, then computing Jaro-Winkler against each candidate — did not finish.
+
+Two bounds make it cheap, and both are bounds on Jaro's match count `m` rather than heuristics.
+`m` cannot exceed the shorter string, so `jaro ≤ (m/|a| + m/|b| + 1) / 3`; with the prefix bonus
+bounded by `jw ≤ 0.6·jaro + 0.4`, a threshold of 0.92 admits only candidates whose length is
+within 0.6× to 1.67× the query's. And `m` cannot exceed the number of characters the two strings
+share, which one pass over a 128-slot count vector answers, where a similarity computation costs a
+pass over one string per character of the other.
+
+Both only ever over-estimate `m`, so a candidate they skip could not have matched: the index is a
+speed-up with no effect on results, tied scores included. `MarkdownResolution.pathIndex` carries it,
+built once per run; an analyzer called without one builds its own and produces the same output more
+slowly.

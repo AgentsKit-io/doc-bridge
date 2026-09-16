@@ -198,9 +198,18 @@
           "README.md",
           "doc-bridge.config.json",
           "examples/verify-handoff.mjs",
-          "package.json"
+          {
+            "path": "package.json",
+            "fields": [
+              "name",
+              "description",
+              "bin",
+              "exports",
+              "engines"
+            ]
+          }
         ],
-        "sourceHash": "sha256:cc6fb1bb6247e66c9ead48847565c22882063f09f84273bc25348298352b0584"
+        "sourceHash": "sha256:99af13fbff8699d6f04ad1a21e051d85ddbdac9bab30905ad4f1ec9088d6ad68"
       },
       "exceptions": []
     },
@@ -277,9 +286,18 @@
           "README.md",
           "doc-bridge.config.json",
           "examples/verify-handoff.mjs",
-          "package.json"
+          {
+            "path": "package.json",
+            "fields": [
+              "name",
+              "description",
+              "bin",
+              "exports",
+              "engines"
+            ]
+          }
         ],
-        "sourceHash": "sha256:cc6fb1bb6247e66c9ead48847565c22882063f09f84273bc25348298352b0584"
+        "sourceHash": "sha256:99af13fbff8699d6f04ad1a21e051d85ddbdac9bab30905ad4f1ec9088d6ad68"
       },
       "exceptions": []
     },
@@ -356,9 +374,18 @@
           "README.md",
           "doc-bridge.config.json",
           "examples/verify-handoff.mjs",
-          "package.json"
+          {
+            "path": "package.json",
+            "fields": [
+              "name",
+              "description",
+              "bin",
+              "exports",
+              "engines"
+            ]
+          }
         ],
-        "sourceHash": "sha256:cc6fb1bb6247e66c9ead48847565c22882063f09f84273bc25348298352b0584"
+        "sourceHash": "sha256:99af13fbff8699d6f04ad1a21e051d85ddbdac9bab30905ad4f1ec9088d6ad68"
       },
       "exceptions": []
     }
