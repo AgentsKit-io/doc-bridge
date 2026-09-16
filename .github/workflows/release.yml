@@ -47,7 +47,12 @@ jobs:
           git fetch origin master --tags
           test "$(git rev-list -n 1 "$RELEASE_TAG")" = "$(git rev-parse HEAD)"
           git merge-base --is-ancestor "$(git rev-parse HEAD)" origin/master
-      - run: pnpm audit --audit-level low
+      # Production dependencies are what a consumer installs, and they are audited down to
+      # the lowest severity. Development tooling is not: it never ships, and at least one of
+      # its advisories (extract-zip <=2.0.1, through @lhci/cli > lighthouse > puppeteer-core)
+      # has no patched release in existence, so auditing dev dependencies here made the
+      # release gate unsatisfiable rather than safe. Dependabot still reports them.
+      - run: pnpm audit --prod --audit-level low
       - run: pnpm typecheck
       - run: pnpm check:ecosystem-upstream
       - run: pnpm check:marketplace
