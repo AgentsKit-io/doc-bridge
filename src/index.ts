@@ -891,3 +891,39 @@ export {
 } from './study/expectations.js'
 export { ASSISTED_SCENARIO, assistedArmReadiness, type AssistedArmStatus } from './study/execution.js'
 export { adjudicatorRubric } from './study/adjudication.js'
+
+// #158: the public documentation parity report — claims, resolvers and the gate over them
+export {
+  CLAIM_TRANSFORMS,
+  CLAIM_VALUE_TYPES,
+  PUBLIC_CLAIMS_CONTENT_HASH_ALGO,
+  PUBLIC_CLAIMS_SCHEMA_VERSION,
+  PublicClaimsV1Schema,
+  claimPattern,
+  claimSurfaces,
+  createPublicClaims,
+  exceptionFor,
+  parsePublicClaims,
+  renderClaim,
+  templateFor,
+  type ClaimEvidence,
+  type ClaimTransform,
+  type ClaimValueType,
+  type PublicClaim,
+  type PublicClaimException,
+  type PublicClaimsV1,
+} from './parity/claims.js'
+export { resolveClaim, type ResolveContext, type ResolvedClaim } from './parity/resolve.js'
+export {
+  PARITY_CODES,
+  PARITY_EXCERPT_LIMIT,
+  PUBLIC_PARITY_SCHEMA_VERSION,
+  PublicParityReportV1Schema,
+  checkPublicParity,
+  formatPublicParityText,
+  parsePublicParityReport,
+  type CheckParityOptions,
+  type ParityCode,
+  type ParityFinding,
+  type PublicParityReportV1,
+} from './parity/check.js'

@@ -72,6 +72,9 @@ import { benchmarkFixture, formatBenchmarkText, measureBenchmark } from '../metr
 import { PACKAGE_VERSION } from '../version.js'
 import { auditDocumentation, formatDocumentationAuditText } from '../audit/documentation.js'
 import { renderArtifact, writeRenderedPages } from '../render/render.js'
+import { CLI_COMMAND_USAGE } from './usage.js'
+import { checkPublicParity, formatPublicParityText } from '../parity/check.js'
+import { parsePublicClaims } from '../parity/claims.js'
 import { resolveTemplateSource } from '../render/template-source.js'
 import { RENDER_TEMPLATE_NAMES, RENDER_TEMPLATES, isRenderTemplateName } from '../render/templates.js'
 import {
@@ -133,71 +136,10 @@ type Command =
   | 'list'
   | 'conformance'
   | 'audit'
+  | 'parity'
   | 'render'
 
-const usage = `ak-docs — human↔agent documentation bridge (@agentskit/doc-bridge)
-
-Core (no API key):
-  ak-docs init [--demo] [--scaffold-workspaces]
-  ak-docs demo [--fixture example|monorepo] [--text] [--in-project]
-  ak-docs doctor [--text] [--badge] [--write-badge]
-  ak-docs index [--watch]
-  ak-docs discover [--text|--json]
-  ak-docs benchmark <fixture.json> <observation.json> [--text|--json]
-  ak-docs bench retrieval <suite.json> [--index <file>] [--baseline <file>] [--limit <n>] [--text|--json]
-  ak-docs bench retrieval <suite.json> --update-baseline --by <name> [--reason <text>]
-  ak-docs study protocol <protocol.json> [--text|--json]
-  ak-docs study history <registry.json> [--protocol <protocol.json>] [--text|--json]
-  ak-docs study tasks <task-suite.json> [--text|--json]
-  ak-docs study select <task-suite.json> [--text|--json]
-  ak-docs study plan <run-plan.json> [--text|--json]
-  ak-docs study providers <provider-cli.json> [--text|--json]
-  ak-docs study run <run-plan.json> <task-suite.json> --providers <provider-cli.json> --repositories <repositories.json> --ledger <ledger.json> [--round <id>] [--dry-run] [--text|--json]
-  ak-docs study adjudicate <observation-ledger.json> <task-suite.json> --adjudicator <provider-cli.json> --output <ledger.json> [--run-id <id>] [--offset <n>] [--limit <n>] [--text|--json]
-  ak-docs study ledger <observation-ledger.json> [--text|--json]
-  ak-docs study verification <binding.json> [--text|--json]
-  ak-docs study metrics <observation-ledger.json> [--baseline-round <id>] [--current-round <id>] [--baseline-run-id <id>] [--current-run-id <id>] [--allow-regressions] [--text|--json]
-  ak-docs scan | reconcile | check | map [--text|--json] [--html] [--report-threshold <bytes>]
-  ak-docs check --json --format finding             emit diagnostics in the ecosystem Finding shape
-  ak-docs bench retrieval <suite> --overlay        measure the suite with and without the accepted overlay
-  ak-docs enrich --retrieval-delta                 run the overlay through the golden suite after enriching
-  ak-docs study expectations <suite> --expectations <file>   check the study's mechanical retrieval expectations
-  ak-docs check --enrich          run the enrichment stage between reconcile and evaluate
-  ak-docs enrich [--json|--text]  run the configured Registry roles over context packs
-  ak-docs enrich list | approve <proposalId> --by <name> | reject <proposalId> --by <name> [--reason <text>]
-  ak-docs fix propose links|normalize <artifact> [--output <file>]
-  ak-docs fix approve|apply <proposal.json> [--by <name>]
-  ak-docs suggest [--documentation] [--json|--text]   run the configured Registry agent
-  ak-docs query [package|ownership|intent|change] <id> [--agent] [--text]
-  ak-docs search <term> [--agent] [--explain] [--mode=<mode>] [--context-budget=<tokens>] [--text]
-  ak-docs list <packages|intents|changes|knowledge> [--text]
-  ak-docs ask [question]          local consult (no LLM)
-  ak-docs gate run [gate-id]
-  ak-docs rules run <report.json> [--preset default|recommended|strict] [--severity rule=level] [--ignore rule]
-  ak-docs conformance run documentation-standard-v1 [--text|--json]
-  ak-docs audit documentation [--text|--json]
-  ak-docs render <llms.txt|area|ownership|change-digest|overlay-review> [--data <artifact>] [--output <path>] [--print-template] [--json]
-  ak-docs mcp
-  ak-docs mcp install --cursor | --claude
-  ak-docs memory ingest|classify|promote [--pr] [--dry-run]
-  ak-docs bootstrap agent-docs
-  ak-docs validate-config | validate-handoff <file>
-
-Intelligence (optional AgentsKit peers):
-  ak-docs rag ingest|search <query>
-  ak-docs chat                    terminal chat (Ink + RAG)
-  ak-docs ask <question> --chat   one-shot grounded answer
-
-Advanced / ecosystem:
-  ak-docs retrieve <query>
-  ak-docs registry topology
-  ak-docs playbook draft | pattern [--text]
-
-Global flags:
-  -h, --help   --version
-  --config <path>   (project root = config file directory)
-  --agent   --json   --text   --chat   --demo
-`
+const usage = CLI_COMMAND_USAGE
 
 const QUERY_KINDS = new Set<QueryKind>(['package', 'ownership', 'intent', 'change', 'search'])
 const LIST_KINDS = new Set(['packages', 'intents', 'changes', 'knowledge'])
@@ -271,6 +213,7 @@ const parseArgs = (argv: readonly string[]) => {
   else if (positional[0] === 'list') command = 'list'
   else if (positional[0] === 'conformance') command = 'conformance'
   else if (positional[0] === 'audit') command = 'audit'
+  else if (positional[0] === 'parity') command = 'parity'
   else if (positional[0] === 'render') command = 'render'
 
   return { command, flags, configPath, positional }
@@ -1174,6 +1117,43 @@ const runEnrichCommand = async (flags: ReadonlySet<string>, positional: readonly
   }
 }
 
+/** Where the claim registry lives unless a caller points somewhere else. */
+export const DEFAULT_PUBLIC_CLAIMS = 'docs/parity/public-claims-v1.json'
+
+/**
+ * `ak-docs parity`: what this repository says in public, against what it can prove.
+ *
+ * The gate fails on a blocking finding — a stale or contradictory claim nobody accepted — and
+ * leaves warnings and unresolved claims visible without failing, so a repository can adopt the
+ * registry one claim at a time. The doctor runs only when a claim asks for one of its figures:
+ * measuring it costs an index and a benchmark, and most registries never need it.
+ */
+const runParityCommand = (flags: ReadonlySet<string>, configPath: string | undefined, argv: readonly string[]): number => {
+  try {
+    const { config, root } = loadProject(configPath)
+    const claimsPath = optionValues(argv, '--claims')[0] ?? DEFAULT_PUBLIC_CLAIMS
+    const registry = parsePublicClaims(JSON.parse(readFileSync(resolve(root, claimsPath), 'utf8')) as unknown)
+    const snapshot = discoverRepository({ root, config })
+    const doctor = registry.claims.some((claim) => claim.evidence.kind === 'doctor-metric') ? runDoctor(root, config) : undefined
+    const report = checkPublicParity({
+      root,
+      config,
+      registry,
+      snapshot,
+      ...(doctor ? { doctor } : {}),
+      project: { name: snapshot.project.name },
+      sourceRevision: snapshot.sourceRevision,
+      sourceRevisionKind: snapshot.sourceRevisionKind,
+    })
+    if (wantsTextOutput(flags, config)) writeLines(formatPublicParityText(report))
+    else writeJson({ ok: report.metrics.blocking === 0, parity: report })
+    return report.metrics.blocking ? 1 : 0
+  } catch (error) {
+    process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`)
+    return 2
+  }
+}
+
 const runSuggestCommand = async (flags: ReadonlySet<string>, configPath: string | undefined): Promise<number> => {
   try {
     const { config, root } = loadProject(configPath)
@@ -1607,6 +1587,7 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
     return runWorkflowCommand(command, flags, configPath, argv)
   }
   if (command === 'audit') return runDocumentationAuditCommand(flags, positional, configPath)
+  if (command === 'parity') return runParityCommand(flags, configPath, argv)
   if (command === 'render') return runRenderCommand(flags, positional, configPath, argv)
   if (command === 'bench') return runBenchCommand(flags, positional, configPath, argv)
 
