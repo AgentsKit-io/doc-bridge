@@ -8,6 +8,7 @@ import { buildDocBridgeIndex } from '../index-builder/build-index.js'
 import { scanAgentCorpus } from '../index-builder/scan-corpus.js'
 import { runGates, type GateRunResult } from '../gates/run-gates.js'
 import { IndexNotFoundError, loadDocBridgeIndex } from '../query/load-index.js'
+import { checkIndexReproducibility, type IndexReproducibility } from '../discovery/reproducibility.js'
 import type { DocBridgeIndexV1 } from '../schemas/doc-bridge-index.js'
 import type { DiscoverySnapshotV1 } from '../schemas/knowledge.js'
 import { doctorBadgeMetrics, type DoctorBadgeMetrics } from './badge.js'
@@ -104,6 +105,8 @@ export type DoctorCoverage = {
     readonly hasIndex: boolean
   }
   readonly gates: GateRunResult
+  /** Whether a clean checkout would rebuild this index, or whether generated files leak into it. */
+  readonly reproducibility: IndexReproducibility
 }
 
 export type DoctorReport = {
@@ -265,6 +268,22 @@ const buildIssues = (coverage: DoctorCoverage): DoctorIssue[] => {
     })
   }
 
+  /*
+   * A warning, not an error: the index is not wrong, it is unreproducible, and every reader of it
+   * on another machine is the one who finds out. The fix belongs to the repository's
+   * `safety.exclude`, so the message names the rule that matched and lets the operator decide.
+   */
+  const { ignored } = coverage.reproducibility
+  if (ignored.length > 0) {
+    const sample = ignored.slice(0, 5).map((entry) => `${entry.path} (${entry.rule})`)
+    issues.push({
+      severity: 'warn',
+      code: 'index-not-reproducible',
+      message: `${ignored.length} indexed path(s) are ignored by Git, so a clean checkout builds a different index: ${sample.join(', ')}${ignored.length > sample.length ? `, and ${ignored.length - sample.length} more` : ''}.`,
+      action: 'edit doc-bridge.config.json  # add the generated paths to safety.exclude',
+    })
+  }
+
   for (const id of coverage.packages.missingAgentDoc) {
     issues.push({
       severity: 'warn',
@@ -423,6 +442,11 @@ export const runDoctor = (root: string, config: DocBridgeConfigV1): DoctorReport
       hasIndex,
     },
     gates,
+    reproducibility: checkIndexReproducibility(
+      root,
+      config.index?.outFile ?? '.doc-bridge/index.json',
+      index.knowledge.map((entry) => entry.path),
+    ),
   }
 
   const issues = buildIssues(coverage)

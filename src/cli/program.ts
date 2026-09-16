@@ -99,6 +99,7 @@ import { independentlyAdjudicateStudyLedger, persistIndependentlyAdjudicatedLedg
 import { formatStudyProviderCliText, parseStudyProviderCliConfig } from '../study/provider-cli.js'
 import { calculateStudyMetrics, formatStudyMetricsText } from '../study/metrics.js'
 import { formatStudyVerificationText, parseStudyVerificationBinding } from '../study/verification.js'
+import { checkIndexReproducibility } from '../discovery/reproducibility.js'
 
 type Command =
   | 'help'
@@ -469,7 +470,11 @@ const loadProject = (configPath?: string) => {
   return { config, configPath: path, root }
 }
 
-const indexDiagnostics = (config: DocBridgeConfigV1, result: ReturnType<typeof buildDocBridgeIndex>): string[] => {
+const indexDiagnostics = (
+  root: string,
+  config: DocBridgeConfigV1,
+  result: ReturnType<typeof buildDocBridgeIndex>,
+): string[] => {
   const diagnostics: string[] = []
   const onlyDoc = result.index.knowledge.length === 1 ? result.index.knowledge[0] : undefined
   if (onlyDoc?.path === config.corpus.agent.index) {
@@ -482,6 +487,22 @@ const indexDiagnostics = (config: DocBridgeConfigV1, result: ReturnType<typeof b
   if (handoffCount === 0) {
     diagnostics.push(
       'No ownership handoffs yet. Add routing.options.ownership, package frontmatter (package + editRoot), or a monorepo plugin.',
+    )
+  }
+  /*
+   * Said at write time, because this is the moment the unreproducible artifact is created and the
+   * only moment the operator can see what their machine had that another will not.
+   */
+  const reproducibility = checkIndexReproducibility(
+    root,
+    config.index?.outFile ?? '.doc-bridge/index.json',
+    result.index.knowledge.map((entry) => entry.path),
+  )
+  if (reproducibility.ignored.length > 0) {
+    const sample = reproducibility.ignored.slice(0, 5).map((entry) => `${entry.path} (${entry.rule})`)
+    diagnostics.push(
+      `${reproducibility.ignored.length} indexed path(s) are ignored by Git: ${sample.join(', ')}${reproducibility.ignored.length > sample.length ? `, and ${reproducibility.ignored.length - sample.length} more` : ''}.`,
+      'A clean checkout will not have them, so it builds a different index. Add them to safety.exclude in doc-bridge.config.json.',
     )
   }
   return diagnostics
@@ -1749,7 +1770,7 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
         })
       }
       const result = buildDocBridgeIndex({ root, config })
-      const diagnostics = indexDiagnostics(config, result)
+      const diagnostics = indexDiagnostics(root, config, result)
       const handoffCount = Object.keys(result.index.handoffs ?? {}).length
       writeJson({
         ok: true,

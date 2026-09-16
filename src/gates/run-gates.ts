@@ -9,9 +9,11 @@ import { buildDocBridgeIndex } from '../index-builder/build-index.js'
 import { scanAgentCorpus } from '../index-builder/scan-corpus.js'
 import { scanHumanDocRecords } from '../index-builder/human-adapters/index.js'
 import { IndexNotFoundError, loadDocBridgeIndex } from '../query/load-index.js'
+import { checkIndexReproducibility } from '../discovery/reproducibility.js'
 
 export type GateId =
   | 'index-freshness'
+  | 'index-reproducible'
   | 'human-guide-links'
   | 'okf-type'
   | 'docs-style'
@@ -54,6 +56,48 @@ export const runGate = (
   if (id === 'human-guide-links') return runHumanGuideLinksGate(root, config)
   if (id === 'okf-type') return runOkfTypeGate(root, config)
   if (id === 'docs-style') return runDocsStyleGate(root, config)
+  if (id === 'index-reproducible') {
+    /*
+     * Opt-in, and in no preset: a repository that regenerates the index on every run has nothing
+     * to enforce, and turning this on for everyone would fail gates that were passing for good
+     * reasons. `gates.include: ['index-reproducible']` is how a repository that commits the index
+     * says it wants the guarantee enforced rather than merely reported.
+     */
+    let index
+    try {
+      index = loadDocBridgeIndex(root, config)
+    } catch (error) {
+      if (error instanceof IndexNotFoundError) return { id, ok: false, message: error.message }
+      throw error
+    }
+    const result = checkIndexReproducibility(
+      root,
+      config.index?.outFile ?? '.doc-bridge/index.json',
+      index.knowledge.map((entry) => entry.path),
+    )
+    if (!result.checked) {
+      return {
+        id,
+        ok: true,
+        message:
+          result.skipped === 'index-untracked'
+            ? 'Index is not committed, so nothing has to reproduce it'
+            : 'Not a Git checkout; reproducibility was not checked',
+      }
+    }
+    if (result.ignored.length === 0) {
+      return { id, ok: true, message: 'Every indexed path is committed' }
+    }
+    const sample = result.ignored.slice(0, 5).map((entry) => `${entry.path} (${entry.rule})`)
+    return {
+      id,
+      ok: false,
+      message: `${result.ignored.length} indexed path(s) are ignored by Git, so a clean checkout builds a different index. Add them to safety.exclude.`,
+      expected: 'every indexed path is committed',
+      actual: sample.join(', '),
+    }
+  }
+
   if (id !== 'index-freshness') throw new Error(`Unsupported gate "${id}"`)
 
   let current: string
