@@ -648,6 +648,7 @@ export const discoverRepository = (opts: DiscoveryOptions = {}): DiscoverySnapsh
     ownership: Object.entries(opts.config?.routing?.options?.ownership ?? {}).map(([id, record]) => ({ id, path: record.path })),
     ...(opts.config?.analysis?.areas?.depth !== undefined ? { depth: opts.config.analysis.areas.depth } : {}),
     ...(opts.config?.analysis?.areas?.roots !== undefined ? { roots: opts.config.analysis.areas.roots } : {}),
+    ...(opts.config?.analysis?.areas?.exclude !== undefined ? { exclude: opts.config.analysis.areas.exclude } : {}),
   })
   const areasById = new Map(areas.map((area) => [area.id, area]))
   const areasByPath = new Map(areas.map((area) => [area.path, area.id]))

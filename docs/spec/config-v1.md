@@ -478,6 +478,8 @@ areas?: {
   depth?: number
   /** Directories that contain areas rather than being one. */
   roots?: string[]
+  /** Glob patterns for directories that hold code without being a unit of architecture. */
+  exclude?: string[]
 }
 ```
 
@@ -486,8 +488,16 @@ modules. `src` is not an area in any useful sense; `src/query` is. So `roots` na
 directories that hold areas — by default `src`, `lib`, `app`, `source`, `server`, `client`,
 `packages`, `apps` — and `depth` says how many levels below such a root an area sits.
 
+`exclude` names what the convention gets wrong in the other direction. A monorepo where every
+package keeps `tests/` and `fixtures/` beside `src/` derives an area per directory, and
+connectivity then asks for a document about a folder of test data — on one 26-package monorepo,
+43 of 81 undocumented areas were exactly that. A candidate matching an exclude pattern is not
+derived, and its modules fall to the most specific area that still encloses them, or to none,
+which is the honest answer for a folder of fixtures.
+
 Areas are derived, never declared, with one exception that matters: **any path an ownership record
-names becomes an area**, whatever the convention says. A configuration that reads
+names becomes an area**, whatever the convention says — including a path `exclude` matches, because
+a person saying a directory is a unit outranks a pattern saying it is not. A configuration that reads
 `path: "src/mcp"` is a human stating that the directory is a unit, and the graph should have an
 entity for it. Such an area carries `metadata.ownershipId`, which is what lets an agent document
 declaring `id` plus `editRoot` resolve to the thing it owns.
