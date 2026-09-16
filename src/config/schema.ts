@@ -122,6 +122,7 @@ export const GatesConfigSchema = z
       .array(
         z.enum([
           'index-freshness',
+          'index-reproducible',
           'human-guide-links',
           'link-rot',
           'okf-type',
@@ -137,6 +138,7 @@ export const GatesConfigSchema = z
       .array(
         z.enum([
           'index-freshness',
+          'index-reproducible',
           'human-guide-links',
           'link-rot',
           'okf-type',

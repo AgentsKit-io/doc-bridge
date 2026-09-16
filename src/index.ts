@@ -99,6 +99,11 @@ export {
   type RepositoryInputsV1,
 } from './index-builder/project-corpus.js'
 export {
+  checkIndexReproducibility,
+  type IgnoredIndexEntry,
+  type IndexReproducibility,
+} from './discovery/reproducibility.js'
+export {
   DOCUMENT_BODY_LIMIT,
   EMPTY_OVERLAY_HASH,
   RETRIEVAL_PROJECTION_VERSION,

@@ -343,6 +343,7 @@ type GatesConfig = {
 
 type GateId =
   | 'index-freshness'
+  | 'index-reproducible'           // opt-in; in no preset
   | 'human-guide-links'
   | 'link-rot'                    // reserved; emits a diagnostic and is not executed
   | 'okf-type'
@@ -358,7 +359,7 @@ type GateId =
 | `standard` | + `human-guide-links` in v1 |
 | `strict` | + `okf-type` in v1 |
 
-Implemented gates include `index-freshness`, `human-guide-links`, `okf-type`, `docs-style`, and the opt-in `documentation-standard-v1`. For v1 compatibility, `link-rot`, `routing-currency`, and `bootstrap-size` remain accepted as reserved IDs; including one emits `AK_DOCS_RESERVED_GATE` and does not claim that the gate ran. Unknown IDs are rejected.
+Implemented gates include `index-freshness`, `human-guide-links`, `okf-type`, `docs-style`, and the opt-in `index-reproducible` and `documentation-standard-v1`. For v1 compatibility, `link-rot`, `routing-currency`, and `bootstrap-size` remain accepted as reserved IDs; including one emits `AK_DOCS_RESERVED_GATE` and does not claim that the gate ran. Unknown IDs are rejected.
 
 ### Structural vs style validation
 
@@ -367,9 +368,30 @@ These gates are deterministic lint checks, not editorial grading:
 | Gate | Kind | What it proves |
 |------|------|----------------|
 | `index-freshness` | structural | Generated index matches current docs/config |
+| `index-reproducible` | structural | Every indexed path is committed, so a clean checkout rebuilds the same index |
 | `human-guide-links` | structural | Local `humanDoc` links resolve through configured human-doc adapters |
 | `okf-type` | OKF lint | Agent docs have required `type:` frontmatter when strict/required |
 | `docs-style` | style lint | Opt-in deterministic profile checks for title, purpose, audience, examples, owner/source, task orientation, and stale wording |
+
+### Why `index-reproducible` is opt-in
+
+A scan walks what is on disk and has no reason to consult `.gitignore`, so a generated module or
+document joins the corpus on a machine that has built and leaves it on one that has not. That is
+harmless while the index is regenerated on every run, and a defect the moment the index is
+committed for a gate to verify: two checkouts of the same commit produce different artifacts,
+`index-freshness` reports staleness that nothing caused, and regenerating cannot fix it because the
+next machine disagrees in the other direction.
+
+`index-reproducible` asks Git which of the indexed paths it ignores, and names each one with the
+rule that matched (`apps/docs-next/.gitignore:13:lib/ask-context.ts`) so the fix is one lookup
+away: add the path to `safety.exclude`. It reports success, not failure, when the index is not
+committed or the project is not a Git checkout — there is nothing to reproduce in either case. A
+file that is both tracked and matched by an ignore rule is not flagged; being committed is the
+point.
+
+It is in no preset, because enabling it for every consumer would fail gates that pass for good
+reasons. `ak-docs index` and `ak-docs doctor` report the same finding unconditionally — as a
+diagnostic and a `warn` issue — so a repository learns about it before deciding to enforce it.
 
 `docs-style` supports `google-dev-docs`, `playbook-okf`, and `custom` profiles. It is not part of the default path and does not grade prose quality; it checks for explicit structural signals. LLM critique remains planned optional behavior.
 
