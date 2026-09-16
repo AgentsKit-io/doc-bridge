@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "contentHash": "f889c908e5a26c98609766d967da27a48179f54f676fecdf5cb651cb6a813300",
+  "contentHash": "0d7dea319d847d4e8453c243bf5132df607b771307c697aea93b954171bf73a2",
   "contentHashAlgo": "sha256-normalized-v1",
-  "generatedAt": "2026-09-16T23:30:51.697Z",
+  "generatedAt": "2026-09-16T23:36:46.357Z",
   "project": {
     "name": "@agentskit/doc-bridge",
     "root": "."
@@ -1200,7 +1200,7 @@
         "document",
         "project"
       ],
-      "contentHash": "b8db641e3356d1ddfa77a022a2da478642513b7ba9bb9b9da6ed5ae16546ad6f"
+      "contentHash": "4b9ce450ff2fda833bb9d3c54f06ee9581657abf1a885a6f8eec0405e37787ec"
     },
     {
       "id": "document:SECURITY.md",
@@ -7014,7 +7014,7 @@
     "changes": {}
   },
   "inputs": {
-    "hash": "cb5fe5f58771fa52733371b6648bf6b8cc0b4a88c82241f77acfc641dc3de925",
+    "hash": "ff249fe9e75b19a5f8ff32819a855b2ad5404d47388eb3f00bf9139257d6c403",
     "fileCount": 412,
     "projectionVersion": 2
   },
@@ -7037,9 +7037,9 @@
   "projection": {
     "type": "retrieval-index",
     "schemaVersion": 1,
-    "contentHash": "19089eb238a5a8e5cd27dfcb6b7c66ac25c6651c2d6a504989ac5e1f0f461025",
+    "contentHash": "a280f77c731fa908b668a7605509cc0ca07ddced179a30aa452a50dae9718e27",
     "contentHashAlgo": "sha256-normalized-v1",
-    "snapshotHash": "7b9907f5a34ecf645010ae6bf638755f2d1fc0990b7dc7549025b0653b4ac729",
+    "snapshotHash": "9aac572b8e692db302b03f15dbbfb92ffff8eaae8418136c16f42347402b7c99",
     "overlayHash": "f99666ff9119084dd25c2974ae64eb6935ec2aa785ff5ad478fb9d541f7a5e94",
     "configurationHash": "91d46a4ecbfe3b55878e0b3c7608819775cf7b18aeafcc8f689eddfa462622b4",
     "lexiconVersion": 1,
@@ -15870,7 +15870,7 @@
             }
           ]
         },
-        "contentHash": "b8db641e3356d1ddfa77a022a2da478642513b7ba9bb9b9da6ed5ae16546ad6f",
+        "contentHash": "4b9ce450ff2fda833bb9d3c54f06ee9581657abf1a885a6f8eec0405e37787ec",
         "provenance": "observed",
         "confidence": "observed"
       },
