@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
 import { AgentHandoffLegacySchema } from './agent-handoff.js'
-import { RetrievalIndexV1Schema } from './retrieval-index.js'
+import { RETRIEVAL_MAX_ENTRIES, RetrievalIndexV1Schema } from './retrieval-index.js'
 
 export const INDEX_SCHEMA_VERSION = 1 as const
 
@@ -133,7 +133,13 @@ export const DocBridgeIndexV1Schema = z
       .strict()
       .optional(),
     properties: z.array(EcosystemPropertySchema).max(16).optional(),
-    knowledge: z.array(KnowledgeEntrySchema).max(10_000),
+    /*
+     * `knowledge[]` and `projection.entries` describe the same entries, so they carry the same
+     * bound. They did not: a monorepo projecting eleven thousand entries produced an index the
+     * builder wrote and `parseDocBridgeIndex` refused, which made `doctor`, `search` and the MCP
+     * server fail on a repository `index` had reported building successfully.
+     */
+    knowledge: z.array(KnowledgeEntrySchema).max(RETRIEVAL_MAX_ENTRIES),
     capabilities: z.array(CapabilityRefSchema).max(5_000).optional(),
     handoffs: z.record(z.string().min(1).max(256), AgentHandoffLegacySchema).optional(),
     lookup: IndexLookupSchema.optional(),

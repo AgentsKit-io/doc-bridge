@@ -1,3 +1,5 @@
+import { RETRIEVAL_MAX_ENTRIES } from './retrieval-index.js'
+
 type JsonSchema = {
   readonly [key: string]: unknown
 }
@@ -146,7 +148,7 @@ export const DocBridgeIndexV1JsonSchema = {
     },
     knowledge: {
       type: 'array',
-      maxItems: 10000,
+      maxItems: RETRIEVAL_MAX_ENTRIES,
       items: {
         type: 'object',
         additionalProperties: false,
