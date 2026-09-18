@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "contentHash": "0d7dea319d847d4e8453c243bf5132df607b771307c697aea93b954171bf73a2",
+  "contentHash": "2154a7fc831d8a5e09f3006121c032b96192ce85cebe6538faf6e3e43c8ed531",
   "contentHashAlgo": "sha256-normalized-v1",
-  "generatedAt": "2026-09-16T23:36:46.357Z",
+  "generatedAt": "2026-09-18T00:51:06.614Z",
   "project": {
     "name": "@agentskit/doc-bridge",
     "root": "."
@@ -84,6 +84,13 @@
       "title": "Query",
       "path": "docs/agent-corpus/query.md",
       "description": "Owns deterministic package and document resolution. Prefer an explicit miss over an invented answer."
+    },
+    {
+      "id": "doc-bridge-retrieval",
+      "type": "agent-doc",
+      "title": "Retrieval",
+      "path": "docs/agent-corpus/retrieval.md",
+      "description": "Owns the projection from a discovery snapshot to the sealed retrieval index, and the ranking over it."
     },
     {
       "id": "document:agents/content-fact-checker/README.md",
@@ -6857,6 +6864,34 @@
       "notes": [
         "Deterministic package queries, document search, and index loading"
       ]
+    },
+    "doc-bridge-retrieval": {
+      "type": "agent-handoff",
+      "schemaVersion": 1,
+      "source": ".doc-bridge/index.json",
+      "target": {
+        "type": "package",
+        "id": "doc-bridge-retrieval",
+        "path": "src/retrieval"
+      },
+      "startHere": "docs/agent-corpus/retrieval.md",
+      "readBeforeEditing": [
+        "docs/agent-corpus/retrieval.md",
+        "AGENTS.md"
+      ],
+      "editRoots": [
+        "src/retrieval"
+      ],
+      "checks": [
+        "pnpm test"
+      ],
+      "humanDoc": "/docs/query",
+      "bridge": {
+        "humanDoc": "linked"
+      },
+      "notes": [
+        "Owns the projection from a discovery snapshot to the sealed retrieval index, and the ranking over it."
+      ]
     }
   },
   "lookup": {
@@ -6871,7 +6906,8 @@
       "doc-bridge-index",
       "doc-bridge-mcp",
       "doc-bridge-memory",
-      "doc-bridge-query"
+      "doc-bridge-query",
+      "doc-bridge-retrieval"
     ],
     "ownership": {
       "@agentskit/doc-bridge": {
@@ -7008,14 +7044,25 @@
         "purpose": "Deterministic package queries, document search, and index loading",
         "humanDoc": "/docs/query",
         "agentDoc": "docs/agent-corpus/query.md"
+      },
+      "doc-bridge-retrieval": {
+        "id": "doc-bridge-retrieval",
+        "path": "src/retrieval",
+        "checks": [
+          "pnpm test"
+        ],
+        "checksSource": "default",
+        "purpose": "Owns the projection from a discovery snapshot to the sealed retrieval index, and the ranking over it.",
+        "humanDoc": "/docs/query",
+        "agentDoc": "docs/agent-corpus/retrieval.md"
       }
     },
     "intents": {},
     "changes": {}
   },
   "inputs": {
-    "hash": "ff249fe9e75b19a5f8ff32819a855b2ad5404d47388eb3f00bf9139257d6c403",
-    "fileCount": 412,
+    "hash": "20571d28fde9e264e10cfbfe64c796c1651e9e4b5fc02d0cbc27cb10cb2797a8",
+    "fileCount": 413,
     "projectionVersion": 2
   },
   "retrieval": {
@@ -7037,9 +7084,9 @@
   "projection": {
     "type": "retrieval-index",
     "schemaVersion": 1,
-    "contentHash": "a280f77c731fa908b668a7605509cc0ca07ddced179a30aa452a50dae9718e27",
+    "contentHash": "f99bb94d8e61a819ad3fc28f42cac4937f0bc4114c279f93a9153db479513999",
     "contentHashAlgo": "sha256-normalized-v1",
-    "snapshotHash": "9aac572b8e692db302b03f15dbbfb92ffff8eaae8418136c16f42347402b7c99",
+    "snapshotHash": "11547f2283059d017f9f0604325b398ddd34b55c3403b52548cea9c958b0d50a",
     "overlayHash": "f99666ff9119084dd25c2974ae64eb6935ec2aa785ff5ad478fb9d541f7a5e94",
     "configurationHash": "91d46a4ecbfe3b55878e0b3c7608819775cf7b18aeafcc8f689eddfa462622b4",
     "lexiconVersion": 1,
@@ -7059,7 +7106,7 @@
     },
     "lexical": {
       "version": 1,
-      "documentCount": 440,
+      "documentCount": 441,
       "fieldNames": [
         "aliases",
         "body",
@@ -7070,13 +7117,13 @@
         "title"
       ],
       "averageFieldLength": {
-        "aliases": 3.1,
-        "body": 66.95454545454545,
-        "headings": 4.8159090909090905,
-        "path": 5.654545454545454,
-        "summary": 4.579545454545454,
-        "symbols": 12.402272727272727,
-        "title": 3.209090909090909
+        "aliases": 3.120181405895692,
+        "body": 67.43310657596372,
+        "headings": 4.809523809523809,
+        "path": 5.655328798185941,
+        "summary": 4.605442176870748,
+        "symbols": 12.374149659863946,
+        "title": 3.204081632653061
       }
     },
     "entries": [
@@ -7533,7 +7580,7 @@
           "aliases": "doc-bridge-cli area ownership"
         },
         "graph": {
-          "pagerank": 0.012688,
+          "pagerank": 0.012445,
           "inboundLinks": 1,
           "coveredBy": [
             "document:docs/agent-corpus/cli.md"
@@ -7611,7 +7658,7 @@
           "aliases": "doc-bridge-conformance area ownership"
         },
         "graph": {
-          "pagerank": 0.012688,
+          "pagerank": 0.012445,
           "inboundLinks": 1,
           "coveredBy": [
             "document:docs/agent-corpus/conformance.md"
@@ -7697,7 +7744,7 @@
           "aliases": "doc-bridge-doctor area ownership"
         },
         "graph": {
-          "pagerank": 0.012688,
+          "pagerank": 0.012445,
           "inboundLinks": 2,
           "coveredBy": [
             "document:docs/agent-corpus/doctor.md"
@@ -7886,7 +7933,7 @@
           "aliases": "doc-bridge-gates area ownership"
         },
         "graph": {
-          "pagerank": 0.012688,
+          "pagerank": 0.012445,
           "inboundLinks": 1,
           "coveredBy": [
             "document:docs/agent-corpus/gates.md"
@@ -7978,7 +8025,7 @@
           "aliases": "doc-bridge-index area ownership"
         },
         "graph": {
-          "pagerank": 0.012688,
+          "pagerank": 0.012445,
           "inboundLinks": 2,
           "coveredBy": [
             "document:docs/agent-corpus/INDEX.md"
@@ -8031,7 +8078,7 @@
           "aliases": "doc-bridge-chat area ownership"
         },
         "graph": {
-          "pagerank": 0.012688,
+          "pagerank": 0.012445,
           "inboundLinks": 1,
           "coveredBy": [
             "document:docs/agent-corpus/chat.md"
@@ -8109,7 +8156,7 @@
           "aliases": "doc-bridge-mcp area ownership"
         },
         "graph": {
-          "pagerank": 0.012688,
+          "pagerank": 0.012445,
           "inboundLinks": 2,
           "coveredBy": [
             "document:docs/agent-corpus/mcp.md"
@@ -8162,7 +8209,7 @@
           "aliases": "doc-bridge-memory area ownership"
         },
         "graph": {
-          "pagerank": 0.012688,
+          "pagerank": 0.012445,
           "inboundLinks": 1,
           "coveredBy": [
             "document:docs/agent-corpus/memory.md"
@@ -8336,7 +8383,7 @@
           "aliases": "doc-bridge-query area ownership"
         },
         "graph": {
-          "pagerank": 0.012688,
+          "pagerank": 0.012445,
           "inboundLinks": 3,
           "coveredBy": [
             "document:docs/agent-corpus/query.md"
@@ -8493,33 +8540,47 @@
         "id": "area:src/retrieval",
         "kind": "area",
         "path": "src/retrieval",
-        "title": "retrieval",
-        "aliases": [],
+        "title": "Retrieval",
+        "summary": "Owns the projection from a discovery snapshot to the sealed retrieval index, and the ranking over it.",
+        "audience": "human",
+        "aliases": [
+          "doc-bridge-retrieval"
+        ],
         "tags": [
-          "area"
+          "area",
+          "ownership"
         ],
         "fields": {
-          "title": "retrieval",
-          "headings": "",
+          "title": "Retrieval",
+          "headings": "Retrieval",
           "path": "src/retrieval",
           "symbols": "",
-          "summary": "",
-          "body": "",
-          "aliases": "area"
+          "summary": "Owns the projection from a discovery snapshot to the sealed retrieval index, and the ranking over it.",
+          "body": "Retrieval Owns the projection from a discovery snapshot to the sealed retrieval index, and the ranking over it. projectRetrievalIndex is the only writer of RetrievalIndexV1 . It seals over what the snapshot observed — pipelineVersion , analyzerVersions , entities and relations, hashed by snapshotObservationHash — and never over the revision the snapshot was taken at. snapshotHash survives in the projection as provenance only; reading it as a seal input is what made a committed index go stale the moment it landed, fixed in 1.10.1 by bumping RETRIEVAL PROJECTION VERSION to 2. Each area and module carries graph.coveredBy and graph.mentionedBy , built from the covers , mentions and mentions-symbol relations pointing into it. The doctor reads exactly those two lists to decide whether an area is documented, so a document earns connectivity by declaring an edge, never by sitting in the corpus. Ranking is deterministic: bm25.ts builds a field-weighted BM25 index at BM25 VERSION , rank.ts scores an entry from named components and returns a RankExplanation for every hit, and weights.ts holds the shares those components divide. A hit below RELEVANCE FLOOR is dropped rather than returned with a low score, so the benchmark measures answers, not near-misses.",
+          "aliases": "doc-bridge-retrieval area ownership"
         },
         "graph": {
-          "pagerank": 0,
-          "inboundLinks": 0,
-          "coveredBy": [],
+          "pagerank": 0.012445,
+          "inboundLinks": 1,
+          "coveredBy": [
+            "document:docs/agent-corpus/retrieval.md"
+          ],
           "mentionedBy": [],
           "areaId": "area:src",
           "packageId": "package:@agentskit/doc-bridge",
-          "inbound": [],
+          "inbound": [
+            {
+              "kind": "covers",
+              "id": "document:docs/agent-corpus/retrieval.md",
+              "confidence": "declared"
+            }
+          ],
           "outbound": []
         },
         "contentHash": "6e0a1b1b3045303b12223ce6c4c116d06718bb1879214ff119d691eb234636cb",
         "provenance": "observed",
-        "confidence": "observed"
+        "confidence": "observed",
+        "ownershipId": "doc-bridge-retrieval"
       },
       {
         "id": "area:src/retriever",
@@ -8968,7 +9029,7 @@
           "aliases": "document project"
         },
         "graph": {
-          "pagerank": 0.007193,
+          "pagerank": 0.007055,
           "inboundLinks": 3,
           "coveredBy": [],
           "mentionedBy": [
@@ -9205,7 +9266,7 @@
           "aliases": "document unclassified"
         },
         "graph": {
-          "pagerank": 0.011193,
+          "pagerank": 0.010978,
           "inboundLinks": 5,
           "coveredBy": [],
           "mentionedBy": [
@@ -9267,7 +9328,7 @@
           "aliases": "document project"
         },
         "graph": {
-          "pagerank": 0.007193,
+          "pagerank": 0.007055,
           "inboundLinks": 3,
           "coveredBy": [],
           "mentionedBy": [
@@ -9671,7 +9732,7 @@
           "aliases": "doc-bridge-chat document human module"
         },
         "graph": {
-          "pagerank": 0.006858,
+          "pagerank": 0.006727,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -9713,7 +9774,7 @@
           "aliases": "doc-bridge-cli document human module"
         },
         "graph": {
-          "pagerank": 0.006858,
+          "pagerank": 0.006727,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -9755,7 +9816,7 @@
           "aliases": "doc-bridge-conformance document human module"
         },
         "graph": {
-          "pagerank": 0.006858,
+          "pagerank": 0.006727,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -9797,7 +9858,7 @@
           "aliases": "@agentskit/doc-bridge document human package"
         },
         "graph": {
-          "pagerank": 0.006858,
+          "pagerank": 0.006727,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -9889,7 +9950,7 @@
           "aliases": "doc-bridge-doctor document human module"
         },
         "graph": {
-          "pagerank": 0.006858,
+          "pagerank": 0.006727,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -9931,7 +9992,7 @@
           "aliases": "doc-bridge-gates document human module"
         },
         "graph": {
-          "pagerank": 0.006858,
+          "pagerank": 0.006727,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -9973,7 +10034,7 @@
           "aliases": "doc-bridge-index document human module"
         },
         "graph": {
-          "pagerank": 0.006858,
+          "pagerank": 0.006727,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -10025,7 +10086,7 @@
           "aliases": "doc-bridge-mcp document human module"
         },
         "graph": {
-          "pagerank": 0.006858,
+          "pagerank": 0.006727,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -10082,7 +10143,7 @@
           "aliases": "doc-bridge-memory document human module"
         },
         "graph": {
-          "pagerank": 0.006858,
+          "pagerank": 0.006727,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -10168,7 +10229,7 @@
           "aliases": "doc-bridge-query document human module"
         },
         "graph": {
-          "pagerank": 0.006858,
+          "pagerank": 0.006727,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -10216,6 +10277,68 @@
         "confidence": "observed"
       },
       {
+        "id": "document:docs/agent-corpus/retrieval.md",
+        "kind": "document",
+        "path": "docs/agent-corpus/retrieval.md",
+        "title": "Retrieval",
+        "summary": "Owns the projection from a discovery snapshot to the sealed retrieval index, and the ranking over it.",
+        "audience": "human",
+        "aliases": [
+          "doc-bridge-retrieval"
+        ],
+        "tags": [
+          "document",
+          "human",
+          "module"
+        ],
+        "fields": {
+          "title": "Retrieval",
+          "headings": "Retrieval",
+          "path": "docs/agent-corpus/retrieval.md",
+          "symbols": "",
+          "summary": "Owns the projection from a discovery snapshot to the sealed retrieval index, and the ranking over it.",
+          "body": "Retrieval Owns the projection from a discovery snapshot to the sealed retrieval index, and the ranking over it. projectRetrievalIndex is the only writer of RetrievalIndexV1 . It seals over what the snapshot observed — pipelineVersion , analyzerVersions , entities and relations, hashed by snapshotObservationHash — and never over the revision the snapshot was taken at. snapshotHash survives in the projection as provenance only; reading it as a seal input is what made a committed index go stale the moment it landed, fixed in 1.10.1 by bumping RETRIEVAL PROJECTION VERSION to 2. Each area and module carries graph.coveredBy and graph.mentionedBy , built from the covers , mentions and mentions-symbol relations pointing into it. The doctor reads exactly those two lists to decide whether an area is documented, so a document earns connectivity by declaring an edge, never by sitting in the corpus. Ranking is deterministic: bm25.ts builds a field-weighted BM25 index at BM25 VERSION , rank.ts scores an entry from named components and returns a RankExplanation for every hit, and weights.ts holds the shares those components divide. A hit below RELEVANCE FLOOR is dropped rather than returned with a low score, so the benchmark measures answers, not near-misses.",
+          "aliases": "doc-bridge-retrieval document human module"
+        },
+        "graph": {
+          "pagerank": 0.006727,
+          "inboundLinks": 0,
+          "coveredBy": [],
+          "mentionedBy": [],
+          "inbound": [],
+          "outbound": [
+            {
+              "kind": "covers",
+              "id": "area:src/retrieval",
+              "confidence": "declared"
+            },
+            {
+              "kind": "mentions-symbol",
+              "id": "module:src/retrieval/bm25.ts",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions-symbol",
+              "id": "module:src/retrieval/project.ts",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions-symbol",
+              "id": "module:src/retrieval/rank.ts",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions-symbol",
+              "id": "module:src/schemas/retrieval-index.ts",
+              "confidence": "observed"
+            }
+          ]
+        },
+        "contentHash": "9bdc1b42ad585cc19cd849beb7c49038bc950dc6ebc19fc0112e431c4ed21270",
+        "provenance": "observed",
+        "confidence": "observed"
+      },
+      {
         "id": "document:docs/bench/README.md",
         "kind": "document",
         "path": "docs/bench/README.md",
@@ -10237,7 +10360,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.011514,
+          "pagerank": 0.011293,
           "inboundLinks": 2,
           "coveredBy": [],
           "mentionedBy": [],
@@ -10297,7 +10420,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.021877,
+          "pagerank": 0.021457,
           "inboundLinks": 10,
           "coveredBy": [],
           "mentionedBy": [
@@ -10542,7 +10665,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.011697,
+          "pagerank": 0.011472,
           "inboundLinks": 5,
           "coveredBy": [],
           "mentionedBy": [
@@ -10619,7 +10742,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.018739,
+          "pagerank": 0.01838,
           "inboundLinks": 10,
           "coveredBy": [],
           "mentionedBy": [
@@ -10729,7 +10852,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.021526,
+          "pagerank": 0.021114,
           "inboundLinks": 7,
           "coveredBy": [],
           "mentionedBy": [
@@ -10866,7 +10989,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.006858,
+          "pagerank": 0.006727,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -10930,7 +11053,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.012702,
+          "pagerank": 0.012458,
           "inboundLinks": 4,
           "coveredBy": [],
           "mentionedBy": [],
@@ -11025,7 +11148,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.018716,
+          "pagerank": 0.018357,
           "inboundLinks": 6,
           "coveredBy": [],
           "mentionedBy": [],
@@ -11110,7 +11233,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.025066,
+          "pagerank": 0.024586,
           "inboundLinks": 9,
           "coveredBy": [],
           "mentionedBy": [],
@@ -11220,7 +11343,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.0208,
+          "pagerank": 0.020401,
           "inboundLinks": 6,
           "coveredBy": [],
           "mentionedBy": [],
@@ -11315,7 +11438,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.024723,
+          "pagerank": 0.024248,
           "inboundLinks": 8,
           "coveredBy": [],
           "mentionedBy": [],
@@ -11415,7 +11538,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.012174,
+          "pagerank": 0.011941,
           "inboundLinks": 4,
           "coveredBy": [],
           "mentionedBy": [],
@@ -11495,7 +11618,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.006858,
+          "pagerank": 0.006727,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -11724,7 +11847,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.011752,
+          "pagerank": 0.011527,
           "inboundLinks": 1,
           "coveredBy": [],
           "mentionedBy": [],
@@ -11871,7 +11994,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.020658,
+          "pagerank": 0.020262,
           "inboundLinks": 5,
           "coveredBy": [],
           "mentionedBy": [],
@@ -11946,7 +12069,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.018255,
+          "pagerank": 0.017905,
           "inboundLinks": 8,
           "coveredBy": [],
           "mentionedBy": [
@@ -12060,7 +12183,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.027143,
+          "pagerank": 0.026622,
           "inboundLinks": 4,
           "coveredBy": [],
           "mentionedBy": [
@@ -12117,7 +12240,7 @@
           "aliases": "document human pattern"
         },
         "graph": {
-          "pagerank": 0.013172,
+          "pagerank": 0.01292,
           "inboundLinks": 6,
           "coveredBy": [],
           "mentionedBy": [
@@ -12191,7 +12314,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.019687,
+          "pagerank": 0.01931,
           "inboundLinks": 6,
           "coveredBy": [],
           "mentionedBy": [
@@ -12778,7 +12901,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.007008,
+          "pagerank": 0.006874,
           "inboundLinks": 1,
           "coveredBy": [],
           "mentionedBy": [],
@@ -12878,7 +13001,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.007343,
+          "pagerank": 0.007202,
           "inboundLinks": 4,
           "coveredBy": [],
           "mentionedBy": [
@@ -12941,7 +13064,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.00933,
+          "pagerank": 0.009151,
           "inboundLinks": 2,
           "coveredBy": [],
           "mentionedBy": [
@@ -13003,7 +13126,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.020362,
+          "pagerank": 0.019971,
           "inboundLinks": 6,
           "coveredBy": [],
           "mentionedBy": [],
@@ -13083,7 +13206,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.011514,
+          "pagerank": 0.011293,
           "inboundLinks": 2,
           "coveredBy": [],
           "mentionedBy": [],
@@ -13153,7 +13276,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.012988,
+          "pagerank": 0.012739,
           "inboundLinks": 2,
           "coveredBy": [],
           "mentionedBy": [],
@@ -13213,7 +13336,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.02879,
+          "pagerank": 0.028238,
           "inboundLinks": 8,
           "coveredBy": [],
           "mentionedBy": [
@@ -13371,7 +13494,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.02427,
+          "pagerank": 0.023805,
           "inboundLinks": 10,
           "coveredBy": [],
           "mentionedBy": [
@@ -13494,7 +13617,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.033435,
+          "pagerank": 0.032794,
           "inboundLinks": 10,
           "coveredBy": [],
           "mentionedBy": [
@@ -13656,7 +13779,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.007008,
+          "pagerank": 0.006874,
           "inboundLinks": 1,
           "coveredBy": [],
           "mentionedBy": [],
@@ -13695,7 +13818,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.014896,
+          "pagerank": 0.014611,
           "inboundLinks": 2,
           "coveredBy": [],
           "mentionedBy": [],
@@ -13745,7 +13868,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.015443,
+          "pagerank": 0.015147,
           "inboundLinks": 3,
           "coveredBy": [],
           "mentionedBy": [
@@ -13897,7 +14020,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.007008,
+          "pagerank": 0.006874,
           "inboundLinks": 1,
           "coveredBy": [],
           "mentionedBy": [],
@@ -13952,7 +14075,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.007008,
+          "pagerank": 0.006874,
           "inboundLinks": 2,
           "coveredBy": [],
           "mentionedBy": [
@@ -13998,7 +14121,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.012003,
+          "pagerank": 0.011772,
           "inboundLinks": 3,
           "coveredBy": [],
           "mentionedBy": [
@@ -14049,7 +14172,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.009224,
+          "pagerank": 0.009048,
           "inboundLinks": 2,
           "coveredBy": [],
           "mentionedBy": [],
@@ -14134,7 +14257,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.009923,
+          "pagerank": 0.009733,
           "inboundLinks": 2,
           "coveredBy": [],
           "mentionedBy": [],
@@ -14234,7 +14357,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.006858,
+          "pagerank": 0.006727,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -14278,7 +14401,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.007008,
+          "pagerank": 0.006874,
           "inboundLinks": 1,
           "coveredBy": [],
           "mentionedBy": [],
@@ -14372,7 +14495,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.017945,
+          "pagerank": 0.017601,
           "inboundLinks": 3,
           "coveredBy": [],
           "mentionedBy": [],
@@ -14452,7 +14575,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.012497,
+          "pagerank": 0.012258,
           "inboundLinks": 3,
           "coveredBy": [],
           "mentionedBy": [],
@@ -14562,7 +14685,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.007008,
+          "pagerank": 0.006874,
           "inboundLinks": 1,
           "coveredBy": [],
           "mentionedBy": [],
@@ -14607,7 +14730,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.007008,
+          "pagerank": 0.006874,
           "inboundLinks": 1,
           "coveredBy": [],
           "mentionedBy": [],
@@ -14652,7 +14775,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.012965,
+          "pagerank": 0.012716,
           "inboundLinks": 2,
           "coveredBy": [],
           "mentionedBy": [],
@@ -14702,7 +14825,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.007008,
+          "pagerank": 0.006874,
           "inboundLinks": 1,
           "coveredBy": [],
           "mentionedBy": [],
@@ -14752,7 +14875,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.007008,
+          "pagerank": 0.006874,
           "inboundLinks": 1,
           "coveredBy": [],
           "mentionedBy": [],
@@ -14797,7 +14920,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.007008,
+          "pagerank": 0.006874,
           "inboundLinks": 1,
           "coveredBy": [],
           "mentionedBy": [],
@@ -14852,7 +14975,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.007936,
+          "pagerank": 0.007784,
           "inboundLinks": 1,
           "coveredBy": [],
           "mentionedBy": [],
@@ -14891,7 +15014,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.008085,
+          "pagerank": 0.00793,
           "inboundLinks": 2,
           "coveredBy": [],
           "mentionedBy": [],
@@ -14935,7 +15058,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.014681,
+          "pagerank": 0.0144,
           "inboundLinks": 2,
           "coveredBy": [],
           "mentionedBy": [],
@@ -15043,7 +15166,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.008871,
+          "pagerank": 0.008701,
           "inboundLinks": 5,
           "coveredBy": [],
           "mentionedBy": [
@@ -15141,7 +15264,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.007008,
+          "pagerank": 0.006874,
           "inboundLinks": 1,
           "coveredBy": [],
           "mentionedBy": [],
@@ -15180,7 +15303,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.007936,
+          "pagerank": 0.007784,
           "inboundLinks": 1,
           "coveredBy": [],
           "mentionedBy": [],
@@ -15219,7 +15342,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.007936,
+          "pagerank": 0.007784,
           "inboundLinks": 1,
           "coveredBy": [],
           "mentionedBy": [],
@@ -15258,7 +15381,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.007936,
+          "pagerank": 0.007784,
           "inboundLinks": 1,
           "coveredBy": [],
           "mentionedBy": [],
@@ -15330,7 +15453,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.007936,
+          "pagerank": 0.007784,
           "inboundLinks": 1,
           "coveredBy": [],
           "mentionedBy": [],
@@ -15446,7 +15569,7 @@
           "aliases": "document unclassified"
         },
         "graph": {
-          "pagerank": 0.008722,
+          "pagerank": 0.008554,
           "inboundLinks": 4,
           "coveredBy": [],
           "mentionedBy": [
@@ -15533,7 +15656,7 @@
           "aliases": "document unclassified"
         },
         "graph": {
-          "pagerank": 0.007193,
+          "pagerank": 0.007055,
           "inboundLinks": 2,
           "coveredBy": [],
           "mentionedBy": [
@@ -15594,7 +15717,7 @@
           "aliases": "document unclassified"
         },
         "graph": {
-          "pagerank": 0.007193,
+          "pagerank": 0.007055,
           "inboundLinks": 1,
           "coveredBy": [],
           "mentionedBy": [],
@@ -15633,7 +15756,7 @@
           "aliases": "document project"
         },
         "graph": {
-          "pagerank": 0.008266,
+          "pagerank": 0.008108,
           "inboundLinks": 3,
           "coveredBy": [],
           "mentionedBy": [
@@ -15896,7 +16019,7 @@
           "aliases": "document project"
         },
         "graph": {
-          "pagerank": 0.011193,
+          "pagerank": 0.010978,
           "inboundLinks": 6,
           "coveredBy": [],
           "mentionedBy": [
@@ -16002,7 +16125,7 @@
           "aliases": "document unclassified"
         },
         "graph": {
-          "pagerank": 0.007193,
+          "pagerank": 0.007055,
           "inboundLinks": 2,
           "coveredBy": [],
           "mentionedBy": [
@@ -30319,9 +30442,11 @@
         },
         "graph": {
           "pagerank": 0,
-          "inboundLinks": 0,
+          "inboundLinks": 1,
           "coveredBy": [],
-          "mentionedBy": [],
+          "mentionedBy": [
+            "document:docs/agent-corpus/retrieval.md"
+          ],
           "areaId": "area:src/retrieval",
           "packageId": "package:@agentskit/doc-bridge",
           "inbound": [
@@ -30348,6 +30473,11 @@
             {
               "kind": "imports",
               "id": "module:tests/retrieval-corpus.test.ts",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions-symbol",
+              "id": "document:docs/agent-corpus/retrieval.md",
               "confidence": "observed"
             },
             {
@@ -30404,13 +30534,14 @@
         },
         "graph": {
           "pagerank": 0,
-          "inboundLinks": 5,
+          "inboundLinks": 6,
           "coveredBy": [],
           "mentionedBy": [
             "document:docs/agent-corpus/INDEX.md",
             "document:docs/agent-corpus/query.md",
             "document:docs/PRD-knowledge-retrieval-and-enrichment.md",
             "document:CHANGELOG.md",
+            "document:docs/agent-corpus/retrieval.md",
             "document:docs/spec/enrichment-overlay-v1.md"
           ],
           "areaId": "area:src/retrieval",
@@ -30459,6 +30590,11 @@
             {
               "kind": "mentions-symbol",
               "id": "document:CHANGELOG.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions-symbol",
+              "id": "document:docs/agent-corpus/retrieval.md",
               "confidence": "observed"
             },
             {
@@ -30566,7 +30702,7 @@
         },
         "graph": {
           "pagerank": 0,
-          "inboundLinks": 6,
+          "inboundLinks": 7,
           "coveredBy": [],
           "mentionedBy": [
             "document:CHANGELOG.md",
@@ -30574,6 +30710,7 @@
             "document:docs/PRD-knowledge-retrieval-and-enrichment.md",
             "document:docs/spec/retrieval-index-v1.md",
             "document:docs/agent-corpus/query.md",
+            "document:docs/agent-corpus/retrieval.md",
             "document:docs/spec/enrichment-overlay-v1.md"
           ],
           "areaId": "area:src/retrieval",
@@ -30617,6 +30754,11 @@
             {
               "kind": "mentions-symbol",
               "id": "document:docs/agent-corpus/query.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions-symbol",
+              "id": "document:docs/agent-corpus/retrieval.md",
               "confidence": "observed"
             },
             {
@@ -32299,11 +32441,12 @@
         },
         "graph": {
           "pagerank": 0,
-          "inboundLinks": 4,
+          "inboundLinks": 5,
           "coveredBy": [],
           "mentionedBy": [
             "document:docs/PRD-knowledge-retrieval-and-enrichment.md",
             "document:CHANGELOG.md",
+            "document:docs/agent-corpus/retrieval.md",
             "document:docs/PRD-knowledge-retrieval-and-enrichment.md",
             "document:docs/spec/retrieval-index-v1.md"
           ],
@@ -32378,6 +32521,11 @@
             {
               "kind": "mentions-symbol",
               "id": "document:CHANGELOG.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions-symbol",
+              "id": "document:docs/agent-corpus/retrieval.md",
               "confidence": "observed"
             },
             {
@@ -38030,7 +38178,7 @@
           "aliases": "doc-bridge @agentskit/doc-bridge package"
         },
         "graph": {
-          "pagerank": 0.009773,
+          "pagerank": 0.009586,
           "inboundLinks": 14,
           "coveredBy": [
             "document:docs/agent-corpus/doc-bridge.md"
