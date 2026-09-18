@@ -2,7 +2,7 @@
 type: module
 id: doc-bridge-plugins
 editRoot: src/plugins
-humanDoc: /docs/spec/analyzer-plugin-v1
+humanDoc: /docs/spec/config-v1
 owner: doc-bridge-maintainers
 lifecycle: active
 sourceOfTruth: src/plugins

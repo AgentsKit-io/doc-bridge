@@ -2,7 +2,7 @@
 type: module
 id: doc-bridge-audit
 editRoot: src/audit
-humanDoc: /docs/spec/documentation-audit-v1
+humanDoc: /docs/spec/documentation-standard-v1
 owner: doc-bridge-maintainers
 lifecycle: active
 sourceOfTruth: src/audit

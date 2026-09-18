@@ -2,7 +2,7 @@
 type: module
 id: doc-bridge-parity
 editRoot: src/parity
-humanDoc: /docs/spec/public-parity-v1
+humanDoc: /docs/RELEASE
 owner: doc-bridge-maintainers
 lifecycle: active
 sourceOfTruth: src/parity

@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "contentHash": "ae1242edf47202a37aaab261238755ee2584861dd5a93cbafa0afef38e1b7079",
+  "contentHash": "538a945db9a4e9a876096f544102e5de2e9218cbf634130fa4d15ca1ecdb59e0",
   "contentHashAlgo": "sha256-normalized-v1",
-  "generatedAt": "2026-09-18T01:14:44.298Z",
+  "generatedAt": "2026-09-18T01:20:28.442Z",
   "project": {
     "name": "@agentskit/doc-bridge",
     "root": "."
@@ -6746,7 +6746,7 @@
       "checks": [
         "pnpm test"
       ],
-      "humanDoc": "/docs/spec/documentation-audit-v1",
+      "humanDoc": "/docs/spec/documentation-standard-v1",
       "bridge": {
         "humanDoc": "linked"
       },
@@ -7206,7 +7206,7 @@
       "checks": [
         "pnpm test"
       ],
-      "humanDoc": "/docs/spec/benchmark-v1",
+      "humanDoc": "/docs/query",
       "bridge": {
         "humanDoc": "linked"
       },
@@ -7234,7 +7234,7 @@
       "checks": [
         "pnpm test"
       ],
-      "humanDoc": "/docs/spec/public-parity-v1",
+      "humanDoc": "/docs/RELEASE",
       "bridge": {
         "humanDoc": "linked"
       },
@@ -7290,7 +7290,7 @@
       "checks": [
         "pnpm test"
       ],
-      "humanDoc": "/docs/spec/analyzer-plugin-v1",
+      "humanDoc": "/docs/spec/config-v1",
       "bridge": {
         "humanDoc": "linked"
       },
@@ -7589,7 +7589,7 @@
         ],
         "checksSource": "default",
         "purpose": "Owns deterministic documentation quality, coverage, and structural validation. Every finding maps to code evidence.",
-        "humanDoc": "/docs/spec/documentation-audit-v1",
+        "humanDoc": "/docs/spec/documentation-standard-v1",
         "agentDoc": "docs/agent-corpus/audit.md"
       },
       "doc-bridge-bin": {
@@ -7777,7 +7777,7 @@
         ],
         "checksSource": "default",
         "purpose": "Owns benchmark measurement for entity, relation, and finding precision and recall, and efficiency metrics for agent latency, response bytes, and tokens.",
-        "humanDoc": "/docs/spec/benchmark-v1",
+        "humanDoc": "/docs/query",
         "agentDoc": "docs/agent-corpus/metrics.md"
       },
       "doc-bridge-parity": {
@@ -7788,7 +7788,7 @@
         ],
         "checksSource": "default",
         "purpose": "Owns detecting when public sentences have drifted from repository facts and reporting findings with remediation.",
-        "humanDoc": "/docs/spec/public-parity-v1",
+        "humanDoc": "/docs/RELEASE",
         "agentDoc": "docs/agent-corpus/parity.md"
       },
       "doc-bridge-playbook": {
@@ -7810,7 +7810,7 @@
         ],
         "checksSource": "default",
         "purpose": "Owns the analyzer plugin contract and registry. `AnalyzerPluginManifestSchema` defines a plugin's identity, languages, frameworks, capabilities, and resource limits. `AnalyzerPluginOutputSchema` validates entities, relations, coverage, and diagnostics.",
-        "humanDoc": "/docs/spec/analyzer-plugin-v1",
+        "humanDoc": "/docs/spec/config-v1",
         "agentDoc": "docs/agent-corpus/plugins.md"
       },
       "doc-bridge-query": {
@@ -7907,7 +7907,7 @@
     "changes": {}
   },
   "inputs": {
-    "hash": "cdf4e5c8213dc64f7edc02d3778d58e3c95d61b8a54ccb5392569ccc0a18c650",
+    "hash": "42803d479118f9185ba95346de7fe706cba4122c109310be703d45b2e1b9cff5",
     "fileCount": 431,
     "projectionVersion": 2
   },
@@ -7930,9 +7930,9 @@
   "projection": {
     "type": "retrieval-index",
     "schemaVersion": 1,
-    "contentHash": "43d30d3864f5c235dd56fe4742911c041f59b815169506d9d19c806b978c41c4",
+    "contentHash": "1e0cc6f3c60020b5e256ff9b722d6b8ccb1444272fe7a076328177a0edc6a8bd",
     "contentHashAlgo": "sha256-normalized-v1",
-    "snapshotHash": "b1d8c4f69ea849dd3a1fe58cba6f340e4c5f14de5e41caef1031aca1c2851eaa",
+    "snapshotHash": "1f6c73f636ba48ca5d47ee0dc4ef9305c61af5b694249e31286f92d2b4d992e0",
     "overlayHash": "f99666ff9119084dd25c2974ae64eb6935ec2aa785ff5ad478fb9d541f7a5e94",
     "configurationHash": "91d46a4ecbfe3b55878e0b3c7608819775cf7b18aeafcc8f689eddfa462622b4",
     "lexiconVersion": 1,
@@ -10865,7 +10865,7 @@
             }
           ]
         },
-        "contentHash": "7f6c3489016fb0a50af2ee38d5b140dd7777b89eaed0607b1eed314f7d06bcf6",
+        "contentHash": "2efb709696d7e7a036945d980d4d5ee468c89674d5d3a775e2dce02c73ac4a80",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -11744,7 +11744,7 @@
             }
           ]
         },
-        "contentHash": "76d0abf9360899cb9c16218a0e6d3df0badb7c3e37ea1faf01f584f332eeecd7",
+        "contentHash": "699aae426464b0396aec0257d690b07b41dd17cdc90394236d991d2b8622c8a6",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -11840,7 +11840,7 @@
             }
           ]
         },
-        "contentHash": "ffe106bfe18462d259056ee5e308632e6fd5c2d3969c4e48a3306aae27c73017",
+        "contentHash": "e35dd3f11258304c01ed5ccd95b19d5d4f20a2456bb79ec91925263c4c2dde74",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -11934,7 +11934,7 @@
             }
           ]
         },
-        "contentHash": "43ffff753ba80ff31e21af3a574f1d353d2c1c073960b6786ab9e5c3bdc3c2e5",
+        "contentHash": "68d592faa9ee027dfec6c95a2d089723e14c3bca52658299dec601db07afa581",
         "provenance": "observed",
         "confidence": "observed"
       },

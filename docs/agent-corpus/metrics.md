@@ -2,7 +2,7 @@
 type: module
 id: doc-bridge-metrics
 editRoot: src/metrics
-humanDoc: /docs/spec/benchmark-v1
+humanDoc: /docs/query
 owner: doc-bridge-maintainers
 lifecycle: active
 sourceOfTruth: src/metrics
