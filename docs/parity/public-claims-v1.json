@@ -137,9 +137,26 @@
       ],
       "severity": "error",
       "remediation": "Document `ak-docs parity` in the CLI reference, or remove the command."
+    },
+    {
+      "claimId": "checked-in-package-version",
+      "statement": "The README states which package version this checkout carries",
+      "owner": "platform",
+      "valueType": "semver",
+      "template": "checked-in package version is `{value}`",
+      "evidence": {
+        "kind": "artifact-field",
+        "path": "package.json",
+        "field": "version"
+      },
+      "required": [
+        "README.md"
+      ],
+      "severity": "error",
+      "remediation": "Restate the version from package.json on every surface that quotes it, or drop the sentence."
     }
   ],
   "exceptions": [],
-  "contentHash": "e188a7b2776a3c7c495016b462fd2c053faec9d29d0b824b607458b922fbd118",
+  "contentHash": "981acc99a59c6ba5d3cf79ac3c6d040353c4733d60800f48c22ed4756d0fdd99",
   "contentHashAlgo": "sha256-normalized-v1"
 }

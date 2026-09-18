@@ -297,19 +297,23 @@ gates without silently rebuilding them. It rejects non-exact package versions.
 See the [Marketplace guide](docs/MARKETPLACE.md).
 
 The guide is pinned to the published stable Action release `v1.7.45`; the
-checked-in package version is `1.8.0`.
+checked-in package version is `1.11.0`.
 
 Coverage is repository-specific. Run `ak-docs doctor --badge` locally to emit
 current handoff and human-bridge badges, or `pnpm coverage:badge` in CI; this
 README intentionally avoids publishing a stale static percentage.
 
-Or locally:
+Or locally, as two steps rather than one, because they answer different questions:
 
 ```bash
-ak-docs index && ak-docs gate run
+ak-docs index     # after changing docs or config — then review and commit the result
+ak-docs gate run  # verifies the committed index, which is what CI verifies
 ```
 
-Gate fails with `Index is stale. Run: ak-docs index` — same check in CI annotations.
+Chaining them (`index && gate run`) cannot report a stale index: it gates an artifact written a
+second earlier against a rebuild of the same tree. The gate's value is that the committed index
+and the repository agree, so run it the way CI does, against what is committed. It fails with
+`Index is stale. Run: ak-docs index` — the same check, and the same annotation, as in CI.
 
 ## Product surface
 

@@ -19,7 +19,8 @@
     "requiredRelationTargets": "internal"
   },
   "safety": {
-    "exclude": ["**/examples/**", "**/public/raw/**", ".changeset/**", ".impeccable.md", "**/CLAUDE.md"]
+    "exclude": ["**/.source/**",
+      "**/examples/**", "**/public/raw/**", ".changeset/**", ".impeccable.md", "**/CLAUDE.md"]
   },
   "audit": {
     "documentation": {
@@ -104,7 +105,7 @@
   },
   "gates": {
     "preset": "minimal",
-    "include": ["documentation-standard-v1"]
+    "include": ["documentation-standard-v1", "index-reproducible"]
   },
   "conformance": {
     "documentationStandardV1": {

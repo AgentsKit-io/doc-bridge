@@ -3,7 +3,15 @@ dist/
 coverage/
 *.tsbuildinfo
 .DS_Store
-.doc-bridge/
+# Unanchored on purpose, like the `llms.txt` rule below: every fixture project a test indexes
+# writes its own `.doc-bridge/`. The contents are excluded rather than the directory, because Git
+# cannot re-include a file whose parent directory is excluded.
+**/.doc-bridge/*
+# …except this repository's own index, anchored with a leading slash so no fixture is rescued. It
+# is the artifact `index-freshness` verifies, and a gate cannot verify what it regenerates first:
+# committing it is the whole point of the check, and what every consumer is told to do.
+# `workflow/` stays out — run state, and 191 MB of it.
+!/.doc-bridge/index.json
 llms.txt
 # …except a golden: that one is a fixture the render tests compare against, not an artifact a
 # build wrote. The pattern above is unanchored on purpose, since every fixture project a test

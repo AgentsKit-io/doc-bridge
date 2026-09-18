@@ -85,6 +85,31 @@ describe('a committed index has to be reproducible from a clean checkout', () =>
     expect(result.ignored).toEqual([])
   })
 
+  /*
+   * `check-ignore --verbose` emits a record for a path a `!` rule rescues, so the pattern field
+   * has to be read: a record whose pattern starts with `!` says the path is *not* ignored. Found
+   * by enabling the gate on this repository, whose `.gitignore` rescues its own committed index.
+   */
+  it('does not flag a path an ignore rule rescues with a negation', () => {
+    const root = mkdtempSync(join(tmpdir(), 'doc-bridge-repro-negated-'))
+    temporary.push(root)
+    write(root, '.gitignore', 'gen/*\n!gen/keep.ts\n.doc-bridge/\n')
+    write(root, 'gen/keep.ts', 'export const keep = 1\n')
+    write(root, 'gen/drop.ts', 'export const drop = 2\n')
+    write(root, '.doc-bridge/index.json', '{}\n')
+    run(root, 'init', '--quiet', '--initial-branch=main')
+    /* Deliberately not `add --all`: the rescued path stays untracked, which is the only state in
+     * which `check-ignore` reports it at all. */
+    run(root, 'add', '.gitignore')
+    run(root, 'add', '--force', '.doc-bridge/index.json')
+    run(root, 'commit', '--quiet', '--message', 'fixture')
+
+    const result = checkIndexReproducibility(root, '.doc-bridge/index.json', ['gen/keep.ts', 'gen/drop.ts'])
+
+    expect(result.checked).toBe(true)
+    expect(result.ignored.map((entry) => entry.path)).toEqual(['gen/drop.ts'])
+  })
+
   it('is silent when the index is not committed, because there is nothing to reproduce', () => {
     const root = fixture({ trackIndex: false })
     const result = checkIndexReproducibility(root, '.doc-bridge/index.json', ['lib/generated.ts'])
