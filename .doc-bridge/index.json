@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "contentHash": "69f13ee70ef0c41edaa72a1e0b07d6ce529b77024c8676d0761270acfd950cbf",
+  "contentHash": "ae1242edf47202a37aaab261238755ee2584861dd5a93cbafa0afef38e1b7079",
   "contentHashAlgo": "sha256-normalized-v1",
-  "generatedAt": "2026-09-18T01:04:27.242Z",
+  "generatedAt": "2026-09-18T01:14:44.298Z",
   "project": {
     "name": "@agentskit/doc-bridge",
     "root": "."
@@ -271,12 +271,12 @@
       "type": "document",
       "title": "Changelog",
       "path": "CHANGELOG.md",
-      "description": "25f16f3: Say when a committed index could not have come from a clean checkout.",
+      "description": "faf29f5: Stop reporting a path an ignore rule rescues as unreproducible.",
       "tags": [
         "document",
         "project"
       ],
-      "contentHash": "98614196974cb1b3f8c6e1f39b3a214bb6bb3ffdc719677dffb4ea43043d1b2a"
+      "contentHash": "7e216c524313f62d0f58142d95859539a39346d9965dad4ccaa065308dcef870"
     },
     {
       "id": "document:CODE_OF_CONDUCT.md",
@@ -1333,7 +1333,7 @@
         "document",
         "project"
       ],
-      "contentHash": "4b9ce450ff2fda833bb9d3c54f06ee9581657abf1a885a6f8eec0405e37787ec"
+      "contentHash": "f3c18ad57208c7a152497d4e1e3a7d35ace0dfb6a967eac2433ebedd4833d54f"
     },
     {
       "id": "document:SECURITY.md",
@@ -2592,7 +2592,7 @@
         "mjs",
         "scripts"
       ],
-      "contentHash": "f0e4af458d45db81c037797c29e4e0b73a2012f2ffb8b41744f577fc81f870f0"
+      "contentHash": "cc95e1833354e885dc549def25d8966b954d3ce3c39102d6753885a364a4534e"
     },
     {
       "id": "module:src/agents/registry-adapter.ts",
@@ -5729,7 +5729,7 @@
         "ts",
         "src"
       ],
-      "contentHash": "f9e3329d9bc71edbcfbf865ec760487c4e7b94a3f22f19486a5b931af39e39c7"
+      "contentHash": "78923b5a9df448a4f0c6bcebf4e528c56a6f6e74f873d7a49b4b866658b85655"
     },
     {
       "id": "module:src/workflow/engine.ts",
@@ -7907,7 +7907,7 @@
     "changes": {}
   },
   "inputs": {
-    "hash": "dd9c2e8d54f354f580d847c714bec6632b22a5560e37317c1100bd8aca51d259",
+    "hash": "cdf4e5c8213dc64f7edc02d3778d58e3c95d61b8a54ccb5392569ccc0a18c650",
     "fileCount": 431,
     "projectionVersion": 2
   },
@@ -7930,9 +7930,9 @@
   "projection": {
     "type": "retrieval-index",
     "schemaVersion": 1,
-    "contentHash": "73732d0ddc0eb5d23c07211d58e90d4ddd12a75f23df1f2a7cfa78f059e8d8af",
+    "contentHash": "43d30d3864f5c235dd56fe4742911c041f59b815169506d9d19c806b978c41c4",
     "contentHashAlgo": "sha256-normalized-v1",
-    "snapshotHash": "1eb94aaff808b74a3aa06d7277f5c292707173703e65f1c49e649c217a8f58f4",
+    "snapshotHash": "b1d8c4f69ea849dd3a1fe58cba6f340e4c5f14de5e41caef1031aca1c2851eaa",
     "overlayHash": "f99666ff9119084dd25c2974ae64eb6935ec2aa785ff5ad478fb9d541f7a5e94",
     "configurationHash": "91d46a4ecbfe3b55878e0b3c7608819775cf7b18aeafcc8f689eddfa462622b4",
     "lexiconVersion": 1,
@@ -7964,10 +7964,10 @@
       ],
       "averageFieldLength": {
         "aliases": 3.468409586056645,
-        "body": 72.49673202614379,
+        "body": 72.50108932461873,
         "headings": 4.703703703703703,
         "path": 5.668845315904139,
-        "summary": 5.814814814814815,
+        "summary": 5.816993464052287,
         "symbols": 11.88888888888889,
         "title": 3.122004357298475
       }
@@ -10122,7 +10122,7 @@
         "kind": "document",
         "path": "CHANGELOG.md",
         "title": "Changelog",
-        "summary": "25f16f3: Say when a committed index could not have come from a clean checkout.",
+        "summary": "faf29f5: Stop reporting a path an ignore rule rescues as unreproducible.",
         "audience": "human",
         "aliases": [],
         "tags": [
@@ -10131,11 +10131,11 @@
         ],
         "fields": {
           "title": "Changelog",
-          "headings": "Changelog 1.11.0 Minor Changes 1.10.1 Patch Changes 1.10.0 Minor Changes 1.9.0 Minor Changes Patch Changes 1.8.0 Minor Changes Patch Changes 1.7.45 Patch Changes 1.7.44 1.7.43 1.7.42 1.7.41 1.7.40 1.7.39 1.7.38 1.7.37 1.7.36 1.7.35 1.7.34 1.7.33 1.7.32 1.7.31 1.7.30 1.7.29 1.7.28 1.7.27 Patch Changes 1.7.26 Patch Changes 1.7.25 Patch Changes 1.7.24 Patch Changes 1.7.23 Patch Changes 1.7.22 Patch Changes 1.7.21 Patch Changes 1.7.20 Patch Changes 1.7.19 Patch Changes 1.7.18 Patch Changes 1.7.17 Patch Changes 1.7.16 Patch Changes 1.7.15 Patch Changes 1.7.14 Patch Changes 1.7.13 Patch Changes 1.7.12 Patch Changes",
+          "headings": "Changelog 1.11.1 Patch Changes 1.11.0 Minor Changes 1.10.1 Patch Changes 1.10.0 Minor Changes 1.9.0 Minor Changes Patch Changes 1.8.0 Minor Changes Patch Changes 1.7.45 Patch Changes 1.7.44 1.7.43 1.7.42 1.7.41 1.7.40 1.7.39 1.7.38 1.7.37 1.7.36 1.7.35 1.7.34 1.7.33 1.7.32 1.7.31 1.7.30 1.7.29 1.7.28 1.7.27 Patch Changes 1.7.26 Patch Changes 1.7.25 Patch Changes 1.7.24 Patch Changes 1.7.23 Patch Changes 1.7.22 Patch Changes 1.7.21 Patch Changes 1.7.20 Patch Changes 1.7.19 Patch Changes 1.7.18 Patch Changes 1.7.17 Patch Changes 1.7.16 Patch Changes 1.7.15 Patch Changes 1.7.14 Patch Changes 1.7.13 Patch Changes",
           "path": "CHANGELOG.md",
           "symbols": "",
-          "summary": "25f16f3: Say when a committed index could not have come from a clean checkout.",
-          "body": "Changelog 1.11.0 Minor Changes - 25f16f3: Say when a committed index could not have come from a clean checkout. A scan walks what is on disk and has no reason to consult .gitignore , so a generated module or document silently joins the corpus on a machine that has built and silently leaves it on one that has not. That is harmless while the index is rebuilt on every run. It is a defect the moment the index is committed so a gate can verify it — which is the setup index-freshness exists for: two checkouts of the same commit then produce different artifacts, the gate reports staleness that nothing caused, and regenerating cannot fix it because the next machine disagrees in the other direction. Dogfooding found this the expensive way. On a 25-package monorepo the freshness gate passed locally and failed in CI, twice, because pnpm lint had generated one .ts file into the corpus before the index was written; CI lints a narrower scope and never had the file. Diagnosing it took reading two CI logs and diffing file inventories. Git already knew the answer. ak-docs index now names those paths as it writes, and ak-docs doctor raises an index-not-reproducible warning, each with the ignore rule that matched — for example apps/docs-next/lib/ask-context.ts (apps/docs-next/.gitignore:13:lib/ask-context.ts) — so the fix is one lookup away: add the path to safety.exclude . Both are unconditional and neither changes an exit code or the doctor's score. Enforcement is the new index-reproducible gate, which is in no preset and has to be requested with gates.include: ['index-reproducible'] , because turning it on for every consumer would fail gates that pass for good reasons. The check reports success rather than failure when the index is not committed or the project is not a Git checkout, since there is nothing to reproduce in either case, and it does not flag a file that is both tracked and matched by an ignore rule — being committed is the point. 1.10.1 Patch Changes - 0926c57: Keep a committed index fresh across commits. The retrieval projection sealed its content hash over the discovery snapshot's hash, and a snapshot's hash covers its sourceRevision — the commit SHA when the working tree is clean, a digest of the scanned files when it is not. That is right for an artifact whose job is to say what one revision looked like, and wrong as a projection input: the projection is a function of what the snapshot observed, not of where it observed it. The consequence only appears in a repository that commits .doc-bridge/index.json , which is the recommended setup: committing the index changes the revision that the next run hashes, so the artifact was stale the moment it landed — landing it is a commit. ak-docs gate run reported index-freshness failing on an index that nothing had invalidated, and no regenerate could fix it, because the fix was itself a commit. Dogfooding on a 25-package monorepo, the gate could not be made to pass twice in a row. The seal is now over what the snapshot observed: the entities, the relations and the analyzer identity that produced them, alongside the overlay and configuration hashes it already covered. The artifact still carries snapshotHash , now documented as provenance rather than a seal input, so a reader can still say which snapshot a projection came from. RETRIEVAL PROJECTION VERSION goes to 2, so no reader compares a hash across the change, and every index's content hash changes once on the next ak-docs index . 1.10.0 Minor Changes - 97851d0: Let a repository say which directories are not areas. An area is the unit of architecture between a package and a file, derived as the first directory level under a package's source roots. In a monorepo where every package keeps tests/ and fixtures/ beside src/ , that derives one area per directory — and the doctor's connectivity dimension then asks for a document about a folder of test data. Dogfooding on a 26-package monorepo, 43 of its 81 undocumented areas were tests/ or fi",
+          "summary": "faf29f5: Stop reporting a path an ignore rule rescues as unreproducible.",
+          "body": "Changelog 1.11.1 Patch Changes - faf29f5: Stop reporting a path an ignore rule rescues as unreproducible. git check-ignore --verbose emits a record for every path that matched a rule, including the path a ! negation rescues — and such a path is precisely one Git does not ignore. The reproducibility check read the record without reading the pattern, so dist/ plus !dist/keep.js reported dist/keep.js as a reason the index could not be rebuilt from a clean checkout. The opposite of what the rule says, stated confidently. The window is narrow: check-ignore stops reporting a path once it is committed, and a path rescued by a negation is usually committed, which is the point of rescuing it. It shows up while such a path is still untracked — a file added but not yet committed. Found by turning the new index-reproducible gate on in this repository, which had to add !.doc-bridge/index.json to its own .gitignore to commit the index the gate verifies. 1.11.0 Minor Changes - 25f16f3: Say when a committed index could not have come from a clean checkout. A scan walks what is on disk and has no reason to consult .gitignore , so a generated module or document silently joins the corpus on a machine that has built and silently leaves it on one that has not. That is harmless while the index is rebuilt on every run. It is a defect the moment the index is committed so a gate can verify it — which is the setup index-freshness exists for: two checkouts of the same commit then produce different artifacts, the gate reports staleness that nothing caused, and regenerating cannot fix it because the next machine disagrees in the other direction. Dogfooding found this the expensive way. On a 25-package monorepo the freshness gate passed locally and failed in CI, twice, because pnpm lint had generated one .ts file into the corpus before the index was written; CI lints a narrower scope and never had the file. Diagnosing it took reading two CI logs and diffing file inventories. Git already knew the answer. ak-docs index now names those paths as it writes, and ak-docs doctor raises an index-not-reproducible warning, each with the ignore rule that matched — for example apps/docs-next/lib/ask-context.ts (apps/docs-next/.gitignore:13:lib/ask-context.ts) — so the fix is one lookup away: add the path to safety.exclude . Both are unconditional and neither changes an exit code or the doctor's score. Enforcement is the new index-reproducible gate, which is in no preset and has to be requested with gates.include: ['index-reproducible'] , because turning it on for every consumer would fail gates that pass for good reasons. The check reports success rather than failure when the index is not committed or the project is not a Git checkout, since there is nothing to reproduce in either case, and it does not flag a file that is both tracked and matched by an ignore rule — being committed is the point. 1.10.1 Patch Changes - 0926c57: Keep a committed index fresh across commits. The retrieval projection sealed its content hash over the discovery snapshot's hash, and a snapshot's hash covers its sourceRevision — the commit SHA when the working tree is clean, a digest of the scanned files when it is not. That is right for an artifact whose job is to say what one revision looked like, and wrong as a projection input: the projection is a function of what the snapshot observed, not of where it observed it. The consequence only appears in a repository that commits .doc-bridge/index.json , which is the recommended setup: committing the index changes the revision that the next run hashes, so the artifact was stale the moment it landed — landing it is a commit. ak-docs gate run reported index-freshness failing on an index that nothing had invalidated, and no regenerate could fix it, because the fix was itself a commit. Dogfooding on a 25-package monorepo, the gate could not be made to pass twice in a row. The seal is now over what the snapshot observed: the entities, the relations and t",
           "aliases": "document project"
         },
         "graph": {
@@ -10351,7 +10351,7 @@
             }
           ]
         },
-        "contentHash": "98614196974cb1b3f8c6e1f39b3a214bb6bb3ffdc719677dffb4ea43043d1b2a",
+        "contentHash": "7e216c524313f62d0f58142d95859539a39346d9965dad4ccaa065308dcef870",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -18029,7 +18029,7 @@
             }
           ]
         },
-        "contentHash": "4b9ce450ff2fda833bb9d3c54f06ee9581657abf1a885a6f8eec0405e37787ec",
+        "contentHash": "f3c18ad57208c7a152497d4e1e3a7d35ace0dfb6a967eac2433ebedd4833d54f",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -21556,7 +21556,7 @@
           "inbound": [],
           "outbound": []
         },
-        "contentHash": "f0e4af458d45db81c037797c29e4e0b73a2012f2ffb8b41744f577fc81f870f0",
+        "contentHash": "cc95e1833354e885dc549def25d8966b954d3ce3c39102d6753885a364a4534e",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -36095,7 +36095,7 @@
           ],
           "outbound": []
         },
-        "contentHash": "f9e3329d9bc71edbcfbf865ec760487c4e7b94a3f22f19486a5b931af39e39c7",
+        "contentHash": "78923b5a9df448a4f0c6bcebf4e528c56a6f6e74f873d7a49b4b866658b85655",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -40494,7 +40494,7 @@
           ],
           "outbound": []
         },
-        "contentHash": "b696253ca16912de3f2afde8077394a124ab06365c52f9ae3c7aa6c7a7d23f5f",
+        "contentHash": "c6c23bedb5317e18e1db92f58222dfa2d2e7d50db3bb7eee5814769f3c432e48",
         "provenance": "observed",
         "confidence": "observed"
       }
