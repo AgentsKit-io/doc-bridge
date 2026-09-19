@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "contentHash": "538a945db9a4e9a876096f544102e5de2e9218cbf634130fa4d15ca1ecdb59e0",
+  "contentHash": "b8e07de732362b6f41e49871239f816f7f3240497babe8cc7427f0fcb68e51b5",
   "contentHashAlgo": "sha256-normalized-v1",
-  "generatedAt": "2026-09-18T01:20:28.442Z",
+  "generatedAt": "2026-09-19T20:05:54.281Z",
   "project": {
     "name": "@agentskit/doc-bridge",
     "root": "."
@@ -1636,7 +1636,7 @@
         "tsx",
         "docs"
       ],
-      "contentHash": "8650042e685c8c5e9f5c95b8d5cfdb2fdfc04c32752710ce7292379849121252"
+      "contentHash": "c2c959961c58f25e455e66d1d2ab5a0124bee7b3ad394a951716be119962c2d9"
     },
     {
       "id": "module:apps/docs/app/for-agents/page.tsx",
@@ -1856,7 +1856,7 @@
         "tsx",
         "components"
       ],
-      "contentHash": "8772b1feea878eb5f8faa5fa63f40c89f660c0d61099b047297b01119ac05fe4"
+      "contentHash": "37120e4d2d147039f985e323228da3ce2e405fa19052e8dff47363cd705a6009"
     },
     {
       "id": "module:apps/docs/global.d.ts",
@@ -2098,7 +2098,7 @@
         "mjs",
         "scripts"
       ],
-      "contentHash": "06c347a605db246e022e5ef85815eba61aa390b9090698becf9d709ff4c44b07"
+      "contentHash": "caa402ec8b7932dc36d8115dd137866158a58245ed023981aec68f17533cd23d"
     },
     {
       "id": "module:scripts/build-mcpb.mjs",
@@ -7907,7 +7907,7 @@
     "changes": {}
   },
   "inputs": {
-    "hash": "42803d479118f9185ba95346de7fe706cba4122c109310be703d45b2e1b9cff5",
+    "hash": "db431c32424bf7281306530e70dd40cec2f3e701d0b941f9201c1f789de7d708",
     "fileCount": 431,
     "projectionVersion": 2
   },
@@ -7930,9 +7930,9 @@
   "projection": {
     "type": "retrieval-index",
     "schemaVersion": 1,
-    "contentHash": "1e0cc6f3c60020b5e256ff9b722d6b8ccb1444272fe7a076328177a0edc6a8bd",
+    "contentHash": "bdc3d9b6372111b7627593c13a5d4d3f3e813ed71947eb04552f1c39214c9707",
     "contentHashAlgo": "sha256-normalized-v1",
-    "snapshotHash": "1f6c73f636ba48ca5d47ee0dc4ef9305c61af5b694249e31286f92d2b4d992e0",
+    "snapshotHash": "57b091bed8cd1bc9fcfceb0e90ba59d88b281065cc7577d476fbca7139c9a822",
     "overlayHash": "f99666ff9119084dd25c2974ae64eb6935ec2aa785ff5ad478fb9d541f7a5e94",
     "configurationHash": "91d46a4ecbfe3b55878e0b3c7608819775cf7b18aeafcc8f689eddfa462622b4",
     "lexiconVersion": 1,
@@ -18862,7 +18862,7 @@
           "inbound": [],
           "outbound": []
         },
-        "contentHash": "8650042e685c8c5e9f5c95b8d5cfdb2fdfc04c32752710ce7292379849121252",
+        "contentHash": "c2c959961c58f25e455e66d1d2ab5a0124bee7b3ad394a951716be119962c2d9",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -19402,7 +19402,7 @@
           "inbound": [],
           "outbound": []
         },
-        "contentHash": "8772b1feea878eb5f8faa5fa63f40c89f660c0d61099b047297b01119ac05fe4",
+        "contentHash": "37120e4d2d147039f985e323228da3ce2e405fa19052e8dff47363cd705a6009",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -20097,7 +20097,7 @@
           ],
           "outbound": []
         },
-        "contentHash": "06c347a605db246e022e5ef85815eba61aa390b9090698becf9d709ff4c44b07",
+        "contentHash": "caa402ec8b7932dc36d8115dd137866158a58245ed023981aec68f17533cd23d",
         "provenance": "observed",
         "confidence": "observed"
       },
