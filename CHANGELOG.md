@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.11.2
+
+### Patch Changes
+
+- 221b4a6: Retire the public AKOS ecosystem contract and generated documentation references.
+
 ## 1.11.1
 
 ### Patch Changes
