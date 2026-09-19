@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "contentHash": "b8e07de732362b6f41e49871239f816f7f3240497babe8cc7427f0fcb68e51b5",
+  "contentHash": "0a70f65585c927674e27b1f634b068d4ae40771959b793b7bfedc20060beccae",
   "contentHashAlgo": "sha256-normalized-v1",
-  "generatedAt": "2026-09-19T20:05:54.281Z",
+  "generatedAt": "2026-09-19T21:03:35.583Z",
   "project": {
     "name": "@agentskit/doc-bridge",
     "root": "."
@@ -2098,7 +2098,7 @@
         "mjs",
         "scripts"
       ],
-      "contentHash": "caa402ec8b7932dc36d8115dd137866158a58245ed023981aec68f17533cd23d"
+      "contentHash": "06c347a605db246e022e5ef85815eba61aa390b9090698becf9d709ff4c44b07"
     },
     {
       "id": "module:scripts/build-mcpb.mjs",
@@ -2210,7 +2210,7 @@
         "test",
         "scripts"
       ],
-      "contentHash": "eb0e20efdb5d9fed43906824d697ed6fc9786f21e83336eb793a555c0bb2d2b0"
+      "contentHash": "0442a21b2eac46b25f35877e228aa6d01ce71e8a42f8b9331bc13e38c8dab2b1"
     },
     {
       "id": "module:scripts/generate-study-charts.mjs",
@@ -2410,7 +2410,7 @@
         "mjs",
         "scripts"
       ],
-      "contentHash": "6252a9d8353b4a75d92b56b714e54d4bf59caf49e199a052ab6090cf8073c3b7"
+      "contentHash": "fcf38e24cb85b540e8714e7737588ef34cfd9ac3b42ebe6b1057994ac5cf7d05"
     },
     {
       "id": "module:scripts/smoke-real-docsites.mjs",
@@ -2997,7 +2997,7 @@
         "ts",
         "conformance"
       ],
-      "contentHash": "21dc1e93a44faf55811f7892d03f5eea3cd3f4053caead6510b8a78e3d19e0a6"
+      "contentHash": "f99055a3bf3d90e85cdb22be7953cfc0fa97018c334ec8beb896cbce85119527"
     },
     {
       "id": "module:src/discovery/areas.ts",
@@ -5974,7 +5974,7 @@
         "test",
         "tests"
       ],
-      "contentHash": "da3d077b1f0560278839f6b57c16fdbfc2665502a8fefa83e3ced1f99ca541c5"
+      "contentHash": "1a33d12f560b1e73c241cde5c23b51312184aba15ac8b3e3429f2b9dc96ee9df"
     },
     {
       "id": "module:tests/ecosystem-llms.test.ts",
@@ -7907,7 +7907,7 @@
     "changes": {}
   },
   "inputs": {
-    "hash": "db431c32424bf7281306530e70dd40cec2f3e701d0b941f9201c1f789de7d708",
+    "hash": "8cac005281cc601231f9b0e45ea02011661ed29d32f308bc347c09e6d0797f96",
     "fileCount": 431,
     "projectionVersion": 2
   },
@@ -7930,9 +7930,9 @@
   "projection": {
     "type": "retrieval-index",
     "schemaVersion": 1,
-    "contentHash": "bdc3d9b6372111b7627593c13a5d4d3f3e813ed71947eb04552f1c39214c9707",
+    "contentHash": "2bf1c2a54943935fef55a6972895f511c9288b74c25067c4148c4e7478ef73e0",
     "contentHashAlgo": "sha256-normalized-v1",
-    "snapshotHash": "57b091bed8cd1bc9fcfceb0e90ba59d88b281065cc7577d476fbca7139c9a822",
+    "snapshotHash": "80f8566a107ae4595315cfb2245a2aa0c274f35c459ada2df6e9ecdd94e8c787",
     "overlayHash": "f99666ff9119084dd25c2974ae64eb6935ec2aa785ff5ad478fb9d541f7a5e94",
     "configurationHash": "91d46a4ecbfe3b55878e0b3c7608819775cf7b18aeafcc8f689eddfa462622b4",
     "lexiconVersion": 1,
@@ -20097,7 +20097,7 @@
           ],
           "outbound": []
         },
-        "contentHash": "caa402ec8b7932dc36d8115dd137866158a58245ed023981aec68f17533cd23d",
+        "contentHash": "06c347a605db246e022e5ef85815eba61aa390b9090698becf9d709ff4c44b07",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -20427,7 +20427,7 @@
           "inbound": [],
           "outbound": []
         },
-        "contentHash": "eb0e20efdb5d9fed43906824d697ed6fc9786f21e83336eb793a555c0bb2d2b0",
+        "contentHash": "0442a21b2eac46b25f35877e228aa6d01ce71e8a42f8b9331bc13e38c8dab2b1",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -21010,7 +21010,7 @@
           "inbound": [],
           "outbound": []
         },
-        "contentHash": "6252a9d8353b4a75d92b56b714e54d4bf59caf49e199a052ab6090cf8073c3b7",
+        "contentHash": "fcf38e24cb85b540e8714e7737588ef34cfd9ac3b42ebe6b1057994ac5cf7d05",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -23867,7 +23867,7 @@
           ],
           "outbound": []
         },
-        "contentHash": "21dc1e93a44faf55811f7892d03f5eea3cd3f4053caead6510b8a78e3d19e0a6",
+        "contentHash": "f99055a3bf3d90e85cdb22be7953cfc0fa97018c334ec8beb896cbce85119527",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -37063,7 +37063,7 @@
             }
           ]
         },
-        "contentHash": "da3d077b1f0560278839f6b57c16fdbfc2665502a8fefa83e3ced1f99ca541c5",
+        "contentHash": "1a33d12f560b1e73c241cde5c23b51312184aba15ac8b3e3429f2b9dc96ee9df",
         "provenance": "observed",
         "confidence": "observed"
       },
