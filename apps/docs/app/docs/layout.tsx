@@ -13,7 +13,6 @@ export default function Layout({ children }: { children: ReactNode }) {
         { text: 'Registry', url: 'https://registry.agentskit.io', external: true },
         { text: 'Chat', url: 'https://chat.agentskit.io', external: true },
         { text: 'Playbook', url: 'https://playbook.agentskit.io', external: true },
-        { text: 'AKOS', url: 'https://akos.agentskit.io', external: true },
         { text: 'GitHub', url: 'https://github.com/AgentsKit-io/doc-bridge', external: true },
       ]}
     >

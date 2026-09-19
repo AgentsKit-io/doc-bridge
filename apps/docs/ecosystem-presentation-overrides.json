@@ -8,6 +8,5 @@
     "role": "Connect human and agent documentation.",
     "hook": "Make repository context deterministic."
   },
-  "code-review": { "home": "https://github.com/AgentsKit-io/code-review-cli", "role": "Verify changes before merge.", "hook": "Run a focused, low-noise model review." },
-  "akos": { "home": "https://akos.agentskit.io", "role": "Operate and govern in production.", "hook": "Need an enterprise solution? Add orchestration, policy, and audit." }
+  "code-review": { "home": "https://github.com/AgentsKit-io/code-review-cli", "role": "Verify changes before merge.", "hook": "Run a focused, low-noise model review." }
 }

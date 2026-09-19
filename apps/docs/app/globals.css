@@ -46,7 +46,6 @@ table { display: block; max-width: 100%; overflow-x: auto; }
 .ecosystem-peer-chat { border-top-color: #f59e0b; }
 .ecosystem-peer-playbook { border-top-color: #8b5cf6; }
 .ecosystem-peer-code-review { border-top-color: #f97316; }
-.ecosystem-peer-akos { border-top-color: #10b981; }
 .ecosystem-peers-compact { margin-top: 4rem; border-top: 1px solid color-mix(in srgb, currentColor 14%, transparent); padding: 3rem 0 1rem; }
 .ecosystem-peers-compact h2 { font-size: 1.75rem; }
 .ecosystem-peers-compact .ecosystem-peer-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 1.5rem; }
