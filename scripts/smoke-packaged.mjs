@@ -88,7 +88,7 @@ try {
   }
   const retrieve = run(bin, ['retrieve', 'Self-Describe discovery'], market)
   if (!retrieve.includes('self-describe-pattern')) throw new Error('retrieve did not find Self-Describe Pattern')
-  if (/akos/i.test(retrieve)) throw new Error('retrieve crawled an unrelated origin')
+  if (/unrelated\.invalid/i.test(retrieve)) throw new Error('retrieve crawled an unrelated origin')
   run(bin, ['memory', 'promote'], market)
   run(bin, ['gate', 'run'], market)
 

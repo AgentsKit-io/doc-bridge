@@ -11,7 +11,7 @@ const manifest = JSON.parse(readFileSync(resolve(root, 'ecosystem.json'), 'utf8'
 const overrides = JSON.parse(readFileSync(resolve(root, 'apps/docs/ecosystem-presentation-overrides.json'), 'utf8'))
 const publicDocs = JSON.parse(readFileSync(resolve(root, 'apps/docs/public-docs.json'), 'utf8'))
 const publicAgentDocs = JSON.parse(readFileSync(resolve(root, 'apps/docs/public-agent-docs.json'), 'utf8'))
-const ecosystem = manifest.products.filter((product) => product.id !== 'akos').map((product) => ({ ...product, ...overrides[product.id] }))
+const ecosystem = manifest.products.map((product) => ({ ...product, ...overrides[product.id] }))
 const knowledge = JSON.parse(readFileSync(resolve(publicRoot, 'deterministic/knowledge.json'), 'utf8'))
 const sitemap = readFileSync(resolve(root, 'apps/docs/out/sitemap.xml'), 'utf8')
 
