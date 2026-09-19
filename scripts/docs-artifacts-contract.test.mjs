@@ -11,7 +11,7 @@ const manifest = JSON.parse(readFileSync(resolve(root, 'ecosystem.json'), 'utf8'
 const overrides = JSON.parse(readFileSync(resolve(root, 'apps/docs/ecosystem-presentation-overrides.json'), 'utf8'))
 const publicDocs = JSON.parse(readFileSync(resolve(root, 'apps/docs/public-docs.json'), 'utf8'))
 const publicAgentDocs = JSON.parse(readFileSync(resolve(root, 'apps/docs/public-agent-docs.json'), 'utf8'))
-const ecosystem = manifest.products.map((product) => ({ ...product, ...overrides[product.id] }))
+const ecosystem = manifest.products.filter((product) => product.id !== 'akos').map((product) => ({ ...product, ...overrides[product.id] }))
 const knowledge = JSON.parse(readFileSync(resolve(publicRoot, 'deterministic/knowledge.json'), 'utf8'))
 const sitemap = readFileSync(resolve(root, 'apps/docs/out/sitemap.xml'), 'utf8')
 
@@ -29,10 +29,10 @@ test('concise and full LLM surfaces have distinct progressive-disclosure roles',
   }
 })
 
-test('all seven products are discoverable and the six peers resolve locally', () => {
-  assert.equal(ecosystem.length, 7)
-  assert.deepEqual(new Set(ecosystem.map(({ id }) => id)).size, 7)
-  assert.deepEqual(new Set(Object.keys(overrides)), new Set(manifest.products.map(({ id }) => id)))
+test('all public products are discoverable and peers resolve locally', () => {
+  assert.equal(ecosystem.length, 6)
+  assert.deepEqual(new Set(ecosystem.map(({ id }) => id)).size, 6)
+  assert.deepEqual(new Set(Object.keys(overrides)), new Set(ecosystem.map(({ id }) => id)))
   for (const product of ecosystem) {
     const primary = product.surfaces?.docs ?? product.surfaces?.home ?? product.home
     assert.ok(llms.includes(`[${product.name}](${primary})`), `missing ${product.name}`)
@@ -41,7 +41,7 @@ test('all seven products are discoverable and the six peers resolve locally', ()
   assert.ok(llms.includes('Machine index:'), 'must include machine indexes')
   assert.ok(llms.includes('Role: `understanding`'), 'must include product roles')
   const peerEntries = knowledge.entries.filter(({ id }) => id.startsWith('ecosystem:'))
-  assert.equal(peerEntries.length, 6)
+  assert.equal(peerEntries.length, 5)
   assert.ok(peerEntries.every(({ answer }) => answer.citations[0]?.href.startsWith('https://')))
 })
 
