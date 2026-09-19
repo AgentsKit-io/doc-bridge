@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
   "repository": "AgentsKit-io/agentskit",
-  "ref": "main",
+  "ref": "codex/akos-retire-public",
   "files": {
-    "ecosystem.json": "21f28c132685f9984979afc83b66a61310e2bb79666d826662f7e8f234fbf36f",
-    "ecosystem-claims.json": "6e77a801d93e58e6580fe5d69d8899bf8d396bffba367f3a705fa751aea83a06"
+    "ecosystem.json": "fec4e2c23743d45a142b7be23fad6aecd161a72795fbc1c00ff6e10382c11c24",
+    "ecosystem-claims.json": "e45446d2ec0824a6ee7121028e2127542b2ed0e5e30179213e49b1389f117539"
   }
 }
