@@ -50,11 +50,11 @@ const ManifestSchema = z.object({
   schemaVersion: z.literal(2),
   parentBrand: z.object({ id: NonEmptyStringSchema, name: NonEmptyStringSchema }).passthrough(),
   products: z.array(ProductSchema).min(1),
-  // Historical four-product shim or full seven-product projection of products[].
+  // Legacy three-product shim or full public product projection of products[].
   properties: z
     .array(LegacyPropertySchema)
-    .refine((value) => value.length === 4 || value.length === 7, {
-      message: 'must project either the legacy four products or the full seven-product catalog',
+    .refine((value) => value.length === 3 || value.length === 6, {
+      message: 'must project either the legacy three products or the full public product catalog',
     }),
   builder: z.object({ id: NonEmptyStringSchema, name: NonEmptyStringSchema, url: HttpsUrlSchema }).passthrough().optional(),
 }).passthrough()
@@ -94,17 +94,16 @@ const ClaimsSchema = z.object({
   products: z.array(ClaimProductSchema),
 }).passthrough()
 
-/** Historical four-product shim order. */
-const LEGACY_FOUR_PRODUCT_IDS = ['agentskit', 'akos', 'playbook', 'registry'] as const
-/** Full seven-product projection order (matches products[]). */
-const FULL_SEVEN_PRODUCT_IDS = [
+/** Historical three-product shim order. */
+const LEGACY_PRODUCT_IDS = ['agentskit', 'playbook', 'registry'] as const
+/** Full public product projection order (matches products[]). */
+const PUBLIC_PRODUCT_IDS = [
   'agentskit',
   'registry',
   'agentskit-chat',
   'playbook',
   'doc-bridge',
   'code-review',
-  'akos',
 ] as const
 
 export const parseCanonicalEcosystemContract = (
@@ -137,8 +136,7 @@ export const parseCanonicalEcosystemContract = (
     }
   }
 
-  const propertyIds =
-    manifest.properties.length === 7 ? FULL_SEVEN_PRODUCT_IDS : LEGACY_FOUR_PRODUCT_IDS
+  const propertyIds = manifest.properties.length === 6 ? PUBLIC_PRODUCT_IDS : LEGACY_PRODUCT_IDS
 
   for (const [index, id] of propertyIds.entries()) {
     const legacy = manifest.properties[index]

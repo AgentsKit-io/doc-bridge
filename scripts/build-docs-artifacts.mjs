@@ -188,7 +188,7 @@ const commandEntries = [
   answer: { markdown: `## ${label}\n\n\`\`\`bash\n${command}\n\`\`\`\n\n${description}`, citations: [{ id: 'doc:spec:cli', title: 'CLI reference', href: `${origin}/docs/spec/cli/` }] },
 }))
 
-const ecosystemEntries = ecosystem.filter((product) => product.id !== 'doc-bridge' && product.id !== 'akos').map((product) => ({
+const ecosystemEntries = ecosystem.filter((product) => product.id !== 'doc-bridge').map((product) => ({
   id: `ecosystem:${product.id}`,
   kind: 'document',
   label: product.name,
