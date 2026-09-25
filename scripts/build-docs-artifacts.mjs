@@ -84,12 +84,11 @@ function descriptionOf(markdown) {
     ?? 'Canonical Doc Bridge documentation.'
 }
 
-const ecosystemBarPath = join(publicRoot, 'ecosystem-bar.js')
-const ecosystemBar = await readFile(ecosystemBarPath)
+// The ecosystem bar, tour, footer, and aurora come from the hosted AgentsKit shell
+// (`{NEXT_PUBLIC_AGENTSKIT_SHELL_ORIGIN}/shell/v1.*`); nothing shell-related is self-hosted here.
 await rm(publicRoot, { recursive: true, force: true })
 await mkdir(join(publicRoot, 'raw'), { recursive: true })
 await mkdir(join(publicRoot, 'deterministic'), { recursive: true })
-await writeFile(ecosystemBarPath, ecosystemBar)
 
 const files = await walk(docsRoot)
 const documents = await Promise.all(files.map(async (path) => {
@@ -100,7 +99,11 @@ const documents = await Promise.all(files.map(async (path) => {
 }))
 const manifest = JSON.parse(await readFile(ecosystemManifestPath, 'utf8'))
 const ecosystemOverrides = JSON.parse(await readFile(ecosystemOverridesPath, 'utf8'))
-const ecosystem = manifest.products
+// Canonical public ecosystem: the products the shared bar lists (Playbook is not shown).
+const publicProducts = manifest.products
+  .filter((product) => product.public && product.navigation?.showInBar)
+  .sort((left, right) => left.navigation.order - right.navigation.order)
+const ecosystem = publicProducts
   .map((product) => ({
     ...product,
     ...ecosystemOverrides[product.id],
@@ -123,7 +126,7 @@ for (const doc of rawDocuments) {
 
 await cp(join(root, 'docs/landing/assets'), join(publicRoot, 'assets'), { recursive: true })
 
-const productsForLlms = [...manifest.products]
+const productsForLlms = [...publicProducts]
   .map((product) => ({
     id: product.id,
     name: product.name,

@@ -1,6 +1,6 @@
 @import './brand-tokens.css';
 
-/* Home-only extension of the shared AgentsKit canvas and liquid cursor treatment. */
+/* Home-only extension of the shared AgentsKit canvas; the aurora layer comes from shell v1. */
 .bridge-home {
   --ak-font-body: var(--font-inter), Inter, ui-sans-serif, system-ui, sans-serif;
   --ak-font-mono: var(--font-jetbrains), 'JetBrains Mono', ui-monospace, monospace;
@@ -16,64 +16,19 @@
   isolation: isolate;
   overflow: clip;
   background-color: var(--bridge-home-bg);
-  background-image:
-    radial-gradient(ellipse 58vw 72vh at 12% 8%, color-mix(in srgb, var(--bridge-home-blue) 10%, transparent), transparent 72%),
-    radial-gradient(ellipse 52vw 76vh at 92% 54%, color-mix(in srgb, var(--bridge-home-green) 8%, transparent), transparent 76%),
-    radial-gradient(ellipse 48vw 62vh at 36% 100%, color-mix(in srgb, var(--bridge-home-blue) 6%, transparent), transparent 76%);
   color: var(--bridge-home-fg);
   font-family: var(--ak-font-body);
   -webkit-font-smoothing: antialiased;
 }
 
-.bridge-liquid-cursor {
-  position: absolute;
-  z-index: 0;
-  inset: 0;
-  overflow: hidden;
-  pointer-events: none;
-  opacity: .48;
-  transition: opacity 500ms ease;
-  background:
-    radial-gradient(ellipse 58% 92% at 78% 22%, color-mix(in srgb, var(--bridge-home-blue) 14%, transparent), transparent 74%),
-    radial-gradient(ellipse 48% 72% at 18% 86%, color-mix(in srgb, var(--bridge-home-green) 10%, transparent), transparent 76%);
-}
-.bridge-liquid-cursor[data-active='true'] { opacity: .68; }
-.bridge-liquid-cursor i {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: min(48rem, 92vw);
-  aspect-ratio: 1;
-  border-radius: 50%;
-  transform: translate3d(var(--cursor-x, 50vw), var(--cursor-y, 15rem), 0) translate(-50%, -50%);
-  transition: transform 760ms cubic-bezier(.16, 1, .3, 1);
-  will-change: transform;
-  background: radial-gradient(ellipse, color-mix(in srgb, var(--bridge-home-blue) 18%, transparent), transparent 68%);
-}
-.bridge-liquid-cursor i + i {
-  width: min(36rem, 74vw);
-  transform: translate3d(calc(var(--cursor-x, 50vw) - 5rem), calc(var(--cursor-y, 15rem) + 3rem), 0) translate(-50%, -50%);
-  transition-duration: 1100ms;
-  background: radial-gradient(ellipse, color-mix(in srgb, var(--bridge-home-green) 15%, transparent), transparent 68%);
-}
-.bridge-home-content, .bridge-home-footer { position: relative; z-index: 1; }
+.bridge-home-content, agentskit-footer { position: relative; z-index: 1; }
+agentskit-footer, agentskit-ecosystem { display: block; }
 .bridge-home-header {
   z-index: 1;
   border-color: color-mix(in srgb, var(--bridge-home-border) 78%, transparent) !important;
   background: color-mix(in srgb, var(--bridge-home-bg) 58%, transparent) !important;
   -webkit-backdrop-filter: blur(18px) saturate(125%);
   backdrop-filter: blur(18px) saturate(125%);
-}
-.bridge-home-header > nav > a:first-child > span:first-child {
-  background: color-mix(in srgb, var(--bridge-home-surface) 80%, transparent);
-  color: var(--bridge-home-blue);
-  border: 1px solid var(--bridge-home-border);
-}
-.bridge-home-footer {
-  border-color: color-mix(in srgb, var(--bridge-home-border) 76%, transparent) !important;
-  background: color-mix(in srgb, var(--bridge-home-surface) 46%, transparent) !important;
-  -webkit-backdrop-filter: blur(22px) saturate(125%);
-  backdrop-filter: blur(22px) saturate(125%);
 }
 
 .bridge-home-hero { border-bottom: 1px solid color-mix(in srgb, var(--bridge-home-border) 68%, transparent); }
@@ -183,8 +138,6 @@
 .bridge-terminal-tabs button[aria-selected='true'] { background: color-mix(in srgb, var(--bridge-home-surface) 95%, transparent); color: var(--bridge-home-fg); }
 .bridge-terminal-tabs button[aria-selected='true']::after { position: absolute; inset-inline: .65rem; bottom: 0; height: 1px; background: var(--bridge-home-blue); content: ''; }
 .bridge-terminal-tabs button:focus-visible { outline: 2px solid var(--bridge-home-blue); outline-offset: -2px; }
-.bridge-home-footer [data-current-product='true'] { color: var(--bridge-home-fg); font-weight: 600; }
-.bridge-home-footer [data-current-product='true']::after { display: inline-block; width: .35rem; height: .35rem; margin-left: .45rem; border-radius: 50%; background: var(--bridge-home-green); content: ''; vertical-align: middle; }
 
 .bridge-knowledge-flow { padding-block: clamp(4.5rem, 8vw, 7.5rem); }
 .bridge-flow-list { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1.1rem; margin-top: 2.7rem; }
@@ -236,7 +189,6 @@
   .bridge-final-cta .bridge-button { align-self: flex-start; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .bridge-liquid-cursor { display: none; }
   .bridge-map-flow, .bridge-map-return-flow { animation: none; stroke-dasharray: none; }
   .bridge-button { transition: none; }
 }

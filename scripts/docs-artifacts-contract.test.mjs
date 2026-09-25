@@ -12,7 +12,7 @@ const overrides = JSON.parse(readFileSync(resolve(root, 'apps/docs/ecosystem-pre
 const publicDocs = JSON.parse(readFileSync(resolve(root, 'apps/docs/public-docs.json'), 'utf8'))
 const publicAgentDocs = JSON.parse(readFileSync(resolve(root, 'apps/docs/public-agent-docs.json'), 'utf8'))
 const ecosystem = manifest.products
-  .filter(({ public: isPublic }) => isPublic)
+  .filter(({ public: isPublic, navigation }) => isPublic && navigation?.showInBar)
   .map((product) => ({ ...product, ...overrides[product.id] }))
 const knowledge = JSON.parse(readFileSync(resolve(publicRoot, 'deterministic/knowledge.json'), 'utf8'))
 const sitemap = readFileSync(resolve(root, 'apps/docs/out/sitemap.xml'), 'utf8')
@@ -33,6 +33,13 @@ test('concise and full LLM surfaces have distinct progressive-disclosure roles',
 
 test('all public products are discoverable and peers resolve locally', () => {
   assert.equal(new Set(ecosystem.map(({ id }) => id)).size, ecosystem.length)
+  assert.deepEqual(
+    [...ecosystem].sort((left, right) => left.navigation.order - right.navigation.order).map(({ id }) => id),
+    ['agentskit', 'registry', 'agentskit-chat', 'doc-bridge', 'code-review', 'harness'],
+    'the canonical ecosystem is six products in shell order',
+  )
+  assert.ok(!llms.includes('](https://playbook.agentskit.io/docs)'), 'Playbook is not listed as an ecosystem product')
+  assert.ok(!existsSync(resolve(publicRoot, 'ecosystem-bar.js')), 'the shared shell is loaded from AgentsKit, not self-hosted')
   assert.ok(Object.keys(overrides).every((id) => ecosystem.some((product) => product.id === id)))
   for (const product of ecosystem) {
     const primary = product.surfaces?.docs ?? product.surfaces?.home ?? product.home

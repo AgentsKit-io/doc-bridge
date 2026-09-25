@@ -9,10 +9,14 @@ test('landing communicates the deterministic proof and has no horizontal overflo
   await expect(page.getByRole('heading', { name: 'Make your repository clear to the people and agents working in it.' })).toBeVisible()
   await expect(page.getByRole('link', { name: 'Add Doc Bridge to your repo' })).toHaveAttribute('href', /\/docs\/getting-started\/?$/)
   await expect(page.getByText('THE BRIDGE CONTRACT')).toBeVisible()
-  const ecosystemFooter = page.getByRole('contentinfo').locator('[data-footer-column="Ecosystem"]')
-  await expect(ecosystemFooter.getByRole('link')).toHaveCount(6)
-  await expect(ecosystemFooter.getByRole('link', { name: /Doc Bridge/ })).toHaveAttribute('aria-current', 'page')
-  await expect(ecosystemFooter).not.toContainText('Code Review')
+  await expect(page.locator('agentskit-aurora')).toHaveCount(1)
+  await expect(page.locator('agentskit-ecosystem[current="doc-bridge"][data-visual="agentskit-home"]')).toHaveCount(1)
+  const footer = page.locator('agentskit-footer[current="doc-bridge"][repo="AgentsKit-io/doc-bridge"]')
+  await expect(footer).toHaveCount(1)
+  await expect(footer.locator('a[href^="https://code-review.agentskit.io"]').first()).toBeAttached()
+  await expect(footer.locator('a[href*="playbook.agentskit.io"]')).toHaveCount(0)
+  await expect(page.locator('.bridge-home-header a[href*="github.com"]')).toHaveCount(0)
+  await expect(page.locator('.bridge-home-header .ak-product-wordmark')).toContainText('Doc Bridge')
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
   expect(overflow).toBeLessThanOrEqual(0)
   await expect(page.locator('#ak-eco')).toBeVisible()
@@ -39,7 +43,7 @@ test('product subheader keeps search, navigation, and the primary action reachab
 
   await menuButton.click()
   const mobileMenu = page.locator('#doc-bridge-mobile-menu')
-  await expect(mobileMenu.getByRole('link')).toHaveCount(4)
+  await expect(mobileMenu.getByRole('link')).toHaveCount(3)
   for (const link of await mobileMenu.getByRole('link').all()) {
     expect((await link.boundingBox())?.height).toBeGreaterThanOrEqual(44)
   }

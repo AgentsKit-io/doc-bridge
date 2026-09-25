@@ -32,8 +32,7 @@ Use `--bridge-home-*` aliases in the homepage CSS when a component needs a role-
 
 ## Background and glass
 
-- Keep one shared near-black canvas with faint blue and green ambient gradients across the complete home.
-- The pointer-reactive liquid cursor reuses the AgentsKit CSS/interaction pattern. It is homepage-only, ignores touch pointers, and is disabled for reduced motion.
+- Keep one shared near-black canvas across the complete home. Ambient color comes from the shared `<agentskit-aurora>` layer (fixed, `aria-hidden`, no pointer events, honours reduced motion).
 - Use translucent surfaces and backdrop blur for the product header, handoff proof, footer, and chat. Borders should remain visible against both the canvas and surface.
 - Keep ordinary content sections open on the canvas. Avoid a card around every content group or competing colored section backgrounds.
 
@@ -62,11 +61,11 @@ Use `--bridge-home-*` aliases in the homepage CSS when a component needs a role-
 
 ## Reused components
 
-- `apps/docs/public/ecosystem-bar.js` is kept byte-for-byte aligned with the AgentsKit local source at `agentskit/apps/docs-next/public/ecosystem-bar.js`. Refresh this asset from that source when the shared bar changes; the Doc Bridge page passes its current product identity to the same custom element.
+- The ecosystem bar, home tour (`<agentskit-ecosystem current="doc-bridge" data-visual="agentskit-home">`), footer (`<agentskit-footer>` with a static fallback), aurora, and `.ak-product-wordmark` styles come from the hosted AgentsKit shell (`{NEXT_PUBLIC_AGENTSKIT_SHELL_ORIGIN}/shell/v1.css` and `v1.js`, default origin `https://www.agentskit.io`). Nothing shell-related is self-hosted; the GitHub Star action lives only in the bar.
 - Keep the home canvas, fonts, and interaction styles in `apps/docs/app/home.css`, imported by the home route only. Documentation routes keep the base stylesheet and calmer Fumadocs layout.
-- The home reuses the AgentsKit liquid cursor behavior and brand tokens without adding a UI dependency.
+- The home reuses the AgentsKit brand tokens without adding a UI dependency.
 - Install commands use the same tab pattern as AgentsKit and expose one copyable command per package manager.
 - The proof terminal follows the AgentsKit demo pattern: colored code tokens, a slowly advancing active step, pause on hover or keyboard focus, manual play/pause, and a static reduced-motion mode.
 - The proof terminal reveals demo, index, and resolve output in sequence. Stage tabs are keyboard operable; hover and focus pause the sequence, and reduced-motion users see a static first frame.
-- The footer follows the AgentsKit home column layout while keeping Doc Bridge routes, repository links, and ecosystem links. Mark the current product in the Ecosystem column with `aria-current="page"` and a quiet green indicator.
+- The footer is the shared `<agentskit-footer current="doc-bridge">`. Its server-rendered fallback lists the six ecosystem products (current one marked `aria-current="page"`), the repository, and the license.
 - Product navigation, the animated handoff proof, and chat remain Doc Bridge components with shared visual tokens.

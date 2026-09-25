@@ -65,7 +65,8 @@ try {
       themeClass: document.documentElement.className,
       colorScheme: getComputedStyle(document.documentElement).colorScheme,
       hasHome: Boolean(home),
-      hasCursor: Boolean(home?.querySelector('.bridge-liquid-cursor')),
+      hasAurora: document.querySelectorAll('agentskit-aurora').length === 1 && document.querySelector('agentskit-aurora')?.getAttribute('aria-hidden') === 'true',
+      hasLegacyCursor: Boolean(document.querySelector('.bridge-liquid-cursor')),
       hasHandoff: Boolean(handoff),
       bridgeSides: Array.from(document.querySelectorAll('.bridge-map-side')).map((node) => node.getAttribute('aria-label')),
       bridgeCore: document.querySelector('.bridge-map-core')?.textContent?.trim() ?? null,
@@ -74,12 +75,31 @@ try {
       hasProofTerminal: Boolean(document.querySelector('.bridge-proof-terminal')),
       hasInstallTabs: Boolean(document.querySelector('[role="tablist"][aria-label="Package manager"]')),
       hasHomeStats: Boolean(document.querySelector('.bridge-home-metrics')),
-      hasEmbeddedEcosystemShowcase: Boolean(document.querySelector('main agentskit-ecosystem')),
+      hasHomeTour: Boolean(document.querySelector('agentskit-ecosystem[current="doc-bridge"][data-visual="agentskit-home"]')),
       hasNumberedProofCards: Boolean(document.querySelector('.bridge-proof-steps')),
-      activeFooterProduct: document.querySelector('[data-footer-column="Ecosystem"] [aria-current="page"]')?.textContent?.trim() ?? null,
-      footerColumns: Array.from(document.querySelectorAll('[data-footer-column]')).map((node) => node.getAttribute('data-footer-column')),
-      footerInternalRoutes: Array.from(document.querySelectorAll('[data-footer-column] a[href^="/"]')).map((node) => node.getAttribute('href')),
-      ecosystemScript: document.querySelector('script[src$="ecosystem-bar.js"]')?.getAttribute('src'),
+      footer: (() => {
+        const footer = document.querySelector('agentskit-footer')
+        return footer ? { current: footer.getAttribute('current'), repo: footer.getAttribute('repo'), links: footer.querySelectorAll('a[href]').length } : null
+      })(),
+      hasLegacyFooter: Boolean(document.querySelector('.bridge-home-footer')),
+      shellScript: (() => {
+        const script = document.querySelector('script[src$="/shell/v1.js"]')
+        return script ? { src: script.getAttribute('src'), current: script.dataset.current, repo: script.dataset.currentRepo } : null
+      })(),
+      shellStylesheet: document.querySelector('link[rel="stylesheet"][href$="/shell/v1.css"]')?.getAttribute('href') ?? null,
+      legacyBarScript: Boolean(document.querySelector('script[src$="ecosystem-bar.js"]')),
+      headerWordmark: document.querySelector('.bridge-home-header .ak-product-wordmark')?.textContent?.replace(/\s+/g, ' ').trim() ?? null,
+      headerGithubLinks: document.querySelectorAll('.bridge-home-header a[href*="github.com"]').length,
+      barBeforeHeader: (() => {
+        const bar = document.querySelector('#ak-eco')
+        const header = document.querySelector('.bridge-home-header')
+        return Boolean(bar && header && (bar.compareDocumentPosition(header) & Node.DOCUMENT_POSITION_FOLLOWING))
+      })(),
+      tourBeforeFooter: (() => {
+        const tour = document.querySelector('agentskit-ecosystem')
+        const footer = document.querySelector('agentskit-footer')
+        return Boolean(tour && footer && (tour.compareDocumentPosition(footer) & Node.DOCUMENT_POSITION_FOLLOWING))
+      })(),
       ecosystemLinks: Array.from(document.querySelectorAll('#ak-eco .ak-eco-link:not(.ak-eco-cta)')).map((node) => node.textContent),
       ecosystemStar: document.querySelector('#ak-eco .ak-eco-cta')?.getAttribute('href'),
       terminalTabs: Array.from(document.querySelectorAll('[role="tablist"][aria-label="CLI demo stages"] [role="tab"]')).map((node) => node.textContent?.trim()),
@@ -95,13 +115,17 @@ try {
   })
   check('desktop-http', response?.ok() === true, `HTTP ${response?.status()}`)
   check('dark-default', desktopData.themeClass.includes('dark') && desktopData.colorScheme === 'dark', JSON.stringify({ themeClass: desktopData.themeClass, colorScheme: desktopData.colorScheme }))
-  check('home-only-liquid-and-bridge-map', desktopData.hasHome && desktopData.hasCursor && desktopData.hasHandoff && desktopData.bridgeSides.join(',') === 'Human documentation,Agent context and tools' && desktopData.bridgeCore.includes('Doc Bridge') && desktopData.bridgeReturn.includes('review'), JSON.stringify({ hasHome: desktopData.hasHome, hasCursor: desktopData.hasCursor, hasHandoff: desktopData.hasHandoff, sides: desktopData.bridgeSides, core: desktopData.bridgeCore, return: desktopData.bridgeReturn }))
+  check('shared-aurora-and-bridge-map', desktopData.hasHome && desktopData.hasAurora && !desktopData.hasLegacyCursor && desktopData.hasHandoff && desktopData.bridgeSides.join(',') === 'Human documentation,Agent context and tools' && desktopData.bridgeCore.includes('Doc Bridge') && desktopData.bridgeReturn.includes('review'), JSON.stringify({ hasHome: desktopData.hasHome, hasAurora: desktopData.hasAurora, legacyCursor: desktopData.hasLegacyCursor, hasHandoff: desktopData.hasHandoff, sides: desktopData.bridgeSides, core: desktopData.bridgeCore, return: desktopData.bridgeReturn }))
   check('desktop-bridge-connectors', desktopData.bridgeConnections === 3, `Three connector groups connect sources, core, and agent contexts; found ${desktopData.bridgeConnections}`)
-  check('shared-ecosystem-bar-and-home-cleanup', desktopData.ecosystemScript === '/ecosystem-bar.js' && desktopData.ecosystemLinks.join(',') === 'AgentsKit,Registry,Chat,Doc Bridge,Code Review,Harness' && desktopData.ecosystemStar === 'https://github.com/AgentsKit-io/doc-bridge' && !desktopData.hasEmbeddedEcosystemShowcase && !desktopData.hasNumberedProofCards, JSON.stringify({ script: desktopData.ecosystemScript, links: desktopData.ecosystemLinks, star: desktopData.ecosystemStar, embeddedShowcase: desktopData.hasEmbeddedEcosystemShowcase, proofCards: desktopData.hasNumberedProofCards }))
-  check('hero-cleanup-and-agentskit-footer', !desktopData.hasHomeStats && desktopData.footerColumns.join(',') === 'Start,Build,Ecosystem,Community', JSON.stringify({ hasHomeStats: desktopData.hasHomeStats, footerColumns: desktopData.footerColumns }))
-  check('footer-current-product', desktopData.activeFooterProduct === 'Doc Bridge', `Current ecosystem link: ${desktopData.activeFooterProduct}`)
-  const footerRouteStatuses = await Promise.all(desktopData.footerInternalRoutes.map(async (path) => ({ path, status: (await desktop.request.get(new URL(path, baseURL).href)).status() })))
-  check('footer-links-resolve', footerRouteStatuses.length > 0 && footerRouteStatuses.every((route) => route.status === 200), JSON.stringify(footerRouteStatuses))
+  check('shared-shell-v1-assets', desktopData.shellScript?.current === 'doc-bridge' && desktopData.shellScript?.repo === 'AgentsKit-io/doc-bridge' && Boolean(desktopData.shellStylesheet) && !desktopData.legacyBarScript, JSON.stringify({ script: desktopData.shellScript, stylesheet: desktopData.shellStylesheet, legacyBarScript: desktopData.legacyBarScript }))
+  check('shared-ecosystem-bar-six-products', desktopData.ecosystemLinks.join(',') === 'AgentsKit,Registry,Chat,Doc Bridge,Code Review,Harness' && desktopData.ecosystemStar === 'https://github.com/AgentsKit-io/doc-bridge' && desktopData.barBeforeHeader && !desktopData.hasNumberedProofCards, JSON.stringify({ links: desktopData.ecosystemLinks, star: desktopData.ecosystemStar, barBeforeHeader: desktopData.barBeforeHeader, proofCards: desktopData.hasNumberedProofCards }))
+  check('product-header-wordmark-without-github', desktopData.headerWordmark === 'AgentsKit Doc Bridge' && desktopData.headerGithubLinks === 0, JSON.stringify({ wordmark: desktopData.headerWordmark, githubLinks: desktopData.headerGithubLinks }))
+  check('home-ecosystem-tour', desktopData.hasHomeTour && desktopData.tourBeforeFooter, JSON.stringify({ tour: desktopData.hasHomeTour, tourBeforeFooter: desktopData.tourBeforeFooter }))
+  check('shared-footer', !desktopData.hasHomeStats && !desktopData.hasLegacyFooter && desktopData.footer?.current === 'doc-bridge' && desktopData.footer?.repo === 'AgentsKit-io/doc-bridge' && desktopData.footer.links > 0, JSON.stringify({ hasHomeStats: desktopData.hasHomeStats, legacyFooter: desktopData.hasLegacyFooter, footer: desktopData.footer }))
+  const serverHtml = await (await desktop.request.get(baseURL)).text()
+  const serverFooter = serverHtml.match(/<agentskit-footer[\s\S]*?<\/agentskit-footer>/u)?.[0] ?? ''
+  const fallbackHomes = ['https://www.agentskit.io', 'https://registry.agentskit.io', 'https://chat.agentskit.io', 'https://doc-bridge.agentskit.io/', 'https://code-review.agentskit.io', 'https://harness.agentskit.io/']
+  check('footer-static-fallback', fallbackHomes.every((href) => serverFooter.includes(`href="${href}"`)) && serverFooter.includes('github.com/AgentsKit-io/doc-bridge') && serverFooter.includes('LICENSE') && !serverFooter.includes('playbook.agentskit.io'), JSON.stringify({ bytes: serverFooter.length }))
   check('terminal-and-install-tabs', desktopData.hasProofTerminal && desktopData.hasInstallTabs, JSON.stringify({ terminal: desktopData.hasProofTerminal, installTabs: desktopData.hasInstallTabs }))
   check('hero-copy', desktopData.heading === 'The docs your team reads.\nThe context your agents need.', desktopData.heading)
   check('desktop-overflow', desktopData.scrollWidth <= desktopData.width, `${desktopData.scrollWidth}px content in ${desktopData.width}px viewport`)
@@ -164,10 +188,8 @@ try {
   const motionEnd = await desktop.locator('.bridge-map-flow').first().evaluate((node) => getComputedStyle(node).strokeDashoffset)
   check('bridge-lines-animate', motionStart.playState === 'running' && motionStart.dashOffset !== motionEnd, JSON.stringify({ start: motionStart, end: motionEnd }))
 
-  await desktop.mouse.move(720, 410)
-  await desktop.waitForTimeout(100)
-  const cursorMoves = await desktop.locator('.bridge-liquid-cursor').evaluate((node) => ({ active: node.dataset.active, x: getComputedStyle(node).getPropertyValue('--cursor-x') }))
-  check('cursor-follows-pointer', cursorMoves.active === 'true' && cursorMoves.x.trim() === '720px', JSON.stringify(cursorMoves))
+  const aurora = await desktop.locator('agentskit-aurora').evaluate((node) => ({ position: getComputedStyle(node).position, pointerEvents: getComputedStyle(node).pointerEvents }))
+  check('aurora-is-decorative-layer', aurora.position === 'fixed' && aurora.pointerEvents === 'none', JSON.stringify(aurora))
   await desktop.locator('button[aria-label="Ask Doc Bridge"]').click()
   await desktop.getByRole('dialog', { name: 'Ask Doc Bridge' }).waitFor({ state: 'visible', timeout: 10000 })
   await desktop.keyboard.press('Escape')
@@ -179,14 +201,12 @@ try {
   mobile.on('pageerror', (error) => consoleErrors.push(error.message))
   const mobileResponse = await mobile.goto(baseURL, { waitUntil: 'networkidle', timeout: 30000 })
   await mobile.waitForTimeout(500)
-  const mobileMetrics = await mobile.evaluate(() => ({ width: document.documentElement.clientWidth, scrollWidth: document.documentElement.scrollWidth, cursor: Boolean(document.querySelector('.bridge-liquid-cursor')) }))
+  const mobileMetrics = await mobile.evaluate(() => ({ width: document.documentElement.clientWidth, scrollWidth: document.documentElement.scrollWidth, aurora: Boolean(document.querySelector('agentskit-aurora')) }))
   check('mobile-http', mobileResponse?.ok() === true, `HTTP ${mobileResponse?.status()}`)
   check('mobile-no-overflow', mobileMetrics.scrollWidth <= mobileMetrics.width, `${mobileMetrics.scrollWidth}px content in ${mobileMetrics.width}px viewport`)
   const mobileBridge = await mobile.evaluate(() => ({ sideCount: document.querySelectorAll('.bridge-map-side').length, lines: getComputedStyle(document.querySelector('.bridge-map-lines')).display, order: Array.from(document.querySelector('.bridge-map-canvas').children).filter((node) => node.matches('.bridge-map-side, .bridge-map-core')).map((node) => node.className) }))
   check('mobile-bridge-stacks-without-lines', mobileBridge.sideCount === 2 && mobileBridge.lines === 'none' && mobileBridge.order.join(',') === 'bridge-map-side,bridge-map-core,bridge-map-side', JSON.stringify(mobileBridge))
-  await mobile.evaluate(() => window.dispatchEvent(new PointerEvent('pointermove', { pointerType: 'touch', clientX: 120, clientY: 180 })))
-  const touchCursor = await mobile.locator('.bridge-liquid-cursor').getAttribute('data-active')
-  check('mobile-touch-cursor-is-inert', mobileMetrics.cursor && touchCursor !== 'true', `Cursor active state after touch pointer: ${touchCursor}`)
+  check('mobile-aurora-and-tour', mobileMetrics.aurora && await mobile.locator('agentskit-ecosystem[data-visual="agentskit-home"]').count() === 1, JSON.stringify({ aurora: mobileMetrics.aurora }))
   const menuButton = mobile.getByRole('button', { name: 'Open navigation menu' })
   await menuButton.focus()
   await mobile.keyboard.press('Enter')
@@ -210,13 +230,13 @@ try {
 
   await mobile.goto(`${baseURL}/docs/getting-started`, { waitUntil: 'domcontentloaded', timeout: 30000 })
   await mobile.locator('body').waitFor({ state: 'visible' })
-  const docsData = await mobile.evaluate(() => ({ hasHome: Boolean(document.querySelector('.bridge-home')), cursor: Boolean(document.querySelector('.bridge-liquid-cursor')), title: document.title }))
-  check('docs-remain-calm', !docsData.hasHome && !docsData.cursor, JSON.stringify(docsData))
+  const docsData = await mobile.evaluate(() => ({ hasHome: Boolean(document.querySelector('.bridge-home')), wordmark: Boolean(document.querySelector('.ak-product-wordmark')), homeTour: Boolean(document.querySelector('agentskit-ecosystem[data-visual="agentskit-home"]')), title: document.title }))
+  check('docs-remain-calm', !docsData.hasHome && docsData.wordmark && !docsData.homeTour, JSON.stringify(docsData))
 
   const motion = await browser.newPage({ viewport: { width: 1280, height: 800 }, reducedMotion: 'reduce' })
   await motion.goto(baseURL, { waitUntil: 'networkidle', timeout: 30000 })
-  const motionState = await motion.locator('.bridge-liquid-cursor').evaluate((node) => ({ display: getComputedStyle(node).display, animation: getComputedStyle(document.querySelector('.bridge-map-flow')).animationDuration }))
-  check('reduced-motion', motionState.display === 'none' && Number.parseFloat(motionState.animation) < 0.01, JSON.stringify(motionState))
+  const motionState = await motion.evaluate(() => ({ animation: getComputedStyle(document.querySelector('.bridge-map-flow')).animationDuration }))
+  check('reduced-motion', Number.parseFloat(motionState.animation) < 0.01, JSON.stringify(motionState))
   const terminalStepBefore = await motion.locator('.bridge-proof-terminal').getAttribute('data-active-step')
   const terminalState = await motion.locator('.bridge-proof-terminal-state').textContent()
   await motion.waitForTimeout(1800)
