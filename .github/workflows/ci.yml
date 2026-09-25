@@ -45,9 +45,12 @@ jobs:
       # artifact written seconds earlier against a rebuild of the same tree, and could not fail.
       # The committed index is what consumers are told to verify, so verify that one. The badge
       # writes into `.doc-bridge/`, which the scan excludes, and runs after the gate regardless.
-      - name: Dogfood gate (doc-bridge on itself, against the committed index)
+      - name: Doc Bridge index freshness (committed index matches the tree)
+        run: node bin/ak-docs.js gate run index-freshness
+      - name: Dogfood gate and documentation conformance (against the committed index)
         run: |
           node bin/ak-docs.js gate run
+          node bin/ak-docs.js conformance run documentation-standard-v1 --text
           node bin/ak-docs.js doctor --text
           node bin/ak-docs.js doctor --write-badge
           node bin/ak-docs.js doctor --badge

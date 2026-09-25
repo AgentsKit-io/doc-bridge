@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "contentHash": "c6304db4068bb6b8b83663cba3a9f848cdea639b3dad3ea1331911d02949f76e",
+  "contentHash": "77c5a18b0e08a0fe28dfdde3d19879f9711781fffb991878b44887965a1cc7bd",
   "contentHashAlgo": "sha256-normalized-v1",
-  "generatedAt": "2026-09-25T01:40:15.239Z",
+  "generatedAt": "2026-09-25T23:51:37.819Z",
   "project": {
     "name": "@agentskit/doc-bridge",
     "root": "."
@@ -457,6 +457,18 @@
         "human"
       ],
       "contentHash": "692b903e5de9e2da85d8312bc8f2a79a446a8a02b57d14b39fc46743b4e941b6"
+    },
+    {
+      "id": "document:docs/DESIGN.md",
+      "type": "document",
+      "title": "Doc Bridge Design",
+      "path": "docs/DESIGN.md",
+      "description": "This guide adapts the AgentsKit homepage visual system to Doc Bridge. The product story remains specific: repository knowledge moves between people and agents, with human review at the boundary. Keep documentation pages calm and readable; homepage effects must never leak into docs or interior routes.",
+      "tags": [
+        "document",
+        "human"
+      ],
+      "contentHash": "dbc24139f9b4d560d58fcba281fb6352fbd7b534217451d29f69ee1d0e230afd"
     },
     {
       "id": "document:docs/examples.md",
@@ -1309,7 +1321,7 @@
         "document",
         "project"
       ],
-      "contentHash": "4376ddb2cb7b442daba04811d4d340b7a5fa7427d17256a1c8c9e037062ca807"
+      "contentHash": "3572883e36c163e4330669865bbacfd7e68596868745425ca596c5fea386ba93"
     },
     {
       "id": "document:SECURITY.md",
@@ -1612,7 +1624,7 @@
         "tsx",
         "docs"
       ],
-      "contentHash": "c2c959961c58f25e455e66d1d2ab5a0124bee7b3ad394a951716be119962c2d9"
+      "contentHash": "dfb6b8bc05a751612fc55e135f59a0b1ad2ca7321020d161e474c37443031a4d"
     },
     {
       "id": "module:apps/docs/app/for-agents/page.tsx",
@@ -1645,7 +1657,7 @@
         "tsx",
         "app"
       ],
-      "contentHash": "41225ffa6e592971b4d6110b03874683bfd3b7a3e709daf47fee41998af4c845"
+      "contentHash": "e1067bc137725d0e728438315c581df814874d9347fd5efb8bcbc7340140a6ed"
     },
     {
       "id": "module:apps/docs/app/opengraph-image.tsx",
@@ -1679,7 +1691,7 @@
         "tsx",
         "app"
       ],
-      "contentHash": "42d4ec55ac73ff56ffff043e76f1e59d438a234c97d9fb733b9bd794495ae669"
+      "contentHash": "0553a0d25be81b392eb9e5d43d000231c7c0ecede485f95e63beeae93fa2400f"
     },
     {
       "id": "module:apps/docs/app/robots.ts",
@@ -1741,7 +1753,7 @@
         "tsx",
         "components"
       ],
-      "contentHash": "79a26f4e3601723fcee92791b7e8bd8807936d103962bf7d3b82c0340a058926"
+      "contentHash": "6fbd833de5422d073d61ddd85475e0faeec464119d816b544678bf0f591cbf1d"
     },
     {
       "id": "module:apps/docs/components/chat-widget.tsx",
@@ -1756,7 +1768,7 @@
         "tsx",
         "components"
       ],
-      "contentHash": "ad13199c446d8925314182ac15219c7caa29e2ea592e461b65d7ff01bb8d7832"
+      "contentHash": "27713aaf7cf40de127b940f733b4f0639471bafe5385dfb971493d022cc802f6"
     },
     {
       "id": "module:apps/docs/components/copy-button.tsx",
@@ -1787,7 +1799,52 @@
         "tsx",
         "components"
       ],
-      "contentHash": "9acc41811dfa70eca271b7c830c5723a3308f9ffb301df3ee01918206ddc0c59"
+      "contentHash": "960559614d04d11220879fa1105594878391311734b665b5c0c1651c670bb954"
+    },
+    {
+      "id": "module:apps/docs/components/home/handoff-proof.tsx",
+      "type": "module",
+      "title": "handoff-proof.tsx",
+      "path": "apps/docs/components/home/handoff-proof.tsx",
+      "symbols": [
+        "HandoffProof"
+      ],
+      "tags": [
+        "module",
+        "tsx",
+        "home"
+      ],
+      "contentHash": "90be4573fc65934ba108e9156623a81cca81646455be2beb994c39ea21a352ac"
+    },
+    {
+      "id": "module:apps/docs/components/home/install-command-tabs.tsx",
+      "type": "module",
+      "title": "install-command-tabs.tsx",
+      "path": "apps/docs/components/home/install-command-tabs.tsx",
+      "symbols": [
+        "InstallCommandTabs"
+      ],
+      "tags": [
+        "module",
+        "tsx",
+        "home"
+      ],
+      "contentHash": "8b718d46453376192ae5749f557ff721adada3c3a7867a666a065807563455ff"
+    },
+    {
+      "id": "module:apps/docs/components/home/proof-terminal.tsx",
+      "type": "module",
+      "title": "proof-terminal.tsx",
+      "path": "apps/docs/components/home/proof-terminal.tsx",
+      "symbols": [
+        "ProofTerminal"
+      ],
+      "tags": [
+        "module",
+        "tsx",
+        "home"
+      ],
+      "contentHash": "542a57d07470edd2de61e77b5e6218139304372d1d05853da63f1ff901932cca"
     },
     {
       "id": "module:apps/docs/components/mermaid.tsx",
@@ -1817,7 +1874,22 @@
         "tsx",
         "components"
       ],
-      "contentHash": "920068fe9e5984c922bb2d82b2c0018d502010586e719e13abacd60ccb5fcd74"
+      "contentHash": "4ca135e298ce8378351aa73a68f6e584370e328aca186557914a19e94dda4b63"
+    },
+    {
+      "id": "module:apps/docs/components/product-wordmark.tsx",
+      "type": "module",
+      "title": "product-wordmark.tsx",
+      "path": "apps/docs/components/product-wordmark.tsx",
+      "symbols": [
+        "ProductWordmark"
+      ],
+      "tags": [
+        "module",
+        "tsx",
+        "components"
+      ],
+      "contentHash": "4179d8e5282de8023afeef443950e41e7a86c3a2718e3dd24ca75315f8270700"
     },
     {
       "id": "module:apps/docs/components/site-footer.tsx",
@@ -1832,7 +1904,7 @@
         "tsx",
         "components"
       ],
-      "contentHash": "37120e4d2d147039f985e323228da3ce2e405fa19052e8dff47363cd705a6009"
+      "contentHash": "2498e66b6fa5533c9a0f467d8e2c9cb49196f3c77cf19e182ba2c1e57495ff14"
     },
     {
       "id": "module:apps/docs/global.d.ts",
@@ -1878,6 +1950,25 @@
         "lib"
       ],
       "contentHash": "e30a62a052972dafb0b92bc66bbca639561d26585ba2d5de237762fe41ffe960"
+    },
+    {
+      "id": "module:apps/docs/lib/shell.ts",
+      "type": "module",
+      "title": "shell.ts",
+      "path": "apps/docs/lib/shell.ts",
+      "symbols": [
+        "PRODUCT_ID",
+        "PRODUCT_REPO",
+        "SHELL_CSS_URL",
+        "SHELL_JS_URL",
+        "SHELL_ORIGIN"
+      ],
+      "tags": [
+        "module",
+        "ts",
+        "lib"
+      ],
+      "contentHash": "0ec9be74b460f724c33e83f833970420b108f807dda3fa9705575d107d50c0e8"
     },
     {
       "id": "module:apps/docs/lib/site.ts",
@@ -1999,6 +2090,18 @@
       "contentHash": "6fc5abb268e1efe7a3e821fb6efc5b80289a328c7f27dc2749557ea963c24a75"
     },
     {
+      "id": "module:apps/docs/shell-elements.d.ts",
+      "type": "module",
+      "title": "shell-elements.d.ts",
+      "path": "apps/docs/shell-elements.d.ts",
+      "tags": [
+        "module",
+        "ts",
+        "docs"
+      ],
+      "contentHash": "243b39a2a1346857481972d7d4f0554eae52fb38a0d2167ea86fb1c3e2783eb8"
+    },
+    {
       "id": "module:apps/docs/source.config.ts",
       "type": "module",
       "title": "source.config.ts",
@@ -2074,7 +2177,7 @@
         "mjs",
         "scripts"
       ],
-      "contentHash": "06c347a605db246e022e5ef85815eba61aa390b9090698becf9d709ff4c44b07"
+      "contentHash": "0012c4943fc6e9600a57d5d2abbd87ab2f02c893b33128b64ae3c26d2bcf2903"
     },
     {
       "id": "module:scripts/build-mcpb.mjs",
@@ -2186,7 +2289,7 @@
         "test",
         "scripts"
       ],
-      "contentHash": "0442a21b2eac46b25f35877e228aa6d01ce71e8a42f8b9331bc13e38c8dab2b1"
+      "contentHash": "f40f0f37923b290017a4be16a52c1d0ddedd38b4fd29b8c7ccdb4f82a2360dbc"
     },
     {
       "id": "module:scripts/generate-study-charts.mjs",
@@ -2557,6 +2660,18 @@
         "scripts"
       ],
       "contentHash": "bce087c5dc2249f194c1ce7e853157e00f8c799e8b2e260a2425e34bca2cc104"
+    },
+    {
+      "id": "module:scripts/verify-home-ui.mjs",
+      "type": "module",
+      "title": "verify-home-ui.mjs",
+      "path": "scripts/verify-home-ui.mjs",
+      "tags": [
+        "module",
+        "mjs",
+        "scripts"
+      ],
+      "contentHash": "ce760f7e30a0c4c3cf10e20c040ec0f89ea1dcc3bedfa08bf71906ffb100e192"
     },
     {
       "id": "module:skills/doc-bridge-handoff/scripts/resolve-handoff.mjs",
@@ -5872,7 +5987,7 @@
         "test",
         "docs-e2e"
       ],
-      "contentHash": "8e0e57c4fdca21bcba025c1027f5bfe02ea5d93bf2f371ef7f0ef72fe5749655"
+      "contentHash": "6af12f6e275495076f24ed9e0253c12b2c85e51d76cca35c72a75c5e506a02d1"
     },
     {
       "id": "module:tests/doctor-measured.test.ts",
@@ -7883,8 +7998,8 @@
     "changes": {}
   },
   "inputs": {
-    "hash": "35bd0d0a643e516f07468077f4d0737a5f621cf90657372b825c44466345d2e1",
-    "fileCount": 429,
+    "hash": "21172e416e4c4e80dd1b936c4aa5257ac726488e26f709b7c02699653cb0b729",
+    "fileCount": 437,
     "projectionVersion": 2
   },
   "retrieval": {
@@ -7906,9 +8021,9 @@
   "projection": {
     "type": "retrieval-index",
     "schemaVersion": 1,
-    "contentHash": "7f5f1d79be19a93067432dffc9cf13da52c72e4cec777efe50565d25f5248545",
+    "contentHash": "4194c304725282708e056d60ab7ec091b4c0ba1d5fa499c1be92b380b649f8e7",
     "contentHashAlgo": "sha256-normalized-v1",
-    "snapshotHash": "e1967adba441c2866a6d05554a14b0ed80a9371944360a8ce0e8c17cca19681c",
+    "snapshotHash": "381375895f1485f711276b1a056350ec85b0582bbe3132920404152f13a67b4d",
     "overlayHash": "f99666ff9119084dd25c2974ae64eb6935ec2aa785ff5ad478fb9d541f7a5e94",
     "configurationHash": "91d46a4ecbfe3b55878e0b3c7608819775cf7b18aeafcc8f689eddfa462622b4",
     "lexiconVersion": 1,
@@ -7928,7 +8043,7 @@
     },
     "lexical": {
       "version": 1,
-      "documentCount": 457,
+      "documentCount": 465,
       "fieldNames": [
         "aliases",
         "body",
@@ -7939,13 +8054,13 @@
         "title"
       ],
       "averageFieldLength": {
-        "aliases": 3.474835886214442,
-        "body": 69.25382932166302,
-        "headings": 4.365426695842451,
-        "path": 5.669584245076586,
-        "summary": 5.74835886214442,
-        "symbols": 11.940919037199125,
-        "title": 3.087527352297593
+        "aliases": 3.464516129032258,
+        "body": 69.12258064516129,
+        "headings": 4.324731182795699,
+        "path": 5.688172043010753,
+        "summary": 5.72258064516129,
+        "symbols": 11.8,
+        "title": 3.1010752688172043
       }
     },
     "entries": [
@@ -8015,7 +8130,7 @@
           ],
           "outbound": []
         },
-        "contentHash": "899e1305eed84b1c28dd91400137b7b733c4a3399bc9f595152c95a615309352",
+        "contentHash": "2cbaa4ec83a2975ee2dd7483c53695423d32b9cd5860e3e6f17f95c0885eb267",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -8104,7 +8219,7 @@
           ],
           "outbound": []
         },
-        "contentHash": "1babbd763c5cc281060494ba8024b492b8dafd9df688004c0cc2f26682822423",
+        "contentHash": "4c994876ed71551ec19a20b9e1af109dc9d71c3dbb2c36d37bb916975e19a3a5",
         "provenance": "observed",
         "confidence": "observed",
         "ownershipId": "doc-bridge-scripts"
@@ -12617,6 +12732,39 @@
           ]
         },
         "contentHash": "692b903e5de9e2da85d8312bc8f2a79a446a8a02b57d14b39fc46743b4e941b6",
+        "provenance": "observed",
+        "confidence": "observed"
+      },
+      {
+        "id": "document:docs/DESIGN.md",
+        "kind": "document",
+        "path": "docs/DESIGN.md",
+        "title": "Doc Bridge Design",
+        "summary": "This guide adapts the AgentsKit homepage visual system to Doc Bridge. The product story remains specific: repository knowledge moves between people and agents, with human review at the boundary. Keep documentation pages calm and readable; homepage effects must never leak into docs or interior routes.",
+        "audience": "human",
+        "aliases": [],
+        "tags": [
+          "document",
+          "human"
+        ],
+        "fields": {
+          "title": "Doc Bridge Design",
+          "headings": "Doc Bridge Design Principles Tokens Type Background and glass Borders and radii Motion Responsive behavior Accessibility Reused components",
+          "path": "docs/DESIGN.md",
+          "symbols": "",
+          "summary": "This guide adapts the AgentsKit homepage visual system to Doc Bridge. The product story remains specific: repository knowledge moves between people and agents, with human review at the boundary. Keep documentation pages calm and readable; homepage effects must never leak into docs or interior routes.",
+          "body": "Doc Bridge Design This guide adapts the AgentsKit homepage visual system to Doc Bridge. The product story remains specific: repository knowledge moves between people and agents, with human review at the boundary. Keep documentation pages calm and readable; homepage effects must never leak into docs or interior routes. Principles - Use the local AgentsKit home and agentskit/docs/DESIGN.md as the source of shared brand decisions. - Prefer hierarchy, space, and typography over decorative panels. Use glass only on focused chrome such as the product header, chat, and footer. - Make the knowledge handoff visible: source docs → structured context → agent action → reviewable human-owned draft. - Lead the home with a three-part map: human documentation sources → Doc Bridge → agent context, with agent memory returning as a reviewable draft. - Keep all interface copy in English and state product claims in terms users can verify. Tokens Role Token Dark value Use --- --- --- --- Canvas --ak-bg 0d1117 Default homepage background Raised surface --ak-surface 161b22 Code, chat, and handoff surfaces Border --ak-border 30363d Dividers and quiet outlines Foreground --ak-fg e6edf3 Primary text Muted --ak-muted 8b949e Eyebrows and supporting labels Blue --ak-blue 58a6ff Links and navigation cues Green --ak-green 2ea043 Doc Bridge handoff / verified state Use --bridge-home- aliases in the homepage CSS when a component needs a role-specific name. The imported brand-tokens.css is generated; do not edit it directly. Keep the documentation theme independent from homepage-only surface styling. Type - Use the system sans stack for home display and body text; use --ak-font-mono for commands, technical labels, and compact metrics. - Headlines use tight tracking and a clear scale; body copy remains comfortable at 16px or larger where it carries explanation. - Avoid long all-caps text. Eyebrows are short, muted, and letter-spaced. Background and glass - Keep one shared near-black canvas across the complete home. Ambient color comes from the shared <agentskit-aurora layer (fixed, aria-hidden , no pointer events, honours reduced motion). - Use translucent surfaces and backdrop blur for the product header, handoff proof, footer, and chat. Borders should remain visible against both the canvas and surface. - Keep ordinary content sections open on the canvas. Avoid a card around every content group or competing colored section backgrounds. Borders and radii - Use a 24px radius for the primary handoff demonstration and chat window; use 12–16px for compact technical surfaces and controls. - Prefer one-pixel neutral borders and restrained separators. Primary actions may use a pill shape; secondary actions stay quiet and outlined. Motion - Animate the hero map's connectors to show repository knowledge moving toward agents and memory returning to people. Motion must remain subtle, loop slowly, and preserve readable static content. - Use short easing for hover/focus transitions. Do not animate documentation content or introduce cursor effects on interior routes. - Under prefers-reduced-motion , remove ambient cursor motion and stop proof animation without hiding information. Responsive behavior - Keep the hero map as three clear columns on desktop and stack its human, bridge, and agent areas on mobile. Hide the desktop connector paths on narrow screens and retain a readable static sequence. - Collapse principle and flow rows to a single column on narrow screens; keep command blocks horizontally scrollable rather than widening the page. - Test narrow mobile widths for clipped copy, controls, and horizontal overflow. Accessibility - Maintain WCAG AA contrast for normal text and visible keyboard focus for links and controls. - Give decorative gradients and motion aria-hidden ; keep the handoff stages and return path understandable in document order without animation. - Honor reduced motion. Preserve usable touch targets and keyboard dismissal for navigation and chat. Reused",
+          "aliases": "document human"
+        },
+        "graph": {
+          "pagerank": 0,
+          "inboundLinks": 0,
+          "coveredBy": [],
+          "mentionedBy": [],
+          "inbound": [],
+          "outbound": []
+        },
+        "contentHash": "dbc24139f9b4d560d58fcba281fb6352fbd7b534217451d29f69ee1d0e230afd",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -17970,7 +18118,7 @@
             }
           ]
         },
-        "contentHash": "4376ddb2cb7b442daba04811d4d340b7a5fa7427d17256a1c8c9e037062ca807",
+        "contentHash": "3572883e36c163e4330669865bbacfd7e68596868745425ca596c5fea386ba93",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -18803,7 +18951,7 @@
           "inbound": [],
           "outbound": []
         },
-        "contentHash": "c2c959961c58f25e455e66d1d2ab5a0124bee7b3ad394a951716be119962c2d9",
+        "contentHash": "dfb6b8bc05a751612fc55e135f59a0b1ad2ca7321020d161e474c37443031a4d",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -18880,7 +19028,7 @@
           "inbound": [],
           "outbound": []
         },
-        "contentHash": "41225ffa6e592971b4d6110b03874683bfd3b7a3e709daf47fee41998af4c845",
+        "contentHash": "e1067bc137725d0e728438315c581df814874d9347fd5efb8bcbc7340140a6ed",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -18958,7 +19106,7 @@
           "inbound": [],
           "outbound": []
         },
-        "contentHash": "42d4ec55ac73ff56ffff043e76f1e59d438a234c97d9fb733b9bd794495ae669",
+        "contentHash": "0553a0d25be81b392eb9e5d43d000231c7c0ecede485f95e63beeae93fa2400f",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -19114,7 +19262,7 @@
             }
           ]
         },
-        "contentHash": "79a26f4e3601723fcee92791b7e8bd8807936d103962bf7d3b82c0340a058926",
+        "contentHash": "6fbd833de5422d073d61ddd85475e0faeec464119d816b544678bf0f591cbf1d",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -19157,7 +19305,7 @@
           ],
           "outbound": []
         },
-        "contentHash": "ad13199c446d8925314182ac15219c7caa29e2ea592e461b65d7ff01bb8d7832",
+        "contentHash": "27713aaf7cf40de127b940f733b4f0639471bafe5385dfb971493d022cc802f6",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -19232,7 +19380,118 @@
           "inbound": [],
           "outbound": []
         },
-        "contentHash": "9acc41811dfa70eca271b7c830c5723a3308f9ffb301df3ee01918206ddc0c59",
+        "contentHash": "960559614d04d11220879fa1105594878391311734b665b5c0c1651c670bb954",
+        "provenance": "observed",
+        "confidence": "observed"
+      },
+      {
+        "id": "module:apps/docs/components/home/handoff-proof.tsx",
+        "kind": "module",
+        "path": "apps/docs/components/home/handoff-proof.tsx",
+        "title": "handoff-proof.tsx",
+        "aliases": [],
+        "symbols": [
+          "HandoffProof"
+        ],
+        "tags": [
+          "module",
+          "tsx",
+          "home"
+        ],
+        "fields": {
+          "title": "handoff-proof.tsx",
+          "headings": "",
+          "path": "apps/docs/components/home/handoff-proof.tsx",
+          "symbols": "HandoffProof",
+          "summary": "",
+          "body": "",
+          "aliases": "module tsx home"
+        },
+        "graph": {
+          "pagerank": 0,
+          "inboundLinks": 0,
+          "coveredBy": [],
+          "mentionedBy": [],
+          "areaId": "area:apps/docs",
+          "packageId": "package:@agentskit/doc-bridge",
+          "inbound": [],
+          "outbound": []
+        },
+        "contentHash": "90be4573fc65934ba108e9156623a81cca81646455be2beb994c39ea21a352ac",
+        "provenance": "observed",
+        "confidence": "observed"
+      },
+      {
+        "id": "module:apps/docs/components/home/install-command-tabs.tsx",
+        "kind": "module",
+        "path": "apps/docs/components/home/install-command-tabs.tsx",
+        "title": "install-command-tabs.tsx",
+        "aliases": [],
+        "symbols": [
+          "InstallCommandTabs"
+        ],
+        "tags": [
+          "module",
+          "tsx",
+          "home"
+        ],
+        "fields": {
+          "title": "install-command-tabs.tsx",
+          "headings": "",
+          "path": "apps/docs/components/home/install-command-tabs.tsx",
+          "symbols": "InstallCommandTabs",
+          "summary": "",
+          "body": "",
+          "aliases": "module tsx home"
+        },
+        "graph": {
+          "pagerank": 0,
+          "inboundLinks": 0,
+          "coveredBy": [],
+          "mentionedBy": [],
+          "areaId": "area:apps/docs",
+          "packageId": "package:@agentskit/doc-bridge",
+          "inbound": [],
+          "outbound": []
+        },
+        "contentHash": "8b718d46453376192ae5749f557ff721adada3c3a7867a666a065807563455ff",
+        "provenance": "observed",
+        "confidence": "observed"
+      },
+      {
+        "id": "module:apps/docs/components/home/proof-terminal.tsx",
+        "kind": "module",
+        "path": "apps/docs/components/home/proof-terminal.tsx",
+        "title": "proof-terminal.tsx",
+        "aliases": [],
+        "symbols": [
+          "ProofTerminal"
+        ],
+        "tags": [
+          "module",
+          "tsx",
+          "home"
+        ],
+        "fields": {
+          "title": "proof-terminal.tsx",
+          "headings": "",
+          "path": "apps/docs/components/home/proof-terminal.tsx",
+          "symbols": "ProofTerminal",
+          "summary": "",
+          "body": "",
+          "aliases": "module tsx home"
+        },
+        "graph": {
+          "pagerank": 0,
+          "inboundLinks": 0,
+          "coveredBy": [],
+          "mentionedBy": [],
+          "areaId": "area:apps/docs",
+          "packageId": "package:@agentskit/doc-bridge",
+          "inbound": [],
+          "outbound": []
+        },
+        "contentHash": "542a57d07470edd2de61e77b5e6218139304372d1d05853da63f1ff901932cca",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -19306,7 +19565,44 @@
           "inbound": [],
           "outbound": []
         },
-        "contentHash": "920068fe9e5984c922bb2d82b2c0018d502010586e719e13abacd60ccb5fcd74",
+        "contentHash": "4ca135e298ce8378351aa73a68f6e584370e328aca186557914a19e94dda4b63",
+        "provenance": "observed",
+        "confidence": "observed"
+      },
+      {
+        "id": "module:apps/docs/components/product-wordmark.tsx",
+        "kind": "module",
+        "path": "apps/docs/components/product-wordmark.tsx",
+        "title": "product-wordmark.tsx",
+        "aliases": [],
+        "symbols": [
+          "ProductWordmark"
+        ],
+        "tags": [
+          "module",
+          "tsx",
+          "components"
+        ],
+        "fields": {
+          "title": "product-wordmark.tsx",
+          "headings": "",
+          "path": "apps/docs/components/product-wordmark.tsx",
+          "symbols": "ProductWordmark",
+          "summary": "",
+          "body": "",
+          "aliases": "module tsx components"
+        },
+        "graph": {
+          "pagerank": 0,
+          "inboundLinks": 0,
+          "coveredBy": [],
+          "mentionedBy": [],
+          "areaId": "area:apps/docs",
+          "packageId": "package:@agentskit/doc-bridge",
+          "inbound": [],
+          "outbound": []
+        },
+        "contentHash": "4179d8e5282de8023afeef443950e41e7a86c3a2718e3dd24ca75315f8270700",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -19343,7 +19639,7 @@
           "inbound": [],
           "outbound": []
         },
-        "contentHash": "37120e4d2d147039f985e323228da3ce2e405fa19052e8dff47363cd705a6009",
+        "contentHash": "2498e66b6fa5533c9a0f467d8e2c9cb49196f3c77cf19e182ba2c1e57495ff14",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -19461,6 +19757,47 @@
           "outbound": []
         },
         "contentHash": "e30a62a052972dafb0b92bc66bbca639561d26585ba2d5de237762fe41ffe960",
+        "provenance": "observed",
+        "confidence": "observed"
+      },
+      {
+        "id": "module:apps/docs/lib/shell.ts",
+        "kind": "module",
+        "path": "apps/docs/lib/shell.ts",
+        "title": "shell.ts",
+        "aliases": [],
+        "symbols": [
+          "PRODUCT_ID",
+          "PRODUCT_REPO",
+          "SHELL_CSS_URL",
+          "SHELL_JS_URL",
+          "SHELL_ORIGIN"
+        ],
+        "tags": [
+          "module",
+          "ts",
+          "lib"
+        ],
+        "fields": {
+          "title": "shell.ts",
+          "headings": "",
+          "path": "apps/docs/lib/shell.ts",
+          "symbols": "PRODUCT_ID PRODUCT_REPO SHELL_CSS_URL SHELL_JS_URL SHELL_ORIGIN",
+          "summary": "",
+          "body": "",
+          "aliases": "module ts lib"
+        },
+        "graph": {
+          "pagerank": 0,
+          "inboundLinks": 0,
+          "coveredBy": [],
+          "mentionedBy": [],
+          "areaId": "area:apps/docs",
+          "packageId": "package:@agentskit/doc-bridge",
+          "inbound": [],
+          "outbound": []
+        },
+        "contentHash": "0ec9be74b460f724c33e83f833970420b108f807dda3fa9705575d107d50c0e8",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -19804,6 +20141,40 @@
         "confidence": "observed"
       },
       {
+        "id": "module:apps/docs/shell-elements.d.ts",
+        "kind": "module",
+        "path": "apps/docs/shell-elements.d.ts",
+        "title": "shell-elements.d.ts",
+        "aliases": [],
+        "tags": [
+          "module",
+          "ts",
+          "docs"
+        ],
+        "fields": {
+          "title": "shell-elements.d.ts",
+          "headings": "",
+          "path": "apps/docs/shell-elements.d.ts",
+          "symbols": "",
+          "summary": "",
+          "body": "",
+          "aliases": "module ts docs"
+        },
+        "graph": {
+          "pagerank": 0,
+          "inboundLinks": 0,
+          "coveredBy": [],
+          "mentionedBy": [],
+          "areaId": "area:apps/docs",
+          "packageId": "package:@agentskit/doc-bridge",
+          "inbound": [],
+          "outbound": []
+        },
+        "contentHash": "243b39a2a1346857481972d7d4f0554eae52fb38a0d2167ea86fb1c3e2783eb8",
+        "provenance": "observed",
+        "confidence": "observed"
+      },
+      {
         "id": "module:apps/docs/source.config.ts",
         "kind": "module",
         "path": "apps/docs/source.config.ts",
@@ -20038,7 +20409,7 @@
           ],
           "outbound": []
         },
-        "contentHash": "06c347a605db246e022e5ef85815eba61aa390b9090698becf9d709ff4c44b07",
+        "contentHash": "0012c4943fc6e9600a57d5d2abbd87ab2f02c893b33128b64ae3c26d2bcf2903",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -20368,7 +20739,7 @@
           "inbound": [],
           "outbound": []
         },
-        "contentHash": "0442a21b2eac46b25f35877e228aa6d01ce71e8a42f8b9331bc13e38c8dab2b1",
+        "contentHash": "f40f0f37923b290017a4be16a52c1d0ddedd38b4fd29b8c7ccdb4f82a2360dbc",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -21464,6 +21835,40 @@
           "outbound": []
         },
         "contentHash": "bce087c5dc2249f194c1ce7e853157e00f8c799e8b2e260a2425e34bca2cc104",
+        "provenance": "observed",
+        "confidence": "observed"
+      },
+      {
+        "id": "module:scripts/verify-home-ui.mjs",
+        "kind": "module",
+        "path": "scripts/verify-home-ui.mjs",
+        "title": "verify-home-ui.mjs",
+        "aliases": [],
+        "tags": [
+          "module",
+          "mjs",
+          "scripts"
+        ],
+        "fields": {
+          "title": "verify-home-ui.mjs",
+          "headings": "",
+          "path": "scripts/verify-home-ui.mjs",
+          "symbols": "",
+          "summary": "",
+          "body": "",
+          "aliases": "module mjs scripts"
+        },
+        "graph": {
+          "pagerank": 0,
+          "inboundLinks": 0,
+          "coveredBy": [],
+          "mentionedBy": [],
+          "areaId": "area:scripts",
+          "packageId": "package:@agentskit/doc-bridge",
+          "inbound": [],
+          "outbound": []
+        },
+        "contentHash": "ce760f7e30a0c4c3cf10e20c040ec0f89ea1dcc3bedfa08bf71906ffb100e192",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -36670,7 +37075,7 @@
           "inbound": [],
           "outbound": []
         },
-        "contentHash": "8e0e57c4fdca21bcba025c1027f5bfe02ea5d93bf2f371ef7f0ef72fe5749655",
+        "contentHash": "6af12f6e275495076f24ed9e0253c12b2c85e51d76cca35c72a75c5e506a02d1",
         "provenance": "observed",
         "confidence": "observed"
       },
