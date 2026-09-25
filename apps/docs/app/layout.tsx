@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next'
+import { Inter, JetBrains_Mono, Space_Grotesk } from 'next/font/google'
 import Script from 'next/script'
 import { RootProvider } from 'fumadocs-ui/provider/next'
 import './globals.css'
@@ -6,6 +7,10 @@ import { ChatLauncher } from '@/components/chat-launcher'
 import { SITE_URL } from '@/lib/site'
 import { serializedDocBridgeStructuredData } from '@/lib/structured-data'
 import { AccessibleSearch } from '@/components/accessible-search'
+
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' })
+const jetbrains = JetBrains_Mono({ subsets: ['latin'], variable: '--font-jetbrains', display: 'swap' })
+const spaceGrotesk = Space_Grotesk({ subsets: ['latin'], variable: '--font-space-grotesk', display: 'swap' })
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -46,9 +51,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           dangerouslySetInnerHTML={{ __html: serializedDocBridgeStructuredData }}
         />
       </head>
-      <body>
-        <Script src="https://www.agentskit.io/ecosystem-bar.js" strategy="afterInteractive" data-current="doc-bridge" />
-        <RootProvider search={{ enabled: true, options: { type: 'static', api: `${basePath}/api/search/` } }}>
+      <body className={`${inter.variable} ${jetbrains.variable} ${spaceGrotesk.variable}`}>
+        <Script src={`${basePath}/ecosystem-bar.js`} strategy="afterInteractive" data-current="doc-bridge" />
+        <RootProvider theme={{ defaultTheme: 'dark' }} search={{ enabled: true, options: { type: 'static', api: `${basePath}/api/search/` } }}>
           <AccessibleSearch />
           {children}
           <ChatLauncher />
