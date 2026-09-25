@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { Inter, JetBrains_Mono, Space_Grotesk } from 'next/font/google'
 import { ArrowRight, Bot, GitBranch, ShieldCheck, Terminal, Zap } from 'lucide-react'
 import { readdirSync } from 'node:fs'
 import { resolve } from 'node:path'
@@ -8,6 +9,11 @@ import { ProofTerminal } from '@/components/home/proof-terminal'
 import { LiquidCursorGradient } from '@/components/liquid-cursor-gradient'
 import { ProductSubheader } from '@/components/product-subheader'
 import { SiteFooter } from '@/components/site-footer'
+import './home.css'
+
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' })
+const jetbrains = JetBrains_Mono({ subsets: ['latin'], variable: '--font-jetbrains', display: 'swap' })
+const spaceGrotesk = Space_Grotesk({ subsets: ['latin'], variable: '--font-space-grotesk', display: 'swap' })
 
 const principles = [
   [Zap, 'Deterministic by default', 'Known questions stay local. Every answer keeps its source.'],
@@ -21,7 +27,7 @@ const sourceCount = readdirSync(resolve(process.cwd(), '../../docs'), { recursiv
 
 export default function HomePage() {
   return (
-    <div className="bridge-home">
+    <div className={`bridge-home ${inter.variable} ${jetbrains.variable} ${spaceGrotesk.variable}`}>
       <LiquidCursorGradient />
       <ProductSubheader />
       <main className="bridge-home-content">

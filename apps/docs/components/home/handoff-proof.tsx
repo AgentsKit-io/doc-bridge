@@ -32,7 +32,7 @@ export function HandoffProof() {
         </svg>
 
         <section className="bridge-map-side" aria-label="Human documentation">
-          <h3>FOR PEOPLE</h3>
+          <p className="bridge-map-side-label">FOR PEOPLE</p>
           <ul>
             {humanSources.map(({ label, detail, Icon }) => (
               <li key={label}>
@@ -50,7 +50,7 @@ export function HandoffProof() {
         </div>
 
         <section className="bridge-map-side" aria-label="Agent context and tools">
-          <h3>FOR AGENTS</h3>
+          <p className="bridge-map-side-label">FOR AGENTS</p>
           <ul>
             {agentOutputs.map(({ label, detail, Icon }) => (
               <li key={label}>

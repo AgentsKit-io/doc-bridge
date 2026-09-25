@@ -63,6 +63,7 @@ Use `--bridge-home-*` aliases in the homepage CSS when a component needs a role-
 ## Reused components
 
 - `apps/docs/public/ecosystem-bar.js` is kept byte-for-byte aligned with the AgentsKit local source at `agentskit/apps/docs-next/public/ecosystem-bar.js`. Refresh this asset from that source when the shared bar changes; the Doc Bridge page passes its current product identity to the same custom element.
+- Keep the home canvas, fonts, and interaction styles in `apps/docs/app/home.css`, imported by the home route only. Documentation routes keep the base stylesheet and calmer Fumadocs layout.
 - The home reuses the AgentsKit liquid cursor behavior and brand tokens without adding a UI dependency.
 - Install commands use the same tab pattern as AgentsKit and expose one copyable command per package manager.
 - The proof terminal follows the AgentsKit demo pattern: colored code tokens, a slowly advancing active step, pause on hover or keyboard focus, manual play/pause, and a static reduced-motion mode.

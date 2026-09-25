@@ -51,9 +51,9 @@ export function ProofTerminal({ sourceCount }: { sourceCount: number }) {
             type="button"
             className="bridge-proof-terminal-state"
             onClick={() => setManualPaused((current) => !current)}
-            aria-label={manualPaused ? 'Play terminal demo' : 'Pause terminal demo'}
+            aria-pressed={manualPaused}
           >
-            <i aria-hidden="true" />{paused ? 'Paused' : 'Playing'}
+            <i aria-hidden="true" />{manualPaused ? 'Resume demo' : 'Pause demo'}
           </button>
         )}
       </header>
