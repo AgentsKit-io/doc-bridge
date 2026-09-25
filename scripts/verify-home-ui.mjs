@@ -57,7 +57,6 @@ try {
     const heading = document.querySelector('h1')
     const handoff = document.querySelector('.bridge-map')
     const description = document.querySelector('.bridge-hero-description')
-    const body = document.body
     const homeStyle = home ? getComputedStyle(home) : null
     const headingStyle = heading ? getComputedStyle(heading) : null
     const descriptionStyle = description ? getComputedStyle(description) : null
