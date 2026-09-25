@@ -2,6 +2,7 @@
   "agentskit": { "home": "https://www.agentskit.io", "role": "Foundation library for agents and applications.", "hook": "Start with the JavaScript foundation library." },
   "registry": { "home": "https://registry.agentskit.io", "role": "Start from reusable agents.", "hook": "Browse production-ready agent source." },
   "agentskit-chat": { "home": "https://chat.agentskit.io", "role": "Deliver conversational interfaces.", "hook": "Building chat? Use the cross-framework application layer." },
+  "harness": { "home": "https://harness.agentskit.io/", "role": "Enforce delivery gates and evidence.", "hook": "Keep the SDLC loop moving with fail-closed gates." },
   "playbook": { "home": "https://playbook.agentskit.io", "role": "Apply repeatable engineering standards.", "hook": "Keep agent-built code safe and shippable." },
   "doc-bridge": {
     "home": "https://doc-bridge.agentskit.io/",
