@@ -47,8 +47,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         />
       </head>
       <body>
-        <Script src="https://www.agentskit.io/ecosystem-bar.js" strategy="afterInteractive" data-current="doc-bridge" />
-        <RootProvider search={{ enabled: true, options: { type: 'static', api: `${basePath}/api/search/` } }}>
+        <Script src={`${basePath}/ecosystem-bar.js`} strategy="afterInteractive" data-current="doc-bridge" />
+        <RootProvider theme={{ defaultTheme: 'dark' }} search={{ enabled: true, options: { type: 'static', api: `${basePath}/api/search/` } }}>
           <AccessibleSearch />
           {children}
           <ChatLauncher />

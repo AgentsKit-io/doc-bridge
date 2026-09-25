@@ -74,15 +74,15 @@ html:not(.dark) [style*='--shiki-light:#6E7781'] {
   pointer-events: none;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; }
-}
+
 
 @media (max-width: 900px) {
   .ecosystem-peer-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
-
-@media (max-width: 560px) {
+@media (max-width: 600px) {
   .ecosystem-peer-grid, .ecosystem-peers-compact .ecosystem-peer-grid { grid-template-columns: 1fr; }
   .ecosystem-peer { min-height: 11rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; }
 }

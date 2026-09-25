@@ -19,6 +19,13 @@ export default function ChatWidget({ onClose }: { readonly onClose: () => void }
     void discoveryPromise.current.then((result) => { if (active) setInputs(result) })
     return () => { active = false }
   }, [])
+  useEffect(() => {
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', closeOnEscape)
+    return () => window.removeEventListener('keydown', closeOnEscape)
+  }, [onClose])
   const definition = useMemo(() => {
     const fallback = createAskAdapter({ endpoint: process.env.NEXT_PUBLIC_ASK_ENDPOINT ?? 'https://ask.agentskit.io/v1/ask', corpus: 'doc-bridge' })
     const answer = createDiscoveryAdapter({
@@ -37,7 +44,7 @@ export default function ChatWidget({ onClose }: { readonly onClose: () => void }
   }, [inputs])
 
   return (
-    <section className="fixed inset-x-3 bottom-3 z-50 flex h-[min(640px,calc(100dvh-1.5rem))] flex-col overflow-hidden rounded-2xl border border-white/15 bg-[#0c120f] text-white shadow-2xl sm:left-auto sm:w-[440px]" role="dialog" aria-label="Ask Doc Bridge" onKeyDown={(event) => { if (event.key === 'Escape') onClose() }}>
+    <section className="bridge-home-chat-dialog fixed inset-x-3 bottom-3 z-50 flex h-[min(640px,calc(100dvh-1.5rem))] flex-col overflow-hidden rounded-2xl border border-white/15 bg-[#0c120f] text-white shadow-2xl sm:left-auto sm:w-[440px]" role="dialog" aria-label="Ask Doc Bridge" onKeyDown={(event) => { if (event.key === 'Escape') onClose() }}>
       <header className="flex min-h-14 items-center justify-between border-b border-white/10 px-4"><div><strong className="text-sm">Ask Doc Bridge</strong><p className="text-xs text-white/55">deterministic first · backend when needed</p></div><button className="min-h-11 min-w-11 rounded-full text-xl hover:bg-white/10" type="button" aria-label="Close chat" onClick={onClose}>×</button></header>
       <div className="min-h-0 flex-1 overflow-hidden p-3">
         {inputs === undefined ? <p className="p-4 text-sm text-white/65" role="status">Loading the local knowledge artifact…</p> : <AgentChat definition={definition} placeholder="Ask about setup, MCP, gates, or ownership…" theme={{ colors: { accent: '#55dc91' }, radius: { medium: 12, large: 16 } }} />}

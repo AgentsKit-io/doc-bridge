@@ -17,7 +17,7 @@ export function ProductSubheader() {
 
   return (
     <header
-      className="sticky top-0 z-40 h-14 border-b border-black/10 bg-[var(--bridge-paper)] text-[var(--bridge-ink)] dark:border-white/10 dark:bg-[var(--bridge-night)] dark:text-[var(--bridge-paper-strong)]"
+      className="bridge-home-header sticky top-0 z-40 h-14 border-b border-black/10 bg-[var(--bridge-paper)] text-[var(--bridge-ink)] dark:border-white/10 dark:bg-[var(--bridge-night)] dark:text-[var(--bridge-paper-strong)]"
       onKeyDown={(event) => {
         if (event.key === 'Escape') setOpen(false)
       }}

@@ -66,7 +66,7 @@ function entryId(slug) { return artifactId('doc', slug) }
 function canonicalDocUrl(slug) { return slug === 'index' ? `${origin}/docs/` : `${origin}/docs/${slug}/` }
 function aliases(values) {
   const seen = new Set()
-  return values.filter((value) => {
+  return values.filter((value) => typeof value === 'string').filter((value) => {
     const key = value.normalize('NFKC').trim().replace(/\s+/g, ' ').toLocaleLowerCase('en-US')
     if (seen.has(key)) return false
     seen.add(key)
@@ -84,9 +84,12 @@ function descriptionOf(markdown) {
     ?? 'Canonical Doc Bridge documentation.'
 }
 
+const ecosystemBarPath = join(publicRoot, 'ecosystem-bar.js')
+const ecosystemBar = await readFile(ecosystemBarPath)
 await rm(publicRoot, { recursive: true, force: true })
 await mkdir(join(publicRoot, 'raw'), { recursive: true })
 await mkdir(join(publicRoot, 'deterministic'), { recursive: true })
+await writeFile(ecosystemBarPath, ecosystemBar)
 
 const files = await walk(docsRoot)
 const documents = await Promise.all(files.map(async (path) => {
@@ -98,7 +101,12 @@ const documents = await Promise.all(files.map(async (path) => {
 const manifest = JSON.parse(await readFile(ecosystemManifestPath, 'utf8'))
 const ecosystemOverrides = JSON.parse(await readFile(ecosystemOverridesPath, 'utf8'))
 const ecosystem = manifest.products
-  .map((product) => ({ ...product, ...ecosystemOverrides[product.id] }))
+  .map((product) => ({
+    ...product,
+    ...ecosystemOverrides[product.id],
+    home: ecosystemOverrides[product.id]?.home ?? product.surfaces?.home,
+    hook: ecosystemOverrides[product.id]?.hook ?? product.promise,
+  }))
 const publicFiles = JSON.parse(await readFile(publicDocsPath, 'utf8'))
 const publicFileSet = new Set(publicFiles)
 const publicDocuments = documents.filter((doc) => publicFileSet.has(doc.file))
