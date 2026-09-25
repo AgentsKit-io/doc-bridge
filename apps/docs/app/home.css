@@ -56,8 +56,9 @@
   transition-duration: 1100ms;
   background: radial-gradient(ellipse, color-mix(in srgb, var(--bridge-home-green) 15%, transparent), transparent 68%);
 }
-.bridge-home-content, .bridge-home-header, .bridge-home-footer { position: relative; z-index: 1; }
+.bridge-home-content, .bridge-home-footer { position: relative; z-index: 1; }
 .bridge-home-header {
+  z-index: 1;
   border-color: color-mix(in srgb, var(--bridge-home-border) 78%, transparent) !important;
   background: color-mix(in srgb, var(--bridge-home-bg) 58%, transparent) !important;
   -webkit-backdrop-filter: blur(18px) saturate(125%);

@@ -96,5 +96,5 @@ test('portable compatibility fixture contains no private implementation evidence
     'utf8',
   )
   assert.match(config, /Synthetic package used only to verify/)
-  assert.doesNotMatch(config, /AKOS|customer|private|credential/i)
+  assert.doesNotMatch(config, /customer|private|credential/i)
 })

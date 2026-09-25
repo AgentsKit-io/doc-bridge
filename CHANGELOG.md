@@ -4,7 +4,7 @@
 
 ### Patch Changes
 
-- 221b4a6: Retire the public AKOS ecosystem contract and generated documentation references.
+- 221b4a6: Retire a deprecated ecosystem contract and generated documentation references.
 
 ## 1.11.1
 
@@ -1063,7 +1063,7 @@ Dogfood round-2 fixes (search ranking, full-text body, peers, federation soft-fa
 
 ## 0.1.0-alpha.2
 
-Dogfood-driven polish after ecosystem install on agentskit, agentskit-os, playbook, and registry.
+Dogfood-driven polish after ecosystem install on agentskit, playbook, registry, and a product monorepo.
 
 ### Fixes / features
 
