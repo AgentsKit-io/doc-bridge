@@ -10,7 +10,7 @@ test('landing communicates the deterministic proof and has no horizontal overflo
   await expect(page.getByRole('link', { name: 'Add Doc Bridge to your repo' })).toHaveAttribute('href', /\/docs\/getting-started\/?$/)
   await expect(page.getByText('The bridge contract')).toBeVisible()
   const ecosystemFooter = page.getByRole('contentinfo').getByRole('navigation', { name: 'AgentsKit ecosystem' })
-  await expect(ecosystemFooter.getByRole('link')).toHaveCount(5)
+  await expect(ecosystemFooter.getByRole('link')).toHaveCount(6)
   await expect(ecosystemFooter.getByRole('link', { name: /Doc Bridge/ })).toHaveAttribute('aria-current', 'page')
   await expect(ecosystemFooter).not.toContainText('Code Review')
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
