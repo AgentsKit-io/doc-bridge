@@ -105,7 +105,7 @@ docbridge.diagnostics { "format": "finding" }
 ```
 
 Both emit every reconciliation diagnostic as a `Finding` from `@agentskit/core/finding`, with
-severities drawn from `SEVERITY_ORDER`, so Code Review, AKOS and dashboards read Doc Bridge with no
+severities drawn from `SEVERITY_ORDER`, so Code Review and dashboards read Doc Bridge with no
 parser of their own. Internal severities map `error → high`, `warn → medium`, `info → low`,
 `off → info`; nothing is `critical`, because a documentation finding never takes a system down.
 `title` is the code as words, `detail` the message, `category` the status, `location` the first
