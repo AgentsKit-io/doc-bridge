@@ -84,9 +84,12 @@ function descriptionOf(markdown) {
     ?? 'Canonical Doc Bridge documentation.'
 }
 
+const ecosystemBarPath = join(publicRoot, 'ecosystem-bar.js')
+const ecosystemBar = await readFile(ecosystemBarPath)
 await rm(publicRoot, { recursive: true, force: true })
 await mkdir(join(publicRoot, 'raw'), { recursive: true })
 await mkdir(join(publicRoot, 'deterministic'), { recursive: true })
+await writeFile(ecosystemBarPath, ecosystemBar)
 
 const files = await walk(docsRoot)
 const documents = await Promise.all(files.map(async (path) => {
