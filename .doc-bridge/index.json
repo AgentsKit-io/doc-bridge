@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "contentHash": "0a70f65585c927674e27b1f634b068d4ae40771959b793b7bfedc20060beccae",
+  "contentHash": "c6304db4068bb6b8b83663cba3a9f848cdea639b3dad3ea1331911d02949f76e",
   "contentHashAlgo": "sha256-normalized-v1",
-  "generatedAt": "2026-09-19T21:03:35.583Z",
+  "generatedAt": "2026-09-25T01:40:15.239Z",
   "project": {
     "name": "@agentskit/doc-bridge",
     "root": "."
@@ -219,6 +219,30 @@
       "description": "Owns ambient type declarations for what the published packages do not type correctly themselves. Two files, and both exist to keep `pnpm typecheck` honest rather than to change behaviour."
     },
     {
+      "id": "document:.github/pull_request_template.md",
+      "type": "document",
+      "title": "pull_request_template.md",
+      "path": ".github/pull_request_template.md",
+      "description": "Issue:",
+      "tags": [
+        "document",
+        "unclassified"
+      ],
+      "contentHash": "5df68ee945485fb9a93f73c5b44a2d8ef46b97d7e5d85cfbd9241c07489c3213"
+    },
+    {
+      "id": "document:AGENTS.md",
+      "type": "document",
+      "title": "AGENTS.md",
+      "path": "AGENTS.md",
+      "description": "Instructions for coding agents working in @agentskit/doc-bridge. Human contributor rules live in CONTRIBUTING.md and apply here too.",
+      "tags": [
+        "document",
+        "unclassified"
+      ],
+      "contentHash": "a2c4e2190a77ec011766c8cc4d36a9f293cfcffac0a3f2355a2371d70841a0c2"
+    },
+    {
       "id": "document:agents/content-fact-checker/README.md",
       "type": "document",
       "title": "Fact Checker",
@@ -271,12 +295,12 @@
       "type": "document",
       "title": "Changelog",
       "path": "CHANGELOG.md",
-      "description": "faf29f5: Stop reporting a path an ignore rule rescues as unreproducible.",
+      "description": "221b4a6: Retire a deprecated ecosystem contract and generated documentation references.",
       "tags": [
         "document",
         "project"
       ],
-      "contentHash": "7e216c524313f62d0f58142d95859539a39346d9965dad4ccaa065308dcef870"
+      "contentHash": "144dc70354ccd94759370eed05db1173885e5447da25c81080af159daa05eee8"
     },
     {
       "id": "document:CODE_OF_CONDUCT.md",
@@ -435,54 +459,6 @@
       "contentHash": "692b903e5de9e2da85d8312bc8f2a79a446a8a02b57d14b39fc46743b4e941b6"
     },
     {
-      "id": "document:docs/DOGFOOD-ROUND2.md",
-      "type": "document",
-      "title": "Dogfood round 2 — published @agentskit/doc-bridge@0.1.0-alpha.2",
-      "path": "docs/DOGFOOD-ROUND2.md",
-      "description": "Date: 2026-07-09Install: npm registry tag alpha → 0.1.0-alpha.2Consumers: agentskit · agentskit-os · agents-playbook · agentskit-registry",
-      "tags": [
-        "document",
-        "human"
-      ],
-      "contentHash": "c08a566b67b1ba3f2ff88896a5806ee73b53cc34edc3ba230a5d6a2a36156373"
-    },
-    {
-      "id": "document:docs/DOGFOOD-ROUND3.md",
-      "type": "document",
-      "title": "Dogfood round 3 — @agentskit/doc-bridge@0.1.0-alpha.3",
-      "path": "docs/DOGFOOD-ROUND3.md",
-      "description": "Date: 2026-07-09npm: alpha → 0.1.0-alpha.3 · latest still 0.1.0-alpha.1",
-      "tags": [
-        "document",
-        "human"
-      ],
-      "contentHash": "938cd2ee55fce9cfeb9a08823dce75b94c4a8b75e1bd23c20c4e524e26dbe110"
-    },
-    {
-      "id": "document:docs/DOGFOOD-V1.md",
-      "type": "document",
-      "title": "Dogfood validation — @agentskit/doc-bridge@1.0.0",
-      "path": "docs/DOGFOOD-V1.md",
-      "description": "Date: 2026-07-09Install: 1.0.0 from npm (alpha dist-tag; latest still points at older alpha.1)",
-      "tags": [
-        "document",
-        "human"
-      ],
-      "contentHash": "e6448d89bb1ba6045cae4c02cab33ec2abc0a39095faa3a4b64e1bb18652b53b"
-    },
-    {
-      "id": "document:docs/DOGFOOD.md",
-      "type": "document",
-      "title": "Ecosystem dogfood — @agentskit/doc-bridge",
-      "path": "docs/DOGFOOD.md",
-      "description": "Validated 2026-07-09 against four consumers.",
-      "tags": [
-        "document",
-        "human"
-      ],
-      "contentHash": "a6417e2514592536b213342af16f2cb7a0700b36849e72e5f21c75cc14fa0fb2"
-    },
-    {
       "id": "document:docs/examples.md",
       "type": "document",
       "title": "Examples",
@@ -636,7 +612,7 @@
         "document",
         "human"
       ],
-      "contentHash": "e15a10401a80643c99563af8d839d35f6b3a5c92e1a21dfa6c3098c8ee235af1"
+      "contentHash": "4ca76d701455b4701e6452260226705e7aff471cf6f980022b802bdb6d09835b"
     },
     {
       "id": "document:docs/MARKETPLACE-ECOSYSTEM-PLAN.md",
@@ -648,7 +624,7 @@
         "document",
         "human"
       ],
-      "contentHash": "9afda0fecef277a2d8273129fd0aff4f8da8ba7d7588f27da748cc0ba55a6c3f"
+      "contentHash": "bf9e305b7edb459daaa2a685e6cb4df7352f69da94e798889be02a16c4f57a45"
     },
     {
       "id": "document:docs/MARKETPLACE.md",
@@ -745,7 +721,7 @@
         "document",
         "human"
       ],
-      "contentHash": "4c6de7a2a03c641e70a3099252c55c6f5c8d64519b1b52ac1f9a5d5fa24823dd"
+      "contentHash": "b6ebd33a2a139f20ca63a2d78560ee7a5659c860be06fc287e7891088b26fbd8"
     },
     {
       "id": "document:docs/PRD-knowledge-retrieval-and-enrichment.md",
@@ -757,7 +733,7 @@
         "document",
         "human"
       ],
-      "contentHash": "78eef7279c0fdc43402933bf5e63253b095e6877fc3aae3cd957666ebf2addea"
+      "contentHash": "9ae434d60cd70ad0d6e4e9c3478b7a2ce99073c0566e5e02733b4a9c9e282915"
     },
     {
       "id": "document:docs/qa/vitepress-starlight-adapters.md",
@@ -985,7 +961,7 @@
         "document",
         "human"
       ],
-      "contentHash": "bded57d2ca268d7f3745b298e83ab766baa03f7251a4e790625f66f6f6ea21b8"
+      "contentHash": "5b8375ccae5668e358073047ac57b969355864d8bdec446700737d26a5f84b71"
     },
     {
       "id": "document:docs/spec/measured-enrichment-v1.md",
@@ -1268,12 +1244,12 @@
       "type": "document",
       "title": "Doc Bridge validation cycle plan",
       "path": "docs/validation-cycle-plan.md",
-      "description": "Validate the complete Doc Bridge change against agentskit-os, not only the published package or the HTML report. The validation must prove the bridge between repository structure, documentation, agents, and humans:",
+      "description": "Validate the complete Doc Bridge change against the reference monorepo, not only the published package or the HTML report. The validation must prove the bridge between repository structure, documentation, agents, and humans:",
       "tags": [
         "document",
         "human"
       ],
-      "contentHash": "e772a5066ea778ae4a8272ad022c0fd4a8cbfa78557cfea0d6ace8febe5b20cb"
+      "contentHash": "d7e74a823aa64ce0a8c2ac32ff6b4ee8bb8a81416931ed36d4e705d3de3ad0db"
     },
     {
       "id": "document:docs/verification-harness.md",
@@ -1333,7 +1309,7 @@
         "document",
         "project"
       ],
-      "contentHash": "f3c18ad57208c7a152497d4e1e3a7d35ace0dfb6a967eac2433ebedd4833d54f"
+      "contentHash": "4376ddb2cb7b442daba04811d4d340b7a5fa7427d17256a1c8c9e037062ca807"
     },
     {
       "id": "document:SECURITY.md",
@@ -1369,7 +1345,7 @@
         "document",
         "unclassified"
       ],
-      "contentHash": "d4591954f89c6b7b5b2fb9fe4c84763c44138ac889e624df4012a44ab568cdf2"
+      "contentHash": "c87152cf3984c0b71dfbd7d90d26fd5e09bb8fe5120d45a54f9f590b169a13fd"
     },
     {
       "id": "document:tests/fixtures/sample-project/docs/for-agents/INDEX.md",
@@ -2289,7 +2265,7 @@
         "test",
         "scripts"
       ],
-      "contentHash": "c55e5667e21ae0c3c5ab7e532e7c88c7d20f9a1dd41fd28a02c54757e761b5ec"
+      "contentHash": "1195dda80c7ece42d765e07c26e43aaa1d774a75b07ad3a9aefb49f2e13ea1c4"
     },
     {
       "id": "module:scripts/prepare.mjs",
@@ -2592,7 +2568,7 @@
         "mjs",
         "scripts"
       ],
-      "contentHash": "cc95e1833354e885dc549def25d8966b954d3ce3c39102d6753885a364a4534e"
+      "contentHash": "f12d10f2ce96abb5c3f52335d2fb23f70eaab2f0bc3547d6af01e78beda0386c"
     },
     {
       "id": "module:src/agents/registry-adapter.ts",
@@ -3480,7 +3456,7 @@
         "ts",
         "findings"
       ],
-      "contentHash": "ad8c4e283369db7db48a0d65912053553b4ec228cfdb6c1c4f3962f92c388a41"
+      "contentHash": "2209e6afe618d2bc2ba910c39515991b424cf347dce48dfe860f9f20d960ce0d"
     },
     {
       "id": "module:src/fixes/proposals.ts",
@@ -4920,7 +4896,7 @@
         "ts",
         "report"
       ],
-      "contentHash": "954ec6920f6192afea867698273a37ee550c3affcef79af42061c6335621a45a"
+      "contentHash": "10f58e4a9e74df97415d384170349391382acdef26b89aa221efe3eff819dd29"
     },
     {
       "id": "module:src/retrieval/bm25.ts",
@@ -5729,7 +5705,7 @@
         "ts",
         "src"
       ],
-      "contentHash": "78923b5a9df448a4f0c6bcebf4e528c56a6f6e74f873d7a49b4b866658b85655"
+      "contentHash": "272ba96c327e82faa5b0530b37157d8ff88603d5984b96ddb24207199bb0d1c4"
     },
     {
       "id": "module:src/workflow/engine.ts",
@@ -5896,7 +5872,7 @@
         "test",
         "docs-e2e"
       ],
-      "contentHash": "e8987ce418831a07e153e3f912fd6346833125a7ffbff1b2c56d4a4bc12a6a6e"
+      "contentHash": "8e0e57c4fdca21bcba025c1027f5bfe02ea5d93bf2f371ef7f0ef72fe5749655"
     },
     {
       "id": "module:tests/doctor-measured.test.ts",
@@ -7907,8 +7883,8 @@
     "changes": {}
   },
   "inputs": {
-    "hash": "8cac005281cc601231f9b0e45ea02011661ed29d32f308bc347c09e6d0797f96",
-    "fileCount": 431,
+    "hash": "35bd0d0a643e516f07468077f4d0737a5f621cf90657372b825c44466345d2e1",
+    "fileCount": 429,
     "projectionVersion": 2
   },
   "retrieval": {
@@ -7930,9 +7906,9 @@
   "projection": {
     "type": "retrieval-index",
     "schemaVersion": 1,
-    "contentHash": "2bf1c2a54943935fef55a6972895f511c9288b74c25067c4148c4e7478ef73e0",
+    "contentHash": "7f5f1d79be19a93067432dffc9cf13da52c72e4cec777efe50565d25f5248545",
     "contentHashAlgo": "sha256-normalized-v1",
-    "snapshotHash": "80f8566a107ae4595315cfb2245a2aa0c274f35c459ada2df6e9ecdd94e8c787",
+    "snapshotHash": "e1967adba441c2866a6d05554a14b0ed80a9371944360a8ce0e8c17cca19681c",
     "overlayHash": "f99666ff9119084dd25c2974ae64eb6935ec2aa785ff5ad478fb9d541f7a5e94",
     "configurationHash": "91d46a4ecbfe3b55878e0b3c7608819775cf7b18aeafcc8f689eddfa462622b4",
     "lexiconVersion": 1,
@@ -7952,7 +7928,7 @@
     },
     "lexical": {
       "version": 1,
-      "documentCount": 459,
+      "documentCount": 457,
       "fieldNames": [
         "aliases",
         "body",
@@ -7963,13 +7939,13 @@
         "title"
       ],
       "averageFieldLength": {
-        "aliases": 3.468409586056645,
-        "body": 72.50108932461873,
-        "headings": 4.703703703703703,
-        "path": 5.668845315904139,
-        "summary": 5.816993464052287,
-        "symbols": 11.88888888888889,
-        "title": 3.122004357298475
+        "aliases": 3.474835886214442,
+        "body": 69.25382932166302,
+        "headings": 4.365426695842451,
+        "path": 5.669584245076586,
+        "summary": 5.74835886214442,
+        "symbols": 11.940919037199125,
+        "title": 3.087527352297593
       }
     },
     "entries": [
@@ -7993,49 +7969,11 @@
         },
         "graph": {
           "pagerank": 0,
-          "inboundLinks": 6,
+          "inboundLinks": 0,
           "coveredBy": [],
-          "mentionedBy": [
-            "document:CHANGELOG.md",
-            "document:docs/guides/choose-context-layer.md",
-            "document:docs/loop-workflow.md",
-            "document:docs/PRD-knowledge-retrieval-and-enrichment.md",
-            "document:docs/spec/cli.md",
-            "document:docs/spec/retrieval-index-v1.md"
-          ],
+          "mentionedBy": [],
           "packageId": "package:@agentskit/doc-bridge",
-          "inbound": [
-            {
-              "kind": "mentions",
-              "id": "document:CHANGELOG.md",
-              "confidence": "fuzzy"
-            },
-            {
-              "kind": "mentions",
-              "id": "document:docs/guides/choose-context-layer.md",
-              "confidence": "fuzzy"
-            },
-            {
-              "kind": "mentions",
-              "id": "document:docs/loop-workflow.md",
-              "confidence": "fuzzy"
-            },
-            {
-              "kind": "mentions",
-              "id": "document:docs/PRD-knowledge-retrieval-and-enrichment.md",
-              "confidence": "fuzzy"
-            },
-            {
-              "kind": "mentions",
-              "id": "document:docs/spec/cli.md",
-              "confidence": "fuzzy"
-            },
-            {
-              "kind": "mentions",
-              "id": "document:docs/spec/retrieval-index-v1.md",
-              "confidence": "fuzzy"
-            }
-          ],
+          "inbound": [],
           "outbound": []
         },
         "contentHash": "f14b03164edb0900d72b3b08b4aabcdafa5c128b5dd3912dc1d22c915bd520ad",
@@ -8105,7 +8043,7 @@
           "aliases": "doc-bridge-bin area ownership"
         },
         "graph": {
-          "pagerank": 0.009253,
+          "pagerank": 0.009113,
           "inboundLinks": 1,
           "coveredBy": [
             "document:docs/agent-corpus/bin.md"
@@ -8150,7 +8088,7 @@
           "aliases": "doc-bridge-scripts area ownership"
         },
         "graph": {
-          "pagerank": 0.009253,
+          "pagerank": 0.009113,
           "inboundLinks": 1,
           "coveredBy": [
             "document:docs/agent-corpus/scripts.md"
@@ -8356,7 +8294,7 @@
           "aliases": "doc-bridge-audit area ownership"
         },
         "graph": {
-          "pagerank": 0.009253,
+          "pagerank": 0.009113,
           "inboundLinks": 1,
           "coveredBy": [
             "document:docs/agent-corpus/audit.md"
@@ -8442,7 +8380,7 @@
           "aliases": "doc-bridge-budget area ownership"
         },
         "graph": {
-          "pagerank": 0.009253,
+          "pagerank": 0.009113,
           "inboundLinks": 1,
           "coveredBy": [
             "document:docs/agent-corpus/budget.md"
@@ -8488,7 +8426,7 @@
           "aliases": "doc-bridge-cli area ownership"
         },
         "graph": {
-          "pagerank": 0.009253,
+          "pagerank": 0.009113,
           "inboundLinks": 1,
           "coveredBy": [
             "document:docs/agent-corpus/cli.md"
@@ -8534,7 +8472,7 @@
           "aliases": "doc-bridge-config area ownership"
         },
         "graph": {
-          "pagerank": 0.009253,
+          "pagerank": 0.009113,
           "inboundLinks": 1,
           "coveredBy": [
             "document:docs/agent-corpus/config.md"
@@ -8580,7 +8518,7 @@
           "aliases": "doc-bridge-conformance area ownership"
         },
         "graph": {
-          "pagerank": 0.009253,
+          "pagerank": 0.009113,
           "inboundLinks": 1,
           "coveredBy": [
             "document:docs/agent-corpus/conformance.md"
@@ -8666,7 +8604,7 @@
           "aliases": "doc-bridge-doctor area ownership"
         },
         "graph": {
-          "pagerank": 0.009253,
+          "pagerank": 0.009113,
           "inboundLinks": 2,
           "coveredBy": [
             "document:docs/agent-corpus/doctor.md"
@@ -8759,7 +8697,7 @@
           "aliases": "doc-bridge-federation area ownership"
         },
         "graph": {
-          "pagerank": 0.009253,
+          "pagerank": 0.009113,
           "inboundLinks": 1,
           "coveredBy": [
             "document:docs/agent-corpus/federation.md"
@@ -8805,7 +8743,7 @@
           "aliases": "doc-bridge-findings area ownership"
         },
         "graph": {
-          "pagerank": 0.009253,
+          "pagerank": 0.009113,
           "inboundLinks": 1,
           "coveredBy": [
             "document:docs/agent-corpus/findings.md"
@@ -8851,7 +8789,7 @@
           "aliases": "doc-bridge-fixes area ownership"
         },
         "graph": {
-          "pagerank": 0.009253,
+          "pagerank": 0.009113,
           "inboundLinks": 1,
           "coveredBy": [
             "document:docs/agent-corpus/fixes.md"
@@ -8897,7 +8835,7 @@
           "aliases": "doc-bridge-gates area ownership"
         },
         "graph": {
-          "pagerank": 0.009253,
+          "pagerank": 0.009113,
           "inboundLinks": 1,
           "coveredBy": [
             "document:docs/agent-corpus/gates.md"
@@ -8989,7 +8927,7 @@
           "aliases": "doc-bridge-index area ownership"
         },
         "graph": {
-          "pagerank": 0.009253,
+          "pagerank": 0.009113,
           "inboundLinks": 2,
           "coveredBy": [
             "document:docs/agent-corpus/INDEX.md"
@@ -9042,7 +8980,7 @@
           "aliases": "doc-bridge-chat area ownership"
         },
         "graph": {
-          "pagerank": 0.009253,
+          "pagerank": 0.009113,
           "inboundLinks": 1,
           "coveredBy": [
             "document:docs/agent-corpus/chat.md"
@@ -9088,7 +9026,7 @@
           "aliases": "doc-bridge-lib area ownership"
         },
         "graph": {
-          "pagerank": 0.009253,
+          "pagerank": 0.009113,
           "inboundLinks": 1,
           "coveredBy": [
             "document:docs/agent-corpus/lib.md"
@@ -9134,7 +9072,7 @@
           "aliases": "doc-bridge-mcp area ownership"
         },
         "graph": {
-          "pagerank": 0.009253,
+          "pagerank": 0.009113,
           "inboundLinks": 2,
           "coveredBy": [
             "document:docs/agent-corpus/mcp.md"
@@ -9187,7 +9125,7 @@
           "aliases": "doc-bridge-memory area ownership"
         },
         "graph": {
-          "pagerank": 0.009253,
+          "pagerank": 0.009113,
           "inboundLinks": 1,
           "coveredBy": [
             "document:docs/agent-corpus/memory.md"
@@ -9233,7 +9171,7 @@
           "aliases": "doc-bridge-metrics area ownership"
         },
         "graph": {
-          "pagerank": 0.009253,
+          "pagerank": 0.009113,
           "inboundLinks": 1,
           "coveredBy": [
             "document:docs/agent-corpus/metrics.md"
@@ -9279,7 +9217,7 @@
           "aliases": "doc-bridge-parity area ownership"
         },
         "graph": {
-          "pagerank": 0.009253,
+          "pagerank": 0.009113,
           "inboundLinks": 1,
           "coveredBy": [
             "document:docs/agent-corpus/parity.md"
@@ -9325,7 +9263,7 @@
           "aliases": "doc-bridge-playbook area ownership"
         },
         "graph": {
-          "pagerank": 0.009253,
+          "pagerank": 0.009113,
           "inboundLinks": 1,
           "coveredBy": [
             "document:docs/agent-corpus/playbook.md"
@@ -9371,7 +9309,7 @@
           "aliases": "doc-bridge-plugins area ownership"
         },
         "graph": {
-          "pagerank": 0.009253,
+          "pagerank": 0.009113,
           "inboundLinks": 1,
           "coveredBy": [
             "document:docs/agent-corpus/plugins.md"
@@ -9417,7 +9355,7 @@
           "aliases": "doc-bridge-query area ownership"
         },
         "graph": {
-          "pagerank": 0.009253,
+          "pagerank": 0.009113,
           "inboundLinks": 3,
           "coveredBy": [
             "document:docs/agent-corpus/query.md"
@@ -9562,7 +9500,7 @@
           "aliases": "doc-bridge-report area ownership"
         },
         "graph": {
-          "pagerank": 0.009253,
+          "pagerank": 0.009113,
           "inboundLinks": 1,
           "coveredBy": [
             "document:docs/agent-corpus/report.md"
@@ -9608,7 +9546,7 @@
           "aliases": "doc-bridge-retrieval area ownership"
         },
         "graph": {
-          "pagerank": 0.009253,
+          "pagerank": 0.009113,
           "inboundLinks": 1,
           "coveredBy": [
             "document:docs/agent-corpus/retrieval.md"
@@ -9694,7 +9632,7 @@
           "aliases": "doc-bridge-rules area ownership"
         },
         "graph": {
-          "pagerank": 0.009253,
+          "pagerank": 0.009113,
           "inboundLinks": 1,
           "coveredBy": [
             "document:docs/agent-corpus/rules.md"
@@ -9740,7 +9678,7 @@
           "aliases": "doc-bridge-safety area ownership"
         },
         "graph": {
-          "pagerank": 0.009253,
+          "pagerank": 0.009113,
           "inboundLinks": 1,
           "coveredBy": [
             "document:docs/agent-corpus/safety.md"
@@ -9786,7 +9724,7 @@
           "aliases": "doc-bridge-schemas area ownership"
         },
         "graph": {
-          "pagerank": 0.009253,
+          "pagerank": 0.009113,
           "inboundLinks": 1,
           "coveredBy": [
             "document:docs/agent-corpus/schemas.md"
@@ -9832,7 +9770,7 @@
           "aliases": "doc-bridge-shims area ownership"
         },
         "graph": {
-          "pagerank": 0.009253,
+          "pagerank": 0.009113,
           "inboundLinks": 1,
           "coveredBy": [
             "document:docs/agent-corpus/shims.md"
@@ -9974,6 +9912,135 @@
           "outbound": []
         },
         "contentHash": "de6ca3ec64b1f3c6c112f64291e99bf488ea7fe141c75f6f986596dcb7fcf5c9",
+        "provenance": "observed",
+        "confidence": "observed"
+      },
+      {
+        "id": "document:.github/pull_request_template.md",
+        "kind": "document",
+        "path": ".github/pull_request_template.md",
+        "title": "pull_request_template.md",
+        "summary": "Issue:",
+        "aliases": [],
+        "tags": [
+          "document",
+          "unclassified"
+        ],
+        "fields": {
+          "title": "pull_request_template.md",
+          "headings": "Change Reuse Evidence",
+          "path": ".github/pull_request_template.md",
+          "symbols": "",
+          "summary": "Issue:",
+          "body": "Change - Issue: - What changed and why: Reuse - Existing ecosystem package or module checked: - Established library or service considered: - Why new code or a new dependency is needed (or \"none added\"): Evidence - [ ] Narrow tests for the touched area - [ ] pnpm typecheck && pnpm test && pnpm build - [ ] Docs and CHANGELOG.md / changeset updated when behavior changes CI is the merge gate.",
+          "aliases": "document unclassified"
+        },
+        "graph": {
+          "pagerank": 0,
+          "inboundLinks": 0,
+          "coveredBy": [],
+          "mentionedBy": [],
+          "inbound": [],
+          "outbound": [
+            {
+              "kind": "mentions",
+              "id": "document:CHANGELOG.md",
+              "confidence": "observed"
+            }
+          ]
+        },
+        "contentHash": "5df68ee945485fb9a93f73c5b44a2d8ef46b97d7e5d85cfbd9241c07489c3213",
+        "provenance": "observed",
+        "confidence": "observed"
+      },
+      {
+        "id": "document:AGENTS.md",
+        "kind": "document",
+        "path": "AGENTS.md",
+        "title": "AGENTS.md",
+        "summary": "Instructions for coding agents working in @agentskit/doc-bridge. Human contributor rules live in CONTRIBUTING.md and apply here too.",
+        "aliases": [],
+        "tags": [
+          "document",
+          "unclassified"
+        ],
+        "fields": {
+          "title": "AGENTS.md",
+          "headings": "AGENTS.md Before changing code Reuse first Verification Boundaries",
+          "path": "AGENTS.md",
+          "symbols": "",
+          "summary": "Instructions for coding agents working in @agentskit/doc-bridge. Human contributor rules live in CONTRIBUTING.md and apply here too.",
+          "body": "AGENTS.md Instructions for coding agents working in @agentskit/doc-bridge . Human contributor rules live in and apply here too. Before changing code 1. Read the issue and identify its acceptance criteria. 2. Keep Layer 0 deterministic: no LLM or API key for init , index , query , list , gates, or MCP handoff tools. 3. Public contract changes update docs/spec/ or docs/schemas/ . Reuse first Before adding a package or dependency, check existing AgentsKit ecosystem packages first, then established libraries or services. Write new code only when neither fits, and justify it in the PR's Reuse section. Verification Run the narrowest check for what you touched ( pnpm vitest run <file , a test: script); run pnpm typecheck && pnpm test && pnpm build before the PR is ready. CI is the merge gate. Boundaries - Public repository: no private repository names, local machine paths, real tracker ticket ids, credentials, or private product details in code, docs, fixtures, or commit messages. - Missing evidence is not success; a failing gate is not bypassed.",
+          "aliases": "document unclassified"
+        },
+        "graph": {
+          "pagerank": 0.004926,
+          "inboundLinks": 6,
+          "coveredBy": [],
+          "mentionedBy": [
+            "document:CHANGELOG.md",
+            "document:docs/guides/choose-context-layer.md",
+            "document:docs/loop-workflow.md",
+            "document:docs/PRD-knowledge-retrieval-and-enrichment.md",
+            "document:docs/spec/cli.md",
+            "document:docs/spec/retrieval-index-v1.md"
+          ],
+          "inbound": [
+            {
+              "kind": "mentions",
+              "id": "document:CHANGELOG.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/guides/choose-context-layer.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/loop-workflow.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/PRD-knowledge-retrieval-and-enrichment.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/spec/cli.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/spec/retrieval-index-v1.md",
+              "confidence": "observed"
+            }
+          ],
+          "outbound": [
+            {
+              "kind": "links-to",
+              "id": "document:CONTRIBUTING.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:CONTRIBUTING.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/spec/cli.md",
+              "confidence": "fuzzy"
+            },
+            {
+              "kind": "mentions",
+              "id": "package:@agentskit/doc-bridge",
+              "confidence": "observed"
+            }
+          ]
+        },
+        "contentHash": "a2c4e2190a77ec011766c8cc4d36a9f293cfcffac0a3f2355a2371d70841a0c2",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -10122,7 +10189,7 @@
         "kind": "document",
         "path": "CHANGELOG.md",
         "title": "Changelog",
-        "summary": "faf29f5: Stop reporting a path an ignore rule rescues as unreproducible.",
+        "summary": "221b4a6: Retire a deprecated ecosystem contract and generated documentation references.",
         "audience": "human",
         "aliases": [],
         "tags": [
@@ -10131,18 +10198,19 @@
         ],
         "fields": {
           "title": "Changelog",
-          "headings": "Changelog 1.11.1 Patch Changes 1.11.0 Minor Changes 1.10.1 Patch Changes 1.10.0 Minor Changes 1.9.0 Minor Changes Patch Changes 1.8.0 Minor Changes Patch Changes 1.7.45 Patch Changes 1.7.44 1.7.43 1.7.42 1.7.41 1.7.40 1.7.39 1.7.38 1.7.37 1.7.36 1.7.35 1.7.34 1.7.33 1.7.32 1.7.31 1.7.30 1.7.29 1.7.28 1.7.27 Patch Changes 1.7.26 Patch Changes 1.7.25 Patch Changes 1.7.24 Patch Changes 1.7.23 Patch Changes 1.7.22 Patch Changes 1.7.21 Patch Changes 1.7.20 Patch Changes 1.7.19 Patch Changes 1.7.18 Patch Changes 1.7.17 Patch Changes 1.7.16 Patch Changes 1.7.15 Patch Changes 1.7.14 Patch Changes 1.7.13 Patch Changes",
+          "headings": "Changelog 1.11.2 Patch Changes 1.11.1 Patch Changes 1.11.0 Minor Changes 1.10.1 Patch Changes 1.10.0 Minor Changes 1.9.0 Minor Changes Patch Changes 1.8.0 Minor Changes Patch Changes 1.7.45 Patch Changes 1.7.44 1.7.43 1.7.42 1.7.41 1.7.40 1.7.39 1.7.38 1.7.37 1.7.36 1.7.35 1.7.34 1.7.33 1.7.32 1.7.31 1.7.30 1.7.29 1.7.28 1.7.27 Patch Changes 1.7.26 Patch Changes 1.7.25 Patch Changes 1.7.24 Patch Changes 1.7.23 Patch Changes 1.7.22 Patch Changes 1.7.21 Patch Changes 1.7.20 Patch Changes 1.7.19 Patch Changes 1.7.18 Patch Changes 1.7.17 Patch Changes 1.7.16 Patch Changes 1.7.15 Patch Changes 1.7.14 Patch Changes",
           "path": "CHANGELOG.md",
           "symbols": "",
-          "summary": "faf29f5: Stop reporting a path an ignore rule rescues as unreproducible.",
-          "body": "Changelog 1.11.1 Patch Changes - faf29f5: Stop reporting a path an ignore rule rescues as unreproducible. git check-ignore --verbose emits a record for every path that matched a rule, including the path a ! negation rescues — and such a path is precisely one Git does not ignore. The reproducibility check read the record without reading the pattern, so dist/ plus !dist/keep.js reported dist/keep.js as a reason the index could not be rebuilt from a clean checkout. The opposite of what the rule says, stated confidently. The window is narrow: check-ignore stops reporting a path once it is committed, and a path rescued by a negation is usually committed, which is the point of rescuing it. It shows up while such a path is still untracked — a file added but not yet committed. Found by turning the new index-reproducible gate on in this repository, which had to add !.doc-bridge/index.json to its own .gitignore to commit the index the gate verifies. 1.11.0 Minor Changes - 25f16f3: Say when a committed index could not have come from a clean checkout. A scan walks what is on disk and has no reason to consult .gitignore , so a generated module or document silently joins the corpus on a machine that has built and silently leaves it on one that has not. That is harmless while the index is rebuilt on every run. It is a defect the moment the index is committed so a gate can verify it — which is the setup index-freshness exists for: two checkouts of the same commit then produce different artifacts, the gate reports staleness that nothing caused, and regenerating cannot fix it because the next machine disagrees in the other direction. Dogfooding found this the expensive way. On a 25-package monorepo the freshness gate passed locally and failed in CI, twice, because pnpm lint had generated one .ts file into the corpus before the index was written; CI lints a narrower scope and never had the file. Diagnosing it took reading two CI logs and diffing file inventories. Git already knew the answer. ak-docs index now names those paths as it writes, and ak-docs doctor raises an index-not-reproducible warning, each with the ignore rule that matched — for example apps/docs-next/lib/ask-context.ts (apps/docs-next/.gitignore:13:lib/ask-context.ts) — so the fix is one lookup away: add the path to safety.exclude . Both are unconditional and neither changes an exit code or the doctor's score. Enforcement is the new index-reproducible gate, which is in no preset and has to be requested with gates.include: ['index-reproducible'] , because turning it on for every consumer would fail gates that pass for good reasons. The check reports success rather than failure when the index is not committed or the project is not a Git checkout, since there is nothing to reproduce in either case, and it does not flag a file that is both tracked and matched by an ignore rule — being committed is the point. 1.10.1 Patch Changes - 0926c57: Keep a committed index fresh across commits. The retrieval projection sealed its content hash over the discovery snapshot's hash, and a snapshot's hash covers its sourceRevision — the commit SHA when the working tree is clean, a digest of the scanned files when it is not. That is right for an artifact whose job is to say what one revision looked like, and wrong as a projection input: the projection is a function of what the snapshot observed, not of where it observed it. The consequence only appears in a repository that commits .doc-bridge/index.json , which is the recommended setup: committing the index changes the revision that the next run hashes, so the artifact was stale the moment it landed — landing it is a commit. ak-docs gate run reported index-freshness failing on an index that nothing had invalidated, and no regenerate could fix it, because the fix was itself a commit. Dogfooding on a 25-package monorepo, the gate could not be made to pass twice in a row. The seal is now over what the snapshot observed: the entities, the relations and t",
+          "summary": "221b4a6: Retire a deprecated ecosystem contract and generated documentation references.",
+          "body": "Changelog 1.11.2 Patch Changes - 221b4a6: Retire a deprecated ecosystem contract and generated documentation references. 1.11.1 Patch Changes - faf29f5: Stop reporting a path an ignore rule rescues as unreproducible. git check-ignore --verbose emits a record for every path that matched a rule, including the path a ! negation rescues — and such a path is precisely one Git does not ignore. The reproducibility check read the record without reading the pattern, so dist/ plus !dist/keep.js reported dist/keep.js as a reason the index could not be rebuilt from a clean checkout. The opposite of what the rule says, stated confidently. The window is narrow: check-ignore stops reporting a path once it is committed, and a path rescued by a negation is usually committed, which is the point of rescuing it. It shows up while such a path is still untracked — a file added but not yet committed. Found by turning the new index-reproducible gate on in this repository, which had to add !.doc-bridge/index.json to its own .gitignore to commit the index the gate verifies. 1.11.0 Minor Changes - 25f16f3: Say when a committed index could not have come from a clean checkout. A scan walks what is on disk and has no reason to consult .gitignore , so a generated module or document silently joins the corpus on a machine that has built and silently leaves it on one that has not. That is harmless while the index is rebuilt on every run. It is a defect the moment the index is committed so a gate can verify it — which is the setup index-freshness exists for: two checkouts of the same commit then produce different artifacts, the gate reports staleness that nothing caused, and regenerating cannot fix it because the next machine disagrees in the other direction. Dogfooding found this the expensive way. On a 25-package monorepo the freshness gate passed locally and failed in CI, twice, because pnpm lint had generated one .ts file into the corpus before the index was written; CI lints a narrower scope and never had the file. Diagnosing it took reading two CI logs and diffing file inventories. Git already knew the answer. ak-docs index now names those paths as it writes, and ak-docs doctor raises an index-not-reproducible warning, each with the ignore rule that matched — for example apps/docs-next/lib/ask-context.ts (apps/docs-next/.gitignore:13:lib/ask-context.ts) — so the fix is one lookup away: add the path to safety.exclude . Both are unconditional and neither changes an exit code or the doctor's score. Enforcement is the new index-reproducible gate, which is in no preset and has to be requested with gates.include: ['index-reproducible'] , because turning it on for every consumer would fail gates that pass for good reasons. The check reports success rather than failure when the index is not committed or the project is not a Git checkout, since there is nothing to reproduce in either case, and it does not flag a file that is both tracked and matched by an ignore rule — being committed is the point. 1.10.1 Patch Changes - 0926c57: Keep a committed index fresh across commits. The retrieval projection sealed its content hash over the discovery snapshot's hash, and a snapshot's hash covers its sourceRevision — the commit SHA when the working tree is clean, a digest of the scanned files when it is not. That is right for an artifact whose job is to say what one revision looked like, and wrong as a projection input: the projection is a function of what the snapshot observed, not of where it observed it. The consequence only appears in a repository that commits .doc-bridge/index.json , which is the recommended setup: committing the index changes the revision that the next run hashes, so the artifact was stale the moment it landed — landing it is a commit. ak-docs gate run reported index-freshness failing on an index that nothing had invalidated, and no regenerate could fix it, because the fix was itself a commit. Dogfooding on a 25-package monorepo, the gate could not be ",
           "aliases": "document project"
         },
         "graph": {
-          "pagerank": 0.005245,
-          "inboundLinks": 3,
+          "pagerank": 0.005167,
+          "inboundLinks": 4,
           "coveredBy": [],
           "mentionedBy": [
+            "document:.github/pull_request_template.md",
             "document:CONTRIBUTING.md",
             "document:README.md"
           ],
@@ -10150,6 +10218,11 @@
             {
               "kind": "links-to",
               "id": "document:README.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:.github/pull_request_template.md",
               "confidence": "observed"
             },
             {
@@ -10166,11 +10239,6 @@
           "outbound": [
             {
               "kind": "mentions",
-              "id": "area:agents",
-              "confidence": "fuzzy"
-            },
-            {
-              "kind": "mentions",
               "id": "area:src",
               "confidence": "fuzzy"
             },
@@ -10183,6 +10251,11 @@
               "kind": "mentions",
               "id": "area:tests",
               "confidence": "fuzzy"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:AGENTS.md",
+              "confidence": "observed"
             },
             {
               "kind": "mentions",
@@ -10351,7 +10424,7 @@
             }
           ]
         },
-        "contentHash": "7e216c524313f62d0f58142d95859539a39346d9965dad4ccaa065308dcef870",
+        "contentHash": "144dc70354ccd94759370eed05db1173885e5447da25c81080af159daa05eee8",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -10376,7 +10449,7 @@
           "aliases": "document unclassified"
         },
         "graph": {
-          "pagerank": 0.008162,
+          "pagerank": 0.009182,
           "inboundLinks": 5,
           "coveredBy": [],
           "mentionedBy": [
@@ -10438,17 +10511,28 @@
           "aliases": "document project"
         },
         "graph": {
-          "pagerank": 0.005245,
-          "inboundLinks": 3,
+          "pagerank": 0.009354,
+          "inboundLinks": 5,
           "coveredBy": [],
           "mentionedBy": [
+            "document:AGENTS.md",
             "document:docs/loop-workflow.md",
             "document:README.md"
           ],
           "inbound": [
             {
               "kind": "links-to",
+              "id": "document:AGENTS.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "links-to",
               "id": "document:README.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:AGENTS.md",
               "confidence": "observed"
             },
             {
@@ -10842,7 +10926,7 @@
           "aliases": "doc-bridge-audit document human module"
         },
         "graph": {
-          "pagerank": 0.005001,
+          "pagerank": 0.004926,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -10894,7 +10978,7 @@
           "aliases": "doc-bridge-bin document human module"
         },
         "graph": {
-          "pagerank": 0.005001,
+          "pagerank": 0.004926,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -10951,7 +11035,7 @@
           "aliases": "doc-bridge-budget document human module"
         },
         "graph": {
-          "pagerank": 0.005001,
+          "pagerank": 0.004926,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -11003,7 +11087,7 @@
           "aliases": "doc-bridge-chat document human module"
         },
         "graph": {
-          "pagerank": 0.005001,
+          "pagerank": 0.004926,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -11045,7 +11129,7 @@
           "aliases": "doc-bridge-cli document human module"
         },
         "graph": {
-          "pagerank": 0.005001,
+          "pagerank": 0.004926,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -11087,7 +11171,7 @@
           "aliases": "doc-bridge-config document human module"
         },
         "graph": {
-          "pagerank": 0.005001,
+          "pagerank": 0.004926,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -11149,7 +11233,7 @@
           "aliases": "doc-bridge-conformance document human module"
         },
         "graph": {
-          "pagerank": 0.005001,
+          "pagerank": 0.004926,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -11191,7 +11275,7 @@
           "aliases": "@agentskit/doc-bridge document human package"
         },
         "graph": {
-          "pagerank": 0.005001,
+          "pagerank": 0.004926,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -11283,7 +11367,7 @@
           "aliases": "doc-bridge-doctor document human module"
         },
         "graph": {
-          "pagerank": 0.005001,
+          "pagerank": 0.004926,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -11325,7 +11409,7 @@
           "aliases": "doc-bridge-federation document human module"
         },
         "graph": {
-          "pagerank": 0.005001,
+          "pagerank": 0.004926,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -11372,7 +11456,7 @@
           "aliases": "doc-bridge-findings document human module"
         },
         "graph": {
-          "pagerank": 0.005001,
+          "pagerank": 0.004926,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -11429,7 +11513,7 @@
           "aliases": "doc-bridge-fixes document human module"
         },
         "graph": {
-          "pagerank": 0.005001,
+          "pagerank": 0.004926,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -11481,7 +11565,7 @@
           "aliases": "doc-bridge-gates document human module"
         },
         "graph": {
-          "pagerank": 0.005001,
+          "pagerank": 0.004926,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -11523,7 +11607,7 @@
           "aliases": "doc-bridge-index document human module"
         },
         "graph": {
-          "pagerank": 0.005001,
+          "pagerank": 0.004926,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -11575,7 +11659,7 @@
           "aliases": "doc-bridge-lib document human module"
         },
         "graph": {
-          "pagerank": 0.005001,
+          "pagerank": 0.004926,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -11627,7 +11711,7 @@
           "aliases": "doc-bridge-mcp document human module"
         },
         "graph": {
-          "pagerank": 0.005001,
+          "pagerank": 0.004926,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -11684,7 +11768,7 @@
           "aliases": "doc-bridge-memory document human module"
         },
         "graph": {
-          "pagerank": 0.005001,
+          "pagerank": 0.004926,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -11726,7 +11810,7 @@
           "aliases": "doc-bridge-metrics document human module"
         },
         "graph": {
-          "pagerank": 0.005001,
+          "pagerank": 0.004926,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -11817,7 +11901,7 @@
           "aliases": "doc-bridge-parity document human module"
         },
         "graph": {
-          "pagerank": 0.005001,
+          "pagerank": 0.004926,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -11869,7 +11953,7 @@
           "aliases": "doc-bridge-playbook document human module"
         },
         "graph": {
-          "pagerank": 0.005001,
+          "pagerank": 0.004926,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -11916,7 +12000,7 @@
           "aliases": "doc-bridge-plugins document human module"
         },
         "graph": {
-          "pagerank": 0.005001,
+          "pagerank": 0.004926,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -11963,7 +12047,7 @@
           "aliases": "doc-bridge-query document human module"
         },
         "graph": {
-          "pagerank": 0.005001,
+          "pagerank": 0.004926,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -12035,7 +12119,7 @@
           "aliases": "doc-bridge-report document human module"
         },
         "graph": {
-          "pagerank": 0.005001,
+          "pagerank": 0.004926,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -12082,7 +12166,7 @@
           "aliases": "doc-bridge-retrieval document human module"
         },
         "graph": {
-          "pagerank": 0.005001,
+          "pagerank": 0.004926,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -12144,7 +12228,7 @@
           "aliases": "doc-bridge-rules document human module"
         },
         "graph": {
-          "pagerank": 0.005001,
+          "pagerank": 0.004926,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -12201,7 +12285,7 @@
           "aliases": "doc-bridge-safety document human module"
         },
         "graph": {
-          "pagerank": 0.005001,
+          "pagerank": 0.004926,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -12248,7 +12332,7 @@
           "aliases": "doc-bridge-schemas document human module"
         },
         "graph": {
-          "pagerank": 0.005001,
+          "pagerank": 0.004926,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -12310,7 +12394,7 @@
           "aliases": "doc-bridge-scripts document human module"
         },
         "graph": {
-          "pagerank": 0.005001,
+          "pagerank": 0.004926,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -12357,7 +12441,7 @@
           "aliases": "doc-bridge-shims document human module"
         },
         "graph": {
-          "pagerank": 0.005001,
+          "pagerank": 0.004926,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -12396,7 +12480,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.008396,
+          "pagerank": 0.008274,
           "inboundLinks": 2,
           "coveredBy": [],
           "mentionedBy": [],
@@ -12456,7 +12540,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.01595,
+          "pagerank": 0.015723,
           "inboundLinks": 10,
           "coveredBy": [],
           "mentionedBy": [
@@ -12537,149 +12621,6 @@
         "confidence": "observed"
       },
       {
-        "id": "document:docs/DOGFOOD-ROUND2.md",
-        "kind": "document",
-        "path": "docs/DOGFOOD-ROUND2.md",
-        "title": "Dogfood round 2 — published @agentskit/doc-bridge@0.1.0-alpha.2",
-        "summary": "Date: 2026-07-09Install: npm registry tag alpha → 0.1.0-alpha.2Consumers: agentskit · agentskit-os · agents-playbook · agentskit-registry",
-        "audience": "human",
-        "aliases": [],
-        "tags": [
-          "document",
-          "human"
-        ],
-        "fields": {
-          "title": "Dogfood round 2 — published @agentskit/doc-bridge@0.1.0-alpha.2",
-          "headings": "Dogfood round 2 — published @agentskit/doc-bridge@0.1.0-alpha.2 Scoreboard npm dist-tags (observed) What works well (validated) Issues found (prioritized) P0 — correctness / ranking (agents will take wrong action) P1 — install / peer DX P2 — search / retrieval quality P3 — bridge coverage & product polish Sample outputs (good) agentskit — query package core --agent playbook — pattern handoff registry — docs-chat Recommended next alpha (0.1.0-alpha.3) scope Consumer follow-ups (not doc-bridge code) Conclusion",
-          "path": "docs/DOGFOOD-ROUND2.md",
-          "symbols": "",
-          "summary": "Date: 2026-07-09Install: npm registry tag alpha → 0.1.0-alpha.2Consumers: agentskit · agentskit-os · agents-playbook · agentskit-registry",
-          "body": "Dogfood round 2 — published @agentskit/doc-bridge@0.1.0-alpha.2 Date: 2026-07-09 Install: npm registry tag alpha → 0.1.0-alpha.2 Consumers: agentskit · agentskit-os · agents-playbook · agentskit-registry Scoreboard Repo Install Version Knowledge Handoffs Gate Sample handoff quality ------ --------- --------- ----------- ---------- ------ ------------------------ agentskit pnpm add -Dw @0.1.0-alpha.2 ✅ 0.1.0-alpha.2 25 24 ✅ freshness + 23 humanDoc Excellent: pnpm filter checks + humanDoc /docs/reference/packages/core agentskit-os pnpm store conflict; used npx ✅ 0.1.0-alpha.2 170 92 ✅ freshness + 9 humanDoc Good act path; weak human bridge (9/92) agents-playbook pnpm add -D ✅ 0.1.0-alpha.2 127 81 ✅ freshness + okf-type Pattern ownership + check:okf-type ✅ agentskit-registry needs --legacy-peer-deps ⚠️ 0.1.0-alpha.2 36 36 ✅ freshness Full agent ownership + humanDoc ✅ npm dist-tags (observed) Tag Version ----- --------- latest 0.1.0-alpha.1 alpha 0.1.0-alpha.2 Recommendation: keep prereleases only on alpha until stable; document npm i -D @agentskit/doc-bridge@alpha . --- What works well (validated) 1. Published binary works — ak-docs 0.1.0-alpha.2 from registry / npx. 2. Monorepo handoffs — editRoots + pnpm --filter @agentskit/<pkg test lint on agentskit and AKOS. 3. Playbook preset — gates green without crushing large OKF corpus. 4. Registry ownership — all 36 agents resolve; checks use npm run validate . 5. Fumadocs humanDoc on agentskit points at reference docs, not nested for-agents. 6. Pattern checks — playbook patterns emit pnpm run check:okf-type . --- Issues found (prioritized) P0 — correctness / ranking (agents will take wrong action) ID Issue Evidence Suggested fix ---- -------- ---------- ---------------- R2-1 Search/ask ranking ignores exact package id search core --agent bestMatch = angular (score 8) tied with core (score 8) because summary contains @agentskit/core Boost exact id / path segment matches; prefer ownership id === term before body mentions R2-2 ask suggests wrong handoff “where do I change the core package?” → best match angular , next query ownership angular Same ranking fix; optional: prefer ownership over knowledge for “package/module” language R2-3 Purpose/notes truncated mid-sentence core notes: \"Stable TypeScript contracts (Adapter, Tool, Memory, Retriever, Skill,\" Raise firstParagraph budget; strip trailing incomplete commas; prefer frontmatter purpose full line P1 — install / peer DX ID Issue Evidence Suggested fix ---- -------- ---------- ---------------- R2-4 Optional peers still break npm install registry: ERESOLVE with optional peers vs @agentskit/adapters@0.12.x Peer ranges more permissive ( =0.12 / =1.0 ); document --legacy-peer-deps ; ensure optional peers never hard-fail Layer 0 R2-5 Peer @agentskit/core@^1.10.0 vs monorepo 1.9.0 pnpm warning on agentskit install Align peer to ^1.9.0 \\ \\ ^1.10.0 or =1.9.0 <2 for dogfood until monorepo bumps R2-6 latest still points at alpha.1 npm view latest=alpha.1, alpha=alpha.2 Publish hygiene: don’t put prereleases on latest , or retag after publish R2-7 AKOS cannot pnpm add (store v10 vs v11) ERR PNPM UNEXPECTED STORE Docs: use npx / align store; not a doc-bridge bug but dogfood friction P2 — search / retrieval quality ID Issue Evidence Suggested fix ---- -------- ---------- ---------------- R2-8 Search miss on common English agentskit search documentation → 0 matches Index more body text / titles; lower threshold; BM25 over full file not only description R2-9 Playbook search handoff → 0 term may only appear deep in body Same as R2-8; chunk full markdown into search corpus R2-10 Federation hard-fail noise retrieve → Failed to fetch https://registry.agentskit.io/llms.txt: 404 Soft-fail federation sources; warn once; don’t fail command R2-11 Text search UX tab-separated dense lines Columnar/TTY formatting ( type id path summary ) P3 — bridge coverage & product polish ID Issue Evidence Suggested fix ---- -------- ---------- ---------------- R2-12 AKOS hu",
-          "aliases": "document human"
-        },
-        "graph": {
-          "pagerank": 0,
-          "inboundLinks": 0,
-          "coveredBy": [],
-          "mentionedBy": [],
-          "inbound": [],
-          "outbound": []
-        },
-        "contentHash": "c08a566b67b1ba3f2ff88896a5806ee73b53cc34edc3ba230a5d6a2a36156373",
-        "provenance": "observed",
-        "confidence": "observed"
-      },
-      {
-        "id": "document:docs/DOGFOOD-ROUND3.md",
-        "kind": "document",
-        "path": "docs/DOGFOOD-ROUND3.md",
-        "title": "Dogfood round 3 — @agentskit/doc-bridge@0.1.0-alpha.3",
-        "summary": "Date: 2026-07-09npm: alpha → 0.1.0-alpha.3 · latest still 0.1.0-alpha.1",
-        "audience": "human",
-        "aliases": [],
-        "tags": [
-          "document",
-          "human"
-        ],
-        "fields": {
-          "title": "Dogfood round 3 — @agentskit/doc-bridge@0.1.0-alpha.3",
-          "headings": "Dogfood round 3 — @agentskit/doc-bridge@0.1.0-alpha.3 Scoreboard Round-2 issues — validation Sample outputs (alpha.3) agentskit — ranking agentskit — handoff agentskit-os — ranking registry — ranking Remaining improvements (lower urgency) Verdict",
-          "path": "docs/DOGFOOD-ROUND3.md",
-          "symbols": "",
-          "summary": "Date: 2026-07-09npm: alpha → 0.1.0-alpha.3 · latest still 0.1.0-alpha.1",
-          "body": "Dogfood round 3 — @agentskit/doc-bridge@0.1.0-alpha.3 Date: 2026-07-09 npm: alpha → 0.1.0-alpha.3 · latest still 0.1.0-alpha.1 Scoreboard Repo Install Ver K Handoffs Gate Ranking Ask Retrieve ------ --------- ----- --- ---------- ------ --------- ----- ---------- agentskit pnpm add -Dw ✅ 0.1.0-alpha.3 25 24 ✅ 24 humanDoc core 1 (683) ✅ ownership core ✅ ✅ soft, 8 chunks agentskit-os npx (store issue) ✅ 0.1.0-alpha.3 170 92 ✅ os-core 1 (689) ✅ ownership os-core ✅ ✅ 8 chunks playbook pnpm add -D ✅ 0.1.0-alpha.3 127 81 ✅ okf OKF pattern 1 ✅ pattern ownership ✅ ✅ registry --legacy-peer-deps ⚠️ 0.1.0-alpha.3 36 36 ✅ docs-chat 1 (593) ✅ docs-chat ✅ ✅ Round-2 issues — validation Item (R2) Status Evidence ----------- -------- ---------- Exact id ranking Fixed agentskit search core → best= core not angular ask wrong package Fixed “change the core package?” → ownership core Notes truncated Fixed full purpose sentences on core / os-core Full-text search Improved search documentation → 20 matches (was 0) Federation 404 hard-fail Fixed retrieve exit 0, no error, local chunks only Peer install friction Improved no peer warning on agentskit; registry still needs legacy-peer-deps Text UX Fixed multi-line [ownership] id score= format Path dedupe OK top lists are unique ownership rows AKOS humanDoc sparse Still open os-core handoff has no humanDoc (product docs thin) pnpm store AKOS Still open environment; npx works latest on old alpha Still open publish hygiene Sample outputs (alpha.3) agentskit — ranking agentskit — handoff agentskit-os — ranking registry — ranking Remaining improvements (lower urgency) 1. AKOS humanDoc coverage — enrich for-agents frontmatter humanDoc or map product Fumadocs more densely (content work more than code). 2. npm install without legacy-peer-deps on registry — may still need peerOptional tuning vs npm ERESOLVE; document install flags. 3. HTML entities in notes — &lt;10 KB from source MD; optional decode on index. 4. AKOS lockfile install path — fix local pnpm store / commit published dep version. 5. CI wire-up — docs:bridge:gate on each consumer after merge of dogfood branches. 6. Publish tags — keep latest free of prereleases or retag intentionally. Verdict alpha.3 is a successful dogfood pass. P0/P1 product issues from round 2 are validated fixed on published package across monorepo + playbook + registry. Remaining items are polish, content, or consumer-side install/CI.",
-          "aliases": "document human"
-        },
-        "graph": {
-          "pagerank": 0,
-          "inboundLinks": 0,
-          "coveredBy": [],
-          "mentionedBy": [],
-          "inbound": [],
-          "outbound": []
-        },
-        "contentHash": "938cd2ee55fce9cfeb9a08823dce75b94c4a8b75e1bd23c20c4e524e26dbe110",
-        "provenance": "observed",
-        "confidence": "observed"
-      },
-      {
-        "id": "document:docs/DOGFOOD-V1.md",
-        "kind": "document",
-        "path": "docs/DOGFOOD-V1.md",
-        "title": "Dogfood validation — @agentskit/doc-bridge@1.0.0",
-        "summary": "Date: 2026-07-09Install: 1.0.0 from npm (alpha dist-tag; latest still points at older alpha.1)",
-        "audience": "human",
-        "aliases": [],
-        "tags": [
-          "document",
-          "human"
-        ],
-        "fields": {
-          "title": "Dogfood validation — @agentskit/doc-bridge@1.0.0",
-          "headings": "Dogfood validation — @agentskit/doc-bridge@1.0.0 Scoreboard 1.0.0 features exercised Highlights (impressive) agentskit — perfect monorepo story playbook — OKF corpus registry — agent-id ownership AKOS — honest B (bridge gap is the product) Remaining friction (not blockers for 1.0) Verdict",
-          "path": "docs/DOGFOOD-V1.md",
-          "symbols": "",
-          "summary": "Date: 2026-07-09Install: 1.0.0 from npm (alpha dist-tag; latest still points at older alpha.1)",
-          "body": "Dogfood validation — @agentskit/doc-bridge@1.0.0 Date: 2026-07-09 Install: 1.0.0 from npm ( alpha dist-tag; latest still points at older alpha.1) Scoreboard Repo Install Ver K/H Gate Doctor Ranking Ask handoff preview MCP install ------ --------- ----- ----- ------ -------- --------- --------------------- ------------- agentskit pnpm -Dw ✅ 1.0.0 25/24 ✅ 24 human 100/100 A core 1 ✅ core + bridge ✅ wrote .cursor/mcp.json playbook pnpm -D ✅ 1.0.0 127/81 ✅ 100/100 A OKF pattern 1 ✅ ✅ registry npm --legacy-peer-deps ✅ 1.0.0 36/36 ✅ 100/100 A docs-chat 1 ✅ ✅ agentskit-os npx ✅ 1.0.0 170/92 ✅ 81/100 B os-core 1 ✅ + “human guide missing” (not run write) 1.0.0 features exercised Feature Result --------- -------- doctor --text Score A on 3 repos; B on AKOS with actionable missing humanDoc list doctor --badge Shields markdown for handoff/bridge/score demo --text Before/after handoff + gate red→green + MCP snippet mcp install --cursor Creates .cursor/mcp.json with nextSteps ask handoff preview start / edit / checks / Bridge lines Ranking exact-id core, os-core, docs-chat, open-knowledge-format-pattern all 1 Soft federation retrieve exit 0, local chunks Highlights (impressive) agentskit — perfect monorepo story playbook — OKF corpus registry — agent-id ownership AKOS — honest B (bridge gap is the product) This is the right UX: not fake 100% when product docs are thin. Remaining friction (not blockers for 1.0) 1. npm latest still 0.1.0-alpha.1 — users should install @1.0.0 or @alpha until latest is retagged. 2. registry still prefers --legacy-peer-deps on some npm versions. 3. AKOS pnpm add store mismatch — npx @agentskit/doc-bridge@1.0.0 works. 4. AKOS bridge 16% — content/map work; doctor already drives it. 5. notes may still show HTML entities ( &lt; ) from source MDX. 6. mcp install writes into repo ( .cursor/mcp.json ) — commit or gitignore intentionally. 7. CI still not wired on all four consumers for doctor / gate on every PR. Verdict 1.0.0 is validated on the four ecosystem repos. Doctor + ask handoff preview + mcp install + demo deliver the “wow” layer that alpha.3 still lacked in product surface. AKOS correctly surfaces bridge debt instead of hiding it.",
-          "aliases": "document human"
-        },
-        "graph": {
-          "pagerank": 0,
-          "inboundLinks": 0,
-          "coveredBy": [],
-          "mentionedBy": [],
-          "inbound": [],
-          "outbound": []
-        },
-        "contentHash": "e6448d89bb1ba6045cae4c02cab33ec2abc0a39095faa3a4b64e1bb18652b53b",
-        "provenance": "observed",
-        "confidence": "observed"
-      },
-      {
-        "id": "document:docs/DOGFOOD.md",
-        "kind": "document",
-        "path": "docs/DOGFOOD.md",
-        "title": "Ecosystem dogfood — @agentskit/doc-bridge",
-        "summary": "Validated 2026-07-09 against four consumers.",
-        "audience": "human",
-        "aliases": [],
-        "tags": [
-          "document",
-          "human"
-        ],
-        "fields": {
-          "title": "Ecosystem dogfood — @agentskit/doc-bridge",
-          "headings": "Ecosystem dogfood — @agentskit/doc-bridge Standard integration (all repos) MCP (optional, same in each repo) Results Findings / improvements for doc-bridge P0 product feedback P1 DX P2 ecosystem Per-repo config notes agentskit agentskit-os agents-playbook agentskit-registry Commands used to validate",
-          "path": "docs/DOGFOOD.md",
-          "symbols": "",
-          "summary": "Validated 2026-07-09 against four consumers.",
-          "body": "Ecosystem dogfood — @agentskit/doc-bridge Validated 2026-07-09 against four consumers. - First pass: 0.1.0-alpha.1 (local file: ) - Second pass after polish: 0.1.0-alpha.2 ( v0.1.0-alpha.2 ) Standard integration (all repos) Artifact Purpose ---------- --------- doc-bridge.config.json Layer 0 config (schemaVersion 1) docs:bridge:index ak-docs index docs:bridge:gate ak-docs gate run docs:bridge:query ak-docs query .doc-bridge/ Generated index (gitignored) devDependency @agentskit/doc-bridge ( file: or 0.1.0-alpha.1 / @alpha when npm resolves) MCP (optional, same in each repo) Results Repo Knowledge Handoffs Gate Sample handoff ------ ----------- ---------- ------ ---------------- agentskit 25 24 ✅ freshness + 24 humanDoc core → packages/core + for-agents MDX agentskit-os 170 82 ✅ freshness + 2 humanDoc os-core → for-agents package doc agents-playbook 127 81 patterns ✅ freshness + okf-type open-knowledge-format-pattern agentskit-registry 36 36 ✅ freshness docs-chat → registry/docs-chat Findings / improvements for doc-bridge P0 product feedback 1. Default checks are npm-centric ( npm test / npm run lint ) even in pnpm monorepos. Prefer detecting packageManager or pnpm --filter <id test . 2. Git install lacks dist/ — github:… tag installs source only; need prepare / prepack that builds, or document npm-only install. 3. docs-style gate is too strict for playbook OKF (expects purpose/owner-source on every page). Make playbook profile softer or map to existing check:okf-type . 4. HumanDoc join rate low on AKOS (2/82) — product Fumadocs tree is thin vs package atlas; support multi-human corpora (product + docs/adr ) and/or ownership humanDoc from for-agents frontmatter. P1 DX 5. Nested agent corpus inside human tree (agentskit for-agents under content/docs ) double-counts unless human meta exclude — works but humanDoc points at /docs/for-agents/core which is correct for that site. 6. Playbook is pattern-owned, not package-owned — ownership generation from filenames works; first-class routing.plugin: pattern-files would help. 7. Registry human plain-markdown + URL prefix /agents/:id works; committed public/llms.txt must stay owner of site discovery ( llmsTxt.enabled: false ). 8. AKOS pnpm store mismatch can block pnpm add — dogfood via absolute ak-docs still validates; install needs store alignment. P2 ecosystem 9. Ship npm package publicly ( @agentskit/doc-bridge@alpha ) so consumers drop file: . 10. Wire docs:bridge:gate into each CI ( check:quality-gates / registry verify / new playbook workflow). 11. Federation: registry llms.txt still 404 online — dogfood configs already list it; fix registry publish of Self-Describe artifact. Per-repo config notes agentskit - Agent: apps/docs-next/content/docs/for-agents - Human: Fumadocs same docs tree - Routing: pnpm-monorepo packages/ - Best fit: clean monorepo + for-agents coverage already exists agentskit-os - Agent: docs/for-agents (canonical) - Human: product Fumadocs only ( apps/web/content/docs ) — dual human later - llmsTxt.enabled: false (keep gen-self-describe ) - Dual-run with docs:internal — do not delete internal generators yet agents-playbook - Agent = human = content/docs (OKF) - Ownership: generated per pattern file under pillars - Gates: index-freshness + okf-type only (not docs-style) agentskit-registry - Agent root: registry/ /README.md - Ownership: one entry per agent id - npm package (not pnpm workspace) - llmsTxt.enabled: false Commands used to validate",
-          "aliases": "document human"
-        },
-        "graph": {
-          "pagerank": 0,
-          "inboundLinks": 0,
-          "coveredBy": [],
-          "mentionedBy": [],
-          "inbound": [],
-          "outbound": [
-            {
-              "kind": "mentions",
-              "id": "document:docs/for-agents.md",
-              "confidence": "fuzzy"
-            },
-            {
-              "kind": "mentions",
-              "id": "package:@agentskit/doc-bridge",
-              "confidence": "observed"
-            }
-          ]
-        },
-        "contentHash": "a6417e2514592536b213342af16f2cb7a0700b36849e72e5f21c75cc14fa0fb2",
-        "provenance": "observed",
-        "confidence": "observed"
-      },
-      {
         "id": "document:docs/examples.md",
         "kind": "document",
         "path": "docs/examples.md",
@@ -12701,7 +12642,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.008528,
+          "pagerank": 0.00841,
           "inboundLinks": 5,
           "coveredBy": [],
           "mentionedBy": [
@@ -12778,11 +12719,10 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.013662,
-          "inboundLinks": 10,
+          "pagerank": 0.013463,
+          "inboundLinks": 9,
           "coveredBy": [],
           "mentionedBy": [
-            "document:docs/DOGFOOD.md",
             "document:docs/loop-workflow.md",
             "document:docs/recipes/index-pipeline.md",
             "document:docs/spec/cli.md"
@@ -12817,11 +12757,6 @@
               "kind": "links-to",
               "id": "document:docs/query.md",
               "confidence": "observed"
-            },
-            {
-              "kind": "mentions",
-              "id": "document:docs/DOGFOOD.md",
-              "confidence": "fuzzy"
             },
             {
               "kind": "mentions",
@@ -12888,7 +12823,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.015696,
+          "pagerank": 0.015535,
           "inboundLinks": 7,
           "coveredBy": [],
           "mentionedBy": [
@@ -13025,7 +12960,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.005001,
+          "pagerank": 0.004926,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -13058,8 +12993,8 @@
             },
             {
               "kind": "mentions",
-              "id": "area:agents",
-              "confidence": "fuzzy"
+              "id": "document:AGENTS.md",
+              "confidence": "observed"
             }
           ]
         },
@@ -13089,7 +13024,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.009262,
+          "pagerank": 0.009129,
           "inboundLinks": 4,
           "coveredBy": [],
           "mentionedBy": [],
@@ -13184,7 +13119,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.013647,
+          "pagerank": 0.013518,
           "inboundLinks": 6,
           "coveredBy": [],
           "mentionedBy": [],
@@ -13269,7 +13204,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.018275,
+          "pagerank": 0.018016,
           "inboundLinks": 9,
           "coveredBy": [],
           "mentionedBy": [],
@@ -13379,7 +13314,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.015166,
+          "pagerank": 0.014965,
           "inboundLinks": 6,
           "coveredBy": [],
           "mentionedBy": [],
@@ -13474,7 +13409,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.018024,
+          "pagerank": 0.01777,
           "inboundLinks": 8,
           "coveredBy": [],
           "mentionedBy": [],
@@ -13574,7 +13509,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.008877,
+          "pagerank": 0.00875,
           "inboundLinks": 4,
           "coveredBy": [],
           "mentionedBy": [],
@@ -13654,7 +13589,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.005001,
+          "pagerank": 0.004926,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -13883,7 +13818,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.008569,
+          "pagerank": 0.008443,
           "inboundLinks": 1,
           "coveredBy": [],
           "mentionedBy": [],
@@ -13934,7 +13869,7 @@
           "path": "docs/loop-workflow.md",
           "symbols": "",
           "summary": "ak-harness loop drains one person's Linear queue through Orca worktrees: it freezes an orchestrator contract per issue, opens a worker terminal in a fresh worktree, then drives the resulting pull request through checks, adversarial review and squash merge. This repository ships loop.config.example.yaml with every project-specific value already tuned.",
-          "body": "Keep-pushing loop for the knowledge-retrieval workstreams ak-harness loop drains one person's Linear queue through Orca worktrees: it freezes an orchestrator contract per issue, opens a worker terminal in a fresh worktree, then drives the resulting pull request through checks, adversarial review and squash merge. This repository ships with every project-specific value already tuned. The real loop.config.yaml is gitignored. Its linear block names a workspace, a team and a person by id, and this repository is public, so the working config stays local: loop install lists the Linear team members through Orca and asks whose queue this machine drains, so the identifiers never have to be typed by hand or pasted into a commit. Two facts decide how everything below is laid out: - The queue is Linear, not GitHub. GitHub is where a pull request is reviewed and merged, and github.intakeLabel ( loop:review ) lets a human ask the loop to review a pull request it never dispatched. It is not a work queue. - The loop runs on a machine with Orca , not in CI and not in an ephemeral container. orca.runtime is a blocking doctor check. So the eleven workstreams live in two places on purpose: the GitHub sub-issues of are the specification , and the Linear issues are the queue item the orchestrator actually reads. Each Linear issue carries the scope, the acceptance checklist, the verify command and a \"do not\" section, and links back to its GitHub spec. Workstream map Workstream Linear GitHub spec Start state Blocked by --- --- --- --- --- KR-07 Retrieval benchmark and CI gate AGE-1660 Todo, Urgent — KR-01 Lexical ranking and full corpus AGE-1661 Todo, High — KR-02 Markdown analyzer on remark AGE-1662 Todo, High — KR-03 Code areas and area scope AGE-1663 Todo, High — KR-05 Per-entity hashes, incremental scan AGE-1664 Todo, High — KR-04 Graph layer on graphology AGE-1665 Backlog KR-02, KR-03 KR-06 Retrieval projection and ranking AGE-1666 Backlog KR-01…KR-05 KR-08 Budgeted MCP tools, measured doctor AGE-1667 Backlog KR-06, KR-07 KR-09 Markdown renderings on knap AGE-1668 Backlog KR-03, KR-05, KR-06 KR-10 Enrichment overlay AGE-1669 Backlog KR-04, KR-05, KR-06 KR-11 Overlay stats, assisted study arm AGE-1670 Backlog KR-07, KR-10 One workstream at a time Two mechanisms, both deliberate: 1. machine.ceiling: 1 . The loop admits at most one worker regardless of how many CPUs or how much RAM the machine has. Six of the eleven workstreams extend a contract an earlier one defines (the retrieval projection, the ranking formula, the proposal schema), so two concurrent workers would write conflicting schemas. 2. Dependency gating through Linear state. linear.states: [Todo, Ready] is the dispatchable set. A blocked workstream sits in Backlog , which the loop never reads, and carries a blockedBy relation so the reason is visible in Linear. Priority orders the five that are dispatchable today. Promoting a workstream when its dependencies have merged: move it from Backlog to Todo in Linear. Nothing else is needed; the next tick picks it up. Never promote a workstream whose blockedBy issues are not yet Done: its contract would be frozen against code that does not exist. Prerequisites on the operating machine None of these live in this repository, and the loop doctor blocks on the first two. Requirement Why Check --- --- --- Orca runtime at or above 1.4.200 worktrees, terminals, Linear access, scheduling orca --version , orca status --json ak-harness resolvable in Orca's environment the scheduled automations invoke it npm i -g @agentskit/harness agentskit-review on PATH the deliver stage reviews every green head before merge agentskit-review --help gh authenticated pull request status and the merge call gh auth status At least one provider CLI logged in orchestrator, builder, reviewer and watcher roles claude , codex , grok or opencode A built Doc Bridge index in the main checkout deterministic context for the orchestrator node bin/ak-docs.js index orca.bin is set to o",
+          "body": "Keep-pushing loop for the knowledge-retrieval workstreams ak-harness loop drains one person's Linear queue through Orca worktrees: it freezes an orchestrator contract per issue, opens a worker terminal in a fresh worktree, then drives the resulting pull request through checks, adversarial review and squash merge. This repository ships with every project-specific value already tuned. The real loop.config.yaml is gitignored. Its linear block names a workspace, a team and a person by id, and this repository is public, so the working config stays local: loop install lists the Linear team members through Orca and asks whose queue this machine drains, so the identifiers never have to be typed by hand or pasted into a commit. Two facts decide how everything below is laid out: - The queue is Linear, not GitHub. GitHub is where a pull request is reviewed and merged, and github.intakeLabel ( loop:review ) lets a human ask the loop to review a pull request it never dispatched. It is not a work queue. - The loop runs on a machine with Orca , not in CI and not in an ephemeral container. orca.runtime is a blocking doctor check. So the eleven workstreams live in two places on purpose: the GitHub sub-issues of are the specification , and the Linear issues are the queue item the orchestrator actually reads. Each Linear issue carries the scope, the acceptance checklist, the verify command and a \"do not\" section, and links back to its GitHub spec. Workstream map Workstream GitHub spec Start state Blocked by --- --- --- --- KR-07 Retrieval benchmark and CI gate Todo, Urgent — KR-01 Lexical ranking and full corpus Todo, High — KR-02 Markdown analyzer on remark Todo, High — KR-03 Code areas and area scope Todo, High — KR-05 Per-entity hashes, incremental scan Todo, High — KR-04 Graph layer on graphology Backlog KR-02, KR-03 KR-06 Retrieval projection and ranking Backlog KR-01…KR-05 KR-08 Budgeted MCP tools, measured doctor Backlog KR-06, KR-07 KR-09 Markdown renderings on knap Backlog KR-03, KR-05, KR-06 KR-10 Enrichment overlay Backlog KR-04, KR-05, KR-06 KR-11 Overlay stats, assisted study arm Backlog KR-07, KR-10 One workstream at a time Two mechanisms, both deliberate: 1. machine.ceiling: 1 . The loop admits at most one worker regardless of how many CPUs or how much RAM the machine has. Six of the eleven workstreams extend a contract an earlier one defines (the retrieval projection, the ranking formula, the proposal schema), so two concurrent workers would write conflicting schemas. 2. Dependency gating through Linear state. linear.states: [Todo, Ready] is the dispatchable set. A blocked workstream sits in Backlog , which the loop never reads, and carries a blockedBy relation so the reason is visible in Linear. Priority orders the five that are dispatchable today. Promoting a workstream when its dependencies have merged: move it from Backlog to Todo in Linear. Nothing else is needed; the next tick picks it up. Never promote a workstream whose blockedBy issues are not yet Done: its contract would be frozen against code that does not exist. Prerequisites on the operating machine None of these live in this repository, and the loop doctor blocks on the first two. Requirement Why Check --- --- --- Orca runtime at or above 1.4.200 worktrees, terminals, Linear access, scheduling orca --version , orca status --json ak-harness resolvable in Orca's environment the scheduled automations invoke it npm i -g @agentskit/harness agentskit-review on PATH the deliver stage reviews every green head before merge agentskit-review --help gh authenticated pull request status and the merge call gh auth status At least one provider CLI logged in orchestrator, builder, reviewer and watcher roles claude , codex , grok or opencode A built Doc Bridge index in the main checkout deterministic context for the orchestrator node bin/ak-docs.js index orca.bin is set to orca . On Linux outside an Orca terminal, change it to orca-ide : bare orca is the GNOME screen reader and the ",
           "aliases": "document human"
         },
         "graph": {
@@ -13946,8 +13881,8 @@
           "outbound": [
             {
               "kind": "mentions",
-              "id": "area:agents",
-              "confidence": "fuzzy"
+              "id": "document:AGENTS.md",
+              "confidence": "observed"
             },
             {
               "kind": "mentions",
@@ -13971,7 +13906,7 @@
             }
           ]
         },
-        "contentHash": "e15a10401a80643c99563af8d839d35f6b3a5c92e1a21dfa6c3098c8ee235af1",
+        "contentHash": "4ca76d701455b4701e6452260226705e7aff471cf6f980022b802bdb6d09835b",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -13993,7 +13928,7 @@
           "path": "docs/MARKETPLACE-ECOSYSTEM-PLAN.md",
           "symbols": "",
           "summary": "This slice is complete only when all conditions below are evidenced locally. Publication remains an owner-only follow-up.",
-          "body": "Doc Bridge ecosystem and Marketplace acceptance plan This slice is complete only when all conditions below are evidenced locally. Publication remains an owner-only follow-up. - Composite Action validates committed freshness, accepts shell inputs only through quoted environment variables, pins its runtime package, and pins third-party Actions by SHA. - Marketplace metadata, consumer example, release-owner checklist, and automated contract checks agree on the same version. - The public portal exposes seven ecosystem products, six Doc Bridge peers, and contextual routes for Chat, Code Review, and AKOS. - /for-agents , llms.txt , llms-full.txt , raw Markdown, and deterministic knowledge are public and cross-linked. - Human docs remain concise and navigable; source-heavy detail stays in raw/full machine surfaces. - Landing and documentation pages have no horizontal overflow at 375, 768, 1280, or 1440 pixels. - ak-docs gate run , documentation conformance, and ak-docs doctor finish at 100/A.",
+          "body": "Doc Bridge ecosystem and Marketplace acceptance plan This slice is complete only when all conditions below are evidenced locally. Publication remains an owner-only follow-up. - Composite Action validates committed freshness, accepts shell inputs only through quoted environment variables, pins its runtime package, and pins third-party Actions by SHA. - Marketplace metadata, consumer example, release-owner checklist, and automated contract checks agree on the same version. - The public portal exposes seven ecosystem products, six Doc Bridge peers, and contextual routes for Chat and Code Review. - /for-agents , llms.txt , llms-full.txt , raw Markdown, and deterministic knowledge are public and cross-linked. - Human docs remain concise and navigable; source-heavy detail stays in raw/full machine surfaces. - Landing and documentation pages have no horizontal overflow at 375, 768, 1280, or 1440 pixels. - ak-docs gate run , documentation conformance, and ak-docs doctor finish at 100/A.",
           "aliases": "document human"
         },
         "graph": {
@@ -14004,7 +13939,7 @@
           "inbound": [],
           "outbound": []
         },
-        "contentHash": "9afda0fecef277a2d8273129fd0aff4f8da8ba7d7588f27da748cc0ba55a6c3f",
+        "contentHash": "bf9e305b7edb459daaa2a685e6cb4df7352f69da94e798889be02a16c4f57a45",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -14030,7 +13965,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.015064,
+          "pagerank": 0.015073,
           "inboundLinks": 5,
           "coveredBy": [],
           "mentionedBy": [],
@@ -14105,7 +14040,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.013311,
+          "pagerank": 0.013114,
           "inboundLinks": 8,
           "coveredBy": [],
           "mentionedBy": [
@@ -14219,7 +14154,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.019788,
+          "pagerank": 0.019505,
           "inboundLinks": 4,
           "coveredBy": [],
           "mentionedBy": [
@@ -14276,7 +14211,7 @@
           "aliases": "document human pattern"
         },
         "graph": {
-          "pagerank": 0.009606,
+          "pagerank": 0.009461,
           "inboundLinks": 6,
           "coveredBy": [],
           "mentionedBy": [
@@ -14350,7 +14285,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.014354,
+          "pagerank": 0.014174,
           "inboundLinks": 6,
           "coveredBy": [],
           "mentionedBy": [
@@ -14524,7 +14459,7 @@
           "inbound": [],
           "outbound": []
         },
-        "contentHash": "4c6de7a2a03c641e70a3099252c55c6f5c8d64519b1b52ac1f9a5d5fa24823dd",
+        "contentHash": "b6ebd33a2a139f20ca63a2d78560ee7a5659c860be06fc287e7891088b26fbd8",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -14556,11 +14491,6 @@
           "mentionedBy": [],
           "inbound": [],
           "outbound": [
-            {
-              "kind": "mentions",
-              "id": "area:agents",
-              "confidence": "fuzzy"
-            },
             {
               "kind": "mentions",
               "id": "area:src/agents",
@@ -14615,6 +14545,11 @@
               "kind": "mentions",
               "id": "area:src/study",
               "confidence": "fuzzy"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:AGENTS.md",
+              "confidence": "observed"
             },
             {
               "kind": "mentions",
@@ -14878,7 +14813,7 @@
             }
           ]
         },
-        "contentHash": "78eef7279c0fdc43402933bf5e63253b095e6877fc3aae3cd957666ebf2addea",
+        "contentHash": "9ae434d60cd70ad0d6e4e9c3478b7a2ce99073c0566e5e02733b4a9c9e282915",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -14937,7 +14872,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.00511,
+          "pagerank": 0.005033,
           "inboundLinks": 1,
           "coveredBy": [],
           "mentionedBy": [],
@@ -15037,7 +14972,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.005354,
+          "pagerank": 0.005274,
           "inboundLinks": 4,
           "coveredBy": [],
           "mentionedBy": [
@@ -15100,7 +15035,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.006803,
+          "pagerank": 0.006953,
           "inboundLinks": 2,
           "coveredBy": [],
           "mentionedBy": [
@@ -15162,7 +15097,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.014845,
+          "pagerank": 0.014631,
           "inboundLinks": 6,
           "coveredBy": [],
           "mentionedBy": [],
@@ -15242,7 +15177,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.008396,
+          "pagerank": 0.008274,
           "inboundLinks": 2,
           "coveredBy": [],
           "mentionedBy": [],
@@ -15312,7 +15247,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.00947,
+          "pagerank": 0.009334,
           "inboundLinks": 2,
           "coveredBy": [],
           "mentionedBy": [],
@@ -15372,7 +15307,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.020992,
+          "pagerank": 0.020682,
           "inboundLinks": 8,
           "coveredBy": [],
           "mentionedBy": [
@@ -15530,10 +15465,11 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.017696,
-          "inboundLinks": 10,
+          "pagerank": 0.017521,
+          "inboundLinks": 11,
           "coveredBy": [],
           "mentionedBy": [
+            "document:AGENTS.md",
             "document:CONTRIBUTING.md",
             "document:README.md"
           ],
@@ -15580,6 +15516,11 @@
             },
             {
               "kind": "mentions",
+              "id": "document:AGENTS.md",
+              "confidence": "fuzzy"
+            },
+            {
+              "kind": "mentions",
               "id": "document:CONTRIBUTING.md",
               "confidence": "fuzzy"
             },
@@ -15607,8 +15548,8 @@
             },
             {
               "kind": "mentions",
-              "id": "area:agents",
-              "confidence": "fuzzy"
+              "id": "document:AGENTS.md",
+              "confidence": "observed"
             },
             {
               "kind": "mentions",
@@ -15653,7 +15594,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.024378,
+          "pagerank": 0.024051,
           "inboundLinks": 10,
           "coveredBy": [],
           "mentionedBy": [
@@ -15815,7 +15756,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.00511,
+          "pagerank": 0.005033,
           "inboundLinks": 1,
           "coveredBy": [],
           "mentionedBy": [],
@@ -15854,7 +15795,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.010861,
+          "pagerank": 0.010719,
           "inboundLinks": 2,
           "coveredBy": [],
           "mentionedBy": [],
@@ -15904,7 +15845,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.011261,
+          "pagerank": 0.011092,
           "inboundLinks": 3,
           "coveredBy": [],
           "mentionedBy": [
@@ -16056,7 +15997,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.00511,
+          "pagerank": 0.005033,
           "inboundLinks": 1,
           "coveredBy": [],
           "mentionedBy": [],
@@ -16111,7 +16052,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.00511,
+          "pagerank": 0.005033,
           "inboundLinks": 2,
           "coveredBy": [],
           "mentionedBy": [
@@ -16157,7 +16098,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.008752,
+          "pagerank": 0.008621,
           "inboundLinks": 3,
           "coveredBy": [],
           "mentionedBy": [
@@ -16208,7 +16149,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.006726,
+          "pagerank": 0.006626,
           "inboundLinks": 2,
           "coveredBy": [],
           "mentionedBy": [],
@@ -16267,7 +16208,7 @@
             }
           ]
         },
-        "contentHash": "bded57d2ca268d7f3745b298e83ab766baa03f7251a4e790625f66f6f6ea21b8",
+        "contentHash": "5b8375ccae5668e358073047ac57b969355864d8bdec446700737d26a5f84b71",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -16293,7 +16234,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.007236,
+          "pagerank": 0.007127,
           "inboundLinks": 2,
           "coveredBy": [],
           "mentionedBy": [],
@@ -16393,7 +16334,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.005001,
+          "pagerank": 0.004926,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -16437,7 +16378,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.00511,
+          "pagerank": 0.005033,
           "inboundLinks": 1,
           "coveredBy": [],
           "mentionedBy": [],
@@ -16531,7 +16472,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.013084,
+          "pagerank": 0.012918,
           "inboundLinks": 3,
           "coveredBy": [],
           "mentionedBy": [],
@@ -16611,7 +16552,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.009113,
+          "pagerank": 0.008978,
           "inboundLinks": 3,
           "coveredBy": [],
           "mentionedBy": [],
@@ -16635,12 +16576,12 @@
           "outbound": [
             {
               "kind": "mentions",
-              "id": "area:agents",
-              "confidence": "fuzzy"
+              "id": "area:src/agents",
+              "confidence": "observed"
             },
             {
               "kind": "mentions",
-              "id": "area:src/agents",
+              "id": "document:AGENTS.md",
               "confidence": "observed"
             },
             {
@@ -16721,7 +16662,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.00511,
+          "pagerank": 0.005033,
           "inboundLinks": 1,
           "coveredBy": [],
           "mentionedBy": [],
@@ -16766,7 +16707,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.00511,
+          "pagerank": 0.005033,
           "inboundLinks": 1,
           "coveredBy": [],
           "mentionedBy": [],
@@ -16811,7 +16752,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.009454,
+          "pagerank": 0.009312,
           "inboundLinks": 2,
           "coveredBy": [],
           "mentionedBy": [],
@@ -16861,7 +16802,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.00511,
+          "pagerank": 0.005033,
           "inboundLinks": 1,
           "coveredBy": [],
           "mentionedBy": [],
@@ -16911,7 +16852,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.00511,
+          "pagerank": 0.005033,
           "inboundLinks": 1,
           "coveredBy": [],
           "mentionedBy": [],
@@ -16956,7 +16897,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.00511,
+          "pagerank": 0.005033,
           "inboundLinks": 1,
           "coveredBy": [],
           "mentionedBy": [],
@@ -17011,7 +16952,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.005787,
+          "pagerank": 0.005808,
           "inboundLinks": 1,
           "coveredBy": [],
           "mentionedBy": [],
@@ -17050,7 +16991,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.005896,
+          "pagerank": 0.005915,
           "inboundLinks": 2,
           "coveredBy": [],
           "mentionedBy": [],
@@ -17094,7 +17035,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.010706,
+          "pagerank": 0.010745,
           "inboundLinks": 2,
           "coveredBy": [],
           "mentionedBy": [],
@@ -17202,7 +17143,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.006469,
+          "pagerank": 0.007262,
           "inboundLinks": 5,
           "coveredBy": [],
           "mentionedBy": [
@@ -17300,7 +17241,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.00511,
+          "pagerank": 0.005033,
           "inboundLinks": 1,
           "coveredBy": [],
           "mentionedBy": [],
@@ -17339,7 +17280,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.005787,
+          "pagerank": 0.005808,
           "inboundLinks": 1,
           "coveredBy": [],
           "mentionedBy": [],
@@ -17378,7 +17319,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.005787,
+          "pagerank": 0.005808,
           "inboundLinks": 1,
           "coveredBy": [],
           "mentionedBy": [],
@@ -17417,7 +17358,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.005787,
+          "pagerank": 0.005808,
           "inboundLinks": 1,
           "coveredBy": [],
           "mentionedBy": [],
@@ -17489,7 +17430,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.005787,
+          "pagerank": 0.005808,
           "inboundLinks": 1,
           "coveredBy": [],
           "mentionedBy": [],
@@ -17517,7 +17458,7 @@
         "kind": "document",
         "path": "docs/validation-cycle-plan.md",
         "title": "Doc Bridge validation cycle plan",
-        "summary": "Validate the complete Doc Bridge change against agentskit-os, not only the published package or the HTML report. The validation must prove the bridge between repository structure, documentation, agents, and humans:",
+        "summary": "Validate the complete Doc Bridge change against the reference monorepo, not only the published package or the HTML report. The validation must prove the bridge between repository structure, documentation, agents, and humans:",
         "audience": "human",
         "aliases": [],
         "tags": [
@@ -17529,8 +17470,8 @@
           "headings": "Doc Bridge validation cycle plan Objective Evidence rules Cycle gates and success metrics Cycle 0 — Contract and scope gate Cycle 1 — Real consumer and reproducibility Cycle 2 — Architecture discovery Cycle 3 — Documentation inventory and freshness Cycle 4 — Documentation/code reconciliation Phase 3 — Real-artifact documentation inventory Cycle 5 — Registry agent quality Cycle 6 — Report and interaction validation Cycle 7 — Enterprise completion gate Documentation quality audit baseline — 2026-08-29 Initial baseline to collect Efficiency metric contract Latest measured cycle Current known blockers after the measured dogfood cycle Phase 2 — Semantic classification measurement",
           "path": "docs/validation-cycle-plan.md",
           "symbols": "",
-          "summary": "Validate the complete Doc Bridge change against agentskit-os, not only the published package or the HTML report. The validation must prove the bridge between repository structure, documentation, agents, and humans:",
-          "body": "Doc Bridge validation cycle plan Objective Validate the complete Doc Bridge change against agentskit-os , not only the published package or the HTML report. The validation must prove the bridge between repository structure, documentation, agents, and humans: 1. repository architecture is discovered at package, module, and file levels; 2. documentation is classified, indexed, and checked for freshness; 3. documentation claims are reconciled with observed code relationships; 4. disconnected, stale, conflicting, unresolved, and not-analyzed areas are visible; 5. the Registry agent proposes grounded follow-up work without becoming an unverified authority; 6. the report makes those results useful and navigable; 7. runs are reproducible, resumable, versioned, idempotent, and cost-bounded. This plan is a validation contract. A green result from one cycle never substitutes for a missing cycle. Evidence rules - Every result is tied to the source revision, configuration hash, snapshot hash, report hash, and verification run ID. - not-analyzed is visible and counts against coverage unless an explicit, human-approved exemption exists. - Unit tests and compilation are supporting evidence. They do not prove repository behavior, documentation agreement, endpoint/database behavior, or UI behavior. - Deterministic agent runs and assisted agent runs are separate evidence classes. Deterministic output proves replayability; it does not prove semantic quality. - No agent proposal is applied without human approval and a fresh post-apply verification run. Cycle gates and success metrics Cycle 0 — Contract and scope gate Purpose: map the human request to verifiable outcomes before changing the product or narrowing the target. Required evidence: task contract, acceptance matrix, repository/surface matrix, explicit exemptions, validation budget, and the decision for architecture declaration granularity. Success metrics: - 100% of requested outcomes mapped to one or more executable checks; - 0 unresolved scope, authorization, or behavior ambiguities; - 0 unapproved surface exclusions; - 100% of required checks have an evidence location and an expected result; - the contract names what the report must show for architecture, stale docs, doc/code drift, disconnected areas, Registry proposals, and UI. Stop condition: any unmapped outcome returns the task to CLARIFYING . Cycle 1 — Real consumer and reproducibility Purpose: prove the published package is the artifact used by agentskit-os and that the pipeline is repeatable. Checks: install the declared package version, run discovery, index, reconcile, check, report, and Registry agent using the target repository. Success metrics: - installed version equals the declared and published version; - two unchanged runs produce identical snapshot, report, and deterministic proposal hashes; - every generated artifact is linked from the workflow run; - resume after an interrupted stage completes without duplicating or corrupting artifacts; - local execution is used unless a contract explicitly requires network or CI. Cycle 2 — Architecture discovery Purpose: validate the project topology rather than merely listing dependencies. Checks: compare discovered packages/apps/modules/files and relations with the monorepo manifests, workspace configuration, representative source imports/exports, and known application boundaries. Success metrics: - 100% of in-scope workspace packages and apps are classified; - package, module, and file graph levels are independently navigable; - relation kinds and direction are preserved; - disconnected nodes and high-connectivity/SPOF candidates are reported with code evidence; - dynamic imports, runtime wiring, and generated code are either analyzed or explicitly reported as not-analyzed ; - no architecture claim is inferred from package.json dependencies alone. Cycle 3 — Documentation inventory and freshness Purpose: distinguish document presence from document usefulness and freshness. Checks",
+          "summary": "Validate the complete Doc Bridge change against the reference monorepo, not only the published package or the HTML report. The validation must prove the bridge between repository structure, documentation, agents, and humans:",
+          "body": "Doc Bridge validation cycle plan Objective Validate the complete Doc Bridge change against the reference monorepo, not only the published package or the HTML report. The validation must prove the bridge between repository structure, documentation, agents, and humans: 1. repository architecture is discovered at package, module, and file levels; 2. documentation is classified, indexed, and checked for freshness; 3. documentation claims are reconciled with observed code relationships; 4. disconnected, stale, conflicting, unresolved, and not-analyzed areas are visible; 5. the Registry agent proposes grounded follow-up work without becoming an unverified authority; 6. the report makes those results useful and navigable; 7. runs are reproducible, resumable, versioned, idempotent, and cost-bounded. This plan is a validation contract. A green result from one cycle never substitutes for a missing cycle. Evidence rules - Every result is tied to the source revision, configuration hash, snapshot hash, report hash, and verification run ID. - not-analyzed is visible and counts against coverage unless an explicit, human-approved exemption exists. - Unit tests and compilation are supporting evidence. They do not prove repository behavior, documentation agreement, endpoint/database behavior, or UI behavior. - Deterministic agent runs and assisted agent runs are separate evidence classes. Deterministic output proves replayability; it does not prove semantic quality. - No agent proposal is applied without human approval and a fresh post-apply verification run. Cycle gates and success metrics Cycle 0 — Contract and scope gate Purpose: map the human request to verifiable outcomes before changing the product or narrowing the target. Required evidence: task contract, acceptance matrix, repository/surface matrix, explicit exemptions, validation budget, and the decision for architecture declaration granularity. Success metrics: - 100% of requested outcomes mapped to one or more executable checks; - 0 unresolved scope, authorization, or behavior ambiguities; - 0 unapproved surface exclusions; - 100% of required checks have an evidence location and an expected result; - the contract names what the report must show for architecture, stale docs, doc/code drift, disconnected areas, Registry proposals, and UI. Stop condition: any unmapped outcome returns the task to CLARIFYING . Cycle 1 — Real consumer and reproducibility Purpose: prove the published package is the artifact used by the reference monorepo and that the pipeline is repeatable. Checks: install the declared package version, run discovery, index, reconcile, check, report, and Registry agent using the target repository. Success metrics: - installed version equals the declared and published version; - two unchanged runs produce identical snapshot, report, and deterministic proposal hashes; - every generated artifact is linked from the workflow run; - resume after an interrupted stage completes without duplicating or corrupting artifacts; - local execution is used unless a contract explicitly requires network or CI. Cycle 2 — Architecture discovery Purpose: validate the project topology rather than merely listing dependencies. Checks: compare discovered packages/apps/modules/files and relations with the monorepo manifests, workspace configuration, representative source imports/exports, and known application boundaries. Success metrics: - 100% of in-scope workspace packages and apps are classified; - package, module, and file graph levels are independently navigable; - relation kinds and direction are preserved; - disconnected nodes and high-connectivity/SPOF candidates are reported with code evidence; - dynamic imports, runtime wiring, and generated code are either analyzed or explicitly reported as not-analyzed ; - no architecture claim is inferred from package.json dependencies alone. Cycle 3 — Documentation inventory and freshness Purpose: distinguish document presence from document usefulness an",
           "aliases": "document human"
         },
         "graph": {
@@ -17541,7 +17482,7 @@
           "inbound": [],
           "outbound": []
         },
-        "contentHash": "e772a5066ea778ae4a8272ad022c0fd4a8cbfa78557cfea0d6ace8febe5b20cb",
+        "contentHash": "d7e74a823aa64ce0a8c2ac32ff6b4ee8bb8a81416931ed36d4e705d3de3ad0db",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -17605,7 +17546,7 @@
           "aliases": "document unclassified"
         },
         "graph": {
-          "pagerank": 0.00636,
+          "pagerank": 0.007154,
           "inboundLinks": 4,
           "coveredBy": [],
           "mentionedBy": [
@@ -17692,7 +17633,7 @@
           "aliases": "document unclassified"
         },
         "graph": {
-          "pagerank": 0.005245,
+          "pagerank": 0.005167,
           "inboundLinks": 2,
           "coveredBy": [],
           "mentionedBy": [
@@ -17753,7 +17694,7 @@
           "aliases": "document unclassified"
         },
         "graph": {
-          "pagerank": 0.005245,
+          "pagerank": 0.005167,
           "inboundLinks": 1,
           "coveredBy": [],
           "mentionedBy": [],
@@ -17792,7 +17733,7 @@
           "aliases": "document project"
         },
         "graph": {
-          "pagerank": 0.006028,
+          "pagerank": 0.005942,
           "inboundLinks": 3,
           "coveredBy": [],
           "mentionedBy": [
@@ -18029,7 +17970,7 @@
             }
           ]
         },
-        "contentHash": "f3c18ad57208c7a152497d4e1e3a7d35ace0dfb6a967eac2433ebedd4833d54f",
+        "contentHash": "4376ddb2cb7b442daba04811d4d340b7a5fa7427d17256a1c8c9e037062ca807",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -18055,7 +17996,7 @@
           "aliases": "document project"
         },
         "graph": {
-          "pagerank": 0.008162,
+          "pagerank": 0.009182,
           "inboundLinks": 6,
           "coveredBy": [],
           "mentionedBy": [
@@ -18157,11 +18098,11 @@
           "path": "skills/doc-bridge-handoff/SKILL.md",
           "symbols": "",
           "summary": "Use this skill before editing a repository that contains doc-bridge.config.json.",
-          "body": "Doc Bridge handoff Use this skill before editing a repository that contains doc-bridge.config.json . 1. Resolve the package or ownership id that best matches the requested change: - Prefer the read-only MCP tool handoff.resolve when it is available. - Otherwise run node <skill-directory /scripts/resolve-handoff.mjs <id from the repository. 2. Read every file in readBeforeEditing , beginning with startHere . 3. Keep changes inside editRoots . If the requested path is not covered, stop and report the missing route instead of guessing. 4. Make the smallest change that satisfies the request. 5. Run every command in checks before claiming completion. 6. If documentation changed, refresh the Doc Bridge index and run its gate. If resolution fails, returns incomplete fields, or names an unknown target, stop. Do not infer edit permission from repository layout. The resolver and MCP tools are read-only. They resolve project guidance but never authorize edits, publish changes, execute returned checks, or replace repository instructions. The skill uses no credentials and has no provider, hosted service, or AKOS dependency. Portable runtimes This directory follows the open Agent Skills layout: one SKILL.md plus optional scripts and fixtures. It can be loaded as a local skill by OpenClaw-compatible clients, Hermes Agent, Pi, Cursor, or another runtime that supports Agent Skills and shell execution. Runtime-specific publication metadata is intentionally kept outside the skill.",
+          "body": "Doc Bridge handoff Use this skill before editing a repository that contains doc-bridge.config.json . 1. Resolve the package or ownership id that best matches the requested change: - Prefer the read-only MCP tool handoff.resolve when it is available. - Otherwise run node <skill-directory /scripts/resolve-handoff.mjs <id from the repository. 2. Read every file in readBeforeEditing , beginning with startHere . 3. Keep changes inside editRoots . If the requested path is not covered, stop and report the missing route instead of guessing. 4. Make the smallest change that satisfies the request. 5. Run every command in checks before claiming completion. 6. If documentation changed, refresh the Doc Bridge index and run its gate. If resolution fails, returns incomplete fields, or names an unknown target, stop. Do not infer edit permission from repository layout. The resolver and MCP tools are read-only. They resolve project guidance but never authorize edits, publish changes, execute returned checks, or replace repository instructions. The skill uses no credentials and has no provider, hosted service, or managed-service dependency. Portable runtimes This directory follows the open Agent Skills layout: one SKILL.md plus optional scripts and fixtures. It can be loaded as a local skill by OpenClaw-compatible clients, Hermes Agent, Pi, Cursor, or another runtime that supports Agent Skills and shell execution. Runtime-specific publication metadata is intentionally kept outside the skill.",
           "aliases": "document unclassified"
         },
         "graph": {
-          "pagerank": 0.005245,
+          "pagerank": 0.005167,
           "inboundLinks": 2,
           "coveredBy": [],
           "mentionedBy": [
@@ -18181,7 +18122,7 @@
           ],
           "outbound": []
         },
-        "contentHash": "d4591954f89c6b7b5b2fb9fe4c84763c44138ac889e624df4012a44ab568cdf2",
+        "contentHash": "c87152cf3984c0b71dfbd7d90d26fd5e09bb8fe5120d45a54f9f590b169a13fd",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -20649,7 +20590,7 @@
           "inbound": [],
           "outbound": []
         },
-        "contentHash": "c55e5667e21ae0c3c5ab7e532e7c88c7d20f9a1dd41fd28a02c54757e761b5ec",
+        "contentHash": "1195dda80c7ece42d765e07c26e43aaa1d774a75b07ad3a9aefb49f2e13ea1c4",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -21556,7 +21497,7 @@
           "inbound": [],
           "outbound": []
         },
-        "contentHash": "cc95e1833354e885dc549def25d8966b954d3ce3c39102d6753885a364a4534e",
+        "contentHash": "f12d10f2ce96abb5c3f52335d2fb23f70eaab2f0bc3547d6af01e78beda0386c",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -26095,7 +26036,7 @@
             }
           ]
         },
-        "contentHash": "ad8c4e283369db7db48a0d65912053553b4ec228cfdb6c1c4f3962f92c388a41",
+        "contentHash": "2209e6afe618d2bc2ba910c39515991b424cf347dce48dfe860f9f20d960ce0d",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -32577,7 +32518,7 @@
             }
           ]
         },
-        "contentHash": "954ec6920f6192afea867698273a37ee550c3affcef79af42061c6335621a45a",
+        "contentHash": "10f58e4a9e74df97415d384170349391382acdef26b89aa221efe3eff819dd29",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -36095,7 +36036,7 @@
           ],
           "outbound": []
         },
-        "contentHash": "78923b5a9df448a4f0c6bcebf4e528c56a6f6e74f873d7a49b4b866658b85655",
+        "contentHash": "272ba96c327e82faa5b0530b37157d8ff88603d5984b96ddb24207199bb0d1c4",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -36729,7 +36670,7 @@
           "inbound": [],
           "outbound": []
         },
-        "contentHash": "e8987ce418831a07e153e3f912fd6346833125a7ffbff1b2c56d4a4bc12a6a6e",
+        "contentHash": "8e0e57c4fdca21bcba025c1027f5bfe02ea5d93bf2f371ef7f0ef72fe5749655",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -40399,14 +40340,14 @@
           "aliases": "doc-bridge @agentskit/doc-bridge package"
         },
         "graph": {
-          "pagerank": 0.007127,
+          "pagerank": 0.00702,
           "inboundLinks": 14,
           "coveredBy": [
             "document:docs/agent-corpus/doc-bridge.md"
           ],
           "mentionedBy": [
+            "document:AGENTS.md",
             "document:CONTRIBUTING.md",
-            "document:docs/DOGFOOD.md",
             "document:docs/guides/cli-map.md",
             "document:docs/POSITIONING.md",
             "document:docs/RELEASE.md",
@@ -40428,12 +40369,12 @@
             },
             {
               "kind": "mentions",
-              "id": "document:CONTRIBUTING.md",
+              "id": "document:AGENTS.md",
               "confidence": "observed"
             },
             {
               "kind": "mentions",
-              "id": "document:docs/DOGFOOD.md",
+              "id": "document:CONTRIBUTING.md",
               "confidence": "observed"
             },
             {
@@ -40494,7 +40435,7 @@
           ],
           "outbound": []
         },
-        "contentHash": "c6c23bedb5317e18e1db92f58222dfa2d2e7d50db3bb7eee5814769f3c432e48",
+        "contentHash": "e7402713ec15d953456ed7e6fb0aeea403f189a5eb03baac64ab555173ca225a",
         "provenance": "observed",
         "confidence": "observed"
       }

@@ -25,7 +25,7 @@ Use this skill before editing a repository that contains `doc-bridge.config.json
 
 If resolution fails, returns incomplete fields, or names an unknown target, stop. Do not infer edit permission from repository layout.
 
-The resolver and MCP tools are read-only. They resolve project guidance but never authorize edits, publish changes, execute returned checks, or replace repository instructions. The skill uses no credentials and has no provider, hosted service, or AKOS dependency.
+The resolver and MCP tools are read-only. They resolve project guidance but never authorize edits, publish changes, execute returned checks, or replace repository instructions. The skill uses no credentials and has no provider, hosted service, or managed-service dependency.
 
 ## Portable runtimes
 
