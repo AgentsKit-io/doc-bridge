@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "contentHash": "575bcdb7b9db90f598ba8880b86e158a0da94403940fda5f3a3bb16faf65d777",
+  "contentHash": "faa5746c6ef95b17e7ab559750e234749f36af2ca82353ec3900952642697885",
   "contentHashAlgo": "sha256-normalized-v1",
-  "generatedAt": "2026-09-26T12:23:01.066Z",
+  "generatedAt": "2026-09-26T14:57:46.924Z",
   "project": {
     "name": "@agentskit/doc-bridge",
     "root": "."
@@ -913,7 +913,7 @@
         "document",
         "human"
       ],
-      "contentHash": "7c191878a674275e0000ca905a74bae6d27230b03a6dfc6d603abbb6c2bd5356"
+      "contentHash": "6fe438ab5f3c11cc4317a1fe806e0f31940b327fe5b18d78d94e840799c098bd"
     },
     {
       "id": "document:docs/spec/enrichment-overlay-v1.md",
@@ -3104,7 +3104,7 @@
         "ts",
         "conformance"
       ],
-      "contentHash": "f99055a3bf3d90e85cdb22be7953cfc0fa97018c334ec8beb896cbce85119527"
+      "contentHash": "3f204e1168d9093beab5d7fad57a4c1106f52f20dc0acc1ea453341b8aca4538"
     },
     {
       "id": "module:src/discovery/areas.ts",
@@ -6084,6 +6084,19 @@
       "contentHash": "0e533ff448a1cbb2194588db169b0ac821e116902a1e671d00479d134fdbb3f5"
     },
     {
+      "id": "module:tests/ecosystem-contract.test.ts",
+      "type": "module",
+      "title": "ecosystem-contract.test.ts",
+      "path": "tests/ecosystem-contract.test.ts",
+      "tags": [
+        "module",
+        "ts",
+        "test",
+        "tests"
+      ],
+      "contentHash": "cae22930d35c92ac6af2f368074c7279bd40eefe866c48404e80201b3c3c8569"
+    },
+    {
       "id": "module:tests/ecosystem-llms.test.ts",
       "type": "module",
       "title": "ecosystem-llms.test.ts",
@@ -8029,8 +8042,8 @@
     "changes": {}
   },
   "inputs": {
-    "hash": "732340a1ac6838ac5b713e705cd9c98581e048e8b740ebc65163d8870604e77d",
-    "fileCount": 439,
+    "hash": "ad3ef835cee8d6e5a303d431833841284dcd140befb14374efb5bd3a018da093",
+    "fileCount": 440,
     "projectionVersion": 2
   },
   "retrieval": {
@@ -8052,9 +8065,9 @@
   "projection": {
     "type": "retrieval-index",
     "schemaVersion": 1,
-    "contentHash": "7a34d1783e53a4005f2928f3fdfe29bcffbde388e245055d0ac6d615ab6f5755",
+    "contentHash": "4dcc401c853ee81f16e5be2c654b1dd8e3f1e55abb0b4fc17b7f1d551d9f7d1f",
     "contentHashAlgo": "sha256-normalized-v1",
-    "snapshotHash": "218b1cd8b2b671237334660793373ad28329c53cc911c76ce0301dc793344497",
+    "snapshotHash": "b8ee32a3ee9bf156fa7f185080d4f428a74b83971b2a862126a5f4fc0818222b",
     "overlayHash": "f99666ff9119084dd25c2974ae64eb6935ec2aa785ff5ad478fb9d541f7a5e94",
     "configurationHash": "91d46a4ecbfe3b55878e0b3c7608819775cf7b18aeafcc8f689eddfa462622b4",
     "lexiconVersion": 1,
@@ -8074,7 +8087,7 @@
     },
     "lexical": {
       "version": 1,
-      "documentCount": 467,
+      "documentCount": 468,
       "fieldNames": [
         "aliases",
         "body",
@@ -8085,13 +8098,13 @@
         "title"
       ],
       "averageFieldLength": {
-        "aliases": 3.462526766595289,
-        "body": 68.82655246252676,
-        "headings": 4.3062098501070665,
-        "path": 5.689507494646681,
-        "summary": 5.698072805139186,
-        "symbols": 11.764453961456104,
-        "title": 3.1006423982869378
+        "aliases": 3.463675213675214,
+        "body": 68.67948717948718,
+        "headings": 4.297008547008547,
+        "path": 5.69017094017094,
+        "summary": 5.685897435897436,
+        "symbols": 11.739316239316238,
+        "title": 3.1047008547008548
       }
     },
     "entries": [
@@ -10057,7 +10070,7 @@
           ],
           "outbound": []
         },
-        "contentHash": "d7d4fb9457a2b293ab4f556f74667e08213cc5b8b79cd40ba8124568cae3d6cd",
+        "contentHash": "8233db6bd3e624cf9f88e220f1864942164769b250e1bd5bb566e0567424239d",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -15998,7 +16011,7 @@
             }
           ]
         },
-        "contentHash": "7c191878a674275e0000ca905a74bae6d27230b03a6dfc6d603abbb6c2bd5356",
+        "contentHash": "6fe438ab5f3c11cc4317a1fe806e0f31940b327fe5b18d78d94e840799c098bd",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -24278,11 +24291,16 @@
               "kind": "imports",
               "id": "module:src/conformance/documentation-standard-v1.ts",
               "confidence": "observed"
+            },
+            {
+              "kind": "imports",
+              "id": "module:tests/ecosystem-contract.test.ts",
+              "confidence": "observed"
             }
           ],
           "outbound": []
         },
-        "contentHash": "f99055a3bf3d90e85cdb22be7953cfc0fa97018c334ec8beb896cbce85119527",
+        "contentHash": "3f204e1168d9093beab5d7fad57a4c1106f52f20dc0acc1ea453341b8aca4538",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -37519,6 +37537,47 @@
           ]
         },
         "contentHash": "0e533ff448a1cbb2194588db169b0ac821e116902a1e671d00479d134fdbb3f5",
+        "provenance": "observed",
+        "confidence": "observed"
+      },
+      {
+        "id": "module:tests/ecosystem-contract.test.ts",
+        "kind": "module",
+        "path": "tests/ecosystem-contract.test.ts",
+        "title": "ecosystem-contract.test.ts",
+        "aliases": [],
+        "tags": [
+          "module",
+          "ts",
+          "test",
+          "tests"
+        ],
+        "fields": {
+          "title": "ecosystem-contract.test.ts",
+          "headings": "",
+          "path": "tests/ecosystem-contract.test.ts",
+          "symbols": "",
+          "summary": "",
+          "body": "",
+          "aliases": "module ts test tests"
+        },
+        "graph": {
+          "pagerank": 0,
+          "inboundLinks": 0,
+          "coveredBy": [],
+          "mentionedBy": [],
+          "areaId": "area:tests",
+          "packageId": "package:@agentskit/doc-bridge",
+          "inbound": [],
+          "outbound": [
+            {
+              "kind": "imports",
+              "id": "module:src/conformance/ecosystem-contract.ts",
+              "confidence": "observed"
+            }
+          ]
+        },
+        "contentHash": "cae22930d35c92ac6af2f368074c7279bd40eefe866c48404e80201b3c3c8569",
         "provenance": "observed",
         "confidence": "observed"
       },
