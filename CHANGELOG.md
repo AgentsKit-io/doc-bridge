@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.12.1
+
+### Patch Changes
+
+- 4d75499: Documentation index: the ecosystem list now names Code Review and Harness alongside AgentsKit, Registry, and Chat (Playbook is no longer listed as an ecosystem product).
+
 ## 1.12.0
 
 ### Minor Changes
