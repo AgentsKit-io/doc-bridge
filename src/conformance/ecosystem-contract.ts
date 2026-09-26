@@ -50,12 +50,9 @@ const ManifestSchema = z.object({
   schemaVersion: z.literal(2),
   parentBrand: z.object({ id: NonEmptyStringSchema, name: NonEmptyStringSchema }).passthrough(),
   products: z.array(ProductSchema).min(1),
-  // Legacy three-product shim or full public product projection of products[].
-  properties: z
-    .array(LegacyPropertySchema)
-    .refine((value) => value.length === 3 || value.length === 6, {
-      message: 'must project either the legacy three products or the full public product catalog',
-    }),
+  // Deprecated compatibility shim: when present, every entry projects one products[] record.
+  // Membership is whatever the canonical manifest lists; no product is required by name.
+  properties: z.array(LegacyPropertySchema).optional(),
   builder: z.object({ id: NonEmptyStringSchema, name: NonEmptyStringSchema, url: HttpsUrlSchema }).passthrough().optional(),
 }).passthrough()
 
@@ -94,18 +91,6 @@ const ClaimsSchema = z.object({
   products: z.array(ClaimProductSchema),
 }).passthrough()
 
-/** Historical three-product shim order. */
-const LEGACY_PRODUCT_IDS = ['agentskit', 'playbook', 'registry'] as const
-/** Full public product projection order (matches products[]). */
-const PUBLIC_PRODUCT_IDS = [
-  'agentskit',
-  'registry',
-  'agentskit-chat',
-  'playbook',
-  'doc-bridge',
-  'code-review',
-] as const
-
 export const parseCanonicalEcosystemContract = (
   manifestInput: unknown,
   claimsInput: unknown,
@@ -136,13 +121,14 @@ export const parseCanonicalEcosystemContract = (
     }
   }
 
-  const propertyIds = manifest.properties.length === 6 ? PUBLIC_PRODUCT_IDS : LEGACY_PRODUCT_IDS
-
-  for (const [index, id] of propertyIds.entries()) {
-    const legacy = manifest.properties[index]
+  const propertyIds = new Set<string>()
+  for (const [index, legacy] of (manifest.properties ?? []).entries()) {
+    const id = legacy.id
     const product = products.get(id)
-    if (!legacy || !product || legacy.id !== id || !product.surfaces.home) {
-      throw new Error(`Legacy property ${index} must project product ${id}.`)
+    if (propertyIds.has(id)) throw new Error(`Legacy property ${id} is listed more than once.`)
+    propertyIds.add(id)
+    if (!product || !product.surfaces.home) {
+      throw new Error(`Legacy property ${index} (${id}) must project a manifest product with a home surface.`)
     }
     const expected = {
       name: product.name,

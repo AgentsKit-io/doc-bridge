@@ -3,6 +3,8 @@ import { isAbsolute, relative, resolve, sep } from 'node:path'
 
 import { minimatch } from 'minimatch'
 
+import { createIgnoreFilter } from '../lib/ignore-filter.js'
+
 export const DEFAULT_SAFETY_EXCLUDES = ['**/.git/**', '**/node_modules/**', '**/dist/**', '**/build/**', '**/coverage/**', '**/.doc-bridge/**', '**/.next/**', '**/out/**', '**/.turbo/**', '**/.svelte-kit/**', '**/.mcpb-build/**', '**/.mcpb-output/**', '**/.env', '**/.env.*', '**/*secret*', '**/*credential*', '**/*.pem', '**/*.key'] as const
 
 export type SafeWalkOptions = {
@@ -12,6 +14,11 @@ export type SafeWalkOptions = {
   readonly maxBytes?: number
   readonly maxTimeMs?: number
   readonly maxMemoryMb?: number
+  /**
+   * Skip what the repository ignores (Git ignore rules, or `.gitignore` files outside Git) in
+   * addition to `exclude`, so build output never reaches the index. Defaults to true.
+   */
+  readonly respectIgnore?: boolean
 }
 
 export type SafeWalkResult = {
@@ -43,6 +50,7 @@ export const safeWalkFiles = (root: string, options: SafeWalkOptions = {}): Safe
   let reason: string | undefined
   const started = Date.now()
   const matchesExclude = (path: string): boolean => excludes.some((pattern) => minimatch(path, pattern, { dot: true }))
+  const ignored = options.respectIgnore === false ? undefined : createIgnoreFilter(projectRoot)
   const visit = (directory: string): void => {
     if (reason) return
     if (options.maxTimeMs !== undefined && Date.now() - started >= options.maxTimeMs) { reason = `Repository scan exceeded the ${options.maxTimeMs} ms time limit.`; return }
@@ -56,6 +64,7 @@ export const safeWalkFiles = (root: string, options: SafeWalkOptions = {}): Safe
       let stats
       try { stats = lstatSync(absolute) } catch { continue }
       if (stats.isSymbolicLink()) continue
+      if (ignored?.isIgnored(absolute, stats.isDirectory())) continue
       if (stats.isDirectory()) { visit(absolute); if (reason) return; continue }
       if (!stats.isFile() || (extensions.length > 0 && !extensions.some((extension) => name.endsWith(extension)))) continue
       if (files.length >= (options.maxFiles ?? 10_000)) { reason = `Repository scan exceeded the ${options.maxFiles ?? 10_000} file limit.`; return }

@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "contentHash": "575bcdb7b9db90f598ba8880b86e158a0da94403940fda5f3a3bb16faf65d777",
+  "contentHash": "f81846ee5fcbaabb1b8d8ab564abb01f030ef986696e2d0f952bb30f345fd7ae",
   "contentHashAlgo": "sha256-normalized-v1",
-  "generatedAt": "2026-09-26T12:23:01.066Z",
+  "generatedAt": "2026-09-26T15:00:38.028Z",
   "project": {
     "name": "@agentskit/doc-bridge",
     "root": "."
@@ -612,7 +612,7 @@
         "document",
         "human"
       ],
-      "contentHash": "58af861a64495ef04fe69c35789f9af83d94cb4b12cd0cbaa7fc35047b04eacd"
+      "contentHash": "ae89cc1de898d5c54c3314ad7a2b366be134fc4ab16f0d0b06cf2a60f07fd7b9"
     },
     {
       "id": "document:docs/loop-workflow.md",
@@ -889,7 +889,7 @@
         "document",
         "human"
       ],
-      "contentHash": "400b7f4c6f22961d1bdf52639ad9748eedb2ea031a04f740e01ab2f96f6f8b48"
+      "contentHash": "e3a5228580944da7b391f8c8210ff82b724fc8d44cdc3aa6254313e8a0138b89"
     },
     {
       "id": "document:docs/spec/documentation-audit-v1.md",
@@ -913,7 +913,7 @@
         "document",
         "human"
       ],
-      "contentHash": "7c191878a674275e0000ca905a74bae6d27230b03a6dfc6d603abbb6c2bd5356"
+      "contentHash": "6fe438ab5f3c11cc4317a1fe806e0f31940b327fe5b18d78d94e840799c098bd"
     },
     {
       "id": "document:docs/spec/enrichment-overlay-v1.md",
@@ -3104,7 +3104,7 @@
         "ts",
         "conformance"
       ],
-      "contentHash": "f99055a3bf3d90e85cdb22be7953cfc0fa97018c334ec8beb896cbce85119527"
+      "contentHash": "3f204e1168d9093beab5d7fad57a4c1106f52f20dc0acc1ea453341b8aca4538"
     },
     {
       "id": "module:src/discovery/areas.ts",
@@ -3607,7 +3607,7 @@
         "ts",
         "fixes"
       ],
-      "contentHash": "dbed409578e0f305d478be4c288531015485fe608abd541048b8b357fc43caf0"
+      "contentHash": "ef53661ec4a2b210ab76dc35cf61dbe251688c46032b4926c60b8b4f2226b059"
     },
     {
       "id": "module:src/gates/run-gates.ts",
@@ -3627,7 +3627,7 @@
         "ts",
         "gates"
       ],
-      "contentHash": "d880b3891ec00dd674b5a3245570416fe92d7641ffc7591eff70b5cab34dd7b4"
+      "contentHash": "1916a2858fd48912aef81c697026b1cb1cf8e95c2aab4684f1531f1425f6b980"
     },
     {
       "id": "module:src/graph/build.ts",
@@ -4406,6 +4406,23 @@
       "contentHash": "77dbfb73f8cd4f14a720e4d7aed421db968bab4808b45531ccd8b131545d7ced"
     },
     {
+      "id": "module:src/lib/ignore-filter.ts",
+      "type": "module",
+      "title": "ignore-filter.ts",
+      "path": "src/lib/ignore-filter.ts",
+      "symbols": [
+        "IgnoreFilter",
+        "IgnoreFilterMode",
+        "createIgnoreFilter"
+      ],
+      "tags": [
+        "module",
+        "ts",
+        "lib"
+      ],
+      "contentHash": "f63e0697e75b8f8069e95c28d783a073aaa609804898c6c39fbdf73c0e06c83b"
+    },
+    {
       "id": "module:src/lib/markdown.ts",
       "type": "module",
       "title": "markdown.ts",
@@ -4490,7 +4507,7 @@
         "ts",
         "lib"
       ],
-      "contentHash": "b256102d262a4e5c476dc0af632b32cac5529f1432cd948fa7bef093e4082ab5"
+      "contentHash": "49ff4b0190b4d745a5d4564509b5ab71dcbd4622ee50a451b9d02adb160e0616"
     },
     {
       "id": "module:src/mcp/install.ts",
@@ -4594,7 +4611,7 @@
         "ts",
         "memory"
       ],
-      "contentHash": "22b87c4e0c68cb2a3aa81d7b17e129781a66299e0321cdb5f64878e6b5ae5b43"
+      "contentHash": "91da56e5bbb53c0f6a85ceead3ba1815b72e55c5458affa7dc3a7eb13306309c"
     },
     {
       "id": "module:src/memory/pipeline.ts",
@@ -5183,7 +5200,7 @@
         "ts",
         "safety"
       ],
-      "contentHash": "687bfd2e722422b0d18d07f248e4ad65ef583bc76d4b03aa03358beefd011ca6"
+      "contentHash": "915f899e6ae4e295cfd556390956311f9e05b9058ba4e8890ba598c215119c22"
     },
     {
       "id": "module:src/schemas/agent-handoff.ts",
@@ -6084,6 +6101,19 @@
       "contentHash": "0e533ff448a1cbb2194588db169b0ac821e116902a1e671d00479d134fdbb3f5"
     },
     {
+      "id": "module:tests/ecosystem-contract.test.ts",
+      "type": "module",
+      "title": "ecosystem-contract.test.ts",
+      "path": "tests/ecosystem-contract.test.ts",
+      "tags": [
+        "module",
+        "ts",
+        "test",
+        "tests"
+      ],
+      "contentHash": "cae22930d35c92ac6af2f368074c7279bd40eefe866c48404e80201b3c3c8569"
+    },
+    {
       "id": "module:tests/ecosystem-llms.test.ts",
       "type": "module",
       "title": "ecosystem-llms.test.ts",
@@ -6227,6 +6257,19 @@
         "tests"
       ],
       "contentHash": "33d1d84d72ea3a6adf953d5834d9b3c0a016725d085d7a7bc507df8912e43c60"
+    },
+    {
+      "id": "module:tests/ignore-filter.test.ts",
+      "type": "module",
+      "title": "ignore-filter.test.ts",
+      "path": "tests/ignore-filter.test.ts",
+      "tags": [
+        "module",
+        "ts",
+        "test",
+        "tests"
+      ],
+      "contentHash": "df86d3d95511227ac9a7fefebccb9193a670ac5a8d123bcd6ac5c0203e0cec9e"
     },
     {
       "id": "module:tests/incremental.test.ts",
@@ -6499,7 +6542,7 @@
         "test",
         "tests"
       ],
-      "contentHash": "29cb7d1d100d74652edbb67d0a5c49ca1c9271e5aaeb7a59323efe493f8d0467"
+      "contentHash": "5212396cf7ff3912fc7064a78cbdee8bdc9862e930e0cbbf4520030ada0d1f7c"
     },
     {
       "id": "module:tests/retrieval-corpus.test.ts",
@@ -8029,8 +8072,8 @@
     "changes": {}
   },
   "inputs": {
-    "hash": "732340a1ac6838ac5b713e705cd9c98581e048e8b740ebc65163d8870604e77d",
-    "fileCount": 439,
+    "hash": "1cdcc9adda4629e1a2a92c294ab9a1604cad8c88be376a75a13b6939ffb574cf",
+    "fileCount": 442,
     "projectionVersion": 2
   },
   "retrieval": {
@@ -8052,9 +8095,9 @@
   "projection": {
     "type": "retrieval-index",
     "schemaVersion": 1,
-    "contentHash": "7a34d1783e53a4005f2928f3fdfe29bcffbde388e245055d0ac6d615ab6f5755",
+    "contentHash": "05c765cd789ebd4f332bd9d5abbe4530484da8834ddef8081f35cee19cd5d49a",
     "contentHashAlgo": "sha256-normalized-v1",
-    "snapshotHash": "218b1cd8b2b671237334660793373ad28329c53cc911c76ce0301dc793344497",
+    "snapshotHash": "1dd8cae0176f9707f78b77dedff4e827885c962d6f209bda6479f1d9955fbe99",
     "overlayHash": "f99666ff9119084dd25c2974ae64eb6935ec2aa785ff5ad478fb9d541f7a5e94",
     "configurationHash": "91d46a4ecbfe3b55878e0b3c7608819775cf7b18aeafcc8f689eddfa462622b4",
     "lexiconVersion": 1,
@@ -8074,7 +8117,7 @@
     },
     "lexical": {
       "version": 1,
-      "documentCount": 467,
+      "documentCount": 470,
       "fieldNames": [
         "aliases",
         "body",
@@ -8085,13 +8128,13 @@
         "title"
       ],
       "averageFieldLength": {
-        "aliases": 3.462526766595289,
-        "body": 68.82655246252676,
-        "headings": 4.3062098501070665,
-        "path": 5.689507494646681,
-        "summary": 5.698072805139186,
-        "symbols": 11.764453961456104,
-        "title": 3.1006423982869378
+        "aliases": 3.4638297872340424,
+        "body": 68.3936170212766,
+        "headings": 4.282978723404256,
+        "path": 5.691489361702128,
+        "summary": 5.6617021276595745,
+        "symbols": 11.712765957446809,
+        "title": 3.1106382978723404
       }
     },
     "entries": [
@@ -9189,7 +9232,7 @@
           ],
           "outbound": []
         },
-        "contentHash": "17b4f278aa91e48ea15a473ad599b9755ff5b1ca65530a133d154388fcc5a96b",
+        "contentHash": "35819c7ec85b9177ca4d38f0af85e97293bc48c1530b54146195dc2f7f3fc4c4",
         "provenance": "observed",
         "confidence": "observed",
         "ownershipId": "doc-bridge-lib"
@@ -10057,7 +10100,7 @@
           ],
           "outbound": []
         },
-        "contentHash": "d7d4fb9457a2b293ab4f556f74667e08213cc5b8b79cd40ba8124568cae3d6cd",
+        "contentHash": "62fef79b60375442b91aa40a63521a7ae88adaaedfae1b152f1f19ccca12d36a",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -10121,7 +10164,7 @@
         },
         "graph": {
           "pagerank": 0.004926,
-          "inboundLinks": 6,
+          "inboundLinks": 7,
           "coveredBy": [],
           "mentionedBy": [
             "document:CHANGELOG.md",
@@ -10129,6 +10172,7 @@
             "document:docs/loop-workflow.md",
             "document:docs/PRD-knowledge-retrieval-and-enrichment.md",
             "document:docs/spec/cli.md",
+            "document:docs/spec/config-v1.md",
             "document:docs/spec/retrieval-index-v1.md"
           ],
           "inbound": [
@@ -10155,6 +10199,11 @@
             {
               "kind": "mentions",
               "id": "document:docs/spec/cli.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/spec/config-v1.md",
               "confidence": "observed"
             },
             {
@@ -13993,7 +14042,7 @@
           "path": "docs/knowledge-engine-runbook.md",
           "symbols": "",
           "summary": "Doc Bridge is deterministic by default. It turns repository structure and Markdown declarations into versioned snapshot, reconciliation, rule, report, and workflow artifacts. Optional Registry assistance is explicit and never changes deterministic results.",
-          "body": "Knowledge Engine Runbook Doc Bridge is deterministic by default. It turns repository structure and Markdown declarations into versioned snapshot, reconciliation, rule, report, and workflow artifacts. Optional Registry assistance is explicit and never changes deterministic results. First run Expected artifacts are under .doc-bridge/workflow/ : manifest.json , immutable stage artifacts, transitions.jsonl , and last-known-good.json . The HTML report is standalone and can be opened directly without a server or network. The safe repository walk excludes common generated trees, including dist , build , .next , out , .turbo , .svelte-kit , .mcpb-build , and .mcpb-output , so generated output is reported as a coverage boundary rather than mistaken for source architecture. Add a project-specific safety.exclude pattern when another tool generates code outside these conventions. Safe fixes Proposal generation never changes project files. Approval is bound to the exact proposal and affected-file hashes; apply rejects drift and rolls back on failure. Optional Registry assistance Install the configured local Registry agent, then configure a local runner module: Set intelligence.registry.enabled: true and either runnerModule or the generic cli adapter in doc-bridge.config.json . The runner receives redacted immutable snapshot/report/evidence context and must return AgentProposalV1 . Network, shell, direct file mutation, and automatic approval are not available to a module runner. A CLI receives the same context as a JSON envelope on stdin and must write exactly one AgentProposalV1 JSON object to stdout; configure the executable and argument array without shell syntax: The child runs with the project root as its working directory, never through a shell, and inherits the parent environment so the CLI can use its own login. Doc Bridge enforces timeout, output and proposal-schema limits, rejects non-zero exits, non-JSON output, mismatched hashes, and invalid origins. The CLI is an explicit trust boundary: its own network and filesystem permissions are controlled by the operator, not by Doc Bridge. Recovery and CI Rerunning an unchanged command reuses valid stage artifacts. A changed source revision, configuration hash, or tool version creates a stale/superseding run. CI can use ak-docs check --json ; non-zero rule findings fail the command while unsupported analysis is reported as explicit coverage. The first implementation analyzes JavaScript/TypeScript and Markdown. Other languages should add analyzers that emit the same canonical entity, relation, evidence, coverage, and hash contracts. What the Markdown analyzer reads Documentation is parsed with remark (CommonMark plus GFM), so a document's own prose becomes evidence: links between documents, paths and package names in inline code, and exported names all become observed relations carrying the line they were claimed on. The contract — relation kinds, the ambiguity and near-miss rules, generated regions, the document fields and the docbridge schema — is . Relation coverage policy Agent documents under the configured corpus.agent.root may use the conventional packages/<name .md or apps/<name .md path to declare package coverage without a humanDoc field. This is intentionally separate from the human bridge: humanDoc still reports whether an agent has a resolvable human-facing guide. Missing declarations are configurable because not every implementation import is useful documentation. In the root configuration, reconciliation.scope selects the semantic comparison level while reconciliation.requiredRelationKinds selects the observed relation kinds that must be declared in Markdown. A single-package repository wants scope: \"area\" : at package scope its internal relations aggregate into one self-loop the comparison skips, so nothing is reported. See . Raw file relations remain available in the snapshot and report for evidence and exploration: Omit the option to preserve the original all-relation be",
+          "body": "Knowledge Engine Runbook Doc Bridge is deterministic by default. It turns repository structure and Markdown declarations into versioned snapshot, reconciliation, rule, report, and workflow artifacts. Optional Registry assistance is explicit and never changes deterministic results. First run Expected artifacts are under .doc-bridge/workflow/ : manifest.json , immutable stage artifacts, transitions.jsonl , and last-known-good.json . The HTML report is standalone and can be opened directly without a server or network. The safe repository walk excludes common generated trees, including dist , build , .next , out , .turbo , .svelte-kit , .mcpb-build , and .mcpb-output , so generated output is reported as a coverage boundary rather than mistaken for source architecture. It also skips every path the repository ignores (Git ignore rules, or the .gitignore files on disk outside Git). Add a project-specific safety.exclude pattern when another tool generates code outside these conventions. Safe fixes Proposal generation never changes project files. Approval is bound to the exact proposal and affected-file hashes; apply rejects drift and rolls back on failure. Optional Registry assistance Install the configured local Registry agent, then configure a local runner module: Set intelligence.registry.enabled: true and either runnerModule or the generic cli adapter in doc-bridge.config.json . The runner receives redacted immutable snapshot/report/evidence context and must return AgentProposalV1 . Network, shell, direct file mutation, and automatic approval are not available to a module runner. A CLI receives the same context as a JSON envelope on stdin and must write exactly one AgentProposalV1 JSON object to stdout; configure the executable and argument array without shell syntax: The child runs with the project root as its working directory, never through a shell, and inherits the parent environment so the CLI can use its own login. Doc Bridge enforces timeout, output and proposal-schema limits, rejects non-zero exits, non-JSON output, mismatched hashes, and invalid origins. The CLI is an explicit trust boundary: its own network and filesystem permissions are controlled by the operator, not by Doc Bridge. Recovery and CI Rerunning an unchanged command reuses valid stage artifacts. A changed source revision, configuration hash, or tool version creates a stale/superseding run. CI can use ak-docs check --json ; non-zero rule findings fail the command while unsupported analysis is reported as explicit coverage. The first implementation analyzes JavaScript/TypeScript and Markdown. Other languages should add analyzers that emit the same canonical entity, relation, evidence, coverage, and hash contracts. What the Markdown analyzer reads Documentation is parsed with remark (CommonMark plus GFM), so a document's own prose becomes evidence: links between documents, paths and package names in inline code, and exported names all become observed relations carrying the line they were claimed on. The contract — relation kinds, the ambiguity and near-miss rules, generated regions, the document fields and the docbridge schema — is . Relation coverage policy Agent documents under the configured corpus.agent.root may use the conventional packages/<name .md or apps/<name .md path to declare package coverage without a humanDoc field. This is intentionally separate from the human bridge: humanDoc still reports whether an agent has a resolvable human-facing guide. Missing declarations are configurable because not every implementation import is useful documentation. In the root configuration, reconciliation.scope selects the semantic comparison level while reconciliation.requiredRelationKinds selects the observed relation kinds that must be declared in Markdown. A single-package repository wants scope: \"area\" : at package scope its internal relations aggregate into one self-loop the comparison skips, so nothing is reported. See . Raw file relations remain available ",
           "aliases": "document human"
         },
         "graph": {
@@ -14026,7 +14075,7 @@
             }
           ]
         },
-        "contentHash": "58af861a64495ef04fe69c35789f9af83d94cb4b12cd0cbaa7fc35047b04eacd",
+        "contentHash": "ae89cc1de898d5c54c3314ad7a2b366be134fc4ab16f0d0b06cf2a60f07fd7b9",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -15765,7 +15814,7 @@
         ],
         "fields": {
           "title": "doc-bridge config contract v1",
-          "headings": "doc-bridge config contract v1 Design rules Discovery order TypeScript shape (authoritative) corpus.agent (required) Minimal solo project corpus.human (optional) Bridge to agent docs index (optional) routing (optional — monorepo-first) Join keys (agent ↔ human ↔ ownership) gates (optional) Structural vs style validation Why index-reproducible is opt-in conformance (optional) reconciliation (optional) report (optional) analysis.areas (optional) retrieval (optional) render (optional) safety (optional) analysis (optional) surfaces (optional) intelligence (optional — any provider) federation (optional — ecosystem) AgentHandoff emission rules Example configs 1. Solo library (minimal) 2. pnpm monorepo + ownership 3. Monorepo + Fumadocs (standard profile) 4. Docusaurus + optional memory 5. JSON config (no TypeScript) CLI mapping Validation Versioning See also",
+          "headings": "doc-bridge config contract v1 Design rules Discovery order TypeScript shape (authoritative) corpus.agent (required) Minimal solo project corpus.human (optional) Bridge to agent docs index (optional) routing (optional — monorepo-first) Join keys (agent ↔ human ↔ ownership) gates (optional) Structural vs style validation Why index-reproducible is opt-in conformance (optional) reconciliation (optional) report (optional) analysis.areas (optional) retrieval (optional) render (optional) safety (optional) Ignored files analysis (optional) surfaces (optional) intelligence (optional — any provider) federation (optional — ecosystem) AgentHandoff emission rules Example configs 1. Solo library (minimal) 2. pnpm monorepo + ownership 3. Monorepo + Fumadocs (standard profile) 4. Docusaurus + optional memory 5. JSON config (no TypeScript) CLI mapping Validation Versioning See also",
           "path": "docs/spec/config-v1.md",
           "symbols": "",
           "summary": "doc-bridge.config.ts (or .js, .mjs, .json, or package.json → docBridge) is the v1 integration point for any project. Layer 0 fields are sufficient to run index, query, and MCP without an LLM.",
@@ -15884,6 +15933,11 @@
             },
             {
               "kind": "mentions",
+              "id": "document:AGENTS.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
               "id": "document:docs/spec/analyzer-plugin-v1.md",
               "confidence": "observed"
             },
@@ -15909,7 +15963,7 @@
             }
           ]
         },
-        "contentHash": "400b7f4c6f22961d1bdf52639ad9748eedb2ea031a04f740e01ab2f96f6f8b48",
+        "contentHash": "e3a5228580944da7b391f8c8210ff82b724fc8d44cdc3aa6254313e8a0138b89",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -15998,7 +16052,7 @@
             }
           ]
         },
-        "contentHash": "7c191878a674275e0000ca905a74bae6d27230b03a6dfc6d603abbb6c2bd5356",
+        "contentHash": "6fe438ab5f3c11cc4317a1fe806e0f31940b327fe5b18d78d94e840799c098bd",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -23383,6 +23437,11 @@
             },
             {
               "kind": "imports",
+              "id": "module:tests/ignore-filter.test.ts",
+              "confidence": "observed"
+            },
+            {
+              "kind": "imports",
               "id": "module:tests/index-builder.test.ts",
               "confidence": "observed"
             },
@@ -24069,6 +24128,11 @@
             },
             {
               "kind": "imports",
+              "id": "module:tests/ignore-filter.test.ts",
+              "confidence": "observed"
+            },
+            {
+              "kind": "imports",
               "id": "module:tests/index-builder.test.ts",
               "confidence": "observed"
             },
@@ -24120,11 +24184,6 @@
             {
               "kind": "imports",
               "id": "module:tests/render.test.ts",
-              "confidence": "observed"
-            },
-            {
-              "kind": "imports",
-              "id": "module:tests/reproducibility.test.ts",
               "confidence": "observed"
             }
           ],
@@ -24278,11 +24337,16 @@
               "kind": "imports",
               "id": "module:src/conformance/documentation-standard-v1.ts",
               "confidence": "observed"
+            },
+            {
+              "kind": "imports",
+              "id": "module:tests/ecosystem-contract.test.ts",
+              "confidence": "observed"
             }
           ],
           "outbound": []
         },
-        "contentHash": "f99055a3bf3d90e85cdb22be7953cfc0fa97018c334ec8beb896cbce85119527",
+        "contentHash": "3f204e1168d9093beab5d7fad57a4c1106f52f20dc0acc1ea453341b8aca4538",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -26591,6 +26655,11 @@
             },
             {
               "kind": "imports",
+              "id": "module:src/lib/ignore-filter.ts",
+              "confidence": "observed"
+            },
+            {
+              "kind": "imports",
               "id": "module:src/safety/repository.ts",
               "confidence": "observed"
             },
@@ -26601,7 +26670,7 @@
             }
           ]
         },
-        "contentHash": "dbed409578e0f305d478be4c288531015485fe608abd541048b8b357fc43caf0",
+        "contentHash": "ef53661ec4a2b210ab76dc35cf61dbe251688c46032b4926c60b8b4f2226b059",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -26725,7 +26794,7 @@
             }
           ]
         },
-        "contentHash": "d880b3891ec00dd674b5a3245570416fe92d7641ffc7591eff70b5cab34dd7b4",
+        "contentHash": "1916a2858fd48912aef81c697026b1cb1cf8e95c2aab4684f1531f1425f6b980",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -27119,6 +27188,11 @@
             {
               "kind": "imports",
               "id": "module:tests/gates.test.ts",
+              "confidence": "observed"
+            },
+            {
+              "kind": "imports",
+              "id": "module:tests/ignore-filter.test.ts",
               "confidence": "observed"
             },
             {
@@ -29970,6 +30044,66 @@
         "confidence": "observed"
       },
       {
+        "id": "module:src/lib/ignore-filter.ts",
+        "kind": "module",
+        "path": "src/lib/ignore-filter.ts",
+        "title": "ignore-filter.ts",
+        "aliases": [],
+        "symbols": [
+          "IgnoreFilter",
+          "IgnoreFilterMode",
+          "createIgnoreFilter"
+        ],
+        "tags": [
+          "module",
+          "ts",
+          "lib"
+        ],
+        "fields": {
+          "title": "ignore-filter.ts",
+          "headings": "",
+          "path": "src/lib/ignore-filter.ts",
+          "symbols": "IgnoreFilter IgnoreFilterMode createIgnoreFilter",
+          "summary": "",
+          "body": "",
+          "aliases": "module ts lib"
+        },
+        "graph": {
+          "pagerank": 0,
+          "inboundLinks": 0,
+          "coveredBy": [],
+          "mentionedBy": [],
+          "areaId": "area:src/lib",
+          "packageId": "package:@agentskit/doc-bridge",
+          "inbound": [
+            {
+              "kind": "imports",
+              "id": "module:src/fixes/proposals.ts",
+              "confidence": "observed"
+            },
+            {
+              "kind": "imports",
+              "id": "module:src/lib/walk.ts",
+              "confidence": "observed"
+            },
+            {
+              "kind": "imports",
+              "id": "module:src/safety/repository.ts",
+              "confidence": "observed"
+            },
+            {
+              "kind": "imports",
+              "id": "module:tests/ignore-filter.test.ts",
+              "confidence": "observed"
+            }
+          ],
+          "outbound": []
+        },
+        "contentHash": "f63e0697e75b8f8069e95c28d783a073aaa609804898c6c39fbdf73c0e06c83b",
+        "provenance": "observed",
+        "confidence": "observed"
+      },
+      {
         "id": "module:src/lib/markdown.ts",
         "kind": "module",
         "path": "src/lib/markdown.ts",
@@ -30406,9 +30540,19 @@
               "kind": "imports",
               "id": "module:src/memory/ingest.ts",
               "confidence": "observed"
+            },
+            {
+              "kind": "imports",
+              "id": "module:tests/ignore-filter.test.ts",
+              "confidence": "observed"
             }
           ],
           "outbound": [
+            {
+              "kind": "imports",
+              "id": "module:src/lib/ignore-filter.ts",
+              "confidence": "observed"
+            },
             {
               "kind": "imports",
               "id": "module:src/lib/paths.ts",
@@ -30416,7 +30560,7 @@
             }
           ]
         },
-        "contentHash": "b256102d262a4e5c476dc0af632b32cac5529f1432cd948fa7bef093e4082ab5",
+        "contentHash": "49ff4b0190b4d745a5d4564509b5ab71dcbd4622ee50a451b9d02adb160e0616",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -30978,7 +31122,7 @@
             }
           ]
         },
-        "contentHash": "22b87c4e0c68cb2a3aa81d7b17e129781a66299e0321cdb5f64878e6b5ae5b43",
+        "contentHash": "91da56e5bbb53c0f6a85ceead3ba1815b72e55c5458affa7dc3a7eb13306309c",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -33794,6 +33938,11 @@
             },
             {
               "kind": "imports",
+              "id": "module:tests/ignore-filter.test.ts",
+              "confidence": "observed"
+            },
+            {
+              "kind": "imports",
               "id": "module:tests/repository-safety.test.ts",
               "confidence": "observed"
             },
@@ -33813,9 +33962,15 @@
               "confidence": "observed"
             }
           ],
-          "outbound": []
+          "outbound": [
+            {
+              "kind": "imports",
+              "id": "module:src/lib/ignore-filter.ts",
+              "confidence": "observed"
+            }
+          ]
         },
-        "contentHash": "687bfd2e722422b0d18d07f248e4ad65ef583bc76d4b03aa03358beefd011ca6",
+        "contentHash": "915f899e6ae4e295cfd556390956311f9e05b9058ba4e8890ba598c215119c22",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -37523,6 +37678,47 @@
         "confidence": "observed"
       },
       {
+        "id": "module:tests/ecosystem-contract.test.ts",
+        "kind": "module",
+        "path": "tests/ecosystem-contract.test.ts",
+        "title": "ecosystem-contract.test.ts",
+        "aliases": [],
+        "tags": [
+          "module",
+          "ts",
+          "test",
+          "tests"
+        ],
+        "fields": {
+          "title": "ecosystem-contract.test.ts",
+          "headings": "",
+          "path": "tests/ecosystem-contract.test.ts",
+          "symbols": "",
+          "summary": "",
+          "body": "",
+          "aliases": "module ts test tests"
+        },
+        "graph": {
+          "pagerank": 0,
+          "inboundLinks": 0,
+          "coveredBy": [],
+          "mentionedBy": [],
+          "areaId": "area:tests",
+          "packageId": "package:@agentskit/doc-bridge",
+          "inbound": [],
+          "outbound": [
+            {
+              "kind": "imports",
+              "id": "module:src/conformance/ecosystem-contract.ts",
+              "confidence": "observed"
+            }
+          ]
+        },
+        "contentHash": "cae22930d35c92ac6af2f368074c7279bd40eefe866c48404e80201b3c3c8569",
+        "provenance": "observed",
+        "confidence": "observed"
+      },
+      {
         "id": "module:tests/ecosystem-llms.test.ts",
         "kind": "module",
         "path": "tests/ecosystem-llms.test.ts",
@@ -38232,6 +38428,72 @@
           ]
         },
         "contentHash": "33d1d84d72ea3a6adf953d5834d9b3c0a016725d085d7a7bc507df8912e43c60",
+        "provenance": "observed",
+        "confidence": "observed"
+      },
+      {
+        "id": "module:tests/ignore-filter.test.ts",
+        "kind": "module",
+        "path": "tests/ignore-filter.test.ts",
+        "title": "ignore-filter.test.ts",
+        "aliases": [],
+        "tags": [
+          "module",
+          "ts",
+          "test",
+          "tests"
+        ],
+        "fields": {
+          "title": "ignore-filter.test.ts",
+          "headings": "",
+          "path": "tests/ignore-filter.test.ts",
+          "symbols": "",
+          "summary": "",
+          "body": "",
+          "aliases": "module ts test tests"
+        },
+        "graph": {
+          "pagerank": 0,
+          "inboundLinks": 0,
+          "coveredBy": [],
+          "mentionedBy": [],
+          "areaId": "area:tests",
+          "packageId": "package:@agentskit/doc-bridge",
+          "inbound": [],
+          "outbound": [
+            {
+              "kind": "imports",
+              "id": "module:src/config/defaults.ts",
+              "confidence": "observed"
+            },
+            {
+              "kind": "imports",
+              "id": "module:src/config/schema.ts",
+              "confidence": "observed"
+            },
+            {
+              "kind": "imports",
+              "id": "module:src/index-builder/build-index.ts",
+              "confidence": "observed"
+            },
+            {
+              "kind": "imports",
+              "id": "module:src/lib/ignore-filter.ts",
+              "confidence": "observed"
+            },
+            {
+              "kind": "imports",
+              "id": "module:src/lib/walk.ts",
+              "confidence": "observed"
+            },
+            {
+              "kind": "imports",
+              "id": "module:src/safety/repository.ts",
+              "confidence": "observed"
+            }
+          ]
+        },
+        "contentHash": "df86d3d95511227ac9a7fefebccb9193a670ac5a8d123bcd6ac5c0203e0cec9e",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -39665,7 +39927,7 @@
             }
           ]
         },
-        "contentHash": "29cb7d1d100d74652edbb67d0a5c49ca1c9271e5aaeb7a59323efe493f8d0467",
+        "contentHash": "5212396cf7ff3912fc7064a78cbdee8bdc9862e930e0cbbf4520030ada0d1f7c",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -41047,7 +41309,7 @@
           ],
           "outbound": []
         },
-        "contentHash": "e7402713ec15d953456ed7e6fb0aeea403f189a5eb03baac64ab555173ca225a",
+        "contentHash": "fa5acc1614076c61f64a6af9e353697bd801d9c5abf15ea02f052c0cf17d7c2e",
         "provenance": "observed",
         "confidence": "observed"
       }

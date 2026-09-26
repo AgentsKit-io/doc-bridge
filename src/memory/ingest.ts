@@ -20,7 +20,7 @@ const ingestMarkdownDir = (
 ): MemoryCandidateV1[] => {
   if (!existsSync(dir)) return []
 
-  return walkFiles(dir, { extensions: ['.md', '.mdc'] }).map((abs) => {
+  return walkFiles(dir, { extensions: ['.md', '.mdc'], respectIgnore: false }).map((abs) => {
     const rel = relativePath(root, abs)
     const raw = readFileSync(abs, 'utf8')
     const id = slugFromPath(rel)
