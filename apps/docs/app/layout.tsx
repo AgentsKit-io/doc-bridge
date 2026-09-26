@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { RootProvider } from 'fumadocs-ui/provider/next'
 import './globals.css'
 import { ChatLauncher } from '@/components/chat-launcher'
-import { SHELL_CSS_URL, SHELL_JS_URL, PRODUCT_ID, PRODUCT_REPO } from '@/lib/shell'
+import { SHELL_CSS_URL, SHELL_JS_URL, SHELL_ORIGIN, PRODUCT_ID, PRODUCT_REPO } from '@/lib/shell'
 import { SITE_URL } from '@/lib/site'
 import { serializedDocBridgeStructuredData } from '@/lib/structured-data'
 import { AccessibleSearch } from '@/components/accessible-search'
@@ -41,6 +41,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en" data-scroll-behavior="smooth" suppressHydrationWarning>
       <head>
+        {/* Open the shell connection before the render-blocking stylesheet is discovered. */}
+        <link rel="preconnect" href={SHELL_ORIGIN} />
         <link rel="stylesheet" href={SHELL_CSS_URL} />
         <script src={SHELL_JS_URL} data-current={PRODUCT_ID} data-current-repo={PRODUCT_REPO} defer />
         <script
