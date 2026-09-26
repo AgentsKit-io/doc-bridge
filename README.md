@@ -297,7 +297,7 @@ gates without silently rebuilding them. It rejects non-exact package versions.
 See the [Marketplace guide](docs/MARKETPLACE.md).
 
 The guide is pinned to the published stable Action release `v1.7.45`; the
-checked-in package version is `1.11.2`.
+checked-in package version is `1.12.0`.
 
 Coverage is repository-specific. Run `ak-docs doctor --badge` locally to emit
 current handoff and human-bridge badges, or `pnpm coverage:badge` in CI; this
