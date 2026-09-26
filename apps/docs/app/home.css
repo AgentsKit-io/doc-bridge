@@ -24,7 +24,8 @@
 .bridge-home-content, agentskit-footer { position: relative; z-index: 1; }
 agentskit-footer, agentskit-ecosystem { display: block; }
 .bridge-home-header {
-  z-index: 1;
+  /* Above the z-index:1 content, tour, and footer layers so the sticky header never sits under them. */
+  z-index: 20;
   border-color: color-mix(in srgb, var(--bridge-home-border) 78%, transparent) !important;
   background: color-mix(in srgb, var(--bridge-home-bg) 58%, transparent) !important;
   -webkit-backdrop-filter: blur(18px) saturate(125%);
