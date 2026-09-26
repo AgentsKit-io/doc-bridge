@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "contentHash": "43865a3702a0d5e1c004281af141b31152422094a8c931fd97a134bf59814636",
+  "contentHash": "f892dd4ceae868e7314f88de90f74012530046c73a5dea897318c092840b856e",
   "contentHashAlgo": "sha256-normalized-v1",
-  "generatedAt": "2026-09-26T02:04:48.177Z",
+  "generatedAt": "2026-09-26T04:23:46.560Z",
   "project": {
     "name": "@agentskit/doc-bridge",
     "root": "."
@@ -1657,7 +1657,7 @@
         "tsx",
         "app"
       ],
-      "contentHash": "e1067bc137725d0e728438315c581df814874d9347fd5efb8bcbc7340140a6ed"
+      "contentHash": "e37b5b6403a994b2cd2f518b0943a6e1cc2d065e1f3c0a9253e22fb31ec37fc9"
     },
     {
       "id": "module:apps/docs/app/opengraph-image.tsx",
@@ -7998,7 +7998,7 @@
     "changes": {}
   },
   "inputs": {
-    "hash": "eecf93d8a82fa2b0a78fd93cb57671cf0c1915fd26a93791ff0245480ea05fa2",
+    "hash": "50c74963701e72220f6bcfbbe88a55fde9dff7728b2bb256906e0bd6dcdde463",
     "fileCount": 437,
     "projectionVersion": 2
   },
@@ -8021,9 +8021,9 @@
   "projection": {
     "type": "retrieval-index",
     "schemaVersion": 1,
-    "contentHash": "3ee82eaf7b4249d1a702554aa7a373f53b82be9dec08682700bd221c1fc9e31b",
+    "contentHash": "da7cb390e78e595273825d4f866d7cbc4496ce7af770477ec7b4f85ec559788e",
     "contentHashAlgo": "sha256-normalized-v1",
-    "snapshotHash": "fe706698436f862ae3299afc6b652c7818a58b50e798b292df1806ce432502ea",
+    "snapshotHash": "34d85a9217fe7cebfda9e3f4b2773fe28f1ad9c4b2c813496eb80b74bae4983d",
     "overlayHash": "f99666ff9119084dd25c2974ae64eb6935ec2aa785ff5ad478fb9d541f7a5e94",
     "configurationHash": "91d46a4ecbfe3b55878e0b3c7608819775cf7b18aeafcc8f689eddfa462622b4",
     "lexiconVersion": 1,
@@ -19028,7 +19028,7 @@
           "inbound": [],
           "outbound": []
         },
-        "contentHash": "e1067bc137725d0e728438315c581df814874d9347fd5efb8bcbc7340140a6ed",
+        "contentHash": "e37b5b6403a994b2cd2f518b0943a6e1cc2d065e1f3c0a9253e22fb31ec37fc9",
         "provenance": "observed",
         "confidence": "observed"
       },
