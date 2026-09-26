@@ -55,6 +55,9 @@ importers:
       graphology-shortest-path:
         specifier: ~2.1.0
         version: 2.1.0(graphology-types@0.24.8)
+      ignore:
+        specifier: ^7.0.6
+        version: 7.0.6
       knap:
         specifier: ~0.5.1
         version: 0.5.1

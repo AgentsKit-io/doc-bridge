@@ -3,6 +3,7 @@ import { basename, dirname, extname, join, relative, resolve, sep } from 'node:p
 
 import { contentHashForArtifactV1, sha256NormalizedV1 } from '../index-builder/content-hash.js'
 import { FixProposalV1Schema, type FixProposalV1 } from '../schemas/knowledge.js'
+import { createIgnoreFilter, type IgnoreFilter } from '../lib/ignore-filter.js'
 import { containedPath } from '../safety/repository.js'
 
 export type FixProposalOptions = {
@@ -55,10 +56,11 @@ const makeProposal = (root: string, options: FixProposalOptions, changes: readon
   return FixProposalV1Schema.parse({ ...draft, contentHash: contentHashForArtifactV1(draft) })
 }
 
-const walkMarkdown = (root: string, directory = root): string[] => readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+const walkMarkdown = (root: string, directory = root, ignored: IgnoreFilter = createIgnoreFilter(root)): string[] => readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
   if (entry.name === '.git' || entry.name === 'node_modules' || entry.name === 'dist' || entry.name === 'build') return []
   const path = join(directory, entry.name)
-  if (entry.isDirectory()) return walkMarkdown(root, path)
+  if (ignored.isIgnored(path, entry.isDirectory())) return []
+  if (entry.isDirectory()) return walkMarkdown(root, path, ignored)
   return entry.isFile() && ['.md', '.mdx'].includes(extname(entry.name).toLowerCase()) ? [relative(root, path).split(sep).join('/')] : []
 })
 

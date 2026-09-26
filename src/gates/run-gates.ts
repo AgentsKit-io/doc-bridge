@@ -92,7 +92,7 @@ export const runGate = (
     return {
       id,
       ok: false,
-      message: `${result.ignored.length} indexed path(s) are ignored by Git, so a clean checkout builds a different index. Add them to safety.exclude.`,
+      message: `${result.ignored.length} indexed path(s) are ignored by Git, so a clean checkout builds a different index. Rebuild the index (scans skip ignored paths) or add them to safety.exclude.`,
       expected: 'every indexed path is committed',
       actual: sample.join(', '),
     }

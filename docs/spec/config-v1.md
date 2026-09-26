@@ -375,16 +375,16 @@ These gates are deterministic lint checks, not editorial grading:
 
 ### Why `index-reproducible` is opt-in
 
-A scan walks what is on disk and has no reason to consult `.gitignore`, so a generated module or
-document joins the corpus on a machine that has built and leaves it on one that has not. That is
-harmless while the index is regenerated on every run, and a defect the moment the index is
-committed for a gate to verify: two checkouts of the same commit produce different artifacts,
-`index-freshness` reports staleness that nothing caused, and regenerating cannot fix it because the
-next machine disagrees in the other direction.
+Every repository scan honours ignore rules (see [Ignored files](#ignored-files)), so a fresh
+`ak-docs index` never picks up build output. An index can still carry an ignored path when it was
+built before the rule existed, or by an older Doc Bridge release. Once the index is committed for a
+gate to verify, that is a defect: two checkouts of the same commit produce different artifacts,
+`index-freshness` reports staleness that nothing caused, and regenerating on another machine
+disagrees in the other direction.
 
 `index-reproducible` asks Git which of the indexed paths it ignores, and names each one with the
 rule that matched (`apps/docs-next/.gitignore:13:lib/ask-context.ts`) so the fix is one lookup
-away: add the path to `safety.exclude`. It reports success, not failure, when the index is not
+away: run `ak-docs index` again, or add the path to `safety.exclude` if it is not ignored by Git. It reports success, not failure, when the index is not
 committed or the project is not a Git checkout — there is nothing to reproduce in either case. A
 file that is both tracked and matched by an ignore rule is not flagged; being committed is the
 point.
@@ -623,6 +623,28 @@ Discovery always excludes unsafe or generated trees by default, including
 secret files. `safety.exclude` adds project-specific patterns; it does not
 replace the built-in safety boundary. Excluded files remain outside the
 snapshot and are represented by analyzer coverage when relevant.
+
+### Ignored files
+
+On top of those excludes, every command that walks the repository — `index`,
+`doctor`, `scan`/`check`, gates such as `index-reproducible`, link-fix
+proposals — skips what the repository ignores, so a committed index is a
+function of committed content:
+
+- Inside a Git work tree the file list comes from
+  `git ls-files --cached --others --exclude-standard`. That applies nested
+  `.gitignore` files, `.git/info/exclude` and global excludes exactly like
+  `git status`, keeps untracked files that are not ignored, and keeps a
+  tracked file even when an ignore rule also matches it.
+- Outside Git (an exported tarball, a cache, no `git` binary) Doc Bridge reads
+  the `.gitignore` files on disk, nested ones included, with the same pattern
+  semantics.
+
+Build output such as `apps/*/.next/`, `.source/`, generated API pages,
+`next-env.d.ts`, or an `AGENTS.md` that a dev server writes therefore stays
+out of the index as long as the repository ignores it. Agent-memory ingestion
+(`ak-docs memory ingest`) is the exception: memory directories are read as
+input even when they are gitignored.
 
 ## `analysis` (optional)
 
