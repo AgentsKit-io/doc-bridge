@@ -3,7 +3,7 @@
 /* Home-only extension of the shared AgentsKit canvas; the aurora layer comes from shell v1. */
 .bridge-home {
   --ak-font-body: var(--font-inter), Inter, ui-sans-serif, system-ui, sans-serif;
-  --ak-font-mono: var(--font-jetbrains), 'JetBrains Mono', ui-monospace, monospace;
+  --ak-font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
   --ak-font-display: var(--font-space-grotesk), 'Space Grotesk', Inter, ui-sans-serif, system-ui, sans-serif;
   --bridge-home-bg: var(--ak-bg, #0d1117);
   --bridge-home-surface: var(--ak-surface, #161b22);
