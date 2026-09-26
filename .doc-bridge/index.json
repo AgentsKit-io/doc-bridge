@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "contentHash": "000b7f2698d5bc29fcaac739dd994d174fee4ddd7d4fffd09bdbf24d295a6ac1",
+  "contentHash": "cb41350ea62b27eb27dad178aa778aad843a762e68f82a6009f0af607d8a8fe2",
   "contentHashAlgo": "sha256-normalized-v1",
-  "generatedAt": "2026-09-26T12:06:16.230Z",
+  "generatedAt": "2026-09-26T12:15:04.676Z",
   "project": {
     "name": "@agentskit/doc-bridge",
     "root": "."
@@ -3263,7 +3263,7 @@
         "ts",
         "discovery"
       ],
-      "contentHash": "e1aec6efa25ee05e4011cb34dc6310e66db45f7b4d2206e643d978c56b8ef8dc"
+      "contentHash": "0678cd699851e2d8e2e7841b862aa433f1087fe2131d76663123cc4624c90b5c"
     },
     {
       "id": "module:src/discovery/reproducibility.ts",
@@ -5990,7 +5990,7 @@
         "test",
         "tests"
       ],
-      "contentHash": "587f720ae3fa73d86b456e6e087896c0e07f4241a2649226c3a89804a9670860"
+      "contentHash": "69de5a76160bce8011d2fd50076a64e35a039ddbdc53c69f4832195e409356a3"
     },
     {
       "id": "module:tests/docs-e2e/portal.spec.ts",
@@ -8014,7 +8014,7 @@
     "changes": {}
   },
   "inputs": {
-    "hash": "ee7467016bfe95a48125135e1431d5b9c38e02c7216de60d848773ab9a3ba173",
+    "hash": "06161aae8da1abfdfc4b816739ba547af5e998cc7611aba75961b53ee5bb64ba",
     "fileCount": 438,
     "projectionVersion": 2
   },
@@ -8037,9 +8037,9 @@
   "projection": {
     "type": "retrieval-index",
     "schemaVersion": 1,
-    "contentHash": "559a543ac758d5d968ed62ecbe62d30ead7d012c60f33be30fb62e8fe2ea295f",
+    "contentHash": "ab8fe93a9b227229a46473b3a843f97533cd36736dc398b8e77b5b7963931ccf",
     "contentHashAlgo": "sha256-normalized-v1",
-    "snapshotHash": "114b1366c23d27fb154523c9165fb13c0b07b70b53e7323587e522adcc22d42e",
+    "snapshotHash": "12f410713064d506e78670aaba99b2cd5a549332991155fe8a9d25b2c97c363e",
     "overlayHash": "f99666ff9119084dd25c2974ae64eb6935ec2aa785ff5ad478fb9d541f7a5e94",
     "configurationHash": "91d46a4ecbfe3b55878e0b3c7608819775cf7b18aeafcc8f689eddfa462622b4",
     "lexiconVersion": 1,
@@ -25073,7 +25073,7 @@
             }
           ]
         },
-        "contentHash": "e1aec6efa25ee05e4011cb34dc6310e66db45f7b4d2206e643d978c56b8ef8dc",
+        "contentHash": "0678cd699851e2d8e2e7841b862aa433f1087fe2131d76663123cc4624c90b5c",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -37094,7 +37094,7 @@
             }
           ]
         },
-        "contentHash": "587f720ae3fa73d86b456e6e087896c0e07f4241a2649226c3a89804a9670860",
+        "contentHash": "69de5a76160bce8011d2fd50076a64e35a039ddbdc53c69f4832195e409356a3",
         "provenance": "observed",
         "confidence": "observed"
       },
