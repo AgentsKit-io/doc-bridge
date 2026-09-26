@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { RootProvider } from 'fumadocs-ui/provider/next'
 import './globals.css'
 import { ChatLauncher } from '@/components/chat-launcher'
+import { inter, spaceGrotesk } from '@/lib/fonts'
 import { SHELL_CSS_URL, SHELL_JS_URL, SHELL_ORIGIN, PRODUCT_ID, PRODUCT_REPO } from '@/lib/shell'
 import { SITE_URL } from '@/lib/site'
 import { serializedDocBridgeStructuredData } from '@/lib/structured-data'
@@ -39,19 +40,19 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? ''
 
   return (
-    <html lang="en" data-scroll-behavior="smooth" suppressHydrationWarning>
+    <html lang="en" className={`ak-self-fonts ${inter.variable} ${spaceGrotesk.variable}`} data-scroll-behavior="smooth" suppressHydrationWarning>
       <head>
         {/* Open the shell connection before the render-blocking stylesheet is discovered. */}
         <link rel="preconnect" href={SHELL_ORIGIN} />
         <link rel="stylesheet" href={SHELL_CSS_URL} />
-        <script src={SHELL_JS_URL} data-current={PRODUCT_ID} data-current-repo={PRODUCT_REPO} defer />
+        <script src={SHELL_JS_URL} data-current={PRODUCT_ID} data-current-repo={PRODUCT_REPO} data-ak-fonts="self" defer />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: serializedDocBridgeStructuredData }}
         />
       </head>
       <body>
-        <RootProvider theme={{ defaultTheme: 'dark' }} search={{ enabled: true, options: { type: 'static', api: `${basePath}/api/search/` } }}>
+        <RootProvider theme={{ defaultTheme: 'dark' }} search={{ enabled: true, preload: false, options: { type: 'static', api: `${basePath}/api/search/` } }}>
           <AccessibleSearch />
           {children}
           <ChatLauncher />

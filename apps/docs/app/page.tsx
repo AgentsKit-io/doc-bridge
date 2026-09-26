@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Inter, JetBrains_Mono, Space_Grotesk } from 'next/font/google'
+import { JetBrains_Mono } from 'next/font/google'
 import { ArrowRight, Bot, GitBranch, ShieldCheck, Terminal, Zap } from 'lucide-react'
 import { readdirSync } from 'node:fs'
 import { resolve } from 'node:path'
@@ -11,9 +11,7 @@ import { ProductSubheader } from '@/components/product-subheader'
 import { SiteFooter } from '@/components/site-footer'
 import './home.css'
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' })
 const jetbrains = JetBrains_Mono({ subsets: ['latin'], variable: '--font-jetbrains', display: 'swap' })
-const spaceGrotesk = Space_Grotesk({ subsets: ['latin'], variable: '--font-space-grotesk', display: 'swap' })
 
 const principles = [
   [Zap, 'Deterministic by default', 'Known questions stay local. Every answer keeps its source.'],
@@ -27,7 +25,7 @@ const sourceCount = readdirSync(resolve(process.cwd(), '../../docs'), { recursiv
 
 export default function HomePage() {
   return (
-    <div className={`bridge-home ${inter.variable} ${jetbrains.variable} ${spaceGrotesk.variable}`}>
+    <div className={`bridge-home ${jetbrains.variable}`}>
       <agentskit-aurora aria-hidden="true" />
       <ProductSubheader />
       <main className="bridge-home-content">
@@ -38,7 +36,7 @@ export default function HomePage() {
               <h1>The docs your team reads.<br /><span>The context your agents need.</span></h1>
               <p className="bridge-hero-description">Connect Fumadocs, Docusaurus, and Markdown to repository-backed MCP and CLI handoffs. Return agent memory as reviewable documentation.</p>
               <div className="bridge-hero-actions">
-                <Link href="/docs/getting-started" className="bridge-button bridge-button-primary">Generate your first handoff <ArrowRight aria-hidden className="size-4" /></Link>
+                <Link href="/docs/getting-started" prefetch={false} className="bridge-button bridge-button-primary">Generate your first handoff <ArrowRight aria-hidden className="size-4" /></Link>
                 <a href="#proof" className="bridge-button bridge-button-secondary">See the handoff</a>
               </div>
             </div>
@@ -73,7 +71,7 @@ export default function HomePage() {
               <p className="bridge-eyebrow">THE PROOF</p>
               <h2>Useful before AI enters the loop.</h2>
               <p>Known questions stay local and fast. Ambiguity surfaces with provenance. Only an unresolved miss earns a backend call.</p>
-              <Link href="/docs/guides/cli-map" className="bridge-text-link">Explore the CLI <ArrowRight aria-hidden className="size-4" /></Link>
+              <Link href="/docs/guides/cli-map" prefetch={false} className="bridge-text-link">Explore the CLI <ArrowRight aria-hidden className="size-4" /></Link>
               <p className="bridge-proof-count">{sourceCount} indexed knowledge sources</p>
             </div>
             <div className="bridge-proof-code"><ProofTerminal sourceCount={sourceCount} /></div>
@@ -111,7 +109,7 @@ export default function HomePage() {
             <h2>Make your repository clear to the people and agents working in it.</h2>
             <p>Start with the docs you have. Add structure where it gives your team a better handoff.</p>
           </div>
-          <Link href="/docs/getting-started" className="bridge-button bridge-button-primary">Add Doc Bridge to your repo <ArrowRight aria-hidden className="size-4" /></Link>
+          <Link href="/docs/getting-started" prefetch={false} className="bridge-button bridge-button-primary">Add Doc Bridge to your repo <ArrowRight aria-hidden className="size-4" /></Link>
         </section>
         <EcosystemShowcase />
       </main>
