@@ -93,6 +93,9 @@ describe('study provider CLI contract', () => {
     expect(existsSync(ledgerPath)).toBe(false)
   })
 
+  // Spawns one real subprocess per planned task/variant (24 here); under heavy
+  // concurrent system load the default 5s test timeout can be too tight for
+  // that many real process-creation round trips, independent of test correctness.
   it('resumes a completed study without invoking the provider twice', async () => {
     const ledgerPath = join(process.cwd(), '.tmp-study-provider-resume-ledger.json')
     try {
@@ -103,7 +106,7 @@ describe('study provider CLI contract', () => {
     } finally {
       rmSync(ledgerPath, { force: true })
     }
-  })
+  }, 20_000)
 
   it('records an independent deterministic adjudication without trusting provider outcome', async () => {
     const task = suite.tasks[0]!

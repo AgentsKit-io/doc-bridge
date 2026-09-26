@@ -13,6 +13,7 @@ import {
 import { runGates } from '../src/gates/run-gates.js'
 import { buildDocBridgeIndex } from '../src/index-builder/build-index.js'
 import { renderLlmsTxt } from '../src/index-builder/llms-txt.js'
+import { canCreateSymlinks } from './helpers/symlink-support.js'
 
 const tempDirs: string[] = []
 
@@ -134,7 +135,7 @@ describe('Documentation Standard v1', () => {
     expect(report.results.find((result) => result.id === 'tested-quickstarts')?.evidence[1]?.detail).toContain('runDemo')
   })
 
-  it('rejects evidence symlinks that escape the project root', () => {
+  it.skipIf(!canCreateSymlinks())('rejects evidence symlinks that escape the project root', () => {
     const { root, config } = fixture()
     const outside = mkdtempSync(join(tmpdir(), 'ak-docs-standard-outside-'))
     tempDirs.push(outside)

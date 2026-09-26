@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
 import { containedPath, redactSecrets, safeWalkFiles } from '../src/safety/repository.js'
+import { canCreateSymlinks } from './helpers/symlink-support.js'
 
 const root = () => mkdtempSync(join(tmpdir(), 'doc-bridge-safety-'))
 
@@ -28,7 +29,7 @@ describe('repository safety primitives', () => {
     expect(safeWalkFiles(project, { extensions: ['.ts'] }).files).toEqual([join(project, 'src', 'ok.ts')])
   })
 
-  it('skips symlinks and reports explicit resource limits as incomplete', () => {
+  it.skipIf(!canCreateSymlinks())('skips symlinks and reports explicit resource limits as incomplete', () => {
     const project = root()
     writeFileSync(join(project, 'a.ts'), 'a')
     writeFileSync(join(project, 'b.ts'), 'b')

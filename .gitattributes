@@ -1,0 +1,5 @@
+# Golden/snapshot fixtures are asserted byte-identical against generated
+# output; exempt them from any line-ending conversion so a contributor's
+# core.autocrlf setting can never make a clean checkout fail this repo's
+# own tests (reproduced on Windows: checkout converted their LF to CRLF).
+tests/golden/** -text

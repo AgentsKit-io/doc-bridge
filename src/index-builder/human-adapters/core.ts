@@ -37,12 +37,15 @@ export const optionString = (
 }
 
 export const parseFrontmatter = (raw: string): Record<string, string> => {
-  if (!raw.startsWith('---\n')) return {}
-  const end = raw.indexOf('\n---', 4)
+  // Windows-authored (or git autocrlf-checked-out) Markdown commonly uses CRLF;
+  // normalize before matching so frontmatter isn't silently dropped there.
+  const normalized = raw.includes('\r\n') ? raw.replace(/\r\n/g, '\n') : raw
+  if (!normalized.startsWith('---\n')) return {}
+  const end = normalized.indexOf('\n---', 4)
   if (end === -1) return {}
 
   const out: Record<string, string> = {}
-  for (const line of raw.slice(4, end).split('\n')) {
+  for (const line of normalized.slice(4, end).split('\n')) {
     const match = /^([A-Za-z0-9_-]+):\s*(.+?)\s*$/.exec(line)
     if (match?.[1] && match[2]) out[match[1]] = match[2].replace(/^['"]|['"]$/g, '')
   }
@@ -89,7 +92,10 @@ export const scanMarkdownDocs = (
     const canonical = realpathSync.native(abs)
     const fileRelative = relative(projectRoot, canonical)
     if (isAbsolute(fileRelative) || fileRelative === '..' || fileRelative.startsWith(`..${sep}`)) continue
-    const relToHumanRoot = toPosix(abs.replace(`${toPosix(absRoot)}/`, ''))
+    // Both sides must be toPosix'd before stripping the prefix: `abs` is native-separator
+    // (backslashes on Windows), so comparing it raw against a toPosix'd `absRoot` never
+    // matches there, silently leaving relToHumanRoot as the full absolute path.
+    const relToHumanRoot = toPosix(abs).replace(`${toPosix(absRoot)}/`, '')
     const raw = readBoundedText(abs, budget)
     if (options?.includeRelPath && !options.includeRelPath(relToHumanRoot, raw)) continue
     out.push({

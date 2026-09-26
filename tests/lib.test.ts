@@ -5,6 +5,7 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 import { expandWorkspaceGlobs } from '../src/lib/glob-expand.js'
+import { toPosix } from '../src/lib/paths.js'
 import {
   extractSearchBody,
   firstHeading,
@@ -69,9 +70,9 @@ describe('workspace glob expansion', () => {
     mkdirSync(join(root, 'apps/web'), { recursive: true })
 
     expect(expandWorkspaceGlobs(root, ['packages/*', 'apps/web', 'missing/*'])).toEqual([
-      join(root, 'apps/web'),
-      join(root, 'packages/a'),
-      join(root, 'packages/b'),
+      toPosix(join(root, 'apps/web')),
+      toPosix(join(root, 'packages/a')),
+      toPosix(join(root, 'packages/b')),
     ])
   })
 })

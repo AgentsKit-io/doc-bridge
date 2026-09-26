@@ -19,6 +19,7 @@ import { renderTemplate, renderTemplateWithKnap, TemplateError } from '../src/re
 import { generatedRegionHash, verifyGeneratedRegions, wrapGeneratedRegion } from '../src/render/generated.js'
 import { REGION_VARIABLES, renderArtifact, writeRenderedPages } from '../src/render/render.js'
 import { BUNDLED_TEMPLATES, RENDER_TEMPLATE_NAMES } from '../src/render/templates.js'
+import { toPosix } from '../src/lib/paths.js'
 
 vi.setConfig({ testTimeout: 30_000 })
 
@@ -370,7 +371,7 @@ describe('boundaries', () => {
         queue.push(resolve(dirname(file), (match[1] as string).replace(/\.js$/, '.ts')))
       }
     }
-    const reached = [...seen].map((file) => file.slice(repositoryRoot.length + 1))
+    const reached = [...seen].map((file) => toPosix(file.slice(repositoryRoot.length + 1)))
     expect(reached.filter((file) => file.startsWith('src/agents/'))).toEqual([])
     expect(reached).toContain('src/query/handoff.ts')
   })
