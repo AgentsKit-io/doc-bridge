@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.12.0
+
+### Minor Changes
+
+- 6d552b3: Repository scans now respect ignore rules. `ak-docs index`, `doctor`, `scan`/`check`, gates, and link-fix proposals skip every path the repository ignores — via `git ls-files --cached --others --exclude-standard` inside a Git work tree (nested `.gitignore`, `.git/info/exclude`, and global excludes included; tracked files are kept), or the on-disk `.gitignore` files outside Git — in addition to the built-in safety excludes. Build output such as `.next/`, `.source/`, generated API pages, or `next-env.d.ts` no longer enters a committed index, so `index-freshness` and `index-reproducible` agree across clean checkouts. Agent-memory ingestion still reads gitignored memory directories.
+
+### Patch Changes
+
+- 6d552b3: The documentation-standard ecosystem contract no longer hard-codes product membership. It used to require the deprecated `properties` shim to project either a fixed three-product list that included Playbook or a fixed six-product list without Harness, which forced repositories to keep a hidden `playbook` record in `ecosystem.json`. Membership now comes from the canonical manifest: the shim is optional, and each entry must name a distinct `products[]` record and match it exactly.
+
 ## 1.11.2
 
 ### Patch Changes

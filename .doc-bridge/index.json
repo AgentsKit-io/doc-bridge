@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "contentHash": "f81846ee5fcbaabb1b8d8ab564abb01f030ef986696e2d0f952bb30f345fd7ae",
+  "contentHash": "62ebf7862f7fe084fb2af0b95edff07c0507836755e508ce56d49e2887ecc502",
   "contentHashAlgo": "sha256-normalized-v1",
-  "generatedAt": "2026-09-26T15:00:38.028Z",
+  "generatedAt": "2026-09-26T15:37:45.918Z",
   "project": {
     "name": "@agentskit/doc-bridge",
     "root": "."
@@ -295,12 +295,12 @@
       "type": "document",
       "title": "Changelog",
       "path": "CHANGELOG.md",
-      "description": "221b4a6: Retire a deprecated ecosystem contract and generated documentation references.",
+      "description": "6d552b3: Repository scans now respect ignore rules. ak-docs index, doctor, scan/check, gates, and link-fix proposals skip every path the repository ignores — via git ls-files --cached --others --exclude-standard inside a Git work tree (nested .gitignore, .git/info/exclude, and global excludes included; tracked files are kept), or the on-disk .gitignore files outside Git — in addition to the",
       "tags": [
         "document",
         "project"
       ],
-      "contentHash": "144dc70354ccd94759370eed05db1173885e5447da25c81080af159daa05eee8"
+      "contentHash": "3f35d6fe05593d4f8fefbf7cd4e1455c8a1611b0803db8f2dcb8f09a72f6acc0"
     },
     {
       "id": "document:CODE_OF_CONDUCT.md",
@@ -1321,7 +1321,7 @@
         "document",
         "project"
       ],
-      "contentHash": "3572883e36c163e4330669865bbacfd7e68596868745425ca596c5fea386ba93"
+      "contentHash": "0a655cfe2b285727526e99e17a93b7922ca7ab411bf38b1279a9fa2e23499ba9"
     },
     {
       "id": "document:SECURITY.md",
@@ -2699,7 +2699,7 @@
         "mjs",
         "scripts"
       ],
-      "contentHash": "f12d10f2ce96abb5c3f52335d2fb23f70eaab2f0bc3547d6af01e78beda0386c"
+      "contentHash": "3b06174c9bedb50fcfb25d6b39a080d4bb35ad3c523bcfd52d45a270b4ceeefb"
     },
     {
       "id": "module:src/agents/registry-adapter.ts",
@@ -5853,7 +5853,7 @@
         "ts",
         "src"
       ],
-      "contentHash": "272ba96c327e82faa5b0530b37157d8ff88603d5984b96ddb24207199bb0d1c4"
+      "contentHash": "93ddb31a0631bf111623dce2f83dc68a4dcc73c262c516febfd8eca5989bf95f"
     },
     {
       "id": "module:src/workflow/engine.ts",
@@ -8072,7 +8072,7 @@
     "changes": {}
   },
   "inputs": {
-    "hash": "1cdcc9adda4629e1a2a92c294ab9a1604cad8c88be376a75a13b6939ffb574cf",
+    "hash": "7cf0071bda8adf0619bf5f24a1a7080272569b2475fd0a1235df40b39a63d9bb",
     "fileCount": 442,
     "projectionVersion": 2
   },
@@ -8095,9 +8095,9 @@
   "projection": {
     "type": "retrieval-index",
     "schemaVersion": 1,
-    "contentHash": "05c765cd789ebd4f332bd9d5abbe4530484da8834ddef8081f35cee19cd5d49a",
+    "contentHash": "0d7e0aa0860f13073ba9d0be960eb95705b4f6e2c355bb162f7c995abd47b071",
     "contentHashAlgo": "sha256-normalized-v1",
-    "snapshotHash": "1dd8cae0176f9707f78b77dedff4e827885c962d6f209bda6479f1d9955fbe99",
+    "snapshotHash": "b1377f6c05094b0ba55f47400b00778070ecc1b57afc1af2babd186c42d55127",
     "overlayHash": "f99666ff9119084dd25c2974ae64eb6935ec2aa785ff5ad478fb9d541f7a5e94",
     "configurationHash": "91d46a4ecbfe3b55878e0b3c7608819775cf7b18aeafcc8f689eddfa462622b4",
     "lexiconVersion": 1,
@@ -8129,10 +8129,10 @@
       ],
       "averageFieldLength": {
         "aliases": 3.4638297872340424,
-        "body": 68.3936170212766,
+        "body": 68.4872340425532,
         "headings": 4.282978723404256,
         "path": 5.691489361702128,
-        "summary": 5.6617021276595745,
+        "summary": 5.772340425531915,
         "symbols": 11.712765957446809,
         "title": 3.1106382978723404
       }
@@ -10384,7 +10384,7 @@
         "kind": "document",
         "path": "CHANGELOG.md",
         "title": "Changelog",
-        "summary": "221b4a6: Retire a deprecated ecosystem contract and generated documentation references.",
+        "summary": "6d552b3: Repository scans now respect ignore rules. ak-docs index, doctor, scan/check, gates, and link-fix proposals skip every path the repository ignores — via git ls-files --cached --others --exclude-standard inside a Git work tree (nested .gitignore, .git/info/exclude, and global excludes included; tracked files are kept), or the on-disk .gitignore files outside Git — in addition to the",
         "audience": "human",
         "aliases": [],
         "tags": [
@@ -10393,11 +10393,11 @@
         ],
         "fields": {
           "title": "Changelog",
-          "headings": "Changelog 1.11.2 Patch Changes 1.11.1 Patch Changes 1.11.0 Minor Changes 1.10.1 Patch Changes 1.10.0 Minor Changes 1.9.0 Minor Changes Patch Changes 1.8.0 Minor Changes Patch Changes 1.7.45 Patch Changes 1.7.44 1.7.43 1.7.42 1.7.41 1.7.40 1.7.39 1.7.38 1.7.37 1.7.36 1.7.35 1.7.34 1.7.33 1.7.32 1.7.31 1.7.30 1.7.29 1.7.28 1.7.27 Patch Changes 1.7.26 Patch Changes 1.7.25 Patch Changes 1.7.24 Patch Changes 1.7.23 Patch Changes 1.7.22 Patch Changes 1.7.21 Patch Changes 1.7.20 Patch Changes 1.7.19 Patch Changes 1.7.18 Patch Changes 1.7.17 Patch Changes 1.7.16 Patch Changes 1.7.15 Patch Changes 1.7.14 Patch Changes",
+          "headings": "Changelog 1.12.0 Minor Changes Patch Changes 1.11.2 Patch Changes 1.11.1 Patch Changes 1.11.0 Minor Changes 1.10.1 Patch Changes 1.10.0 Minor Changes 1.9.0 Minor Changes Patch Changes 1.8.0 Minor Changes Patch Changes 1.7.45 Patch Changes 1.7.44 1.7.43 1.7.42 1.7.41 1.7.40 1.7.39 1.7.38 1.7.37 1.7.36 1.7.35 1.7.34 1.7.33 1.7.32 1.7.31 1.7.30 1.7.29 1.7.28 1.7.27 Patch Changes 1.7.26 Patch Changes 1.7.25 Patch Changes 1.7.24 Patch Changes 1.7.23 Patch Changes 1.7.22 Patch Changes 1.7.21 Patch Changes 1.7.20 Patch Changes 1.7.19 Patch Changes 1.7.18 Patch Changes 1.7.17 Patch Changes 1.7.16 Patch Changes 1.7.15",
           "path": "CHANGELOG.md",
           "symbols": "",
-          "summary": "221b4a6: Retire a deprecated ecosystem contract and generated documentation references.",
-          "body": "Changelog 1.11.2 Patch Changes - 221b4a6: Retire a deprecated ecosystem contract and generated documentation references. 1.11.1 Patch Changes - faf29f5: Stop reporting a path an ignore rule rescues as unreproducible. git check-ignore --verbose emits a record for every path that matched a rule, including the path a ! negation rescues — and such a path is precisely one Git does not ignore. The reproducibility check read the record without reading the pattern, so dist/ plus !dist/keep.js reported dist/keep.js as a reason the index could not be rebuilt from a clean checkout. The opposite of what the rule says, stated confidently. The window is narrow: check-ignore stops reporting a path once it is committed, and a path rescued by a negation is usually committed, which is the point of rescuing it. It shows up while such a path is still untracked — a file added but not yet committed. Found by turning the new index-reproducible gate on in this repository, which had to add !.doc-bridge/index.json to its own .gitignore to commit the index the gate verifies. 1.11.0 Minor Changes - 25f16f3: Say when a committed index could not have come from a clean checkout. A scan walks what is on disk and has no reason to consult .gitignore , so a generated module or document silently joins the corpus on a machine that has built and silently leaves it on one that has not. That is harmless while the index is rebuilt on every run. It is a defect the moment the index is committed so a gate can verify it — which is the setup index-freshness exists for: two checkouts of the same commit then produce different artifacts, the gate reports staleness that nothing caused, and regenerating cannot fix it because the next machine disagrees in the other direction. Dogfooding found this the expensive way. On a 25-package monorepo the freshness gate passed locally and failed in CI, twice, because pnpm lint had generated one .ts file into the corpus before the index was written; CI lints a narrower scope and never had the file. Diagnosing it took reading two CI logs and diffing file inventories. Git already knew the answer. ak-docs index now names those paths as it writes, and ak-docs doctor raises an index-not-reproducible warning, each with the ignore rule that matched — for example apps/docs-next/lib/ask-context.ts (apps/docs-next/.gitignore:13:lib/ask-context.ts) — so the fix is one lookup away: add the path to safety.exclude . Both are unconditional and neither changes an exit code or the doctor's score. Enforcement is the new index-reproducible gate, which is in no preset and has to be requested with gates.include: ['index-reproducible'] , because turning it on for every consumer would fail gates that pass for good reasons. The check reports success rather than failure when the index is not committed or the project is not a Git checkout, since there is nothing to reproduce in either case, and it does not flag a file that is both tracked and matched by an ignore rule — being committed is the point. 1.10.1 Patch Changes - 0926c57: Keep a committed index fresh across commits. The retrieval projection sealed its content hash over the discovery snapshot's hash, and a snapshot's hash covers its sourceRevision — the commit SHA when the working tree is clean, a digest of the scanned files when it is not. That is right for an artifact whose job is to say what one revision looked like, and wrong as a projection input: the projection is a function of what the snapshot observed, not of where it observed it. The consequence only appears in a repository that commits .doc-bridge/index.json , which is the recommended setup: committing the index changes the revision that the next run hashes, so the artifact was stale the moment it landed — landing it is a commit. ak-docs gate run reported index-freshness failing on an index that nothing had invalidated, and no regenerate could fix it, because the fix was itself a commit. Dogfooding on a 25-package monorepo, the gate could not be ",
+          "summary": "6d552b3: Repository scans now respect ignore rules. ak-docs index, doctor, scan/check, gates, and link-fix proposals skip every path the repository ignores — via git ls-files --cached --others --exclude-standard inside a Git work tree (nested .gitignore, .git/info/exclude, and global excludes included; tracked files are kept), or the on-disk .gitignore files outside Git — in addition to the",
+          "body": "Changelog 1.12.0 Minor Changes - 6d552b3: Repository scans now respect ignore rules. ak-docs index , doctor , scan / check , gates, and link-fix proposals skip every path the repository ignores — via git ls-files --cached --others --exclude-standard inside a Git work tree (nested .gitignore , .git/info/exclude , and global excludes included; tracked files are kept), or the on-disk .gitignore files outside Git — in addition to the built-in safety excludes. Build output such as .next/ , .source/ , generated API pages, or next-env.d.ts no longer enters a committed index, so index-freshness and index-reproducible agree across clean checkouts. Agent-memory ingestion still reads gitignored memory directories. Patch Changes - 6d552b3: The documentation-standard ecosystem contract no longer hard-codes product membership. It used to require the deprecated properties shim to project either a fixed three-product list that included Playbook or a fixed six-product list without Harness, which forced repositories to keep a hidden playbook record in ecosystem.json . Membership now comes from the canonical manifest: the shim is optional, and each entry must name a distinct products[] record and match it exactly. 1.11.2 Patch Changes - 221b4a6: Retire a deprecated ecosystem contract and generated documentation references. 1.11.1 Patch Changes - faf29f5: Stop reporting a path an ignore rule rescues as unreproducible. git check-ignore --verbose emits a record for every path that matched a rule, including the path a ! negation rescues — and such a path is precisely one Git does not ignore. The reproducibility check read the record without reading the pattern, so dist/ plus !dist/keep.js reported dist/keep.js as a reason the index could not be rebuilt from a clean checkout. The opposite of what the rule says, stated confidently. The window is narrow: check-ignore stops reporting a path once it is committed, and a path rescued by a negation is usually committed, which is the point of rescuing it. It shows up while such a path is still untracked — a file added but not yet committed. Found by turning the new index-reproducible gate on in this repository, which had to add !.doc-bridge/index.json to its own .gitignore to commit the index the gate verifies. 1.11.0 Minor Changes - 25f16f3: Say when a committed index could not have come from a clean checkout. A scan walks what is on disk and has no reason to consult .gitignore , so a generated module or document silently joins the corpus on a machine that has built and silently leaves it on one that has not. That is harmless while the index is rebuilt on every run. It is a defect the moment the index is committed so a gate can verify it — which is the setup index-freshness exists for: two checkouts of the same commit then produce different artifacts, the gate reports staleness that nothing caused, and regenerating cannot fix it because the next machine disagrees in the other direction. Dogfooding found this the expensive way. On a 25-package monorepo the freshness gate passed locally and failed in CI, twice, because pnpm lint had generated one .ts file into the corpus before the index was written; CI lints a narrower scope and never had the file. Diagnosing it took reading two CI logs and diffing file inventories. Git already knew the answer. ak-docs index now names those paths as it writes, and ak-docs doctor raises an index-not-reproducible warning, each with the ignore rule that matched — for example apps/docs-next/lib/ask-context.ts (apps/docs-next/.gitignore:13:lib/ask-context.ts) — so the fix is one lookup away: add the path to safety.exclude . Both are unconditional and neither changes an exit code or the doctor's score. Enforcement is the new index-reproducible gate, which is in no preset and has to be requested with gates.include: ['index-reproducible'] , because turning it on for every consumer would fail gates that pass for good reasons. The check reports success rather than failure when the ind",
           "aliases": "document project"
         },
         "graph": {
@@ -10619,7 +10619,7 @@
             }
           ]
         },
-        "contentHash": "144dc70354ccd94759370eed05db1173885e5447da25c81080af159daa05eee8",
+        "contentHash": "3f35d6fe05593d4f8fefbf7cd4e1455c8a1611b0803db8f2dcb8f09a72f6acc0",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -18203,7 +18203,7 @@
             }
           ]
         },
-        "contentHash": "3572883e36c163e4330669865bbacfd7e68596868745425ca596c5fea386ba93",
+        "contentHash": "0a655cfe2b285727526e99e17a93b7922ca7ab411bf38b1279a9fa2e23499ba9",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -22025,7 +22025,7 @@
           "inbound": [],
           "outbound": []
         },
-        "contentHash": "f12d10f2ce96abb5c3f52335d2fb23f70eaab2f0bc3547d6af01e78beda0386c",
+        "contentHash": "3b06174c9bedb50fcfb25d6b39a080d4bb35ad3c523bcfd52d45a270b4ceeefb",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -36695,7 +36695,7 @@
           ],
           "outbound": []
         },
-        "contentHash": "272ba96c327e82faa5b0530b37157d8ff88603d5984b96ddb24207199bb0d1c4",
+        "contentHash": "93ddb31a0631bf111623dce2f83dc68a4dcc73c262c516febfd8eca5989bf95f",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -41309,7 +41309,7 @@
           ],
           "outbound": []
         },
-        "contentHash": "fa5acc1614076c61f64a6af9e353697bd801d9c5abf15ea02f052c0cf17d7c2e",
+        "contentHash": "e4b3ebccc62d30fa1a186f40025e3fde30ad9f5ce45e79f5a2378d0563c8f6f0",
         "provenance": "observed",
         "confidence": "observed"
       }
