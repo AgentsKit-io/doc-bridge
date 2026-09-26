@@ -6,6 +6,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { runCli } from '../src/cli/program.js'
+import { toPosix } from '../src/lib/paths.js'
 
 const fixtureRoot = join(fileURLToPath(new URL('.', import.meta.url)), 'fixtures', 'sample-project')
 const originalCwd = process.cwd()
@@ -271,7 +272,7 @@ describe('ak-docs CLI', () => {
       expect(readFileSync(draftPath, 'utf8')).toBe('# Auth\n\nCurated.\n')
       const payload = JSON.parse(rerun.out) as { skipped?: { workspaceDocs?: string[] } }
       expect(payload.skipped?.workspaceDocs?.some((path) =>
-        path.endsWith('docs/for-agents/packages/auth.md'),
+        toPosix(path).endsWith('docs/for-agents/packages/auth.md'),
       )).toBe(true)
     } finally {
       process.chdir(projectRoot)

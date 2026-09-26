@@ -11,6 +11,7 @@ import { buildDocBridgeIndex } from '../src/index-builder/build-index.js'
 import { installMcpConfig, mcpSnippet } from '../src/mcp/install.js'
 import { MCP_TOOLS, handleMcpRequest, respondMcpRequest, startMcpStdioServer } from '../src/mcp/server.js'
 import { runQuery } from '../src/query/query.js'
+import { canCreateSymlinks } from './helpers/symlink-support.js'
 
 const fixtureRoot = join(fileURLToPath(new URL('.', import.meta.url)), 'fixtures', 'sample-project')
 
@@ -306,7 +307,7 @@ describe('MCP tools', () => {
     expect(readFileSync(join(root, 'guide.md'), 'utf8')).toBe('[API](./api.md)\n')
   })
 
-  it('rejects doc.get symlinks that resolve outside the project root', () => {
+  it.skipIf(!canCreateSymlinks())('rejects doc.get symlinks that resolve outside the project root', () => {
     const root = join(mkdtempSync(join(tmpdir(), 'ak-docs-mcp-symlink-')), 'sample-project')
     cpSync(fixtureRoot, root, { recursive: true })
     const outside = join(mkdtempSync(join(tmpdir(), 'ak-docs-mcp-outside-')), 'secret.md')
