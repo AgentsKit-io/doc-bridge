@@ -6,7 +6,7 @@ import { resolve } from 'node:path'
 import { HandoffProof } from '@/components/home/handoff-proof'
 import { InstallCommandTabs } from '@/components/home/install-command-tabs'
 import { ProofTerminal } from '@/components/home/proof-terminal'
-import { LiquidCursorGradient } from '@/components/liquid-cursor-gradient'
+import { EcosystemShowcase } from '@/components/ecosystem'
 import { ProductSubheader } from '@/components/product-subheader'
 import { SiteFooter } from '@/components/site-footer'
 import './home.css'
@@ -28,7 +28,7 @@ const sourceCount = readdirSync(resolve(process.cwd(), '../../docs'), { recursiv
 export default function HomePage() {
   return (
     <div className={`bridge-home ${inter.variable} ${jetbrains.variable} ${spaceGrotesk.variable}`}>
-      <LiquidCursorGradient />
+      <agentskit-aurora aria-hidden="true" />
       <ProductSubheader />
       <main className="bridge-home-content">
         <section className="bridge-home-hero">
@@ -113,6 +113,7 @@ export default function HomePage() {
           </div>
           <Link href="/docs/getting-started" className="bridge-button bridge-button-primary">Add Doc Bridge to your repo <ArrowRight aria-hidden className="size-4" /></Link>
         </section>
+        <EcosystemShowcase />
       </main>
       <SiteFooter />
     </div>
