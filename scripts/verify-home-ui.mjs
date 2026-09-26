@@ -27,7 +27,11 @@ const screenshot = async (page, name, viewport) => {
 }
 
 const contrast = (foreground, background) => {
-  const channels = (color) => color.match(/[\d.]+/g)?.slice(0, 3).map(Number) ?? []
+  /* Computed colours arrive as rgb(0-255) or, for color-mix(), as color(srgb 0-1). */
+  const channels = (color) => {
+    const values = color.match(/[\d.]+/g)?.slice(0, 3).map(Number) ?? []
+    return color.startsWith('color(') ? values.map((v) => v * 255) : values
+  }
   const luminance = (color) => {
     const values = channels(color).map((v) => {
       const x = v / 255
@@ -237,8 +241,8 @@ try {
 
   await mobile.goto(`${baseURL}/docs/getting-started`, { waitUntil: 'domcontentloaded', timeout: 30000 })
   await mobile.locator('body').waitFor({ state: 'visible' })
-  const docsData = await mobile.evaluate(() => ({ hasHome: Boolean(document.querySelector('.bridge-home')), wordmark: Boolean(document.querySelector('.ak-product-wordmark')), homeTour: Boolean(document.querySelector('agentskit-ecosystem[data-visual="agentskit-home"]')), title: document.title }))
-  check('docs-remain-calm', !docsData.hasHome && docsData.wordmark && !docsData.homeTour, JSON.stringify(docsData))
+  const docsData = await mobile.evaluate(() => ({ hasHome: Boolean(document.querySelector('.bridge-home')), wordmark: Boolean(document.querySelector('.ak-product-wordmark')), footer: document.querySelectorAll('agentskit-footer[current="doc-bridge"]').length, title: document.title }))
+  check('docs-remain-calm', !docsData.hasHome && docsData.wordmark && docsData.footer === 1, JSON.stringify(docsData))
 
   const motion = await browser.newPage({ viewport: { width: 1280, height: 800 }, reducedMotion: 'reduce' })
   await motion.goto(baseURL, { waitUntil: 'networkidle', timeout: 30000 })
