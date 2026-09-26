@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "contentHash": "cb41350ea62b27eb27dad178aa778aad843a762e68f82a6009f0af607d8a8fe2",
+  "contentHash": "88c41c37b82516654a1e01e9d36da7a5718f35f7f4ad96c82d48e7bc95f3c72d",
   "contentHashAlgo": "sha256-normalized-v1",
-  "generatedAt": "2026-09-26T12:15:04.676Z",
+  "generatedAt": "2026-09-26T12:47:05.906Z",
   "project": {
     "name": "@agentskit/doc-bridge",
     "root": "."
@@ -1691,7 +1691,7 @@
         "tsx",
         "app"
       ],
-      "contentHash": "b408e89239f1d73dede9a7e1f1946dd33137c5e4ae530064f16553d9f220aaaa"
+      "contentHash": "ef8a621decd98d405aee1109d2393c592edcbc3fe6df3454e671e4d1b716f41f"
     },
     {
       "id": "module:apps/docs/app/robots.ts",
@@ -8014,7 +8014,7 @@
     "changes": {}
   },
   "inputs": {
-    "hash": "06161aae8da1abfdfc4b816739ba547af5e998cc7611aba75961b53ee5bb64ba",
+    "hash": "b8561766b72afa0e3824609b75e644d53a351ca3c0a4c8f0e229ce3ac55f966b",
     "fileCount": 438,
     "projectionVersion": 2
   },
@@ -8037,9 +8037,9 @@
   "projection": {
     "type": "retrieval-index",
     "schemaVersion": 1,
-    "contentHash": "ab8fe93a9b227229a46473b3a843f97533cd36736dc398b8e77b5b7963931ccf",
+    "contentHash": "f19bb89c3fd3d9fb645675105445a3aeabf466140cca39533d63d19b969ae40c",
     "contentHashAlgo": "sha256-normalized-v1",
-    "snapshotHash": "12f410713064d506e78670aaba99b2cd5a549332991155fe8a9d25b2c97c363e",
+    "snapshotHash": "8418ddbe7adb14af3db4aa3c88c4f1c9648d8bbda13182b740e5ed86ec70c4f0",
     "overlayHash": "f99666ff9119084dd25c2974ae64eb6935ec2aa785ff5ad478fb9d541f7a5e94",
     "configurationHash": "91d46a4ecbfe3b55878e0b3c7608819775cf7b18aeafcc8f689eddfa462622b4",
     "lexiconVersion": 1,
@@ -19122,7 +19122,7 @@
           "inbound": [],
           "outbound": []
         },
-        "contentHash": "b408e89239f1d73dede9a7e1f1946dd33137c5e4ae530064f16553d9f220aaaa",
+        "contentHash": "ef8a621decd98d405aee1109d2393c592edcbc3fe6df3454e671e4d1b716f41f",
         "provenance": "observed",
         "confidence": "observed"
       },
