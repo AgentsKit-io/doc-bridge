@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "contentHash": "77c5a18b0e08a0fe28dfdde3d19879f9711781fffb991878b44887965a1cc7bd",
+  "contentHash": "43865a3702a0d5e1c004281af141b31152422094a8c931fd97a134bf59814636",
   "contentHashAlgo": "sha256-normalized-v1",
-  "generatedAt": "2026-09-25T23:51:37.819Z",
+  "generatedAt": "2026-09-26T02:04:48.177Z",
   "project": {
     "name": "@agentskit/doc-bridge",
     "root": "."
@@ -2671,7 +2671,7 @@
         "mjs",
         "scripts"
       ],
-      "contentHash": "ce760f7e30a0c4c3cf10e20c040ec0f89ea1dcc3bedfa08bf71906ffb100e192"
+      "contentHash": "ff327bcd94f9a969af418eb79fc3ed733261191c3d48549a7f81195c1e3ec0ef"
     },
     {
       "id": "module:skills/doc-bridge-handoff/scripts/resolve-handoff.mjs",
@@ -7998,7 +7998,7 @@
     "changes": {}
   },
   "inputs": {
-    "hash": "21172e416e4c4e80dd1b936c4aa5257ac726488e26f709b7c02699653cb0b729",
+    "hash": "eecf93d8a82fa2b0a78fd93cb57671cf0c1915fd26a93791ff0245480ea05fa2",
     "fileCount": 437,
     "projectionVersion": 2
   },
@@ -8021,9 +8021,9 @@
   "projection": {
     "type": "retrieval-index",
     "schemaVersion": 1,
-    "contentHash": "4194c304725282708e056d60ab7ec091b4c0ba1d5fa499c1be92b380b649f8e7",
+    "contentHash": "3ee82eaf7b4249d1a702554aa7a373f53b82be9dec08682700bd221c1fc9e31b",
     "contentHashAlgo": "sha256-normalized-v1",
-    "snapshotHash": "381375895f1485f711276b1a056350ec85b0582bbe3132920404152f13a67b4d",
+    "snapshotHash": "fe706698436f862ae3299afc6b652c7818a58b50e798b292df1806ce432502ea",
     "overlayHash": "f99666ff9119084dd25c2974ae64eb6935ec2aa785ff5ad478fb9d541f7a5e94",
     "configurationHash": "91d46a4ecbfe3b55878e0b3c7608819775cf7b18aeafcc8f689eddfa462622b4",
     "lexiconVersion": 1,
@@ -21868,7 +21868,7 @@
           "inbound": [],
           "outbound": []
         },
-        "contentHash": "ce760f7e30a0c4c3cf10e20c040ec0f89ea1dcc3bedfa08bf71906ffb100e192",
+        "contentHash": "ff327bcd94f9a969af418eb79fc3ed733261191c3d48549a7f81195c1e3ec0ef",
         "provenance": "observed",
         "confidence": "observed"
       },

@@ -125,7 +125,14 @@ try {
   const serverHtml = await (await desktop.request.get(baseURL)).text()
   const serverFooter = serverHtml.match(/<agentskit-footer[\s\S]*?<\/agentskit-footer>/u)?.[0] ?? ''
   const fallbackHomes = ['https://www.agentskit.io', 'https://registry.agentskit.io', 'https://chat.agentskit.io', 'https://doc-bridge.agentskit.io/', 'https://code-review.agentskit.io', 'https://harness.agentskit.io/']
-  check('footer-static-fallback', fallbackHomes.every((href) => serverFooter.includes(`href="${href}"`)) && serverFooter.includes('github.com/AgentsKit-io/doc-bridge') && serverFooter.includes('LICENSE') && !serverFooter.includes('playbook.agentskit.io'), JSON.stringify({ bytes: serverFooter.length }))
+  const fallbackUrls = [...serverFooter.matchAll(/href="([^"]+)"/gu)].flatMap(([, href]) => {
+    try { return [new URL(href, baseURL)] } catch { return [] }
+  })
+  const fallbackHrefs = new Set(fallbackUrls.map((url) => url.href))
+  const fallbackHosts = new Set(fallbackUrls.map((url) => url.hostname))
+  const hasRepoLink = fallbackUrls.some((url) => url.hostname === 'github.com' && url.pathname === '/AgentsKit-io/doc-bridge')
+  const hasLicenseLink = fallbackUrls.some((url) => url.hostname === 'github.com' && url.pathname.startsWith('/AgentsKit-io/doc-bridge/') && url.pathname.endsWith('/LICENSE'))
+  check('footer-static-fallback', fallbackHomes.every((href) => fallbackHrefs.has(new URL(href).href)) && hasRepoLink && hasLicenseLink && !fallbackHosts.has('playbook.agentskit.io'), JSON.stringify({ hrefs: [...fallbackHrefs] }))
   check('terminal-and-install-tabs', desktopData.hasProofTerminal && desktopData.hasInstallTabs, JSON.stringify({ terminal: desktopData.hasProofTerminal, installTabs: desktopData.hasInstallTabs }))
   check('hero-copy', desktopData.heading === 'The docs your team reads.\nThe context your agents need.', desktopData.heading)
   check('desktop-overflow', desktopData.scrollWidth <= desktopData.width, `${desktopData.scrollWidth}px content in ${desktopData.width}px viewport`)
