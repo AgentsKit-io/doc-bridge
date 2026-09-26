@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "contentHash": "62ebf7862f7fe084fb2af0b95edff07c0507836755e508ce56d49e2887ecc502",
+  "contentHash": "deb00c400fa4dfc1d8526cc5218237a57cf0e1bc36a24c4603b663620a4656ad",
   "contentHashAlgo": "sha256-normalized-v1",
-  "generatedAt": "2026-09-26T15:37:45.918Z",
+  "generatedAt": "2026-09-26T15:53:41.040Z",
   "project": {
     "name": "@agentskit/doc-bridge",
     "root": "."
@@ -600,7 +600,7 @@
         "document",
         "human"
       ],
-      "contentHash": "cfce6d92ed27c0daf1dc6b208fdb8439b012f8b9ab7d695cae8a9583d0c9abd9"
+      "contentHash": "bf7b366ab1e8139b359129c98e5075c160f428d7e715a7d46515935d5529a4c3"
     },
     {
       "id": "document:docs/knowledge-engine-runbook.md",
@@ -1624,7 +1624,7 @@
         "tsx",
         "docs"
       ],
-      "contentHash": "dfb6b8bc05a751612fc55e135f59a0b1ad2ca7321020d161e474c37443031a4d"
+      "contentHash": "23254203ac05a341f0693b9d67c7cb13ffba66452e1052290dfb115b4b7efca1"
     },
     {
       "id": "module:apps/docs/app/for-agents/page.tsx",
@@ -1799,7 +1799,7 @@
         "tsx",
         "components"
       ],
-      "contentHash": "960559614d04d11220879fa1105594878391311734b665b5c0c1651c670bb954"
+      "contentHash": "8d3358446e1d0b4e29727574e20287c467f880cb8db34d8a2a7e2c3c97fcc8dc"
     },
     {
       "id": "module:apps/docs/components/home/handoff-proof.tsx",
@@ -2046,7 +2046,7 @@
         "tsx",
         "docs"
       ],
-      "contentHash": "0048844caa8e88473fe10e65264cced7897ff5a28d2a2c884c25739781dcef64"
+      "contentHash": "0f9d003ed13d7ddd33631c6a4ae54ff9c9668c4798495ce49708c5bbfa7577ab"
     },
     {
       "id": "module:apps/docs/next-env.d.ts",
@@ -2103,7 +2103,7 @@
         "mjs",
         "docs"
       ],
-      "contentHash": "6fc5abb268e1efe7a3e821fb6efc5b80289a328c7f27dc2749557ea963c24a75"
+      "contentHash": "2cb6e21ce8c88c99f08be7f5fbcc601f68a8655b9814a7ff2e2956104d3d5b34"
     },
     {
       "id": "module:apps/docs/shell-elements.d.ts",
@@ -2687,7 +2687,7 @@
         "mjs",
         "scripts"
       ],
-      "contentHash": "ff327bcd94f9a969af418eb79fc3ed733261191c3d48549a7f81195c1e3ec0ef"
+      "contentHash": "c5c4767951a9b81c03bac8289bd59ac4722881570b467d507ea981f80555f078"
     },
     {
       "id": "module:skills/doc-bridge-handoff/scripts/resolve-handoff.mjs",
@@ -6020,7 +6020,7 @@
         "test",
         "docs-e2e"
       ],
-      "contentHash": "6af12f6e275495076f24ed9e0253c12b2c85e51d76cca35c72a75c5e506a02d1"
+      "contentHash": "2d9440050c8d3158411bcccdebe032e2794383eb9dd35955006be177825b2570"
     },
     {
       "id": "module:tests/doctor-measured.test.ts",
@@ -8072,7 +8072,7 @@
     "changes": {}
   },
   "inputs": {
-    "hash": "7cf0071bda8adf0619bf5f24a1a7080272569b2475fd0a1235df40b39a63d9bb",
+    "hash": "07b3d98e7dea86af1803479cd2fe876563aeddf7a9cb63b99949d4e58e2e6f13",
     "fileCount": 442,
     "projectionVersion": 2
   },
@@ -8095,9 +8095,9 @@
   "projection": {
     "type": "retrieval-index",
     "schemaVersion": 1,
-    "contentHash": "0d7e0aa0860f13073ba9d0be960eb95705b4f6e2c355bb162f7c995abd47b071",
+    "contentHash": "a17678e53e53d14930e1b9a3ed5b4359fa37dc03a73fa878be95f17c75c94a37",
     "contentHashAlgo": "sha256-normalized-v1",
-    "snapshotHash": "b1377f6c05094b0ba55f47400b00778070ecc1b57afc1af2babd186c42d55127",
+    "snapshotHash": "7c492fb8f9c932d683b6490623e4691381616e1a79a3fb9cf9bedb406f8b3144",
     "overlayHash": "f99666ff9119084dd25c2974ae64eb6935ec2aa785ff5ad478fb9d541f7a5e94",
     "configurationHash": "91d46a4ecbfe3b55878e0b3c7608819775cf7b18aeafcc8f689eddfa462622b4",
     "lexiconVersion": 1,
@@ -13813,7 +13813,7 @@
           "path": "docs/index.md",
           "symbols": "",
           "summary": "Doc Bridge keeps one repository useful to people and coding agents. Pick the shortest path:",
-          "body": "Documentation Doc Bridge keeps one repository useful to people and coding agents. Pick the shortest path: Start Goal Page --- --- Install + 60s proof Guided install Machine-first entry · site route /for-agents PR freshness gate · Build workflows Goal Page --- --- Index + resolve ownership · MCP for Cursor / Claude · Memory digest → draft docs Every CLI command · Config sketches Optional chat / RAG · Study and measurement · Controlled task suite Phase 3 task coverage Controlled study runner Provider CLI adapter Round 1 instrumentation · Longitudinal measurements Study verification A/B baseline result · Documentation quality audit What is read from a Markdown document Canonicality, centrality, cycles and the graph as memory Per-file hashes and reuse between scans The index as a projection, explainable ranking, handoffs for any entity Budgeted knowledge.search / knowledge.lookup , canonical findings, the measured doctor Markdown renderings from templates: area pages, sidecars, change digest, overlay review Typed agent proposals, validators, the overlay and bounded influence What the overlay cost, whether it helped, and the study measurements The claims this repository makes in public, and the gate that keeps them true Current documentation audit snapshot Controlled pilot evidence How it works 1. Index — map ownership from corpus + config 2. Resolve — deterministic handoffs ( startHere , editRoots , checks ) 3. Gate — fail stale context before agents run 4. Promote — optional memory → draft docs loop Product vs reference - Start / Guides — get value in minutes - Product — , , - Reference — , , Machine surfaces: · · Ecosystem Part of AgentsKit — next to , , , and .",
+          "body": "Documentation Doc Bridge keeps one repository useful to people and coding agents. Pick the shortest path: Start Goal Page --- --- Install + 60s proof Guided install Machine-first entry · site route /for-agents PR freshness gate · Build workflows Goal Page --- --- Index + resolve ownership · MCP for Cursor / Claude · Memory digest → draft docs Every CLI command · Config sketches Optional chat / RAG · Study and measurement · Controlled task suite Phase 3 task coverage Controlled study runner Provider CLI adapter Round 1 instrumentation · Longitudinal measurements Study verification A/B baseline result · Documentation quality audit What is read from a Markdown document Canonicality, centrality, cycles and the graph as memory Per-file hashes and reuse between scans The index as a projection, explainable ranking, handoffs for any entity Budgeted knowledge.search / knowledge.lookup , canonical findings, the measured doctor Markdown renderings from templates: area pages, sidecars, change digest, overlay review Typed agent proposals, validators, the overlay and bounded influence What the overlay cost, whether it helped, and the study measurements The claims this repository makes in public, and the gate that keeps them true Current documentation audit snapshot Controlled pilot evidence How it works 1. Index — map ownership from corpus + config 2. Resolve — deterministic handoffs ( startHere , editRoots , checks ) 3. Gate — fail stale context before agents run 4. Promote — optional memory → draft docs loop Product vs reference - Start / Guides — get value in minutes - Product — , , - Reference — , , Machine surfaces: · · Ecosystem Part of AgentsKit — next to , , , , and .",
           "aliases": "document human"
         },
         "graph": {
@@ -14020,7 +14020,7 @@
             }
           ]
         },
-        "contentHash": "cfce6d92ed27c0daf1dc6b208fdb8439b012f8b9ab7d695cae8a9583d0c9abd9",
+        "contentHash": "bf7b366ab1e8139b359129c98e5075c160f428d7e715a7d46515935d5529a4c3",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -19036,7 +19036,7 @@
           "inbound": [],
           "outbound": []
         },
-        "contentHash": "dfb6b8bc05a751612fc55e135f59a0b1ad2ca7321020d161e474c37443031a4d",
+        "contentHash": "23254203ac05a341f0693b9d67c7cb13ffba66452e1052290dfb115b4b7efca1",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -19465,7 +19465,7 @@
           "inbound": [],
           "outbound": []
         },
-        "contentHash": "960559614d04d11220879fa1105594878391311734b665b5c0c1651c670bb954",
+        "contentHash": "8d3358446e1d0b4e29727574e20287c467f880cb8db34d8a2a7e2c3c97fcc8dc",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -20108,7 +20108,7 @@
           "inbound": [],
           "outbound": []
         },
-        "contentHash": "0048844caa8e88473fe10e65264cced7897ff5a28d2a2c884c25739781dcef64",
+        "contentHash": "0f9d003ed13d7ddd33631c6a4ae54ff9c9668c4798495ce49708c5bbfa7577ab",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -20259,7 +20259,7 @@
           ],
           "outbound": []
         },
-        "contentHash": "6fc5abb268e1efe7a3e821fb6efc5b80289a328c7f27dc2749557ea963c24a75",
+        "contentHash": "2cb6e21ce8c88c99f08be7f5fbcc601f68a8655b9814a7ff2e2956104d3d5b34",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -21991,7 +21991,7 @@
           "inbound": [],
           "outbound": []
         },
-        "contentHash": "ff327bcd94f9a969af418eb79fc3ed733261191c3d48549a7f81195c1e3ec0ef",
+        "contentHash": "c5c4767951a9b81c03bac8289bd59ac4722881570b467d507ea981f80555f078",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -37334,7 +37334,7 @@
           "inbound": [],
           "outbound": []
         },
-        "contentHash": "6af12f6e275495076f24ed9e0253c12b2c85e51d76cca35c72a75c5e506a02d1",
+        "contentHash": "2d9440050c8d3158411bcccdebe032e2794383eb9dd35955006be177825b2570",
         "provenance": "observed",
         "confidence": "observed"
       },
