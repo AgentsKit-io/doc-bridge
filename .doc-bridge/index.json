@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "contentHash": "f892dd4ceae868e7314f88de90f74012530046c73a5dea897318c092840b856e",
+  "contentHash": "000b7f2698d5bc29fcaac739dd994d174fee4ddd7d4fffd09bdbf24d295a6ac1",
   "contentHashAlgo": "sha256-normalized-v1",
-  "generatedAt": "2026-09-26T04:23:46.560Z",
+  "generatedAt": "2026-09-26T12:06:16.230Z",
   "project": {
     "name": "@agentskit/doc-bridge",
     "root": "."
@@ -1657,7 +1657,7 @@
         "tsx",
         "app"
       ],
-      "contentHash": "e37b5b6403a994b2cd2f518b0943a6e1cc2d065e1f3c0a9253e22fb31ec37fc9"
+      "contentHash": "0198742911d3b98bd808477592c297cbf1b5be2730e9d0f55410d8707bad0d77"
     },
     {
       "id": "module:apps/docs/app/opengraph-image.tsx",
@@ -1691,7 +1691,7 @@
         "tsx",
         "app"
       ],
-      "contentHash": "0553a0d25be81b392eb9e5d43d000231c7c0ecede485f95e63beeae93fa2400f"
+      "contentHash": "b408e89239f1d73dede9a7e1f1946dd33137c5e4ae530064f16553d9f220aaaa"
     },
     {
       "id": "module:apps/docs/app/robots.ts",
@@ -1874,7 +1874,7 @@
         "tsx",
         "components"
       ],
-      "contentHash": "4ca135e298ce8378351aa73a68f6e584370e328aca186557914a19e94dda4b63"
+      "contentHash": "4eceb5543c3515f6a84f290005b5fa429e98fbaa1c111c419521cdb84772efce"
     },
     {
       "id": "module:apps/docs/components/product-wordmark.tsx",
@@ -1934,6 +1934,22 @@
         "lib"
       ],
       "contentHash": "4103bf397a8beaee5e3a98438378b1347788b7ef070085b062409a57769be388"
+    },
+    {
+      "id": "module:apps/docs/lib/fonts.ts",
+      "type": "module",
+      "title": "fonts.ts",
+      "path": "apps/docs/lib/fonts.ts",
+      "symbols": [
+        "inter",
+        "spaceGrotesk"
+      ],
+      "tags": [
+        "module",
+        "ts",
+        "lib"
+      ],
+      "contentHash": "fbf29b3e0816d24f306e070ca30b9b7c751393de61520f389d7c0c5b72bb7aa5"
     },
     {
       "id": "module:apps/docs/lib/public-docs.ts",
@@ -7998,8 +8014,8 @@
     "changes": {}
   },
   "inputs": {
-    "hash": "50c74963701e72220f6bcfbbe88a55fde9dff7728b2bb256906e0bd6dcdde463",
-    "fileCount": 437,
+    "hash": "ee7467016bfe95a48125135e1431d5b9c38e02c7216de60d848773ab9a3ba173",
+    "fileCount": 438,
     "projectionVersion": 2
   },
   "retrieval": {
@@ -8021,9 +8037,9 @@
   "projection": {
     "type": "retrieval-index",
     "schemaVersion": 1,
-    "contentHash": "da7cb390e78e595273825d4f866d7cbc4496ce7af770477ec7b4f85ec559788e",
+    "contentHash": "559a543ac758d5d968ed62ecbe62d30ead7d012c60f33be30fb62e8fe2ea295f",
     "contentHashAlgo": "sha256-normalized-v1",
-    "snapshotHash": "34d85a9217fe7cebfda9e3f4b2773fe28f1ad9c4b2c813496eb80b74bae4983d",
+    "snapshotHash": "114b1366c23d27fb154523c9165fb13c0b07b70b53e7323587e522adcc22d42e",
     "overlayHash": "f99666ff9119084dd25c2974ae64eb6935ec2aa785ff5ad478fb9d541f7a5e94",
     "configurationHash": "91d46a4ecbfe3b55878e0b3c7608819775cf7b18aeafcc8f689eddfa462622b4",
     "lexiconVersion": 1,
@@ -8043,7 +8059,7 @@
     },
     "lexical": {
       "version": 1,
-      "documentCount": 465,
+      "documentCount": 466,
       "fieldNames": [
         "aliases",
         "body",
@@ -8054,13 +8070,13 @@
         "title"
       ],
       "averageFieldLength": {
-        "aliases": 3.464516129032258,
-        "body": 69.12258064516129,
-        "headings": 4.324731182795699,
-        "path": 5.688172043010753,
-        "summary": 5.72258064516129,
-        "symbols": 11.8,
-        "title": 3.1010752688172043
+        "aliases": 3.463519313304721,
+        "body": 68.97424892703863,
+        "headings": 4.315450643776824,
+        "path": 5.6888412017167385,
+        "summary": 5.710300429184549,
+        "symbols": 11.783261802575108,
+        "title": 3.0987124463519313
       }
     },
     "entries": [
@@ -8130,7 +8146,7 @@
           ],
           "outbound": []
         },
-        "contentHash": "2cbaa4ec83a2975ee2dd7483c53695423d32b9cd5860e3e6f17f95c0885eb267",
+        "contentHash": "863f8356e5dfeb4d924b5b1029a51a55359575e7dbb4d931b418ba9662b39d3d",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -19028,7 +19044,7 @@
           "inbound": [],
           "outbound": []
         },
-        "contentHash": "e37b5b6403a994b2cd2f518b0943a6e1cc2d065e1f3c0a9253e22fb31ec37fc9",
+        "contentHash": "0198742911d3b98bd808477592c297cbf1b5be2730e9d0f55410d8707bad0d77",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -19106,7 +19122,7 @@
           "inbound": [],
           "outbound": []
         },
-        "contentHash": "0553a0d25be81b392eb9e5d43d000231c7c0ecede485f95e63beeae93fa2400f",
+        "contentHash": "b408e89239f1d73dede9a7e1f1946dd33137c5e4ae530064f16553d9f220aaaa",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -19565,7 +19581,7 @@
           "inbound": [],
           "outbound": []
         },
-        "contentHash": "4ca135e298ce8378351aa73a68f6e584370e328aca186557914a19e94dda4b63",
+        "contentHash": "4eceb5543c3515f6a84f290005b5fa429e98fbaa1c111c419521cdb84772efce",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -19713,6 +19729,44 @@
           "outbound": []
         },
         "contentHash": "4103bf397a8beaee5e3a98438378b1347788b7ef070085b062409a57769be388",
+        "provenance": "observed",
+        "confidence": "observed"
+      },
+      {
+        "id": "module:apps/docs/lib/fonts.ts",
+        "kind": "module",
+        "path": "apps/docs/lib/fonts.ts",
+        "title": "fonts.ts",
+        "aliases": [],
+        "symbols": [
+          "inter",
+          "spaceGrotesk"
+        ],
+        "tags": [
+          "module",
+          "ts",
+          "lib"
+        ],
+        "fields": {
+          "title": "fonts.ts",
+          "headings": "",
+          "path": "apps/docs/lib/fonts.ts",
+          "symbols": "inter spaceGrotesk",
+          "summary": "",
+          "body": "",
+          "aliases": "module ts lib"
+        },
+        "graph": {
+          "pagerank": 0,
+          "inboundLinks": 0,
+          "coveredBy": [],
+          "mentionedBy": [],
+          "areaId": "area:apps/docs",
+          "packageId": "package:@agentskit/doc-bridge",
+          "inbound": [],
+          "outbound": []
+        },
+        "contentHash": "fbf29b3e0816d24f306e070ca30b9b7c751393de61520f389d7c0c5b72bb7aa5",
         "provenance": "observed",
         "confidence": "observed"
       },
