@@ -1,4 +1,4 @@
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path'
 
 function unix(path) {
@@ -19,6 +19,13 @@ function findRepositoryRoot() {
   throw new Error('Unable to locate the Doc Bridge repository root')
 }
 
+let publishedDocs
+/** Docs that have a route under /docs/ (apps/docs/public-docs.json); others link to GitHub. */
+function isPublished(repositoryRoot, file) {
+  publishedDocs ??= new Set(JSON.parse(readFileSync(join(repositoryRoot, 'apps/docs/public-docs.json'), 'utf8')))
+  return publishedDocs.has(file)
+}
+
 function rewrite(url, sourcePath) {
   if (!url || url.startsWith('#') || /^(?:[a-z]+:|\/\/)/iu.test(url)) return url
 
@@ -30,7 +37,7 @@ function rewrite(url, sourcePath) {
   const absoluteSourcePath = isAbsolute(sourcePath) ? sourcePath : resolve(docsRoot, sourcePath)
   const target = resolve(dirname(absoluteSourcePath), decodeURIComponent(pathname))
 
-  if (isInside(docsRoot, target) && pathname.endsWith('.md')) {
+  if (isInside(docsRoot, target) && pathname.endsWith('.md') && isPublished(repositoryRoot, unix(relative(docsRoot, target)))) {
     const slug = unix(relative(docsRoot, target)).replace(/\.md$/u, '')
     return `${process.env.DOCS_BASE_PATH ?? ''}/docs/${slug}/${suffix}`
   }

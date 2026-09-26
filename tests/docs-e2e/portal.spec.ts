@@ -79,6 +79,7 @@ test('Fumadocs renders canonical docs with raw and llms surfaces', async ({ page
   expect(llms.ok()).toBeTruthy()
   expect(await llms.text()).toContain('# AgentsKit Doc Bridge')
   await expect(page.locator('agentskit-ecosystem')).toBeVisible()
+  await expect(page.locator('agentskit-footer[current="doc-bridge"][repo="AgentsKit-io/doc-bridge"]')).toHaveCount(1)
   await expect(page.locator('[data-search]:visible, [data-search-full]:visible').first()).toBeVisible()
 })
 
