@@ -102,6 +102,22 @@ describe('repository discovery', () => {
     expect(() => discoverRepository({ root })).toThrow('Package identity collision')
   })
 
+  it('does not treat the root package as colliding with itself when workspaces explicitly lists "."', () => {
+    const root = fixture()
+    writeFileSync(
+      join(root, 'package.json'),
+      JSON.stringify({
+        name: 'fixture-root',
+        workspaces: ['.', 'packages/*'],
+        dependencies: { 'external-lib': '^1.0.0' },
+      }),
+    )
+
+    const snapshot = discoverRepository({ root })
+    const rootPackageIds = snapshot.entities.filter((entity) => entity.id === 'package:fixture-root').map((entity) => entity.id)
+    expect(rootPackageIds).toHaveLength(1)
+  })
+
   it('covers JavaScript module forms, exports, unsupported runtime behavior and resolution fallbacks', () => {
     const root = mkdtempSync(join(tmpdir(), 'doc-bridge-discovery-edges-'))
     mkdirSync(join(root, 'packages', 'edge', 'src', 'dir'), { recursive: true })
