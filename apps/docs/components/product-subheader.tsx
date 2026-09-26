@@ -23,13 +23,13 @@ export function ProductSubheader() {
       }}
     >
       <nav className="relative mx-auto flex h-14 max-w-7xl items-center gap-2 px-3 sm:px-5 lg:px-8" aria-label="Doc Bridge navigation">
-        <Link href="/" className="flex min-h-11 min-w-0 items-center gap-2 rounded-md font-semibold tracking-tight focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 sm:gap-3">
+        <Link href="/" prefetch={false} className="flex min-h-11 min-w-0 items-center gap-2 rounded-md font-semibold tracking-tight focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 sm:gap-3">
           <ProductWordmark />
         </Link>
 
         <div className="ml-auto hidden items-center gap-1 md:flex">
           {links.map((link) => (
-            <Link key={link.href} href={link.href} className="inline-flex min-h-11 items-center rounded-md px-3 text-sm font-medium text-neutral-600 transition-colors hover:text-emerald-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 dark:text-neutral-300 dark:hover:text-emerald-300">
+            <Link key={link.href} href={link.href} prefetch={false} className="inline-flex min-h-11 items-center rounded-md px-3 text-sm font-medium text-neutral-600 transition-colors hover:text-emerald-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 dark:text-neutral-300 dark:hover:text-emerald-300">
               {link.label}
             </Link>
           ))}
@@ -53,7 +53,7 @@ export function ProductSubheader() {
         {open ? (
           <div id="doc-bridge-mobile-menu" className="absolute inset-x-0 top-full grid gap-1 border-b border-black/10 bg-[var(--bridge-paper)] p-3 shadow-lg dark:border-white/10 dark:bg-[var(--bridge-night)] md:hidden">
             {links.map((link) => (
-              <Link key={link.href} href={link.href} className="flex min-h-11 items-center rounded-md px-3 text-sm font-medium hover:bg-black/5 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-emerald-600 dark:hover:bg-white/10" onClick={() => setOpen(false)}>
+              <Link key={link.href} href={link.href} prefetch={false} className="flex min-h-11 items-center rounded-md px-3 text-sm font-medium hover:bg-black/5 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-emerald-600 dark:hover:bg-white/10" onClick={() => setOpen(false)}>
                 {link.label}
               </Link>
             ))}

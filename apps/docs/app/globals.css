@@ -3,6 +3,12 @@
 @import 'fumadocs-ui/css/preset.css';
 @import '@agentskit/react/theme';
 
+/* Self-hosted next/font families feed the shared shell tokens (the shell skips Google Fonts). */
+html.ak-self-fonts {
+  --ak-font-body: var(--font-inter), Inter, ui-sans-serif, system-ui, sans-serif;
+  --ak-font-display: var(--font-space-grotesk), 'Space Grotesk', Inter, ui-sans-serif, system-ui, sans-serif;
+}
+
 :root {
   --bridge-ink: #111714;
   --bridge-paper: #f7f8f3;
