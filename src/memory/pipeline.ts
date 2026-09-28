@@ -1,6 +1,7 @@
 import type { DocBridgeIndexV1 } from '../schemas/doc-bridge-index.js'
 import type { MemoryCandidateV1 } from '../schemas/memory-candidate.js'
 import { searchIndex } from '../query/search.js'
+import { containsSecret } from '../safety/repository.js'
 
 export type MemoryRoute = 'agent' | 'human' | 'playbook' | 'discard'
 
@@ -27,7 +28,6 @@ export type MemoryPromotionDraft = {
 }
 
 const packageOwnership = /\b(?:package|module)\s+([a-z0-9._/-]+)\s+(?:owns|owner|responsible|routes?)\b/i
-const secretPattern = /\b(?:api[_-]?key|token|secret|password)\s*[:=]\s*\S+/i
 const privateEmailPattern = /\b[A-Z0-9._%+-]+@(?!example\.com\b)[A-Z0-9.-]+\.[A-Z]{2,}\b/i
 
 const classifyRoute = (fact: string): Pick<MemoryClassification, 'route' | 'reason'> => {
@@ -64,7 +64,7 @@ export const scanMemorySafety = (
 ): SafetyFinding[] =>
   classifications.flatMap(({ candidate }) => {
     const findings: SafetyFinding[] = []
-    if (secretPattern.test(candidate.fact)) {
+    if (containsSecret(candidate.fact)) {
       findings.push({
         candidateId: candidate.id,
         kind: 'secret',
