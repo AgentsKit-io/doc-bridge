@@ -1,8 +1,9 @@
 import { cp, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises'
-import { dirname, extname, join, relative, resolve, sep } from 'node:path'
+import { dirname, extname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { computeLocalKnowledgeArtifactContentHash, LocalKnowledgeArtifactSchema } from '@agentskit/chat/protocol'
 import { createRequire } from 'node:module'
+import { toPosix } from '@agentskit/cross-platform'
 
 const require = createRequire(import.meta.url)
 /** Prefer package export; fall back to source when running pre-build. */
@@ -60,7 +61,7 @@ async function walk(directory) {
   return files.flat().filter((path) => extname(path) === '.md').sort()
 }
 
-function unix(path) { return path.split(sep).join('/') }
+function unix(path) { return toPosix(path) }
 function artifactId(prefix, value) { return `${prefix}:${value.replace(/[^A-Za-z0-9._:-]+/g, ':')}` }
 function entryId(slug) { return artifactId('doc', slug) }
 function canonicalDocUrl(slug) { return slug === 'index' ? `${origin}/docs/` : `${origin}/docs/${slug}/` }

@@ -1,7 +1,8 @@
-import { spawn } from 'node:child_process'
+import type { ChildProcess } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
+import { killProcessTree, spawnNodeChild } from '@agentskit/cross-platform'
 import { z } from 'zod'
 
 import {
@@ -43,15 +44,15 @@ type ProcessResult = {
   readonly durationMs: number
 }
 
-const terminate = (child: ReturnType<typeof spawn>): void => {
+const terminate = (child: ChildProcess): void => {
   if (child.pid === undefined) return
-  try { process.kill(-child.pid, 'SIGTERM') } catch { child.kill('SIGTERM') }
+  void killProcessTree(child.pid, 'SIGTERM', (signal) => child.kill(signal))
 }
 
 const runAdjudicatorProcess = (config: StudyAdjudicatorCli, cwd: string, input: string, maxRuntimeMs: number): Promise<ProcessResult> => new Promise((resolveResult) => {
   const env = Object.fromEntries([...new Set(['PATH', 'HOME', 'TMPDIR', ...config.envAllowlist])].flatMap((name) => process.env[name] === undefined ? [] : [[name, process.env[name] as string]]))
   const started = Date.now()
-  const child = spawn(config.command, [...config.args], { cwd: resolve(cwd), shell: false, detached: true, env, stdio: ['pipe', 'pipe', 'pipe'] })
+  const child = spawnNodeChild(config.command, [...config.args], { cwd: resolve(cwd), detached: true, env, stdio: ['pipe', 'pipe', 'pipe'] })
   let stdout = ''
   let stderrBytes = 0
   let settled = false

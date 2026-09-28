@@ -102,6 +102,7 @@ const sectionTitle = (section: string, sourceUrl: string): string => {
   const urlLine = firstMatchingLine(section, (line) => /^https?:\/\//i.test(line))
   if (urlLine) {
     try {
+      // cross-platform-ignore: http(s) URL path segment, not a file path
       return new URL(urlLine).pathname.split('/').filter(Boolean).at(-1) ?? slugFromPath(sourceUrl)
     } catch {
       return slugFromPath(sourceUrl)
@@ -164,6 +165,7 @@ export const loadFederatedChunks = async (
       const baseUrl = source.rawBaseUrl ? httpUrl(source.rawBaseUrl) : undefined
       const url = linkUrl ?? (baseUrl ? new URL(link.url, baseUrl).href : link.url)
       let pathname = url
+      // cross-platform-ignore: http(s) URL path, used only for its extension
       try { pathname = new URL(url).pathname } catch { /* local source */ }
       if (!/\.(md|txt)$/i.test(pathname)) continue
       if (!sameOrigin(source.llmsTxt, url)) continue

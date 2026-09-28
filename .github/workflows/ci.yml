@@ -29,6 +29,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm check:no-legacy-chat-imports
+      - run: pnpm check:cross-platform
       - run: pnpm typecheck
       - run: pnpm check:ecosystem-upstream
       - run: pnpm check:marketplace

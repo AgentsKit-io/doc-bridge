@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import test from 'node:test'
+import { splitLines } from '@agentskit/cross-platform'
 
 const packageJson = JSON.parse(readFileSync('package.json', 'utf8'))
 const manifest = JSON.parse(readFileSync('mcpb/manifest.json', 'utf8'))
@@ -76,6 +77,6 @@ test('privacy requirements are public and complete', () => {
 
 test('MCPB ignore rules reject local credentials and development artifacts', () => {
   for (const pattern of ['.env*', '*.log', '*.map', 'coverage/', 'tests/', 'src/']) {
-    assert.ok(ignore.split('\n').includes(pattern), `missing ignore pattern ${pattern}`)
+    assert.ok(splitLines(ignore).includes(pattern), `missing ignore pattern ${pattern}`)
   }
 })

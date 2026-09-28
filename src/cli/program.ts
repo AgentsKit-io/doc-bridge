@@ -1,6 +1,7 @@
 import { closeSync, existsSync, mkdirSync, openSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs'
 import { dirname, relative, resolve } from 'node:path'
 import { createInterface } from 'node:readline/promises'
+import { splitFrontmatter } from '@agentskit/cross-platform'
 
 import { ConfigNotFoundError, loadConfig, projectRootFromConfigPath } from '../config/load-config.js'
 import type { DocBridgeConfigV1, RuleId, RuleSeverity } from '../config/schema.js'
@@ -1339,7 +1340,7 @@ const bootstrapAgentDocs = (
   const skipped: string[] = []
   for (const doc of scanHumanDocRecords(root, config)) {
     const raw = readFileSync(doc.path, 'utf8')
-    const body = raw.replace(/^---\n[\s\S]*?\n---\n?/, '')
+    const { body } = splitFrontmatter(raw)
     const title = firstHeading(body) ?? doc.id
     const description = firstParagraph(body)
     const draftPath = resolve(root, config.corpus.agent.root, 'human', `${doc.id}.md`)

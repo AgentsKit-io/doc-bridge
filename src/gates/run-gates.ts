@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs'
+import { splitFrontmatter } from '@agentskit/cross-platform'
 
 import type { DocBridgeConfigV1 } from '../config/schema.js'
 import {
@@ -151,13 +152,11 @@ const runHumanGuideLinksGate = (root: string, config: DocBridgeConfigV1): GateRe
 }
 
 const frontmatterType = (markdown: string): string | undefined => {
-  const match = /^---\n([\s\S]*?)\n---/.exec(markdown)
-  return match?.[1]?.match(/^type:\s*['"]?([^'"\n#]+)['"]?/m)?.[1]?.trim()
+  return splitFrontmatter(markdown).frontmatter?.match(/^type:\s*['"]?([^'"\n#]+)['"]?/m)?.[1]?.trim()
 }
 
 const frontmatterField = (markdown: string, field: string): string | undefined => {
-  const match = /^---\n([\s\S]*?)\n---/.exec(markdown)
-  return match?.[1]?.match(new RegExp(`^${field}:\\s*['"]?([^'\"\\n#]+)['"]?`, 'm'))?.[1]?.trim()
+  return splitFrontmatter(markdown).frontmatter?.match(new RegExp(`^${field}:\\s*['"]?([^'\"\\n#]+)['"]?`, 'm'))?.[1]?.trim()
 }
 
 const runOkfTypeGate = (root: string, config: DocBridgeConfigV1): GateResult => {

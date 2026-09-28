@@ -5,6 +5,7 @@ import { createHash } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { resolve } from 'node:path'
+import { splitLines } from '@agentskit/cross-platform'
 import { measureProviderToolTelemetry } from '../dist/index.js'
 import { resolveDocBridgeQueryId } from './study-doc-bridge-query.mjs'
 
@@ -74,7 +75,7 @@ const normalizeEvidenceIds = (values) => (Array.isArray(values) ? values : [])
 child.once('error', () => finish(1))
 child.once('close', (code) => {
   if (code !== 0) return finish(1)
-  const events = stdout.trim().split('\n').filter(Boolean).flatMap((line) => {
+  const events = splitLines(stdout.trim()).filter(Boolean).flatMap((line) => {
     try { return [JSON.parse(line)] } catch { return [] }
   })
   const usage = events.find((event) => event.type === 'turn.completed')?.usage

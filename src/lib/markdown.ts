@@ -1,3 +1,4 @@
+import { splitLines } from '@agentskit/cross-platform'
 export type FrontmatterValue = string | boolean | readonly string[]
 export type FrontmatterData = Record<string, FrontmatterValue>
 
@@ -57,7 +58,7 @@ export const frontmatterStringList = (
 
 export const firstHeading = (markdown: string): string | undefined => {
   const { body } = parseFrontmatter(markdown)
-  for (const line of body.split('\n')) {
+  for (const line of splitLines(body)) {
     const m = /^#\s+(.+)$/.exec(line.trim())
     if (m?.[1]) return m[1].trim()
   }
@@ -67,7 +68,7 @@ export const firstHeading = (markdown: string): string | undefined => {
 /** Complete first prose block — prefer full sentences, cap length without mid-word cuts. */
 export const firstParagraph = (markdown: string, maxLen = 400): string | undefined => {
   const { body } = parseFrontmatter(markdown)
-  const lines = body.split('\n')
+  const lines = splitLines(body)
   const buf: string[] = []
   for (const line of lines) {
     const t = line.trim()

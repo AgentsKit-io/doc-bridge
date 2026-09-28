@@ -13,6 +13,7 @@ import {
   writeFileSync,
 } from 'node:fs'
 import { dirname, join, relative, resolve, sep } from 'node:path'
+import { splitLines } from '@agentskit/cross-platform'
 
 const VERSION = '1.5.0'
 const STATES = new Set(['CLARIFYING', 'PLANNED', 'VERIFYING', 'AWAITING_HUMAN_APPROVAL', 'AWAITING_AUTHORIZATION', 'COMPLETE', 'BLOCKED', 'FAILED'])
@@ -211,7 +212,7 @@ const sourceRevision = (root) => {
 }
 
 const machineStatusFrom = (stdout) => {
-  const lines = String(stdout ?? '').trim().split('\n').reverse()
+  const lines = splitLines(String(stdout ?? '').trim()).reverse()
   for (const line of lines) {
     try {
       const value = JSON.parse(line)
