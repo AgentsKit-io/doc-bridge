@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.12.1
+
+### Patch Changes
+
+- 3138e23: Use `@agentskit/cross-platform` for process spawning, process-tree termination, path separators, line splitting and frontmatter detection. Registry agent and study CLIs that are `.cmd` shims now start on Windows without a shell, timed-out children no longer leave orphaned grandchildren on Windows, and the `okf-type` and `docs-style` gates read CRLF frontmatter. `pnpm check:cross-platform` guards against new portability regressions with a ratchet baseline.
+- 4d75499: Documentation index: the ecosystem list now names Code Review and Harness alongside AgentsKit, Registry, and Chat (Playbook is no longer listed as an ecosystem product).
+- b9470b5: Redact more real token shapes: Slack (`xoxb-`/`xoxp-`/`xoxa-`/`xoxr-`/`xoxs-`/`xapp-`), OpenAI (`sk-`, `sk-proj-`), Anthropic (`sk-ant-`), all GitHub token prefixes, AWS `ASIA` ids, Google API keys, Stripe restricted keys, npm tokens, `Bearer` credentials and PEM private key blocks. The list is exported once as `SECRET_PATTERNS` (with `containsSecret`), and the memory promotion safety scan now uses it too.
+
 ## 1.12.0
 
 ### Minor Changes
