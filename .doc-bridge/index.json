@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "contentHash": "03c9fe5d847d2fffcb6c226913bd0a5c8bdd0a6d13acf27f4e4fa00e51e67b30",
+  "contentHash": "244e5bba3fae489f76e2905f561c858a0200e58a8a5ef882867245445b824590",
   "contentHashAlgo": "sha256-normalized-v1",
-  "generatedAt": "2026-09-28T00:27:41.081Z",
+  "generatedAt": "2026-09-28T02:14:43.668Z",
   "project": {
     "name": "@agentskit/doc-bridge",
     "root": "."
@@ -4279,7 +4279,7 @@
         "ts",
         "src"
       ],
-      "contentHash": "41bd14c02db3695a45d0a5a55d52ec920ef60f91a51b33b09cb9e2479e526ea4"
+      "contentHash": "4d8226cb38794ae1358bef92bb844fa40393692f1ae643e88f8f3d8e0d11f7e8"
     },
     {
       "id": "module:src/intelligence/adapter.ts",
@@ -4632,7 +4632,7 @@
         "ts",
         "memory"
       ],
-      "contentHash": "98214e253d7cd719736d76db66bc77202b650ac563b2336f9acbcfad095bc002"
+      "contentHash": "c59dc11251b2a900fd078748f9e9955e6770291e182fc9eb60ab470b6b14dc09"
     },
     {
       "id": "module:src/metrics/benchmark.ts",
@@ -5188,9 +5188,11 @@
       "path": "src/safety/repository.ts",
       "symbols": [
         "DEFAULT_SAFETY_EXCLUDES",
+        "SECRET_PATTERNS",
         "SafeWalkOptions",
         "SafeWalkResult",
         "containedPath",
+        "containsSecret",
         "redactSecrets",
         "redactValue",
         "safeWalkFiles"
@@ -5200,7 +5202,7 @@
         "ts",
         "safety"
       ],
-      "contentHash": "f3cd48e491f8bea9691530184ce853a72f8433042fead13fc45d6eb0f5c890ae"
+      "contentHash": "8d53bb107c71ce676b9859613eb58f60f383cc6b18f4a618754fe18f6e0bbc9d"
     },
     {
       "id": "module:src/schemas/agent-handoff.ts",
@@ -6386,7 +6388,7 @@
         "test",
         "tests"
       ],
-      "contentHash": "a958836a5254018133bb19ba453a6a3f9ab921c73d4b3291d756cbce43ef7c12"
+      "contentHash": "c4cb4f58121bf92e53011f2f288789758bbc208e830f2f3cd81c324df6d41f77"
     },
     {
       "id": "module:tests/nx-plugin.test.ts",
@@ -6529,7 +6531,7 @@
         "test",
         "tests"
       ],
-      "contentHash": "dfdb9a7524a9fcbbbf941907eeae52aefa6f481406efd7ff9e2aa71452f3fa52"
+      "contentHash": "c01417e1bef2511baea4887ea19949f36340558f5bb014b441964e962d63bc7f"
     },
     {
       "id": "module:tests/reproducibility.test.ts",
@@ -8072,7 +8074,7 @@
     "changes": {}
   },
   "inputs": {
-    "hash": "769aba744f32f3810c6a9d2669dde77e4c8519d3f0a13787b756d75abc731ac5",
+    "hash": "7cfb667d6bfa9f9f6ade49999e493a39d13bd58699e3579c9a65831697812e11",
     "fileCount": 442,
     "projectionVersion": 2
   },
@@ -8095,9 +8097,9 @@
   "projection": {
     "type": "retrieval-index",
     "schemaVersion": 1,
-    "contentHash": "32fd5e20c8111a4d4a499892f4ce16d8ae4ac27295adac4c0ef47fcd555d04e8",
+    "contentHash": "4f9f7c00002a8f5a1f6395ab3beded756b2e37bb475f5f7686d10e069970c4ee",
     "contentHashAlgo": "sha256-normalized-v1",
-    "snapshotHash": "0c64a94fec014aedae87bfd45906183f0fe28265e5942d8cabee6524fb4de4ed",
+    "snapshotHash": "333d987d5e8c9e04b0929e332f79b886e86bb93ca9207162ffe62ed9db8d9a12",
     "overlayHash": "f99666ff9119084dd25c2974ae64eb6935ec2aa785ff5ad478fb9d541f7a5e94",
     "configurationHash": "91d46a4ecbfe3b55878e0b3c7608819775cf7b18aeafcc8f689eddfa462622b4",
     "lexiconVersion": 1,
@@ -8129,11 +8131,11 @@
       ],
       "averageFieldLength": {
         "aliases": 3.4638297872340424,
-        "body": 68.5,
+        "body": 68.68723404255319,
         "headings": 4.282978723404256,
         "path": 5.691489361702128,
         "summary": 5.772340425531915,
-        "symbols": 11.712765957446809,
+        "symbols": 11.725531914893617,
         "title": 3.1106382978723404
       }
     },
@@ -9863,7 +9865,7 @@
           "path": "src/safety",
           "symbols": "",
           "summary": "Owns safe file discovery and secret detection. The `safeWalkFiles` function walks a repository with resource limits (file count, byte size, memory, time) and respects exclusion globs from `safety.exclude` in config or `DEFAULT_SAFETY_EXCLUDES` — paths matching `.git`, `node_modules`, dist, build, coverage directories, and patterns for `.env`, `.pem`, `.key`, and secret-like names.",
-          "body": "Safety Owns safe file discovery and secret detection. The safeWalkFiles function walks a repository with resource limits (file count, byte size, memory, time) and respects exclusion globs from safety.exclude in config or DEFAULT SAFETY EXCLUDES — paths matching .git , node modules , dist, build, coverage directories, and patterns for .env , .pem , .key , and secret-like names. redactSecrets detects and redacts patterns for API keys (Stripe, GitHub, AWS) and credentials (password, token, api-key style). Symbolic links are skipped; containment checks prevent escapes via symlink resolution.",
+          "body": "Safety Owns safe file discovery and secret detection. The safeWalkFiles function walks a repository with resource limits (file count, byte size, memory, time) and respects exclusion globs from safety.exclude in config or DEFAULT SAFETY EXCLUDES — paths matching .git , node modules , dist, build, coverage directories, and patterns for .env , .pem , .key , and secret-like names. redactSecrets replaces every match of the exported SECRET PATTERNS list with [REDACTED] : PEM private key blocks, Stripe, Anthropic, OpenAI (legacy and sk-proj- ), GitHub ( gh[pousr] , github pat ), Slack ( xox - , xapp- ), AWS access key ids ( AKIA / ASIA ), Google API keys, npm tokens, Bearer credentials, and password / token / secret / api-key assignments. containsSecret is the boolean form used by the memory safety scan. Symbolic links are skipped; containment checks prevent escapes via symlink resolution.",
           "aliases": "doc-bridge-safety area ownership"
         },
         "graph": {
@@ -12476,7 +12478,7 @@
           "path": "docs/agent-corpus/safety.md",
           "symbols": "",
           "summary": "Owns safe file discovery and secret detection. The `safeWalkFiles` function walks a repository with resource limits (file count, byte size, memory, time) and respects exclusion globs from `safety.exclude` in config or `DEFAULT_SAFETY_EXCLUDES` — paths matching `.git`, `node_modules`, dist, build, coverage directories, and patterns for `.env`, `.pem`, `.key`, and secret-like names.",
-          "body": "Safety Owns safe file discovery and secret detection. The safeWalkFiles function walks a repository with resource limits (file count, byte size, memory, time) and respects exclusion globs from safety.exclude in config or DEFAULT SAFETY EXCLUDES — paths matching .git , node modules , dist, build, coverage directories, and patterns for .env , .pem , .key , and secret-like names. redactSecrets detects and redacts patterns for API keys (Stripe, GitHub, AWS) and credentials (password, token, api-key style). Symbolic links are skipped; containment checks prevent escapes via symlink resolution.",
+          "body": "Safety Owns safe file discovery and secret detection. The safeWalkFiles function walks a repository with resource limits (file count, byte size, memory, time) and respects exclusion globs from safety.exclude in config or DEFAULT SAFETY EXCLUDES — paths matching .git , node modules , dist, build, coverage directories, and patterns for .env , .pem , .key , and secret-like names. redactSecrets replaces every match of the exported SECRET PATTERNS list with [REDACTED] : PEM private key blocks, Stripe, Anthropic, OpenAI (legacy and sk-proj- ), GitHub ( gh[pousr] , github pat ), Slack ( xox - , xapp- ), AWS access key ids ( AKIA / ASIA ), Google API keys, npm tokens, Bearer credentials, and password / token / secret / api-key assignments. containsSecret is the boolean form used by the memory safety scan. Symbolic links are skipped; containment checks prevent escapes via symlink resolution.",
           "aliases": "doc-bridge-safety document human module"
         },
         "graph": {
@@ -12498,7 +12500,7 @@
             }
           ]
         },
-        "contentHash": "ccd050a2a7c76698585957118707f7115342dfd40b0cdd6db04bdf78f524450f",
+        "contentHash": "ae78bd2e10431ef1d7bdc9c8af60df3d6668831a23a1fcc6fc5980055b50dcde",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -29518,7 +29520,7 @@
             }
           ]
         },
-        "contentHash": "41bd14c02db3695a45d0a5a55d52ec920ef60f91a51b33b09cb9e2479e526ea4",
+        "contentHash": "4d8226cb38794ae1358bef92bb844fa40393692f1ae643e88f8f3d8e0d11f7e8",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -31209,6 +31211,11 @@
             },
             {
               "kind": "imports",
+              "id": "module:src/safety/repository.ts",
+              "confidence": "observed"
+            },
+            {
+              "kind": "imports",
               "id": "module:src/schemas/doc-bridge-index.ts",
               "confidence": "observed"
             },
@@ -31219,7 +31226,7 @@
             }
           ]
         },
-        "contentHash": "98214e253d7cd719736d76db66bc77202b650ac563b2336f9acbcfad095bc002",
+        "contentHash": "c59dc11251b2a900fd078748f9e9955e6770291e182fc9eb60ab470b6b14dc09",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -33854,9 +33861,11 @@
         "aliases": [],
         "symbols": [
           "DEFAULT_SAFETY_EXCLUDES",
+          "SECRET_PATTERNS",
           "SafeWalkOptions",
           "SafeWalkResult",
           "containedPath",
+          "containsSecret",
           "redactSecrets",
           "redactValue",
           "safeWalkFiles"
@@ -33870,7 +33879,7 @@
           "title": "repository.ts",
           "headings": "",
           "path": "src/safety/repository.ts",
-          "symbols": "DEFAULT_SAFETY_EXCLUDES SafeWalkOptions SafeWalkResult containedPath redactSecrets redactValue safeWalkFiles",
+          "symbols": "DEFAULT_SAFETY_EXCLUDES SECRET_PATTERNS SafeWalkOptions SafeWalkResult containedPath containsSecret redactSecrets redactValue safeWalkFiles",
           "summary": "",
           "body": "",
           "aliases": "module ts safety"
@@ -33928,6 +33937,11 @@
             },
             {
               "kind": "imports",
+              "id": "module:src/memory/pipeline.ts",
+              "confidence": "observed"
+            },
+            {
+              "kind": "imports",
               "id": "module:src/parity/check.ts",
               "confidence": "observed"
             },
@@ -33970,7 +33984,7 @@
             }
           ]
         },
-        "contentHash": "f3cd48e491f8bea9691530184ce853a72f8433042fead13fc45d6eb0f5c890ae",
+        "contentHash": "8d53bb107c71ce676b9859613eb58f60f383cc6b18f4a618754fe18f6e0bbc9d",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -39147,7 +39161,7 @@
             }
           ]
         },
-        "contentHash": "a958836a5254018133bb19ba453a6a3f9ab921c73d4b3291d756cbce43ef7c12",
+        "contentHash": "c4cb4f58121bf92e53011f2f288789758bbc208e830f2f3cd81c324df6d41f77",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -39861,7 +39875,7 @@
             }
           ]
         },
-        "contentHash": "dfdb9a7524a9fcbbbf941907eeae52aefa6f481406efd7ff9e2aa71452f3fa52",
+        "contentHash": "c01417e1bef2511baea4887ea19949f36340558f5bb014b441964e962d63bc7f",
         "provenance": "observed",
         "confidence": "observed"
       },

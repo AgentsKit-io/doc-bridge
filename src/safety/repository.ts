@@ -78,14 +78,38 @@ export const safeWalkFiles = (root: string, options: SafeWalkOptions = {}): Safe
   return { files: files.sort(), incomplete: reason !== undefined, ...(reason ? { reason } : {}) }
 }
 
-const SECRET_PATTERNS = [
-  /\b(?:sk|pk)[_-](?:live|test)[_-][A-Za-z0-9_-]{12,}\b/g,
-  /\b(?:ghp|github_pat|xox[baprs])_[A-Za-z0-9_-]{12,}\b/g,
-  /\bAKIA[0-9A-Z]{16}\b/g,
+/**
+ * The one secret-shape list Doc Bridge redacts with. Specific, prefix-anchored token shapes come
+ * first; the generic `key=value` credential pattern runs last. Every pattern is global, so use
+ * `redactSecrets` / `containsSecret` rather than calling `.test()` on these directly.
+ */
+export const SECRET_PATTERNS: readonly RegExp[] = Object.freeze([
+  // PEM private key blocks (RSA, EC, OPENSSH, PGP, ...); an unterminated block is redacted to the end.
+  /-----BEGIN [A-Z0-9 ]*PRIVATE KEY(?: BLOCK)?-----[\s\S]*?(?:-----END [A-Z0-9 ]*PRIVATE KEY(?: BLOCK)?-----|$)/g,
+  // Stripe secret, publishable and restricted keys.
+  /\b(?:sk|pk|rk)[_-](?:live|test)[_-][A-Za-z0-9_-]{12,}\b/g,
+  // Anthropic keys, then OpenAI project/service/admin keys and legacy alphanumeric keys.
+  /\bsk-ant-[A-Za-z0-9_-]{20,}/g,
+  /\bsk-(?:proj|svcacct|admin)-[A-Za-z0-9_-]{20,}/g,
+  /\bsk-[A-Za-z0-9]{20,}\b/g,
+  // GitHub classic (ghp/gho/ghu/ghs/ghr) and fine-grained tokens.
+  /\b(?:gh[pousr]|github_pat)_[A-Za-z0-9_-]{12,}\b/g,
+  // Slack bot/user/app/refresh/config tokens and app-level tokens.
+  /\b(?:xox[abeoprs]|xapp)[-_][A-Za-z0-9-]{10,}/g,
+  // AWS access key ids (long-term and temporary).
+  /\b(?:AKIA|ASIA)[0-9A-Z]{16}\b/g,
+  // Google API keys.
+  /\bAIza[0-9A-Za-z_-]{35}(?![0-9A-Za-z_-])/g,
+  // npm access tokens.
+  /\bnpm_[A-Za-z0-9]{36}\b/g,
+  // HTTP bearer credentials; the scheme word is kept.
+  /(?<=\bBearer\s+)[A-Za-z0-9._~+/-]{16,}=*/gi,
   /(?:password|passwd|secret|token|api[_-]?key)\s*[:=]\s*["']?[^\s,"']+/gi,
-]
+])
 
 export const redactSecrets = (value: string): string => SECRET_PATTERNS.reduce((result, pattern) => result.replace(pattern, '[REDACTED]'), value)
+
+export const containsSecret = (value: string): boolean => redactSecrets(value) !== value
 
 export const redactValue = (value: unknown): unknown => Array.isArray(value)
   ? value.map(redactValue)
