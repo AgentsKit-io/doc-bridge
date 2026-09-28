@@ -1,5 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { splitLines } from '@agentskit/cross-platform'
 
 import { z } from 'zod'
 
@@ -121,7 +122,7 @@ const excerptOf = (line: string): string => {
  */
 const occurrences = (claim: PublicClaim, surface: string, content: string): readonly Occurrence[] => {
   const found: Occurrence[] = []
-  const lines = content.split('\n')
+  const lines = splitLines(content, { dropTrailingEmpty: false })
   for (const [index, line] of lines.entries()) {
     if (claim.evidence.kind === 'cli-command') {
       if (line.includes(claim.evidence.command)) {

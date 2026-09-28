@@ -1,5 +1,6 @@
 import { realpathSync } from 'node:fs'
 import { isAbsolute, relative, resolve, sep } from 'node:path'
+import { normalizeEol, splitLines } from '@agentskit/cross-platform'
 
 import type { HumanCorpusConfig } from '../../config/schema.js'
 import { slugFromPath } from '../../lib/markdown.js'
@@ -39,13 +40,13 @@ export const optionString = (
 export const parseFrontmatter = (raw: string): Record<string, string> => {
   // Windows-authored (or git autocrlf-checked-out) Markdown commonly uses CRLF;
   // normalize before matching so frontmatter isn't silently dropped there.
-  const normalized = raw.includes('\r\n') ? raw.replace(/\r\n/g, '\n') : raw
+  const normalized = normalizeEol(raw)
   if (!normalized.startsWith('---\n')) return {}
   const end = normalized.indexOf('\n---', 4)
   if (end === -1) return {}
 
   const out: Record<string, string> = {}
-  for (const line of normalized.slice(4, end).split('\n')) {
+  for (const line of splitLines(normalized.slice(4, end))) {
     const match = /^([A-Za-z0-9_-]+):\s*(.+?)\s*$/.exec(line)
     if (match?.[1] && match[2]) out[match[1]] = match[2].replace(/^['"]|['"]$/g, '')
   }

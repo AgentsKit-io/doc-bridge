@@ -1,3 +1,4 @@
+import { toPosix } from '@agentskit/cross-platform'
 import { unobservedOwnershipPaths } from '../discovery/areas.js'
 import { importCycles } from '../graph/build.js'
 import { contentHashForArtifactV1, sha256NormalizedV1 } from '../index-builder/content-hash.js'
@@ -119,7 +120,7 @@ const entityById = (snapshots: readonly DiscoverySnapshotV1[]): ReadonlyMap<stri
 const isUnresolved = (id: string, entities: ReadonlyMap<string, KnowledgeEntity>): boolean =>
   id.startsWith('unresolved:') || entities.get(id)?.kind === 'unresolved-reference'
 
-const normalizedPath = (path: string): string => path.replaceAll('\\', '/').replace(/^\.\//, '')
+const normalizedPath = (path: string): string => toPosix(path).replace(/^\.\//, '')
 
 const semanticEntityId = (
   id: string,

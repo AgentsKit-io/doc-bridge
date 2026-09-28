@@ -1,7 +1,7 @@
 import { existsSync, realpathSync } from 'node:fs'
 import { isAbsolute, relative, resolve, sep } from 'node:path'
 
-export const toPosix = (value: string): string => value.split('\\').join('/')
+export { toPosix } from '@agentskit/cross-platform'
 
 export const resolveFromRoot = (root: string, rel: string): string =>
   resolve(root, rel)

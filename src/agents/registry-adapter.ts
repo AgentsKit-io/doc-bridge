@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs'
-import { spawn } from 'node:child_process'
 import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
+import { killProcessTree, spawnNodeChild } from '@agentskit/cross-platform'
 import { z } from 'zod'
 
 import type { DocBridgeConfigV1 } from '../config/schema.js'
@@ -104,12 +104,15 @@ const runCli = (root: string, cli: RegistryCliConfig, context: RegistryAgentCont
     reject(new Error(`Registry agent CLI input limit ${maxInputBytes} bytes exceeded.`))
     return
   }
-  const child = spawn(cli.command, cli.args ?? [], {
+  const child = spawnNodeChild(cli.command, cli.args ?? [], {
     cwd: root,
-    shell: false,
     env: process.env,
     stdio: ['pipe', 'pipe', 'pipe'],
   })
+  const terminate = (): void => {
+    if (child.pid === undefined) child.kill('SIGTERM')
+    else void killProcessTree(child.pid, 'SIGTERM', (signal) => child.kill(signal))
+  }
   let stdout = ''
   let stderr = ''
   let settled = false
@@ -119,14 +122,14 @@ const runCli = (root: string, cli: RegistryCliConfig, context: RegistryAgentCont
     callback()
   }
   const timer = setTimeout(() => {
-    child.kill('SIGTERM')
+    terminate()
     finish(() => reject(new Error(`Registry agent CLI timed out after ${timeoutMs}ms.`)))
   }, timeoutMs)
   child.stdout.on('data', (chunk: Buffer) => {
     stdout += chunk.toString('utf8')
     if (Buffer.byteLength(stdout, 'utf8') > maxResponseBytes) {
       clearTimeout(timer)
-      child.kill('SIGTERM')
+      terminate()
       finish(() => reject(new Error(`Registry agent CLI response limit ${maxResponseBytes} bytes exceeded.`)))
     }
   })
@@ -155,7 +158,7 @@ const runCli = (root: string, cli: RegistryCliConfig, context: RegistryAgentCont
   })
   child.stdin.once('error', (error) => {
     clearTimeout(timer)
-    child.kill('SIGTERM')
+    terminate()
     finish(() => reject(new Error(`Registry agent CLI stdin failed: ${error.message}`)))
   })
   child.stdin.end(input)

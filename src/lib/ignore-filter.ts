@@ -16,6 +16,7 @@
 import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync, realpathSync } from 'node:fs'
 import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path'
+import { toPosix } from '@agentskit/cross-platform'
 
 import ignore, { type Ignore } from 'ignore'
 
@@ -28,7 +29,6 @@ export type IgnoreFilter = {
   readonly isIgnored: (absolutePath: string, isDirectory: boolean) => boolean
 }
 
-const toPosix = (value: string): string => value.split(sep).join('/')
 
 const canonical = (path: string): string => {
   try {

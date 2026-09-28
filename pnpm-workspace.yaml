@@ -4,6 +4,9 @@ packages:
 allowBuilds:
   esbuild: true
 
+minimumReleaseAgeExclude:
+  - '@agentskit/cross-platform@0.1.0'
+
 overrides:
   '@puppeteer/browsers': 3.2.1
   framer-motion: 13.3.0

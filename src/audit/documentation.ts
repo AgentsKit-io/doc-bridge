@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { toPosix } from '@agentskit/cross-platform'
 import { minimatch } from 'minimatch'
 
 import type { DocumentationAuditConfig } from '../config/schema.js'
@@ -140,7 +141,7 @@ export type DocumentationAuditReportV1 = z.infer<typeof DocumentationAuditReport
 
 type DocumentInput = { readonly path: string; readonly content: string }
 
-const normalizedPath = (path: string): string => path.replaceAll('\\', '/').replace(/^\.\//, '')
+const normalizedPath = (path: string): string => toPosix(path).replace(/^\.\//, '')
 const evidenceFor = (path: string, lineStart?: number): Evidence => ({
   source: 'documentation',
   path: normalizedPath(path),

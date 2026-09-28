@@ -1,5 +1,6 @@
 import { lstatSync, readdirSync, realpathSync, statSync } from 'node:fs'
 import { isAbsolute, relative, resolve, sep } from 'node:path'
+import { toPosix } from '@agentskit/cross-platform'
 
 import { minimatch } from 'minimatch'
 
@@ -59,7 +60,7 @@ export const safeWalkFiles = (root: string, options: SafeWalkOptions = {}): Safe
     try { entries = readdirSync(directory) } catch { return }
     for (const name of entries.sort()) {
       const absolute = resolve(directory, name)
-      const relativePath = relative(projectRoot, absolute).split(sep).join('/')
+      const relativePath = toPosix(relative(projectRoot, absolute))
       if (matchesExclude(relativePath) || name === '.git') continue
       let stats
       try { stats = lstatSync(absolute) } catch { continue }

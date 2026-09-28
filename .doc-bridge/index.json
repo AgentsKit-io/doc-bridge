@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "contentHash": "deb00c400fa4dfc1d8526cc5218237a57cf0e1bc36a24c4603b663620a4656ad",
+  "contentHash": "03c9fe5d847d2fffcb6c226913bd0a5c8bdd0a6d13acf27f4e4fa00e51e67b30",
   "contentHashAlgo": "sha256-normalized-v1",
-  "generatedAt": "2026-09-26T15:53:41.040Z",
+  "generatedAt": "2026-09-28T00:27:41.081Z",
   "project": {
     "name": "@agentskit/doc-bridge",
     "root": "."
@@ -1093,7 +1093,7 @@
         "document",
         "human"
       ],
-      "contentHash": "f6cb631e503de7d55ebafbe8d689f13a4104a1f3be54ace04e9a471cc44b4137"
+      "contentHash": "19625d57b08c9d96b833730b4d7a44c006f2d6b7479e50ac88047d91a8a63d12"
     },
     {
       "id": "document:docs/spec/study-task-suite-v1.md",
@@ -2155,7 +2155,7 @@
         "js",
         "bin"
       ],
-      "contentHash": "07cd7c3bdc312493f2a7756f0ec98204b892ad6be7d8d7c891e5f6f142b7e120"
+      "contentHash": "8c403589239590bd65891a3f9f3edba8224525efa656dc32be5768d9540f16a0"
     },
     {
       "id": "module:playwright.config.ts",
@@ -2193,7 +2193,7 @@
         "mjs",
         "scripts"
       ],
-      "contentHash": "0012c4943fc6e9600a57d5d2abbd87ab2f02c893b33128b64ae3c26d2bcf2903"
+      "contentHash": "7112848fb673fe49f4e8601ca79985a5e30f099680b50d85126a11ff56ba5343"
     },
     {
       "id": "module:scripts/build-mcpb.mjs",
@@ -2205,7 +2205,7 @@
         "mjs",
         "scripts"
       ],
-      "contentHash": "7b090580bd457e9a1e8120babbee9ef37421a88d8d0fa227b7f9276b020244c5"
+      "contentHash": "cd3b19ea24c7a0982ac82dd44ccb014b7157cd13d58057d6d33f2873b7cb542f"
     },
     {
       "id": "module:scripts/check-ecosystem-upstream.mjs",
@@ -2241,7 +2241,7 @@
         "mjs",
         "scripts"
       ],
-      "contentHash": "adff0efd6e567759e1a8483ae9e926479ec920a8404041dc42001fa1a54df205"
+      "contentHash": "923dc501dcf2228906905b5d7e84eb410e088bf8ab92691cce07c4f30896017d"
     },
     {
       "id": "module:scripts/check-readme-standard.mjs",
@@ -2305,7 +2305,7 @@
         "test",
         "scripts"
       ],
-      "contentHash": "f40f0f37923b290017a4be16a52c1d0ddedd38b4fd29b8c7ccdb4f82a2360dbc"
+      "contentHash": "b997960ade4e798d1eb2f7537b1578514bfd6991c046c1b86ad404c2e0035218"
     },
     {
       "id": "module:scripts/generate-study-charts.mjs",
@@ -2359,7 +2359,7 @@
         "test",
         "scripts"
       ],
-      "contentHash": "6054e4b0bd9997430e4b2c3dddd04f937c849b5d005c37c1a2859c819e6a33bf"
+      "contentHash": "5c062eda98fa1c4affc8077a48642d1b84dc698111e19a1fd363539010729e97"
     },
     {
       "id": "module:scripts/phase4-public-pilot-check.mjs",
@@ -2396,7 +2396,7 @@
         "mjs",
         "scripts"
       ],
-      "contentHash": "a0b4e12d968ae0646779f9101e36b73c03dd174f76e47f067859df68927ebad7"
+      "contentHash": "585cd346cf360d3c1b08cd15553b10759dc083ea38d72d6cfddb7a2f90cbdf26"
     },
     {
       "id": "module:scripts/quality-scorecard-eval.mjs",
@@ -2445,7 +2445,7 @@
         "mjs",
         "scripts"
       ],
-      "contentHash": "5942444c66f528101d8ed654f1d33c75ddca9aeb244a48929d4716fcefec239f"
+      "contentHash": "3641f7193a4b8ef243274d8fcef836472a30a410d10d9a2ea29b2aa29c272ce4"
     },
     {
       "id": "module:scripts/run-semantic-adjudication.mjs",
@@ -2529,7 +2529,7 @@
         "mjs",
         "scripts"
       ],
-      "contentHash": "f1a650d55677cba9863e5591e8c209e1877e14fb494bc48d728af855be186d9d"
+      "contentHash": "e2cd92a6e907c3cb15526f69cd647442d24c51f3b35f5b7a3b2170f05cc09591"
     },
     {
       "id": "module:scripts/study-codex-provider.mjs",
@@ -2541,7 +2541,7 @@
         "mjs",
         "scripts"
       ],
-      "contentHash": "559703177928de26973efe17af055b534b35a8422f634c2e3d8680fbc4de126c"
+      "contentHash": "a5db46d7539d59cd5677be15cc9653b09676392d09cece4601ab5bfc23cd6a20"
     },
     {
       "id": "module:scripts/study-doc-bridge-query.mjs",
@@ -2650,7 +2650,7 @@
         "mjs",
         "scripts"
       ],
-      "contentHash": "2f8023f61322f619fbec4623a70ebd6f810af606e71f31500ba7655aa57af3b1"
+      "contentHash": "27b34d40ef8d7239db60e329cc7d1efd58022bcccae77dae13274a4088330439"
     },
     {
       "id": "module:scripts/verification-harness.test.mjs",
@@ -2724,7 +2724,7 @@
         "ts",
         "agents"
       ],
-      "contentHash": "1e85d9030b6da9ddaa3f9fe62288f28eebb8b2fb133a5f70b275e6ed62cb2615"
+      "contentHash": "3c20062a5c16831ad5768c404de32c4baca0e78cd8f743ae2636ede7acfcce44"
     },
     {
       "id": "module:src/audit/documentation.ts",
@@ -2748,7 +2748,7 @@
         "ts",
         "audit"
       ],
-      "contentHash": "de9b293d47ba0790828074168d268e258d7d1a05b29d12e4cfaaa9fa6ccb8196"
+      "contentHash": "a56a66bd7a71bab68f37f0293225ca983308f862ad9aad9ab23784a375e5b833"
     },
     {
       "id": "module:src/bench/baseline.ts",
@@ -2825,7 +2825,7 @@
         "ts",
         "bench"
       ],
-      "contentHash": "b53407dea910acb7198fee591dd90bf77ffb14a8ff882a2e617d91e354e2ea4b"
+      "contentHash": "f166bd34a24c9395be1f9eb34ba712041ba5bbb9522ecf38208ef80cdb42430d"
     },
     {
       "id": "module:src/budget/compile.ts",
@@ -2881,7 +2881,7 @@
         "ts",
         "cli"
       ],
-      "contentHash": "393d8dbca47feb5ee63de179253b8540ff06ef1d9ea26b84d935ed4fc7bfd8dc"
+      "contentHash": "9ede787cc528c21058fcff59cf1c11106beac8f9159b1515bcf47aebeea5c2d5"
     },
     {
       "id": "module:src/cli/program.ts",
@@ -2897,7 +2897,7 @@
         "ts",
         "cli"
       ],
-      "contentHash": "42bcb6cf3129e10af5983d349560043f3c61864b21f9056ff095b27adcfec09a"
+      "contentHash": "9cc5e01a6fef1726ca55a04ea448783f21c52f4470e433466e123c804fba6fd5"
     },
     {
       "id": "module:src/cli/usage.ts",
@@ -3567,7 +3567,7 @@
         "ts",
         "federation"
       ],
-      "contentHash": "5346201cb31735cb475c00df39138a0a64cb748bd93a23fec138c857b88e0524"
+      "contentHash": "5357f7d38f7145bb481dc99086ae4a8114fc199d43a512f9cb9b4bea32d4d792"
     },
     {
       "id": "module:src/findings/report.ts",
@@ -3607,7 +3607,7 @@
         "ts",
         "fixes"
       ],
-      "contentHash": "ef53661ec4a2b210ab76dc35cf61dbe251688c46032b4926c60b8b4f2226b059"
+      "contentHash": "0bf600899b66f363e303e78c1cbdcfe2c662d26c69527a8a3cd56fb658f4ce60"
     },
     {
       "id": "module:src/gates/run-gates.ts",
@@ -3627,7 +3627,7 @@
         "ts",
         "gates"
       ],
-      "contentHash": "1916a2858fd48912aef81c697026b1cb1cf8e95c2aab4684f1531f1425f6b980"
+      "contentHash": "b9f325bd51c8f8de918d81387f13df0d24ff2abf8886517698ef94fda58ff64a"
     },
     {
       "id": "module:src/graph/build.ts",
@@ -3774,7 +3774,7 @@
         "ts",
         "human-adapters"
       ],
-      "contentHash": "e63bad448019883af1a2583b2eb876f423a5352cbfb3a18790a8ad4c7abc4c40"
+      "contentHash": "42fe861539c0c4ae68046c803da4a9c2422207096e75c831b7cd9e0da1c2c9ce"
     },
     {
       "id": "module:src/index-builder/human-adapters/docusaurus.ts",
@@ -3853,7 +3853,7 @@
         "ts",
         "human-adapters"
       ],
-      "contentHash": "a4bbc6ef89ffbf2b6f11a0aed7815d70892629ccc037ec8b6c133e184c597815"
+      "contentHash": "9b46f7e13ca106fd179ca865f4ae70383e1a575ed622f4a6772df12813722c76"
     },
     {
       "id": "module:src/index-builder/human-adapters/starlight.ts",
@@ -3902,7 +3902,7 @@
         "ts",
         "index-builder"
       ],
-      "contentHash": "9daaf4f763501da4cefeec773702c9bd69bd0327aaf30431fe1deebe999783c3"
+      "contentHash": "74161ae7cf5ab1f46f6f7ac1545ed2a5d3ea25f754a71b939a983a80846d5c3f"
     },
     {
       "id": "module:src/index-builder/plugins/human-markdown.ts",
@@ -3952,7 +3952,7 @@
         "ts",
         "plugins"
       ],
-      "contentHash": "cc9056c806fcbcfa53b3fe256d65431c2243a200223164368c9cfe8610669bc5"
+      "contentHash": "2eed14751a61de5c2c576c9ff8c7d566d047bd7b43b3cafb9a1ca3e352a79e11"
     },
     {
       "id": "module:src/index-builder/project-corpus.ts",
@@ -3972,7 +3972,7 @@
         "ts",
         "index-builder"
       ],
-      "contentHash": "90f0cd23e6333ba37d8529a26b7779f8bb7a16ccbb404db4644d0f31f7b77a0a"
+      "contentHash": "b74d89fe010292a8d85533b14f7c090d501b0cdd80b7aa8a0a169668fcca6130"
     },
     {
       "id": "module:src/index-builder/scan-corpus.ts",
@@ -4420,7 +4420,7 @@
         "ts",
         "lib"
       ],
-      "contentHash": "f63e0697e75b8f8069e95c28d783a073aaa609804898c6c39fbdf73c0e06c83b"
+      "contentHash": "73b23b28292e9926f5ba25a5f326a5aea5f0d76f9318ecd286b993f2c1532f2a"
     },
     {
       "id": "module:src/lib/markdown.ts",
@@ -4443,7 +4443,7 @@
         "ts",
         "lib"
       ],
-      "contentHash": "52664558e148b1f98f8605b036a39bbb8c6800525b15b2346b191c6b52626c06"
+      "contentHash": "b5022e0de6ddd3c41e8e1e3548f797e2fedbd5fdeb94f46183648deb0b106ce8"
     },
     {
       "id": "module:src/lib/package-manager.ts",
@@ -4477,7 +4477,7 @@
         "ts",
         "lib"
       ],
-      "contentHash": "1e69dcf2cf0f2b5c5378071d306e436d263bb4dd97cb7e6ce1586e759f992460"
+      "contentHash": "a39869b8e97937ce182c01081a3e34ce25666c1216f852eda5fdf3fa81beaece"
     },
     {
       "id": "module:src/lib/static-js-literal.ts",
@@ -4687,7 +4687,7 @@
         "ts",
         "parity"
       ],
-      "contentHash": "bc178c8d75548614652bee43c15e63e07595bb20a3602416f7f221509322e572"
+      "contentHash": "589bca415cd115e58fc2d6435fe07bc43a593a87277051975d3741b4df424742"
     },
     {
       "id": "module:src/parity/claims.ts",
@@ -4894,7 +4894,7 @@
         "ts",
         "reconciliation"
       ],
-      "contentHash": "b7e785a283b9b36760ac412ceab26c906ec3ced58726c798f9de89d4d8db9f56"
+      "contentHash": "f71b2dca245e750b07da83f143abbbf501ee88b8a354842d066c4dff85255fd1"
     },
     {
       "id": "module:src/render/data.ts",
@@ -4967,7 +4967,7 @@
         "ts",
         "render"
       ],
-      "contentHash": "dbee6dc9d6352bcf5677878c610f4db6663df8a726dc637b86b9b0bbb711da72"
+      "contentHash": "884e6450677bc3e5d2ced81bc8d86522274e079a23d5ed903dd62c95a47f8e17"
     },
     {
       "id": "module:src/render/render.ts",
@@ -5200,7 +5200,7 @@
         "ts",
         "safety"
       ],
-      "contentHash": "915f899e6ae4e295cfd556390956311f9e05b9058ba4e8890ba598c215119c22"
+      "contentHash": "f3cd48e491f8bea9691530184ce853a72f8433042fead13fc45d6eb0f5c890ae"
     },
     {
       "id": "module:src/schemas/agent-handoff.ts",
@@ -5538,7 +5538,7 @@
         "ts",
         "study"
       ],
-      "contentHash": "3c31152b43d04a5524c9a7f57fee663545f3a57ff7755930151f468ee90b7f00"
+      "contentHash": "4f5b6130b2d71357cd73fb7c358e298b03325ad206932c7b1d0a59c8e3ee81d1"
     },
     {
       "id": "module:src/study/execution.ts",
@@ -5745,7 +5745,7 @@
         "ts",
         "study"
       ],
-      "contentHash": "335175a3b0d7fbbfa65e52567d0138680e499a2a7cf958b7fac47c8541336387"
+      "contentHash": "f210f030de9d2c123815d9049647ecf1ff643fbb14cd4177f837de71279cbe12"
     },
     {
       "id": "module:src/study/task-suite.ts",
@@ -6189,7 +6189,7 @@
         "test",
         "tests"
       ],
-      "contentHash": "613a0fe4c84ff6544ee0de13c1110b98e6fd05bc86d1d80673a465407fa5d192"
+      "contentHash": "091cb6248f1196f348b6f8bb5068ea189b7f8f4a0f19a3033123544b08e376a6"
     },
     {
       "id": "module:tests/github-pr.test.ts",
@@ -8072,7 +8072,7 @@
     "changes": {}
   },
   "inputs": {
-    "hash": "07b3d98e7dea86af1803479cd2fe876563aeddf7a9cb63b99949d4e58e2e6f13",
+    "hash": "769aba744f32f3810c6a9d2669dde77e4c8519d3f0a13787b756d75abc731ac5",
     "fileCount": 442,
     "projectionVersion": 2
   },
@@ -8095,9 +8095,9 @@
   "projection": {
     "type": "retrieval-index",
     "schemaVersion": 1,
-    "contentHash": "a17678e53e53d14930e1b9a3ed5b4359fa37dc03a73fa878be95f17c75c94a37",
+    "contentHash": "32fd5e20c8111a4d4a499892f4ce16d8ae4ac27295adac4c0ef47fcd555d04e8",
     "contentHashAlgo": "sha256-normalized-v1",
-    "snapshotHash": "7c492fb8f9c932d683b6490623e4691381616e1a79a3fb9cf9bedb406f8b3144",
+    "snapshotHash": "0c64a94fec014aedae87bfd45906183f0fe28265e5942d8cabee6524fb4de4ed",
     "overlayHash": "f99666ff9119084dd25c2974ae64eb6935ec2aa785ff5ad478fb9d541f7a5e94",
     "configurationHash": "91d46a4ecbfe3b55878e0b3c7608819775cf7b18aeafcc8f689eddfa462622b4",
     "lexiconVersion": 1,
@@ -8129,7 +8129,7 @@
       ],
       "averageFieldLength": {
         "aliases": 3.4638297872340424,
-        "body": 68.4872340425532,
+        "body": 68.5,
         "headings": 4.282978723404256,
         "path": 5.691489361702128,
         "summary": 5.772340425531915,
@@ -17031,7 +17031,7 @@
           "path": "docs/spec/study-runner-v1.md",
           "symbols": "",
           "summary": "ControlledStudyRunPlanV1 binds a task suite to one source revision, protocol hash, configuration hash, Doc Bridge version, two pinned model configurations, the three study scenarios, and a deterministic sampling policy. A plan is content-addressed and cannot be treated as a baseline merely because it parses.",
-          "body": "Controlled study runner v1 ControlledStudyRunPlanV1 binds a task suite to one source revision, protocol hash, configuration hash, Doc Bridge version, two pinned model configurations, the three study scenarios, and a deterministic sampling policy. A plan is content-addressed and cannot be treated as a baseline merely because it parses. The default balanced-task-strata strategy preserves the original study sample. The pairwise-task-strata strategy selects exactly two declared scenarios for every selected task/model combination. It is intended for A/B comparisons such as repository-only versus deterministic-doc-bridge ; the task, model, repository, and replicate remain constant across both arms. runControlledCommand starts a fresh child process for each attempt with shell: false , a unique session identifier, bounded runtime, bounded output, and an explicit retry limit. It records only status, exit metadata, timing, byte counts, hashes, labeled token counts, context-token attribution, first-evidence latency when observed, and tool-call counts. Raw stdout, stderr, prompts, repository content, and credentials are never persisted in an observation. The standard provider process contract is documented in . Provider selection is intentionally external to the core runner, so a hosted model CLI or an AgentsKit Registry agent can be used without bundling a local model runtime. The runner recognizes completed , failed , timed-out , unavailable , invalid-output , and budget-exceeded outcomes. An unavailable or invalid Registry agent is evidence of a failed/blocked scenario, never a successful task result. Provider token counts are labeled provider ; calculated counts must be labeled estimate . When a provider reports labeled input and output usage and its configuration contains pricing , the runner also records agentCostUsd using the configured USD rates. Missing pricing or missing usage remains missing data. Independent adjudication is a separate study adjudicate command and records its own actor, method, token usage, and optional adjudicatorCostUsd ; provider output is never used as its own approval. The current Codex plan uses a calibrated ceiling of 400000 tokens per task. This ceiling was raised only after a real pilot measured 331325 input tokens for a repository-only discovery task; the pilot remains a budget finding and is not counted as a successful observation. The ceiling is a safety bound, not a target, and the study still reports the measured token distribution. The current run selects 24 tasks, one per task, balanced across the six model×scenario strata (four tasks per stratum), and permits one attempt per task to avoid duplicate spend after the pilot showed the cost of retries. ControlledStudyObservationV1 keeps model, scenario, task, variant, replicate, source, plan, and run provenance together with an automated deterministic or human adjudication state. The runner does not approve semantic results. upsertControlledStudyObservation is idempotent for the same run/task and rejects conflicting replacements; ledger hashes make changes detectable. Provider token usage also produces the explicit providerTokenCostUnits measurement: one unit is one provider-reported input or output token, not a currency claim. contextTokens is paired with contextTokenMethod ; the default runner value is a byte-based estimate ( ceil(contextBytes / 4) ) and is never presented as provider usage. firstEvidenceLatencyMs is optional because a provider must not invent it. An observation may also record round , taskOutcome , evidenceQuality , safetyOutcome , clarificationRequests , reworkCount , and bounded numeric measurements . The measurement envelope is extensible; the v1 metrics calculator reserves names for search hit rate, acceptance checks, errors, documentation findings/examples/freshness/quality, and analysis or Registry-agent cost. Unknown measurements are preserved for future metric versions but are not interpreted automatically. Validate and i",
+          "body": "Controlled study runner v1 ControlledStudyRunPlanV1 binds a task suite to one source revision, protocol hash, configuration hash, Doc Bridge version, two pinned model configurations, the three study scenarios, and a deterministic sampling policy. A plan is content-addressed and cannot be treated as a baseline merely because it parses. The default balanced-task-strata strategy preserves the original study sample. The pairwise-task-strata strategy selects exactly two declared scenarios for every selected task/model combination. It is intended for A/B comparisons such as repository-only versus deterministic-doc-bridge ; the task, model, repository, and replicate remain constant across both arms. runControlledCommand starts a fresh child process for each attempt without a shell (Windows .cmd shims are resolved by @agentskit/cross-platform ), a unique session identifier, bounded runtime, bounded output, and an explicit retry limit. A timeout or output-limit breach terminates the child's whole process tree, on Windows as well as POSIX. It records only status, exit metadata, timing, byte counts, hashes, labeled token counts, context-token attribution, first-evidence latency when observed, and tool-call counts. Raw stdout, stderr, prompts, repository content, and credentials are never persisted in an observation. The standard provider process contract is documented in . Provider selection is intentionally external to the core runner, so a hosted model CLI or an AgentsKit Registry agent can be used without bundling a local model runtime. The runner recognizes completed , failed , timed-out , unavailable , invalid-output , and budget-exceeded outcomes. An unavailable or invalid Registry agent is evidence of a failed/blocked scenario, never a successful task result. Provider token counts are labeled provider ; calculated counts must be labeled estimate . When a provider reports labeled input and output usage and its configuration contains pricing , the runner also records agentCostUsd using the configured USD rates. Missing pricing or missing usage remains missing data. Independent adjudication is a separate study adjudicate command and records its own actor, method, token usage, and optional adjudicatorCostUsd ; provider output is never used as its own approval. The current Codex plan uses a calibrated ceiling of 400000 tokens per task. This ceiling was raised only after a real pilot measured 331325 input tokens for a repository-only discovery task; the pilot remains a budget finding and is not counted as a successful observation. The ceiling is a safety bound, not a target, and the study still reports the measured token distribution. The current run selects 24 tasks, one per task, balanced across the six model×scenario strata (four tasks per stratum), and permits one attempt per task to avoid duplicate spend after the pilot showed the cost of retries. ControlledStudyObservationV1 keeps model, scenario, task, variant, replicate, source, plan, and run provenance together with an automated deterministic or human adjudication state. The runner does not approve semantic results. upsertControlledStudyObservation is idempotent for the same run/task and rejects conflicting replacements; ledger hashes make changes detectable. Provider token usage also produces the explicit providerTokenCostUnits measurement: one unit is one provider-reported input or output token, not a currency claim. contextTokens is paired with contextTokenMethod ; the default runner value is a byte-based estimate ( ceil(contextBytes / 4) ) and is never presented as provider usage. firstEvidenceLatencyMs is optional because a provider must not invent it. An observation may also record round , taskOutcome , evidenceQuality , safetyOutcome , clarificationRequests , reworkCount , and bounded numeric measurements . The measurement envelope is extensible; the v1 metrics calculator reserves names for search hit rate, acceptance checks, errors, documentation findings/examples/fresh",
           "aliases": "document human"
         },
         "graph": {
@@ -17059,7 +17059,7 @@
             }
           ]
         },
-        "contentHash": "f6cb631e503de7d55ebafbe8d689f13a4104a1f3be54ace04e9a471cc44b4137",
+        "contentHash": "19625d57b08c9d96b833730b4d7a44c006f2d6b7479e50ac88047d91a8a63d12",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -20413,7 +20413,7 @@
           "inbound": [],
           "outbound": []
         },
-        "contentHash": "07cd7c3bdc312493f2a7756f0ec98204b892ad6be7d8d7c891e5f6f142b7e120",
+        "contentHash": "8c403589239590bd65891a3f9f3edba8224525efa656dc32be5768d9540f16a0",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -20532,7 +20532,7 @@
           ],
           "outbound": []
         },
-        "contentHash": "0012c4943fc6e9600a57d5d2abbd87ab2f02c893b33128b64ae3c26d2bcf2903",
+        "contentHash": "7112848fb673fe49f4e8601ca79985a5e30f099680b50d85126a11ff56ba5343",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -20566,7 +20566,7 @@
           "inbound": [],
           "outbound": []
         },
-        "contentHash": "7b090580bd457e9a1e8120babbee9ef37421a88d8d0fa227b7f9276b020244c5",
+        "contentHash": "cd3b19ea24c7a0982ac82dd44ccb014b7157cd13d58057d6d33f2873b7cb542f",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -20668,7 +20668,7 @@
           "inbound": [],
           "outbound": []
         },
-        "contentHash": "adff0efd6e567759e1a8483ae9e926479ec920a8404041dc42001fa1a54df205",
+        "contentHash": "923dc501dcf2228906905b5d7e84eb410e088bf8ab92691cce07c4f30896017d",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -20862,7 +20862,7 @@
           "inbound": [],
           "outbound": []
         },
-        "contentHash": "f40f0f37923b290017a4be16a52c1d0ddedd38b4fd29b8c7ccdb4f82a2360dbc",
+        "contentHash": "b997960ade4e798d1eb2f7537b1578514bfd6991c046c1b86ad404c2e0035218",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -21015,7 +21015,7 @@
           "inbound": [],
           "outbound": []
         },
-        "contentHash": "6054e4b0bd9997430e4b2c3dddd04f937c849b5d005c37c1a2859c819e6a33bf",
+        "contentHash": "5c062eda98fa1c4affc8077a48642d1b84dc698111e19a1fd363539010729e97",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -21132,7 +21132,7 @@
           ],
           "outbound": []
         },
-        "contentHash": "a0b4e12d968ae0646779f9101e36b73c03dd174f76e47f067859df68927ebad7",
+        "contentHash": "585cd346cf360d3c1b08cd15553b10759dc083ea38d72d6cfddb7a2f90cbdf26",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -21275,7 +21275,7 @@
           "inbound": [],
           "outbound": []
         },
-        "contentHash": "5942444c66f528101d8ed654f1d33c75ddca9aeb244a48929d4716fcefec239f",
+        "contentHash": "3641f7193a4b8ef243274d8fcef836472a30a410d10d9a2ea29b2aa29c272ce4",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -21513,7 +21513,7 @@
           "inbound": [],
           "outbound": []
         },
-        "contentHash": "f1a650d55677cba9863e5591e8c209e1877e14fb494bc48d728af855be186d9d",
+        "contentHash": "e2cd92a6e907c3cb15526f69cd647442d24c51f3b35f5b7a3b2170f05cc09591",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -21553,7 +21553,7 @@
             }
           ]
         },
-        "contentHash": "559703177928de26973efe17af055b534b35a8422f634c2e3d8680fbc4de126c",
+        "contentHash": "a5db46d7539d59cd5677be15cc9653b09676392d09cece4601ab5bfc23cd6a20",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -21882,7 +21882,7 @@
           ],
           "outbound": []
         },
-        "contentHash": "2f8023f61322f619fbec4623a70ebd6f810af606e71f31500ba7655aa57af3b1",
+        "contentHash": "27b34d40ef8d7239db60e329cc7d1efd58022bcccae77dae13274a4088330439",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -22142,7 +22142,7 @@
             }
           ]
         },
-        "contentHash": "1e85d9030b6da9ddaa3f9fe62288f28eebb8b2fb133a5f70b275e6ed62cb2615",
+        "contentHash": "3c20062a5c16831ad5768c404de32c4baca0e78cd8f743ae2636ede7acfcce44",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -22291,7 +22291,7 @@
             }
           ]
         },
-        "contentHash": "de9b293d47ba0790828074168d268e258d7d1a05b29d12e4cfaaa9fa6ccb8196",
+        "contentHash": "a56a66bd7a71bab68f37f0293225ca983308f862ad9aad9ab23784a375e5b833",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -22590,7 +22590,7 @@
             }
           ]
         },
-        "contentHash": "b53407dea910acb7198fee591dd90bf77ffb14a8ff882a2e617d91e354e2ea4b",
+        "contentHash": "f166bd34a24c9395be1f9eb34ba712041ba5bbb9522ecf38208ef80cdb42430d",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -22846,7 +22846,7 @@
             }
           ]
         },
-        "contentHash": "393d8dbca47feb5ee63de179253b8540ff06ef1d9ea26b84d935ed4fc7bfd8dc",
+        "contentHash": "9ede787cc528c21058fcff59cf1c11106beac8f9159b1515bcf47aebeea5c2d5",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -23300,7 +23300,7 @@
             }
           ]
         },
-        "contentHash": "42bcb6cf3129e10af5983d349560043f3c61864b21f9056ff095b27adcfec09a",
+        "contentHash": "9cc5e01a6fef1726ca55a04ea448783f21c52f4470e433466e123c804fba6fd5",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -26480,7 +26480,7 @@
             }
           ]
         },
-        "contentHash": "5346201cb31735cb475c00df39138a0a64cb748bd93a23fec138c857b88e0524",
+        "contentHash": "5357f7d38f7145bb481dc99086ae4a8114fc199d43a512f9cb9b4bea32d4d792",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -26670,7 +26670,7 @@
             }
           ]
         },
-        "contentHash": "ef53661ec4a2b210ab76dc35cf61dbe251688c46032b4926c60b8b4f2226b059",
+        "contentHash": "0bf600899b66f363e303e78c1cbdcfe2c662d26c69527a8a3cd56fb658f4ce60",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -26794,7 +26794,7 @@
             }
           ]
         },
-        "contentHash": "1916a2858fd48912aef81c697026b1cb1cf8e95c2aab4684f1531f1425f6b980",
+        "contentHash": "b9f325bd51c8f8de918d81387f13df0d24ff2abf8886517698ef94fda58ff64a",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -27849,7 +27849,7 @@
             }
           ]
         },
-        "contentHash": "e63bad448019883af1a2583b2eb876f423a5352cbfb3a18790a8ad4c7abc4c40",
+        "contentHash": "42fe861539c0c4ae68046c803da4a9c2422207096e75c831b7cd9e0da1c2c9ce",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -28190,7 +28190,7 @@
             }
           ]
         },
-        "contentHash": "a4bbc6ef89ffbf2b6f11a0aed7815d70892629ccc037ec8b6c133e184c597815",
+        "contentHash": "9b46f7e13ca106fd179ca865f4ae70383e1a575ed622f4a6772df12813722c76",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -28399,7 +28399,7 @@
             }
           ]
         },
-        "contentHash": "9daaf4f763501da4cefeec773702c9bd69bd0327aaf30431fe1deebe999783c3",
+        "contentHash": "74161ae7cf5ab1f46f6f7ac1545ed2a5d3ea25f754a71b939a983a80846d5c3f",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -28611,7 +28611,7 @@
             }
           ]
         },
-        "contentHash": "cc9056c806fcbcfa53b3fe256d65431c2243a200223164368c9cfe8610669bc5",
+        "contentHash": "2eed14751a61de5c2c576c9ff8c7d566d047bd7b43b3cafb9a1ca3e352a79e11",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -28727,7 +28727,7 @@
             }
           ]
         },
-        "contentHash": "90f0cd23e6333ba37d8529a26b7779f8bb7a16ccbb404db4644d0f31f7b77a0a",
+        "contentHash": "b74d89fe010292a8d85533b14f7c090d501b0cdd80b7aa8a0a169668fcca6130",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -30099,7 +30099,7 @@
           ],
           "outbound": []
         },
-        "contentHash": "f63e0697e75b8f8069e95c28d783a073aaa609804898c6c39fbdf73c0e06c83b",
+        "contentHash": "73b23b28292e9926f5ba25a5f326a5aea5f0d76f9318ecd286b993f2c1532f2a",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -30198,7 +30198,7 @@
           ],
           "outbound": []
         },
-        "contentHash": "52664558e148b1f98f8605b036a39bbb8c6800525b15b2346b191c6b52626c06",
+        "contentHash": "b5022e0de6ddd3c41e8e1e3548f797e2fedbd5fdeb94f46183648deb0b106ce8",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -30420,7 +30420,7 @@
           ],
           "outbound": []
         },
-        "contentHash": "1e69dcf2cf0f2b5c5378071d306e436d263bb4dd97cb7e6ce1586e759f992460",
+        "contentHash": "a39869b8e97937ce182c01081a3e34ce25666c1216f852eda5fdf3fa81beaece",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -31395,7 +31395,7 @@
             }
           ]
         },
-        "contentHash": "bc178c8d75548614652bee43c15e63e07595bb20a3602416f7f221509322e572",
+        "contentHash": "589bca415cd115e58fc2d6435fe07bc43a593a87277051975d3741b4df424742",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -32533,7 +32533,7 @@
             }
           ]
         },
-        "contentHash": "b7e785a283b9b36760ac412ceab26c906ec3ced58726c798f9de89d4d8db9f56",
+        "contentHash": "f71b2dca245e750b07da83f143abbbf501ee88b8a354842d066c4dff85255fd1",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -32791,7 +32791,7 @@
           ],
           "outbound": []
         },
-        "contentHash": "dbee6dc9d6352bcf5677878c610f4db6663df8a726dc637b86b9b0bbb711da72",
+        "contentHash": "884e6450677bc3e5d2ced81bc8d86522274e079a23d5ed903dd62c95a47f8e17",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -33970,7 +33970,7 @@
             }
           ]
         },
-        "contentHash": "915f899e6ae4e295cfd556390956311f9e05b9058ba4e8890ba598c215119c22",
+        "contentHash": "f3cd48e491f8bea9691530184ce853a72f8433042fead13fc45d6eb0f5c890ae",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -35577,7 +35577,7 @@
             }
           ]
         },
-        "contentHash": "3c31152b43d04a5524c9a7f57fee663545f3a57ff7755930151f468ee90b7f00",
+        "contentHash": "4f5b6130b2d71357cd73fb7c358e298b03325ad206932c7b1d0a59c8e3ee81d1",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -36292,7 +36292,7 @@
             }
           ]
         },
-        "contentHash": "335175a3b0d7fbbfa65e52567d0138680e499a2a7cf958b7fac47c8541336387",
+        "contentHash": "f210f030de9d2c123815d9049647ecf1ff643fbb14cd4177f837de71279cbe12",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -38170,7 +38170,7 @@
             }
           ]
         },
-        "contentHash": "613a0fe4c84ff6544ee0de13c1110b98e6fd05bc86d1d80673a465407fa5d192",
+        "contentHash": "091cb6248f1196f348b6f8bb5068ea189b7f8f4a0f19a3033123544b08e376a6",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -41309,7 +41309,7 @@
           ],
           "outbound": []
         },
-        "contentHash": "e4b3ebccc62d30fa1a186f40025e3fde30ad9f5ce45e79f5a2378d0563c8f6f0",
+        "contentHash": "7f3d605bd56d67545975d3f7baf266baee33b7e01b96f11e89da767ed7a9f4c6",
         "provenance": "observed",
         "confidence": "observed"
       }

@@ -1,3 +1,4 @@
+import { toPosix } from '@agentskit/cross-platform'
 import { z } from 'zod'
 
 import { contentHashForArtifactV1, sha256NormalizedV1 } from '../index-builder/content-hash.js'
@@ -162,7 +163,7 @@ export const parseRetrievalBenchResult = (raw: unknown): RetrievalBenchResultV1 
 }
 
 /** Normalize a target or result value so `./docs/a.md`, `docs/a.md` and a Windows path compare equal. */
-const normalizeTarget = (value: string): string => value.replaceAll('\\', '/').replace(/^\.\//, '').trim()
+const normalizeTarget = (value: string): string => toPosix(value).replace(/^\.\//, '').trim()
 
 /**
  * The identities a ranked result can be addressed by. Both are compared so a suite written

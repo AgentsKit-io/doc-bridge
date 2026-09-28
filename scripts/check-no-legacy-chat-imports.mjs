@@ -11,11 +11,11 @@
  * Prose may mention the migration history; this check targets code + lockfile usage.
  */
 import { readdirSync, readFileSync } from 'node:fs'
-import { join, relative, resolve, sep } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { join, relative, resolve } from 'node:path'
+import { fileUrlToPath, moduleDir, toPosix } from '@agentskit/cross-platform'
 
-const root = resolve(fileURLToPath(new URL('.', import.meta.url)), '..')
-const thisScript = relative(root, fileURLToPath(import.meta.url)).split(sep).join('/')
+const root = resolve(moduleDir(import.meta.url), '..')
+const thisScript = toPosix(relative(root, fileUrlToPath(import.meta.url)))
 
 const LEGACY = ['@agentskit/chat-protocol', '@agentskit/chat-react']
 
@@ -64,7 +64,7 @@ function walk(directory, out = []) {
       continue
     }
     if (!entry.isFile()) continue
-    const rel = relative(root, full).split(sep).join('/')
+    const rel = toPosix(relative(root, full))
     if (rel === thisScript) continue
     if (rel === 'pnpm-lock.yaml' || rel.endsWith('/package.json') || rel === 'package.json') {
       out.push(full)
@@ -79,7 +79,7 @@ function walk(directory, out = []) {
 const hits = []
 for (const file of walk(root)) {
   const text = readFileSync(file, 'utf8')
-  const rel = relative(root, file).split(sep).join('/')
+  const rel = toPosix(relative(root, file))
   const isLockfile = rel === 'pnpm-lock.yaml'
   for (const legacy of LEGACY) {
     const patterns = isLockfile

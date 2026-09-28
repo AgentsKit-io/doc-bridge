@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { existsSync, readFileSync } from 'node:fs'
 import { test } from 'node:test'
 import { resolve } from 'node:path'
+import { splitLines } from '@agentskit/cross-platform'
 
 const root = resolve(import.meta.dirname, '..')
 const publicRoot = resolve(root, 'apps/docs/public')
@@ -100,7 +101,7 @@ test('sitemap publishes only the public documentation surface', () => {
 })
 
 test('machine entry points cross-reference the agent-first route', () => {
-  const hasExactUrl = (text, url) => text.split('\n').some(line => line.split('(')[1]?.split(')')[0] === url)
+  const hasExactUrl = (text, url) => splitLines(text).some(line => line.split('(')[1]?.split(')')[0] === url)
   assert.ok(hasExactUrl(llms, 'https://doc-bridge.agentskit.io/for-agents/'))
   assert.ok(hasExactUrl(llms, 'https://doc-bridge.agentskit.io/llms-full.txt'))
   assert.ok(hasExactUrl(llms, 'https://doc-bridge.agentskit.io/deterministic/knowledge.json'))

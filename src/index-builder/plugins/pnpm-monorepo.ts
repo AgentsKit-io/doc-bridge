@@ -1,5 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { basename, join } from 'node:path'
+import { splitLines } from '@agentskit/cross-platform'
 
 import type { DocBridgeConfigV1 } from '../../config/schema.js'
 import { expandWorkspaceGlobs } from '../../lib/glob-expand.js'
@@ -13,7 +14,7 @@ export type DiscoveredPackage = {
 }
 
 const parsePnpmWorkspace = (yaml: string): string[] => {
-  const lines = yaml.split('\n')
+  const lines = splitLines(yaml, { dropTrailingEmpty: false })
   const patterns: string[] = []
   let inPackages = false
   for (const line of lines) {
