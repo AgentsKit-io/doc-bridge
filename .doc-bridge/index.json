@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "contentHash": "809dbad82f55e20b6d80112a452af6badca646f6471e2f8e446b341a35353e5a",
+  "contentHash": "b0b959d0fea5d220ea9c4b70cc61797cb6b31e7ecde4ece51393d5e2320401ed",
   "contentHashAlgo": "sha256-normalized-v1",
-  "generatedAt": "2026-09-29T17:15:32.516Z",
+  "generatedAt": "2026-09-29T17:51:38.078Z",
   "project": {
     "name": "@agentskit/doc-bridge",
     "root": "."
@@ -5924,7 +5924,7 @@
         "test",
         "docs-e2e"
       ],
-      "contentHash": "e8987ce418831a07e153e3f912fd6346833125a7ffbff1b2c56d4a4bc12a6a6e"
+      "contentHash": "28adc56dbeca6fb6061f5bde86332e3c7958cf69d21261f353ee8b63af84ac9d"
     },
     {
       "id": "module:tests/doctor-measured.test.ts",
@@ -7935,7 +7935,7 @@
     "changes": {}
   },
   "inputs": {
-    "hash": "579e6d6b2f58b53eb17276a094fa1b4decdbf06ef6ba30370762e8edf31f80a0",
+    "hash": "c566cb66e92c24e21da55591c7deb7ce3591fdb38bc7b880cb6110fafbd35c60",
     "fileCount": 433,
     "projectionVersion": 2
   },
@@ -7958,9 +7958,9 @@
   "projection": {
     "type": "retrieval-index",
     "schemaVersion": 1,
-    "contentHash": "dc61d93e949d165edf4444974e229bd0ece1392d2dfe254ebbd48c75d8b20004",
+    "contentHash": "d38803844a4b76c9f771642e003ad73febc4c8e821ff59dcac8ba64768d7e6ea",
     "contentHashAlgo": "sha256-normalized-v1",
-    "snapshotHash": "f6aa2c59d297b929e5e50a1e1d1321ebf51c10abf2bdf7eb08d3433e8560d6fd",
+    "snapshotHash": "24184db4380f869efd03c6b4ce397ae08558ec97dbd306c16f06effcf9b06fac",
     "overlayHash": "f99666ff9119084dd25c2974ae64eb6935ec2aa785ff5ad478fb9d541f7a5e94",
     "configurationHash": "91d46a4ecbfe3b55878e0b3c7608819775cf7b18aeafcc8f689eddfa462622b4",
     "lexiconVersion": 1,
@@ -36864,7 +36864,7 @@
           "inbound": [],
           "outbound": []
         },
-        "contentHash": "e8987ce418831a07e153e3f912fd6346833125a7ffbff1b2c56d4a4bc12a6a6e",
+        "contentHash": "28adc56dbeca6fb6061f5bde86332e3c7958cf69d21261f353ee8b63af84ac9d",
         "provenance": "observed",
         "confidence": "observed"
       },

@@ -1,4 +1,29 @@
-import { expect, test } from '@playwright/test'
+import { expect, type Page, test } from '@playwright/test'
+
+async function expectEcosystemContrast(page: Page) {
+  await page.waitForFunction(() =>
+    document.querySelector('agentskit-ecosystem')?.shadowRoot?.querySelector('.akx-title'),
+  )
+  const colors = await page.locator('agentskit-ecosystem').evaluate((element) => {
+    const root = element.shadowRoot
+    const title = root?.querySelector('.akx-title')
+    const eyebrow = root?.querySelector('.akx-eyebrow')
+    if (!title || !eyebrow) return null
+    return {
+      dark: document.documentElement.classList.contains('dark'),
+      title: getComputedStyle(title).color,
+      eyebrow: getComputedStyle(eyebrow).color,
+    }
+  })
+  expect(colors).not.toBeNull()
+  if (colors?.dark) {
+    expect(colors.title).toBe('rgb(230, 237, 243)')
+    expect(colors.eyebrow).toBe('rgb(139, 148, 158)')
+  } else {
+    expect(colors?.title).toBe('rgb(13, 17, 23)')
+    expect(colors?.eyebrow).toBe('rgb(87, 96, 106)')
+  }
+}
 
 test('landing communicates the deterministic proof and has no horizontal overflow', async ({ page }) => {
   await page.goto('/')
@@ -16,7 +41,14 @@ test('landing communicates the deterministic proof and has no horizontal overflo
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
   expect(overflow).toBeLessThanOrEqual(0)
   await expect(page.locator('#ak-eco')).toBeVisible()
-  await expect(page.locator('agentskit-ecosystem')).toBeVisible()
+  await expectEcosystemContrast(page)
+})
+
+test('ecosystem showcase follows the dark page surface', async ({ page }) => {
+  await page.emulateMedia({ colorScheme: 'dark' })
+  await page.goto('/')
+  await expect(page.locator('html')).toHaveClass(/dark/)
+  await expectEcosystemContrast(page)
 })
 
 test('product subheader keeps search, navigation, and the primary action reachable on mobile', async ({ page }) => {
@@ -75,9 +107,16 @@ test('Fumadocs renders canonical docs with raw and llms surfaces', async ({ page
   const llms = await page.request.get('/llms.txt')
   expect(llms.ok()).toBeTruthy()
   expect(await llms.text()).toContain('# AgentsKit Doc Bridge')
-  await expect(page.locator('agentskit-ecosystem')).toBeVisible()
   await expect(page.locator('[data-search]:visible, [data-search-full]:visible').first()).toBeVisible()
-  await expect(page.getByText('Code Review', { exact: true })).toHaveCount(0)
+  const strayCodeReview = await page.getByText('Code Review', { exact: true }).evaluateAll((nodes) =>
+    nodes.filter((node) => {
+      const root = node.getRootNode()
+      if (root instanceof ShadowRoot && root.host.localName === 'agentskit-ecosystem') return false
+      return node.closest('#ak-eco') === null
+    }).length,
+  )
+  expect(strayCodeReview).toBe(0)
+  await expectEcosystemContrast(page)
 })
 
 test('publishes the static search index and social preview', async ({ page }) => {
