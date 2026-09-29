@@ -157,7 +157,7 @@ The enterprise contract will be strict by default:
 
 - Add a precision/recall evaluation runner whose fixtures contain expected entities, relations, documentation claims, findings, and unsupported boundaries.
 - Enforce 100% recall and at least 95% precision for the supported fixture matrix before an enterprise profile can pass.
-- Keep the agentskit-os result as a real-world baseline, not as a semantic truth set.
+- Keep the reference-monorepo result as a real-world baseline, not as a semantic truth set.
 - Add finding density, category distribution, evidence completeness, and change-over-time metrics.
 - Make package/module/file reconciliation scope configurable while retaining raw file-level evidence.
 
@@ -247,7 +247,7 @@ Tests must validate externally observable behavior and the real artifact. Unit t
 
 ### Consumer validation
 
-- Install the exact packed artifact in agentskit-os.
+- Install the exact packed artifact in the reference monorepo.
 - Run the full Doc Bridge workflow against the real monorepo.
 - Validate its discovered architecture, documentation inventory, reconciliation findings, Registry proposals, report, agent search efficiency, and all applicable product surfaces.
 - Keep endpoint/database checks conditional on actual project behavior and record non-applicability explicitly.
@@ -265,7 +265,7 @@ The enterprise hardening initiative is complete only when all of the following h
 - The default Registry agent and an alternate configured Registry agent pass their bounded-assistance contract.
 - Real CLI and MCP package checks pass.
 - Real-browser UI checks pass with zero automated failures and explicit human visual approval.
-- The agentskit-os dogfood run produces a reproducible, anonymization-safe metric record.
+- The reference-monorepo dogfood run produces a reproducible, anonymization-safe metric record.
 - Documentation, configuration references, release notes, and structural ADR/RFC records are updated.
 - Any external issue, PR, or ticket transition is recorded only after explicit authorization and includes the exact verification run ID.
 - Residual limitations are visible in the final report; enterprise readiness is not claimed while any required gate is pending.
@@ -277,11 +277,11 @@ The enterprise hardening initiative is complete only when all of the following h
 - Perfect resolution of arbitrary reflection, runtime metaprogramming, or generated code without project-provided metadata.
 - Full implementation of every future language analyzer in this initiative.
 - Replacing specialized security scanners, compilers, test runners, API contract tools, or database migration tools.
-- Making the current agentskit-os documentation debt disappear as a prerequisite for improving Doc Bridge; that debt remains a measured consumer outcome.
+- Making the current reference-monorepo documentation debt disappear as a prerequisite for improving Doc Bridge; that debt remains a measured consumer outcome.
 
 ## Further Notes
 
-- The current agentskit-os dogfood run is evidence for the product but is not a truth set for semantic precision. A separate fixture corpus is mandatory.
+- The current reference-monorepo dogfood run is evidence for the product but is not a truth set for semantic precision. A separate fixture corpus is mandatory.
 - The current baseline and cycle history must remain immutable unless a human explicitly authorizes a baseline replacement.
 - The implementation should proceed in vertical slices: common contracts and metrics first, analyzer/coverage next, workflow/profile hardening next, Registry and documentation quality next, and complete CLI/MCP/report validation last.
 - Each slice must run the local harness before consuming CI resources. A failed or unavailable required validation blocks completion and must be recorded with the reason.

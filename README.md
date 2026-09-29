@@ -297,7 +297,7 @@ gates without silently rebuilding them. It rejects non-exact package versions.
 See the [Marketplace guide](docs/MARKETPLACE.md).
 
 The guide is pinned to the published stable Action release `v1.7.45`; the
-checked-in package version is `1.11.1`.
+checked-in package version is `1.12.0`.
 
 Coverage is repository-specific. Run `ak-docs doctor --badge` locally to emit
 current handoff and human-bridge badges, or `pnpm coverage:badge` in CI; this
@@ -350,7 +350,8 @@ Designed for and dogfooded on open AgentsKit surfaces:
 | **Registry** | [registry.agentskit.io](https://registry.agentskit.io/) |
 | **Playbook** | [playbook.agentskit.io](https://playbook.agentskit.io/llms.txt) |
 | **AgentsKit Chat** | [documentation](https://chat.agentskit.io) · [source](https://github.com/AgentsKit-io/agentskit-chat) |
-| **Code Review** | [repository-native CLI](https://github.com/AgentsKit-io/code-review) |
+| **Code Review** | [site](https://code-review.agentskit.io) · [source](https://github.com/AgentsKit-io/code-review) |
+| **Harness** | [documentation](https://harness.agentskit.io/) · [source](https://github.com/AgentsKit-io/harness) |
 | **This repo** | CI green · `ak-docs gate run` on every PR |
 
 **Playbook pattern:** [`docs/playbook/doc-bridge-pattern.md`](docs/playbook/doc-bridge-pattern.md) — export with `ak-docs playbook pattern --text`

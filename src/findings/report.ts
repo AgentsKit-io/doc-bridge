@@ -4,7 +4,7 @@ import type { Evidence, FindingStatus, KnowledgeDiagnostic } from '../schemas/kn
  * The canonical finding, as the rest of the ecosystem consumes it.
  *
  * `Finding` and `SEVERITY_ORDER` mirror `@agentskit/core/finding`, which is an optional peer:
- * Code Review, AKOS and dashboards read this shape, so a Doc Bridge diagnostic reported in it
+ * Code Review and dashboards read this shape, so a Doc Bridge diagnostic reported in it
  * needs no parser of its own. A test imports the real package and asserts that what is emitted
  * here is assignable to it and that the severities are drawn from the real order.
  *

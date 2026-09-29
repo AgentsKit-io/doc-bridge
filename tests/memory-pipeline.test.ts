@@ -57,4 +57,12 @@ describe('memory pipeline', () => {
     expect(draft.findings[0]).toMatchObject({ kind: 'secret', candidateId: 'secret' })
     expect(draft.body).toContain('blocked')
   })
+
+  it('blocks promotion drafts for bare token shapes from the shared secret list', () => {
+    const token = 'xo' + 'xb-' + '1234567890-'.repeat(4)
+    const draft = draftMemoryPromotion(classifyMemoryCandidates([candidate('slack', `the bot uses ${token} in staging`)], index))
+
+    expect(draft.ok).toBe(false)
+    expect(draft.findings[0]).toMatchObject({ kind: 'secret', candidateId: 'slack' })
+  })
 })

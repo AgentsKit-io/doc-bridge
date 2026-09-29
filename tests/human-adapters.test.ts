@@ -7,6 +7,7 @@ import { describe, expect, it } from 'vitest'
 
 import { scanHumanDocRecords } from '../src/index-builder/human-adapters/index.js'
 import type { DocBridgeConfigV1 } from '../src/config/schema.js'
+import { canCreateSymlinks } from './helpers/symlink-support.js'
 
 describe('human doc adapters', () => {
   it('does not treat an overlapping agent corpus as human documentation', () => {
@@ -24,7 +25,7 @@ describe('human doc adapters', () => {
     expect(scanHumanDocRecords(root, config)).toEqual([])
   })
 
-  it('does not treat a symlink alias of the agent corpus as human documentation', () => {
+  it.skipIf(!canCreateSymlinks())('does not treat a symlink alias of the agent corpus as human documentation', () => {
     const root = mkdtempSync(join(tmpdir(), 'ak-docs-symlink-human-'))
     mkdirSync(join(root, 'agent-docs'), { recursive: true })
     writeFileSync(join(root, 'agent-docs/INDEX.md'), '# Agent docs')
@@ -80,7 +81,7 @@ describe('human doc adapters', () => {
     expect(scanHumanDocRecords(root, config).map((doc) => doc.url)).toEqual(['selected/README'])
   })
 
-  it('does not follow nested directory symlinks outside the project root', () => {
+  it.skipIf(!canCreateSymlinks())('does not follow nested directory symlinks outside the project root', () => {
     const root = mkdtempSync(join(tmpdir(), 'ak-docs-nested-symlink-human-'))
     const outside = mkdtempSync(join(tmpdir(), 'ak-docs-nested-outside-human-'))
     mkdirSync(join(root, 'human-docs'), { recursive: true })

@@ -1,0 +1,86 @@
+{
+  "version": 1,
+  "include": [
+    "src",
+    "bin",
+    "scripts",
+    "apps"
+  ],
+  "exclude": [],
+  "entries": {
+    "apps/docs/lib/public-docs.ts": {
+      "manual-slash-normalize": 1
+    },
+    "apps/docs/remark-rewrite-links.mjs": {
+      "manual-slash-normalize": 1
+    },
+    "scripts/agent-task-efficiency-check.mjs": {
+      "child-process-import": 1
+    },
+    "scripts/build-mcpb.mjs": {
+      "child-process-import": 1
+    },
+    "scripts/portable-skill-contract.test.mjs": {
+      "child-process-import": 1
+    },
+    "scripts/quality-scorecard-eval.mjs": {
+      "child-process-import": 1
+    },
+    "scripts/readme-standard.test.mjs": {
+      "child-process-import": 1
+    },
+    "scripts/run-registry-semantic-review.mjs": {
+      "child-process-import": 1
+    },
+    "scripts/run-semantic-adjudication.mjs": {
+      "child-process-import": 1
+    },
+    "scripts/smoke-docsites.mjs": {
+      "child-process-import": 1
+    },
+    "scripts/smoke-mcpb.mjs": {
+      "child-process-import": 1
+    },
+    "scripts/smoke-ollama.mjs": {
+      "child-process-import": 1
+    },
+    "scripts/smoke-packaged.mjs": {
+      "child-process-import": 1
+    },
+    "scripts/smoke-real-docsites.mjs": {
+      "child-process-import": 1
+    },
+    "scripts/study-codex-adjudicator.mjs": {
+      "child-process-import": 1
+    },
+    "scripts/study-codex-provider.mjs": {
+      "child-process-import": 1,
+      "split-newline": 1
+    },
+    "scripts/study-provider-telemetry-pilot.mjs": {
+      "child-process-import": 1
+    },
+    "scripts/update-coverage-badge.mjs": {
+      "child-process-import": 1
+    },
+    "scripts/verification-harness.mjs": {
+      "child-process-import": 1,
+      "platform-shell": 1
+    },
+    "scripts/verify-home-ui.mjs": {
+      "child-process-import": 1
+    },
+    "src/discovery/repository.ts": {
+      "child-process-import": 1
+    },
+    "src/discovery/reproducibility.ts": {
+      "child-process-import": 1
+    },
+    "src/lib/ignore-filter.ts": {
+      "child-process-import": 1
+    },
+    "src/memory/github-pr.ts": {
+      "child-process-import": 1
+    }
+  }
+}

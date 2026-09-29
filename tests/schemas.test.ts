@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { dirname, join, resolve, sep } from 'node:path'
 
 import { defineConfig } from '../src/config/define-config.js'
 import { loadConfig, projectRootFromConfigPath, resolveProjectRoot } from '../src/config/load-config.js'
@@ -115,7 +115,8 @@ describe('DocBridgeIndex v1', () => {
 
 describe('configuration paths', () => {
   it('resolves a project root relative to a configuration file', () => {
-    expect(projectRootFromConfigPath('/tmp/project/config/doc-bridge.config.json', '../')).toBe('/tmp/project')
+    const configPath = sep + join('tmp', 'project', 'config', 'doc-bridge.config.json')
+    expect(projectRootFromConfigPath(configPath, '../')).toBe(resolve(dirname(configPath), '..'))
   })
 })
 

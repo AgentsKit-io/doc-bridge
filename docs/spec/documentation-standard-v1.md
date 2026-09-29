@@ -108,6 +108,11 @@ The ecosystem contract files are committed, network-free consumer snapshots of t
 AgentsKit `ecosystem.json` v2 manifest and `ecosystem-claims.json` ledger. The gate verifies
 their schema relationship, product identity parity, the adopting product ID, and that declared
 cross-links occur both in the manifest's public surfaces and in repository documentation.
+Product membership comes from the manifest itself: no product is required by name, so a
+product that the canonical manifest drops or hides (for example with `navigation.showInBar:
+false`) does not have to be kept as a placeholder record. The deprecated `properties` shim is
+optional; when present, each entry must name a distinct `products[]` record and repeat its
+name, domain, URL, repository, tagline, kind, accent, and machine surfaces exactly.
 Doc Bridge also records the upstream ref and SHA-256 digests in `ecosystem-upstream.json`;
 `pnpm check:ecosystem-upstream` compares the local snapshots with AgentsKit `main` in CI.
 This network parity check is deliberately separate from the runtime conformance profile, which

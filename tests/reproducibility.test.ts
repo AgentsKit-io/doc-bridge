@@ -140,12 +140,15 @@ describe('a committed index has to be reproducible from a clean checkout', () =>
   })
 })
 
-/** A real checkout the whole pipeline can run over: one agent doc, one module, one generated module. */
+/**
+ * A real checkout the whole pipeline can run over: one agent doc, one module, one generated module.
+ * Scans honour ignore rules, so the only way an ignored path reaches a committed index is a rule
+ * added after the index was built — which is what this fixture does.
+ */
 const indexableFixture = (include: readonly string[] = []) => {
   const root = mkdtempSync(join(tmpdir(), 'doc-bridge-repro-index-'))
   temporary.push(root)
   writeFileSync(join(root, 'package.json'), JSON.stringify({ name: 'fixture', version: '0.0.0' }), 'utf8')
-  write(root, '.gitignore', 'lib/generated.ts\n')
   write(root, 'src/query/search.ts', 'export const searchIndex = (): number => 1\n')
   write(root, 'lib/generated.ts', 'export const generated = (): number => 2\n')
   write(root, 'docs/for-agents/INDEX.md', '# Agent index\n\nStart with [query](./query.md).\n')
@@ -158,6 +161,7 @@ const indexableFixture = (include: readonly string[] = []) => {
     }),
   )
   buildDocBridgeIndex({ root, config })
+  write(root, '.gitignore', 'lib/generated.ts\n')
   run(root, 'init', '--quiet', '--initial-branch=main')
   run(root, 'add', '--all')
   run(root, 'add', '--force', '.doc-bridge/index.json')

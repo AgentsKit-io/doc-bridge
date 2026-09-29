@@ -3,6 +3,7 @@ import { execFileSync } from 'node:child_process'
 import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
 import { builtinModules } from 'node:module'
 import { relative, resolve } from 'node:path'
+import { splitLines } from '@agentskit/cross-platform'
 
 import { build } from 'esbuild'
 
@@ -89,9 +90,7 @@ const pack = () => {
   const output = resolve(outputDir, `doc-bridge-${packageJson.version}.mcpb`)
   rmSync(output, { force: true })
   run(mcpbBin, ['pack', stageDir, output])
-  const files = execFileSync('unzip', ['-Z1', output], { encoding: 'utf8' })
-    .trim()
-    .split('\n')
+  const files = splitLines(execFileSync('unzip', ['-Z1', output], { encoding: 'utf8' }).trim())
     .filter(Boolean)
     .sort()
   assertSafeInventory(files)

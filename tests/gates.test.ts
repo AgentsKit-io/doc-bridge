@@ -88,6 +88,10 @@ describe('gates', () => {
 
     expect(runGates(root, config, ['okf-type']).ok).toBe(true)
 
+    // A Windows checkout (core.autocrlf) must read the same frontmatter.
+    writeFileSync(join(root, 'docs/for-agents/modules/auth.md'), '---\r\ntype: module\r\n---\r\n\r\n# Auth\r\n')
+    expect(runGates(root, config, ['okf-type']).ok).toBe(true)
+
     writeFileSync(join(root, 'docs/for-agents/modules/auth.md'), '# Auth\n\nOwns login.\n')
     const result = runGates(root, config, ['okf-type'])
     expect(result.ok).toBe(false)

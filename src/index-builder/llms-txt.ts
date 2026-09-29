@@ -1,11 +1,12 @@
+import { toPosix } from '@agentskit/cross-platform'
 import type { DocBridgeConfigV1 } from '../config/schema.js'
 import { renderNamedTemplate } from '../render/template-source.js'
 import type { KnowledgeEntry } from '../schemas/doc-bridge-index.js'
 import { isProjectedEntry } from './project-corpus.js'
 
 const routePath = (path: string, pathPrefix: string | undefined): string => {
-  const normalizedPath = path.replaceAll('\\', '/').replace(/\.(?:md|mdx)$/, '')
-  const normalizedPrefix = pathPrefix?.replaceAll('\\', '/').replace(/\/$/, '')
+  const normalizedPath = toPosix(path).replace(/\.(?:md|mdx)$/, '')
+  const normalizedPrefix = pathPrefix === undefined ? undefined : toPosix(pathPrefix).replace(/\/$/, '')
   const relativePath = normalizedPrefix && normalizedPath.startsWith(`${normalizedPrefix}/`)
     ? normalizedPath.slice(normalizedPrefix.length + 1)
     : normalizedPath

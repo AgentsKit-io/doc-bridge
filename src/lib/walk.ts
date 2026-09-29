@@ -1,6 +1,7 @@
 import { lstatSync, readdirSync, realpathSync } from 'node:fs'
 import { join } from 'node:path'
 
+import { createIgnoreFilter } from './ignore-filter.js'
 import { toPosix } from './paths.js'
 
 const DEFAULT_SKIP = new Set(['node_modules', '.git', 'dist', 'coverage', '.doc-bridge'])
@@ -12,12 +13,19 @@ export const walkFiles = (
     readonly extensions?: readonly string[]
     readonly skipDirs?: ReadonlySet<string>
     readonly maxFiles?: number
+    /**
+     * Skip what the repository ignores (`.gitignore`, `.git/info/exclude`, global excludes) on top
+     * of `skipDirs`. On by default; only walks of non-repository input, such as an agent memory
+     * directory, turn it off.
+     */
+    readonly respectIgnore?: boolean
   },
 ): string[] => {
   const extensions = opts?.extensions ?? ['.md']
   const skip = opts?.skipDirs ?? DEFAULT_SKIP
   const out: string[] = []
   const visited = new Set<string>()
+  const ignored = opts?.respectIgnore === false ? undefined : createIgnoreFilter(root)
 
   const visit = (dir: string) => {
     let canonicalDir: string
@@ -45,12 +53,12 @@ export const walkFiles = (
       }
       if (st.isSymbolicLink()) continue
       if (st.isDirectory()) {
-        if (skip.has(name)) continue
+        if (skip.has(name) || ignored?.isIgnored(abs, true)) continue
         visit(abs)
         continue
       }
       if (!st.isFile()) continue
-      if (extensions.some((ext) => name.endsWith(ext))) {
+      if (extensions.some((ext) => name.endsWith(ext)) && !ignored?.isIgnored(abs, false)) {
         if (out.length >= (opts?.maxFiles ?? DEFAULT_MAX_FILES)) {
           throw new Error(`Documentation corpus exceeds the ${opts?.maxFiles ?? DEFAULT_MAX_FILES} file limit.`)
         }

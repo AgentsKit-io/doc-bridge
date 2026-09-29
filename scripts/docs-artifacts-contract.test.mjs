@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { existsSync, readFileSync } from 'node:fs'
 import { test } from 'node:test'
 import { resolve } from 'node:path'
+import { splitLines } from '@agentskit/cross-platform'
 
 const root = resolve(import.meta.dirname, '..')
 const publicRoot = resolve(root, 'apps/docs/public')
@@ -11,7 +12,9 @@ const manifest = JSON.parse(readFileSync(resolve(root, 'ecosystem.json'), 'utf8'
 const overrides = JSON.parse(readFileSync(resolve(root, 'apps/docs/ecosystem-presentation-overrides.json'), 'utf8'))
 const publicDocs = JSON.parse(readFileSync(resolve(root, 'apps/docs/public-docs.json'), 'utf8'))
 const publicAgentDocs = JSON.parse(readFileSync(resolve(root, 'apps/docs/public-agent-docs.json'), 'utf8'))
-const ecosystem = manifest.products.map((product) => ({ ...product, ...overrides[product.id] }))
+const ecosystem = manifest.products
+  .filter(({ public: isPublic, navigation }) => isPublic && navigation?.showInBar)
+  .map((product) => ({ ...product, ...overrides[product.id] }))
 const knowledge = JSON.parse(readFileSync(resolve(publicRoot, 'deterministic/knowledge.json'), 'utf8'))
 const sitemap = readFileSync(resolve(root, 'apps/docs/out/sitemap.xml'), 'utf8')
 
@@ -29,10 +32,16 @@ test('concise and full LLM surfaces have distinct progressive-disclosure roles',
   }
 })
 
-test('all seven products are discoverable and the six peers resolve locally', () => {
-  assert.equal(ecosystem.length, 7)
-  assert.deepEqual(new Set(ecosystem.map(({ id }) => id)).size, 7)
-  assert.ok(Object.keys(overrides).every((id) => manifest.products.some((product) => product.id === id)))
+test('all public products are discoverable and peers resolve locally', () => {
+  assert.equal(new Set(ecosystem.map(({ id }) => id)).size, ecosystem.length)
+  assert.deepEqual(
+    [...ecosystem].sort((left, right) => left.navigation.order - right.navigation.order).map(({ id }) => id),
+    ['agentskit', 'registry', 'agentskit-chat', 'doc-bridge', 'code-review', 'harness'],
+    'the canonical ecosystem is six products in shell order',
+  )
+  assert.ok(!llms.includes('](https://playbook.agentskit.io/docs)'), 'Playbook is not listed as an ecosystem product')
+  assert.ok(!existsSync(resolve(publicRoot, 'ecosystem-bar.js')), 'the shared shell is loaded from AgentsKit, not self-hosted')
+  assert.ok(Object.keys(overrides).every((id) => ecosystem.some((product) => product.id === id)))
   for (const product of ecosystem) {
     const primary = product.surfaces?.docs ?? product.surfaces?.home ?? product.home
     assert.ok(llms.includes(`[${product.name}](${primary})`), `missing ${product.name}`)
@@ -41,8 +50,18 @@ test('all seven products are discoverable and the six peers resolve locally', ()
   assert.ok(llms.includes('Machine index:'), 'must include machine indexes')
   assert.ok(llms.includes('Role: `understanding`'), 'must include product roles')
   const peerEntries = knowledge.entries.filter(({ id }) => id.startsWith('ecosystem:'))
-  assert.equal(peerEntries.length, 6)
+  assert.equal(peerEntries.length, ecosystem.length - 1)
   assert.ok(peerEntries.every(({ answer }) => answer.citations[0]?.href.startsWith('https://')))
+})
+
+test('products without a presentation override use the manifest promise and canonical URL', () => {
+  const product = manifest.products.find(({ id }) => id === 'harness')
+  assert.ok(product)
+  assert.equal(overrides[product.id], undefined)
+  const entry = knowledge.entries.find(({ id }) => id === `ecosystem:${product.id}`)
+  assert.ok(entry)
+  assert.equal(entry.answer.citations[0]?.href, product.surfaces?.home ?? product.surfaces?.docs)
+  assert.ok(entry.answer.markdown.includes(product.promise))
 })
 
 test('every public document and local deterministic citation resolves in the export', () => {
@@ -92,7 +111,7 @@ test('sitemap publishes only the public documentation surface', () => {
 })
 
 test('machine entry points cross-reference the agent-first route', () => {
-  const hasExactUrl = (text, url) => text.split('\n').some(line => line.split('(')[1]?.split(')')[0] === url)
+  const hasExactUrl = (text, url) => splitLines(text).some(line => line.split('(')[1]?.split(')')[0] === url)
   assert.ok(hasExactUrl(llms, 'https://doc-bridge.agentskit.io/for-agents/'))
   assert.ok(hasExactUrl(llms, 'https://doc-bridge.agentskit.io/llms-full.txt'))
   assert.ok(hasExactUrl(llms, 'https://doc-bridge.agentskit.io/deterministic/knowledge.json'))

@@ -1,4 +1,4 @@
-import { basename, extname, relative, resolve, sep } from 'node:path'
+import { basename, extname, relative, resolve } from 'node:path'
 import { readFileSync } from 'node:fs'
 
 import type { DocBridgeConfigV1 } from '../config/schema.js'
@@ -88,7 +88,7 @@ export const repositoryInputs = (root: string, config: DocBridgeConfigV1 | undef
   const fingerprints: [string, string][] = []
 
   for (const absPath of walk.files) {
-    const path = toPosix(relative(projectRoot, absPath).split(sep).join('/'))
+    const path = toPosix(relative(projectRoot, absPath))
     if (!isInput(path, basename(absPath))) continue
     try {
       fingerprints.push([path, sha256NormalizedV1(readFileSync(absPath, 'utf8'))])

@@ -245,7 +245,7 @@ A library enters the runtime dependency list only when it is deterministic, has 
 | `Retriever`, `RetrievedDocument` | `createDocBridgeRetriever` returns `RetrievedDocument[]` with `metadata: { kind, path, evidence, explain, confidence }`, so `createHybridRetriever`, `createRerankedRetriever`, `formatRetrievedDocuments` and the runtime consume Doc Bridge unchanged |
 | `compileBudget`, `approximateCounter` | `knowledge.lookup` and `handoff.resolve` accept `budgetTokens`; sections drop in a declared order until the payload fits; the response reports `tokens.total`, `fits` and what was dropped |
 | `createApprovalGate`, `ApprovalStore` | overlay approvals, with a file-backed store under `.doc-bridge/approvals/`, shared by the CLI, MCP and the rendered review page |
-| `Finding`, `SEVERITY_ORDER` | `ak-docs check --json --format finding` and MCP `docbridge.diagnostics { format: 'finding' }` emit the canonical shape so Code Review, AKOS and dashboards need no Doc Bridge specific parser |
+| `Finding`, `SEVERITY_ORDER` | `ak-docs check --json --format finding` and MCP `docbridge.diagnostics { format: 'finding' }` emit the canonical shape so Code Review and dashboards need no Doc Bridge specific parser |
 | `fuzzyMatchList` | entity resolution in the Markdown analyzer and the query layer: one candidate at or above 0.92 resolves with `confidence: 'fuzzy'` and evidence, two candidates stay unresolved |
 | `GraphMemory` | `createDocBridgeGraphMemory(snapshot, overlay)` exposes the projected graph through `getNode`, `findEdges` and `traverse` |
 | `bm25Score`, `createHybridRetriever` | the optional RAG path becomes hybrid over the same projection entries, and a vector store is never required |

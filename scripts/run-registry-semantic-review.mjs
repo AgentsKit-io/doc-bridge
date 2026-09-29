@@ -3,6 +3,7 @@
 import { execFileSync } from 'node:child_process'
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { splitLines } from '@agentskit/cross-platform'
 
 const root = process.cwd()
 const args = process.argv.slice(2)
@@ -53,7 +54,7 @@ for (const model of models) {
     'exec', '--ephemeral', '--ignore-user-config', '--sandbox', 'read-only', '--model', model,
     '--output-schema', resolve(root, 'scripts/registry-semantic-review.schema.json'), '--json', '-',
   ], { cwd: root, input: prompt, encoding: 'utf8', maxBuffer: 4_000_000 })
-  const events = stdout.trim().split('\n').filter(Boolean).flatMap((line) => { try { return [JSON.parse(line)] } catch { return [] } })
+  const events = splitLines(stdout.trim()).filter(Boolean).flatMap((line) => { try { return [JSON.parse(line)] } catch { return [] } })
   const message = [...events].reverse().find((event) => event.type === 'item.completed' && event.item?.type === 'agent_message')?.item?.text
   if (!message) throw new Error(`Codex model ${model} did not return a final structured message.`)
   const result = JSON.parse(message)

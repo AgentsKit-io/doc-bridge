@@ -12,7 +12,7 @@
       "claims": [
         {
           "id": "packages",
-          "value": 22,
+          "value": 24,
           "noun": "packages",
           "evidence": {
             "type": "repository-derivation",
@@ -20,7 +20,7 @@
             "path": "scripts/compute-stats.mjs",
             "summary": "Published non-private @agentskit/* package directories."
           },
-          "conservativeFloor": 22
+          "conservativeFloor": 24
         },
         {
           "id": "framework-bindings",
@@ -59,7 +59,7 @@
         },
         {
           "id": "catalog-providers",
-          "value": 184,
+          "value": 222,
           "noun": "providers",
           "evidence": {
             "type": "repository-derivation",
@@ -67,11 +67,11 @@
             "path": "scripts/compute-stats.mjs",
             "summary": "Providers in the committed model catalog snapshot."
           },
-          "conservativeFloor": 180
+          "conservativeFloor": 220
         },
         {
           "id": "catalog-models",
-          "value": 6297,
+          "value": 7870,
           "noun": "models",
           "evidence": {
             "type": "repository-derivation",
@@ -79,7 +79,7 @@
             "path": "scripts/compute-stats.mjs",
             "summary": "Models in the committed provider catalog snapshot."
           },
-          "conservativeFloor": 6000
+          "conservativeFloor": 7000
         },
         {
           "id": "skills",
@@ -106,7 +106,7 @@
         },
         {
           "id": "recipes",
-          "value": 71,
+          "value": 64,
           "noun": "recipes",
           "evidence": {
             "type": "repository-derivation",
@@ -114,7 +114,7 @@
             "path": "scripts/compute-stats.mjs",
             "summary": "Published recipe MDX pages excluding indexes and metadata."
           },
-          "conservativeFloor": 71
+          "conservativeFloor": 64
         },
         {
           "id": "core-size-kb-gzip",
@@ -148,15 +148,6 @@
       "claims": []
     },
     {
-      "productId": "playbook",
-      "source": {
-        "type": "endpoint",
-        "url": "https://playbook.agentskit.io/api/stats.json"
-      },
-      "verification": "declared",
-      "claims": []
-    },
-    {
       "productId": "doc-bridge",
       "source": {
         "type": "repository",
@@ -175,10 +166,19 @@
       "claims": []
     },
     {
-      "productId": "akos",
+      "productId": "harness",
       "source": {
-        "type": "declaration",
-        "summary": "Public commercial references only; never use private implementation as contribution evidence."
+        "type": "endpoint",
+        "url": "https://harness.agentskit.io/api/stats.json"
+      },
+      "verification": "declared",
+      "claims": []
+    },
+    {
+      "productId": "playbook",
+      "source": {
+        "type": "endpoint",
+        "url": "https://playbook.agentskit.io/api/stats.json"
       },
       "verification": "declared",
       "claims": []

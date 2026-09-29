@@ -1,6 +1,6 @@
 import { expect, type Page, test } from '@playwright/test'
 
-async function expectEcosystemContrast(page: Page) {
+async function expectEcosystemContrast(page: Page, dark: boolean) {
   await page.waitForFunction(() =>
     document.querySelector('agentskit-ecosystem')?.shadowRoot?.querySelector('.akx-title'),
   )
@@ -16,7 +16,8 @@ async function expectEcosystemContrast(page: Page) {
     }
   })
   expect(colors).not.toBeNull()
-  if (colors?.dark) {
+  expect(colors?.dark).toBe(dark)
+  if (dark) {
     expect(colors.title).toBe('rgb(230, 237, 243)')
     expect(colors.eyebrow).toBe('rgb(139, 148, 158)')
   } else {
@@ -26,29 +27,36 @@ async function expectEcosystemContrast(page: Page) {
 }
 
 test('landing communicates the deterministic proof and has no horizontal overflow', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('theme', 'light'))
   await page.goto('/')
-  await expect(page.getByRole('heading', { level: 1 })).toContainText('duplicated truth')
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('The context your agents need.')
   await expect(page.getByText('backend calls: 0')).toBeVisible()
   await expect(page.getByRole('link', { name: 'Generate your first handoff', exact: true })).toHaveAttribute('href', /\/docs\/getting-started\/?$/)
-  await expect(page.getByRole('link', { name: 'See how knowledge flows' })).toHaveAttribute('href', '#knowledge-flow')
-  await expect(page.getByRole('heading', { name: 'Make your repository understandable to humans and agents.' })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'See the handoff' })).toHaveAttribute('href', '#proof')
+  await expect(page.getByRole('heading', { name: 'Make your repository clear to the people and agents working in it.' })).toBeVisible()
   await expect(page.getByRole('link', { name: 'Add Doc Bridge to your repo' })).toHaveAttribute('href', /\/docs\/getting-started\/?$/)
-  await expect(page.getByText('The bridge contract')).toBeVisible()
-  const ecosystemFooter = page.getByRole('contentinfo').getByRole('navigation', { name: 'AgentsKit ecosystem' })
-  await expect(ecosystemFooter.getByRole('link')).toHaveCount(6)
-  await expect(ecosystemFooter.getByRole('link', { name: /Doc Bridge/ })).toHaveAttribute('aria-current', 'page')
-  await expect(ecosystemFooter).not.toContainText('Code Review')
+  await expect(page.getByText('THE BRIDGE CONTRACT')).toBeVisible()
+  await expect(page.locator('agentskit-aurora')).toHaveCount(1)
+  await expect(page.locator('agentskit-ecosystem[current="doc-bridge"][data-visual="agentskit-home"]')).toHaveCount(1)
+  const footer = page.locator('agentskit-footer[current="doc-bridge"][repo="AgentsKit-io/doc-bridge"]')
+  await expect(footer).toHaveCount(1)
+  await expect(footer.locator('a[href^="https://code-review.agentskit.io"]').first()).toBeAttached()
+  await expect(footer.locator('a[href="https://harness.agentskit.io/"]').first()).toBeAttached()
+  await expect(footer.getByText('AKOS', { exact: true })).toHaveCount(0)
+  await expect(footer.locator('a[href*="playbook.agentskit.io"]')).toHaveCount(0)
+  await expect(page.locator('.bridge-home-header a[href*="github.com"]')).toHaveCount(0)
+  await expect(page.locator('.bridge-home-header .ak-product-wordmark')).toContainText('Doc Bridge')
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
   expect(overflow).toBeLessThanOrEqual(0)
   await expect(page.locator('#ak-eco')).toBeVisible()
-  await expectEcosystemContrast(page)
+  await expectEcosystemContrast(page, false)
 })
 
 test('ecosystem showcase follows the dark page surface', async ({ page }) => {
-  await page.emulateMedia({ colorScheme: 'dark' })
+  await page.addInitScript(() => localStorage.setItem('theme', 'dark'))
   await page.goto('/')
   await expect(page.locator('html')).toHaveClass(/dark/)
-  await expectEcosystemContrast(page)
+  await expectEcosystemContrast(page, true)
 })
 
 test('product subheader keeps search, navigation, and the primary action reachable on mobile', async ({ page }) => {
@@ -72,7 +80,7 @@ test('product subheader keeps search, navigation, and the primary action reachab
 
   await menuButton.click()
   const mobileMenu = page.locator('#doc-bridge-mobile-menu')
-  await expect(mobileMenu.getByRole('link')).toHaveCount(4)
+  await expect(mobileMenu.getByRole('link')).toHaveCount(3)
   for (const link of await mobileMenu.getByRole('link').all()) {
     expect((await link.boundingBox())?.height).toBeGreaterThanOrEqual(44)
   }
@@ -98,6 +106,7 @@ test('product subheader keeps search, navigation, and the primary action reachab
 })
 
 test('Fumadocs renders canonical docs with raw and llms surfaces', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('theme', 'dark'))
   await page.goto('/docs/getting-started')
   await expect(page.locator('h1#getting-started')).toBeVisible()
   await expect(page.locator('h1')).toHaveCount(1)
@@ -107,16 +116,10 @@ test('Fumadocs renders canonical docs with raw and llms surfaces', async ({ page
   const llms = await page.request.get('/llms.txt')
   expect(llms.ok()).toBeTruthy()
   expect(await llms.text()).toContain('# AgentsKit Doc Bridge')
+  await expect(page.locator('agentskit-ecosystem')).toBeVisible()
+  await expect(page.locator('agentskit-footer[current="doc-bridge"][repo="AgentsKit-io/doc-bridge"]')).toHaveCount(1)
   await expect(page.locator('[data-search]:visible, [data-search-full]:visible').first()).toBeVisible()
-  const strayCodeReview = await page.getByText('Code Review', { exact: true }).evaluateAll((nodes) =>
-    nodes.filter((node) => {
-      const root = node.getRootNode()
-      if (root instanceof ShadowRoot && root.host.localName === 'agentskit-ecosystem') return false
-      return node.closest('#ak-eco') === null
-    }).length,
-  )
-  expect(strayCodeReview).toBe(0)
-  await expectEcosystemContrast(page)
+  await expectEcosystemContrast(page, true)
 })
 
 test('publishes the static search index and social preview', async ({ page }) => {
@@ -160,7 +163,7 @@ for (const width of [320, 375, 768, 1280, 1440]) {
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
       expect(overflow, `${path} at ${width}px`).toBeLessThanOrEqual(0)
       if (path === '/') {
-        const clippedHeroLayout = await page.locator('.bridge-hero').evaluate((hero, viewportWidth) => {
+        const clippedHeroLayout = await page.locator('.bridge-home-hero').evaluate((hero, viewportWidth) => {
           const grid = hero.firstElementChild
           const elements = grid ? [grid, ...grid.children, ...hero.querySelectorAll('pre')] : []
           return elements.flatMap((element) => {

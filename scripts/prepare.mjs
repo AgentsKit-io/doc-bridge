@@ -4,11 +4,10 @@
  * Published npm tarballs already include dist/ — this is a no-op then.
  */
 import { existsSync } from 'node:fs'
-import { spawnSync } from 'node:child_process'
-import { dirname, join } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { join } from 'node:path'
+import { moduleDir, spawnProcess } from '@agentskit/cross-platform'
 
-const root = join(dirname(fileURLToPath(import.meta.url)), '..')
+const root = join(moduleDir(import.meta.url), '..')
 const marker = join(root, 'dist', 'cli', 'program.js')
 
 if (existsSync(marker)) {
@@ -23,13 +22,15 @@ const attempts = [
 
 let ok = false
 for (const [cmd, args] of attempts) {
-  const result = spawnSync(cmd, args, {
+  // Resolves the pnpm/npx/npm .cmd shims on Windows without a shell.
+  const status = await spawnProcess(cmd, args, {
     cwd: root,
-    stdio: 'inherit',
+    stdin: 'inherit',
+    stdout: 'inherit',
+    stderr: 'inherit',
     env: process.env,
-    shell: process.platform === 'win32',
-  })
-  if (result.status === 0 && existsSync(marker)) {
+  }).exited.catch(() => ({ code: null }))
+  if (status.code === 0 && existsSync(marker)) {
     ok = true
     break
   }

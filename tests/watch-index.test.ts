@@ -1,6 +1,17 @@
 import { EventEmitter } from 'node:events'
+import { resolve } from 'node:path'
 
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+// watchDocBridgeIndex resolves watch roots with node:path's `resolve`, which is
+// platform-native: on Windows, `resolve('/repo', 'x')` doesn't just backslash-ify
+// this suite's POSIX-shaped virtual root, it prepends the current drive letter
+// (e.g. `C:\repo\x`), since a bare leading `/` means drive-relative there, not
+// absolute. Normalize to posix (for readable diffs) and derive expected paths
+// through the same `resolve` the production code uses, rather than hardcoding
+// POSIX literals that can never match on Windows.
+const toPosix = (value: string): string => value.split('\\').join('/')
+const expectedWatchDir = (...segments: string[]): string => toPosix(resolve('/repo', ...segments))
 
 const fsMock = vi.hoisted(() => ({
   callbacks: [] as Array<(event: string, filename: string | null) => void>,
@@ -8,7 +19,7 @@ const fsMock = vi.hoisted(() => ({
   watchedOptions: [] as unknown[],
   existsSync: vi.fn(() => true),
   watch: vi.fn((dir: string, _opts: unknown, cb?: (event: string, filename: string | null) => void) => {
-    fsMock.watchedDirs.push(dir)
+    fsMock.watchedDirs.push(toPosix(dir))
     fsMock.watchedOptions.push(_opts)
     const callback = typeof _opts === 'function' ? _opts : cb
     if (callback) fsMock.callbacks.push(callback)
@@ -114,7 +125,7 @@ describe('watchDocBridgeIndex', () => {
       })
 
       await vi.advanceTimersByTimeAsync(5)
-      const vitepressWatch = fsMock.watchedDirs.indexOf('/repo/website/vitepress')
+      const vitepressWatch = fsMock.watchedDirs.indexOf(expectedWatchDir('website/vitepress'))
       expect(vitepressWatch).toBeGreaterThanOrEqual(0)
       fsMock.callbacks[vitepressWatch]?.('change', 'guide.md')
       await vi.advanceTimersByTimeAsync(5)
@@ -148,7 +159,7 @@ describe('watchDocBridgeIndex', () => {
       })
 
       await vi.advanceTimersByTimeAsync(5)
-      const nextraWatch = fsMock.watchedDirs.indexOf('/repo/content')
+      const nextraWatch = fsMock.watchedDirs.indexOf(expectedWatchDir('content'))
       expect(nextraWatch).toBeGreaterThanOrEqual(0)
       fsMock.callbacks[nextraWatch]?.('change', 'guide.mdx')
       await vi.advanceTimersByTimeAsync(5)
@@ -205,7 +216,7 @@ describe('watchDocBridgeIndex', () => {
 
       const nxWatcherIndex = fsMock.watchedDirs.findIndex((dir, index) => {
         const options = fsMock.watchedOptions[index]
-        return dir === '/repo' && typeof options === 'object' && options !== null && 'recursive' in options
+        return dir === expectedWatchDir() && typeof options === 'object' && options !== null && 'recursive' in options
           ? options.recursive === true
           : false
       })

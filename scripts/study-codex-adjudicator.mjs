@@ -2,6 +2,7 @@
 
 import { spawn } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
+import { splitLines } from '@agentskit/cross-platform'
 
 const modelIndex = process.argv.indexOf('--model')
 const model = modelIndex >= 0 ? process.argv[modelIndex + 1] : undefined
@@ -21,7 +22,7 @@ child.stdout.on('data', (chunk) => { stdout += chunk.toString('utf8') })
 child.once('error', () => { process.exitCode = 1 })
 child.once('close', (code) => {
   if (code !== 0) { process.exitCode = 1; return }
-  const events = stdout.trim().split('\n').filter(Boolean).flatMap((line) => { try { return [JSON.parse(line)] } catch { return [] } })
+  const events = splitLines(stdout.trim()).filter(Boolean).flatMap((line) => { try { return [JSON.parse(line)] } catch { return [] } })
   const usage = events.find((event) => event.type === 'turn.completed')?.usage
   const message = [...events].reverse().find((event) => event.type === 'item.completed' && event.item?.type === 'agent_message')?.item?.text
   let output

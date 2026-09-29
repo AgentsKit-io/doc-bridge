@@ -1,6 +1,6 @@
 {
   "name": "@agentskit/doc-bridge",
-  "version": "1.11.1",
+  "version": "1.12.0",
   "mcpName": "io.github.AgentsKit-io/doc-bridge",
   "description": "Human↔agent documentation bridge — deterministic handoffs, doc-site links, memory→docs, optional AgentsKit RAG/chat.",
   "type": "module",
@@ -54,6 +54,7 @@
     "bench:retrieval": "node bin/ak-docs.js bench retrieval docs/bench/retrieval-suite-v1.json --baseline docs/bench/retrieval-baseline-v1.json --text",
     "check:ecosystem-upstream": "node scripts/check-ecosystem-upstream.mjs",
     "check:no-legacy-chat-imports": "node scripts/check-no-legacy-chat-imports.mjs",
+    "check:cross-platform": "agentskit-cross-platform check",
     "typecheck": "tsc --noEmit",
     "smoke:packaged": "node scripts/smoke-packaged.mjs",
     "smoke:docsites": "node scripts/smoke-docsites.mjs",
@@ -123,6 +124,7 @@
     "access": "public"
   },
   "dependencies": {
+    "@agentskit/cross-platform": "^0.1.0",
     "@agentskit/harness": "0.11.0",
     "github-slugger": "^2.0.0",
     "graphology": "~0.26.0",
@@ -130,6 +132,7 @@
     "graphology-dag": "~0.4.1",
     "graphology-metrics": "~2.4.2",
     "graphology-shortest-path": "~2.1.0",
+    "ignore": "^7.0.6",
     "knap": "~0.5.1",
     "mdast-util-to-string": "^4.0.0",
     "mermaid": "^11.17.2",

@@ -1,7 +1,7 @@
 import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { dirname, join, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { join, resolve } from 'node:path'
+import { moduleDir, splitLines } from '@agentskit/cross-platform'
 
 import type { DocBridgeConfigV1 } from '../config/schema.js'
 import { buildDocBridgeIndex } from '../index-builder/build-index.js'
@@ -13,7 +13,7 @@ import type { AgentHandoffV1 } from '../schemas/agent-handoff.js'
 
 export type DemoFixture = 'example' | 'monorepo'
 
-const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..')
+const packageRoot = resolve(moduleDir(import.meta.url), '..', '..')
 
 const fixturePath = (fixture: DemoFixture): string => {
   if (fixture === 'monorepo') {
@@ -115,7 +115,7 @@ export const formatDemoText = (result: DemoResult): string[] => {
     `  after:  ${result.gateAfter.message}`,
     '',
     'MCP snippet (.cursor/mcp.json)',
-    ...result.mcpSnippet.split('\n').map((line) => `  ${line}`),
+    ...splitLines(result.mcpSnippet, { dropTrailingEmpty: false }).map((line) => `  ${line}`),
     '',
     'Next',
     ...result.nextCommands.map((cmd) => `  → ${cmd}`),

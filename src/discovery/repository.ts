@@ -203,7 +203,13 @@ const discoverPackages = (
     const name = packageName(parsed.value, path)
     const id = entityId('package', name ?? path)
     const duplicate = packages.find((pkg) => pkg.id === id)
-    if (duplicate && duplicate.absPath !== absPath) {
+    // Compare toPosix'd, not raw: the root package above is always registered with its raw, native-separator
+    // `absPath` (other code depends on that — e.g. `packageForModule`'s `startsWith` matching against
+    // `safeWalkFiles`' own native-style paths), while `expandWorkspaceGlobs` always returns toPosix'd absPaths.
+    // On Windows those are two different strings for the exact same directory whenever a workspace list
+    // includes "." explicitly (root resolves to itself both ways) — a false-positive collision on every such
+    // Windows checkout otherwise (reproduced live: harness's own `packages: [., apps/*]`).
+    if (duplicate && toPosix(duplicate.absPath) !== toPosix(absPath)) {
       throw new Error(`Package identity collision for "${id}": "${duplicate.path}" and "${path}".`)
     }
     if (!duplicate) packages.push({ id, ...(name ? { name } : {}), path, absPath, manifestPath, manifest: parsed.value })

@@ -1,51 +1,38 @@
-import Link from 'next/link'
 import ecosystem from '../../../ecosystem.json'
+import { PRODUCT_ID, PRODUCT_REPO } from '@/lib/shell'
+import { BASE_PATH } from '@/lib/site'
 
-const publicProducts = ecosystem.products
-  .filter((product) => product.navigation.showInBar)
+const products = ecosystem.products
+  .filter((product) => product.public && product.navigation.showInBar)
   .sort((left, right) => left.navigation.order - right.navigation.order)
 
+/**
+ * Shared AgentsKit footer. The children are a minimal static fallback so the ecosystem,
+ * repository, and license links exist in the exported HTML; shell v1 replaces them on upgrade.
+ */
 export function SiteFooter() {
   return (
-    <footer className="border-t border-black/10 bg-white/45 dark:border-white/10 dark:bg-white/[0.02]">
-      <div className="mx-auto max-w-7xl px-5 py-12 lg:px-8">
-        <div className="flex flex-col justify-between gap-5 border-b border-black/10 pb-8 sm:flex-row sm:items-end dark:border-white/10">
-          <div className="max-w-xl">
-            <p className="font-semibold tracking-tight">AgentsKit / Doc Bridge</p>
-            <p className="mt-2 text-sm leading-6 text-neutral-600 dark:text-neutral-400">
-              One repository knowledge layer for humans and agents.
-            </p>
-          </div>
-          <nav aria-label="Doc Bridge resources" className="flex flex-wrap gap-x-5 gap-y-3 text-sm">
-            <Link href="/docs/getting-started" className="hover:text-emerald-700 dark:hover:text-emerald-300">Docs</Link>
-            <Link href="/for-agents" className="hover:text-emerald-700 dark:hover:text-emerald-300">For agents</Link>
-            <a href="https://github.com/AgentsKit-io/doc-bridge" className="hover:text-emerald-700 dark:hover:text-emerald-300">GitHub</a>
-          </nav>
-        </div>
-
-        <nav aria-label="AgentsKit ecosystem" className="grid gap-px overflow-hidden rounded-xl border border-black/10 bg-black/10 sm:grid-cols-3 lg:grid-cols-6 dark:border-white/10 dark:bg-white/10">
-          {publicProducts.map((product) => {
-            const current = product.id === 'doc-bridge'
-            return (
-              <a
-                key={product.id}
-                href={product.surfaces.home}
-                aria-current={current ? 'page' : undefined}
-                className="min-w-0 bg-[var(--bridge-paper)] px-4 py-5 transition-colors hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-emerald-600 dark:bg-[var(--bridge-night)] dark:hover:bg-white/[0.06]"
-              >
-                <span className="block text-sm font-semibold">{product.shortName}</span>
-                <span className="mt-1 block text-xs leading-5 text-neutral-600 dark:text-neutral-400">
-                  {product.promise}
-                </span>
-              </a>
-            )
-          })}
+    <agentskit-footer current={PRODUCT_ID} repo={PRODUCT_REPO}>
+      <footer className="ak-footer-fallback" aria-label="AgentsKit ecosystem">
+        <nav aria-label="AgentsKit products">
+          <ul>
+            {products.map((product) => (
+              <li key={product.id}>
+                <a href={product.surfaces.home} aria-current={product.id === PRODUCT_ID ? 'page' : undefined}>
+                  {product.shortName}
+                </a>
+              </li>
+            ))}
+          </ul>
         </nav>
-
-        <p className="mt-6 text-xs text-neutral-500 dark:text-neutral-400">
-          One connected agent toolkit.
+        <p>
+          <a href={`https://github.com/${PRODUCT_REPO}`}>GitHub repository</a>
+          {' · '}
+          <a href={`https://github.com/${PRODUCT_REPO}/blob/master/LICENSE`}>MIT License</a>
+          {' · '}
+          <a href={`${BASE_PATH}/llms.txt`}>llms.txt</a>
         </p>
-      </div>
-    </footer>
+      </footer>
+    </agentskit-footer>
   )
 }

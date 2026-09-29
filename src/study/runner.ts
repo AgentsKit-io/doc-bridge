@@ -1,7 +1,8 @@
-import { spawn } from 'node:child_process'
+import type { ChildProcess } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
+import { killProcessTree, spawnNodeChild } from '@agentskit/cross-platform'
 import { z } from 'zod'
 
 import { contentHashForArtifactV1, sha256NormalizedV1 } from '../index-builder/content-hash.js'
@@ -313,9 +314,9 @@ type ChildAttempt = {
   readonly errorCode?: string
 }
 
-const terminateChildProcessGroup = (child: ReturnType<typeof spawn>): void => {
+const terminateChildProcessGroup = (child: ChildProcess): void => {
   if (child.pid === undefined) return
-  try { process.kill(-child.pid, 'SIGTERM') } catch { child.kill('SIGTERM') }
+  void killProcessTree(child.pid, 'SIGTERM', (signal) => child.kill(signal))
 }
 
 const runAttempt = (request: ControlledCommandRequest, sessionId: string): Promise<ChildAttempt> => new Promise((resolveAttempt) => {
@@ -325,9 +326,8 @@ const runAttempt = (request: ControlledCommandRequest, sessionId: string): Promi
   const started = Date.now()
   const maxRuntimeMs = request.maxRuntimeMs ?? request.plan.budget.maxRuntimeMs
   const maxOutputBytes = request.maxOutputBytes ?? request.plan.budget.maxOutputBytes
-  const child = spawn(request.command, [...(request.args ?? [])], {
+  const child = spawnNodeChild(request.command, [...(request.args ?? [])], {
     cwd: resolve(request.cwd),
-    shell: false,
     detached: true,
     env: { ...env, DOC_BRIDGE_STUDY_SESSION_ID: sessionId },
     stdio: ['pipe', 'pipe', 'pipe'],

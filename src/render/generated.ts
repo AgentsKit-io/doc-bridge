@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto'
+import { normalizeEol } from '@agentskit/cross-platform'
 
 /**
  * The marker every generated region carries.
@@ -21,7 +22,7 @@ export const generatedRegionOpen = (hash: string): string => `<!-- doc-bridge:ge
  * to CRLF has not changed what the generator wrote.
  */
 export const generatedRegionHash = (body: string): string =>
-  createHash('sha256').update(body.replace(/\r\n/g, '\n'), 'utf8').digest('hex').slice(0, GENERATED_REGION_HASH_LENGTH)
+  createHash('sha256').update(normalizeEol(body), 'utf8').digest('hex').slice(0, GENERATED_REGION_HASH_LENGTH)
 
 /**
  * Strip the blank lines around a region body.

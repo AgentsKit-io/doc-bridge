@@ -16,6 +16,7 @@ import {
 } from '../src/memory/github-pr.js'
 import { classifyMemoryCandidates, draftMemoryPromotion } from '../src/memory/pipeline.js'
 import type { MemoryCandidateV1 } from '../src/schemas/memory-candidate.js'
+import { toPosix } from '../src/lib/paths.js'
 
 const fixtureRoot = join(import.meta.dirname, 'fixtures', 'sample-project')
 
@@ -82,7 +83,7 @@ describe('Tier B — memory promote PR', () => {
     ])
     const pr = promoteMemoryToGithubPr(root, draft)
     expect(pr.ok).toBe(false)
-    expect(writePromotionDraft(root, draft)).toMatch(/\.doc-bridge\/drafts\//)
+    expect(toPosix(writePromotionDraft(root, draft))).toMatch(/\.doc-bridge\/drafts\//)
   })
 })
 

@@ -18,6 +18,7 @@ import {
 import { markdownContentHash } from '../src/discovery/markdown.js'
 import { discoverRepository } from '../src/discovery/repository.js'
 import { contentHashForArtifactV1 } from '../src/index-builder/content-hash.js'
+import { toPosix } from '../src/lib/paths.js'
 import type { DiscoverySnapshotV1, KnowledgeEntity } from '../src/schemas/knowledge.js'
 
 /**
@@ -211,7 +212,7 @@ describe('invalidation', () => {
     parses.files.length = 0
     const reused = discoverRepository({ root, previous: cold })
 
-    expect([...new Set(parses.files.map((file) => file.slice(root.length + 1)))]).toEqual(['src/ranking/bm25.ts'])
+    expect([...new Set(parses.files.map((file) => toPosix(file.slice(root.length + 1))))]).toEqual(['src/ranking/bm25.ts'])
     expect(entity(reused, 'module:src/ranking/bm25.ts').metadata?.exports).toEqual(['rank'])
     expect(reuseEntry(reused)?.status).toBe('complete')
     expect(reuseEntry(reused)?.reason).toContain('Re-parsed: src/ranking/bm25.ts.')

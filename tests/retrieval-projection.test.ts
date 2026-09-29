@@ -12,6 +12,7 @@ import { discoverRepository } from '../src/discovery/repository.js'
 import { buildDocBridgeIndex } from '../src/index-builder/build-index.js'
 import { handoffForEntity } from '../src/query/handoff.js'
 import { IndexStaleError, loadFreshDocBridgeIndex } from '../src/query/load-index.js'
+import { toPosix } from '../src/lib/paths.js'
 import { runQuery } from '../src/query/query.js'
 import { searchIndex } from '../src/query/search.js'
 import { projectRetrievalIndex, snapshotObservationHash, weakerConfidence } from '../src/retrieval/project.js'
@@ -438,7 +439,7 @@ describe('freshness and boundaries', () => {
         queue.push(resolve(dirname(file), (match[1] as string).replace(/\.js$/, '.ts')))
       }
     }
-    const reached = [...seen].map((file) => file.slice(repositoryRoot.length + 1))
+    const reached = [...seen].map((file) => toPosix(file.slice(repositoryRoot.length + 1)))
     expect(reached.filter((file) => file.startsWith('src/agents/'))).toEqual([])
     expect(reached).toContain('src/retrieval/bm25.ts')
   })

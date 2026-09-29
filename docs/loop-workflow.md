@@ -25,19 +25,19 @@ So the eleven workstreams live in two places on purpose: the GitHub sub-issues o
 
 ## Workstream map
 
-| Workstream | Linear | GitHub spec | Start state | Blocked by |
-| --- | --- | --- | --- | --- |
-| KR-07 Retrieval benchmark and CI gate | AGE-1660 | [#176](https://github.com/AgentsKit-io/doc-bridge/issues/176) | Todo, Urgent | — |
-| KR-01 Lexical ranking and full corpus | AGE-1661 | [#170](https://github.com/AgentsKit-io/doc-bridge/issues/170) | Todo, High | — |
-| KR-02 Markdown analyzer on remark | AGE-1662 | [#171](https://github.com/AgentsKit-io/doc-bridge/issues/171) | Todo, High | — |
-| KR-03 Code areas and area scope | AGE-1663 | [#172](https://github.com/AgentsKit-io/doc-bridge/issues/172) | Todo, High | — |
-| KR-05 Per-entity hashes, incremental scan | AGE-1664 | [#174](https://github.com/AgentsKit-io/doc-bridge/issues/174) | Todo, High | — |
-| KR-04 Graph layer on graphology | AGE-1665 | [#173](https://github.com/AgentsKit-io/doc-bridge/issues/173) | Backlog | KR-02, KR-03 |
-| KR-06 Retrieval projection and ranking | AGE-1666 | [#175](https://github.com/AgentsKit-io/doc-bridge/issues/175) | Backlog | KR-01…KR-05 |
-| KR-08 Budgeted MCP tools, measured doctor | AGE-1667 | [#177](https://github.com/AgentsKit-io/doc-bridge/issues/177) | Backlog | KR-06, KR-07 |
-| KR-09 Markdown renderings on knap | AGE-1668 | [#178](https://github.com/AgentsKit-io/doc-bridge/issues/178) | Backlog | KR-03, KR-05, KR-06 |
-| KR-10 Enrichment overlay | AGE-1669 | [#179](https://github.com/AgentsKit-io/doc-bridge/issues/179) | Backlog | KR-04, KR-05, KR-06 |
-| KR-11 Overlay stats, assisted study arm | AGE-1670 | [#180](https://github.com/AgentsKit-io/doc-bridge/issues/180) | Backlog | KR-07, KR-10 |
+| Workstream | GitHub spec | Start state | Blocked by |
+| --- | --- | --- | --- |
+| KR-07 Retrieval benchmark and CI gate | [#176](https://github.com/AgentsKit-io/doc-bridge/issues/176) | Todo, Urgent | — |
+| KR-01 Lexical ranking and full corpus | [#170](https://github.com/AgentsKit-io/doc-bridge/issues/170) | Todo, High | — |
+| KR-02 Markdown analyzer on remark | [#171](https://github.com/AgentsKit-io/doc-bridge/issues/171) | Todo, High | — |
+| KR-03 Code areas and area scope | [#172](https://github.com/AgentsKit-io/doc-bridge/issues/172) | Todo, High | — |
+| KR-05 Per-entity hashes, incremental scan | [#174](https://github.com/AgentsKit-io/doc-bridge/issues/174) | Todo, High | — |
+| KR-04 Graph layer on graphology | [#173](https://github.com/AgentsKit-io/doc-bridge/issues/173) | Backlog | KR-02, KR-03 |
+| KR-06 Retrieval projection and ranking | [#175](https://github.com/AgentsKit-io/doc-bridge/issues/175) | Backlog | KR-01…KR-05 |
+| KR-08 Budgeted MCP tools, measured doctor | [#177](https://github.com/AgentsKit-io/doc-bridge/issues/177) | Backlog | KR-06, KR-07 |
+| KR-09 Markdown renderings on knap | [#178](https://github.com/AgentsKit-io/doc-bridge/issues/178) | Backlog | KR-03, KR-05, KR-06 |
+| KR-10 Enrichment overlay | [#179](https://github.com/AgentsKit-io/doc-bridge/issues/179) | Backlog | KR-04, KR-05, KR-06 |
+| KR-11 Overlay stats, assisted study arm | [#180](https://github.com/AgentsKit-io/doc-bridge/issues/180) | Backlog | KR-07, KR-10 |
 
 ## One workstream at a time
 
@@ -87,9 +87,9 @@ ak-harness loop status                                     # what Orca knows: en
 
 ```bash
 ak-harness loop debrief                    # in flight, held, escalated, cooldowns — reads local state only
-ak-harness loop watch --issue AGE-1661     # DONE | FAILED | ACTION_REQUIRED | PROGRESS
+ak-harness loop watch --issue ABC-123     # DONE | FAILED | ACTION_REQUIRED | PROGRESS
 ak-harness loop paused                     # workstreams auto-paused after repeated failures
-ak-harness loop resume AGE-1661            # clear a pause, or remove the loop:paused label in Linear
+ak-harness loop resume ABC-123            # clear a pause, or remove the loop:paused label in Linear
 ak-harness loop retro --since 7d           # digest plus one knob to turn in loop.config.yaml
 ```
 

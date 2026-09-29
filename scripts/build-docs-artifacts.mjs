@@ -1,9 +1,10 @@
 import { cp, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises'
-import { dirname, extname, join, relative, resolve, sep } from 'node:path'
+import { dirname, extname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { computeLocalKnowledgeArtifactContentHash, LocalKnowledgeArtifactSchema } from '@agentskit/chat/protocol'
 import { createRequire } from 'node:module'
 import { aliases } from './lib/aliases.mjs'
+import { toPosix } from '@agentskit/cross-platform'
 
 const require = createRequire(import.meta.url)
 /** Prefer package export; fall back to source when running pre-build. */
@@ -61,7 +62,7 @@ async function walk(directory) {
   return files.flat().filter((path) => extname(path) === '.md').sort()
 }
 
-function unix(path) { return path.split(sep).join('/') }
+function unix(path) { return toPosix(path) }
 function artifactId(prefix, value) { return `${prefix}:${value.replace(/[^A-Za-z0-9._:-]+/g, ':')}` }
 function entryId(slug) { return artifactId('doc', slug) }
 function canonicalDocUrl(slug) { return slug === 'index' ? `${origin}/docs/` : `${origin}/docs/${slug}/` }
@@ -76,6 +77,8 @@ function descriptionOf(markdown) {
     ?? 'Canonical Doc Bridge documentation.'
 }
 
+// The ecosystem bar, tour, footer, and aurora come from the hosted AgentsKit shell
+// (`{NEXT_PUBLIC_AGENTSKIT_SHELL_ORIGIN}/shell/v1.*`); nothing shell-related is self-hosted here.
 await rm(publicRoot, { recursive: true, force: true })
 await mkdir(join(publicRoot, 'raw'), { recursive: true })
 await mkdir(join(publicRoot, 'deterministic'), { recursive: true })
@@ -89,8 +92,17 @@ const documents = await Promise.all(files.map(async (path) => {
 }))
 const manifest = JSON.parse(await readFile(ecosystemManifestPath, 'utf8'))
 const ecosystemOverrides = JSON.parse(await readFile(ecosystemOverridesPath, 'utf8'))
-const ecosystem = manifest.products
-  .map((product) => ({ ...product, ...ecosystemOverrides[product.id] }))
+// Canonical public ecosystem: the products the shared bar lists (Playbook is not shown).
+const publicProducts = manifest.products
+  .filter((product) => product.public && product.navigation?.showInBar)
+  .sort((left, right) => left.navigation.order - right.navigation.order)
+const ecosystem = publicProducts
+  .map((product) => ({
+    ...product,
+    ...ecosystemOverrides[product.id],
+    home: ecosystemOverrides[product.id]?.home ?? product.home ?? product.surfaces?.home ?? product.surfaces?.docs,
+    hook: ecosystemOverrides[product.id]?.hook ?? product.promise,
+  }))
 const publicFiles = JSON.parse(await readFile(publicDocsPath, 'utf8'))
 const publicFileSet = new Set(publicFiles)
 const publicDocuments = documents.filter((doc) => publicFileSet.has(doc.file))
@@ -107,7 +119,7 @@ for (const doc of rawDocuments) {
 
 await cp(join(root, 'docs/landing/assets'), join(publicRoot, 'assets'), { recursive: true })
 
-const productsForLlms = [...manifest.products]
+const productsForLlms = [...publicProducts]
   .map((product) => ({
     id: product.id,
     name: product.name,
@@ -181,9 +193,9 @@ const commandEntries = [
 }))
 
 const ecosystemEntries = ecosystem
-  .filter((product) => product.id !== 'doc-bridge' && (product.home ?? product.surfaces?.home ?? product.surfaces?.docs))
+  .filter((product) => product.id !== 'doc-bridge' && product.home)
   .map((product) => {
-    const home = product.home ?? product.surfaces?.home ?? product.surfaces?.docs
+    const home = product.home
     return {
       id: `ecosystem:${product.id}`,
       kind: 'document',

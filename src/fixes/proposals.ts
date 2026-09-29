@@ -1,8 +1,10 @@
 import { existsSync, readdirSync, readFileSync, realpathSync, renameSync, unlinkSync, writeFileSync } from 'node:fs'
-import { basename, dirname, extname, join, relative, resolve, sep } from 'node:path'
+import { basename, dirname, extname, join, relative, resolve } from 'node:path'
+import { splitLines, toPosix } from '@agentskit/cross-platform'
 
 import { contentHashForArtifactV1, sha256NormalizedV1 } from '../index-builder/content-hash.js'
 import { FixProposalV1Schema, type FixProposalV1 } from '../schemas/knowledge.js'
+import { createIgnoreFilter, type IgnoreFilter } from '../lib/ignore-filter.js'
 import { containedPath } from '../safety/repository.js'
 
 export type FixProposalOptions = {
@@ -34,8 +36,8 @@ const artifactMetadata = (root: string, options: FixProposalOptions) => ({
 })
 
 const unifiedDiff = (changes: readonly FixChange[]): string => changes.map((change) => {
-  const before = change.before.split('\n').map((line) => `-${line}`).join('\n')
-  const after = change.after.split('\n').map((line) => `+${line}`).join('\n')
+  const before = splitLines(change.before, { dropTrailingEmpty: false }).map((line) => `-${line}`).join('\n')
+  const after = splitLines(change.after, { dropTrailingEmpty: false }).map((line) => `+${line}`).join('\n')
   return `--- a/${change.path}\n+++ b/${change.path}\n@@\n${before}\n${after}`
 }).join('\n')
 
@@ -55,11 +57,12 @@ const makeProposal = (root: string, options: FixProposalOptions, changes: readon
   return FixProposalV1Schema.parse({ ...draft, contentHash: contentHashForArtifactV1(draft) })
 }
 
-const walkMarkdown = (root: string, directory = root): string[] => readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+const walkMarkdown = (root: string, directory = root, ignored: IgnoreFilter = createIgnoreFilter(root)): string[] => readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
   if (entry.name === '.git' || entry.name === 'node_modules' || entry.name === 'dist' || entry.name === 'build') return []
   const path = join(directory, entry.name)
-  if (entry.isDirectory()) return walkMarkdown(root, path)
-  return entry.isFile() && ['.md', '.mdx'].includes(extname(entry.name).toLowerCase()) ? [relative(root, path).split(sep).join('/')] : []
+  if (ignored.isIgnored(path, entry.isDirectory())) return []
+  if (entry.isDirectory()) return walkMarkdown(root, path, ignored)
+  return entry.isFile() && ['.md', '.mdx'].includes(extname(entry.name).toLowerCase()) ? [toPosix(relative(root, path))] : []
 })
 
 const localLink = /(!?)\[([^\]]*)\]\(([^)\s]+)(?:\s+["'][^)]*["'])?\)/g
@@ -86,7 +89,7 @@ export const createMarkdownLinkFixProposal = (root: string, options: FixProposal
       const labelStem = (match[2] ?? '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '')
       const candidates = paths.filter((candidate) => basename(candidate, extname(candidate)).toLowerCase() === targetStem || basename(candidate, extname(candidate)).toLowerCase().replace(/[^a-z0-9]+/g, '') === labelStem)
       if (candidates.length !== 1) continue
-      let replacement = relative(dirname(path), candidates[0]!).split(sep).join('/')
+      let replacement = toPosix(relative(dirname(path), candidates[0]!))
       if (target.startsWith('./') && !replacement.startsWith('.')) replacement = `./${replacement}`
       next = next.replace(match[0], match[0].replace(target, replacement))
     }
@@ -97,14 +100,14 @@ export const createMarkdownLinkFixProposal = (root: string, options: FixProposal
 
 export const createArtifactNormalizationProposal = (root: string, artifactPath: string, options: FixProposalOptions): FixProposalV1 | undefined => {
   const projectRoot = realpathSync.native(resolve(root))
-  const path = artifactPath.split(sep).join('/')
+  const path = toPosix(artifactPath)
   const absolute = containedPath(projectRoot, path)
   if (!absolute) return undefined
   let before: string
   try { before = readFileSync(absolute, 'utf8') } catch { return undefined }
   let after: string
   try { after = `${JSON.stringify(sortJson(JSON.parse(before) as unknown), null, 2)}\n` } catch { return undefined }
-  return after === before ? undefined : makeProposal(projectRoot, options, [{ path: relative(projectRoot, absolute).split(sep).join('/'), before, after }], ['The artifact contains valid JSON.'], ['The artifact is valid canonical JSON with one trailing newline.'])
+  return after === before ? undefined : makeProposal(projectRoot, options, [{ path: toPosix(relative(projectRoot, absolute)), before, after }], ['The artifact contains valid JSON.'], ['The artifact is valid canonical JSON with one trailing newline.'])
 }
 
 export const approveFixProposal = (proposalInput: unknown, approvedBy: string, approvedAt = new Date().toISOString()): FixProposalV1 => {

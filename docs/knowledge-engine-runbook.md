@@ -23,7 +23,7 @@ ak-docs map --html --output .doc-bridge/report.html
 
 Expected artifacts are under `.doc-bridge/workflow/`: `manifest.json`, immutable stage artifacts, `transitions.jsonl`, and `last-known-good.json`. The HTML report is standalone and can be opened directly without a server or network.
 
-The safe repository walk excludes common generated trees, including `dist`, `build`, `.next`, `out`, `.turbo`, `.svelte-kit`, `.mcpb-build`, and `.mcpb-output`, so generated output is reported as a coverage boundary rather than mistaken for source architecture. Add a project-specific `safety.exclude` pattern when another tool generates code outside these conventions.
+The safe repository walk excludes common generated trees, including `dist`, `build`, `.next`, `out`, `.turbo`, `.svelte-kit`, `.mcpb-build`, and `.mcpb-output`, so generated output is reported as a coverage boundary rather than mistaken for source architecture. It also skips every path the repository ignores (Git ignore rules, or the `.gitignore` files on disk outside Git). Add a project-specific `safety.exclude` pattern when another tool generates code outside these conventions.
 
 ## Safe fixes
 
