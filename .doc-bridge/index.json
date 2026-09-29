@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "contentHash": "538a945db9a4e9a876096f544102e5de2e9218cbf634130fa4d15ca1ecdb59e0",
+  "contentHash": "809dbad82f55e20b6d80112a452af6badca646f6471e2f8e446b341a35353e5a",
   "contentHashAlgo": "sha256-normalized-v1",
-  "generatedAt": "2026-09-18T01:20:28.442Z",
+  "generatedAt": "2026-09-29T17:15:32.516Z",
   "project": {
     "name": "@agentskit/doc-bridge",
     "root": "."
@@ -1636,7 +1636,7 @@
         "tsx",
         "docs"
       ],
-      "contentHash": "8650042e685c8c5e9f5c95b8d5cfdb2fdfc04c32752710ce7292379849121252"
+      "contentHash": "c2c959961c58f25e455e66d1d2ab5a0124bee7b3ad394a951716be119962c2d9"
     },
     {
       "id": "module:apps/docs/app/for-agents/page.tsx",
@@ -1856,7 +1856,7 @@
         "tsx",
         "components"
       ],
-      "contentHash": "8772b1feea878eb5f8faa5fa63f40c89f660c0d61099b047297b01119ac05fe4"
+      "contentHash": "37120e4d2d147039f985e323228da3ce2e405fa19052e8dff47363cd705a6009"
     },
     {
       "id": "module:apps/docs/global.d.ts",
@@ -2089,6 +2089,19 @@
       "contentHash": "ec38054acc4593de358cdefedf98f90c9251913433c9f1817b6baac7fa0de6ab"
     },
     {
+      "id": "module:scripts/aliases.test.mjs",
+      "type": "module",
+      "title": "aliases.test.mjs",
+      "path": "scripts/aliases.test.mjs",
+      "tags": [
+        "module",
+        "mjs",
+        "test",
+        "scripts"
+      ],
+      "contentHash": "89afb813eb6922d1715b4b56171ecde7ed95d57fd5a4698e0661745d84409904"
+    },
+    {
       "id": "module:scripts/build-docs-artifacts.mjs",
       "type": "module",
       "title": "build-docs-artifacts.mjs",
@@ -2098,7 +2111,7 @@
         "mjs",
         "scripts"
       ],
-      "contentHash": "06c347a605db246e022e5ef85815eba61aa390b9090698becf9d709ff4c44b07"
+      "contentHash": "32f1c79b8dea9b5be076fd2643b0c140e30011071c355bb7d8bae24bb11b6ffd"
     },
     {
       "id": "module:scripts/build-mcpb.mjs",
@@ -2210,7 +2223,7 @@
         "test",
         "scripts"
       ],
-      "contentHash": "eb0e20efdb5d9fed43906824d697ed6fc9786f21e83336eb793a555c0bb2d2b0"
+      "contentHash": "67a91cbb5e3305afae0c65d140b7520436eea9e6f30a8f6d253e4a204da7bad5"
     },
     {
       "id": "module:scripts/generate-study-charts.mjs",
@@ -2223,6 +2236,21 @@
         "scripts"
       ],
       "contentHash": "a4d33cf0810195925cb2a99cd44a2cf1c191327bffd0f2b50692007649718ea1"
+    },
+    {
+      "id": "module:scripts/lib/aliases.mjs",
+      "type": "module",
+      "title": "aliases.mjs",
+      "path": "scripts/lib/aliases.mjs",
+      "symbols": [
+        "aliases"
+      ],
+      "tags": [
+        "module",
+        "mjs",
+        "lib"
+      ],
+      "contentHash": "19e786b0807bb24c02f4966f0b1975feba11ed4259e82248cf9c52097b7f0efc"
     },
     {
       "id": "module:scripts/lib/readme-standard.mjs",
@@ -7907,8 +7935,8 @@
     "changes": {}
   },
   "inputs": {
-    "hash": "42803d479118f9185ba95346de7fe706cba4122c109310be703d45b2e1b9cff5",
-    "fileCount": 431,
+    "hash": "579e6d6b2f58b53eb17276a094fa1b4decdbf06ef6ba30370762e8edf31f80a0",
+    "fileCount": 433,
     "projectionVersion": 2
   },
   "retrieval": {
@@ -7930,9 +7958,9 @@
   "projection": {
     "type": "retrieval-index",
     "schemaVersion": 1,
-    "contentHash": "1e0cc6f3c60020b5e256ff9b722d6b8ccb1444272fe7a076328177a0edc6a8bd",
+    "contentHash": "dc61d93e949d165edf4444974e229bd0ece1392d2dfe254ebbd48c75d8b20004",
     "contentHashAlgo": "sha256-normalized-v1",
-    "snapshotHash": "1f6c73f636ba48ca5d47ee0dc4ef9305c61af5b694249e31286f92d2b4d992e0",
+    "snapshotHash": "f6aa2c59d297b929e5e50a1e1d1321ebf51c10abf2bdf7eb08d3433e8560d6fd",
     "overlayHash": "f99666ff9119084dd25c2974ae64eb6935ec2aa785ff5ad478fb9d541f7a5e94",
     "configurationHash": "91d46a4ecbfe3b55878e0b3c7608819775cf7b18aeafcc8f689eddfa462622b4",
     "lexiconVersion": 1,
@@ -7952,7 +7980,7 @@
     },
     "lexical": {
       "version": 1,
-      "documentCount": 459,
+      "documentCount": 461,
       "fieldNames": [
         "aliases",
         "body",
@@ -7963,13 +7991,13 @@
         "title"
       ],
       "averageFieldLength": {
-        "aliases": 3.468409586056645,
-        "body": 72.50108932461873,
-        "headings": 4.703703703703703,
-        "path": 5.668845315904139,
-        "summary": 5.816993464052287,
-        "symbols": 11.88888888888889,
-        "title": 3.122004357298475
+        "aliases": 3.468546637744035,
+        "body": 72.18655097613883,
+        "headings": 4.683297180043384,
+        "path": 5.665943600867679,
+        "summary": 5.79175704989154,
+        "symbols": 11.839479392624728,
+        "title": 3.119305856832972
       }
     },
     "entries": [
@@ -8166,7 +8194,7 @@
           ],
           "outbound": []
         },
-        "contentHash": "1babbd763c5cc281060494ba8024b492b8dafd9df688004c0cc2f26682822423",
+        "contentHash": "478f96b756740ec93585cf9937cd485041b0acae476225b6046143b7aae624a8",
         "provenance": "observed",
         "confidence": "observed",
         "ownershipId": "doc-bridge-scripts"
@@ -10242,6 +10270,11 @@
             {
               "kind": "mentions",
               "id": "module:src/retrieval/rank.ts",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions-symbol",
+              "id": "module:scripts/lib/aliases.mjs",
               "confidence": "observed"
             },
             {
@@ -18862,7 +18895,7 @@
           "inbound": [],
           "outbound": []
         },
-        "contentHash": "8650042e685c8c5e9f5c95b8d5cfdb2fdfc04c32752710ce7292379849121252",
+        "contentHash": "c2c959961c58f25e455e66d1d2ab5a0124bee7b3ad394a951716be119962c2d9",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -19402,7 +19435,7 @@
           "inbound": [],
           "outbound": []
         },
-        "contentHash": "8772b1feea878eb5f8faa5fa63f40c89f660c0d61099b047297b01119ac05fe4",
+        "contentHash": "37120e4d2d147039f985e323228da3ce2e405fa19052e8dff47363cd705a6009",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -20060,6 +20093,47 @@
         "confidence": "observed"
       },
       {
+        "id": "module:scripts/aliases.test.mjs",
+        "kind": "module",
+        "path": "scripts/aliases.test.mjs",
+        "title": "aliases.test.mjs",
+        "aliases": [],
+        "tags": [
+          "module",
+          "mjs",
+          "test",
+          "scripts"
+        ],
+        "fields": {
+          "title": "aliases.test.mjs",
+          "headings": "",
+          "path": "scripts/aliases.test.mjs",
+          "symbols": "",
+          "summary": "",
+          "body": "",
+          "aliases": "module mjs test scripts"
+        },
+        "graph": {
+          "pagerank": 0,
+          "inboundLinks": 0,
+          "coveredBy": [],
+          "mentionedBy": [],
+          "areaId": "area:scripts",
+          "packageId": "package:@agentskit/doc-bridge",
+          "inbound": [],
+          "outbound": [
+            {
+              "kind": "imports",
+              "id": "module:scripts/lib/aliases.mjs",
+              "confidence": "observed"
+            }
+          ]
+        },
+        "contentHash": "89afb813eb6922d1715b4b56171ecde7ed95d57fd5a4698e0661745d84409904",
+        "provenance": "observed",
+        "confidence": "observed"
+      },
+      {
         "id": "module:scripts/build-docs-artifacts.mjs",
         "kind": "module",
         "path": "scripts/build-docs-artifacts.mjs",
@@ -20095,9 +20169,15 @@
               "confidence": "observed"
             }
           ],
-          "outbound": []
+          "outbound": [
+            {
+              "kind": "imports",
+              "id": "module:scripts/lib/aliases.mjs",
+              "confidence": "observed"
+            }
+          ]
         },
-        "contentHash": "06c347a605db246e022e5ef85815eba61aa390b9090698becf9d709ff4c44b07",
+        "contentHash": "32f1c79b8dea9b5be076fd2643b0c140e30011071c355bb7d8bae24bb11b6ffd",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -20427,7 +20507,7 @@
           "inbound": [],
           "outbound": []
         },
-        "contentHash": "eb0e20efdb5d9fed43906824d697ed6fc9786f21e83336eb793a555c0bb2d2b0",
+        "contentHash": "67a91cbb5e3305afae0c65d140b7520436eea9e6f30a8f6d253e4a204da7bad5",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -20462,6 +20542,61 @@
           "outbound": []
         },
         "contentHash": "a4d33cf0810195925cb2a99cd44a2cf1c191327bffd0f2b50692007649718ea1",
+        "provenance": "observed",
+        "confidence": "observed"
+      },
+      {
+        "id": "module:scripts/lib/aliases.mjs",
+        "kind": "module",
+        "path": "scripts/lib/aliases.mjs",
+        "title": "aliases.mjs",
+        "aliases": [],
+        "symbols": [
+          "aliases"
+        ],
+        "tags": [
+          "module",
+          "mjs",
+          "lib"
+        ],
+        "fields": {
+          "title": "aliases.mjs",
+          "headings": "",
+          "path": "scripts/lib/aliases.mjs",
+          "symbols": "aliases",
+          "summary": "",
+          "body": "",
+          "aliases": "module mjs lib"
+        },
+        "graph": {
+          "pagerank": 0,
+          "inboundLinks": 1,
+          "coveredBy": [],
+          "mentionedBy": [
+            "document:CHANGELOG.md"
+          ],
+          "areaId": "area:scripts",
+          "packageId": "package:@agentskit/doc-bridge",
+          "inbound": [
+            {
+              "kind": "imports",
+              "id": "module:scripts/aliases.test.mjs",
+              "confidence": "observed"
+            },
+            {
+              "kind": "imports",
+              "id": "module:scripts/build-docs-artifacts.mjs",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions-symbol",
+              "id": "document:CHANGELOG.md",
+              "confidence": "observed"
+            }
+          ],
+          "outbound": []
+        },
+        "contentHash": "19e786b0807bb24c02f4966f0b1975feba11ed4259e82248cf9c52097b7f0efc",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -40494,7 +40629,7 @@
           ],
           "outbound": []
         },
-        "contentHash": "c6c23bedb5317e18e1db92f58222dfa2d2e7d50db3bb7eee5814769f3c432e48",
+        "contentHash": "dc4699155c39fa3b8875518086b2f1d9a0a7f06bae83ed6a60a054f4f47ec8c4",
         "provenance": "observed",
         "confidence": "observed"
       }

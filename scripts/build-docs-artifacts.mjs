@@ -3,6 +3,7 @@ import { dirname, extname, join, relative, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { computeLocalKnowledgeArtifactContentHash, LocalKnowledgeArtifactSchema } from '@agentskit/chat/protocol'
 import { createRequire } from 'node:module'
+import { aliases } from './lib/aliases.mjs'
 
 const require = createRequire(import.meta.url)
 /** Prefer package export; fall back to source when running pre-build. */
@@ -64,15 +65,6 @@ function unix(path) { return path.split(sep).join('/') }
 function artifactId(prefix, value) { return `${prefix}:${value.replace(/[^A-Za-z0-9._:-]+/g, ':')}` }
 function entryId(slug) { return artifactId('doc', slug) }
 function canonicalDocUrl(slug) { return slug === 'index' ? `${origin}/docs/` : `${origin}/docs/${slug}/` }
-function aliases(values) {
-  const seen = new Set()
-  return values.filter((value) => {
-    const key = value.normalize('NFKC').trim().replace(/\s+/g, ' ').toLocaleLowerCase('en-US')
-    if (seen.has(key)) return false
-    seen.add(key)
-    return true
-  })
-}
 function titleOf(markdown, fallback) { return markdown.match(/^#\s+(.+)$/m)?.[1]?.trim() ?? fallback }
 function descriptionOf(markdown) {
   const frontmatter = markdown.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n/u)?.[1]
@@ -188,16 +180,21 @@ const commandEntries = [
   answer: { markdown: `## ${label}\n\n\`\`\`bash\n${command}\n\`\`\`\n\n${description}`, citations: [{ id: 'doc:spec:cli', title: 'CLI reference', href: `${origin}/docs/spec/cli/` }] },
 }))
 
-const ecosystemEntries = ecosystem.filter((product) => product.id !== 'doc-bridge').map((product) => ({
-  id: `ecosystem:${product.id}`,
-  kind: 'document',
-  label: product.name,
-  match: { type: 'exact', values: aliases([product.id, product.name, product.role, product.hook]) },
-  answer: {
-    markdown: `## ${product.name}\n\n${product.hook}\n\n[Continue to ${product.name}](${product.home})`,
-    citations: [{ id: `ecosystem:${product.id}`, title: product.name, href: product.home }],
-  },
-}))
+const ecosystemEntries = ecosystem
+  .filter((product) => product.id !== 'doc-bridge' && (product.home ?? product.surfaces?.home ?? product.surfaces?.docs))
+  .map((product) => {
+    const home = product.home ?? product.surfaces?.home ?? product.surfaces?.docs
+    return {
+      id: `ecosystem:${product.id}`,
+      kind: 'document',
+      label: product.name,
+      match: { type: 'exact', values: aliases([product.id, product.name, product.role, product.hook]) },
+      answer: {
+        markdown: `## ${product.name}\n\n${product.hook ?? product.promise}\n\n[Continue to ${product.name}](${home})`,
+        citations: [{ id: `ecosystem:${product.id}`, title: product.name, href: home }],
+      },
+    }
+  })
 
 const handoffIndex = JSON.parse(await readFile(join(root, '.doc-bridge/index.json'), 'utf8'))
 const handoffEntries = Object.entries(handoffIndex.handoffs ?? {}).map(([id, handoff]) => {

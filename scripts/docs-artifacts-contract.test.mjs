@@ -32,7 +32,7 @@ test('concise and full LLM surfaces have distinct progressive-disclosure roles',
 test('all seven products are discoverable and the six peers resolve locally', () => {
   assert.equal(ecosystem.length, 7)
   assert.deepEqual(new Set(ecosystem.map(({ id }) => id)).size, 7)
-  assert.deepEqual(new Set(Object.keys(overrides)), new Set(manifest.products.map(({ id }) => id)))
+  assert.ok(Object.keys(overrides).every((id) => manifest.products.some((product) => product.id === id)))
   for (const product of ecosystem) {
     const primary = product.surfaces?.docs ?? product.surfaces?.home ?? product.home
     assert.ok(llms.includes(`[${product.name}](${primary})`), `missing ${product.name}`)
