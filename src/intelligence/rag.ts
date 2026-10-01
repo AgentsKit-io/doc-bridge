@@ -4,7 +4,23 @@ import { join } from 'node:path'
 import type { DocBridgeConfigV1 } from '../config/schema.js'
 import type { DocBridgeIndexV1 } from '../schemas/doc-bridge-index.js'
 import { defaultVectorStorePath, resolveIntelligenceRuntime } from './adapter.js'
-import { importPeer } from './peers.js'
+import { importPeer, PeerMissingError } from './peers.js'
+
+const withVectorPeerHint = async <T>(operation: () => Promise<T>): Promise<T> => {
+  try {
+    return await operation()
+  } catch (error) {
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      error.code === 'AK_MEMORY_PEER_MISSING'
+    ) {
+      throw new PeerMissingError('vectra', 'npm install vectra')
+    }
+    throw error
+  }
+}
 
 export type RagSearchHit = {
   readonly id?: string
@@ -79,12 +95,12 @@ export const createDocBridgeRag = async (
   return {
     storePath,
     retriever: rag,
-    ingest: async () => {
+    ingest: () => withVectorPeerHint(async () => {
       const documents = loadDocuments(root, index, sources)
       await rag.ingest(documents)
       return { documentCount: documents.length, storePath }
-    },
-    search: async (query, topK = 6) => {
+    }),
+    search: (query, topK = 6) => withVectorPeerHint(async () => {
       const hits = await rag.search(query, { topK })
       return hits.map((hit) => ({
         ...(hit.id ? { id: hit.id } : {}),
@@ -93,6 +109,6 @@ export const createDocBridgeRag = async (
         ...(hit.source ? { source: hit.source } : {}),
         ...(hit.metadata ? { metadata: hit.metadata } : {}),
       }))
-    },
+    }),
   }
 }

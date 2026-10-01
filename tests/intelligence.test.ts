@@ -236,6 +236,27 @@ describe('intelligence runtime', () => {
     ])
   })
 
+  it('surfaces missing vector peers with an install hint and preserves other failures', async () => {
+    const rag = await createDocBridgeRag(
+      tempProject(),
+      config({ enabled: true, adapter: { provider: 'ollama' } }),
+      index(),
+    )
+    const missingPeer = Object.assign(new Error('optional vector peer is missing'), {
+      code: 'AK_MEMORY_PEER_MISSING',
+    })
+    const storageFailure = new Error('vector storage is unavailable')
+    mocks.rag.ingest.mockRejectedValueOnce(missingPeer)
+    mocks.rag.search.mockRejectedValueOnce(storageFailure)
+
+    await expect(rag.ingest()).rejects.toMatchObject({
+      name: 'PeerMissingError',
+      peer: 'vectra',
+      installHint: 'npm install vectra',
+    })
+    await expect(rag.search('schemas')).rejects.toBe(storageFailure)
+  })
+
   it('runs one-shot chat with handoff-first context when the question names a package', async () => {
     const root = tempProject()
     const result = await runChatOnce(
