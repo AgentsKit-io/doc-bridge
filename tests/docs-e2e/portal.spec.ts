@@ -14,6 +14,8 @@ test('landing communicates the deterministic proof and has no horizontal overflo
   const footer = page.locator('agentskit-footer[current="doc-bridge"][repo="AgentsKit-io/doc-bridge"]')
   await expect(footer).toHaveCount(1)
   await expect(footer.locator('a[href^="https://code-review.agentskit.io"]').first()).toBeAttached()
+  await expect(footer.locator('a[href="https://harness.agentskit.io/"]').first()).toBeAttached()
+  await expect(footer.getByText('AKOS', { exact: true })).toHaveCount(0)
   await expect(footer.locator('a[href*="playbook.agentskit.io"]')).toHaveCount(0)
   await expect(page.locator('.bridge-home-header a[href*="github.com"]')).toHaveCount(0)
   await expect(page.locator('.bridge-home-header .ak-product-wordmark')).toContainText('Doc Bridge')

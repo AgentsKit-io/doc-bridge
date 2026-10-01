@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "contentHash": "244e5bba3fae489f76e2905f561c858a0200e58a8a5ef882867245445b824590",
+  "contentHash": "ea8f6d2b0497834afcfa8b758f5b9c55726a71a706aa844399a531833b54cd14",
   "contentHashAlgo": "sha256-normalized-v1",
-  "generatedAt": "2026-09-28T02:14:43.668Z",
+  "generatedAt": "2026-09-29T19:28:54.496Z",
   "project": {
     "name": "@agentskit/doc-bridge",
     "root": "."
@@ -492,7 +492,7 @@
         "document",
         "human"
       ],
-      "contentHash": "9d93c37412d0c74a712779b5dbcb3180ad19a55de5bd1bb12d9441a25e89ef21"
+      "contentHash": "74bccd3b1184cdd0bd400e82a60b0edf91af605b2c4123525bb7306115b3d404"
     },
     {
       "id": "document:docs/getting-started.md",
@@ -636,7 +636,7 @@
         "document",
         "human"
       ],
-      "contentHash": "bf9e305b7edb459daaa2a685e6cb4df7352f69da94e798889be02a16c4f57a45"
+      "contentHash": "0ea14426b269e676b73b78f609bf4238b92d477abba069a4603d11c4bf5197a0"
     },
     {
       "id": "document:docs/MARKETPLACE.md",
@@ -2058,7 +2058,7 @@
         "ts",
         "docs"
       ],
-      "contentHash": "7ffc81b25133285ed9bf828649cff94bf2e0b39da596d6af695aff6afd4399f5"
+      "contentHash": "f9ed026ba8a9c875d0b5baad64f0e18d68fdf32c3cd25d049ebfe26236fddf7e"
     },
     {
       "id": "module:apps/docs/next.config.mjs",
@@ -6022,7 +6022,7 @@
         "test",
         "docs-e2e"
       ],
-      "contentHash": "2d9440050c8d3158411bcccdebe032e2794383eb9dd35955006be177825b2570"
+      "contentHash": "0056c3599d27352a2c93e66204938d0cd263abdf7134060f57fe6bf368412110"
     },
     {
       "id": "module:tests/doctor-measured.test.ts",
@@ -8074,7 +8074,7 @@
     "changes": {}
   },
   "inputs": {
-    "hash": "7cfb667d6bfa9f9f6ade49999e493a39d13bd58699e3579c9a65831697812e11",
+    "hash": "6f79b2587896b513205463a32012a8ed3a0bf4872895578583f7267baed73a84",
     "fileCount": 442,
     "projectionVersion": 2
   },
@@ -8097,9 +8097,9 @@
   "projection": {
     "type": "retrieval-index",
     "schemaVersion": 1,
-    "contentHash": "4f9f7c00002a8f5a1f6395ab3beded756b2e37bb475f5f7686d10e069970c4ee",
+    "contentHash": "00204838f0a01ac4f5b761d6268da9be6b602db40a6a4bb0da44ea289c429719",
     "contentHashAlgo": "sha256-normalized-v1",
-    "snapshotHash": "333d987d5e8c9e04b0929e332f79b886e86bb93ca9207162ffe62ed9db8d9a12",
+    "snapshotHash": "31bb2f13a2b7c38b1262c8214c35930b3b915d79a724b665f1c1ad5ead34bb8b",
     "overlayHash": "f99666ff9119084dd25c2974ae64eb6935ec2aa785ff5ad478fb9d541f7a5e94",
     "configurationHash": "91d46a4ecbfe3b55878e0b3c7608819775cf7b18aeafcc8f689eddfa462622b4",
     "lexiconVersion": 1,
@@ -8131,7 +8131,7 @@
       ],
       "averageFieldLength": {
         "aliases": 3.4638297872340424,
-        "body": 68.68723404255319,
+        "body": 68.70212765957447,
         "headings": 4.282978723404256,
         "path": 5.691489361702128,
         "summary": 5.772340425531915,
@@ -12945,7 +12945,7 @@
           "path": "docs/for-agents.md",
           "symbols": "",
           "summary": "Use Doc Bridge before changing a module. It returns versioned, runtime-validated data instead of asking a model to infer ownership from the entire repository.",
-          "body": "For agents Use Doc Bridge before changing a module. It returns versioned, runtime-validated data instead of asking a model to infer ownership from the entire repository. The response supplies four things: startHere , readBeforeEditing , editRoots , and checks . For a documentation change, inspect the deterministic audit before editing: Treat blocked as a stop condition. Treat not-analyzed as missing evidence, not as a pass. When a report explicitly documents a limitation, preserve that limitation as not-analyzed ; do not reinterpret it as a successful check or silently upgrade it to a defect. Agent proposals remain advisory until a human approves them. Machine entry points - — concise discovery and canonical routes - — complete source corpus - — local chat/discovery artifact - — this guide as raw Markdown - Site route: — human-readable agent entry Related - - - - If the task is conversational UI, continue with . For verification before merge, use . For enterprise orchestration, governance, and audit, follow the repository's configured team workflow.",
+          "body": "For agents Use Doc Bridge before changing a module. It returns versioned, runtime-validated data instead of asking a model to infer ownership from the entire repository. The response supplies four things: startHere , readBeforeEditing , editRoots , and checks . For a documentation change, inspect the deterministic audit before editing: Treat blocked as a stop condition. Treat not-analyzed as missing evidence, not as a pass. When a report explicitly documents a limitation, preserve that limitation as not-analyzed ; do not reinterpret it as a successful check or silently upgrade it to a defect. Agent proposals remain advisory until a human approves them. Machine entry points - — concise discovery and canonical routes - — complete source corpus - — local chat/discovery artifact - — this guide as raw Markdown - Site route: — human-readable agent entry Related - - - - If the task is conversational UI, continue with . For verification before merge, use . For the keep-pushing delivery loop, use . For enterprise orchestration, governance, and audit, follow the repository's configured team workflow.",
           "aliases": "document human"
         },
         "graph": {
@@ -13027,7 +13027,7 @@
             }
           ]
         },
-        "contentHash": "9d93c37412d0c74a712779b5dbcb3180ad19a55de5bd1bb12d9441a25e89ef21",
+        "contentHash": "74bccd3b1184cdd0bd400e82a60b0edf91af605b2c4123525bb7306115b3d404",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -14158,7 +14158,7 @@
           "path": "docs/MARKETPLACE-ECOSYSTEM-PLAN.md",
           "symbols": "",
           "summary": "This slice is complete only when all conditions below are evidenced locally. Publication remains an owner-only follow-up.",
-          "body": "Doc Bridge ecosystem and Marketplace acceptance plan This slice is complete only when all conditions below are evidenced locally. Publication remains an owner-only follow-up. - Composite Action validates committed freshness, accepts shell inputs only through quoted environment variables, pins its runtime package, and pins third-party Actions by SHA. - Marketplace metadata, consumer example, release-owner checklist, and automated contract checks agree on the same version. - The public portal exposes seven ecosystem products, six Doc Bridge peers, and contextual routes for Chat and Code Review. - /for-agents , llms.txt , llms-full.txt , raw Markdown, and deterministic knowledge are public and cross-linked. - Human docs remain concise and navigable; source-heavy detail stays in raw/full machine surfaces. - Landing and documentation pages have no horizontal overflow at 375, 768, 1280, or 1440 pixels. - ak-docs gate run , documentation conformance, and ak-docs doctor finish at 100/A.",
+          "body": "Doc Bridge ecosystem and Marketplace acceptance plan This slice is complete only when all conditions below are evidenced locally. Publication remains an owner-only follow-up. - Composite Action validates committed freshness, accepts shell inputs only through quoted environment variables, pins its runtime package, and pins third-party Actions by SHA. - Marketplace metadata, consumer example, release-owner checklist, and automated contract checks agree on the same version. - The public portal exposes seven ecosystem products, six Doc Bridge peers, and contextual routes for Chat, Code Review, and Harness. - /for-agents , llms.txt , llms-full.txt , raw Markdown, and deterministic knowledge are public and cross-linked. - Human docs remain concise and navigable; source-heavy detail stays in raw/full machine surfaces. - Landing and documentation pages have no horizontal overflow at 375, 768, 1280, or 1440 pixels. - ak-docs gate run , documentation conformance, and ak-docs doctor finish at 100/A.",
           "aliases": "document human"
         },
         "graph": {
@@ -14169,7 +14169,7 @@
           "inbound": [],
           "outbound": []
         },
-        "contentHash": "bf9e305b7edb459daaa2a685e6cb4df7352f69da94e798889be02a16c4f57a45",
+        "contentHash": "0ea14426b269e676b73b78f609bf4238b92d477abba069a4603d11c4bf5197a0",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -20144,7 +20144,7 @@
           "inbound": [],
           "outbound": []
         },
-        "contentHash": "7ffc81b25133285ed9bf828649cff94bf2e0b39da596d6af695aff6afd4399f5",
+        "contentHash": "f9ed026ba8a9c875d0b5baad64f0e18d68fdf32c3cd25d049ebfe26236fddf7e",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -37348,7 +37348,7 @@
           "inbound": [],
           "outbound": []
         },
-        "contentHash": "2d9440050c8d3158411bcccdebe032e2794383eb9dd35955006be177825b2570",
+        "contentHash": "0056c3599d27352a2c93e66204938d0cd263abdf7134060f57fe6bf368412110",
         "provenance": "observed",
         "confidence": "observed"
       },

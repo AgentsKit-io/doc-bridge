@@ -44,4 +44,4 @@ flowchart LR
 - [AgentHandoff schema](./schemas/agent-handoff-v1.md)
 - [Skill text](./skills/doc-bridge.md)
 
-If the task is conversational UI, continue with [AgentsKit Chat](https://chat.agentskit.io). For verification before merge, use [AgentsKit Code Review](https://github.com/AgentsKit-io/code-review). For enterprise orchestration, governance, and audit, follow the repository's configured team workflow.
+If the task is conversational UI, continue with [AgentsKit Chat](https://chat.agentskit.io). For verification before merge, use [AgentsKit Code Review](https://code-review.agentskit.io). For the keep-pushing delivery loop, use [AgentsKit Harness](https://harness.agentskit.io/). For enterprise orchestration, governance, and audit, follow the repository's configured team workflow.
