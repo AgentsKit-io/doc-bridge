@@ -3,6 +3,5 @@
   "registry": { "home": "https://registry.agentskit.io", "role": "Start from reusable agents.", "hook": "Browse production-ready agent source." },
   "agentskit-chat": { "home": "https://chat.agentskit.io", "role": "Deliver conversational interfaces.", "hook": "Building chat? Use the cross-framework application layer." },
   "doc-bridge": { "home": "https://doc-bridge.agentskit.io/", "role": "Connect human and agent documentation.", "hook": "Make repository context deterministic." },
-  "code-review": { "home": "https://code-review.agentskit.io", "role": "Verify changes before merge.", "hook": "Run a focused, low-noise model review." },
-  "harness": { "home": "https://harness.agentskit.io/", "role": "Enforce delivery gates and evidence.", "hook": "Keep the SDLC loop moving with fail-closed gates." }
+  "code-review": { "home": "https://code-review.agentskit.io", "role": "Verify changes before merge.", "hook": "Run a focused, low-noise model review." }
 }

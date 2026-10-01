@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "contentHash": "ea8f6d2b0497834afcfa8b758f5b9c55726a71a706aa844399a531833b54cd14",
+  "contentHash": "60f538a05fe7077f162e6ac07e6846cddb04792512ec3a7140dccf20cd8b31ab",
   "contentHashAlgo": "sha256-normalized-v1",
-  "generatedAt": "2026-09-29T19:28:54.496Z",
+  "generatedAt": "2026-10-01T02:11:56.992Z",
   "project": {
     "name": "@agentskit/doc-bridge",
     "root": "."
@@ -2058,7 +2058,7 @@
         "ts",
         "docs"
       ],
-      "contentHash": "f9ed026ba8a9c875d0b5baad64f0e18d68fdf32c3cd25d049ebfe26236fddf7e"
+      "contentHash": "7ffc81b25133285ed9bf828649cff94bf2e0b39da596d6af695aff6afd4399f5"
     },
     {
       "id": "module:apps/docs/next.config.mjs",
@@ -2184,6 +2184,19 @@
       "contentHash": "ec38054acc4593de358cdefedf98f90c9251913433c9f1817b6baac7fa0de6ab"
     },
     {
+      "id": "module:scripts/aliases.test.mjs",
+      "type": "module",
+      "title": "aliases.test.mjs",
+      "path": "scripts/aliases.test.mjs",
+      "tags": [
+        "module",
+        "mjs",
+        "test",
+        "scripts"
+      ],
+      "contentHash": "89afb813eb6922d1715b4b56171ecde7ed95d57fd5a4698e0661745d84409904"
+    },
+    {
       "id": "module:scripts/build-docs-artifacts.mjs",
       "type": "module",
       "title": "build-docs-artifacts.mjs",
@@ -2193,7 +2206,7 @@
         "mjs",
         "scripts"
       ],
-      "contentHash": "7112848fb673fe49f4e8601ca79985a5e30f099680b50d85126a11ff56ba5343"
+      "contentHash": "d3a2d4dc9ea7039324d2b050514d6b5a1e829f9992c3e22547efe9e4af12deae"
     },
     {
       "id": "module:scripts/build-mcpb.mjs",
@@ -2305,7 +2318,7 @@
         "test",
         "scripts"
       ],
-      "contentHash": "b997960ade4e798d1eb2f7537b1578514bfd6991c046c1b86ad404c2e0035218"
+      "contentHash": "69b3b495e866ef25ae601e1a295c95dc62db26f5dab77170b1cc71dc72e2217f"
     },
     {
       "id": "module:scripts/generate-study-charts.mjs",
@@ -2318,6 +2331,21 @@
         "scripts"
       ],
       "contentHash": "a4d33cf0810195925cb2a99cd44a2cf1c191327bffd0f2b50692007649718ea1"
+    },
+    {
+      "id": "module:scripts/lib/aliases.mjs",
+      "type": "module",
+      "title": "aliases.mjs",
+      "path": "scripts/lib/aliases.mjs",
+      "symbols": [
+        "aliases"
+      ],
+      "tags": [
+        "module",
+        "mjs",
+        "lib"
+      ],
+      "contentHash": "19e786b0807bb24c02f4966f0b1975feba11ed4259e82248cf9c52097b7f0efc"
     },
     {
       "id": "module:scripts/lib/readme-standard.mjs",
@@ -4347,7 +4375,7 @@
         "ts",
         "intelligence"
       ],
-      "contentHash": "b20146661bf5ac1e699c89e5252ca5749105f26eb811ecf08f43d896eedf5a67"
+      "contentHash": "9cb1c3748ae7c628fc1c3db7a94293b7a61f9f99194b5a985f22c06850ca8b62"
     },
     {
       "id": "module:src/lib/bounded-text.ts",
@@ -6022,7 +6050,7 @@
         "test",
         "docs-e2e"
       ],
-      "contentHash": "0056c3599d27352a2c93e66204938d0cd263abdf7134060f57fe6bf368412110"
+      "contentHash": "6b6ce8af2a70c881cc9b6ab2d9c3c14b7670e46a3d1c1e073bce787ebc4690d9"
     },
     {
       "id": "module:tests/doctor-measured.test.ts",
@@ -6310,7 +6338,7 @@
         "test",
         "tests"
       ],
-      "contentHash": "71643b5271d70fadb84f335238ed3f0270a83a3b4c5a556c27d487fa53d5b9c3"
+      "contentHash": "212ad988533b38b31a6d9fd67f27332d0f5b07fcf1737523e0dc8e0b4c2f8c0f"
     },
     {
       "id": "module:tests/knowledge-tools.test.ts",
@@ -6531,7 +6559,7 @@
         "test",
         "tests"
       ],
-      "contentHash": "c01417e1bef2511baea4887ea19949f36340558f5bb014b441964e962d63bc7f"
+      "contentHash": "b22263b31c3b94912a1dffbfa81df76ec2f3dacc9c4435b95152c1809254056c"
     },
     {
       "id": "module:tests/reproducibility.test.ts",
@@ -8074,8 +8102,8 @@
     "changes": {}
   },
   "inputs": {
-    "hash": "6f79b2587896b513205463a32012a8ed3a0bf4872895578583f7267baed73a84",
-    "fileCount": 442,
+    "hash": "f66bfa98b0dc27d53adfc7871b964865594fe850b108700f98a0a3960515e647",
+    "fileCount": 444,
     "projectionVersion": 2
   },
   "retrieval": {
@@ -8097,9 +8125,9 @@
   "projection": {
     "type": "retrieval-index",
     "schemaVersion": 1,
-    "contentHash": "00204838f0a01ac4f5b761d6268da9be6b602db40a6a4bb0da44ea289c429719",
+    "contentHash": "4df57023c9cf27186e1e2cbb800ec7dce4908d7c2cc938cffbdf1396210672d4",
     "contentHashAlgo": "sha256-normalized-v1",
-    "snapshotHash": "31bb2f13a2b7c38b1262c8214c35930b3b915d79a724b665f1c1ad5ead34bb8b",
+    "snapshotHash": "cd22d91bd0929660adaec096cac668fabaa6e15deb2531d42928f6f8e40aef05",
     "overlayHash": "f99666ff9119084dd25c2974ae64eb6935ec2aa785ff5ad478fb9d541f7a5e94",
     "configurationHash": "91d46a4ecbfe3b55878e0b3c7608819775cf7b18aeafcc8f689eddfa462622b4",
     "lexiconVersion": 1,
@@ -8119,7 +8147,7 @@
     },
     "lexical": {
       "version": 1,
-      "documentCount": 470,
+      "documentCount": 472,
       "fieldNames": [
         "aliases",
         "body",
@@ -8130,13 +8158,13 @@
         "title"
       ],
       "averageFieldLength": {
-        "aliases": 3.4638297872340424,
-        "body": 68.70212765957447,
-        "headings": 4.282978723404256,
-        "path": 5.691489361702128,
-        "summary": 5.772340425531915,
-        "symbols": 11.725531914893617,
-        "title": 3.1106382978723404
+        "aliases": 3.4639830508474576,
+        "body": 68.41101694915254,
+        "headings": 4.264830508474576,
+        "path": 5.688559322033898,
+        "summary": 5.747881355932203,
+        "symbols": 11.677966101694915,
+        "title": 3.108050847457627
       }
     },
     "entries": [
@@ -8295,7 +8323,7 @@
           ],
           "outbound": []
         },
-        "contentHash": "4c994876ed71551ec19a20b9e1af109dc9d71c3dbb2c36d37bb916975e19a3a5",
+        "contentHash": "4c04427cc74e4070ad3da4daa57dd27d98f8abc15a9499dded4c22a1ba672cdd",
         "provenance": "observed",
         "confidence": "observed",
         "ownershipId": "doc-bridge-scripts"
@@ -10512,6 +10540,11 @@
             {
               "kind": "mentions",
               "id": "module:src/retrieval/rank.ts",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions-symbol",
+              "id": "module:scripts/lib/aliases.mjs",
               "confidence": "observed"
             },
             {
@@ -20144,7 +20177,7 @@
           "inbound": [],
           "outbound": []
         },
-        "contentHash": "f9ed026ba8a9c875d0b5baad64f0e18d68fdf32c3cd25d049ebfe26236fddf7e",
+        "contentHash": "7ffc81b25133285ed9bf828649cff94bf2e0b39da596d6af695aff6afd4399f5",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -20497,6 +20530,47 @@
         "confidence": "observed"
       },
       {
+        "id": "module:scripts/aliases.test.mjs",
+        "kind": "module",
+        "path": "scripts/aliases.test.mjs",
+        "title": "aliases.test.mjs",
+        "aliases": [],
+        "tags": [
+          "module",
+          "mjs",
+          "test",
+          "scripts"
+        ],
+        "fields": {
+          "title": "aliases.test.mjs",
+          "headings": "",
+          "path": "scripts/aliases.test.mjs",
+          "symbols": "",
+          "summary": "",
+          "body": "",
+          "aliases": "module mjs test scripts"
+        },
+        "graph": {
+          "pagerank": 0,
+          "inboundLinks": 0,
+          "coveredBy": [],
+          "mentionedBy": [],
+          "areaId": "area:scripts",
+          "packageId": "package:@agentskit/doc-bridge",
+          "inbound": [],
+          "outbound": [
+            {
+              "kind": "imports",
+              "id": "module:scripts/lib/aliases.mjs",
+              "confidence": "observed"
+            }
+          ]
+        },
+        "contentHash": "89afb813eb6922d1715b4b56171ecde7ed95d57fd5a4698e0661745d84409904",
+        "provenance": "observed",
+        "confidence": "observed"
+      },
+      {
         "id": "module:scripts/build-docs-artifacts.mjs",
         "kind": "module",
         "path": "scripts/build-docs-artifacts.mjs",
@@ -20532,9 +20606,15 @@
               "confidence": "observed"
             }
           ],
-          "outbound": []
+          "outbound": [
+            {
+              "kind": "imports",
+              "id": "module:scripts/lib/aliases.mjs",
+              "confidence": "observed"
+            }
+          ]
         },
-        "contentHash": "7112848fb673fe49f4e8601ca79985a5e30f099680b50d85126a11ff56ba5343",
+        "contentHash": "d3a2d4dc9ea7039324d2b050514d6b5a1e829f9992c3e22547efe9e4af12deae",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -20864,7 +20944,7 @@
           "inbound": [],
           "outbound": []
         },
-        "contentHash": "b997960ade4e798d1eb2f7537b1578514bfd6991c046c1b86ad404c2e0035218",
+        "contentHash": "69b3b495e866ef25ae601e1a295c95dc62db26f5dab77170b1cc71dc72e2217f",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -20899,6 +20979,61 @@
           "outbound": []
         },
         "contentHash": "a4d33cf0810195925cb2a99cd44a2cf1c191327bffd0f2b50692007649718ea1",
+        "provenance": "observed",
+        "confidence": "observed"
+      },
+      {
+        "id": "module:scripts/lib/aliases.mjs",
+        "kind": "module",
+        "path": "scripts/lib/aliases.mjs",
+        "title": "aliases.mjs",
+        "aliases": [],
+        "symbols": [
+          "aliases"
+        ],
+        "tags": [
+          "module",
+          "mjs",
+          "lib"
+        ],
+        "fields": {
+          "title": "aliases.mjs",
+          "headings": "",
+          "path": "scripts/lib/aliases.mjs",
+          "symbols": "aliases",
+          "summary": "",
+          "body": "",
+          "aliases": "module mjs lib"
+        },
+        "graph": {
+          "pagerank": 0,
+          "inboundLinks": 1,
+          "coveredBy": [],
+          "mentionedBy": [
+            "document:CHANGELOG.md"
+          ],
+          "areaId": "area:scripts",
+          "packageId": "package:@agentskit/doc-bridge",
+          "inbound": [
+            {
+              "kind": "imports",
+              "id": "module:scripts/aliases.test.mjs",
+              "confidence": "observed"
+            },
+            {
+              "kind": "imports",
+              "id": "module:scripts/build-docs-artifacts.mjs",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions-symbol",
+              "id": "document:CHANGELOG.md",
+              "confidence": "observed"
+            }
+          ],
+          "outbound": []
+        },
+        "contentHash": "19e786b0807bb24c02f4966f0b1975feba11ed4259e82248cf9c52097b7f0efc",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -29835,7 +29970,7 @@
             }
           ]
         },
-        "contentHash": "b20146661bf5ac1e699c89e5252ca5749105f26eb811ecf08f43d896eedf5a67",
+        "contentHash": "9cb1c3748ae7c628fc1c3db7a94293b7a61f9f99194b5a985f22c06850ca8b62",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -37348,7 +37483,7 @@
           "inbound": [],
           "outbound": []
         },
-        "contentHash": "0056c3599d27352a2c93e66204938d0cd263abdf7134060f57fe6bf368412110",
+        "contentHash": "6b6ce8af2a70c881cc9b6ab2d9c3c14b7670e46a3d1c1e073bce787ebc4690d9",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -38705,7 +38840,7 @@
             }
           ]
         },
-        "contentHash": "71643b5271d70fadb84f335238ed3f0270a83a3b4c5a556c27d487fa53d5b9c3",
+        "contentHash": "212ad988533b38b31a6d9fd67f27332d0f5b07fcf1737523e0dc8e0b4c2f8c0f",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -39875,7 +40010,7 @@
             }
           ]
         },
-        "contentHash": "c01417e1bef2511baea4887ea19949f36340558f5bb014b441964e962d63bc7f",
+        "contentHash": "b22263b31c3b94912a1dffbfa81df76ec2f3dacc9c4435b95152c1809254056c",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -41323,7 +41458,7 @@
           ],
           "outbound": []
         },
-        "contentHash": "7f3d605bd56d67545975d3f7baf266baee33b7e01b96f11e89da767ed7a9f4c6",
+        "contentHash": "22f1e098b6cb4184e9feefd85fe59a5120cf9685f2154de144e42f1c49d5a26b",
         "provenance": "observed",
         "confidence": "observed"
       }

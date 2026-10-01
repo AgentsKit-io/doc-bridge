@@ -1,6 +1,33 @@
-import { expect, test } from '@playwright/test'
+import { expect, type Page, test } from '@playwright/test'
+
+async function expectEcosystemContrast(page: Page, dark: boolean) {
+  await page.waitForFunction(() =>
+    document.querySelector('agentskit-ecosystem')?.shadowRoot?.querySelector('.akx-title'),
+  )
+  const colors = await page.locator('agentskit-ecosystem').evaluate((element) => {
+    const root = element.shadowRoot
+    const title = root?.querySelector('.akx-title')
+    const eyebrow = root?.querySelector('.akx-eyebrow')
+    if (!title || !eyebrow) return null
+    return {
+      dark: document.documentElement.classList.contains('dark'),
+      title: getComputedStyle(title).color,
+      eyebrow: getComputedStyle(eyebrow).color,
+    }
+  })
+  expect(colors).not.toBeNull()
+  expect(colors?.dark).toBe(dark)
+  if (dark) {
+    expect(colors.title).toBe('rgb(230, 237, 243)')
+    expect(colors.eyebrow).toBe('rgb(139, 148, 158)')
+  } else {
+    expect(colors?.title).toBe('rgb(13, 17, 23)')
+    expect(colors?.eyebrow).toBe('rgb(87, 96, 106)')
+  }
+}
 
 test('landing communicates the deterministic proof and has no horizontal overflow', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('theme', 'light'))
   await page.goto('/')
   await expect(page.getByRole('heading', { level: 1 })).toContainText('The context your agents need.')
   await expect(page.getByText('backend calls: 0')).toBeVisible()
@@ -22,6 +49,14 @@ test('landing communicates the deterministic proof and has no horizontal overflo
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
   expect(overflow).toBeLessThanOrEqual(0)
   await expect(page.locator('#ak-eco')).toBeVisible()
+  await expectEcosystemContrast(page, false)
+})
+
+test('ecosystem showcase follows the dark page surface', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('theme', 'dark'))
+  await page.goto('/')
+  await expect(page.locator('html')).toHaveClass(/dark/)
+  await expectEcosystemContrast(page, true)
 })
 
 test('product subheader keeps search, navigation, and the primary action reachable on mobile', async ({ page }) => {
@@ -71,6 +106,7 @@ test('product subheader keeps search, navigation, and the primary action reachab
 })
 
 test('Fumadocs renders canonical docs with raw and llms surfaces', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('theme', 'dark'))
   await page.goto('/docs/getting-started')
   await expect(page.locator('h1#getting-started')).toBeVisible()
   await expect(page.locator('h1')).toHaveCount(1)
@@ -83,6 +119,7 @@ test('Fumadocs renders canonical docs with raw and llms surfaces', async ({ page
   await expect(page.locator('agentskit-ecosystem')).toBeVisible()
   await expect(page.locator('agentskit-footer[current="doc-bridge"][repo="AgentsKit-io/doc-bridge"]')).toHaveCount(1)
   await expect(page.locator('[data-search]:visible, [data-search-full]:visible').first()).toBeVisible()
+  await expectEcosystemContrast(page, true)
 })
 
 test('publishes the static search index and social preview', async ({ page }) => {

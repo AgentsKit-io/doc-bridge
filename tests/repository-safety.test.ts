@@ -1,7 +1,8 @@
+import { spawnSync } from 'node:child_process'
 import { describe, expect, it } from 'vitest'
-import { mkdirSync, mkdtempSync, realpathSync, symlinkSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, realpathSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { join, resolve } from 'node:path'
 
 import { containedPath, containsSecret, redactSecrets, safeWalkFiles } from '../src/safety/repository.js'
 import { canCreateSymlinks } from './helpers/symlink-support.js'
@@ -9,6 +10,43 @@ import { canCreateSymlinks } from './helpers/symlink-support.js'
 const root = () => mkdtempSync(join(tmpdir(), 'doc-bridge-safety-'))
 
 describe('repository safety primitives', () => {
+  it('survives the upstream deeply nested brace pattern in a bounded repository scan', () => {
+    const childMode = process.env.DOC_BRIDGE_BRACE_EXPANSION_CHILD === '1'
+    const pattern = '{'.repeat(3_200) + 'a,b' + '}'.repeat(3_200)
+
+    if (childMode) {
+      const project = root()
+      try {
+        mkdirSync(join(project, 'src'))
+        writeFileSync(join(project, 'src', 'kept.ts'), '')
+        expect(safeWalkFiles(project, { extensions: ['.ts'], exclude: [pattern], respectIgnore: false }).files)
+          .toEqual([join(project, 'src', 'kept.ts')])
+        expect(safeWalkFiles(project, { extensions: ['.ts'], exclude: ['src/*.ts'], respectIgnore: false }).files)
+          .toEqual([])
+      } finally {
+        rmSync(project, { recursive: true, force: true })
+      }
+      return
+    }
+
+    const child = spawnSync(process.execPath, [
+      resolve(process.cwd(), 'node_modules/vitest/vitest.mjs'),
+      'run',
+      'tests/repository-safety.test.ts',
+      '-t',
+      'survives the upstream deeply nested brace pattern',
+    ], {
+      cwd: process.cwd(),
+      encoding: 'utf8',
+      env: { ...process.env, DOC_BRIDGE_BRACE_EXPANSION_CHILD: '1' },
+      maxBuffer: 1_000_000,
+      timeout: 20_000,
+    })
+
+    expect(child.error, child.stderr).toBeUndefined()
+    expect(child.status, `${child.stdout}\n${child.stderr}`).toBe(0)
+  })
+
   it('enforces the root boundary and skips secret/generated paths by default', () => {
     const project = root()
     mkdirSync(join(project, 'src'))

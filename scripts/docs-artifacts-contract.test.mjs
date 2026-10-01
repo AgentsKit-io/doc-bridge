@@ -54,6 +54,16 @@ test('all public products are discoverable and peers resolve locally', () => {
   assert.ok(peerEntries.every(({ answer }) => answer.citations[0]?.href.startsWith('https://')))
 })
 
+test('products without a presentation override use the manifest promise and canonical URL', () => {
+  const product = manifest.products.find(({ id }) => id === 'harness')
+  assert.ok(product)
+  assert.equal(overrides[product.id], undefined)
+  const entry = knowledge.entries.find(({ id }) => id === `ecosystem:${product.id}`)
+  assert.ok(entry)
+  assert.equal(entry.answer.citations[0]?.href, product.surfaces?.home ?? product.surfaces?.docs)
+  assert.ok(entry.answer.markdown.includes(product.promise))
+})
+
 test('every public document and local deterministic citation resolves in the export', () => {
   for (const file of [...publicDocs, ...publicAgentDocs]) {
     assert.ok(existsSync(resolve(publicRoot, 'raw', file)), `missing raw export for ${file}`)

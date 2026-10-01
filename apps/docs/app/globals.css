@@ -57,6 +57,36 @@ table { display: block; max-width: 100%; overflow-x: auto; }
 .ecosystem-peers-compact .ecosystem-peer-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 1.5rem; }
 .ecosystem-peers-compact .ecosystem-peer { min-height: 10rem; }
 
+/* ecosystem-bar.js paints a transparent shell. Without host tokens it keeps the
+   dark palette, which is 1.1:1 and 2.75:1 on --bridge-paper. These are the
+   widget's own light and dark surfaces. */
+agentskit-ecosystem {
+  color-scheme: light;
+  --ak-bg: #ffffff;
+  --ak-surface: #f6f8fa;
+  --ak-border: #d0d7de;
+  --ak-fg: #0d1117;
+  --ak-muted: #57606a;
+  --ak-graphite: #57606a;
+  --ak-blue: #0969da;
+  --ak-green: #1a7f37;
+  --ak-red: #cf222e;
+  --ak-accent-ink: 55%;
+}
+html.dark agentskit-ecosystem {
+  color-scheme: dark;
+  --ak-bg: #0d1117;
+  --ak-surface: #161b22;
+  --ak-border: #30363d;
+  --ak-fg: #e6edf3;
+  --ak-muted: #8b949e;
+  --ak-graphite: #8b949e;
+  --ak-blue: #58a6ff;
+  --ak-green: #2ea043;
+  --ak-red: #f85149;
+  --ak-accent-ink: 100%;
+}
+
 /* GitHub Light's comment token misses WCAG AA against the docs code surface. */
 html:not(.dark) [style*='--shiki-light:#6E7781'] {
   --shiki-light: #57606a !important;
