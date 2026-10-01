@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "contentHash": "7701bd8f0169ab2099b989a55fa8313f406d22f49bd266eb0a5397581788abd1",
+  "contentHash": "4177f0d0d8316d3cdc3d74bcaa52b8089580cca1a666423a518e82efc0f7af36",
   "contentHashAlgo": "sha256-normalized-v1",
-  "generatedAt": "2026-10-01T01:17:41.915Z",
+  "generatedAt": "2026-10-01T01:31:48.968Z",
   "project": {
     "name": "@agentskit/doc-bridge",
     "root": "."
@@ -4375,7 +4375,7 @@
         "ts",
         "intelligence"
       ],
-      "contentHash": "b20146661bf5ac1e699c89e5252ca5749105f26eb811ecf08f43d896eedf5a67"
+      "contentHash": "9cb1c3748ae7c628fc1c3db7a94293b7a61f9f99194b5a985f22c06850ca8b62"
     },
     {
       "id": "module:src/lib/bounded-text.ts",
@@ -6338,7 +6338,7 @@
         "test",
         "tests"
       ],
-      "contentHash": "71643b5271d70fadb84f335238ed3f0270a83a3b4c5a556c27d487fa53d5b9c3"
+      "contentHash": "212ad988533b38b31a6d9fd67f27332d0f5b07fcf1737523e0dc8e0b4c2f8c0f"
     },
     {
       "id": "module:tests/knowledge-tools.test.ts",
@@ -8102,7 +8102,7 @@
     "changes": {}
   },
   "inputs": {
-    "hash": "b5cc3b161c285ad01dcee7e0ea09a75f295e1bf10f7610abd8f46bea72866250",
+    "hash": "b381d9cb49527e6ed8c606c0e7f8f607093d1564c3a81ffac8738c537133580d",
     "fileCount": 444,
     "projectionVersion": 2
   },
@@ -8125,9 +8125,9 @@
   "projection": {
     "type": "retrieval-index",
     "schemaVersion": 1,
-    "contentHash": "8563f6b5e4e9acf86199555131899f52c62f4f6475f462da69f749cee44dd8c5",
+    "contentHash": "be2930db6e534870e892befab12f49697aca170a3c69c4702ff89ac758f3e6f2",
     "contentHashAlgo": "sha256-normalized-v1",
-    "snapshotHash": "af1838fcf624eb50bc943bfa0601ba7f239b2acd5d4d6562ea6eb942302de780",
+    "snapshotHash": "78866c96317525aae33d3e665c0f0e3a3168a017456e84662f60d8fd4bbed59b",
     "overlayHash": "f99666ff9119084dd25c2974ae64eb6935ec2aa785ff5ad478fb9d541f7a5e94",
     "configurationHash": "91d46a4ecbfe3b55878e0b3c7608819775cf7b18aeafcc8f689eddfa462622b4",
     "lexiconVersion": 1,
@@ -29970,7 +29970,7 @@
             }
           ]
         },
-        "contentHash": "b20146661bf5ac1e699c89e5252ca5749105f26eb811ecf08f43d896eedf5a67",
+        "contentHash": "9cb1c3748ae7c628fc1c3db7a94293b7a61f9f99194b5a985f22c06850ca8b62",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -38840,7 +38840,7 @@
             }
           ]
         },
-        "contentHash": "71643b5271d70fadb84f335238ed3f0270a83a3b4c5a556c27d487fa53d5b9c3",
+        "contentHash": "212ad988533b38b31a6d9fd67f27332d0f5b07fcf1737523e0dc8e0b4c2f8c0f",
         "provenance": "observed",
         "confidence": "observed"
       },
