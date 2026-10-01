@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "contentHash": "7701bd8f0169ab2099b989a55fa8313f406d22f49bd266eb0a5397581788abd1",
   "contentHashAlgo": "sha256-normalized-v1",
-  "generatedAt": "2026-09-29T23:24:21.322Z",
+  "generatedAt": "2026-10-01T01:17:41.915Z",
   "project": {
     "name": "@agentskit/doc-bridge",
     "root": "."
