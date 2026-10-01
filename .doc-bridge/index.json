@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "contentHash": "4177f0d0d8316d3cdc3d74bcaa52b8089580cca1a666423a518e82efc0f7af36",
+  "contentHash": "60f538a05fe7077f162e6ac07e6846cddb04792512ec3a7140dccf20cd8b31ab",
   "contentHashAlgo": "sha256-normalized-v1",
-  "generatedAt": "2026-10-01T01:31:48.968Z",
+  "generatedAt": "2026-10-01T02:11:56.992Z",
   "project": {
     "name": "@agentskit/doc-bridge",
     "root": "."
@@ -6559,7 +6559,7 @@
         "test",
         "tests"
       ],
-      "contentHash": "c01417e1bef2511baea4887ea19949f36340558f5bb014b441964e962d63bc7f"
+      "contentHash": "b22263b31c3b94912a1dffbfa81df76ec2f3dacc9c4435b95152c1809254056c"
     },
     {
       "id": "module:tests/reproducibility.test.ts",
@@ -8102,7 +8102,7 @@
     "changes": {}
   },
   "inputs": {
-    "hash": "b381d9cb49527e6ed8c606c0e7f8f607093d1564c3a81ffac8738c537133580d",
+    "hash": "f66bfa98b0dc27d53adfc7871b964865594fe850b108700f98a0a3960515e647",
     "fileCount": 444,
     "projectionVersion": 2
   },
@@ -8125,9 +8125,9 @@
   "projection": {
     "type": "retrieval-index",
     "schemaVersion": 1,
-    "contentHash": "be2930db6e534870e892befab12f49697aca170a3c69c4702ff89ac758f3e6f2",
+    "contentHash": "4df57023c9cf27186e1e2cbb800ec7dce4908d7c2cc938cffbdf1396210672d4",
     "contentHashAlgo": "sha256-normalized-v1",
-    "snapshotHash": "78866c96317525aae33d3e665c0f0e3a3168a017456e84662f60d8fd4bbed59b",
+    "snapshotHash": "cd22d91bd0929660adaec096cac668fabaa6e15deb2531d42928f6f8e40aef05",
     "overlayHash": "f99666ff9119084dd25c2974ae64eb6935ec2aa785ff5ad478fb9d541f7a5e94",
     "configurationHash": "91d46a4ecbfe3b55878e0b3c7608819775cf7b18aeafcc8f689eddfa462622b4",
     "lexiconVersion": 1,
@@ -40010,7 +40010,7 @@
             }
           ]
         },
-        "contentHash": "c01417e1bef2511baea4887ea19949f36340558f5bb014b441964e962d63bc7f",
+        "contentHash": "b22263b31c3b94912a1dffbfa81df76ec2f3dacc9c4435b95152c1809254056c",
         "provenance": "observed",
         "confidence": "observed"
       },
