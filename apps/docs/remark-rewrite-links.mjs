@@ -44,7 +44,7 @@ function rewrite(url, sourcePath) {
 
   if (isInside(repositoryRoot, target)) {
     const kind = pathname.endsWith('/') ? 'tree' : 'blob'
-    return `https://github.com/AgentsKit-io/doc-bridge/${kind}/master/${unix(relative(repositoryRoot, target))}${suffix}`
+    return `https://github.com/AgentsKit-io/doc-bridge/${kind}/main/${unix(relative(repositoryRoot, target))}${suffix}`
   }
 
   return url

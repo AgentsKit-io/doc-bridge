@@ -24,7 +24,7 @@ coordinated disclosure is appropriate. Conduct matters follow
 
 ## Releases
 
-Stable releases are cut from `master` using immutable semantic-version tags.
+Stable releases are cut from `main` using immutable semantic-version tags.
 The repository release workflow reruns security, test, coverage, package,
 dogfood, Marketplace, and documentation conformance checks before publishing
 the npm package with provenance. It verifies the registry result, uploads the

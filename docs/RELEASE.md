@@ -60,7 +60,7 @@ git push origin v1.7.45
 For recovery of an existing immutable tag, use the guarded manual dispatch. Never move or recreate a release tag.
 
 ```bash
-gh workflow run release.yml --ref master -f tag=v1.7.45
+gh workflow run release.yml --ref main -f tag=v1.7.45
 ```
 
 Confirm:

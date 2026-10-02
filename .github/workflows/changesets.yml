@@ -2,7 +2,7 @@ name: Changesets release
 
 on:
   push:
-    branches: [master]
+    branches: [main]
   workflow_dispatch: {}
 
 concurrency:
@@ -13,7 +13,7 @@ permissions: {}
 
 jobs:
   release:
-    if: github.ref == 'refs/heads/master'
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment: npm
     permissions:
@@ -56,7 +56,7 @@ jobs:
       - run: pnpm build
       # changesets/action 2.x renamed every script and pull-request input; the 1.x names now fail
       # the step outright. CI never exercises this workflow, so the rename only surfaced on the
-      # first push to master after the major bump.
+      # first push to main after the major bump.
       - name: Version or publish packages
         uses: changesets/action@ae32849d5ba541f9ae29e40e22a623bc13562f51
         with:

@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "contentHash": "1d25010c48bcf9670ed416eb12855c159b260b7e8bf02195f7baf0237daa2c6e",
+  "contentHash": "bf18f02fc67df833ae096de5b4769e0fc3404b45bbf273e77800bf5ad8ad635a",
   "contentHashAlgo": "sha256-normalized-v1",
-  "generatedAt": "2026-10-02T14:47:25.149Z",
+  "generatedAt": "2026-10-02T20:54:36.168Z",
   "project": {
     "name": "@agentskit/doc-bridge",
     "root": "."
@@ -324,7 +324,7 @@
         "document",
         "project"
       ],
-      "contentHash": "5d76c4184e0f248963332de2cda0f5b72d8bad8da038b4834022f28bd7c0442f"
+      "contentHash": "b938cd6295dcde17ba07bc637ebeecfccf71dbb5ae6da9502447a54c036f9bf4"
     },
     {
       "id": "document:docs/adr/0001-enterprise-verification-contract.md",
@@ -624,7 +624,7 @@
         "document",
         "human"
       ],
-      "contentHash": "4ca76d701455b4701e6452260226705e7aff471cf6f980022b802bdb6d09835b"
+      "contentHash": "3d150da7fd1655dde13bd9471598ef02d2729b56ec91e770f4b3666b2c538266"
     },
     {
       "id": "document:docs/MARKETPLACE-ECOSYSTEM-PLAN.md",
@@ -793,7 +793,7 @@
         "document",
         "human"
       ],
-      "contentHash": "7afbd854f68a391e3b31c822e32199c0303ee2a3127fa024c1f25e1d5f99696d"
+      "contentHash": "59d226c671b3724feff223a043d2ed410bd9dd3101d688b5fc519e0f830ac97c"
     },
     {
       "id": "document:docs/schemas/agent-handoff-v1.md",
@@ -1285,7 +1285,7 @@
         "document",
         "unclassified"
       ],
-      "contentHash": "406843162ff17320a996ef7d2222d674028c2dc901bec0fcce35752cae2870a6"
+      "contentHash": "878c101a85605d96aa0efac73c2c375767a748251bf6e51e34e8fcf8b379b2f3"
     },
     {
       "id": "document:llms-install.md",
@@ -1321,7 +1321,7 @@
         "document",
         "project"
       ],
-      "contentHash": "0a655cfe2b285727526e99e17a93b7922ca7ab411bf38b1279a9fa2e23499ba9"
+      "contentHash": "81921909946d2775809cf1695fa780686ddc45b105b26d61700df41640663b43"
     },
     {
       "id": "document:SECURITY.md",
@@ -1609,7 +1609,7 @@
         "tsx",
         "[[...slug]]"
       ],
-      "contentHash": "b095838eaeb71b0ccb2913e48fde7d8541687127e84c5429d77ccfe31c36f77a"
+      "contentHash": "bd65b24dbcfc73e805fac8045ff605386a24123f36fb662a088de957d7113ea4"
     },
     {
       "id": "module:apps/docs/app/docs/layout.tsx",
@@ -1904,7 +1904,7 @@
         "tsx",
         "components"
       ],
-      "contentHash": "2498e66b6fa5533c9a0f467d8e2c9cb49196f3c77cf19e182ba2c1e57495ff14"
+      "contentHash": "f82e9b6464289746d8d5a714188df53656c8b1fb8c5ccef14e6daaec1e95e938"
     },
     {
       "id": "module:apps/docs/global.d.ts",
@@ -2031,7 +2031,7 @@
         "ts",
         "lib"
       ],
-      "contentHash": "11df29a3c5dc4f463db895e703a9f01198152620be351beaaf54fb2268ab509f"
+      "contentHash": "daa4b83a75ba4a3d830ac81d31adbc33d684333f991d9821c2dd801a9eac881f"
     },
     {
       "id": "module:apps/docs/mdx-components.tsx",
@@ -2103,7 +2103,7 @@
         "mjs",
         "docs"
       ],
-      "contentHash": "2cb6e21ce8c88c99f08be7f5fbcc601f68a8655b9814a7ff2e2956104d3d5b34"
+      "contentHash": "7ef8aaa558611ace10bc401d00127152fb5fdd4f01f0e1831b1f828715ca6521"
     },
     {
       "id": "module:apps/docs/shell-elements.d.ts",
@@ -2282,6 +2282,18 @@
       "contentHash": "d5e21c475277b1c8061f1abec3e12225595bdd41bc1d236a47088b41227a55e5"
     },
     {
+      "id": "module:scripts/cloudflare-headers.mjs",
+      "type": "module",
+      "title": "cloudflare-headers.mjs",
+      "path": "scripts/cloudflare-headers.mjs",
+      "tags": [
+        "module",
+        "mjs",
+        "scripts"
+      ],
+      "contentHash": "3d0bf277343d0d7cc2a4bc17c7eab398a4135e2f35d980af81ce4a4af8d97a9d"
+    },
+    {
       "id": "module:scripts/copilot-plugin-contract.test.mjs",
       "type": "module",
       "title": "copilot-plugin-contract.test.mjs",
@@ -2387,7 +2399,7 @@
         "test",
         "scripts"
       ],
-      "contentHash": "5c062eda98fa1c4affc8077a48642d1b84dc698111e19a1fd363539010729e97"
+      "contentHash": "51f9149820b69b623cfa236e0b3423c73776c3790675ddc57372068f3def2c33"
     },
     {
       "id": "module:scripts/phase4-public-pilot-check.mjs",
@@ -4783,7 +4795,7 @@
         "ts",
         "playbook"
       ],
-      "contentHash": "fdd41eea7991e5722379af51633ca272c8b0dbf06441a1b49f5993db07d95433"
+      "contentHash": "33077c2f9550d439a61d95476f6c2f7d2674124b1d3c08afcdbd0eaabd841353"
     },
     {
       "id": "module:src/plugins/contract.ts",
@@ -6677,7 +6689,7 @@
         "test",
         "tests"
       ],
-      "contentHash": "c67d75cec08cf104c38f879114e135c24ace9730986b8a2747afa84c9a59b853"
+      "contentHash": "81d6b0752b17b5190ff89682f6bc2532d448c0e56056c56d9a4b7127e49d74fe"
     },
     {
       "id": "module:tests/study-cli.test.ts",
@@ -8103,8 +8115,8 @@
     "changes": {}
   },
   "inputs": {
-    "hash": "073a41c47d13ec020473abff5f37c8e9327bc6db06c955e279cb9d8c40f7e8f6",
-    "fileCount": 444,
+    "hash": "bc33d4e0d865cffeac29325560281a11581ffb2d9caea3a369a7bdfec146b5e7",
+    "fileCount": 445,
     "projectionVersion": 2
   },
   "retrieval": {
@@ -8126,9 +8138,9 @@
   "projection": {
     "type": "retrieval-index",
     "schemaVersion": 1,
-    "contentHash": "ef8c866549b0dab7e3b4eed92696f570e1b13d02887ecccbf2393993bf41360c",
+    "contentHash": "d11d6149e1887d03f43a72162d5c35563e5c4079b2331cbe9ac83d259b450341",
     "contentHashAlgo": "sha256-normalized-v1",
-    "snapshotHash": "acd8ce79c9d3ef3923b98b0bb879cf6465ee88d00e6d5bc56504d26e26143eea",
+    "snapshotHash": "e95fa46b63757446be3e3a8fb2d578f02641ca8c4dce3b5eb3aca61b7c579645",
     "overlayHash": "f99666ff9119084dd25c2974ae64eb6935ec2aa785ff5ad478fb9d541f7a5e94",
     "configurationHash": "91d46a4ecbfe3b55878e0b3c7608819775cf7b18aeafcc8f689eddfa462622b4",
     "lexiconVersion": 1,
@@ -8148,7 +8160,7 @@
     },
     "lexical": {
       "version": 1,
-      "documentCount": 472,
+      "documentCount": 473,
       "fieldNames": [
         "aliases",
         "body",
@@ -8159,13 +8171,13 @@
         "title"
       ],
       "averageFieldLength": {
-        "aliases": 3.4639830508474576,
-        "body": 68.60381355932203,
-        "headings": 4.264830508474576,
-        "path": 5.688559322033898,
-        "summary": 5.692796610169491,
-        "symbols": 11.688559322033898,
-        "title": 3.108050847457627
+        "aliases": 3.463002114164905,
+        "body": 68.45877378435517,
+        "headings": 4.255813953488372,
+        "path": 5.687103594080338,
+        "summary": 5.680761099365751,
+        "symbols": 11.66384778012685,
+        "title": 3.109936575052854
       }
     },
     "entries": [
@@ -8324,7 +8336,7 @@
           ],
           "outbound": []
         },
-        "contentHash": "4c04427cc74e4070ad3da4daa57dd27d98f8abc15a9499dded4c22a1ba672cdd",
+        "contentHash": "98b62a3f6c95b3b129c40f45ad6fa39934d5ba9746b75f3f5a7b229a7951729c",
         "provenance": "observed",
         "confidence": "observed",
         "ownershipId": "doc-bridge-scripts"
@@ -10738,7 +10750,7 @@
           "path": "CONTRIBUTING.md",
           "symbols": "",
           "summary": "Thanks for helping improve @agentskit/doc-bridge.",
-          "body": "Contributing Thanks for helping improve @agentskit/doc-bridge . Setup Development rules - Keep Layer 0 deterministic: no LLM/API key required for init , index , query , list , gates, or MCP handoff tools. - Do not add private-repo assumptions to public docs, examples, defaults, or tests. - Prefer existing helpers and Node APIs before adding dependencies. - Add or update the smallest test that would fail if the behavior regresses. - Public contract changes must update the relevant docs under docs/spec/ or docs/schemas/ . - Dogfood AgentsKit Chat 0.4.x only: @agentskit/chat , @agentskit/chat/protocol , and @agentskit/chat/react . Never reintroduce @agentskit/chat-protocol or @agentskit/chat-react ( pnpm check:no-legacy-chat-imports ). - Never commit API keys, tokens, secrets, or private repository content. Pull request checklist - Run pnpm typecheck && pnpm test && pnpm build . - Run npm pack --dry-run for package or README changes. - Update docs and CHANGELOG.md when behavior changes. - Keep examples public and reproducible. Why contribute? Doc Bridge helps humans and coding agents navigate large repositories with less context and stronger evidence. The study is intentionally open and anonymized so contributors can improve the measurement surface as well as the product. High-impact contribution areas: - language and framework analyzers; - documentation quality rules and contradiction detectors; - architecture relation extraction; - CLI, MCP, and documentation adapters; - executable acceptance checks; - anonymized benchmark tasks and replications; - accessibility and report improvements. Start with the , run the chart check, and use the smallest reproducible example for a proposed change. Releases Use Changesets for versioned changes. A merged changeset on master starts the version workflow, which opens a version PR and publishes the merged version through npm Trusted Publishing (GitHub OIDC). No npm token is stored in GitHub. The npm package must have a GitHub Actions trusted publisher configured for AgentsKit-io/doc-bridge , workflow changesets.yml , and environment npm . Do not publish from a dirty worktree or run pnpm release locally. Project decisions and maintainer responsibilities are documented in . By participating, you agree to follow the . Report vulnerabilities through the private process in .",
+          "body": "Contributing Thanks for helping improve @agentskit/doc-bridge . Setup Development rules - Keep Layer 0 deterministic: no LLM/API key required for init , index , query , list , gates, or MCP handoff tools. - Do not add private-repo assumptions to public docs, examples, defaults, or tests. - Prefer existing helpers and Node APIs before adding dependencies. - Add or update the smallest test that would fail if the behavior regresses. - Public contract changes must update the relevant docs under docs/spec/ or docs/schemas/ . - Dogfood AgentsKit Chat 0.4.x only: @agentskit/chat , @agentskit/chat/protocol , and @agentskit/chat/react . Never reintroduce @agentskit/chat-protocol or @agentskit/chat-react ( pnpm check:no-legacy-chat-imports ). - Never commit API keys, tokens, secrets, or private repository content. Pull request checklist - Run pnpm typecheck && pnpm test && pnpm build . - Run npm pack --dry-run for package or README changes. - Update docs and CHANGELOG.md when behavior changes. - Keep examples public and reproducible. Why contribute? Doc Bridge helps humans and coding agents navigate large repositories with less context and stronger evidence. The study is intentionally open and anonymized so contributors can improve the measurement surface as well as the product. High-impact contribution areas: - language and framework analyzers; - documentation quality rules and contradiction detectors; - architecture relation extraction; - CLI, MCP, and documentation adapters; - executable acceptance checks; - anonymized benchmark tasks and replications; - accessibility and report improvements. Start with the , run the chart check, and use the smallest reproducible example for a proposed change. Releases Use Changesets for versioned changes. A merged changeset on main starts the version workflow, which opens a version PR and publishes the merged version through npm Trusted Publishing (GitHub OIDC). No npm token is stored in GitHub. The npm package must have a GitHub Actions trusted publisher configured for AgentsKit-io/doc-bridge , workflow changesets.yml , and environment npm . Do not publish from a dirty worktree or run pnpm release locally. Project decisions and maintainer responsibilities are documented in . By participating, you agree to follow the . Report vulnerabilities through the private process in .",
           "aliases": "document project"
         },
         "graph": {
@@ -10822,10 +10834,15 @@
               "kind": "mentions",
               "id": "package:@agentskit/doc-bridge",
               "confidence": "observed"
+            },
+            {
+              "kind": "mentions-symbol",
+              "id": "module:scripts/verification-harness.mjs",
+              "confidence": "observed"
             }
           ]
         },
-        "contentHash": "5d76c4184e0f248963332de2cda0f5b72d8bad8da038b4834022f28bd7c0442f",
+        "contentHash": "b938cd6295dcde17ba07bc637ebeecfccf71dbb5ae6da9502447a54c036f9bf4",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -14167,10 +14184,15 @@
               "kind": "mentions",
               "id": "document:docs/skills/doc-bridge.md",
               "confidence": "observed"
+            },
+            {
+              "kind": "mentions-symbol",
+              "id": "module:scripts/verification-harness.mjs",
+              "confidence": "observed"
             }
           ]
         },
-        "contentHash": "4ca76d701455b4701e6452260226705e7aff471cf6f980022b802bdb6d09835b",
+        "contentHash": "3d150da7fd1655dde13bd9471598ef02d2729b56ec91e770f4b3666b2c538266",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -15335,7 +15357,7 @@
             }
           ]
         },
-        "contentHash": "7afbd854f68a391e3b31c822e32199c0303ee2a3127fa024c1f25e1d5f99696d",
+        "contentHash": "59d226c671b3724feff223a043d2ed410bd9dd3101d688b5fc519e0f830ac97c",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -17816,7 +17838,7 @@
           "path": "GOVERNANCE.md",
           "symbols": "",
           "summary": "Doc Bridge is maintained in public by the AgentsKit organization. Emerson Braun is the primary maintainer. Repository maintainers are responsible for triage, reviews, releases, security response, and enforcing the contribution and conduct policies.",
-          "body": "Governance Doc Bridge is maintained in public by the AgentsKit organization. Emerson Braun is the primary maintainer. Repository maintainers are responsible for triage, reviews, releases, security response, and enforcing the contribution and conduct policies. Decisions Bug reports, feature proposals, and implementation decisions belong in public issues and pull requests whenever they do not involve a vulnerability or private data. Maintainers decide by documented technical merit, compatibility with the deterministic handoff contracts, maintenance cost, and evidence from tests or reproducible examples. Small, focused changes may proceed directly through a pull request. Contributors should open an issue before a large architectural or contract change. Maintainers have final merge authority and may decline changes that expand scope without sufficient evidence or a sustainable maintenance path. Security reports follow and remain private until coordinated disclosure is appropriate. Conduct matters follow . Releases Stable releases are cut from master using immutable semantic-version tags. The repository release workflow reruns security, test, coverage, package, dogfood, Marketplace, and documentation conformance checks before publishing the npm package with provenance. It verifies the registry result, uploads the package artifact to a GitHub Release draft, and leaves final GitHub Release publication to a maintainer. The detailed release procedure and recovery path are documented in . Maintainer or release-process changes are documented in this file through the same pull request workflow.",
+          "body": "Governance Doc Bridge is maintained in public by the AgentsKit organization. Emerson Braun is the primary maintainer. Repository maintainers are responsible for triage, reviews, releases, security response, and enforcing the contribution and conduct policies. Decisions Bug reports, feature proposals, and implementation decisions belong in public issues and pull requests whenever they do not involve a vulnerability or private data. Maintainers decide by documented technical merit, compatibility with the deterministic handoff contracts, maintenance cost, and evidence from tests or reproducible examples. Small, focused changes may proceed directly through a pull request. Contributors should open an issue before a large architectural or contract change. Maintainers have final merge authority and may decline changes that expand scope without sufficient evidence or a sustainable maintenance path. Security reports follow and remain private until coordinated disclosure is appropriate. Conduct matters follow . Releases Stable releases are cut from main using immutable semantic-version tags. The repository release workflow reruns security, test, coverage, package, dogfood, Marketplace, and documentation conformance checks before publishing the npm package with provenance. It verifies the registry result, uploads the package artifact to a GitHub Release draft, and leaves final GitHub Release publication to a maintainer. The detailed release procedure and recovery path are documented in . Maintainer or release-process changes are documented in this file through the same pull request workflow.",
           "aliases": "document unclassified"
         },
         "graph": {
@@ -17879,10 +17901,15 @@
               "kind": "mentions",
               "id": "document:SECURITY.md",
               "confidence": "observed"
+            },
+            {
+              "kind": "mentions-symbol",
+              "id": "module:scripts/verification-harness.mjs",
+              "confidence": "observed"
             }
           ]
         },
-        "contentHash": "406843162ff17320a996ef7d2222d674028c2dc901bec0fcce35752cae2870a6",
+        "contentHash": "878c101a85605d96aa0efac73c2c375767a748251bf6e51e34e8fcf8b379b2f3",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -18244,7 +18271,7 @@
             }
           ]
         },
-        "contentHash": "0a655cfe2b285727526e99e17a93b7922ca7ab411bf38b1279a9fa2e23499ba9",
+        "contentHash": "81921909946d2775809cf1695fa780686ddc45b105b26d61700df41640663b43",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -19040,7 +19067,7 @@
           "inbound": [],
           "outbound": []
         },
-        "contentHash": "b095838eaeb71b0ccb2913e48fde7d8541687127e84c5429d77ccfe31c36f77a",
+        "contentHash": "bd65b24dbcfc73e805fac8045ff605386a24123f36fb662a088de957d7113ea4",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -19765,7 +19792,7 @@
           "inbound": [],
           "outbound": []
         },
-        "contentHash": "2498e66b6fa5533c9a0f467d8e2c9cb49196f3c77cf19e182ba2c1e57495ff14",
+        "contentHash": "f82e9b6464289746d8d5a714188df53656c8b1fb8c5ccef14e6daaec1e95e938",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -20112,7 +20139,7 @@
             }
           ]
         },
-        "contentHash": "11df29a3c5dc4f463db895e703a9f01198152620be351beaaf54fb2268ab509f",
+        "contentHash": "daa4b83a75ba4a3d830ac81d31adbc33d684333f991d9821c2dd801a9eac881f",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -20300,7 +20327,7 @@
           ],
           "outbound": []
         },
-        "contentHash": "2cb6e21ce8c88c99f08be7f5fbcc601f68a8655b9814a7ff2e2956104d3d5b34",
+        "contentHash": "7ef8aaa558611ace10bc401d00127152fb5fdd4f01f0e1831b1f828715ca6521",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -20850,6 +20877,40 @@
         "confidence": "observed"
       },
       {
+        "id": "module:scripts/cloudflare-headers.mjs",
+        "kind": "module",
+        "path": "scripts/cloudflare-headers.mjs",
+        "title": "cloudflare-headers.mjs",
+        "aliases": [],
+        "tags": [
+          "module",
+          "mjs",
+          "scripts"
+        ],
+        "fields": {
+          "title": "cloudflare-headers.mjs",
+          "headings": "",
+          "path": "scripts/cloudflare-headers.mjs",
+          "symbols": "",
+          "summary": "",
+          "body": "",
+          "aliases": "module mjs scripts"
+        },
+        "graph": {
+          "pagerank": 0,
+          "inboundLinks": 0,
+          "coveredBy": [],
+          "mentionedBy": [],
+          "areaId": "area:scripts",
+          "packageId": "package:@agentskit/doc-bridge",
+          "inbound": [],
+          "outbound": []
+        },
+        "contentHash": "3d0bf277343d0d7cc2a4bc17c7eab398a4135e2f35d980af81ce4a4af8d97a9d",
+        "provenance": "observed",
+        "confidence": "observed"
+      },
+      {
         "id": "module:scripts/copilot-plugin-contract.test.mjs",
         "kind": "module",
         "path": "scripts/copilot-plugin-contract.test.mjs",
@@ -21158,7 +21219,7 @@
           "inbound": [],
           "outbound": []
         },
-        "contentHash": "5c062eda98fa1c4affc8077a48642d1b84dc698111e19a1fd363539010729e97",
+        "contentHash": "51f9149820b69b623cfa236e0b3423c73776c3790675ddc57372068f3def2c33",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -21998,11 +22059,14 @@
         },
         "graph": {
           "pagerank": 0,
-          "inboundLinks": 2,
+          "inboundLinks": 5,
           "coveredBy": [],
           "mentionedBy": [
             "document:CHANGELOG.md",
-            "document:docs/spec/documentation-standard-v1.md"
+            "document:CONTRIBUTING.md",
+            "document:docs/loop-workflow.md",
+            "document:docs/spec/documentation-standard-v1.md",
+            "document:GOVERNANCE.md"
           ],
           "areaId": "area:scripts",
           "packageId": "package:@agentskit/doc-bridge",
@@ -22019,7 +22083,22 @@
             },
             {
               "kind": "mentions-symbol",
+              "id": "document:CONTRIBUTING.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions-symbol",
+              "id": "document:docs/loop-workflow.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions-symbol",
               "id": "document:docs/spec/documentation-standard-v1.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions-symbol",
+              "id": "document:GOVERNANCE.md",
               "confidence": "observed"
             }
           ],
@@ -31793,7 +31872,7 @@
           ],
           "outbound": []
         },
-        "contentHash": "fdd41eea7991e5722379af51633ca272c8b0dbf06441a1b49f5993db07d95433",
+        "contentHash": "33077c2f9550d439a61d95476f6c2f7d2674124b1d3c08afcdbd0eaabd841353",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -40640,7 +40719,7 @@
             }
           ]
         },
-        "contentHash": "c67d75cec08cf104c38f879114e135c24ace9730986b8a2747afa84c9a59b853",
+        "contentHash": "81d6b0752b17b5190ff89682f6bc2532d448c0e56056c56d9a4b7127e49d74fe",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -41471,7 +41550,7 @@
           ],
           "outbound": []
         },
-        "contentHash": "de9aaeb655fbb64f65a97f1885f4e4397b42cc7a72d7218e7f7481cac0f94569",
+        "contentHash": "b67d1402afc13bd70b62f271565ab475d210d77ac27b3a2ce0827665b64d424d",
         "provenance": "observed",
         "confidence": "observed"
       }

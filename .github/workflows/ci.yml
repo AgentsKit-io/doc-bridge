@@ -6,7 +6,7 @@ permissions:
 on:
   pull_request:
   push:
-    branches: [master]
+    branches: [main]
 
 concurrency:
   # Supersede in-flight runs for the same PR; pushes to main always finish.

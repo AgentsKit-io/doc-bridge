@@ -25,7 +25,7 @@ export const docBridgeStructuredData = {
       name: 'AgentsKit Doc Bridge',
       description: 'An open-source CLI, MCP server, and CI gate for deterministic human-to-agent documentation handoffs.',
       codeRepository: 'https://github.com/AgentsKit-io/doc-bridge',
-      license: 'https://github.com/AgentsKit-io/doc-bridge/blob/master/LICENSE',
+      license: 'https://github.com/AgentsKit-io/doc-bridge/blob/main/LICENSE',
       programmingLanguage: 'TypeScript',
       runtimePlatform: 'Node.js 22 or newer',
       author: { '@id': 'https://www.agentskit.io/#organization' },
