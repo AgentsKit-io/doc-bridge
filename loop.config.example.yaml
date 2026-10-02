@@ -18,7 +18,7 @@ schemaVersion: 1
 project:
   name: doc-bridge
   repo: AgentsKit-io/doc-bridge
-  baseBranch: master
+  baseBranch: main
   root: .
   stateDir: .codex/loop
   setup:
@@ -115,7 +115,7 @@ machine:
   wslCap: 1
 
 delivery:
-  # doc-bridge has no lint script; typecheck plus the full suite is what CI enforces on master.
+  # doc-bridge has no lint script; typecheck plus the full suite is what CI enforces on main.
   verifyCommand: "pnpm typecheck && pnpm test"
   review:
     cli: agentskit-review

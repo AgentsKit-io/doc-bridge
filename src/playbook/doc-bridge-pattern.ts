@@ -110,7 +110,7 @@ Teams track handoff % and human-bridge % daily.
 
 - npm: https://www.npmjs.com/package/@agentskit/doc-bridge
 - repo: https://github.com/AgentsKit-io/doc-bridge
-- skill: https://github.com/AgentsKit-io/doc-bridge/blob/master/docs/skills/doc-bridge.md
+- skill: https://github.com/AgentsKit-io/doc-bridge/blob/main/docs/skills/doc-bridge.md
 - landing: https://doc-bridge.agentskit.io/
 `
 

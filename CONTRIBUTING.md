@@ -53,7 +53,7 @@ Start with the [study overview](docs/study/README.md), run the chart check, and 
 
 ## Releases
 
-Use Changesets for versioned changes. A merged changeset on `master` starts the
+Use Changesets for versioned changes. A merged changeset on `main` starts the
 version workflow, which opens a version PR and publishes the merged version
 through npm Trusted Publishing (GitHub OIDC). No npm token is stored in GitHub.
 

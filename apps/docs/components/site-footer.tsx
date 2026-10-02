@@ -28,7 +28,7 @@ export function SiteFooter() {
         <p>
           <a href={`https://github.com/${PRODUCT_REPO}`}>GitHub repository</a>
           {' · '}
-          <a href={`https://github.com/${PRODUCT_REPO}/blob/master/LICENSE`}>MIT License</a>
+          <a href={`https://github.com/${PRODUCT_REPO}/blob/main/LICENSE`}>MIT License</a>
           {' · '}
           <a href={`${BASE_PATH}/llms.txt`}>llms.txt</a>
         </p>

@@ -21,7 +21,7 @@ export default async function Page({ params }: Props) {
       editOnGithub={{
         owner: 'AgentsKit-io',
         repo: 'doc-bridge',
-        sha: 'master',
+        sha: 'main',
         path: `docs/${page.path}`,
       }}
     >

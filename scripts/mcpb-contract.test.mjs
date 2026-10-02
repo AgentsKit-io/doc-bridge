@@ -60,7 +60,7 @@ test('MCPB requires an explicit project configuration boundary', () => {
 
 test('privacy requirements are public and complete', () => {
   assert.deepEqual(manifest.privacy_policies, [
-    'https://github.com/AgentsKit-io/doc-bridge/blob/master/PRIVACY.md',
+    'https://github.com/AgentsKit-io/doc-bridge/blob/main/PRIVACY.md',
   ])
   assert.match(readme, /^## Privacy Policy$/m)
   assert.match(readme, /\[Privacy Policy\]\(PRIVACY\.md\)/)

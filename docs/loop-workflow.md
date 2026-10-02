@@ -107,7 +107,7 @@ ak-harness loop retro --since 7d           # digest plus one knob to turn in loo
 
 | Setting | Value | Why |
 | --- | --- | --- |
-| `delivery.verifyCommand` | `pnpm typecheck && pnpm test` | doc-bridge has no `lint` script; this is what CI enforces on `master` |
+| `delivery.verifyCommand` | `pnpm typecheck && pnpm test` | doc-bridge has no `lint` script; this is what CI enforces on `main` |
 | `project.setup.command` | `pnpm install --frozen-lockfile` | a fresh Orca worktree has no `node_modules`; without it every dispatch loses its first minutes |
 | `contract.briefScopes` | `[agent-corpus]` | `corpus.agent.root` is `docs/agent-corpus`, the only surface in the index, so it is the only scope worth listing in a brief |
 | `brief.skills` | `CONTRIBUTING.md`, `docs/for-agents.md`, `docs/agent-corpus/OVERVIEW.md`, `docs/skills/doc-bridge.md` | pinned verbatim and hashed into `dispatch.json`; a missing path fails the dispatch rather than sending a worker without promised guidance. This repository has no root `AGENTS.md`, so the routing convention comes from the corpus overview |

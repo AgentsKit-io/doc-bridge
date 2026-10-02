@@ -15,7 +15,7 @@ describe('documentation site structured data', () => {
     expect(docBridgeStructuredData['@graph']).toContainEqual(expect.objectContaining({
       '@type': 'SoftwareSourceCode',
       codeRepository: 'https://github.com/AgentsKit-io/doc-bridge',
-      license: 'https://github.com/AgentsKit-io/doc-bridge/blob/master/LICENSE',
+      license: 'https://github.com/AgentsKit-io/doc-bridge/blob/main/LICENSE',
       programmingLanguage: 'TypeScript',
     }))
   })

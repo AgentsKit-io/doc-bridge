@@ -44,9 +44,9 @@ jobs:
         run: |
           version=$(node -p "require('./package.json').version")
           test "$RELEASE_TAG" = "v$version"
-          git fetch origin master --tags
+          git fetch origin main --tags
           test "$(git rev-list -n 1 "$RELEASE_TAG")" = "$(git rev-parse HEAD)"
-          git merge-base --is-ancestor "$(git rev-parse HEAD)" origin/master
+          git merge-base --is-ancestor "$(git rev-parse HEAD)" origin/main
       # Production dependencies are what a consumer installs, and they are audited down to
       # the lowest severity. Development tooling is not: it never ships, and at least one of
       # its advisories (extract-zip <=2.0.1, through @lhci/cli > lighthouse > puppeteer-core)
