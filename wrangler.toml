@@ -1,0 +1,11 @@
+# Cloudflare Workers static assets (migration off Vercel). Serves the static export of
+# `pnpm docs:build`; _headers (written by scripts/cloudflare-headers.mjs) mirrors vercel.json.
+# Deploy: pnpm cf:deploy   (needs CLOUDFLARE_API_TOKEN / CLOUDFLARE_ACCOUNT_ID)
+name = "ak-doc-bridge"
+compatibility_date = "2026-10-01"
+workers_dev = true
+
+[assets]
+directory = "apps/docs/out"
+html_handling = "auto-trailing-slash"
+not_found_handling = "404-page"

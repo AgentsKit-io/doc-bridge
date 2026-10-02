@@ -94,7 +94,9 @@
     "check:marketplace": "node scripts/check-marketplace-contract.mjs",
     "test:docs-artifacts": "node --test scripts/aliases.test.mjs scripts/docs-artifacts-contract.test.mjs",
     "check:readme-standard": "node scripts/check-readme-standard.mjs",
-    "check:docs": "pnpm check:readme-standard && node bin/ak-docs.js gate run && node bin/ak-docs.js conformance run documentation-standard-v1 --text && pnpm docs:typecheck && pnpm docs:build && pnpm test:docs-artifacts"
+    "check:docs": "pnpm check:readme-standard && node bin/ak-docs.js gate run && node bin/ak-docs.js conformance run documentation-standard-v1 --text && pnpm docs:typecheck && pnpm docs:build && pnpm test:docs-artifacts",
+    "cf:headers": "node scripts/cloudflare-headers.mjs",
+    "cf:deploy": "pnpm docs:build && pnpm cf:headers && npx -y wrangler@4 deploy"
   },
   "keywords": [
     "agentskit",
