@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "contentHash": "60f538a05fe7077f162e6ac07e6846cddb04792512ec3a7140dccf20cd8b31ab",
+  "contentHash": "1d25010c48bcf9670ed416eb12855c159b260b7e8bf02195f7baf0237daa2c6e",
   "contentHashAlgo": "sha256-normalized-v1",
-  "generatedAt": "2026-10-01T02:11:56.992Z",
+  "generatedAt": "2026-10-02T14:47:25.149Z",
   "project": {
     "name": "@agentskit/doc-bridge",
     "root": "."
@@ -295,12 +295,12 @@
       "type": "document",
       "title": "Changelog",
       "path": "CHANGELOG.md",
-      "description": "6d552b3: Repository scans now respect ignore rules. ak-docs index, doctor, scan/check, gates, and link-fix proposals skip every path the repository ignores — via git ls-files --cached --others --exclude-standard inside a Git work tree (nested .gitignore, .git/info/exclude, and global excludes included; tracked files are kept), or the on-disk .gitignore files outside Git — in addition to the",
+      "description": "Registry agent runners receive an optional cancellation signal separately from their frozen context. Local and CLI deadlines now use @agentskit/net; CLI timeout and response overflow switch process-tree termination from SIGTERM to SIGKILL, while concurrency remains reserved until execution settles.",
       "tags": [
         "document",
         "project"
       ],
-      "contentHash": "3f35d6fe05593d4f8fefbf7cd4e1455c8a1611b0803db8f2dcb8f09a72f6acc0"
+      "contentHash": "6774e1f3c56a1333940772a103e98ee31298bd9b4dc622d39e58864030e948cf"
     },
     {
       "id": "document:CODE_OF_CONDUCT.md",
@@ -1021,7 +1021,7 @@
         "document",
         "human"
       ],
-      "contentHash": "76c989dd0006ccae01e6b74c9ddced21482e90f611c1cc277de5fab12b43bfa8"
+      "contentHash": "08f8c910fa4452281467d1aee2848ed98a637c07b9e99d589a87c6f47144c755"
     },
     {
       "id": "document:docs/spec/render-v1.md",
@@ -2739,6 +2739,7 @@
         "REGISTRY_AGENT_PROTOCOL_V2",
         "RegistryAgentAdapter",
         "RegistryAgentContext",
+        "RegistryAgentExecutionOptions",
         "RegistryAgentMetadata",
         "RegistryAgentRunner",
         "RegistryEnrichmentContext",
@@ -2752,7 +2753,7 @@
         "ts",
         "agents"
       ],
-      "contentHash": "3c20062a5c16831ad5768c404de32c4baca0e78cd8f743ae2636ede7acfcce44"
+      "contentHash": "916bf2835daeabca13f63df881d191a5f150963ac4d09cbb0b5683e2e3a5e7df"
     },
     {
       "id": "module:src/audit/documentation.ts",
@@ -4307,7 +4308,7 @@
         "ts",
         "src"
       ],
-      "contentHash": "4d8226cb38794ae1358bef92bb844fa40393692f1ae643e88f8f3d8e0d11f7e8"
+      "contentHash": "1fefdbae737e354012151893f32ee708fd1698a26a42a2660f6fc39b787cbd55"
     },
     {
       "id": "module:src/intelligence/adapter.ts",
@@ -6533,7 +6534,7 @@
         "test",
         "tests"
       ],
-      "contentHash": "70b374028f27656a89e0296a28375c2ea4e7d57829f2f9ef21cd02a14dedd8f4"
+      "contentHash": "77f0b79289412bacf68ac16ebf63ecdec5cb5f6d09dc4756c8ef00837899a766"
     },
     {
       "id": "module:tests/render.test.ts",
@@ -8102,7 +8103,7 @@
     "changes": {}
   },
   "inputs": {
-    "hash": "f66bfa98b0dc27d53adfc7871b964865594fe850b108700f98a0a3960515e647",
+    "hash": "073a41c47d13ec020473abff5f37c8e9327bc6db06c955e279cb9d8c40f7e8f6",
     "fileCount": 444,
     "projectionVersion": 2
   },
@@ -8125,9 +8126,9 @@
   "projection": {
     "type": "retrieval-index",
     "schemaVersion": 1,
-    "contentHash": "4df57023c9cf27186e1e2cbb800ec7dce4908d7c2cc938cffbdf1396210672d4",
+    "contentHash": "ef8c866549b0dab7e3b4eed92696f570e1b13d02887ecccbf2393993bf41360c",
     "contentHashAlgo": "sha256-normalized-v1",
-    "snapshotHash": "cd22d91bd0929660adaec096cac668fabaa6e15deb2531d42928f6f8e40aef05",
+    "snapshotHash": "acd8ce79c9d3ef3923b98b0bb879cf6465ee88d00e6d5bc56504d26e26143eea",
     "overlayHash": "f99666ff9119084dd25c2974ae64eb6935ec2aa785ff5ad478fb9d541f7a5e94",
     "configurationHash": "91d46a4ecbfe3b55878e0b3c7608819775cf7b18aeafcc8f689eddfa462622b4",
     "lexiconVersion": 1,
@@ -8159,11 +8160,11 @@
       ],
       "averageFieldLength": {
         "aliases": 3.4639830508474576,
-        "body": 68.41101694915254,
+        "body": 68.60381355932203,
         "headings": 4.264830508474576,
         "path": 5.688559322033898,
-        "summary": 5.747881355932203,
-        "symbols": 11.677966101694915,
+        "summary": 5.692796610169491,
+        "symbols": 11.688559322033898,
         "title": 3.108050847457627
       }
     },
@@ -10414,7 +10415,7 @@
         "kind": "document",
         "path": "CHANGELOG.md",
         "title": "Changelog",
-        "summary": "6d552b3: Repository scans now respect ignore rules. ak-docs index, doctor, scan/check, gates, and link-fix proposals skip every path the repository ignores — via git ls-files --cached --others --exclude-standard inside a Git work tree (nested .gitignore, .git/info/exclude, and global excludes included; tracked files are kept), or the on-disk .gitignore files outside Git — in addition to the",
+        "summary": "Registry agent runners receive an optional cancellation signal separately from their frozen context. Local and CLI deadlines now use @agentskit/net; CLI timeout and response overflow switch process-tree termination from SIGTERM to SIGKILL, while concurrency remains reserved until execution settles.",
         "audience": "human",
         "aliases": [],
         "tags": [
@@ -10423,11 +10424,11 @@
         ],
         "fields": {
           "title": "Changelog",
-          "headings": "Changelog 1.12.0 Minor Changes Patch Changes 1.11.2 Patch Changes 1.11.1 Patch Changes 1.11.0 Minor Changes 1.10.1 Patch Changes 1.10.0 Minor Changes 1.9.0 Minor Changes Patch Changes 1.8.0 Minor Changes Patch Changes 1.7.45 Patch Changes 1.7.44 1.7.43 1.7.42 1.7.41 1.7.40 1.7.39 1.7.38 1.7.37 1.7.36 1.7.35 1.7.34 1.7.33 1.7.32 1.7.31 1.7.30 1.7.29 1.7.28 1.7.27 Patch Changes 1.7.26 Patch Changes 1.7.25 Patch Changes 1.7.24 Patch Changes 1.7.23 Patch Changes 1.7.22 Patch Changes 1.7.21 Patch Changes 1.7.20 Patch Changes 1.7.19 Patch Changes 1.7.18 Patch Changes 1.7.17 Patch Changes 1.7.16 Patch Changes 1.7.15",
+          "headings": "Changelog Unreleased Minor Changes 1.12.0 Minor Changes Patch Changes 1.11.2 Patch Changes 1.11.1 Patch Changes 1.11.0 Minor Changes 1.10.1 Patch Changes 1.10.0 Minor Changes 1.9.0 Minor Changes Patch Changes 1.8.0 Minor Changes Patch Changes 1.7.45 Patch Changes 1.7.44 1.7.43 1.7.42 1.7.41 1.7.40 1.7.39 1.7.38 1.7.37 1.7.36 1.7.35 1.7.34 1.7.33 1.7.32 1.7.31 1.7.30 1.7.29 1.7.28 1.7.27 Patch Changes 1.7.26 Patch Changes 1.7.25 Patch Changes 1.7.24 Patch Changes 1.7.23 Patch Changes 1.7.22 Patch Changes 1.7.21 Patch Changes 1.7.20 Patch Changes 1.7.19 Patch Changes 1.7.18 Patch Changes 1.7.17 Patch Changes 1.7.16",
           "path": "CHANGELOG.md",
           "symbols": "",
-          "summary": "6d552b3: Repository scans now respect ignore rules. ak-docs index, doctor, scan/check, gates, and link-fix proposals skip every path the repository ignores — via git ls-files --cached --others --exclude-standard inside a Git work tree (nested .gitignore, .git/info/exclude, and global excludes included; tracked files are kept), or the on-disk .gitignore files outside Git — in addition to the",
-          "body": "Changelog 1.12.0 Minor Changes - 6d552b3: Repository scans now respect ignore rules. ak-docs index , doctor , scan / check , gates, and link-fix proposals skip every path the repository ignores — via git ls-files --cached --others --exclude-standard inside a Git work tree (nested .gitignore , .git/info/exclude , and global excludes included; tracked files are kept), or the on-disk .gitignore files outside Git — in addition to the built-in safety excludes. Build output such as .next/ , .source/ , generated API pages, or next-env.d.ts no longer enters a committed index, so index-freshness and index-reproducible agree across clean checkouts. Agent-memory ingestion still reads gitignored memory directories. Patch Changes - 6d552b3: The documentation-standard ecosystem contract no longer hard-codes product membership. It used to require the deprecated properties shim to project either a fixed three-product list that included Playbook or a fixed six-product list without Harness, which forced repositories to keep a hidden playbook record in ecosystem.json . Membership now comes from the canonical manifest: the shim is optional, and each entry must name a distinct products[] record and match it exactly. 1.11.2 Patch Changes - 221b4a6: Retire a deprecated ecosystem contract and generated documentation references. 1.11.1 Patch Changes - faf29f5: Stop reporting a path an ignore rule rescues as unreproducible. git check-ignore --verbose emits a record for every path that matched a rule, including the path a ! negation rescues — and such a path is precisely one Git does not ignore. The reproducibility check read the record without reading the pattern, so dist/ plus !dist/keep.js reported dist/keep.js as a reason the index could not be rebuilt from a clean checkout. The opposite of what the rule says, stated confidently. The window is narrow: check-ignore stops reporting a path once it is committed, and a path rescued by a negation is usually committed, which is the point of rescuing it. It shows up while such a path is still untracked — a file added but not yet committed. Found by turning the new index-reproducible gate on in this repository, which had to add !.doc-bridge/index.json to its own .gitignore to commit the index the gate verifies. 1.11.0 Minor Changes - 25f16f3: Say when a committed index could not have come from a clean checkout. A scan walks what is on disk and has no reason to consult .gitignore , so a generated module or document silently joins the corpus on a machine that has built and silently leaves it on one that has not. That is harmless while the index is rebuilt on every run. It is a defect the moment the index is committed so a gate can verify it — which is the setup index-freshness exists for: two checkouts of the same commit then produce different artifacts, the gate reports staleness that nothing caused, and regenerating cannot fix it because the next machine disagrees in the other direction. Dogfooding found this the expensive way. On a 25-package monorepo the freshness gate passed locally and failed in CI, twice, because pnpm lint had generated one .ts file into the corpus before the index was written; CI lints a narrower scope and never had the file. Diagnosing it took reading two CI logs and diffing file inventories. Git already knew the answer. ak-docs index now names those paths as it writes, and ak-docs doctor raises an index-not-reproducible warning, each with the ignore rule that matched — for example apps/docs-next/lib/ask-context.ts (apps/docs-next/.gitignore:13:lib/ask-context.ts) — so the fix is one lookup away: add the path to safety.exclude . Both are unconditional and neither changes an exit code or the doctor's score. Enforcement is the new index-reproducible gate, which is in no preset and has to be requested with gates.include: ['index-reproducible'] , because turning it on for every consumer would fail gates that pass for good reasons. The check reports success rather than failure when the ind",
+          "summary": "Registry agent runners receive an optional cancellation signal separately from their frozen context. Local and CLI deadlines now use @agentskit/net; CLI timeout and response overflow switch process-tree termination from SIGTERM to SIGKILL, while concurrency remains reserved until execution settles.",
+          "body": "Changelog Unreleased Minor Changes - Registry agent runners receive an optional cancellation signal separately from their frozen context. Local and CLI deadlines now use @agentskit/net ; CLI timeout and response overflow switch process-tree termination from SIGTERM to SIGKILL , while concurrency remains reserved until execution settles. 1.12.0 Minor Changes - 6d552b3: Repository scans now respect ignore rules. ak-docs index , doctor , scan / check , gates, and link-fix proposals skip every path the repository ignores — via git ls-files --cached --others --exclude-standard inside a Git work tree (nested .gitignore , .git/info/exclude , and global excludes included; tracked files are kept), or the on-disk .gitignore files outside Git — in addition to the built-in safety excludes. Build output such as .next/ , .source/ , generated API pages, or next-env.d.ts no longer enters a committed index, so index-freshness and index-reproducible agree across clean checkouts. Agent-memory ingestion still reads gitignored memory directories. Patch Changes - 6d552b3: The documentation-standard ecosystem contract no longer hard-codes product membership. It used to require the deprecated properties shim to project either a fixed three-product list that included Playbook or a fixed six-product list without Harness, which forced repositories to keep a hidden playbook record in ecosystem.json . Membership now comes from the canonical manifest: the shim is optional, and each entry must name a distinct products[] record and match it exactly. 1.11.2 Patch Changes - 221b4a6: Retire a deprecated ecosystem contract and generated documentation references. 1.11.1 Patch Changes - faf29f5: Stop reporting a path an ignore rule rescues as unreproducible. git check-ignore --verbose emits a record for every path that matched a rule, including the path a ! negation rescues — and such a path is precisely one Git does not ignore. The reproducibility check read the record without reading the pattern, so dist/ plus !dist/keep.js reported dist/keep.js as a reason the index could not be rebuilt from a clean checkout. The opposite of what the rule says, stated confidently. The window is narrow: check-ignore stops reporting a path once it is committed, and a path rescued by a negation is usually committed, which is the point of rescuing it. It shows up while such a path is still untracked — a file added but not yet committed. Found by turning the new index-reproducible gate on in this repository, which had to add !.doc-bridge/index.json to its own .gitignore to commit the index the gate verifies. 1.11.0 Minor Changes - 25f16f3: Say when a committed index could not have come from a clean checkout. A scan walks what is on disk and has no reason to consult .gitignore , so a generated module or document silently joins the corpus on a machine that has built and silently leaves it on one that has not. That is harmless while the index is rebuilt on every run. It is a defect the moment the index is committed so a gate can verify it — which is the setup index-freshness exists for: two checkouts of the same commit then produce different artifacts, the gate reports staleness that nothing caused, and regenerating cannot fix it because the next machine disagrees in the other direction. Dogfooding found this the expensive way. On a 25-package monorepo the freshness gate passed locally and failed in CI, twice, because pnpm lint had generated one .ts file into the corpus before the index was written; CI lints a narrower scope and never had the file. Diagnosing it took reading two CI logs and diffing file inventories. Git already knew the answer. ak-docs index now names those paths as it writes, and ak-docs doctor raises an index-not-reproducible warning, each with the ignore rule that matched — for example apps/docs-next/lib/ask-context.ts (apps/docs-next/.gitignore:13:lib/ask-context.ts) — so the fix is one lookup away: add the path to safety.exclude . Both are unconditional and neithe",
           "aliases": "document project"
         },
         "graph": {
@@ -10654,7 +10655,7 @@
             }
           ]
         },
-        "contentHash": "3f35d6fe05593d4f8fefbf7cd4e1455c8a1611b0803db8f2dcb8f09a72f6acc0",
+        "contentHash": "6774e1f3c56a1333940772a103e98ee31298bd9b4dc622d39e58864030e948cf",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -16697,7 +16698,7 @@
           "path": "docs/spec/registry-agents.md",
           "symbols": "",
           "summary": "doc-bridge exposes deterministic tools; Registry agents can compose them into maintenance flows.",
-          "body": "Registry Agent Topology doc-bridge exposes deterministic tools; Registry agents can compose them into maintenance flows. doc-curator Supervisor flow: Runtime Notes - The MCP server is local: ak-docs mcp . - The flow must not require a private repository shape. - knowledge-promoter may draft PR content, but must never merge. - code-review runs after gates so reviewers see deterministic failures first. - Future RAG mode should inject createDocBridgeRetriever(index) and keep exact handoff resolution ahead of semantic results. Grounding and approval boundary The adapter accepts only a typed AgentProposalV1 whose base snapshot and report hashes match the supplied artifacts. A proposal must identify the configured Registry agent and exact installed version, reference known diagnostics, and include evidence present in the supplied snapshot or reconciliation report. When ak-docs suggest --documentation is used, the bounded documentation-audit context is also supplied; the proposal must bind baseDocumentationAuditHash and may reference audit finding IDs and evidence. Unknown diagnostics, out-of-scope evidence, malformed output, timeout, response limits, and token limits fail closed. The adapter returns advisory evidence only. It does not apply documentation changes, mark findings resolved, or approve its own output. Convert an accepted suggestion into the existing human-gated fix-proposal flow, run post-apply verification, and treat the new source revision as a new evidence run. An alternate Registry agent is selected by changing intelligence.registry.agentId and installing matching metadata under agentRoot ; the common adapter and evidence contract remain unchanged.",
+          "body": "Registry Agent Topology doc-bridge exposes deterministic tools; Registry agents can compose them into maintenance flows. doc-curator Supervisor flow: Runtime Notes - The MCP server is local: ak-docs mcp . - The flow must not require a private repository shape. - knowledge-promoter may draft PR content, but must never merge. - code-review runs after gates so reviewers see deterministic failures first. - Future RAG mode should inject createDocBridgeRetriever(index) and keep exact handoff resolution ahead of semantic results. Grounding and approval boundary The adapter accepts only a typed AgentProposalV1 whose base snapshot and report hashes match the supplied artifacts. A proposal must identify the configured Registry agent and exact installed version, reference known diagnostics, and include evidence present in the supplied snapshot or reconciliation report. When ak-docs suggest --documentation is used, the bounded documentation-audit context is also supplied; the proposal must bind baseDocumentationAuditHash and may reference audit finding IDs and evidence. Unknown diagnostics, out-of-scope evidence, malformed output, timeout, response limits, and token limits fail closed. Local runners receive the frozen registry context as their first argument and may accept an optional RegistryAgentExecutionOptions second argument with an AbortSignal . The signal is execution-only: it is not part of the serialized context. Existing one-argument runners remain compatible. The adapter aborts at intelligence.registry.timeoutMs ; runners should pass the signal to cancellable work such as fetch . A runner that ignores cancellation still causes a timeout response, while its concurrency slot remains occupied until that runner settles. CLI mode uses the same deadline and response budgets, sends SIGKILL to the child process tree on timeout or output overflow, and retains the slot until the child closes. Timeouts expose AK NET TIMEOUT while preserving the Registry timeout message. The adapter returns advisory evidence only. It does not apply documentation changes, mark findings resolved, or approve its own output. Convert an accepted suggestion into the existing human-gated fix-proposal flow, run post-apply verification, and treat the new source revision as a new evidence run. An alternate Registry agent is selected by changing intelligence.registry.agentId and installing matching metadata under agentRoot ; the common adapter and evidence contract remain unchanged.",
           "aliases": "document human"
         },
         "graph": {
@@ -16709,12 +16710,17 @@
           "outbound": [
             {
               "kind": "mentions-symbol",
+              "id": "module:src/agents/registry-adapter.ts",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions-symbol",
               "id": "module:src/schemas/knowledge.ts",
               "confidence": "observed"
             }
           ]
         },
-        "contentHash": "76c989dd0006ccae01e6b74c9ddced21482e90f611c1cc277de5fab12b43bfa8",
+        "contentHash": "08f8c910fa4452281467d1aee2848ed98a637c07b9e99d589a87c6f47144c755",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -22177,6 +22183,7 @@
           "REGISTRY_AGENT_PROTOCOL_V2",
           "RegistryAgentAdapter",
           "RegistryAgentContext",
+          "RegistryAgentExecutionOptions",
           "RegistryAgentMetadata",
           "RegistryAgentRunner",
           "RegistryEnrichmentContext",
@@ -22194,18 +22201,19 @@
           "title": "registry-adapter.ts",
           "headings": "",
           "path": "src/agents/registry-adapter.ts",
-          "symbols": "DEFAULT_REGISTRY_AGENT_ID REGISTRY_AGENT_PROTOCOL_V2 RegistryAgentAdapter RegistryAgentContext RegistryAgentMetadata RegistryAgentRunner RegistryEnrichmentContext createRegistryAgentAdapter loadRegistryAgentMetadata loadRegistryAgentRunner persistRegistryAgentProposal",
+          "symbols": "DEFAULT_REGISTRY_AGENT_ID REGISTRY_AGENT_PROTOCOL_V2 RegistryAgentAdapter RegistryAgentContext RegistryAgentExecutionOptions RegistryAgentMetadata RegistryAgentRunner RegistryEnrichmentContext createRegistryAgentAdapter loadRegistryAgentMetadata loadRegistryAgentRunner persistRegistryAgentProposal",
           "summary": "",
           "body": "",
           "aliases": "module ts agents"
         },
         "graph": {
           "pagerank": 0,
-          "inboundLinks": 2,
+          "inboundLinks": 3,
           "coveredBy": [],
           "mentionedBy": [
             "document:docs/PRD-knowledge-retrieval-and-enrichment.md",
-            "document:docs/spec/enrichment-overlay-v1.md"
+            "document:docs/spec/enrichment-overlay-v1.md",
+            "document:docs/spec/registry-agents.md"
           ],
           "areaId": "area:src/agents",
           "packageId": "package:@agentskit/doc-bridge",
@@ -22246,6 +22254,11 @@
               "confidence": "observed"
             },
             {
+              "kind": "mentions-symbol",
+              "id": "document:docs/spec/registry-agents.md",
+              "confidence": "observed"
+            },
+            {
               "kind": "re-exports",
               "id": "module:src/index.ts",
               "confidence": "observed"
@@ -22279,7 +22292,7 @@
             }
           ]
         },
-        "contentHash": "3c20062a5c16831ad5768c404de32c4baca0e78cd8f743ae2636ede7acfcce44",
+        "contentHash": "916bf2835daeabca13f63df881d191a5f150963ac4d09cbb0b5683e2e3a5e7df",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -29655,7 +29668,7 @@
             }
           ]
         },
-        "contentHash": "4d8226cb38794ae1358bef92bb844fa40393692f1ae643e88f8f3d8e0d11f7e8",
+        "contentHash": "1fefdbae737e354012151893f32ee708fd1698a26a42a2660f6fc39b787cbd55",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -39848,7 +39861,7 @@
             }
           ]
         },
-        "contentHash": "70b374028f27656a89e0296a28375c2ea4e7d57829f2f9ef21cd02a14dedd8f4",
+        "contentHash": "77f0b79289412bacf68ac16ebf63ecdec5cb5f6d09dc4756c8ef00837899a766",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -41458,7 +41471,7 @@
           ],
           "outbound": []
         },
-        "contentHash": "22f1e098b6cb4184e9feefd85fe59a5120cf9685f2154de144e42f1c49d5a26b",
+        "contentHash": "de9aaeb655fbb64f65a97f1885f4e4397b42cc7a72d7218e7f7481cac0f94569",
         "provenance": "observed",
         "confidence": "observed"
       }
