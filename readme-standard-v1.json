@@ -192,7 +192,7 @@
         }
       ],
       "freshness": {
-        "reviewedOn": "2026-09-14",
+        "reviewedOn": "2026-10-02",
         "reviewDueOn": "2026-12-13",
         "sources": [
           "README.md",
@@ -209,7 +209,7 @@
             ]
           }
         ],
-        "sourceHash": "sha256:e017da06238d101d6594ca7c63cc79fd2ee01f6d5b51e7b937f9f3cd7eedc9dc"
+        "sourceHash": "sha256:4fc066ace62113db0f7fb0104f786f191c390982e7e9bb4f35528a0b9cc86a5e"
       },
       "exceptions": []
     },
@@ -280,7 +280,7 @@
         }
       ],
       "freshness": {
-        "reviewedOn": "2026-09-14",
+        "reviewedOn": "2026-10-02",
         "reviewDueOn": "2026-12-13",
         "sources": [
           "README.md",
@@ -297,7 +297,7 @@
             ]
           }
         ],
-        "sourceHash": "sha256:e017da06238d101d6594ca7c63cc79fd2ee01f6d5b51e7b937f9f3cd7eedc9dc"
+        "sourceHash": "sha256:4fc066ace62113db0f7fb0104f786f191c390982e7e9bb4f35528a0b9cc86a5e"
       },
       "exceptions": []
     },
@@ -368,7 +368,7 @@
         }
       ],
       "freshness": {
-        "reviewedOn": "2026-09-14",
+        "reviewedOn": "2026-10-02",
         "reviewDueOn": "2027-01-12",
         "sources": [
           "README.md",
@@ -385,7 +385,7 @@
             ]
           }
         ],
-        "sourceHash": "sha256:e017da06238d101d6594ca7c63cc79fd2ee01f6d5b51e7b937f9f3cd7eedc9dc"
+        "sourceHash": "sha256:4fc066ace62113db0f7fb0104f786f191c390982e7e9bb4f35528a0b9cc86a5e"
       },
       "exceptions": []
     }
