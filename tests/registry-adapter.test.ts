@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
+import { createServer } from 'node:http'
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { killProcessTree } from '@agentskit/cross-platform'
+import { NetErrorCodes } from '@agentskit/net'
 
 import { applyConfigDefaults } from '../src/config/defaults.js'
 import { DocBridgeConfigV1Schema } from '../src/config/schema.js'
@@ -164,4 +167,162 @@ process.stdout.write(${JSON.stringify(JSON.stringify(proposal))})
     release?.()
     await first
   })
+
+  it('passes a separate deadline signal that closes a real HTTP request', async () => {
+    const root = agentRoot()
+    const { snapshot, report } = fixture()
+    let requestSeenResolve: () => void = () => {}
+    let responseClosedResolve: () => void = () => {}
+    const requestSeen = new Promise<void>((resolve) => { requestSeenResolve = resolve })
+    const responseClosed = new Promise<void>((resolve) => { responseClosedResolve = resolve })
+    const server = createServer((request, response) => {
+      requestSeenResolve()
+      if (request.url === '/recover') {
+        response.end('ok')
+        return
+      }
+      response.on('close', responseClosedResolve)
+    })
+    await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve))
+    const address = server.address()
+    if (!address || typeof address === 'string') throw new Error('Expected a localhost TCP server address.')
+    try {
+      let calls = 0
+      const adapter = createRegistryAgentAdapter(root, config(true, { timeoutMs: 200, deterministic: false }), (context, options) => {
+        expect(Object.isFrozen(context)).toBe(true)
+        expect('signal' in context).toBe(false)
+        expect(options?.signal).toBeInstanceOf(AbortSignal)
+        const path = calls++ === 0 ? '/wait' : '/recover'
+        return fetch(`http://127.0.0.1:${address.port}${path}`, { signal: options?.signal }).then(() => validProposal(snapshot, report))
+      })
+      const pending = adapter.run(snapshot, report)
+      await requestSeen
+      await expect(pending).rejects.toMatchObject({ code: NetErrorCodes.AK_NET_TIMEOUT, message: 'Registry agent timed out after 200ms.' })
+      await responseClosed
+      await expect(adapter.run(snapshot, report)).resolves.toMatchObject({ contentHash: validProposal(snapshot, report).contentHash })
+    } finally {
+      server.closeAllConnections()
+      await new Promise<void>((resolve) => server.close(() => resolve()))
+      rmSync(root, { recursive: true, force: true })
+    }
+  }, 10_000)
+
+  it('keeps enrichment capacity reserved until an uncooperative runner settles', async () => {
+    const root = agentRoot()
+    let calls = 0
+    let settle: (() => void) | undefined
+    const adapter = createRegistryAgentAdapter(root, config(true, { timeoutMs: 20, deterministic: false, maxConcurrency: 1 }), () => {
+      calls += 1
+      if (calls === 1) return new Promise((resolve) => { settle = () => resolve({ proposals: [{ kind: 'late' }] }) })
+      return { proposals: [{ kind: 'recovered' }] }
+    })
+    const bounded = createRegistryAgentAdapter(root, config(true, { maxInputBytes: 16 }), () => ({ proposals: [] }))
+    try {
+      await expect(bounded.enrich('curate', [{ text: 'x'.repeat(100) }])).rejects.toThrow('input limit')
+      const first = adapter.enrich('curate', [])
+      await expect(first).rejects.toMatchObject({ code: NetErrorCodes.AK_NET_TIMEOUT, message: 'Registry agent timed out after 20ms.' })
+      await expect(adapter.enrich('curate', [])).rejects.toThrow('concurrency limit')
+      settle?.()
+      await new Promise((resolve) => setTimeout(resolve, 0))
+      await expect(adapter.enrich('curate', [])).resolves.toEqual([{ kind: 'recovered' }])
+    } finally {
+      rmSync(root, { recursive: true, force: true })
+    }
+  })
+
+  it('preserves UTF-8 when a CLI splits JSON bytes across stdout chunks', async () => {
+    const root = agentRoot()
+    const cliPath = join(root, 'split-utf8-cli.mjs')
+    const output = JSON.stringify({ proposals: [{ fact: 'café' }] })
+    writeFileSync(cliPath, `const output = Buffer.from(${JSON.stringify(output)})
+const split = output.indexOf(Buffer.from('é')) + 1
+process.stdout.write(output.subarray(0, split))
+setTimeout(() => process.stdout.write(output.subarray(split)), 20)
+`)
+    try {
+      const adapter = createRegistryAgentAdapter(root, config(true, { cli: { command: process.execPath, args: [cliPath] } }))
+      await expect(adapter.enrich('curate', [])).resolves.toEqual([{ fact: 'café' }])
+    } finally {
+      rmSync(root, { recursive: true, force: true })
+    }
+  })
+
+  it('kills CLI child trees on deadline and output overflow, then recovers', async () => {
+    const root = agentRoot()
+    const cliPath = join(root, 'registry-agent-cli.mjs')
+    const childPidPath = join(root, 'child.pid')
+    const modePath = join(root, 'mode.txt')
+    const childPids: number[] = []
+    writeFileSync(modePath, 'hang')
+    writeFileSync(cliPath, `import { spawn } from 'node:child_process'
+import { readFileSync, writeFileSync } from 'node:fs'
+const mode = readFileSync(${JSON.stringify(modePath)}, 'utf8')
+if (mode === 'success') {
+  process.stdout.write(JSON.stringify({ proposals: [{ kind: 'recovered' }] }))
+} else {
+  const child = spawn(process.execPath, ['-e', 'process.on("SIGTERM", () => {}); setInterval(() => {}, 1000)'], { stdio: 'ignore' })
+  writeFileSync(${JSON.stringify(childPidPath)}, String(child.pid))
+  process.on('SIGTERM', () => {})
+  if (mode === 'large') process.stdout.write('x'.repeat(1024))
+  setInterval(() => {}, 1000)
+}
+`)
+    const expectExit = async (pid: number): Promise<void> => {
+      const deadline = Date.now() + 3_000
+      while (Date.now() < deadline) {
+        try { process.kill(pid, 0) } catch { return }
+        await new Promise((resolve) => setTimeout(resolve, 20))
+      }
+      throw new Error(`Child process ${pid} remained alive.`)
+    }
+    try {
+      const adapter = createRegistryAgentAdapter(root, config(true, {
+        timeoutMs: 250,
+        deterministic: false,
+        maxResponseBytes: 64,
+        cli: { command: process.execPath, args: [cliPath] },
+      }))
+      await expect(adapter.enrich('curate', [])).rejects.toMatchObject({ code: NetErrorCodes.AK_NET_TIMEOUT, message: 'Registry agent CLI timed out after 250ms.' })
+      childPids.push(Number(readFileSync(childPidPath, 'utf8')))
+      await expectExit(childPids[0]!)
+
+      writeFileSync(modePath, 'large')
+      await expect(adapter.enrich('curate', [])).rejects.toThrow('response limit 64 bytes exceeded')
+      childPids.push(Number(readFileSync(childPidPath, 'utf8')))
+      await expectExit(childPids[1]!)
+
+      writeFileSync(modePath, 'success')
+      await expect(adapter.enrich('curate', [])).resolves.toEqual([{ kind: 'recovered' }])
+    } finally {
+      for (const pid of childPids) await killProcessTree(pid, 'SIGKILL')
+      rmSync(root, { recursive: true, force: true })
+    }
+  }, 10_000)
+
+  it('keeps CLI input and stderr bounded and reports startup and stdin failures', async () => {
+    const root = agentRoot()
+    const missing = createRegistryAgentAdapter(root, config(true, { cli: { command: join(root, 'missing'), args: [] } }))
+    const oversizedInput = createRegistryAgentAdapter(root, config(true, { maxInputBytes: 1, cli: { command: process.execPath, args: [] } }))
+    const stdinPath = join(root, 'stdin-fails.mjs')
+    const stdinPidPath = join(root, 'stdin-child.pid')
+    const stderrPath = join(root, 'large-stderr.mjs')
+    writeFileSync(stdinPath, `import { closeSync, writeFileSync } from 'node:fs'
+writeFileSync(${JSON.stringify(stdinPidPath)}, String(process.pid))
+closeSync(0)
+setInterval(() => {}, 1000)
+`)
+    writeFileSync(stderrPath, 'process.stderr.write("e".repeat(1024)); process.exit(1)\n')
+    try {
+      await expect(missing.enrich('curate', [])).rejects.toThrow('failed to start')
+      await expect(oversizedInput.enrich('curate', [])).rejects.toThrow('input limit')
+      const stdinFailure = createRegistryAgentAdapter(root, config(true, { timeoutMs: 2_000, maxInputBytes: 5_000_000, cli: { command: process.execPath, args: [stdinPath] } }))
+      await expect(stdinFailure.enrich('curate', [{ value: 'x'.repeat(4_000_000) }])).rejects.toThrow('stdin failed')
+      const stderrFailure = createRegistryAgentAdapter(root, config(true, { maxResponseBytes: 64, cli: { command: process.execPath, args: [stderrPath] } }))
+      await expect(stderrFailure.enrich('curate', [])).rejects.toThrow('exited with code 1')
+      await expect(stderrFailure.enrich('curate', [])).rejects.toThrow(new RegExp(`e{64}$`))
+    } finally {
+      try { await killProcessTree(Number(readFileSync(stdinPidPath, 'utf8')), 'SIGKILL') } catch { /* The child may not have started. */ }
+      rmSync(root, { recursive: true, force: true })
+    }
+  }, 10_000)
 })

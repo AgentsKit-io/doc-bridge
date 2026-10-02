@@ -128,6 +128,7 @@
   "dependencies": {
     "@agentskit/cross-platform": "^0.1.0",
     "@agentskit/harness": "0.11.0",
+    "@agentskit/net": "^0.2.0",
     "github-slugger": "^2.0.0",
     "graphology": "~0.26.0",
     "graphology-communities-louvain": "~2.0.2",

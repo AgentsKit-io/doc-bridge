@@ -2,6 +2,7 @@ import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { killProcessTree, spawnNodeChild } from '@agentskit/cross-platform'
+import { NetError, NetErrorCodes, withTimeout } from '@agentskit/net'
 import { z } from 'zod'
 
 import type { DocBridgeConfigV1 } from '../config/schema.js'
@@ -33,7 +34,16 @@ export type RegistryAgentContext = {
   readonly deterministic: boolean
 }
 
-export type RegistryAgentRunner = (context: RegistryAgentContext) => Promise<unknown> | unknown
+/** Execution-only options supplied to a local Registry runner. The signal is aborted when the configured deadline elapses.
+ * @since 1.13.0
+ */
+export type RegistryAgentExecutionOptions = {
+  /** Aborted when the adapter deadline elapses. */
+  readonly signal: AbortSignal
+}
+
+/** Local runners receive the signal separately from context; one-argument runners remain compatible. */
+export type RegistryAgentRunner = (context: RegistryAgentContext, options?: RegistryAgentExecutionOptions) => Promise<unknown> | unknown
 
 type RegistryCliConfig = NonNullable<NonNullable<NonNullable<DocBridgeConfigV1['intelligence']>['registry']>['cli']>
 
@@ -59,10 +69,17 @@ export type RegistryEnrichmentContext = {
   readonly deterministic: boolean
 }
 
+/** Registry deadlines reject with `NetError` code `AK_NET_TIMEOUT`. */
 export type RegistryAgentAdapter = {
   readonly metadata: RegistryAgentMetadata
+  /** Run an agent against the frozen snapshot and report context.
+   * @throws {NetError} With code `AK_NET_TIMEOUT` when the configured deadline elapses.
+   */
   readonly run: (snapshot: DiscoverySnapshotV1, report: ReconciliationReportV1, evidence?: readonly RegistryAgentContext['evidence'][number][], documentation?: DocumentationAuditReportV1) => Promise<AgentProposalV1>
-  /** Send packs for a task and return the raw `proposals` array. Throws on transport, budget or shape failure. */
+  /** Send packs for a task and return the raw `proposals` array.
+   * @throws {NetError} With code `AK_NET_TIMEOUT` when the configured deadline elapses.
+   * @throws {Error} On transport, budget or shape failure.
+   */
   readonly enrich: (task: RegistryEnrichmentContext['task'], packs: readonly unknown[], options?: { readonly role?: string; readonly promptVersion?: string }) => Promise<readonly unknown[]>
 }
 
@@ -93,7 +110,7 @@ const validateGrounding = (proposal: AgentProposalV1, snapshot: DiscoverySnapsho
   if (proposal.evidence.some((item) => !evidenceKeys.has(evidenceKey(item)))) throw new Error('Registry agent proposal contains evidence outside the supplied snapshot/report.')
 }
 
-const runCli = (root: string, cli: RegistryCliConfig, context: RegistryAgentContext | RegistryEnrichmentContext, timeoutMs: number, maxInputBytes: number, maxResponseBytes: number): Promise<unknown> => new Promise((resolve, reject) => {
+const runCli = (root: string, cli: RegistryCliConfig, context: RegistryAgentContext | RegistryEnrichmentContext, maxInputBytes: number, maxResponseBytes: number, signal: AbortSignal): Promise<unknown> => new Promise((resolve, reject) => {
   const v2 = 'protocol' in context
   const input = JSON.stringify(
     v2
@@ -110,56 +127,62 @@ const runCli = (root: string, cli: RegistryCliConfig, context: RegistryAgentCont
     stdio: ['pipe', 'pipe', 'pipe'],
   })
   const terminate = (): void => {
-    if (child.pid === undefined) child.kill('SIGTERM')
-    else void killProcessTree(child.pid, 'SIGTERM', (signal) => child.kill(signal))
+    if (child.pid === undefined) child.kill('SIGKILL')
+    else void killProcessTree(child.pid, 'SIGKILL', (signal) => child.kill(signal))
   }
-  let stdout = ''
-  let stderr = ''
+  let stdout = Buffer.alloc(0)
+  let stderr = Buffer.alloc(0)
   let settled = false
+  let failed = false
+  let failure: unknown
+  const fail = (error: unknown): void => {
+    if (failed) return
+    failed = true
+    failure = error
+    terminate()
+  }
+  const onAbort = (): void => fail(signal.reason)
   const finish = (callback: () => void): void => {
     if (settled) return
     settled = true
+    signal.removeEventListener('abort', onAbort)
     callback()
   }
-  const timer = setTimeout(() => {
-    terminate()
-    finish(() => reject(new Error(`Registry agent CLI timed out after ${timeoutMs}ms.`)))
-  }, timeoutMs)
+  if (signal.aborted) onAbort()
+  else signal.addEventListener('abort', onAbort, { once: true })
   child.stdout.on('data', (chunk: Buffer) => {
-    stdout += chunk.toString('utf8')
-    if (Buffer.byteLength(stdout, 'utf8') > maxResponseBytes) {
-      clearTimeout(timer)
-      terminate()
-      finish(() => reject(new Error(`Registry agent CLI response limit ${maxResponseBytes} bytes exceeded.`)))
-    }
+    if (failed) return
+    if (stdout.length + chunk.length > maxResponseBytes) return fail(new Error(`Registry agent CLI response limit ${maxResponseBytes} bytes exceeded.`))
+    stdout = Buffer.concat([stdout, chunk])
   })
   child.stderr.on('data', (chunk: Buffer) => {
-    stderr += chunk.toString('utf8')
-    if (Buffer.byteLength(stderr, 'utf8') > maxResponseBytes) stderr = stderr.slice(-maxResponseBytes)
+    const next = Buffer.concat([stderr, chunk])
+    stderr = Buffer.from(next.subarray(-maxResponseBytes))
   })
   child.once('error', (error) => {
-    clearTimeout(timer)
-    finish(() => reject(new Error(`Registry agent CLI failed to start: ${error.message}`)))
+    finish(() => reject(failed ? failure : new Error(`Registry agent CLI failed to start: ${error.message}`)))
   })
   child.once('close', (code, signal) => {
-    clearTimeout(timer)
     finish(() => {
+      if (failed) {
+        reject(failure)
+        return
+      }
       if (code !== 0) {
-        const detail = stderr.trim() ? `: ${stderr.trim()}` : signal ? ` (${signal})` : ''
+        const stderrText = stderr.toString('utf8').trim()
+        const detail = stderrText ? `: ${stderrText}` : signal ? ` (${signal})` : ''
         reject(new Error(`Registry agent CLI exited with code ${code ?? 'unknown'}${detail}`))
         return
       }
       try {
-        resolve(JSON.parse(stdout) as unknown)
+        resolve(JSON.parse(stdout.toString('utf8')) as unknown)
       } catch (error) {
         reject(new Error(`Registry agent CLI must return one JSON object on stdout: ${error instanceof Error ? error.message : String(error)}`))
       }
     })
   })
   child.stdin.once('error', (error) => {
-    clearTimeout(timer)
-    terminate()
-    finish(() => reject(new Error(`Registry agent CLI stdin failed: ${error.message}`)))
+    fail(new Error(`Registry agent CLI stdin failed: ${error.message}`))
   })
   child.stdin.end(input)
 })
@@ -188,6 +211,7 @@ export const loadRegistryAgentMetadata = (root: string, config: DocBridgeConfigV
   return { ...metadata, root: agentPath }
 }
 
+/** Create an adapter whose local runner receives `RegistryAgentExecutionOptions.signal` separately from its frozen context; see `RegistryAgentAdapter` for deadline errors. */
 export const createRegistryAgentAdapter = (root: string, config: DocBridgeConfigV1, runner?: RegistryAgentRunner): RegistryAgentAdapter => {
   if (!registryConfig(config)?.enabled) throw new Error('Registry agents are disabled. Set intelligence.registry.enabled: true to run an assisted workflow.')
   const metadata = loadRegistryAgentMetadata(resolve(root), config)
@@ -204,23 +228,35 @@ export const createRegistryAgentAdapter = (root: string, config: DocBridgeConfig
     if (active >= maxConcurrency) throw new Error(`Registry agent concurrency limit ${maxConcurrency} exceeded.`)
     if (!settings.cli && !runner) throw new Error('Registry agent requires either intelligence.registry.cli or a local runner module.')
     active += 1
-    let timer: ReturnType<typeof setTimeout> | undefined
+    let execution: Promise<unknown> | undefined
+    const release = (): void => { active -= 1 }
     try {
       let raw: unknown
-      if (settings.cli) {
-        raw = await runCli(resolve(root), settings.cli, context, timeoutMs, maxInputBytes, maxResponseBytes)
-      } else {
-        const localRunner = runner as RegistryAgentRunner
-        const timeout = new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new Error(`Registry agent timed out after ${timeoutMs}ms.`)), timeoutMs) })
-        raw = await Promise.race([Promise.resolve(localRunner(context as RegistryAgentContext)), timeout])
+      try {
+        raw = await withTimeout((signal) => {
+          const work = settings.cli
+            ? runCli(resolve(root), settings.cli, context, maxInputBytes, maxResponseBytes, signal)
+            : Promise.resolve().then(() => (runner as RegistryAgentRunner)(context as RegistryAgentContext, { signal }))
+          execution = work
+          return work
+        }, timeoutMs)
+      } catch (error) {
+        if (error instanceof NetError && 'code' in error && error.code === NetErrorCodes.AK_NET_TIMEOUT) {
+          throw new NetError({
+            code: NetErrorCodes.AK_NET_TIMEOUT,
+            message: `${settings.cli ? 'Registry agent CLI' : 'Registry agent'} timed out after ${timeoutMs}ms.`,
+            cause: error,
+          })
+        }
+        throw error
       }
       const responseBytes = Buffer.byteLength(JSON.stringify(raw) ?? '')
       if (responseBytes > maxResponseBytes) throw new Error(`Registry agent response limit ${maxResponseBytes} bytes exceeded.`)
       if (Math.ceil(responseBytes / 4) > maxTokens) throw new Error(`Registry agent token budget ${maxTokens} exceeded.`)
       return raw
     } finally {
-      if (timer) clearTimeout(timer)
-      active -= 1
+      if (execution) void execution.then(release, release)
+      else release()
     }
   }
   return {

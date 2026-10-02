@@ -262,7 +262,7 @@ export {
   type ReuseLedger,
 } from './discovery/incremental.js'
 export { containedPath, containsSecret, DEFAULT_SAFETY_EXCLUDES, redactSecrets, redactValue, SECRET_PATTERNS, safeWalkFiles, type SafeWalkOptions, type SafeWalkResult } from './safety/repository.js'
-export { DEFAULT_REGISTRY_AGENT_ID, createRegistryAgentAdapter, loadRegistryAgentMetadata, loadRegistryAgentRunner, persistRegistryAgentProposal, type RegistryAgentAdapter, type RegistryAgentContext, type RegistryAgentMetadata, type RegistryAgentRunner } from './agents/registry-adapter.js'
+export { DEFAULT_REGISTRY_AGENT_ID, createRegistryAgentAdapter, loadRegistryAgentMetadata, loadRegistryAgentRunner, persistRegistryAgentProposal, type RegistryAgentAdapter, type RegistryAgentContext, type RegistryAgentExecutionOptions, type RegistryAgentMetadata, type RegistryAgentRunner } from './agents/registry-adapter.js'
 export {
   applyDocumentationDeclarations,
   parseDocumentationDeclarations,
