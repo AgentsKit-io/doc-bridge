@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "contentHash": "bf18f02fc67df833ae096de5b4769e0fc3404b45bbf273e77800bf5ad8ad635a",
+  "contentHash": "5c88611d76c47d6d3f6c230de5aa76e643642fdafa7f666d4477c89de1bd6893",
   "contentHashAlgo": "sha256-normalized-v1",
-  "generatedAt": "2026-10-02T20:54:36.168Z",
+  "generatedAt": "2026-10-02T23:48:32.250Z",
   "project": {
     "name": "@agentskit/doc-bridge",
     "root": "."
@@ -8115,7 +8115,7 @@
     "changes": {}
   },
   "inputs": {
-    "hash": "bc33d4e0d865cffeac29325560281a11581ffb2d9caea3a369a7bdfec146b5e7",
+    "hash": "53de7ba2a9fd45422ded21f7a2c825d8db8a0d63b589c6bbf94bfc0ed58a09e2",
     "fileCount": 445,
     "projectionVersion": 2
   },
@@ -8138,9 +8138,9 @@
   "projection": {
     "type": "retrieval-index",
     "schemaVersion": 1,
-    "contentHash": "d11d6149e1887d03f43a72162d5c35563e5c4079b2331cbe9ac83d259b450341",
+    "contentHash": "b8e713774a0550d30c17481fc8ac351b2b9dc4e935b780505102f9457d481f75",
     "contentHashAlgo": "sha256-normalized-v1",
-    "snapshotHash": "e95fa46b63757446be3e3a8fb2d578f02641ca8c4dce3b5eb3aca61b7c579645",
+    "snapshotHash": "7eb94d020b39b78e5036b36fde51e754a548c8b7a92a7a93fd8dec5814523293",
     "overlayHash": "f99666ff9119084dd25c2974ae64eb6935ec2aa785ff5ad478fb9d541f7a5e94",
     "configurationHash": "91d46a4ecbfe3b55878e0b3c7608819775cf7b18aeafcc8f689eddfa462622b4",
     "lexiconVersion": 1,
@@ -41550,7 +41550,7 @@
           ],
           "outbound": []
         },
-        "contentHash": "b67d1402afc13bd70b62f271565ab475d210d77ac27b3a2ce0827665b64d424d",
+        "contentHash": "f7aed2d9defb176db9c3110e43bc26f884397fddbc6d8f3a04e7c2b514a1c451",
         "provenance": "observed",
         "confidence": "observed"
       }
