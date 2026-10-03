@@ -6,6 +6,22 @@
 
 - Registry agent runners receive an optional cancellation signal separately from their frozen context. Local and CLI deadlines now use `@agentskit/net`; CLI timeout and response overflow switch process-tree termination from `SIGTERM` to `SIGKILL`, while concurrency remains reserved until execution settles.
 
+## 1.13.0
+
+### Minor Changes
+
+- a4e741d: Add separate runner cancellation signals and switch CLI process-tree termination from SIGTERM to SIGKILL at deadlines or output limits.
+
+### Patch Changes
+
+- 3138e23: Use `@agentskit/cross-platform` for process spawning, process-tree termination, path separators, line splitting and frontmatter detection. Registry agent and study CLIs that are `.cmd` shims now start on Windows without a shell, timed-out children no longer leave orphaned grandchildren on Windows, and the `okf-type` and `docs-style` gates read CRLF frontmatter. `pnpm check:cross-platform` guards against new portability regressions with a ratchet baseline.
+- 4d75499: Documentation index: the ecosystem list now names Code Review and Harness alongside AgentsKit, Registry, and Chat (Playbook is no longer listed as an ecosystem product).
+- 5639dc5: Clarify the optional vectra dependency diagnostic with the install command npm install vectra.
+- 5639dc5: Patch brace-expansion to 5.0.11 to prevent stack exhaustion from deeply nested brace patterns.
+- 8503696: Patch Dependabot advisories: brace-expansion 5.0.12 (quadratic `{a},b}` expansion DoS, via minimatch) and dompurify 3.4.16 (IN_PLACE afterSanitize hook XSS, via mermaid), plus dev-only next 16.3.8, ip-address 10.7.2 and qs 6.16.0.
+- b9470b5: Redact more real token shapes: Slack (`xoxb-`/`xoxp-`/`xoxa-`/`xoxr-`/`xoxs-`/`xapp-`), OpenAI (`sk-`, `sk-proj-`), Anthropic (`sk-ant-`), all GitHub token prefixes, AWS `ASIA` ids, Google API keys, Stripe restricted keys, npm tokens, `Bearer` credentials and PEM private key blocks. The list is exported once as `SECRET_PATTERNS` (with `containsSecret`), and the memory promotion safety scan now uses it too.
+- 3c720f7: Sync the public ecosystem catalog with AgentsKit main: Harness replaces AKOS, and claim figures follow the canonical ledger.
+
 ## 1.12.0
 
 ### Minor Changes

@@ -1,6 +1,6 @@
 {
   "name": "@agentskit/doc-bridge",
-  "version": "1.12.0",
+  "version": "1.13.0",
   "mcpName": "io.github.AgentsKit-io/doc-bridge",
   "description": "Human↔agent documentation bridge — deterministic handoffs, doc-site links, memory→docs, optional AgentsKit RAG/chat.",
   "type": "module",
@@ -71,7 +71,7 @@
     "test:portable-skill": "node --test scripts/portable-skill-contract.test.mjs",
     "coverage:badge": "node scripts/update-coverage-badge.mjs",
     "changeset": "changeset",
-    "version-packages": "changeset version && node scripts/sync-version.mjs",
+    "version-packages": "changeset version && node scripts/sync-version.mjs && node bin/ak-docs.js index",
     "release": "npm run build && npm test && changeset publish",
     "version": "node scripts/sync-version.mjs && git add package.json src/version.ts action.yml",
     "prepublishOnly": "npm run build && npm test",

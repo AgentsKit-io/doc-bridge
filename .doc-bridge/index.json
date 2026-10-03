@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "contentHash": "5c88611d76c47d6d3f6c230de5aa76e643642fdafa7f666d4477c89de1bd6893",
+  "contentHash": "4bb981b141ecc0f8453b2ec8bcd332cbb8064b799c5958080d2a7dace75c25b9",
   "contentHashAlgo": "sha256-normalized-v1",
-  "generatedAt": "2026-10-02T23:48:32.250Z",
+  "generatedAt": "2026-10-03T00:24:40.714Z",
   "project": {
     "name": "@agentskit/doc-bridge",
     "root": "."
@@ -300,7 +300,7 @@
         "document",
         "project"
       ],
-      "contentHash": "6774e1f3c56a1333940772a103e98ee31298bd9b4dc622d39e58864030e948cf"
+      "contentHash": "f54ce72916e8f6a3f83535896623b3f9d6a5d9345c9c121c2427a2cc98192050"
     },
     {
       "id": "document:CODE_OF_CONDUCT.md",
@@ -1321,7 +1321,7 @@
         "document",
         "project"
       ],
-      "contentHash": "81921909946d2775809cf1695fa780686ddc45b105b26d61700df41640663b43"
+      "contentHash": "c918729c778dca095d1b52b68d4e475c9e52e2021b1e243bdca50db45dbdb11d"
     },
     {
       "id": "document:SECURITY.md",
@@ -2645,7 +2645,7 @@
         "mjs",
         "scripts"
       ],
-      "contentHash": "4bc8cd825a22fef62ff2db98ff7c9e36a45a40b7a0e8e8deb55f2c6ae8973199"
+      "contentHash": "1b92b4af3b8547de3d8439d19c2f18ad7c970dbf615a477ca96ac186565d5399"
     },
     {
       "id": "module:scripts/task-suite-phase3-check.mjs",
@@ -2739,7 +2739,7 @@
         "mjs",
         "scripts"
       ],
-      "contentHash": "3b06174c9bedb50fcfb25d6b39a080d4bb35ad3c523bcfd52d45a270b4ceeefb"
+      "contentHash": "2e7a4763b0c2f95fc29c837587200082f7f296457c4cdefc8a62408591f1480e"
     },
     {
       "id": "module:src/agents/registry-adapter.ts",
@@ -5896,7 +5896,7 @@
         "ts",
         "src"
       ],
-      "contentHash": "93ddb31a0631bf111623dce2f83dc68a4dcc73c262c516febfd8eca5989bf95f"
+      "contentHash": "b01e74d7977585b257bd76a76e681724148f548c6740a1abc65a6af7d0ccc1ff"
     },
     {
       "id": "module:src/workflow/engine.ts",
@@ -8115,7 +8115,7 @@
     "changes": {}
   },
   "inputs": {
-    "hash": "53de7ba2a9fd45422ded21f7a2c825d8db8a0d63b589c6bbf94bfc0ed58a09e2",
+    "hash": "40d25cef6f3be53ac6c5c0f5a7bdbcf3fb859221140c5f11dd17bcfb7da353c4",
     "fileCount": 445,
     "projectionVersion": 2
   },
@@ -8138,9 +8138,9 @@
   "projection": {
     "type": "retrieval-index",
     "schemaVersion": 1,
-    "contentHash": "b8e713774a0550d30c17481fc8ac351b2b9dc4e935b780505102f9457d481f75",
+    "contentHash": "e19e5700763c65a3c78bcf8fd02f001c1835817bd5a8559d433248107249b3fb",
     "contentHashAlgo": "sha256-normalized-v1",
-    "snapshotHash": "7eb94d020b39b78e5036b36fde51e754a548c8b7a92a7a93fd8dec5814523293",
+    "snapshotHash": "5e266be4de4764b63b7e9c1535b02ede2fde5b48b77cea90c258a5a36ae9b48f",
     "overlayHash": "f99666ff9119084dd25c2974ae64eb6935ec2aa785ff5ad478fb9d541f7a5e94",
     "configurationHash": "91d46a4ecbfe3b55878e0b3c7608819775cf7b18aeafcc8f689eddfa462622b4",
     "lexiconVersion": 1,
@@ -8172,8 +8172,8 @@
       ],
       "averageFieldLength": {
         "aliases": 3.463002114164905,
-        "body": 68.45877378435517,
-        "headings": 4.255813953488372,
+        "body": 68.54968287526427,
+        "headings": 4.2579281183932345,
         "path": 5.687103594080338,
         "summary": 5.680761099365751,
         "symbols": 11.66384778012685,
@@ -10436,11 +10436,11 @@
         ],
         "fields": {
           "title": "Changelog",
-          "headings": "Changelog Unreleased Minor Changes 1.12.0 Minor Changes Patch Changes 1.11.2 Patch Changes 1.11.1 Patch Changes 1.11.0 Minor Changes 1.10.1 Patch Changes 1.10.0 Minor Changes 1.9.0 Minor Changes Patch Changes 1.8.0 Minor Changes Patch Changes 1.7.45 Patch Changes 1.7.44 1.7.43 1.7.42 1.7.41 1.7.40 1.7.39 1.7.38 1.7.37 1.7.36 1.7.35 1.7.34 1.7.33 1.7.32 1.7.31 1.7.30 1.7.29 1.7.28 1.7.27 Patch Changes 1.7.26 Patch Changes 1.7.25 Patch Changes 1.7.24 Patch Changes 1.7.23 Patch Changes 1.7.22 Patch Changes 1.7.21 Patch Changes 1.7.20 Patch Changes 1.7.19 Patch Changes 1.7.18 Patch Changes 1.7.17 Patch Changes 1.7.16",
+          "headings": "Changelog Unreleased Minor Changes 1.13.0 Minor Changes Patch Changes 1.12.0 Minor Changes Patch Changes 1.11.2 Patch Changes 1.11.1 Patch Changes 1.11.0 Minor Changes 1.10.1 Patch Changes 1.10.0 Minor Changes 1.9.0 Minor Changes Patch Changes 1.8.0 Minor Changes Patch Changes 1.7.45 Patch Changes 1.7.44 1.7.43 1.7.42 1.7.41 1.7.40 1.7.39 1.7.38 1.7.37 1.7.36 1.7.35 1.7.34 1.7.33 1.7.32 1.7.31 1.7.30 1.7.29 1.7.28 1.7.27 Patch Changes 1.7.26 Patch Changes 1.7.25 Patch Changes 1.7.24 Patch Changes 1.7.23 Patch Changes 1.7.22 Patch Changes 1.7.21 Patch Changes 1.7.20 Patch Changes 1.7.19 Patch Changes 1.7.18 Patch Changes",
           "path": "CHANGELOG.md",
           "symbols": "",
           "summary": "Registry agent runners receive an optional cancellation signal separately from their frozen context. Local and CLI deadlines now use @agentskit/net; CLI timeout and response overflow switch process-tree termination from SIGTERM to SIGKILL, while concurrency remains reserved until execution settles.",
-          "body": "Changelog Unreleased Minor Changes - Registry agent runners receive an optional cancellation signal separately from their frozen context. Local and CLI deadlines now use @agentskit/net ; CLI timeout and response overflow switch process-tree termination from SIGTERM to SIGKILL , while concurrency remains reserved until execution settles. 1.12.0 Minor Changes - 6d552b3: Repository scans now respect ignore rules. ak-docs index , doctor , scan / check , gates, and link-fix proposals skip every path the repository ignores — via git ls-files --cached --others --exclude-standard inside a Git work tree (nested .gitignore , .git/info/exclude , and global excludes included; tracked files are kept), or the on-disk .gitignore files outside Git — in addition to the built-in safety excludes. Build output such as .next/ , .source/ , generated API pages, or next-env.d.ts no longer enters a committed index, so index-freshness and index-reproducible agree across clean checkouts. Agent-memory ingestion still reads gitignored memory directories. Patch Changes - 6d552b3: The documentation-standard ecosystem contract no longer hard-codes product membership. It used to require the deprecated properties shim to project either a fixed three-product list that included Playbook or a fixed six-product list without Harness, which forced repositories to keep a hidden playbook record in ecosystem.json . Membership now comes from the canonical manifest: the shim is optional, and each entry must name a distinct products[] record and match it exactly. 1.11.2 Patch Changes - 221b4a6: Retire a deprecated ecosystem contract and generated documentation references. 1.11.1 Patch Changes - faf29f5: Stop reporting a path an ignore rule rescues as unreproducible. git check-ignore --verbose emits a record for every path that matched a rule, including the path a ! negation rescues — and such a path is precisely one Git does not ignore. The reproducibility check read the record without reading the pattern, so dist/ plus !dist/keep.js reported dist/keep.js as a reason the index could not be rebuilt from a clean checkout. The opposite of what the rule says, stated confidently. The window is narrow: check-ignore stops reporting a path once it is committed, and a path rescued by a negation is usually committed, which is the point of rescuing it. It shows up while such a path is still untracked — a file added but not yet committed. Found by turning the new index-reproducible gate on in this repository, which had to add !.doc-bridge/index.json to its own .gitignore to commit the index the gate verifies. 1.11.0 Minor Changes - 25f16f3: Say when a committed index could not have come from a clean checkout. A scan walks what is on disk and has no reason to consult .gitignore , so a generated module or document silently joins the corpus on a machine that has built and silently leaves it on one that has not. That is harmless while the index is rebuilt on every run. It is a defect the moment the index is committed so a gate can verify it — which is the setup index-freshness exists for: two checkouts of the same commit then produce different artifacts, the gate reports staleness that nothing caused, and regenerating cannot fix it because the next machine disagrees in the other direction. Dogfooding found this the expensive way. On a 25-package monorepo the freshness gate passed locally and failed in CI, twice, because pnpm lint had generated one .ts file into the corpus before the index was written; CI lints a narrower scope and never had the file. Diagnosing it took reading two CI logs and diffing file inventories. Git already knew the answer. ak-docs index now names those paths as it writes, and ak-docs doctor raises an index-not-reproducible warning, each with the ignore rule that matched — for example apps/docs-next/lib/ask-context.ts (apps/docs-next/.gitignore:13:lib/ask-context.ts) — so the fix is one lookup away: add the path to safety.exclude . Both are unconditional and neithe",
+          "body": "Changelog Unreleased Minor Changes - Registry agent runners receive an optional cancellation signal separately from their frozen context. Local and CLI deadlines now use @agentskit/net ; CLI timeout and response overflow switch process-tree termination from SIGTERM to SIGKILL , while concurrency remains reserved until execution settles. 1.13.0 Minor Changes - a4e741d: Add separate runner cancellation signals and switch CLI process-tree termination from SIGTERM to SIGKILL at deadlines or output limits. Patch Changes - 3138e23: Use @agentskit/cross-platform for process spawning, process-tree termination, path separators, line splitting and frontmatter detection. Registry agent and study CLIs that are .cmd shims now start on Windows without a shell, timed-out children no longer leave orphaned grandchildren on Windows, and the okf-type and docs-style gates read CRLF frontmatter. pnpm check:cross-platform guards against new portability regressions with a ratchet baseline. - 4d75499: Documentation index: the ecosystem list now names Code Review and Harness alongside AgentsKit, Registry, and Chat (Playbook is no longer listed as an ecosystem product). - 5639dc5: Clarify the optional vectra dependency diagnostic with the install command npm install vectra. - 5639dc5: Patch brace-expansion to 5.0.11 to prevent stack exhaustion from deeply nested brace patterns. - 8503696: Patch Dependabot advisories: brace-expansion 5.0.12 (quadratic {a},b} expansion DoS, via minimatch) and dompurify 3.4.16 (IN PLACE afterSanitize hook XSS, via mermaid), plus dev-only next 16.3.8, ip-address 10.7.2 and qs 6.16.0. - b9470b5: Redact more real token shapes: Slack ( xoxb- / xoxp- / xoxa- / xoxr- / xoxs- / xapp- ), OpenAI ( sk- , sk-proj- ), Anthropic ( sk-ant- ), all GitHub token prefixes, AWS ASIA ids, Google API keys, Stripe restricted keys, npm tokens, Bearer credentials and PEM private key blocks. The list is exported once as SECRET PATTERNS (with containsSecret ), and the memory promotion safety scan now uses it too. - 3c720f7: Sync the public ecosystem catalog with AgentsKit main: Harness replaces AKOS, and claim figures follow the canonical ledger. 1.12.0 Minor Changes - 6d552b3: Repository scans now respect ignore rules. ak-docs index , doctor , scan / check , gates, and link-fix proposals skip every path the repository ignores — via git ls-files --cached --others --exclude-standard inside a Git work tree (nested .gitignore , .git/info/exclude , and global excludes included; tracked files are kept), or the on-disk .gitignore files outside Git — in addition to the built-in safety excludes. Build output such as .next/ , .source/ , generated API pages, or next-env.d.ts no longer enters a committed index, so index-freshness and index-reproducible agree across clean checkouts. Agent-memory ingestion still reads gitignored memory directories. Patch Changes - 6d552b3: The documentation-standard ecosystem contract no longer hard-codes product membership. It used to require the deprecated properties shim to project either a fixed three-product list that included Playbook or a fixed six-product list without Harness, which forced repositories to keep a hidden playbook record in ecosystem.json . Membership now comes from the canonical manifest: the shim is optional, and each entry must name a distinct products[] record and match it exactly. 1.11.2 Patch Changes - 221b4a6: Retire a deprecated ecosystem contract and generated documentation references. 1.11.1 Patch Changes - faf29f5: Stop reporting a path an ignore rule rescues as unreproducible. git check-ignore --verbose emits a record for every path that matched a rule, including the path a ! negation rescues — and such a path is precisely one Git does not ignore. The reproducibility check read the record without reading the pattern, so dist/ plus !dist/keep.js reported dist/keep.js as a reason the index could not be rebuilt from a clean checkout. The opposite of what the rule says, stated confidently. The win",
           "aliases": "document project"
         },
         "graph": {
@@ -10642,6 +10642,11 @@
             },
             {
               "kind": "mentions-symbol",
+              "id": "module:src/safety/repository.ts",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions-symbol",
               "id": "module:src/schemas/agent-handoff.ts",
               "confidence": "observed"
             },
@@ -10667,7 +10672,7 @@
             }
           ]
         },
-        "contentHash": "6774e1f3c56a1333940772a103e98ee31298bd9b4dc622d39e58864030e948cf",
+        "contentHash": "f54ce72916e8f6a3f83535896623b3f9d6a5d9345c9c121c2427a2cc98192050",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -18271,7 +18276,7 @@
             }
           ]
         },
-        "contentHash": "81921909946d2775809cf1695fa780686ddc45b105b26d61700df41640663b43",
+        "contentHash": "c918729c778dca095d1b52b68d4e475c9e52e2021b1e243bdca50db45dbdb11d",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -21145,6 +21150,11 @@
               "kind": "imports",
               "id": "module:scripts/readme-standard.test.mjs",
               "confidence": "observed"
+            },
+            {
+              "kind": "imports",
+              "id": "module:scripts/sync-version.mjs",
+              "confidence": "observed"
             }
           ],
           "outbound": []
@@ -21954,9 +21964,15 @@
           "areaId": "area:scripts",
           "packageId": "package:@agentskit/doc-bridge",
           "inbound": [],
-          "outbound": []
+          "outbound": [
+            {
+              "kind": "imports",
+              "id": "module:scripts/lib/readme-standard.mjs",
+              "confidence": "observed"
+            }
+          ]
         },
-        "contentHash": "4bc8cd825a22fef62ff2db98ff7c9e36a45a40b7a0e8e8deb55f2c6ae8973199",
+        "contentHash": "1b92b4af3b8547de3d8439d19c2f18ad7c970dbf615a477ca96ac186565d5399",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -22247,7 +22263,7 @@
           "inbound": [],
           "outbound": []
         },
-        "contentHash": "3b06174c9bedb50fcfb25d6b39a080d4bb35ad3c523bcfd52d45a270b4ceeefb",
+        "contentHash": "2e7a4763b0c2f95fc29c837587200082f7f296457c4cdefc8a62408591f1480e",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -34113,9 +34129,10 @@
         },
         "graph": {
           "pagerank": 0,
-          "inboundLinks": 2,
+          "inboundLinks": 3,
           "coveredBy": [],
           "mentionedBy": [
+            "document:CHANGELOG.md",
             "document:docs/agent-corpus/safety.md",
             "document:docs/spec/enrichment-overlay-v1.md"
           ],
@@ -34185,6 +34202,11 @@
             {
               "kind": "imports",
               "id": "module:tests/repository-safety.test.ts",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions-symbol",
+              "id": "document:CHANGELOG.md",
               "confidence": "observed"
             },
             {
@@ -36936,7 +36958,7 @@
           ],
           "outbound": []
         },
-        "contentHash": "93ddb31a0631bf111623dce2f83dc68a4dcc73c262c516febfd8eca5989bf95f",
+        "contentHash": "b01e74d7977585b257bd76a76e681724148f548c6740a1abc65a6af7d0ccc1ff",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -41550,7 +41572,7 @@
           ],
           "outbound": []
         },
-        "contentHash": "f7aed2d9defb176db9c3110e43bc26f884397fddbc6d8f3a04e7c2b514a1c451",
+        "contentHash": "2d7191fc095ef5ed3d35c267a7cc4dd2bf75709c92bf6d4981dbb2a0a49607ba",
         "provenance": "observed",
         "confidence": "observed"
       }
