@@ -58,3 +58,26 @@ if (
   throw new Error('Could not synchronize portable resolver version')
 }
 writeFileSync(portableResolverPath, syncedPortableResolver)
+
+// The README quotes the checked-in version (parity claim `checked-in-package-version`); keep it
+// in step, then reseal the README Standard source hashes the edit just invalidated.
+const readmePath = resolve(root, 'README.md')
+const readme = readFileSync(readmePath, 'utf8')
+const syncedReadme = readme.replace(/(checked-in package version is `)[^`]*(`)/u, `$1${version}$2`)
+if (syncedReadme === readme && !readme.includes(`checked-in package version is \`${version}\``)) {
+  throw new Error('Could not synchronize README checked-in package version')
+}
+writeFileSync(readmePath, syncedReadme)
+
+const { computeSourceHash } = await import('./lib/readme-standard.mjs')
+const standardPath = resolve(root, 'readme-standard-v1.json')
+const standard = JSON.parse(readFileSync(standardPath, 'utf8'))
+let resealed = false
+for (const surface of standard.surfaces) {
+  const hash = computeSourceHash(root, surface.freshness.sources)
+  if (hash !== surface.freshness.sourceHash) {
+    surface.freshness.sourceHash = hash
+    resealed = true
+  }
+}
+if (resealed) writeFileSync(standardPath, `${JSON.stringify(standard, null, 2)}\n`)
