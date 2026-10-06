@@ -284,15 +284,14 @@ if (mode === 'success') {
       }))
       await expect(adapter.enrich('curate', [])).rejects.toMatchObject({ code: NetErrorCodes.AK_NET_TIMEOUT, message: 'Registry agent CLI timed out after 250ms.' })
       childPids.push(Number(readFileSync(childPidPath, 'utf8')))
-      await expectExit(childPids[0]!)
 
       writeFileSync(modePath, 'large')
       await expect(adapter.enrich('curate', [])).rejects.toThrow('response limit 64 bytes exceeded')
       childPids.push(Number(readFileSync(childPidPath, 'utf8')))
-      await expectExit(childPids[1]!)
 
       writeFileSync(modePath, 'success')
       await expect(adapter.enrich('curate', [])).resolves.toEqual([{ kind: 'recovered' }])
+      for (const pid of childPids) await expectExit(pid)
     } finally {
       for (const pid of childPids) await killProcessTree(pid, 'SIGKILL')
       rmSync(root, { recursive: true, force: true })
