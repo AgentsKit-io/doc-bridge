@@ -69,6 +69,12 @@ source of wrong answers.
 A cache that is only usually right is worse than no cache. Reuse either produces the snapshot a
 cold scan would produce, or it does not happen.
 
+Markdown analyzer version 1.1.0 invalidates older aggregated symbol-reference snapshots.
+Replayed symbol relations retain their symbol-discriminated IDs, metadata and bounded evidence.
+Reused document metadata retains structured ambiguous-symbol references and their truncation flag.
+Changing the exported-symbol ownership fingerprint reparses document references, so removing one
+export drops only its relation even when its owning module remains.
+
 A reused entity also replays the per-file `coverage` its analyzer produced, because the aggregate
 entries are derived from those rather than stored. An aggregate that cannot be rebuilt from what
 the snapshot carries is an aggregate a fast scan gets wrong: a fact that lives only in a local

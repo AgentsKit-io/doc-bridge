@@ -34,6 +34,7 @@ import {
   markdownContentHash,
   parseMarkdownDocument,
   type MarkdownDocumentV1,
+  type AmbiguousSymbolReference,
 } from './markdown.js'
 import {
   CONFIG_EXTENSIONS,
@@ -850,10 +851,14 @@ export const discoverRepository = (opts: DiscoveryOptions = {}): DiscoverySnapsh
   type MarkdownNote = { readonly scope: string; readonly reason: string; readonly evidence: readonly Evidence[] }
   const notesByDocument = new Map<string, readonly MarkdownNote[]>()
   const truncatedDocuments = new Set<string>()
+  const ambiguitiesByDocument = new Map<string, readonly AmbiguousSymbolReference[]>()
+  const truncatedAmbiguities = new Set<string>()
   for (const document of markdownDocuments) {
     const analysis = analyzeMarkdownDocument(document, entityId('document', document.path), markdownResolution)
     for (const relation of analysis.relations) addRelation(relation)
     notesByDocument.set(document.path, analysis.notes)
+    ambiguitiesByDocument.set(document.path, analysis.ambiguousSymbolReferences)
+    if (analysis.ambiguousSymbolReferencesTruncated) truncatedAmbiguities.add(document.path)
     if (analysis.truncated) truncatedDocuments.add(document.path)
   }
 
@@ -898,6 +903,8 @@ export const discoverRepository = (opts: DiscoveryOptions = {}): DiscoverySnapsh
         ...(parsed && Object.keys(parsed.frontmatter).length ? { frontmatter: parsed.frontmatter } : {}),
         ...(parsed?.generatedRegions.length ? { generatedRegions: parsed.generatedRegions } : {}),
         ...(truncatedDocuments.has(path) ? { evidenceTruncated: true } : {}),
+        ...(ambiguitiesByDocument.get(path)?.length ? { ambiguousSymbolReferences: ambiguitiesByDocument.get(path) } : {}),
+        ...(truncatedAmbiguities.has(path) ? { ambiguousSymbolReferencesTruncated: true } : {}),
       },
     })
   }

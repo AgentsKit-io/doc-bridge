@@ -29,7 +29,22 @@ lines, a bounded `summary`, `wordCount`, the frontmatter subset (`type`, `audien
 document declaring `audience` overrides the path heuristic that classifies it; `type` overrides it
 only when it names an audience, since in practice `type` names a document kind.
 
-A document referencing more than 64 entities records `evidenceTruncated` and a coverage note. An
+Each cited symbol has a distinct relation identified by
+`relationId(documentId, 'mentions-symbol', moduleId, symbol)`, with the cited name in
+`metadata.symbol`. Repeated citations accumulate at most eight evidence locations on that
+symbol's relation. Unresolved tokens produce no dangling relation and do not prove removal.
+
+Ambiguous symbols also appear on the document entity in `metadata.ambiguousSymbolReferences`:
+a symbol-sorted array of `{ symbol, candidateModuleIds, candidateCount, lines }`. Names are
+bounded to 256 characters; candidate IDs are sorted and bounded to 32, while `candidateCount`
+retains the true total. Citation lines are sorted and bounded to eight. At most 64 entries are
+retained; exceeding that bound sets `metadata.ambiguousSymbolReferencesTruncated: true`.
+The existing human-readable coverage note, scope and citation evidence remain unchanged.
+These fields use existing open metadata records; strict snapshot, index and handoff envelopes
+are unchanged. Retrieval and graph importance count unique document/module connections rather
+than increasing a module's importance for each cited symbol.
+
+A document referencing more than 64 relations records `evidenceTruncated` and a coverage note. An
 index page's sixty-fifth link is not knowledge, and an unbounded list is not evidence.
 
 ## Generated regions

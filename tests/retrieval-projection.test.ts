@@ -108,6 +108,19 @@ const gitFixture = (): { readonly root: string; readonly config: DocBridgeConfig
 }
 
 describe('the projection is a function of the snapshot', () => {
+  it('keeps module importance and handoffs stable across multiple cited symbols', () => {
+    const { root, config } = fixture()
+    write(root, 'src/ranking/bm25.ts', 'export const rank = (): number => 2\nexport const score = (): number => 3\n')
+    const snapshot = discoverRepository({ root, config })
+    const first = projectRetrievalIndex({ snapshot, config })
+    const reference = snapshot.relations.find((relation) => relation.kind === 'mentions-symbol' && relation.to === 'module:src/ranking/bm25.ts')!
+    const second = projectRetrievalIndex({ snapshot: { ...snapshot, relations: [...snapshot.relations, { ...reference, id: `${reference.id}:score`, metadata: { symbol: 'score' } }] }, config })
+    expect(second.entries.map((entry) => entry.graph)).toEqual(first.entries.map((entry) => entry.graph))
+    const module = second.entries.find((entry) => entry.id === reference.to)!
+    expect(module.graph.mentionedBy).toEqual(['document:docs/ranking.md'])
+    expect(module.graph.inboundLinks).toBe(1)
+  })
+
   it('produces identical content hashes from the same snapshot, overlay and configuration', () => {
     const { root, config } = fixture()
     const snapshot = discoverRepository({ root, config })

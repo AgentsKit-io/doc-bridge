@@ -447,9 +447,9 @@ export const projectRetrievalIndex = (options: ProjectRetrievalOptions): Retriev
         ...(agentSignal ? { agentSignal: Math.min(1, Math.max(0, Math.round(agentSignal * 1_000) / 1_000)) } : {}),
         graph: {
           pagerank: pagerank.get(draft.id) ?? 0,
-          inboundLinks: into.filter((edge) => edge.kind === 'links-to' || edge.kind === 'covers' || edge.kind === 'mentions' || edge.kind === 'mentions-symbol').length,
+          inboundLinks: new Set(into.filter((edge) => edge.kind === 'links-to' || edge.kind === 'covers' || edge.kind === 'mentions' || edge.kind === 'mentions-symbol').map((edge) => edge.id)).size,
           coveredBy: into.filter((edge) => edge.kind === 'covers').map((edge) => edge.id),
-          mentionedBy: into.filter((edge) => edge.kind === 'mentions' || edge.kind === 'mentions-symbol').map((edge) => edge.id),
+          mentionedBy: [...new Set(into.filter((edge) => edge.kind === 'mentions' || edge.kind === 'mentions-symbol').map((edge) => edge.id))],
           ...(areaId ? { areaId } : {}),
           ...(packageId ? { packageId } : {}),
           inbound: into,

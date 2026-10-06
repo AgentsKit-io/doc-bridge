@@ -28,7 +28,7 @@ import { relationId } from './identity.js'
  * is inferred from a near-match unless the near-match is unambiguous.
  */
 
-export const MARKDOWN_ANALYZER_VERSION = '1.0.0'
+export const MARKDOWN_ANALYZER_VERSION = '1.1.0'
 
 /** Headings deeper than this are structure, not subject matter. */
 const MAX_HEADING_DEPTH = 3
@@ -308,7 +308,16 @@ export type MarkdownNote = {
   readonly evidence: readonly Evidence[]
 }
 
+export type AmbiguousSymbolReference = {
+  readonly symbol: string
+  readonly candidateModuleIds: readonly string[]
+  readonly candidateCount: number
+  readonly lines: readonly number[]
+}
+
 export type MarkdownAnalysis = {
+  readonly ambiguousSymbolReferences: readonly AmbiguousSymbolReference[]
+  readonly ambiguousSymbolReferencesTruncated: boolean
   readonly relations: readonly KnowledgeRelation[]
   readonly notes: readonly MarkdownNote[]
   readonly truncated: boolean
@@ -354,9 +363,9 @@ export const analyzeMarkdownDocument = (
   const ambiguous = new Map<string, Evidence[]>()
   let truncated = false
 
-  const add = (kind: string, to: string, line: number, confidence?: 'fuzzy'): void => {
+  const add = (kind: string, to: string, line: number, confidence?: 'fuzzy', symbol?: string): void => {
     if (to === documentId) return
-    const id = relationId(documentId, kind, to)
+    const id = relationId(documentId, kind, to, symbol)
     const existing = relations.get(id)
     if (existing) {
       // One relation, every place the document says it — evidence accumulates, the edge does not.
@@ -376,7 +385,7 @@ export const analyzeMarkdownDocument = (
       to,
       provenance: 'observed',
       evidence: [documentEvidence(document.path, line)],
-      ...(confidence ? { metadata: { confidence } } : {}),
+      ...(symbol ? { metadata: { symbol } } : confidence ? { metadata: { confidence } } : {}),
     })
   }
 
@@ -444,7 +453,7 @@ export const analyzeMarkdownDocument = (
 
     const modules = resolution.symbols.get(value)
     if (modules?.length === 1 && modules[0]) {
-      add('mentions-symbol', modules[0], line)
+      add('mentions-symbol', modules[0], line, undefined, value)
       return
     }
     if (modules && modules.length > 1) {
@@ -473,7 +482,17 @@ export const analyzeMarkdownDocument = (
     })
   }
 
+  const ambiguousSymbolReferences = [...ambiguous.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .slice(0, 64)
+    .map(([symbol, evidence]) => {
+      const candidates = [...new Set(resolution.symbols.get(symbol) ?? [])].sort()
+      return { symbol, candidateModuleIds: candidates.slice(0, 32), candidateCount: candidates.length,
+        lines: [...new Set(evidence.map((item) => item.lineStart as number))].sort((a, b) => a - b) }
+    })
   return {
+    ambiguousSymbolReferences,
+    ambiguousSymbolReferencesTruncated: ambiguous.size > 64,
     relations: [...relations.values()].sort((a, b) => a.id.localeCompare(b.id)),
     notes,
     truncated,

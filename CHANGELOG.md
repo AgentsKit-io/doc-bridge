@@ -8,6 +8,7 @@
 
 ### Minor Changes
 
+- Retain symbol-level documentation references and structured ambiguity metadata without inflating retrieval connection counts.
 - Registry agent runners receive an optional cancellation signal separately from their frozen context. Local and CLI deadlines now use `@agentskit/net`; CLI timeout and response overflow switch process-tree termination from `SIGTERM` to `SIGKILL`, while concurrency remains reserved until execution settles.
 
 ## 1.13.0
