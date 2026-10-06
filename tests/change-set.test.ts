@@ -84,6 +84,53 @@ describe('ChangeSetV1 real snapshot acceptance', () => {
     expect(residual.impact.changedDocumentation.map((doc) => doc.path)).toEqual(['docs/api.md'])
   })
 
+  it('T2b preserves finding identity across unrelated edits and moved citations', () => {
+    const { root, base } = fixture()
+    write(root, 'src/api.ts', 'export const second = 2\n')
+    const original = scanDiff(root, base).findings[0]!
+    write(root, 'docs/api.md', '# API\n\nUse `first` and `second` in `src/api.ts`.\n\nUnrelated explanation.\n')
+    const edited = scanDiff(root, base).findings[0]!
+    expect(edited.id).toBe(original.id)
+    expect(edited.evidence).not.toEqual(original.evidence)
+    write(root, 'docs/api.md', '# API\n\nIntroduction.\n\nUse `first` and `second` in `src/api.ts`.\n')
+    const moved = scanDiff(root, base).findings[0]!
+    expect(moved.id).toBe(original.id)
+    expect(moved.evidence).toContainEqual(expect.objectContaining({ context: 'Head citation', lineStart: 5 }))
+    const reordered = structuredClone(base)
+    for (const relation of reordered.relations) relation.evidence.reverse()
+    expect(scanDiff(root, reordered).findings[0]?.id).toBe(original.id)
+  })
+
+  it('T2b distinguishes removed symbols and their module owners', () => {
+    const { root, base } = fixture()
+    write(root, 'src/api.ts', 'export const second = 2\n')
+    const first = scanDiff(root, base).findings[0]!.id
+    write(root, 'src/api.ts', 'export const first = 1\n')
+    expect(scanDiff(root, base).findings[0]?.id).not.toBe(first)
+    rmSync(join(root, 'src/api.ts'))
+    write(root, 'src/other.ts', 'export const first = 1\nexport const second = 2\n')
+    write(root, 'docs/api.md', '# API\n\nUse `first` and `second` in `src/other.ts`.\n')
+    const otherBase = discoverRepository({ root })
+    write(root, 'src/other.ts', 'export const second = 2\n')
+    expect(scanDiff(root, otherBase).findings[0]?.id).not.toBe(first)
+  })
+
+  it('T2b binds ambiguity identity to the candidate set, not evidence positions or order', () => {
+    const { root, base } = fixture()
+    write(root, 'src/other.ts', 'export const first = 3\n')
+    const original = scanDiff(root, base).findings[0]!
+    write(root, 'docs/api.md', '# API\n\nIntroduction.\n\nUse `first` and `second` in `src/api.ts`.\n')
+    expect(scanDiff(root, base).findings[0]?.id).toBe(original.id)
+    const head = discoverRepository({ root })
+    const doc = head.entities.find((entity) => entity.id === 'document:docs/api.md')!
+    const ambiguities = doc.metadata!.ambiguousSymbolReferences as { candidateModuleIds: string[] }[]
+    ambiguities[0]!.candidateModuleIds.reverse()
+    expect(diffSnapshots(base, head, { headRoot: root }).findings[0]?.id).toBe(original.id)
+    rmSync(join(root, 'src/other.ts'))
+    write(root, 'src/third.ts', 'export const first = 3\n')
+    expect(scanDiff(root, base).findings[0]?.id).not.toBe(original.id)
+  })
+
   it('T2-A6 unsupported kinds and renames remain explicit coverage', () => {
     const { root, base } = fixture()
     const result = scanDiff(root, base)

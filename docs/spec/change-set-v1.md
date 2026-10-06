@@ -79,3 +79,11 @@ an owner or propose remediation. Findings reuse existing `DiagnosticSchema` and
 are emitted in the envelope's `findings` array, outside ChangeSet identity.
 Policy routing, region remediation, release eligibility and acceptance are later
 contracts, not guarantees of this delta flow.
+
+Finding IDs hash the category, document entity ID, relation kind, cited target ID,
+and cited symbol when present, plus the removed target identity recorded in the
+delta (symbol, module or document ID) or the sorted, deduplicated candidate module
+IDs for ambiguity. Citation line numbers, whole-file content hashes, revisions
+and evidence ordering are excluded from identity; evidence retains locations and
+hashes for review. Unrelated document edits and citation movement preserve the
+ID, while a different removed target or ambiguity candidate set changes it.

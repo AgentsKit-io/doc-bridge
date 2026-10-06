@@ -142,7 +142,10 @@ export const diffSnapshots = (base: DiscoverySnapshotV1, head: DiscoverySnapshot
     const status = ambiguous ? 'unresolved' : citation && !partial ? 'conflict' : 'stale-or-unverified'
     const headEvidence: Evidence[] = citation?.evidence ?? (ambiguous && Array.isArray(ambiguous.lines) ? ambiguous.lines.filter((line: unknown): line is number => typeof line === 'number').slice(0, 8).map((line: number) => ({ source: 'documentation' as const, path: doc.path!, lineStart: line, lineEnd: line, contentHash: hashOf(doc) })) : [])
     const evidence = [...relation.evidence.map((item) => ({ ...item, context: 'Base citation' })), ...headEvidence.map((item) => ({ ...item, context: 'Head citation' })), ...(removed?.before?.evidence ?? target.evidence).map((item) => ({ ...item, context: 'Base target removed or no longer uniquely resolved' })), ...(after.get(target.id)?.evidence ?? []).map((item) => ({ ...item, context: 'Head owner' }))].slice(0, 64)
-    const id = entityId('finding', sha256NormalizedV1({ code, document: doc.id, target: relation.to, symbol, evidence }))
+    const relevantIdentity = ambiguous
+      ? { candidateModuleIds: Array.isArray(ambiguous.candidateModuleIds) ? [...new Set(ambiguous.candidateModuleIds.filter((id: unknown): id is string => typeof id === 'string'))].sort() : [] }
+      : { removedTargetId: removed!.before!.id }
+    const id = entityId('finding', sha256NormalizedV1({ code, document: doc.id, relationKind: relation.kind, target: relation.to, symbol, ...relevantIdentity }))
     findings.set(id, DiagnosticSchema.parse({ id, code, status, severity: 'warn', message: `${doc.path} cites ${symbol ?? target.path ?? target.name}, which ${ambiguous ? 'is no longer uniquely resolved' : 'is recorded as removed in the snapshot delta'}.`, evidence, entityIds: [doc.id, target.id], relationIds: [relation.id] }))
   }
   return { changeSet, impact: changeImpact(base, head, changes), findings: [...findings.values()].sort((a, b) => a.id.localeCompare(b.id)) }
