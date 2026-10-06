@@ -8,6 +8,8 @@
 
 ### Minor Changes
 
+- Add bounded injected discovery and built-in JS/TS and Markdown v2 plugins, retaining synchronous extraction and legacy evidence identity.
+
 - Add reader-backed exact-partition index building, freshness loading and artifact persistence without changing index/handoff payloads or synchronous local compatibility. Missing or mismatched bodies carry exact repository/revision/path limitations.
 - Add bounded injected discovery and built-in JS/TS and Markdown v2 plugins, retaining synchronous extraction and legacy evidence identity.
 - Add bounded exact-partition storage I/O v1 and strict discovery plugin v2 contracts with local atomic artifact publication, preserving existing consumers.
