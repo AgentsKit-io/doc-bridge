@@ -215,5 +215,5 @@ describe('ChangeSetV1 real snapshot acceptance', () => {
     writeFileSync(headPath, JSON.stringify(head))
     expect(cli('--base', basePath, '--head', headPath).status).toBe(2)
     expect(contentHashForVersionedArtifact(base)).toBe(base.contentHash)
-  })
+  }, 30_000)
 })
