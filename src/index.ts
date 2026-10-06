@@ -936,3 +936,9 @@ export {
 
 export { ChangeSetV1Schema, ChangeSchema, ChangeKindSchema, ChangeIdentitySchema, ChangeSetV1JsonSchema, type ChangeSetV1, type Change } from './schemas/change-set.js'
 export { diffSnapshots, snapshotChanges, changeImpact, changeSetContentHash, parseChangeSet, type SnapshotForChanges, type ChangeImpact } from './diff/change-set.js'
+
+export type { Partition, StorageLimits, StorageFailure, StorageResult, ContentRef, FileMeta, StorageRequest, RepositoryListing, RepositoryReadV1, ArtifactKind, ArtifactKey, ArtifactEnvelope, ArtifactIOV1 } from './storage/contract.js'
+export type { LocalRepositoryReadOptions } from './storage/local.js'
+export type { LocalArtifactIOOptions } from './storage/artifacts.js'
+export type { SurfaceFact, PackageFact } from './storage/facts.js'
+export type { DiscoveryPluginManifestV2, DiscoveryPluginInputV2, ExtractionV2, ReleaseEvent, Resolution, DiscoveryPluginV2, DiscoveryRegistryV2 } from './plugins/contract.js'
