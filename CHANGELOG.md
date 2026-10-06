@@ -8,6 +8,8 @@
 
 ### Minor Changes
 
+- Compare codec-backed surface and package facts with value hashes, extraction-aware generic citation findings and bounded injected head reads. Prove the language-neutral persisted flow with a test-only toy adapter.
+
 - Add bounded injected discovery and built-in JS/TS and Markdown v2 plugins, retaining synchronous extraction and legacy evidence identity.
 
 - Add reader-backed exact-partition index building, freshness loading and artifact persistence without changing index/handoff payloads or synchronous local compatibility. Missing or mismatched bodies carry exact repository/revision/path limitations.

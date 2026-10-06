@@ -1,0 +1,6 @@
+symbol Keep
+symbol Gone
+command inspect
+flag inspect --brief
+config output text
+signature Keep (value)->text

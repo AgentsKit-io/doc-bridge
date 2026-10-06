@@ -19,7 +19,7 @@ This new artifact does not add fields to `DocBridgeIndexV1` or `AgentHandoffV1`.
 | `branch` | Optional caller-provided branch identity; never inferred as a release |
 | `baseRevision`, `headRevision` | Required bounded revision strings, retained as provenance |
 | `release` | Strict `{ "state": "unreleased" }`; release stamping is not implemented |
-| `packages` | Package purl/version mapping array; currently empty with explicit coverage |
+| `packages` | Head codec-backed package purl/version mapping array; empty for legacy extraction |
 | `changes` | Canonically ordered change records, maximum 100,000 |
 | `contentHash` | 64 lowercase hexadecimal characters |
 | `contentHashAlgo` | `sha256-semantic-v1` |
@@ -32,11 +32,16 @@ Writers currently produce only added, removed and changed. An addition requires
 only `after`, a removal only `before`, and a change or rename requires both.
 The Zod validator enforces this operation-dependent rule.
 
-Each identity has bounded `id`, `name`, optional `ownerId`, and up to 64 existing
+Each identity has bounded `id`, `name`, optional `ownerId`, optional `valueHash`
+(64 lowercase SHA-256 hexadecimal characters), and up to 64 existing
 Evidence records: source, path (512 characters), optional positive line bounds,
 optional SHA-256 content hash and bounded context. Symbol identities use
 `entityId('symbol', moduleId + ':' + exportName)` and carry the module's bounded
-file evidence, not an invented declaration range. Module and package IDs remain
+file evidence, not an invented declaration range. Codec-backed fact identities
+retain their adapter value hash; package identities hash canonical purl/version/
+dependencies. Evidence content hashes still refer to source files. This additive
+identity field evolves the unreleased v1 contract without adding top-level fields.
+Module and package IDs remain
 unchanged. Package mappings, when adapters supply them, have `id`, `purl` and
 optional `version`; this producer does not derive ecosystem-specific identity.
 

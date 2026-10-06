@@ -22,13 +22,30 @@ module body changed. Their owning module change still contributes review impact.
 The current analyzer provides module file evidence for exports, without signature
 or declaration-region extraction.
 
-`cli-command`, `cli-flag`, `config-key` and `signature` extraction is explicitly
-`not-analyzed`. Rename detection is also `not-analyzed`: matching hashes or
-similar paths do not prove renames. Moved files therefore appear as removal and
-addition. Package IDs and manifest changes are observed, but ecosystem-neutral
-purl/version mappings and version routing remain `not-analyzed`; the `packages`
-mapping array stays empty. Release state is always `unreleased`. No network,
-release event inference, version comparison or remediation runs here.
+Codec-backed surface facts (`symbol`, `cli-command`, `cli-flag`, `config-key`,
+`signature`) are compared by stable owner/name ID and adapter-provided value hash.
+Each before/after identity retains `valueHash` and bounded original file evidence.
+Package facts are compared by the canonical hash of purl, version and dependencies;
+unchanged package values do not become changes solely because manifest bytes changed.
+The head package mappings populate `packages`, sorted canonically. The legacy
+file/export path remains unchanged when the built-in plugin emits no codec facts.
+
+Extraction completeness is scoped to the capability (`symbols`, `cli-commands`,
+`cli-flags`, `config-keys`, `signatures`, or `manifest`) and its extracting analyzer.
+Base coverage evidence identifies relevant extractors by fact source path; absent
+such attribution, all base analyzers reporting that capability must have complete
+head extraction. Another analyzer's complete coverage cannot mask a failed,
+partial or unsupported extractor. Repository limit coverage also prevents proof.
+Absence under incomplete extraction remains a removal candidate with
+`stale-or-unverified` findings, never a proven conflict. Supported complete kinds
+have no synthetic diff `not-analyzed` entry; unsupported kinds retain one.
+
+Rename detection remains `not-analyzed`: no adapter rename-proof contract is
+available in this producer, and neither value equality nor similar paths proves a
+rename. Moved identities appear as removal and addition. Release state remains
+`unreleased`; mapping package facts does not implement release eligibility or
+version routing. Version comparison and caller-event release mapping belong to
+plugins and are exercised by the test-only toy adapter, without network access.
 
 Changes and coverage are sorted by canonical JSON. Findings are sorted by stable
 ID, impact by document path. Equal inputs and equal verified head text produce
@@ -50,7 +67,7 @@ existing file-level rendering contract.
 
 ## Findings
 
-A base relation to a removed module/document, or a removed export of its module,
+A base relation to a removed module/document, a removed export, or a codec fact,
 creates a `BROKEN_REFERENCE` candidate. A relation merely failing to resolve,
 without a corresponding removal delta, produces no broken-reference finding.
 Fuzzy relations cannot prove a broken citation.
@@ -87,3 +104,28 @@ IDs for ambiguity. Citation line numbers, whole-file content hashes, revisions
 and evidence ordering are excluded from identity; evidence retains locations and
 hashes for review. Unrelated document edits and citation movement preserve the
 ID, while a different removed target or ambiguity candidate set changes it.
+
+## Generic citations and exact reads
+
+Generic citations target the fact's owner in `relation.to`. Symbols use
+`metadata.symbol`; other kinds use `metadata.factKind` and `metadata.factName`.
+Package citations use kind `package`, the package ID as owner and its purl as name.
+The diff resolves kind/name against codec facts rather than language syntax.
+Verified head inline-code tokens outside generated regions establish current
+citations. Competing head owners of the same kind/name produce
+`AMBIGUOUS_REFERENCE`; missing names without a removal delta do not prove breaks.
+A changed document is still checked for residual citations. The generic locator
+uses fact kind/name in place of the symbol, retaining the existing owner target
+and removed identity (or sorted candidate owners). Evidence positions and hashes
+remain excluded from finding identity.
+
+`diffSnapshotsWithRead(base, head, read, { signal?, branch? })` is the async
+module-level successor for injected callers. The reader must be bound to the head
+revision; a mismatch fails before reading. Caller-owned partition authorization
+and inventories remain required by Storage I/O v1. Reads are bounded, their
+content references checked, and parsed document hashes must equal snapshot
+hashes. Unavailable or drifting documents produce unverified candidates. No
+local fallback or native file reads occur in this API. `diffSnapshots` retains
+its synchronous signature and optional local head verification. Root package
+exports and CLI wiring for the injected successor are a separate integration
+step.
