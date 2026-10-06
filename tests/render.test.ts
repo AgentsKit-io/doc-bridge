@@ -286,6 +286,21 @@ describe('the change digest', () => {
     expect(page).toContain('Nothing was added.')
   })
 
+  it('lists historical references when a removed module has no current edges', () => {
+    const { root, config } = fixture()
+    const previous = discoverRepository({ root, config })
+    write(root, 'previous.json', JSON.stringify(previous))
+    rmSync(join(root, 'src/ranking/bm25.ts'))
+    const current = discoverRepository({ root, config })
+    expect(current.relations.some((relation) => relation.to === 'module:src/ranking/bm25.ts')).toBe(false)
+    expect(changeDigestView(previous, current).documentsToReview).toEqual([
+      { path: 'docs/ranking.md', because: 'mentions `src/ranking/bm25.ts`; mentions-symbol `src/ranking/bm25.ts`' },
+    ])
+    const page = renderArtifact({ root, config, template: 'change-digest', dataPath: 'previous.json' }).pages[0]?.content ?? ''
+    expect(page).toContain('- `docs/ranking.md`: mentions `src/ranking/bm25.ts`; mentions-symbol `src/ranking/bm25.ts`')
+    expect(page).toContain('## Removed')
+  })
+
   it('takes the previous snapshot from the last scan and reports when there is none', () => {
     const { root, config } = fixture()
     expect(() => renderArtifact({ root, config, template: 'change-digest' })).toThrow(/ak-docs scan/)

@@ -13,6 +13,7 @@ import {
 import { buildDocBridgeIndex } from '../index-builder/build-index.js'
 import { applyDocumentationDeclarations } from '../discovery/documentation.js'
 import { discoverRepository } from '../discovery/repository.js'
+import { diffSnapshots } from '../diff/change-set.js'
 import { discoverPnpmPackages } from '../index-builder/plugins/pnpm-monorepo.js'
 import { scanHumanDocRecords } from '../index-builder/human-adapters/index.js'
 import { retrieveHybridChunks } from '../federation/llms.js'
@@ -112,6 +113,7 @@ type Command =
   | 'memory'
   | 'playbook'
   | 'registry'
+  | 'diff'
   | 'discover'
   | 'benchmark'
   | 'bench'
@@ -189,6 +191,7 @@ const parseArgs = (argv: readonly string[]) => {
   else if (positional[0] === 'memory') command = 'memory'
   else if (positional[0] === 'playbook') command = 'playbook'
   else if (positional[0] === 'registry') command = 'registry'
+  else if (positional[0] === 'diff') command = 'diff'
   else if (positional[0] === 'discover') command = 'discover'
   else if (positional[0] === 'benchmark') command = 'benchmark'
   else if (positional[0] === 'bench') command = 'bench'
@@ -1556,6 +1559,42 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
     } catch (error) {
       process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`)
       return 1
+    }
+  }
+
+  if (command === 'diff') {
+    try {
+      const basePath = optionValues(argv, '--base')[0]
+      if (!basePath) throw new Error('Usage: ak-docs diff --base <snapshot.json> [--head <snapshot.json>] [--root <dir>] [--output <file>] [--json]')
+      const headPath = optionValues(argv, '--head')[0]
+      const rootOption = optionValues(argv, '--root')[0]
+      let root = resolve(rootOption ?? process.cwd())
+      let config: DocBridgeConfigV1 | undefined
+      if (!headPath) {
+        try {
+          const loaded = loadConfig({ cwd: root, ...(configPath ? { explicitPath: configPath } : {}) })
+          config = loaded.config
+          if (!rootOption) root = projectRootFromConfigPath(loaded.path)
+        } catch (error) {
+          if (!(error instanceof ConfigNotFoundError) || configPath) throw error
+        }
+      }
+      const base = parseDiscoverySnapshot(JSON.parse(readFileSync(resolve(basePath), 'utf8')))
+      const head = headPath ? parseDiscoverySnapshot(JSON.parse(readFileSync(resolve(headPath), 'utf8')))
+        : discoverRepository({ root, ...(config ? { config } : {}) })
+      const result = diffSnapshots(base, head, !headPath || rootOption ? { headRoot: root } : {})
+      const bytes = `${JSON.stringify(result, null, 2)}\n`
+      const output = optionValues(argv, '--output')[0]
+      if (output) {
+        const path = resolve(output)
+        mkdirSync(dirname(path), { recursive: true })
+        writeFileSync(path, bytes, 'utf8')
+      }
+      process.stdout.write(bytes)
+      return 0
+    } catch (error) {
+      process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`)
+      return 2
     }
   }
 

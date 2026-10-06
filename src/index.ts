@@ -933,3 +933,6 @@ export {
   type ParityFinding,
   type PublicParityReportV1,
 } from './parity/check.js'
+
+export { ChangeSetV1Schema, ChangeSchema, ChangeKindSchema, ChangeIdentitySchema, ChangeSetV1JsonSchema, type ChangeSetV1, type Change } from './schemas/change-set.js'
+export { diffSnapshots, snapshotChanges, changeImpact, changeSetContentHash, parseChangeSet, type SnapshotForChanges, type ChangeImpact } from './diff/change-set.js'
