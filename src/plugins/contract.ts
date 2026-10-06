@@ -3,6 +3,7 @@ import { EvidenceSchema, type Evidence } from '../schemas/knowledge.js'
 import { PartitionSchema, StorageLimitsSchema, StoragePathSchema, type RepositoryReadV1, type StorageLimits } from '../storage/contract.js'
 import { PackageFactSchema, SurfaceFactSchema, surfaceFactToEntity, type PackageFact } from '../storage/facts.js'
 import { contentRef, StorageLedger } from '../storage/local.js'
+import { markdownContentHash } from '../discovery/markdown.js'
 import { canonicalJsonV1 } from '../index-builder/content-hash.js'
 
 import { CoverageSchema, DiagnosticSchema, EntitySchema, RelationSchema, type Coverage, type KnowledgeDiagnostic, type KnowledgeEntity, type KnowledgeRelation } from '../schemas/knowledge.js'
@@ -146,9 +147,10 @@ const freezePluginData = <T>(value: T): T => {
   return value
 }
 const emptyV2 = (manifest: DiscoveryPluginManifestV2, reason: string): ExtractionV2 => ({ entities: [], relations: [], facts: [], packages: [], diagnostics: [], coverage: [{ analyzer: manifest.id, analyzerVersion: manifest.version, scope: 'plugin', status: 'not-analyzed', reason }] })
-export const createDiscoveryRegistryV2 = (options: { readonly pipelineVersion?: string; readonly maxPlugins?: number } = {}): DiscoveryRegistryV2 => {
+export const createDiscoveryRegistryV2 = (options: { readonly pipelineVersion?: string; readonly maxPlugins?: number; readonly builtIns?: readonly { readonly plugin: DiscoveryPluginV2; readonly analyzerVersions: Readonly<Record<string, string>> }[] } = {}): DiscoveryRegistryV2 => {
   const plugins = new Map<string, DiscoveryPluginV2>()
   const pipeline = pipelineMajor(options.pipelineVersion ?? '1.0.0')
+  const builtIns = new Map<string, Readonly<Record<string, string>>>()
   return {
     register(plugin) {
       const manifest = DiscoveryPluginManifestV2Schema.parse(plugin.manifest)
@@ -159,6 +161,8 @@ export const createDiscoveryRegistryV2 = (options: { readonly pipelineVersion?: 
       if (manifest.capabilities.includes('versions') && (!plugin.normalizeVersion || !plugin.compareVersions || !plugin.satisfiesRange)) throw new Error('MISSING_VERSION_CAPABILITY')
       if (manifest.capabilities.includes('release-map') && !plugin.mapRelease) throw new Error('MISSING_RELEASE_CAPABILITY')
       Object.freeze(manifest.languages); Object.freeze(manifest.capabilities); Object.freeze(manifest.inputPatterns); Object.freeze(manifest.unsupportedConstructs); Object.freeze(manifest.resourceLimits); Object.freeze(manifest)
+      const policy = options.builtIns?.find(entry => entry.plugin === plugin)
+      if (policy) builtIns.set(manifest.id, Object.freeze({ ...policy.analyzerVersions }))
       plugins.set(manifest.id, { manifest, discover: plugin.discover.bind(plugin), ...(plugin.normalizeVersion ? { normalizeVersion: plugin.normalizeVersion.bind(plugin) } : {}), ...(plugin.compareVersions ? { compareVersions: plugin.compareVersions.bind(plugin) } : {}), ...(plugin.satisfiesRange ? { satisfiesRange: plugin.satisfiesRange.bind(plugin) } : {}), ...(plugin.mapRelease ? { mapRelease: plugin.mapRelease.bind(plugin) } : {}) })
     },
     list() { return [...plugins.values()].map(plugin => plugin.manifest).sort((a,b) => a.id.localeCompare(b.id)) },
@@ -175,7 +179,7 @@ export const createDiscoveryRegistryV2 = (options: { readonly pipelineVersion?: 
       const abort = new AbortController()
       const signal = AbortSignal.any([input.signal, abort.signal])
       const ledger = new StorageLedger(input.read.partition, input.read.limits)
-      const issued = new Map<string, { hash: string; lines: number }>()
+      const issued = new Map<string, { hash: string; documentationHash: string; lines: number }>()
       const reader: RepositoryReadV1 = Object.freeze({ version: 1, partition: Object.freeze({ ...input.read.partition }), limits: Object.freeze({ ...input.read.limits }),
         async read(request: Parameters<RepositoryReadV1['read']>[0]) {
           const bound = { ...request, signal }; ledger.check(bound)
@@ -184,7 +188,7 @@ export const createDiscoveryRegistryV2 = (options: { readonly pipelineVersion?: 
           if (result.status === 'ok') {
             ledger.charge(bound, result.value.bytes.length)
             if (contentRef(result.value.bytes).hash !== result.value.content.hash) throw new Error('INVALID_READ_EVIDENCE')
-            issued.set(request.path, { hash: result.value.content.hash, lines: Buffer.from(result.value.bytes).toString('utf8').split(/\r?\n/).length })
+            issued.set(request.path, { hash: result.value.content.hash, documentationHash: markdownContentHash(Buffer.from(result.value.bytes).toString('utf8')), lines: Buffer.from(result.value.bytes).toString('utf8').split(/\r?\n/).length })
           }
           return result
         },
@@ -217,19 +221,33 @@ export const createDiscoveryRegistryV2 = (options: { readonly pipelineVersion?: 
         for (const pkg of parsed.packages) { unique(pkg.id); if (entities.has(pkg.id) && entities.get(pkg.id)?.kind !== 'package') throw new Error('INVALID_OWNER') }
         const evidence = [...parsed.entities, ...parsed.relations, ...parsed.facts, ...parsed.packages, ...parsed.coverage, ...parsed.diagnostics].flatMap(item => item.evidence ?? [])
         if (evidence.length > 100_000) throw new Error('EVIDENCE_LIMIT')
+        const componentVersions = builtIns.get(id)
+        const inventoryPaths = new Set<string>(['.'])
+        for (const path of issued.keys()) {
+          inventoryPaths.add(path)
+          const parts = path.split('/')
+          for (let length = 1; length < parts.length; length++) inventoryPaths.add(parts.slice(0, length).join('/'))
+        }
         for (const item of evidence) {
           const proof = issued.get(item.path)
-          if (!StoragePathSchema.safeParse(item.path).success || !proof || item.contentHash !== proof.hash || (item.lineEnd ?? item.lineStart ?? 1) > proof.lines) throw new Error('INVALID_EVIDENCE')
+          const validPath = StoragePathSchema.safeParse(item.path).success || (componentVersions && item.path === '.')
+          const validHash = componentVersions && item.contentHash === undefined ? inventoryPaths.has(item.path) : proof && item.contentHash === (componentVersions && item.source === 'documentation' ? proof.documentationHash : proof.hash)
+          if (!validPath || !validHash || (proof && (item.lineEnd ?? item.lineStart ?? 1) > proof.lines) || (!proof && (item.lineStart !== undefined || item.lineEnd !== undefined))) throw new Error('INVALID_EVIDENCE')
         }
-        for (const entity of parsed.entities) if (entity.path && !issued.has(entity.path)) throw new Error('INVALID_EVIDENCE')
+        for (const entity of parsed.entities) if (entity.path && !(componentVersions ? inventoryPaths.has(entity.path) : issued.has(entity.path))) throw new Error('INVALID_EVIDENCE')
         const capabilityFor = { symbol: 'symbols', 'cli-command': 'cli-commands', 'cli-flag': 'cli-flags', 'config-key': 'config-keys', signature: 'signatures' } as const
         for (const fact of parsed.facts) if (!plugin.manifest.capabilities.includes(capabilityFor[fact.kind])) throw new Error('UNDECLARED_CAPABILITY')
         if (parsed.packages.length && !plugin.manifest.capabilities.includes('manifest') && !plugin.manifest.capabilities.includes('lockfile')) throw new Error('UNDECLARED_CAPABILITY')
-        const coverage = parsed.coverage.map(entry => ({ ...entry, analyzer: plugin.manifest.id, analyzerVersion: plugin.manifest.version }))
-        for (const capability of DiscoveryCapabilitySchema.options) if (!plugin.manifest.capabilities.includes(capability)) coverage.push({ analyzer: plugin.manifest.id, analyzerVersion: plugin.manifest.version, scope: capability, status: 'not-analyzed', reason: 'UNSUPPORTED_CAPABILITY' })
-        for (const capability of plugin.manifest.capabilities) if (!coverage.some(entry => entry.scope === capability)) coverage.push({ analyzer: plugin.manifest.id, analyzerVersion: plugin.manifest.version, scope: capability, status: 'not-analyzed', reason: 'MISSING_CAPABILITY_COVERAGE' })
+        const coverage = parsed.coverage.map(entry => {
+          if (!componentVersions) return { ...entry, analyzer: plugin.manifest.id, analyzerVersion: plugin.manifest.version }
+          const version = componentVersions[entry.analyzer]
+          if (!version || (entry.analyzerVersion !== undefined && entry.analyzerVersion !== version)) throw new Error('INVALID_COMPONENT_ATTRIBUTION')
+          return { ...entry, analyzerVersion: version }
+        })
+        if (!componentVersions) for (const capability of DiscoveryCapabilitySchema.options) if (!plugin.manifest.capabilities.includes(capability)) coverage.push({ analyzer: plugin.manifest.id, analyzerVersion: plugin.manifest.version, scope: capability, status: 'not-analyzed', reason: 'UNSUPPORTED_CAPABILITY' })
+        if (!componentVersions) for (const capability of plugin.manifest.capabilities) if (!coverage.some(entry => entry.scope === capability)) coverage.push({ analyzer: plugin.manifest.id, analyzerVersion: plugin.manifest.version, scope: capability, status: 'not-analyzed', reason: 'MISSING_CAPABILITY_COVERAGE' })
         for (const items of [parsed.entities, parsed.relations, parsed.facts, parsed.packages, parsed.diagnostics]) items.sort((a,b) => a.id.localeCompare(b.id))
-        coverage.sort((a,b) => canonicalJsonV1(a).localeCompare(canonicalJsonV1(b)))
+        if (!componentVersions) coverage.sort((a,b) => canonicalJsonV1(a).localeCompare(canonicalJsonV1(b)))
         return { ...parsed, coverage }
       } catch { return emptyV2(plugin.manifest, signal.aborted ? 'PLUGIN_CANCELLED_OR_TIMEOUT' : 'PLUGIN_FAILED') }
       finally { if (timer) clearTimeout(timer); if (onAbort) signal.removeEventListener('abort', onAbort); abort.abort() }

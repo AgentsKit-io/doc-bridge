@@ -86,3 +86,15 @@ Both only ever over-estimate `m`, so a candidate they skip could not have matche
 speed-up with no effect on results, tied scores included. `MarkdownResolution.pathIndex` carries it,
 built once per run; an analyzer called without one builds its own and produces the same output more
 slowly.
+
+## Discovery v2 transport
+
+The Markdown built-in v2 plugin shares this analyzer with synchronous discovery.
+Acquisition supplies verified scan-local content and generic resolution owners;
+Markdown does not read native files or interpret source syntax. Declared versus
+forwarded ownership, ambiguous references, document collection, generated regions,
+BOM/CRLF normalization and bounded note ordering are unchanged. Documentation
+hashes retain the BOM-stripping Markdown codec even when the storage content
+reference uses the source/configuration codec. The built-in registry validates
+that distinction against issued bytes. Caller-provided symbol fact owners may
+join the resolution universe without adding a language branch to Markdown.

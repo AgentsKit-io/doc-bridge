@@ -8,6 +8,7 @@
 
 ### Minor Changes
 
+- Add bounded injected discovery and built-in JS/TS and Markdown v2 plugins, retaining synchronous extraction and legacy evidence identity.
 - Add bounded exact-partition storage I/O v1 and strict discovery plugin v2 contracts with local atomic artifact publication, preserving existing consumers.
 
 - Add deterministic `ChangeSetV1` and `ak-docs diff`, with historical documentation impact, proven-removal and ambiguity findings, and explicit unsupported extraction coverage. Change digests now include documentation citing removed targets.
