@@ -145,3 +145,12 @@ with no projection at all — what the builder produced before the corpus projec
 
 The doctor's `ok` is unchanged: it is still "no error-severity issue and the gates pass", so a
 CI step that runs `ak-docs doctor --text` fails on a stale index, not on a B.
+
+## Semantic hash compatibility
+
+Discovery snapshots and derived reconciliation reports declare `sha256-semantic-v1` after explicit
+regeneration. New readers verify both this algorithm and legacy `sha256-normalized-v1` using their
+respective projections; unsupported algorithms require a compatible version and regeneration.
+Revision/time and reuse statistics remain provenance, not semantic identity. Legacy handoff field
+sets and exact proposal, fix and study hash bindings are unchanged. See
+[incremental scan v1](incremental-scan-v1.md) and [index schema v1](../schemas/doc-bridge-index-v1.md).

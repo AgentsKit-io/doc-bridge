@@ -1,3 +1,4 @@
+import { contentHashForVersionedArtifact } from './index-builder/content-hash.js'
 import { ZodError } from 'zod'
 
 import { DocBridgeConfigV1Schema, type DocBridgeConfigV1 } from './config/schema.js'
@@ -71,11 +72,16 @@ export const parseDocBridgeIndex = (input: unknown): DocBridgeIndexV1 =>
 export const parseMemoryCandidate = (input: unknown): MemoryCandidateV1 =>
   MemoryCandidateV1Schema.parse(input)
 
+const verifyKnowledgeHash = <T extends { contentHash: string; contentHashAlgo: string }>(artifact: T): T => {
+  if (artifact.contentHash !== contentHashForVersionedArtifact(artifact)) throw new Error(`Invalid artifact content hash under ${artifact.contentHashAlgo}. Explicitly regenerate with a compatible doc-bridge version.`)
+  return artifact
+}
+
 export const parseDiscoverySnapshot = (input: unknown): DiscoverySnapshotV1 =>
-  DiscoverySnapshotV1Schema.parse(input)
+  verifyKnowledgeHash(DiscoverySnapshotV1Schema.parse(input))
 
 export const parseReconciliationReport = (input: unknown): ReconciliationReportV1 =>
-  ReconciliationReportV1Schema.parse(input)
+  verifyKnowledgeHash(ReconciliationReportV1Schema.parse(input))
 
 export const parseWorkflowRun = (input: unknown): WorkflowRunV1 => WorkflowRunV1Schema.parse(input)
 

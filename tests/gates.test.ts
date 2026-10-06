@@ -1,4 +1,4 @@
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
+import { cpSync, rmSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -58,11 +58,16 @@ describe('gates', () => {
 
   it('runs the configured supported gates when no explicit id is passed', () => {
     const config = { ...loadFixtureConfig(), gates: { preset: 'standard' as const } }
-    buildDocBridgeIndex({ root: fixtureRoot, config })
-
-    const result = runGates(fixtureRoot, config)
-    expect(result.ok).toBe(true)
-    expect(result.results.map((gate) => gate.id)).toEqual(['index-freshness', 'human-guide-links'])
+    const root = mkdtempSync(join(tmpdir(), 'doc-bridge-gates-'))
+    try {
+      cpSync(fixtureRoot, root, { recursive: true })
+      buildDocBridgeIndex({ root, config })
+      const result = runGates(root, config)
+      expect(result.ok).toBe(true)
+      expect(result.results.map((gate) => gate.id)).toEqual(['index-freshness', 'human-guide-links'])
+    } finally {
+      rmSync(root, { recursive: true, force: true })
+    }
   })
 
   it('checks OKF type frontmatter only when required', () => {

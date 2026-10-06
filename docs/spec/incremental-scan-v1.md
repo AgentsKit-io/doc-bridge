@@ -99,10 +99,22 @@ cache from a broken scan. One `coverage` entry reports it:
 `status` is `complete` when everything reusable was reused, `partial` when reuse was refused — the
 reason then names what changed — and `not-applicable` when there was no previous snapshot to reuse.
 
-This entry is the one part of a snapshot that describes the *run* rather than the repository. The
-entities, the relations and every other coverage entry are byte-identical to a cold scan's, which
-is what the tests assert; the snapshot's own `contentHash` covers this entry too, so a warm scan
-and a cold scan of the same tree hash differently. That is why the CLI does not yet pass a previous
-snapshot: the artifacts it writes are compared across runs, and the caching layer has to decide
-what a report keys on before a fast scan starts feeding it. `contentHash` and `sourceRevision`
-semantics are otherwise untouched.
+This entry describes run provenance and stays serialized in `coverage`. New snapshots declare
+`contentHashAlgo: sha256-semantic-v1`; their semantic projection excludes only repository
+`reused-entities` coverage, `sourceRevision`, `sourceRevisionKind` and `generatedAt`.
+Repository identity, canonical entities/relations and their evidence, effective configuration,
+pipeline/analyzer versions and all meaningful coverage/limitations remain in the hash. Entities,
+relations and coverage are canonically ordered for hashing. Equal trees at different revisions,
+and cold/warm scans, therefore have equal semantic hashes while retaining distinct provenance.
+A content, configuration, analyzer-version or meaningful coverage change invalidates identity.
+
+Legacy `sha256-normalized-v1` snapshots retain their original verifier: remove `contentHash`,
+then hash the remaining canonical JSON, including revision and reuse coverage. Readers select the
+verifier by the declared algorithm and reject unsupported algorithms with a compatible-version and
+explicit-regeneration diagnostic. Unlike algorithms are never equal identities. Declaration
+resealing, reconciliation and documentation audit inherit the snapshot algorithm.
+
+File/evidence hashes, workflow-run seals and revision-based workflow reuse, fix affected-file hashes,
+proposal seals and approval bindings remain unchanged. Semantic equality cannot rebind approval
+across revisions; registry proposal caches include the exact revision and snapshot algorithm.
+Existing study artifact hash projections are unchanged.

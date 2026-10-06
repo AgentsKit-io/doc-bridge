@@ -1,4 +1,5 @@
-import { existsSync, readFileSync } from 'node:fs'
+import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
 import { describe, expect, it } from 'vitest'
@@ -63,8 +64,11 @@ describe('Tier C — stable 1.0.0', () => {
 
   it('includes pattern export hint in playbook draft', () => {
     const originalCwd = process.cwd()
+    const root = mkdtempSync(join(tmpdir(), 'doc-bridge-playbook-'))
     try {
-      process.chdir(fixtureRoot)
+      cpSync(fixtureRoot, root, { recursive: true })
+      process.chdir(root)
+      expect(captureStdout(() => runCli(['index'])).code).toBe(0)
       const result = captureStdout(() => runCli(['playbook', 'draft']))
       expect(result.code).toBe(0)
       const payload = JSON.parse(result.out) as { exportCommand?: string; patternDoc?: string }
@@ -72,6 +76,7 @@ describe('Tier C — stable 1.0.0', () => {
       expect(payload.patternDoc).toContain('doc-bridge-pattern.md')
     } finally {
       process.chdir(originalCwd)
+      rmSync(root, { recursive: true, force: true })
     }
   })
 

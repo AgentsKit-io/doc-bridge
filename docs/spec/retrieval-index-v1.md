@@ -57,9 +57,22 @@ once in the projection.
 }
 ```
 
-`contentHash` is over the inputs — snapshot hash, overlay hash, configuration hash, lexicon and
-graph-metrics versions, weights and parameters — because the projection is a function: equal
-inputs, equal artifact. `IndexStaleError` keeps working from the same three hashes.
+New projections inherit `contentHashAlgo: sha256-semantic-v1` from their snapshot. The seal
+hashes the full projection (excluding `contentHash`) plus `projectionVersion` and
+`observationHash` (the canonical entity/relation/pipeline/analyzer observation fingerprint).
+This includes the algorithm, semantic `snapshotHash`, accepted `overlayHash`, configuration,
+lexicon/graph versions, weights, parameters, lexical metadata and entries. Snapshot identity
+includes repository identity, effective configuration, analyzer versions and meaningful coverage;
+revision/time and reuse-run statistics remain outside semantic identity. The semantic repository input
+fingerprint also binds pipeline/analyzer versions and effective configuration for query freshness.
+
+Legacy `sha256-normalized-v1` projections keep the original input-only seal: projection version,
+observation fingerprint, overlay/configuration hashes, lexicon/graph versions, weights and parameters.
+Public-index freshness rebuilds select the stored algorithm for both formats. Unknown algorithms
+fail with an actionable compatible-version/regeneration diagnostic; unlike algorithms cannot be
+equal identities. Explicit regeneration migrates the index and its projection together. Old strict
+readers must be upgraded before consuming the new algorithm. Entity/evidence hashes, exact
+approval bindings and study artifact seals are unchanged.
 
 Every entry carries the entity's own `contentHash`, its `provenance`, and a `confidence`. An entry
 kind is one of `document`, `module`, `area`, `package`, `intent`, `change`. An ownership record

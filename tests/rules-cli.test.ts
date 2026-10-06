@@ -4,6 +4,7 @@ import { join } from 'node:path'
 
 import { describe, expect, it } from 'vitest'
 
+import { contentHashForArtifactV1 } from '../src/index-builder/content-hash.js'
 import { runCli } from '../src/cli/program.js'
 import { ReconciliationReportV1Schema } from '../src/schemas/knowledge.js'
 
@@ -44,6 +45,8 @@ const report = ReconciliationReportV1Schema.parse({
   }],
   summary: { entityCount: 1, relationCount: 1, diagnosticCount: 1 },
 })
+
+report.contentHash = contentHashForArtifactV1(report)
 
 describe('rules CLI', () => {
   it('evaluates a report with CLI precedence and returns policy exit codes', () => {

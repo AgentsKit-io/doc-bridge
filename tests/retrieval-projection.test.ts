@@ -163,9 +163,9 @@ describe('the projection is a function of the snapshot', () => {
     const head = commit('a commit that touches nothing the scan reads')
     const after = buildDocBridgeIndex({ root, config, write: false }).index
 
-    // The scan did see the new revision, and the snapshot is a different artifact because of it.
+    // The scan records the new revision without changing semantic identity.
     expect(discoverRepository({ root, config }).sourceRevision).toBe(head)
-    expect(after.projection?.snapshotHash).not.toBe(before.projection?.snapshotHash)
+    expect(after.projection?.snapshotHash).toBe(before.projection?.snapshotHash)
     // The projection and the index are not, because nothing they describe changed.
     expect(after.projection?.contentHash).toBe(before.projection?.contentHash)
     expect(after.contentHash).toBe(before.contentHash)

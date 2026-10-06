@@ -1,7 +1,7 @@
 import { toPosix } from '@agentskit/cross-platform'
 import { unobservedOwnershipPaths } from '../discovery/areas.js'
 import { importCycles } from '../graph/build.js'
-import { contentHashForArtifactV1, sha256NormalizedV1 } from '../index-builder/content-hash.js'
+import { contentHashForVersionedArtifact, sha256NormalizedV1 } from '../index-builder/content-hash.js'
 import {
   ReconciliationReportV1Schema,
   type DiscoverySnapshotV1,
@@ -499,5 +499,5 @@ export const reconcileKnowledge = (
       documentation,
     },
   }
-  return ReconciliationReportV1Schema.parse({ ...base, contentHash: contentHashForArtifactV1(base) })
+  return ReconciliationReportV1Schema.parse({ ...base, contentHash: contentHashForVersionedArtifact(base) })
 }

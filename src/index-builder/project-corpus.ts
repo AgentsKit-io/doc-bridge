@@ -6,7 +6,8 @@ import { DOCUMENT_EXTENSIONS, SOURCE_EXTENSIONS, safeWalkOptions } from '../disc
 import { toPosix } from '../lib/paths.js'
 import { safeWalkFiles } from '../safety/repository.js'
 import type { KnowledgeEntry } from '../schemas/doc-bridge-index.js'
-import { sha256NormalizedV1 } from './content-hash.js'
+import { ANALYZER_VERSIONS, PIPELINE_VERSION } from '../discovery/repository.js'
+import { LEGACY_HASH_ALGORITHM, type HashAlgorithm, sha256NormalizedV1 } from './content-hash.js'
 
 /**
  * The freshness fingerprint of the index.
@@ -82,7 +83,7 @@ const isInput = (path: string, name: string): boolean => {
  * Walk the repository once and hash every input the index derives from: sources, documents and
  * the configuration files that decide how they resolve.
  */
-export const repositoryInputs = (root: string, config: DocBridgeConfigV1 | undefined): RepositoryInputsV1 => {
+export const repositoryInputs = (root: string, config: DocBridgeConfigV1 | undefined, algorithm: HashAlgorithm = LEGACY_HASH_ALGORITHM): RepositoryInputsV1 => {
   const projectRoot = resolve(root)
   const walk = safeWalkFiles(projectRoot, { extensions: INPUT_EXTENSIONS, ...safeWalkOptions(config) })
   const fingerprints: [string, string][] = []
@@ -100,6 +101,12 @@ export const repositoryInputs = (root: string, config: DocBridgeConfigV1 | undef
 
   return {
     hash: sha256NormalizedV1({
+      ...(algorithm !== LEGACY_HASH_ALGORITHM ? {
+        contentHashAlgo: algorithm,
+        pipelineVersion: PIPELINE_VERSION,
+        analyzerVersions: ANALYZER_VERSIONS,
+        effectiveConfigurationHash: sha256NormalizedV1(config ?? {}),
+      } : {}),
       projectionVersion: CORPUS_PROJECTION_VERSION,
       configurationHash: indexConfigurationHash(config),
       files: fingerprints,

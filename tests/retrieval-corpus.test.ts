@@ -8,7 +8,7 @@ import { applyConfigDefaults } from '../src/config/defaults.js'
 import { DocBridgeConfigV1Schema, type DocBridgeConfigV1 } from '../src/config/schema.js'
 import { discoverRepository } from '../src/discovery/repository.js'
 import { buildDocBridgeIndex } from '../src/index-builder/build-index.js'
-import { sha256NormalizedV1 } from '../src/index-builder/content-hash.js'
+import { contentHashForIndex, sha256NormalizedV1 } from '../src/index-builder/content-hash.js'
 import {
   CORPUS_PROJECTION_VERSION,
   indexConfigurationHash,
@@ -259,24 +259,11 @@ describe('index metadata', () => {
     expect(index.retrieval?.lexiconVersion).toBe(SEARCH_LEXICON_VERSION)
     expect(index.inputs?.hash).toMatch(/^[a-f0-9]{64}$/)
 
-    // The hash is taken over exactly this payload, so a different lexicon version is a different
-    // artifact rather than the same artifact ranked by different rules.
-    const payload = {
-      schemaVersion: 1,
-      knowledge: index.knowledge,
-      handoffs: index.handoffs,
-      lookup: index.lookup,
-      retrieval: index.retrieval,
-      inputs: index.inputs,
-      projection: index.projection?.contentHash,
-    }
-    expect(sha256NormalizedV1(payload)).toBe(index.contentHash)
-    expect(
-      sha256NormalizedV1({
-        ...payload,
-        retrieval: { ...index.retrieval, lexiconVersion: SEARCH_LEXICON_VERSION + 1 },
-      }),
-    ).not.toBe(index.contentHash)
+    expect(contentHashForIndex(index)).toBe(index.contentHash)
+    expect(contentHashForIndex({
+      ...index,
+      retrieval: { ...index.retrieval!, lexiconVersion: SEARCH_LEXICON_VERSION + 1 },
+    })).not.toBe(index.contentHash)
   })
 
   it('stays schema-compatible when the projection is switched off', () => {

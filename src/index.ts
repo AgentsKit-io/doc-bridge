@@ -398,7 +398,7 @@ export {
   type GithubPrOptions,
   type GithubPrResult,
 } from './memory/github-pr.js'
-export { canonicalJsonV1, contentHashForArtifactV1, sha256NormalizedV1 } from './index-builder/content-hash.js'
+export { canonicalJsonV1, contentHashForArtifactV1, contentHashForVersionedArtifact, contentHashForIndex, sameHashIdentity, LEGACY_HASH_ALGORITHM, SEMANTIC_HASH_ALGORITHM, sha256NormalizedV1 } from './index-builder/content-hash.js'
 export {
   ANALYZER_PLUGIN_CONTRACT_VERSION,
   AnalyzerPluginManifestSchema,
