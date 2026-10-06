@@ -1,6 +1,6 @@
 ---
 title: Pluggable I/O and revision partitions
-status: proposed
+status: accepted
 date: 2026-10-06
 ---
 

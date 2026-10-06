@@ -1,6 +1,6 @@
 ---
 title: Versioned change sets and semantic identity
-status: proposed
+status: accepted
 date: 2026-10-06
 ---
 

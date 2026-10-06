@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "contentHash": "26541939e54fc8919325decd4371c3732d9b065b640d6bbdc744f1caa8bb22ca",
+  "contentHash": "edc996881b04c9905d819170c35edc90e243796ae497cb4636a22b37d9de99d5",
   "contentHashAlgo": "sha256-normalized-v1",
-  "generatedAt": "2026-10-06T20:32:47.128Z",
+  "generatedAt": "2026-10-06T20:43:49.501Z",
   "project": {
     "name": "@agentskit/doc-bridge",
     "root": "."
@@ -348,7 +348,7 @@
         "document",
         "human"
       ],
-      "contentHash": "b679cb6a47fa93cf3a1e16684e48b4d261ef7bf6500a1d17d9ea275678dd6b73"
+      "contentHash": "cfb36a5ab21b275616bb296a5a007da42eec6c7342a35be3c10b559f23b0ed16"
     },
     {
       "id": "document:docs/adr/0003-study-protocol-and-historical-evidence.md",
@@ -396,7 +396,7 @@
         "document",
         "human"
       ],
-      "contentHash": "54ebb47f027127810f2b8f5126619f71fff173c305663b16d570a1ca2e4ed618"
+      "contentHash": "2686a1c78af39bfd1ff58d27a2b13efc42f0b74a713378f9eee9547747c76535"
     },
     {
       "id": "document:docs/adr/0007-longitudinal-study-metrics.md",
@@ -444,7 +444,7 @@
         "document",
         "human"
       ],
-      "contentHash": "a8bcffcf31f26a22f3d31e094e9b4d01874ba92c018c71a0725badc1876f4bfb"
+      "contentHash": "cf2f7adfad51aeac1e9f57f747358ff6a21cab20d9acc7bfd13abd6dd6e6de88"
     },
     {
       "id": "document:docs/adr/0011-findings-and-region-remediation.md",
@@ -456,7 +456,7 @@
         "document",
         "human"
       ],
-      "contentHash": "c886869cf5bd24bb601d8ad7e64ebf16d6a1f0aff8c6ae738e18a9a22be4041c"
+      "contentHash": "2dab9ef57481d08ff60307e4fc0f96807659c96c74b7902d3775ad19ecf20bc7"
     },
     {
       "id": "document:docs/adr/0012-caller-enforced-service-profile.md",
@@ -468,7 +468,7 @@
         "document",
         "human"
       ],
-      "contentHash": "b94143f4993d0229a8a68cfb648da061c9faee694250096d2b82d7f7768790e0"
+      "contentHash": "19f104d902172c617f1fbdf464a57fe553c8aa3565eb4bd6dee54b613c470962"
     },
     {
       "id": "document:docs/adr/0013-language-neutral-discovery-adapters.md",
@@ -480,7 +480,7 @@
         "document",
         "human"
       ],
-      "contentHash": "36722275710e79cb391c010a42cd49220f2e75e2f4116e833f342f3f3eb55883"
+      "contentHash": "d24ee3536361dc069e06abc8934ccd0fe8b89c9b63d7d0b1d4588e7e72935fb4"
     },
     {
       "id": "document:docs/adr/0014-pluggable-io-and-revision-partitions.md",
@@ -492,7 +492,7 @@
         "document",
         "human"
       ],
-      "contentHash": "15bc9e55ee688c70a41c7f8e5da33404fbdbaa978816af9998fefd0a36e4e9f3"
+      "contentHash": "bcf0e1b8e354c7337b6126d4493f0e2330699daea41ce7da251d9adf8642deef"
     },
     {
       "id": "document:docs/adr/0015-advisory-action-and-ci-built-index.md",
@@ -504,7 +504,7 @@
         "document",
         "human"
       ],
-      "contentHash": "ce1c4fa0dfd9bae4461f7bc1570ad210f5dff3617033d10cf8493eecb985aed1"
+      "contentHash": "68bd71a1098a1522446d99957239462eb28acfb33d99ad0d35a6ee9ad2775062"
     },
     {
       "id": "document:docs/bench/README.md",
@@ -8187,7 +8187,7 @@
     "changes": {}
   },
   "inputs": {
-    "hash": "d507b729b068b416d4f75307f1b2dcdbe7d25cf3fcc8863097b376dd8b227920",
+    "hash": "295000d0acf335426fe3d9b6b0286d59b7a11cb1f285a04799fd9bb05cf62ced",
     "fileCount": 451,
     "projectionVersion": 2
   },
@@ -8210,9 +8210,9 @@
   "projection": {
     "type": "retrieval-index",
     "schemaVersion": 1,
-    "contentHash": "39051488b1b48b873e94c96dc1bb08bcdc864055a343004ed7be56d46bc39bc5",
+    "contentHash": "b5b8d2161851fcb99489949e3144a4b0cdaf25103cb4aa53f6ad6abb834d17df",
     "contentHashAlgo": "sha256-normalized-v1",
-    "snapshotHash": "26a6ad28ca4c2d25cab79d83ea47ea7283a43b950768ea7360c7a116bf09ec88",
+    "snapshotHash": "725ec747f086174ad72e14885e0d8204f41926720b3fce5d244b11926f4eeddb",
     "overlayHash": "f99666ff9119084dd25c2974ae64eb6935ec2aa785ff5ad478fb9d541f7a5e94",
     "configurationHash": "91d46a4ecbfe3b55878e0b3c7608819775cf7b18aeafcc8f689eddfa462622b4",
     "lexiconVersion": 1,
@@ -8244,8 +8244,8 @@
       ],
       "averageFieldLength": {
         "aliases": 3.4446764091858038,
-        "body": 73.87682672233821,
-        "headings": 4.340292275574113,
+        "body": 73.9624217118998,
+        "headings": 4.34446764091858,
         "path": 5.7306889352818375,
         "summary": 6.1837160751565765,
         "symbols": 11.517745302713987,
@@ -8347,7 +8347,7 @@
           "aliases": "doc-bridge-bin area ownership"
         },
         "graph": {
-          "pagerank": 0.009113,
+          "pagerank": 0.008907,
           "inboundLinks": 1,
           "coveredBy": [
             "document:docs/agent-corpus/bin.md"
@@ -8392,7 +8392,7 @@
           "aliases": "doc-bridge-scripts area ownership"
         },
         "graph": {
-          "pagerank": 0.009113,
+          "pagerank": 0.008907,
           "inboundLinks": 1,
           "coveredBy": [
             "document:docs/agent-corpus/scripts.md"
@@ -8598,7 +8598,7 @@
           "aliases": "doc-bridge-audit area ownership"
         },
         "graph": {
-          "pagerank": 0.009113,
+          "pagerank": 0.008907,
           "inboundLinks": 1,
           "coveredBy": [
             "document:docs/agent-corpus/audit.md"
@@ -8684,7 +8684,7 @@
           "aliases": "doc-bridge-budget area ownership"
         },
         "graph": {
-          "pagerank": 0.009113,
+          "pagerank": 0.008907,
           "inboundLinks": 1,
           "coveredBy": [
             "document:docs/agent-corpus/budget.md"
@@ -8730,7 +8730,7 @@
           "aliases": "doc-bridge-cli area ownership"
         },
         "graph": {
-          "pagerank": 0.009113,
+          "pagerank": 0.008907,
           "inboundLinks": 1,
           "coveredBy": [
             "document:docs/agent-corpus/cli.md"
@@ -8776,7 +8776,7 @@
           "aliases": "doc-bridge-config area ownership"
         },
         "graph": {
-          "pagerank": 0.009113,
+          "pagerank": 0.008907,
           "inboundLinks": 1,
           "coveredBy": [
             "document:docs/agent-corpus/config.md"
@@ -8822,7 +8822,7 @@
           "aliases": "doc-bridge-conformance area ownership"
         },
         "graph": {
-          "pagerank": 0.009113,
+          "pagerank": 0.008907,
           "inboundLinks": 1,
           "coveredBy": [
             "document:docs/agent-corpus/conformance.md"
@@ -8908,7 +8908,7 @@
           "aliases": "doc-bridge-doctor area ownership"
         },
         "graph": {
-          "pagerank": 0.009113,
+          "pagerank": 0.008907,
           "inboundLinks": 2,
           "coveredBy": [
             "document:docs/agent-corpus/doctor.md"
@@ -9001,7 +9001,7 @@
           "aliases": "doc-bridge-federation area ownership"
         },
         "graph": {
-          "pagerank": 0.009113,
+          "pagerank": 0.008907,
           "inboundLinks": 1,
           "coveredBy": [
             "document:docs/agent-corpus/federation.md"
@@ -9047,7 +9047,7 @@
           "aliases": "doc-bridge-findings area ownership"
         },
         "graph": {
-          "pagerank": 0.009113,
+          "pagerank": 0.008907,
           "inboundLinks": 1,
           "coveredBy": [
             "document:docs/agent-corpus/findings.md"
@@ -9093,7 +9093,7 @@
           "aliases": "doc-bridge-fixes area ownership"
         },
         "graph": {
-          "pagerank": 0.009113,
+          "pagerank": 0.008907,
           "inboundLinks": 1,
           "coveredBy": [
             "document:docs/agent-corpus/fixes.md"
@@ -9139,7 +9139,7 @@
           "aliases": "doc-bridge-gates area ownership"
         },
         "graph": {
-          "pagerank": 0.009113,
+          "pagerank": 0.008907,
           "inboundLinks": 1,
           "coveredBy": [
             "document:docs/agent-corpus/gates.md"
@@ -9231,7 +9231,7 @@
           "aliases": "doc-bridge-index area ownership"
         },
         "graph": {
-          "pagerank": 0.009113,
+          "pagerank": 0.008907,
           "inboundLinks": 2,
           "coveredBy": [
             "document:docs/agent-corpus/INDEX.md"
@@ -9284,7 +9284,7 @@
           "aliases": "doc-bridge-chat area ownership"
         },
         "graph": {
-          "pagerank": 0.009113,
+          "pagerank": 0.008907,
           "inboundLinks": 1,
           "coveredBy": [
             "document:docs/agent-corpus/chat.md"
@@ -9330,7 +9330,7 @@
           "aliases": "doc-bridge-lib area ownership"
         },
         "graph": {
-          "pagerank": 0.009113,
+          "pagerank": 0.008907,
           "inboundLinks": 1,
           "coveredBy": [
             "document:docs/agent-corpus/lib.md"
@@ -9376,7 +9376,7 @@
           "aliases": "doc-bridge-mcp area ownership"
         },
         "graph": {
-          "pagerank": 0.009113,
+          "pagerank": 0.008907,
           "inboundLinks": 2,
           "coveredBy": [
             "document:docs/agent-corpus/mcp.md"
@@ -9429,7 +9429,7 @@
           "aliases": "doc-bridge-memory area ownership"
         },
         "graph": {
-          "pagerank": 0.009113,
+          "pagerank": 0.008907,
           "inboundLinks": 1,
           "coveredBy": [
             "document:docs/agent-corpus/memory.md"
@@ -9475,7 +9475,7 @@
           "aliases": "doc-bridge-metrics area ownership"
         },
         "graph": {
-          "pagerank": 0.009113,
+          "pagerank": 0.008907,
           "inboundLinks": 1,
           "coveredBy": [
             "document:docs/agent-corpus/metrics.md"
@@ -9521,7 +9521,7 @@
           "aliases": "doc-bridge-parity area ownership"
         },
         "graph": {
-          "pagerank": 0.009113,
+          "pagerank": 0.008907,
           "inboundLinks": 1,
           "coveredBy": [
             "document:docs/agent-corpus/parity.md"
@@ -9567,7 +9567,7 @@
           "aliases": "doc-bridge-playbook area ownership"
         },
         "graph": {
-          "pagerank": 0.009113,
+          "pagerank": 0.008907,
           "inboundLinks": 1,
           "coveredBy": [
             "document:docs/agent-corpus/playbook.md"
@@ -9613,7 +9613,7 @@
           "aliases": "doc-bridge-plugins area ownership"
         },
         "graph": {
-          "pagerank": 0.009113,
+          "pagerank": 0.008907,
           "inboundLinks": 1,
           "coveredBy": [
             "document:docs/agent-corpus/plugins.md"
@@ -9659,7 +9659,7 @@
           "aliases": "doc-bridge-query area ownership"
         },
         "graph": {
-          "pagerank": 0.009113,
+          "pagerank": 0.008907,
           "inboundLinks": 3,
           "coveredBy": [
             "document:docs/agent-corpus/query.md"
@@ -9804,7 +9804,7 @@
           "aliases": "doc-bridge-report area ownership"
         },
         "graph": {
-          "pagerank": 0.009113,
+          "pagerank": 0.008907,
           "inboundLinks": 1,
           "coveredBy": [
             "document:docs/agent-corpus/report.md"
@@ -9850,7 +9850,7 @@
           "aliases": "doc-bridge-retrieval area ownership"
         },
         "graph": {
-          "pagerank": 0.009113,
+          "pagerank": 0.008907,
           "inboundLinks": 1,
           "coveredBy": [
             "document:docs/agent-corpus/retrieval.md"
@@ -9936,7 +9936,7 @@
           "aliases": "doc-bridge-rules area ownership"
         },
         "graph": {
-          "pagerank": 0.009113,
+          "pagerank": 0.008907,
           "inboundLinks": 1,
           "coveredBy": [
             "document:docs/agent-corpus/rules.md"
@@ -9982,7 +9982,7 @@
           "aliases": "doc-bridge-safety area ownership"
         },
         "graph": {
-          "pagerank": 0.009113,
+          "pagerank": 0.008907,
           "inboundLinks": 1,
           "coveredBy": [
             "document:docs/agent-corpus/safety.md"
@@ -10028,7 +10028,7 @@
           "aliases": "doc-bridge-schemas area ownership"
         },
         "graph": {
-          "pagerank": 0.009113,
+          "pagerank": 0.008907,
           "inboundLinks": 1,
           "coveredBy": [
             "document:docs/agent-corpus/schemas.md"
@@ -10074,7 +10074,7 @@
           "aliases": "doc-bridge-shims area ownership"
         },
         "graph": {
-          "pagerank": 0.009113,
+          "pagerank": 0.008907,
           "inboundLinks": 1,
           "coveredBy": [
             "document:docs/agent-corpus/shims.md"
@@ -10278,7 +10278,7 @@
           "aliases": "document unclassified"
         },
         "graph": {
-          "pagerank": 0.004926,
+          "pagerank": 0.004815,
           "inboundLinks": 7,
           "coveredBy": [],
           "mentionedBy": [
@@ -10516,7 +10516,7 @@
           "aliases": "document project"
         },
         "graph": {
-          "pagerank": 0.005167,
+          "pagerank": 0.00505,
           "inboundLinks": 4,
           "coveredBy": [],
           "mentionedBy": [
@@ -10769,7 +10769,7 @@
           "aliases": "document unclassified"
         },
         "graph": {
-          "pagerank": 0.009182,
+          "pagerank": 0.008974,
           "inboundLinks": 5,
           "coveredBy": [],
           "mentionedBy": [
@@ -10831,7 +10831,7 @@
           "aliases": "document project"
         },
         "graph": {
-          "pagerank": 0.009354,
+          "pagerank": 0.009142,
           "inboundLinks": 5,
           "coveredBy": [],
           "mentionedBy": [
@@ -10970,15 +10970,15 @@
         ],
         "fields": {
           "title": "Documentation audit boundary",
-          "headings": "Documentation audit boundary Decision Consequences",
+          "headings": "Documentation audit boundary Decision Consequences Amendments",
           "path": "docs/adr/0002-documentation-audit-boundary.md",
           "symbols": "",
           "summary": "Doc Bridge owns a deterministic documentation audit alongside repository discovery and reconciliation. The audit reports document quality signals, package coverage, structure/documentation gaps, stale declarations, exact duplicates, generated-document freshness boundaries, and explicit analysis limitations.",
-          "body": "Documentation audit boundary Decision Doc Bridge owns a deterministic documentation audit alongside repository discovery and reconciliation. The audit reports document quality signals, package coverage, structure/documentation gaps, stale declarations, exact duplicates, generated-document freshness boundaries, and explicit analysis limitations. High-confidence findings block only when their evidence matches configured critical paths. Natural-language redundancy, unnecessary prose, and contradictions that are not represented as structured Doc Bridge claims remain not-analyzed ; a configured AgentsKit Registry agent may propose review work, but a human must approve documentation changes. Generated documentation is never edited by the audit. It receives presence and freshness-boundary evidence and must be validated by its generating check. Consequences - Reports are measurable and reproducible without an LLM. - Reconciliation remains the source of truth for observed-versus-declared relations. - Teams can raise strictness per repository without changing the engine. - Semantic quality still requires agent or human review and cannot be honestly reduced to a deterministic score.",
+          "body": "Documentation audit boundary Decision Doc Bridge owns a deterministic documentation audit alongside repository discovery and reconciliation. The audit reports document quality signals, package coverage, structure/documentation gaps, stale declarations, exact duplicates, generated-document freshness boundaries, and explicit analysis limitations. High-confidence findings block only when their evidence matches configured critical paths. Natural-language redundancy, unnecessary prose, and contradictions that are not represented as structured Doc Bridge claims remain not-analyzed ; a configured AgentsKit Registry agent may propose review work, but a human must approve documentation changes. Generated documentation is never edited by the audit. It receives presence and freshness-boundary evidence and must be validated by its generating check. Consequences - Reports are measurable and reproducible without an LLM. - Reconciliation remains the source of truth for observed-versus-declared relations. - Teams can raise strictness per repository without changing the engine. - Semantic quality still requires agent or human review and cannot be honestly reduced to a deterministic score. Amendments - narrows the human-approval clause for remediations presented in an isolated review workspace or branch: presentation there is not acceptance, and acceptance is the human approval of that review. All other clauses are unchanged.",
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0,
+          "pagerank": 0.004815,
           "inboundLinks": 3,
           "coveredBy": [],
           "mentionedBy": [
@@ -11003,9 +11003,15 @@
               "confidence": "fuzzy"
             }
           ],
-          "outbound": []
+          "outbound": [
+            {
+              "kind": "links-to",
+              "id": "document:docs/adr/0011-findings-and-region-remediation.md",
+              "confidence": "observed"
+            }
+          ]
         },
-        "contentHash": "b679cb6a47fa93cf3a1e16684e48b4d261ef7bf6500a1d17d9ea275678dd6b73",
+        "contentHash": "cfb36a5ab21b275616bb296a5a007da42eec6c7342a35be3c10b559f23b0ed16",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -11142,15 +11148,15 @@
         ],
         "fields": {
           "title": "Registry semantic review grounding boundary",
-          "headings": "Registry semantic review grounding boundary Decision Consequences",
+          "headings": "Registry semantic review grounding boundary Decision Consequences Amendments",
           "path": "docs/adr/0006-registry-semantic-grounding.md",
           "symbols": "",
           "summary": "Registry agents may classify and explain deterministic documentation findings, but their proposals must be grounded in the exact snapshot and reconciliation report supplied to the adapter. The adapter requires a known diagnostic, at least one matching evidence reference, and the installed Registry agent identity and version.",
-          "body": "Registry semantic review grounding boundary Decision Registry agents may classify and explain deterministic documentation findings, but their proposals must be grounded in the exact snapshot and reconciliation report supplied to the adapter. The adapter requires a known diagnostic, at least one matching evidence reference, and the installed Registry agent identity and version. It accepts either the default configured agent or an alternate installed agent through configuration without changing the common engine. Registry output remains advisory. Human approval is required before a proposal is converted into a fix or considered resolved, and applying a fix requires post-apply verification against the new source revision. Consequences - Unsupported claims and invented evidence fail closed at the adapter boundary. - Deterministic facts remain separate from semantic agent judgment. - Agent swaps remain configurable and attributable. - The existing fix-proposal approval and verification flow remains the single mutation path.",
+          "body": "Registry semantic review grounding boundary Decision Registry agents may classify and explain deterministic documentation findings, but their proposals must be grounded in the exact snapshot and reconciliation report supplied to the adapter. The adapter requires a known diagnostic, at least one matching evidence reference, and the installed Registry agent identity and version. It accepts either the default configured agent or an alternate installed agent through configuration without changing the common engine. Registry output remains advisory. Human approval is required before a proposal is converted into a fix or considered resolved, and applying a fix requires post-apply verification against the new source revision. Consequences - Unsupported claims and invented evidence fail closed at the adapter boundary. - Deterministic facts remain separate from semantic agent judgment. - Agent swaps remain configurable and attributable. - The existing fix-proposal approval and verification flow remains the single mutation path. Amendments - narrows the human-approval clause for remediations presented in an isolated review workspace or branch: presentation there is not acceptance, and acceptance is the human approval of that review. All other clauses are unchanged.",
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0,
+          "pagerank": 0.004815,
           "inboundLinks": 1,
           "coveredBy": [],
           "mentionedBy": [
@@ -11163,9 +11169,15 @@
               "confidence": "fuzzy"
             }
           ],
-          "outbound": []
+          "outbound": [
+            {
+              "kind": "links-to",
+              "id": "document:docs/adr/0011-findings-and-region-remediation.md",
+              "confidence": "observed"
+            }
+          ]
         },
-        "contentHash": "54ebb47f027127810f2b8f5126619f71fff173c305663b16d570a1ca2e4ed618",
+        "contentHash": "2686a1c78af39bfd1ff58d27a2b13efc42f0b74a713378f9eee9547747c76535",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -11378,7 +11390,7 @@
             }
           ]
         },
-        "contentHash": "a8bcffcf31f26a22f3d31e094e9b4d01874ba92c018c71a0725badc1876f4bfb",
+        "contentHash": "cf2f7adfad51aeac1e9f57f747358ff6a21cab20d9acc7bfd13abd6dd6e6de88",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -11400,15 +11412,26 @@
           "path": "docs/adr/0011-findings-and-region-remediation.md",
           "symbols": "",
           "summary": "The knowledge schema already defines confirmed, undocumented, stale-or-unverified, conflict, unresolved and not-analyzed, separately from severity (src/schemas/knowledge.ts:12–23). Fix application requires an approved, exactly bound proposal, checks base revision and entire affected files, then writes temporary files, renames them and rolls back on failure (src/fixes/proposals.ts:125–165).",
-          "body": "Findings and region remediation Context The knowledge schema already defines confirmed , undocumented , stale-or-unverified , conflict , unresolved and not-analyzed , separately from severity ( src/schemas/knowledge.ts:12–23 ). Fix application requires an approved, exactly bound proposal, checks base revision and entire affected files, then writes temporary files, renames them and rolls back on failure ( src/fixes/proposals.ts:125–165 ). Its displayed diff currently uses whole-file minus/plus content and a bare @@ ( src/fixes/proposals.ts:38–42 ). Enrichment retains settled human/adjudicator rejections against cache replay ( src/enrich/stage.ts:199–201 ), and approval binds proposal and target content ( docs/spec/enrichment-overlay-v1.md:195–202 ). ADR 0006 requires approval before conversion to a fix or resolution, and verification after application ( docs/adr/0006-registry-semantic-grounding.md:13 ). ADR 0002 requires human approval of documentation changes and prohibits audit edits of generated documentation ( docs/adr/0002-documentation-audit-boundary.md:13–15 ). A caller-designated isolated review workspace needs a precise presentation boundary while retaining human acceptance authority. Decision Propose separate Finding, Remediation and Decision contracts. Findings reuse the existing knowledge status taxonomy above. Their category includes ADR 0010's proven broken-reference and separate ambiguous-reference . Layer, confidence, severity, entities, bounded doc/code evidence and policy routing are independent fields. Routing ( proposed , excluded , routed-to-L2 , pending-version ) never changes a finding's epistemic status. Preserve document classification/frontmatter overrides ( docs/adr/0005-documentation-quality-and-criticality.md:11–13 ); unify classification before routing. Historical/archived documents are excluded from patches with visible coverage; suspicious migration context routes to interpretation; generated regions point to their generator; out-of-range version targets remain pending. Deterministic evidence is recorded before policy disposition. A finding ID hashes category, assertion locator (document plus cited symbol/key) and relevant evidence content, excluding revision/time. Provenance retains analyzed revisions. Remediations bind a finding/evidence hash and edits {path, range, expectedRegionHash, replacement} , with lifecycle proposed → in-review → merged , or rejected , stale , superseded . Presentation is not resolution. Decisions name an authenticated caller-supplied human identity, target kind/ID, reason and evidence hash; the engine validates binding while the caller proves identity/authority. Rejecting a finding suppresses unchanged relevant evidence until it changes. Rejecting a remediation rejects only that correction, preserving the finding and allowing a different correction. Extend enrichment's settled persistence rather than adding another replay authority. A decision that implementation should change records that disposition without automatically creating an external issue. Closing a review alone is neither approval nor individual rejection. Region validation replaces whole-file staleness only after fresh evidence validation. Keep base revision/configuration provenance; a changed revision requires an explicit revalidation/rebinding record. Hash exact region bytes under a declared algorithm and coordinate convention. First check the specified range. Relocation is allowed only when the exact original region plus recorded bounded anchors has one match within the permitted file; zero or multiple matches are stale, with no fuzzy relocation. Never relocate across files. Reject overlapping or nested edit ranges, duplicate edits, ambiguous same-offset insertions and protected/generated-region intersections before any write. Apply non-overlapping edits from the end of each file. Unrelated edits outside proven regions may survive, but do not waive evidence, scope or approval checks. Use real unified di",
+          "body": "Findings and region remediation Context The knowledge schema already defines confirmed , undocumented , stale-or-unverified , conflict , unresolved and not-analyzed , separately from severity ( src/schemas/knowledge.ts:12–23 ). Fix application requires an approved, exactly bound proposal, checks base revision and entire affected files, then writes temporary files, renames them and rolls back on failure ( src/fixes/proposals.ts:125–165 ). Its displayed diff currently uses whole-file minus/plus content and a bare @@ ( src/fixes/proposals.ts:38–42 ). Enrichment retains settled human/adjudicator rejections against cache replay ( src/enrich/stage.ts:199–201 ), and approval binds proposal and target content ( docs/spec/enrichment-overlay-v1.md:195–202 ). ADR 0006 requires approval before conversion to a fix or resolution, and verification after application ( docs/adr/0006-registry-semantic-grounding.md:13 ). ADR 0002 requires human approval of documentation changes and prohibits audit edits of generated documentation ( docs/adr/0002-documentation-audit-boundary.md:13–15 ). A caller-designated isolated review workspace needs a precise presentation boundary while retaining human acceptance authority. Decision Adopt separate Finding, Remediation and Decision contracts. Findings reuse the existing knowledge status taxonomy above. Their category includes ADR 0010's proven broken-reference and separate ambiguous-reference . Layer, confidence, severity, entities, bounded doc/code evidence and policy routing are independent fields. Routing ( proposed , excluded , routed-to-L2 , pending-version ) never changes a finding's epistemic status. Preserve document classification/frontmatter overrides ( docs/adr/0005-documentation-quality-and-criticality.md:11–13 ); unify classification before routing. Historical/archived documents are excluded from patches with visible coverage; suspicious migration context routes to interpretation; generated regions point to their generator; out-of-range version targets remain pending. Deterministic evidence is recorded before policy disposition. A finding ID hashes category, assertion locator (document plus cited symbol/key) and relevant evidence content, excluding revision/time. Provenance retains analyzed revisions. Remediations bind a finding/evidence hash and edits {path, range, expectedRegionHash, replacement} , with lifecycle proposed → in-review → merged , or rejected , stale , superseded . Presentation is not resolution. Decisions name an authenticated caller-supplied human identity, target kind/ID, reason and evidence hash; the engine validates binding while the caller proves identity/authority. Rejecting a finding suppresses unchanged relevant evidence until it changes. Rejecting a remediation rejects only that correction, preserving the finding and allowing a different correction. Extend enrichment's settled persistence rather than adding another replay authority. A decision that implementation should change records that disposition without automatically creating an external issue. Closing a review alone is neither approval nor individual rejection. Region validation replaces whole-file staleness only after fresh evidence validation. Keep base revision/configuration provenance; a changed revision requires an explicit revalidation/rebinding record. Hash exact region bytes under a declared algorithm and coordinate convention. First check the specified range. Relocation is allowed only when the exact original region plus recorded bounded anchors has one match within the permitted file; zero or multiple matches are stale, with no fuzzy relocation. Never relocate across files. Reject overlapping or nested edit ranges, duplicate edits, ambiguous same-offset insertions and protected/generated-region intersections before any write. Apply non-overlapping edits from the end of each file. Unrelated edits outside proven regions may survive, but do not waive evidence, scope or approval checks. Use real unified diff",
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0,
-          "inboundLinks": 0,
+          "pagerank": 0.013,
+          "inboundLinks": 2,
           "coveredBy": [],
           "mentionedBy": [],
-          "inbound": [],
+          "inbound": [
+            {
+              "kind": "links-to",
+              "id": "document:docs/adr/0002-documentation-audit-boundary.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "links-to",
+              "id": "document:docs/adr/0006-registry-semantic-grounding.md",
+              "confidence": "observed"
+            }
+          ],
           "outbound": [
             {
               "kind": "mentions",
@@ -11497,7 +11520,7 @@
             }
           ]
         },
-        "contentHash": "c886869cf5bd24bb601d8ad7e64ebf16d6a1f0aff8c6ae738e18a9a22be4041c",
+        "contentHash": "2dab9ef57481d08ff60307e4fc0f96807659c96c74b7902d3775ad19ecf20bc7",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -11519,7 +11542,7 @@
           "path": "docs/adr/0012-caller-enforced-service-profile.md",
           "symbols": "",
           "summary": "Configuration parsing is static, not arbitrary repository-code execution (src/config/load-config.ts:62–74, src/config/load-config.ts:105–112). That does not restrict later execution: Registry CLI invocation inherits process.env, and runner loading imports a configured local module (src/agents/registry-adapter.ts:124–126, src/agents/registry-adapter.ts:190–198).",
-          "body": "Caller-enforced service profile Context Configuration parsing is static, not arbitrary repository-code execution ( src/config/load-config.ts:62–74 , src/config/load-config.ts:105–112 ). That does not restrict later execution: Registry CLI invocation inherits process.env , and runner loading imports a configured local module ( src/agents/registry-adapter.ts:124–126 , src/agents/registry-adapter.ts:190–198 ). Configuration exposes runtime and runner modules ( docs/spec/config-v1.md:773–786 ); federation fetches URLs and memory PR promotion pushes ( src/federation/llms.ts:25–29 ; src/memory/github-pr.ts:143–144 ). Watch and local agent paths are documented CLI capabilities ( docs/spec/cli.md:67–84 ). A hosted consumer requires a caller-owned ceiling below these entry points. Decision Propose an explicit service execution profile selected by the trusted caller before configuration loading. The immutable effective capability context propagates through config, discovery, query, CLI/MCP handlers and every execution/I/O entry point. Repository data, config, nested calls, defaults and cached state cannot widen it. Direct library calls must enforce the same ceiling as the top-level API. An absent capability context in a service-bound operation fails closed. Disable repository-selected Registry runner/runtime modules, agent/study CLIs and all repository-selected executable/custom plugin modules; federation fetch; memory PR promotion; and watch. Disable implicit provider/network activation. Trusted adapters are registered by the caller, not imported from repository paths. Reads use bounded contained storage capabilities (ADR 0014); writes are limited to caller-designated artifact storage or separately authorized review presentation (ADR 0011). A service profile is an engine capability restriction, not an OS sandbox or permission to publish. Caller-managed execution environments and credentials remain outside this ADR. Use the following exact repository-config leaf allowlist; arrays/maps admit only the named member leaves. Parent objects are containers, not wildcard grants. This is a proposed restricted subset of the existing config shapes ( src/config/schema.ts:16–30 , src/config/schema.ts:184–215 , src/config/schema.ts:250–290 ): Container Permitted leaves --- --- Root schemaVersion corpus.agent root , index , include[] , exclude[] , okf.requireType , okf.allowedTypes[] audit.documentation criticalPaths[] , generatedPaths[] , exclude[] , minWords , requiredSections[] , requireExamples , exactDuplicates , defaultTier , tierRules[].pattern , tierRules[].tier , tierRules[].critical , requiredCriticalMetadata[] reconciliation scope , requiredRelationKinds[] , requiredRelationTargets , includeOrphanedDocuments analysis.areas depth , roots[] , exclude[] safety exclude[] , maxFiles , maxBytes , maxTimeMs , maxMemoryMb , redactSecrets All other repository keys are ignored with deterministic diagnostics naming key and reason, never secret values; malformed permitted values fail validation. In particular, repository config cannot select human/custom plugins, modules, output destinations, network URLs, executable checks, transport listeners or gates that execute commands. A caller may supply trusted human-document adapters, storage, gate policy and additional restrictions separately; they are not repo-key exceptions. All permitted paths/globs remain inside caller-authorized read roots; limits combine by taking the stricter bound, excludes combine by union, and redaction cannot be disabled by repository input. Repo-selected generated/excluded paths remain visible as coverage rather than silently disappearing. Apply profile-safe defaults after filtering, with execution/network disabled regardless of ordinary local defaults. Unavailable analyzers, skipped agents, ignored options and exhausted budgets retain explicit not-analyzed /partial coverage. Natural-language correctness is not relabeled deterministic when agents are unavailable ( docs/adr/0002-d",
+          "body": "Caller-enforced service profile Context Configuration parsing is static, not arbitrary repository-code execution ( src/config/load-config.ts:62–74 , src/config/load-config.ts:105–112 ). That does not restrict later execution: Registry CLI invocation inherits process.env , and runner loading imports a configured local module ( src/agents/registry-adapter.ts:124–126 , src/agents/registry-adapter.ts:190–198 ). Configuration exposes runtime and runner modules ( docs/spec/config-v1.md:773–786 ); federation fetches URLs and memory PR promotion pushes ( src/federation/llms.ts:25–29 ; src/memory/github-pr.ts:143–144 ). Watch and local agent paths are documented CLI capabilities ( docs/spec/cli.md:67–84 ). A hosted consumer requires a caller-owned ceiling below these entry points. Decision Adopt an explicit service execution profile selected by the trusted caller before configuration loading. The immutable effective capability context propagates through config, discovery, query, CLI/MCP handlers and every execution/I/O entry point. Repository data, config, nested calls, defaults and cached state cannot widen it. Direct library calls must enforce the same ceiling as the top-level API. An absent capability context in a service-bound operation fails closed. Disable repository-selected Registry runner/runtime modules, agent/study CLIs and all repository-selected executable/custom plugin modules; federation fetch; memory PR promotion; and watch. Disable implicit provider/network activation. Trusted adapters are registered by the caller, not imported from repository paths. Reads use bounded contained storage capabilities (ADR 0014); writes are limited to caller-designated artifact storage or separately authorized review presentation (ADR 0011). A service profile is an engine capability restriction, not an OS sandbox or permission to publish. Caller-managed execution environments and credentials remain outside this ADR. Use the following exact repository-config leaf allowlist; arrays/maps admit only the named member leaves. Parent objects are containers, not wildcard grants. This is a proposed restricted subset of the existing config shapes ( src/config/schema.ts:16–30 , src/config/schema.ts:184–215 , src/config/schema.ts:250–290 ): Container Permitted leaves --- --- Root schemaVersion corpus.agent root , index , include[] , exclude[] , okf.requireType , okf.allowedTypes[] audit.documentation criticalPaths[] , generatedPaths[] , exclude[] , minWords , requiredSections[] , requireExamples , exactDuplicates , defaultTier , tierRules[].pattern , tierRules[].tier , tierRules[].critical , requiredCriticalMetadata[] reconciliation scope , requiredRelationKinds[] , requiredRelationTargets , includeOrphanedDocuments analysis.areas depth , roots[] , exclude[] safety exclude[] , maxFiles , maxBytes , maxTimeMs , maxMemoryMb , redactSecrets All other repository keys are ignored with deterministic diagnostics naming key and reason, never secret values; malformed permitted values fail validation. In particular, repository config cannot select human/custom plugins, modules, output destinations, network URLs, executable checks, transport listeners or gates that execute commands. A caller may supply trusted human-document adapters, storage, gate policy and additional restrictions separately; they are not repo-key exceptions. All permitted paths/globs remain inside caller-authorized read roots; limits combine by taking the stricter bound, excludes combine by union, and redaction cannot be disabled by repository input. Repo-selected generated/excluded paths remain visible as coverage rather than silently disappearing. Apply profile-safe defaults after filtering, with execution/network disabled regardless of ordinary local defaults. Unavailable analyzers, skipped agents, ignored options and exhausted budgets retain explicit not-analyzed /partial coverage. Natural-language correctness is not relabeled deterministic when agents are unavailable ( docs/adr/0002-doc",
           "aliases": "document human"
         },
         "graph": {
@@ -11601,7 +11624,7 @@
             }
           ]
         },
-        "contentHash": "b94143f4993d0229a8a68cfb648da061c9faee694250096d2b82d7f7768790e0",
+        "contentHash": "19f104d902172c617f1fbdf464a57fe553c8aa3565eb4bd6dee54b613c470962",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -11623,7 +11646,7 @@
           "path": "docs/adr/0013-language-neutral-discovery-adapters.md",
           "symbols": "",
           "summary": "The analyzer contract declares versioned capabilities, bounded inputs, canonical output and failure coverage (docs/spec/analyzer-plugin-v1.md:8–12). Its input currently contains language/framework/file metadata/value and its strict output contains entities/relations/coverage/diagnostics (src/plugins/contract.ts:21–39).",
-          "body": "Language-neutral discovery adapters Context The analyzer contract declares versioned capabilities, bounded inputs, canonical output and failure coverage ( docs/spec/analyzer-plugin-v1.md:8–12 ). Its input currently contains language/framework/file metadata/value and its strict output contains entities/relations/coverage/diagnostics ( src/plugins/contract.ts:21–39 ). Repository discovery directly imports TypeScript and local filesystem functions ( src/discovery/repository.ts:1–4 ). The language-independent delta and version-routing proposal needs a shared discovery contract with ecosystem-owned semantics rather than more language checks in the core. Decision Propose an extended, versioned analyzer/discovery contract. Migrate JavaScript/TypeScript discovery as the first built-in plugin using it, preserving stable public entity/relation IDs and existing deterministic outputs where semantics are unchanged. The core orchestrates bounded reads, validated canonical output, snapshots, diff and delta; it must not interpret language syntax or ecosystem version ordering. Adapters declare supported capabilities and unsupported constructs, limits, schema/pipeline compatibility and their own versions. Extend responsibilities to manifest and lockfile interpretation; tag/release-event to package/version mapping; exported symbol ownership/re-exports; CLI commands/flags; configuration keys; and signatures. Preserve purl identity and vers range representation from ADR 0010, with comparison and unresolved mapping evidence delegated to the relevant ecosystem adapter. Extraction returns observed facts with bounded path/line/hash evidence, never a release inferred without an event or an arbitrary ambiguous owner. Replace free filesystem access in adapter inputs with a caller-provided bounded read abstraction tied to the exact repository/revision partition (ADR 0014). Reads enforce allowed paths, file/byte/time/memory budgets and cancellation. Repository configuration selects only caller-registered plugins in the service profile (ADR 0012). Plugin ordering and output ordering remain deterministic; malformed/failed/unsupported output becomes explicit partial or not-analyzed coverage, not completed analysis. Version the extended input/output shapes and reject incompatible manifests before execution. A fake non-JS fixture adapter is mandatory acceptance evidence: it must read a synthetic manifest/lockfile and symbol/command/config/signature facts, create base/head snapshots, then produce diff and ChangeSet output through the same core API without any core change or language-specific condition. It must demonstrate package range comparison and release mapping as adapter responsibilities. An adapter that only registers or returns an empty snapshot does not establish this boundary. Alternatives considered - Leave JS/TS in the core and add plugins only for new languages: perpetuates a second discovery pipeline. - Let adapters return arbitrary diffs: duplicates delta semantics and prevents common validation. - Give plugins unrestricted paths or executable module selection from repo config: defeats bounded reads and the service ceiling. - Add production analyzers for every language now: unnecessary to prove the contract; the fixture plus JS/TS migration is sufficient. Consequences Required follow-up contracts: evolve docs/spec/analyzer-plugin-v1.md , src/plugins/contract.ts , docs/spec/markdown-analyzer-v1.md , docs/spec/incremental-scan-v1.md , docs/spec/config-v1.md , src/schemas/knowledge.ts , docs/PRD-enterprise-hardening.md and ADR 0010's proposed versioned-delta spec. Capability/contract version changes must invalidate relevant semantic caches; unsupported analysis stays visible. Implementation acceptance must run the fixture adapter's full snapshot → diff → delta flow, compare JS/TS parity for unchanged semantics, exercise symbols/re-exports and commands/flags/config/signatures, manifest/lockfile precedence, unresolved/ambiguous release mapping, ecosyst",
+          "body": "Language-neutral discovery adapters Context The analyzer contract declares versioned capabilities, bounded inputs, canonical output and failure coverage ( docs/spec/analyzer-plugin-v1.md:8–12 ). Its input currently contains language/framework/file metadata/value and its strict output contains entities/relations/coverage/diagnostics ( src/plugins/contract.ts:21–39 ). Repository discovery directly imports TypeScript and local filesystem functions ( src/discovery/repository.ts:1–4 ). The language-independent delta and version-routing proposal needs a shared discovery contract with ecosystem-owned semantics rather than more language checks in the core. Decision Adopt an extended, versioned analyzer/discovery contract. Migrate JavaScript/TypeScript discovery as the first built-in plugin using it, preserving stable public entity/relation IDs and existing deterministic outputs where semantics are unchanged. The core orchestrates bounded reads, validated canonical output, snapshots, diff and delta; it must not interpret language syntax or ecosystem version ordering. Adapters declare supported capabilities and unsupported constructs, limits, schema/pipeline compatibility and their own versions. Extend responsibilities to manifest and lockfile interpretation; tag/release-event to package/version mapping; exported symbol ownership/re-exports; CLI commands/flags; configuration keys; and signatures. Preserve purl identity and vers range representation from ADR 0010, with comparison and unresolved mapping evidence delegated to the relevant ecosystem adapter. Extraction returns observed facts with bounded path/line/hash evidence, never a release inferred without an event or an arbitrary ambiguous owner. Replace free filesystem access in adapter inputs with a caller-provided bounded read abstraction tied to the exact repository/revision partition (ADR 0014). Reads enforce allowed paths, file/byte/time/memory budgets and cancellation. Repository configuration selects only caller-registered plugins in the service profile (ADR 0012). Plugin ordering and output ordering remain deterministic; malformed/failed/unsupported output becomes explicit partial or not-analyzed coverage, not completed analysis. Version the extended input/output shapes and reject incompatible manifests before execution. A fake non-JS fixture adapter is mandatory acceptance evidence: it must read a synthetic manifest/lockfile and symbol/command/config/signature facts, create base/head snapshots, then produce diff and ChangeSet output through the same core API without any core change or language-specific condition. It must demonstrate package range comparison and release mapping as adapter responsibilities. An adapter that only registers or returns an empty snapshot does not establish this boundary. Alternatives considered - Leave JS/TS in the core and add plugins only for new languages: perpetuates a second discovery pipeline. - Let adapters return arbitrary diffs: duplicates delta semantics and prevents common validation. - Give plugins unrestricted paths or executable module selection from repo config: defeats bounded reads and the service ceiling. - Add production analyzers for every language now: unnecessary to prove the contract; the fixture plus JS/TS migration is sufficient. Consequences Required follow-up contracts: evolve docs/spec/analyzer-plugin-v1.md , src/plugins/contract.ts , docs/spec/markdown-analyzer-v1.md , docs/spec/incremental-scan-v1.md , docs/spec/config-v1.md , src/schemas/knowledge.ts , docs/PRD-enterprise-hardening.md and ADR 0010's proposed versioned-delta spec. Capability/contract version changes must invalidate relevant semantic caches; unsupported analysis stays visible. Implementation acceptance must run the fixture adapter's full snapshot → diff → delta flow, compare JS/TS parity for unchanged semantics, exercise symbols/re-exports and commands/flags/config/signatures, manifest/lockfile precedence, unresolved/ambiguous release mapping, ecosystem",
           "aliases": "document human"
         },
         "graph": {
@@ -11675,7 +11698,7 @@
             }
           ]
         },
-        "contentHash": "36722275710e79cb391c010a42cd49220f2e75e2f4116e833f342f3f3eb55883",
+        "contentHash": "d24ee3536361dc069e06abc8934ccd0fe8b89c9b63d7d0b1d4588e7e72935fb4",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -11754,7 +11777,7 @@
             }
           ]
         },
-        "contentHash": "15bc9e55ee688c70a41c7f8e5da33404fbdbaa978816af9998fefd0a36e4e9f3",
+        "contentHash": "bcf0e1b8e354c7337b6126d4493f0e2330699daea41ce7da251d9adf8642deef",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -11818,7 +11841,7 @@
             }
           ]
         },
-        "contentHash": "ce1c4fa0dfd9bae4461f7bc1570ad210f5dff3617033d10cf8493eecb985aed1",
+        "contentHash": "68bd71a1098a1522446d99957239462eb28acfb33d99ad0d35a6ee9ad2775062",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -11847,7 +11870,7 @@
           "aliases": "doc-bridge-audit document human module"
         },
         "graph": {
-          "pagerank": 0.004926,
+          "pagerank": 0.004815,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -11899,7 +11922,7 @@
           "aliases": "doc-bridge-bin document human module"
         },
         "graph": {
-          "pagerank": 0.004926,
+          "pagerank": 0.004815,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -11956,7 +11979,7 @@
           "aliases": "doc-bridge-budget document human module"
         },
         "graph": {
-          "pagerank": 0.004926,
+          "pagerank": 0.004815,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -12008,7 +12031,7 @@
           "aliases": "doc-bridge-chat document human module"
         },
         "graph": {
-          "pagerank": 0.004926,
+          "pagerank": 0.004815,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -12050,7 +12073,7 @@
           "aliases": "doc-bridge-cli document human module"
         },
         "graph": {
-          "pagerank": 0.004926,
+          "pagerank": 0.004815,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -12092,7 +12115,7 @@
           "aliases": "doc-bridge-config document human module"
         },
         "graph": {
-          "pagerank": 0.004926,
+          "pagerank": 0.004815,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -12154,7 +12177,7 @@
           "aliases": "doc-bridge-conformance document human module"
         },
         "graph": {
-          "pagerank": 0.004926,
+          "pagerank": 0.004815,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -12196,7 +12219,7 @@
           "aliases": "@agentskit/doc-bridge document human package"
         },
         "graph": {
-          "pagerank": 0.004926,
+          "pagerank": 0.004815,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -12288,7 +12311,7 @@
           "aliases": "doc-bridge-doctor document human module"
         },
         "graph": {
-          "pagerank": 0.004926,
+          "pagerank": 0.004815,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -12330,7 +12353,7 @@
           "aliases": "doc-bridge-federation document human module"
         },
         "graph": {
-          "pagerank": 0.004926,
+          "pagerank": 0.004815,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -12377,7 +12400,7 @@
           "aliases": "doc-bridge-findings document human module"
         },
         "graph": {
-          "pagerank": 0.004926,
+          "pagerank": 0.004815,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -12434,7 +12457,7 @@
           "aliases": "doc-bridge-fixes document human module"
         },
         "graph": {
-          "pagerank": 0.004926,
+          "pagerank": 0.004815,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -12486,7 +12509,7 @@
           "aliases": "doc-bridge-gates document human module"
         },
         "graph": {
-          "pagerank": 0.004926,
+          "pagerank": 0.004815,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -12528,7 +12551,7 @@
           "aliases": "doc-bridge-index document human module"
         },
         "graph": {
-          "pagerank": 0.004926,
+          "pagerank": 0.004815,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -12580,7 +12603,7 @@
           "aliases": "doc-bridge-lib document human module"
         },
         "graph": {
-          "pagerank": 0.004926,
+          "pagerank": 0.004815,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -12632,7 +12655,7 @@
           "aliases": "doc-bridge-mcp document human module"
         },
         "graph": {
-          "pagerank": 0.004926,
+          "pagerank": 0.004815,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -12689,7 +12712,7 @@
           "aliases": "doc-bridge-memory document human module"
         },
         "graph": {
-          "pagerank": 0.004926,
+          "pagerank": 0.004815,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -12731,7 +12754,7 @@
           "aliases": "doc-bridge-metrics document human module"
         },
         "graph": {
-          "pagerank": 0.004926,
+          "pagerank": 0.004815,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -12822,7 +12845,7 @@
           "aliases": "doc-bridge-parity document human module"
         },
         "graph": {
-          "pagerank": 0.004926,
+          "pagerank": 0.004815,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -12874,7 +12897,7 @@
           "aliases": "doc-bridge-playbook document human module"
         },
         "graph": {
-          "pagerank": 0.004926,
+          "pagerank": 0.004815,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -12921,7 +12944,7 @@
           "aliases": "doc-bridge-plugins document human module"
         },
         "graph": {
-          "pagerank": 0.004926,
+          "pagerank": 0.004815,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -12968,7 +12991,7 @@
           "aliases": "doc-bridge-query document human module"
         },
         "graph": {
-          "pagerank": 0.004926,
+          "pagerank": 0.004815,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -13040,7 +13063,7 @@
           "aliases": "doc-bridge-report document human module"
         },
         "graph": {
-          "pagerank": 0.004926,
+          "pagerank": 0.004815,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -13087,7 +13110,7 @@
           "aliases": "doc-bridge-retrieval document human module"
         },
         "graph": {
-          "pagerank": 0.004926,
+          "pagerank": 0.004815,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -13149,7 +13172,7 @@
           "aliases": "doc-bridge-rules document human module"
         },
         "graph": {
-          "pagerank": 0.004926,
+          "pagerank": 0.004815,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -13206,7 +13229,7 @@
           "aliases": "doc-bridge-safety document human module"
         },
         "graph": {
-          "pagerank": 0.004926,
+          "pagerank": 0.004815,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -13253,7 +13276,7 @@
           "aliases": "doc-bridge-schemas document human module"
         },
         "graph": {
-          "pagerank": 0.004926,
+          "pagerank": 0.004815,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -13315,7 +13338,7 @@
           "aliases": "doc-bridge-scripts document human module"
         },
         "graph": {
-          "pagerank": 0.004926,
+          "pagerank": 0.004815,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -13362,7 +13385,7 @@
           "aliases": "doc-bridge-shims document human module"
         },
         "graph": {
-          "pagerank": 0.004926,
+          "pagerank": 0.004815,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -13401,7 +13424,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.008274,
+          "pagerank": 0.008087,
           "inboundLinks": 2,
           "coveredBy": [],
           "mentionedBy": [],
@@ -13461,7 +13484,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.015723,
+          "pagerank": 0.015367,
           "inboundLinks": 10,
           "coveredBy": [],
           "mentionedBy": [
@@ -13596,7 +13619,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.00841,
+          "pagerank": 0.008219,
           "inboundLinks": 5,
           "coveredBy": [],
           "mentionedBy": [
@@ -13673,7 +13696,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.013463,
+          "pagerank": 0.013159,
           "inboundLinks": 9,
           "coveredBy": [],
           "mentionedBy": [
@@ -13777,7 +13800,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.015535,
+          "pagerank": 0.015183,
           "inboundLinks": 7,
           "coveredBy": [],
           "mentionedBy": [
@@ -13914,7 +13937,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.004926,
+          "pagerank": 0.004815,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -13978,7 +14001,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.009129,
+          "pagerank": 0.008922,
           "inboundLinks": 4,
           "coveredBy": [],
           "mentionedBy": [],
@@ -14073,7 +14096,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.013518,
+          "pagerank": 0.013212,
           "inboundLinks": 7,
           "coveredBy": [],
           "mentionedBy": [
@@ -14165,7 +14188,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.018016,
+          "pagerank": 0.017608,
           "inboundLinks": 9,
           "coveredBy": [],
           "mentionedBy": [],
@@ -14275,7 +14298,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.014965,
+          "pagerank": 0.014626,
           "inboundLinks": 6,
           "coveredBy": [],
           "mentionedBy": [],
@@ -14370,7 +14393,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.01777,
+          "pagerank": 0.017367,
           "inboundLinks": 8,
           "coveredBy": [],
           "mentionedBy": [],
@@ -14470,7 +14493,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.00875,
+          "pagerank": 0.008552,
           "inboundLinks": 4,
           "coveredBy": [],
           "mentionedBy": [],
@@ -14550,7 +14573,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.004926,
+          "pagerank": 0.004815,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -14779,7 +14802,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.008443,
+          "pagerank": 0.008251,
           "inboundLinks": 1,
           "coveredBy": [],
           "mentionedBy": [],
@@ -14931,7 +14954,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.015073,
+          "pagerank": 0.014732,
           "inboundLinks": 6,
           "coveredBy": [],
           "mentionedBy": [
@@ -15013,7 +15036,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.013114,
+          "pagerank": 0.012817,
           "inboundLinks": 8,
           "coveredBy": [],
           "mentionedBy": [
@@ -15127,7 +15150,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.019505,
+          "pagerank": 0.019063,
           "inboundLinks": 4,
           "coveredBy": [],
           "mentionedBy": [
@@ -15184,7 +15207,7 @@
           "aliases": "document human pattern"
         },
         "graph": {
-          "pagerank": 0.009461,
+          "pagerank": 0.009247,
           "inboundLinks": 6,
           "coveredBy": [],
           "mentionedBy": [
@@ -15258,7 +15281,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.014174,
+          "pagerank": 0.013854,
           "inboundLinks": 6,
           "coveredBy": [],
           "mentionedBy": [
@@ -15879,7 +15902,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.005033,
+          "pagerank": 0.00492,
           "inboundLinks": 1,
           "coveredBy": [],
           "mentionedBy": [],
@@ -15979,7 +16002,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.005274,
+          "pagerank": 0.005155,
           "inboundLinks": 4,
           "coveredBy": [],
           "mentionedBy": [
@@ -16042,7 +16065,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.006953,
+          "pagerank": 0.006796,
           "inboundLinks": 2,
           "coveredBy": [],
           "mentionedBy": [
@@ -16104,7 +16127,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.014631,
+          "pagerank": 0.0143,
           "inboundLinks": 7,
           "coveredBy": [],
           "mentionedBy": [
@@ -16191,7 +16214,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.008274,
+          "pagerank": 0.008087,
           "inboundLinks": 5,
           "coveredBy": [],
           "mentionedBy": [
@@ -16280,7 +16303,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.009334,
+          "pagerank": 0.009123,
           "inboundLinks": 2,
           "coveredBy": [],
           "mentionedBy": [],
@@ -16340,7 +16363,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.020682,
+          "pagerank": 0.020214,
           "inboundLinks": 8,
           "coveredBy": [],
           "mentionedBy": [
@@ -16522,7 +16545,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.017521,
+          "pagerank": 0.017125,
           "inboundLinks": 16,
           "coveredBy": [],
           "mentionedBy": [
@@ -16681,7 +16704,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.024051,
+          "pagerank": 0.023507,
           "inboundLinks": 15,
           "coveredBy": [],
           "mentionedBy": [
@@ -16878,7 +16901,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.005033,
+          "pagerank": 0.00492,
           "inboundLinks": 3,
           "coveredBy": [],
           "mentionedBy": [
@@ -16930,7 +16953,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.010719,
+          "pagerank": 0.010477,
           "inboundLinks": 2,
           "coveredBy": [],
           "mentionedBy": [],
@@ -16980,7 +17003,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.011092,
+          "pagerank": 0.010841,
           "inboundLinks": 5,
           "coveredBy": [],
           "mentionedBy": [
@@ -17144,7 +17167,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.005033,
+          "pagerank": 0.00492,
           "inboundLinks": 1,
           "coveredBy": [],
           "mentionedBy": [],
@@ -17199,7 +17222,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.005033,
+          "pagerank": 0.00492,
           "inboundLinks": 5,
           "coveredBy": [],
           "mentionedBy": [
@@ -17263,7 +17286,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.008621,
+          "pagerank": 0.008426,
           "inboundLinks": 5,
           "coveredBy": [],
           "mentionedBy": [
@@ -17326,7 +17349,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.006626,
+          "pagerank": 0.006476,
           "inboundLinks": 5,
           "coveredBy": [],
           "mentionedBy": [
@@ -17430,7 +17453,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.007127,
+          "pagerank": 0.006966,
           "inboundLinks": 2,
           "coveredBy": [],
           "mentionedBy": [],
@@ -17530,7 +17553,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.004926,
+          "pagerank": 0.004815,
           "inboundLinks": 0,
           "coveredBy": [],
           "mentionedBy": [],
@@ -17574,7 +17597,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.005033,
+          "pagerank": 0.00492,
           "inboundLinks": 3,
           "coveredBy": [],
           "mentionedBy": [
@@ -17686,7 +17709,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.012918,
+          "pagerank": 0.012626,
           "inboundLinks": 4,
           "coveredBy": [],
           "mentionedBy": [
@@ -17773,7 +17796,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.008978,
+          "pagerank": 0.008775,
           "inboundLinks": 6,
           "coveredBy": [],
           "mentionedBy": [
@@ -17902,7 +17925,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.005033,
+          "pagerank": 0.00492,
           "inboundLinks": 1,
           "coveredBy": [],
           "mentionedBy": [],
@@ -17947,7 +17970,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.005033,
+          "pagerank": 0.00492,
           "inboundLinks": 1,
           "coveredBy": [],
           "mentionedBy": [],
@@ -17992,7 +18015,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.009312,
+          "pagerank": 0.009101,
           "inboundLinks": 2,
           "coveredBy": [],
           "mentionedBy": [],
@@ -18042,7 +18065,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.005033,
+          "pagerank": 0.00492,
           "inboundLinks": 1,
           "coveredBy": [],
           "mentionedBy": [],
@@ -18092,7 +18115,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.005033,
+          "pagerank": 0.00492,
           "inboundLinks": 1,
           "coveredBy": [],
           "mentionedBy": [],
@@ -18137,7 +18160,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.005033,
+          "pagerank": 0.00492,
           "inboundLinks": 1,
           "coveredBy": [],
           "mentionedBy": [],
@@ -18192,7 +18215,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.005808,
+          "pagerank": 0.005676,
           "inboundLinks": 1,
           "coveredBy": [],
           "mentionedBy": [],
@@ -18231,7 +18254,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.005915,
+          "pagerank": 0.005781,
           "inboundLinks": 2,
           "coveredBy": [],
           "mentionedBy": [],
@@ -18275,7 +18298,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.010745,
+          "pagerank": 0.010502,
           "inboundLinks": 2,
           "coveredBy": [],
           "mentionedBy": [],
@@ -18383,7 +18406,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.007262,
+          "pagerank": 0.007097,
           "inboundLinks": 5,
           "coveredBy": [],
           "mentionedBy": [
@@ -18481,7 +18504,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.005033,
+          "pagerank": 0.00492,
           "inboundLinks": 1,
           "coveredBy": [],
           "mentionedBy": [],
@@ -18520,7 +18543,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.005808,
+          "pagerank": 0.005676,
           "inboundLinks": 1,
           "coveredBy": [],
           "mentionedBy": [],
@@ -18559,7 +18582,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.005808,
+          "pagerank": 0.005676,
           "inboundLinks": 1,
           "coveredBy": [],
           "mentionedBy": [],
@@ -18598,7 +18621,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.005808,
+          "pagerank": 0.005676,
           "inboundLinks": 1,
           "coveredBy": [],
           "mentionedBy": [],
@@ -18670,7 +18693,7 @@
           "aliases": "document human"
         },
         "graph": {
-          "pagerank": 0.005808,
+          "pagerank": 0.005676,
           "inboundLinks": 1,
           "coveredBy": [],
           "mentionedBy": [],
@@ -18786,7 +18809,7 @@
           "aliases": "document unclassified"
         },
         "graph": {
-          "pagerank": 0.007154,
+          "pagerank": 0.006992,
           "inboundLinks": 4,
           "coveredBy": [],
           "mentionedBy": [
@@ -18878,7 +18901,7 @@
           "aliases": "document unclassified"
         },
         "graph": {
-          "pagerank": 0.005167,
+          "pagerank": 0.00505,
           "inboundLinks": 2,
           "coveredBy": [],
           "mentionedBy": [
@@ -18939,7 +18962,7 @@
           "aliases": "document unclassified"
         },
         "graph": {
-          "pagerank": 0.005167,
+          "pagerank": 0.00505,
           "inboundLinks": 1,
           "coveredBy": [],
           "mentionedBy": [],
@@ -18978,7 +19001,7 @@
           "aliases": "document project"
         },
         "graph": {
-          "pagerank": 0.005942,
+          "pagerank": 0.005807,
           "inboundLinks": 3,
           "coveredBy": [],
           "mentionedBy": [
@@ -19241,7 +19264,7 @@
           "aliases": "document project"
         },
         "graph": {
-          "pagerank": 0.009182,
+          "pagerank": 0.008974,
           "inboundLinks": 6,
           "coveredBy": [],
           "mentionedBy": [
@@ -19347,7 +19370,7 @@
           "aliases": "document unclassified"
         },
         "graph": {
-          "pagerank": 0.005167,
+          "pagerank": 0.00505,
           "inboundLinks": 2,
           "coveredBy": [],
           "mentionedBy": [
@@ -42534,7 +42557,7 @@
           "aliases": "doc-bridge @agentskit/doc-bridge package"
         },
         "graph": {
-          "pagerank": 0.00702,
+          "pagerank": 0.006861,
           "inboundLinks": 14,
           "coveredBy": [
             "document:docs/agent-corpus/doc-bridge.md"

@@ -1,6 +1,6 @@
 ---
 title: Caller-enforced service profile
-status: proposed
+status: accepted
 date: 2026-10-06
 ---
 
@@ -12,7 +12,7 @@ Configuration parsing is static, not arbitrary repository-code execution (`src/c
 
 ## Decision
 
-Propose an explicit service execution profile selected by the trusted caller before configuration loading. The immutable effective capability context propagates through config, discovery, query, CLI/MCP handlers and every execution/I/O entry point. Repository data, config, nested calls, defaults and cached state cannot widen it. Direct library calls must enforce the same ceiling as the top-level API. An absent capability context in a service-bound operation fails closed.
+Adopt an explicit service execution profile selected by the trusted caller before configuration loading. The immutable effective capability context propagates through config, discovery, query, CLI/MCP handlers and every execution/I/O entry point. Repository data, config, nested calls, defaults and cached state cannot widen it. Direct library calls must enforce the same ceiling as the top-level API. An absent capability context in a service-bound operation fails closed.
 
 Disable repository-selected Registry runner/runtime modules, agent/study CLIs and all repository-selected executable/custom plugin modules; federation fetch; memory PR promotion; and watch. Disable implicit provider/network activation. Trusted adapters are registered by the caller, not imported from repository paths. Reads use bounded contained storage capabilities (ADR 0014); writes are limited to caller-designated artifact storage or separately authorized review presentation (ADR 0011). A service profile is an engine capability restriction, not an OS sandbox or permission to publish. Caller-managed execution environments and credentials remain outside this ADR.
 

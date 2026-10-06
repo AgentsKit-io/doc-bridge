@@ -1,6 +1,6 @@
 ---
 title: Language-neutral discovery adapters
-status: proposed
+status: accepted
 date: 2026-10-06
 ---
 
@@ -12,7 +12,7 @@ The analyzer contract declares versioned capabilities, bounded inputs, canonical
 
 ## Decision
 
-Propose an extended, versioned analyzer/discovery contract. Migrate JavaScript/TypeScript discovery as the first built-in plugin using it, preserving stable public entity/relation IDs and existing deterministic outputs where semantics are unchanged. The core orchestrates bounded reads, validated canonical output, snapshots, diff and delta; it must not interpret language syntax or ecosystem version ordering.
+Adopt an extended, versioned analyzer/discovery contract. Migrate JavaScript/TypeScript discovery as the first built-in plugin using it, preserving stable public entity/relation IDs and existing deterministic outputs where semantics are unchanged. The core orchestrates bounded reads, validated canonical output, snapshots, diff and delta; it must not interpret language syntax or ecosystem version ordering.
 
 Adapters declare supported capabilities and unsupported constructs, limits, schema/pipeline compatibility and their own versions. Extend responsibilities to manifest and lockfile interpretation; tag/release-event to package/version mapping; exported symbol ownership/re-exports; CLI commands/flags; configuration keys; and signatures. Preserve purl identity and vers range representation from ADR 0010, with comparison and unresolved mapping evidence delegated to the relevant ecosystem adapter. Extraction returns observed facts with bounded path/line/hash evidence, never a release inferred without an event or an arbitrary ambiguous owner.
 

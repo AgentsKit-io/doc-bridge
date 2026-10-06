@@ -1,6 +1,6 @@
 ---
 title: Findings and region remediation
-status: proposed
+status: accepted
 date: 2026-10-06
 ---
 
@@ -14,7 +14,7 @@ ADR 0006 requires approval before conversion to a fix or resolution, and verific
 
 ## Decision
 
-Propose separate Finding, Remediation and Decision contracts. Findings reuse the existing knowledge status taxonomy above. Their category includes ADR 0010's proven `broken-reference` and separate `ambiguous-reference`. Layer, confidence, severity, entities, bounded doc/code evidence and policy routing are independent fields. Routing (`proposed`, `excluded`, `routed-to-L2`, `pending-version`) never changes a finding's epistemic status. Preserve document classification/frontmatter overrides (`docs/adr/0005-documentation-quality-and-criticality.md:11–13`); unify classification before routing. Historical/archived documents are excluded from patches with visible coverage; suspicious migration context routes to interpretation; generated regions point to their generator; out-of-range version targets remain pending. Deterministic evidence is recorded before policy disposition.
+Adopt separate Finding, Remediation and Decision contracts. Findings reuse the existing knowledge status taxonomy above. Their category includes ADR 0010's proven `broken-reference` and separate `ambiguous-reference`. Layer, confidence, severity, entities, bounded doc/code evidence and policy routing are independent fields. Routing (`proposed`, `excluded`, `routed-to-L2`, `pending-version`) never changes a finding's epistemic status. Preserve document classification/frontmatter overrides (`docs/adr/0005-documentation-quality-and-criticality.md:11–13`); unify classification before routing. Historical/archived documents are excluded from patches with visible coverage; suspicious migration context routes to interpretation; generated regions point to their generator; out-of-range version targets remain pending. Deterministic evidence is recorded before policy disposition.
 
 A finding ID hashes category, assertion locator (document plus cited symbol/key) and relevant evidence content, excluding revision/time. Provenance retains analyzed revisions. Remediations bind a finding/evidence hash and edits `{path, range, expectedRegionHash, replacement}`, with lifecycle `proposed → in-review → merged`, or `rejected`, `stale`, `superseded`. Presentation is not resolution. Decisions name an authenticated caller-supplied human identity, target kind/ID, reason and evidence hash; the engine validates binding while the caller proves identity/authority.
 
@@ -26,13 +26,13 @@ Use real unified diff hunks with line counts, context and no-final-newline marke
 
 ### Narrow approval-boundary supersession
 
-Upon acceptance of this proposed ADR, narrowly supersede only ADR 0006's requirement that human approval precede conversion into a fix (`docs/adr/0006-registry-semantic-grounding.md:13`) **for presentation in an isolated, caller-designated review workspace/branch**. Such application presents the proposal; it does not accept it. The workspace/branch must be unable to reach the default branch without human approval. The trusted caller supplies and enforces that isolation and the engine fails closed if the review mode's boundary cannot be established. No caller config or agent output may assert acceptance. All ordinary local/default-branch application retains prior human approval. Resolution still requires human acceptance and passing current post-apply verification.
+This ADR narrowly supersedes only ADR 0006's requirement that human approval precede conversion into a fix (`docs/adr/0006-registry-semantic-grounding.md:13`) **for presentation in an isolated, caller-designated review workspace/branch**. Such application presents the proposal; it does not accept it. The workspace/branch must be unable to reach the default branch without human approval. The trusted caller supplies and enforces that isolation and the engine fails closed if the review mode's boundary cannot be established. No caller config or agent output may assert acceptance. All ordinary local/default-branch application retains prior human approval. Resolution still requires human acceptance and passing current post-apply verification.
 
-Clarify only ADR 0002's human-approval clause (`docs/adr/0002-documentation-audit-boundary.md:13`): human approval of that isolated review, for example a merge, is acceptance of the documentation change. The audit itself remains read-only and generated regions remain protected. Every other clause of ADRs 0002 and 0006 remains unchanged, including grounding, advisory output and post-apply verification. Extend the existing single mutation path with an explicit review-presentation mode; do not introduce an approval bypass for ordinary fixes. This proposed supersession has no effect until maintainer acceptance.
+Clarify only ADR 0002's human-approval clause (`docs/adr/0002-documentation-audit-boundary.md:13`): human approval of that isolated review, for example a merge, is acceptance of the documentation change. The audit itself remains read-only and generated regions remain protected. Every other clause of ADRs 0002 and 0006 remains unchanged, including grounding, advisory output and post-apply verification. Extend the existing single mutation path with an explicit review-presentation mode; do not introduce an approval bypass for ordinary fixes.
 
 ### Handoff compatibility
 
-Propose optional bounded `caveats` on `AgentHandoffV1` for pending findings, analyzed repository/revision identities and coverage. The current schema has no such field and is strict (`src/schemas/agent-handoff.ts:62–102`), so optionality alone is not bidirectional compatibility. New readers must accept legacy payloads. New writers emit `caveats` only after explicit caller opt-in or consumer capability negotiation; legacy strict readers receive the legacy field set, including embedded handoffs in indexes and MCP responses. Unknown consumer capability defaults to legacy emission. Caveats cannot invent answers or turn missing analysis into success.
+Add optional bounded `caveats` on `AgentHandoffV1` for pending findings, analyzed repository/revision identities and coverage. The current schema has no such field and is strict (`src/schemas/agent-handoff.ts:62–102`), so optionality alone is not bidirectional compatibility. New readers must accept legacy payloads. New writers emit `caveats` only after explicit caller opt-in or consumer capability negotiation; legacy strict readers receive the legacy field set, including embedded handoffs in indexes and MCP responses. Unknown consumer capability defaults to legacy emission. Caveats cannot invent answers or turn missing analysis into success.
 
 ## Alternatives considered
 

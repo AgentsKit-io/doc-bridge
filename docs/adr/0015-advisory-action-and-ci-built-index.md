@@ -1,6 +1,6 @@
 ---
 title: Advisory Action and CI-built index
-status: proposed
+status: accepted
 date: 2026-10-06
 ---
 
