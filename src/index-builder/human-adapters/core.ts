@@ -1,3 +1,4 @@
+import { repositoryWalk, repositoryBoundedText, type RepositoryFiles } from '../repository-io.js'
 import { realpathSync } from 'node:fs'
 import { isAbsolute, relative, resolve, sep } from 'node:path'
 import { normalizeEol, splitLines } from '@agentskit/cross-platform'
@@ -19,6 +20,7 @@ export type HumanDocMap = Record<string, string>
 export type HumanAdapterContext = {
   readonly root: string
   readonly config: HumanCorpusConfig
+  readonly files?: RepositoryFiles
 }
 
 export type HumanAdapter = {
@@ -82,22 +84,23 @@ export const scanMarkdownDocs = (
     readonly urlPrefix?: unknown
     readonly stripGroups?: boolean
   },
+  files?: RepositoryFiles,
 ): HumanDocRecord[] => {
   const out: HumanDocRecord[] = []
-  const projectRoot = realpathSync.native(resolve(root))
-  const absRoot = containedProjectPath(root, humanRoot)
+  const projectRoot = files ? root : realpathSync.native(resolve(root))
+  const absRoot = files ? resolve(root, humanRoot) : containedProjectPath(root, humanRoot)
   if (!absRoot) return out
   const budget = { used: 0 }
 
-  for (const abs of walkFiles(absRoot, { extensions: ['.md', '.mdx'] })) {
-    const canonical = realpathSync.native(abs)
+  for (const abs of (files ? repositoryWalk(files, root, absRoot, ['.md', '.mdx']) : walkFiles(absRoot, { extensions: ['.md', '.mdx'] }))) {
+    const canonical = files ? abs : realpathSync.native(abs)
     const fileRelative = relative(projectRoot, canonical)
     if (isAbsolute(fileRelative) || fileRelative === '..' || fileRelative.startsWith(`..${sep}`)) continue
     // Both sides must be toPosix'd before stripping the prefix: `abs` is native-separator
     // (backslashes on Windows), so comparing it raw against a toPosix'd `absRoot` never
     // matches there, silently leaving relToHumanRoot as the full absolute path.
     const relToHumanRoot = toPosix(abs).replace(`${toPosix(absRoot)}/`, '')
-    const raw = readBoundedText(abs, budget)
+    const raw = files ? repositoryBoundedText(files, root, abs, budget) : readBoundedText(abs, budget)
     if (options?.includeRelPath && !options.includeRelPath(relToHumanRoot, raw)) continue
     out.push({
       id: options?.idForDoc?.(relToHumanRoot, raw) ?? docId(relToHumanRoot, raw),

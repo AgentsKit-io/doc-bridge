@@ -1,3 +1,5 @@
+import type { ArtifactIOV1, StorageRequest } from '../storage/contract.js'
+import { readJsonArtifact, writeJsonArtifact } from '../index-builder/artifact-io.js'
 import { appendFileSync, existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs'
 import { join, relative, resolve } from 'node:path'
 
@@ -317,3 +319,24 @@ export const runWorkflow = (options: WorkflowOptions): WorkflowExecutionResult =
 export const loadWorkflowManifest = (stateDir: string): WorkflowRunV1 => WorkflowRunV1Schema.parse(JSON.parse(readFileSync(join(resolve(stateDir), 'manifest.json'), 'utf8')) as unknown)
 
 export const loadWorkflowStepOutput = (stateDir: string, stage: WorkflowStage): unknown => stepOutput(resolve(stateDir), loadWorkflowManifest(stateDir), stage)
+
+/** Manifest persistence for injected callers; local workflow execution/locking is unchanged. */
+export const readStoredWorkflowManifest = (io: ArtifactIOV1, request: StorageRequest, name = 'manifest') => readJsonArtifact(io, request, { kind: 'workflow', name }, 'WorkflowRunV1', value => {
+  const run = WorkflowRunV1Schema.parse(value)
+  if (run.contentHash !== contentHashForArtifactV1(run)) throw new Error('Invalid workflow manifest hash')
+  if (run.sourceRevision !== request.partition.revision) throw new Error('Workflow revision mismatch')
+  return run
+})
+export const writeStoredWorkflowManifest = (io: ArtifactIOV1, request: StorageRequest, run: WorkflowRunV1, expectedPreviousByteHash: string | null, name = 'manifest') => {
+  const parsed = WorkflowRunV1Schema.parse(run)
+  if (parsed.contentHash !== contentHashForArtifactV1(parsed)) return Promise.resolve({ status: 'mismatch', code: 'CONTENT_MISMATCH' } as const)
+  if (parsed.sourceRevision !== request.partition.revision) return Promise.resolve({ status: 'denied', code: 'PARTITION_MISMATCH' } as const)
+  return writeJsonArtifact(io, request, { kind: 'workflow', name }, 'WorkflowRunV1', parsed, expectedPreviousByteHash)
+}
+
+export const readStoredWorkflowStep = (io: ArtifactIOV1, request: StorageRequest, stage: WorkflowStage, step: WorkflowStep) => readJsonArtifact(io, request, { kind: 'workflow', name: `${stage}-${step.inputHash}` }, 'WorkflowStepArtifactV1', value => {
+  const artifact = value as PersistedArtifact
+  if (!artifact || artifact.type !== 'workflow-step-artifact' || artifact.stage !== stage || artifact.inputHash !== step.inputHash || artifact.outputHash !== step.outputHash || sha256NormalizedV1(artifact.value) !== artifact.outputHash) throw new Error('Invalid workflow step artifact')
+  return artifact.value
+})
+export const writeStoredWorkflowStep = (io: ArtifactIOV1, request: StorageRequest, stage: WorkflowStage, inputHash: string, value: unknown) => writeJsonArtifact(io, request, { kind: 'workflow', name: `${stage}-${inputHash}` }, 'WorkflowStepArtifactV1', { type: 'workflow-step-artifact', stage, inputHash, outputHash: sha256NormalizedV1(value), value }, null)

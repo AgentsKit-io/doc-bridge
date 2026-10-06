@@ -29,7 +29,7 @@ const resolveRouteCollisions = (records: readonly HumanDocRecord[]): HumanDocRec
 
 export const nextraAdapter: HumanAdapter = {
   plugin: 'nextra',
-  scan: ({ root, config }) => {
+  scan: ({ root, config, files }) => {
     const contentDir = optionString(config.options, ['contentDir', 'docsDir', 'root'])
     if (!contentDir) return []
 
@@ -37,7 +37,7 @@ export const nextraAdapter: HumanAdapter = {
       scanMarkdownDocs(root, contentDir, {
         idForDoc: nextraRecordId,
         urlPrefix: optionString(config.options, ['urlPrefix', 'contentDirBasePath']) ?? '/',
-      }),
+      }, files),
     )
   },
 }

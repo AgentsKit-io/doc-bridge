@@ -16,12 +16,12 @@ const matchesConfiguredPath = (relPath: string, options: Record<string, unknown>
 
 export const plainMarkdownAdapter: HumanAdapter = {
   plugin: 'plain-markdown',
-  scan: ({ root, config }) => {
+  scan: ({ root, config, files }) => {
     const humanRoot =
       optionString(config.options, ['contentDir', 'root', 'docsDir']) ?? 'docs'
     return scanMarkdownDocs(root, humanRoot, {
       urlPrefix: config.options?.urlPrefix,
       includeRelPath: (relPath) => matchesConfiguredPath(relPath, config.options),
-    })
+    }, files)
   },
 }

@@ -1,8 +1,9 @@
+import { repositoryHas, repositoryText, repositoryWalk, type RepositoryFiles } from '../repository-io.js'
 import { existsSync, lstatSync, readFileSync, realpathSync } from 'node:fs'
 import { basename, dirname, isAbsolute, relative, resolve, sep } from 'node:path'
 
 import type { DocBridgeConfigV1 } from '../../config/schema.js'
-import { detectPackageManager } from '../../lib/package-manager.js'
+import { detectPackageManager, detectPackageManagerFromFiles } from '../../lib/package-manager.js'
 import { toPosix } from '../../lib/paths.js'
 import { walkFiles } from '../../lib/walk.js'
 import type { DiscoveredPackage } from './pnpm-monorepo.js'
@@ -22,9 +23,9 @@ type JsonRecord = Record<string, unknown>
 const isRecord = (value: unknown): value is JsonRecord =>
   typeof value === 'object' && value !== null && !Array.isArray(value)
 
-const readJsonRecord = (path: string): JsonRecord | undefined => {
+const readJsonRecord = (path: string, root: string, files?: RepositoryFiles): JsonRecord | undefined => {
   try {
-    const parsed: unknown = JSON.parse(readFileSync(path, 'utf8'))
+    const parsed: unknown = JSON.parse(files ? repositoryText(files, root, path) : readFileSync(path, 'utf8'))
     return isRecord(parsed) ? parsed : undefined
   } catch {
     return undefined
@@ -35,10 +36,12 @@ const safeProjectPath = (
   root: string,
   manifestDir: string,
   declaredRoot?: unknown,
+  files?: RepositoryFiles,
 ): string | undefined => {
   const candidate = typeof declaredRoot === 'string' ? resolve(root, declaredRoot) : manifestDir
   const rel = toPosix(relative(root, candidate)) || '.'
   if (isAbsolute(rel) || rel === '..' || rel.startsWith('../')) return undefined
+  if (files) return repositoryHas(files, root, candidate) ? rel : undefined
   try {
     if (!lstatSync(candidate).isDirectory()) return undefined
     const canonicalRoot = realpathSync.native(root)
@@ -60,8 +63,8 @@ const safeProjectPath = (
 const packageId = (name: string): string =>
   name.startsWith('@') ? (name.split('/').at(-1) ?? name) : name
 
-const commandPrefix = (root: string): string => {
-  const manager = detectPackageManager(root)
+const commandPrefix = (root: string, files?: RepositoryFiles): string => {
+  const manager = files ? detectPackageManagerFromFiles(root, files) : detectPackageManager(root)
   if (manager === 'pnpm') return 'pnpm exec nx run'
   if (manager === 'yarn') return 'yarn nx run'
   if (manager === 'bun') return 'bunx nx run'
@@ -73,8 +76,9 @@ const inferredChecks = (
   config: DocBridgeConfigV1,
   projectName: string,
   targets: ReadonlySet<string>,
+  files?: RepositoryFiles,
 ): string[] | undefined => {
-  const prefix = commandPrefix(root)
+  const prefix = commandPrefix(root, files)
   const strict = (config.gates?.preset ?? 'minimal') !== 'minimal'
   const checks = [
     ...(targets.has('test') ? [`${prefix} ${projectName}:test`] : []),
@@ -91,10 +95,12 @@ type RankedProject = DiscoveredPackage & {
 export const discoverNxProjects = (
   root: string,
   config: DocBridgeConfigV1,
+  files?: RepositoryFiles,
+  fallbackProjectName?: string,
 ): DiscoveredPackage[] => {
-  if (!existsSync(resolve(root, 'nx.json'))) return []
+  if (!(files ? repositoryHas(files, root, resolve(root, 'nx.json')) : existsSync(resolve(root, 'nx.json')))) return []
 
-  const manifests = walkFiles(root, {
+  const manifests = files ? repositoryWalk(files, root, root, ['project.json', 'package.json'], NX_SCAN_SKIP) : walkFiles(root, {
     extensions: ['project.json', 'package.json'],
     skipDirs: NX_SCAN_SKIP,
     maxFiles: 10_000,
@@ -102,7 +108,7 @@ export const discoverNxProjects = (
   const projects = new Map<string, RankedProject>()
 
   for (const manifest of manifests) {
-    const json = readJsonRecord(manifest)
+    const json = readJsonRecord(manifest, root, files)
     if (!json) continue
     const manifestDir = dirname(manifest)
     const manifestName = basename(manifest)
@@ -111,17 +117,17 @@ export const discoverNxProjects = (
     const nx = json.nx
     if (!isProjectJson && !isRecord(nx)) continue
 
-    const path = safeProjectPath(root, manifestDir, isProjectJson ? json.root : undefined)
+    const path = safeProjectPath(root, manifestDir, isProjectJson ? json.root : undefined, files)
     if (!path) continue
     const projectPackage = isProjectJson
-      ? readJsonRecord(resolve(root, path, 'package.json'))
+      ? readJsonRecord(resolve(root, path, 'package.json'), root, files)
       : undefined
     const projectName =
       typeof json.name === 'string'
         ? json.name
         : typeof projectPackage?.name === 'string'
           ? projectPackage.name
-          : basename(path === '.' ? root : path)
+          : path === '.' && files ? fallbackProjectName ?? basename(root) : basename(path === '.' ? root : path)
     if (!NX_PROJECT_NAME.test(projectName)) continue
 
     const targets = new Set<string>()
@@ -144,7 +150,7 @@ export const discoverNxProjects = (
     const mergedTargets = [...new Set([...(existing?.targets ?? []), ...targets])]
     const projectJsonWins = rank >= (existing?.rank ?? 0)
     const resolvedName = projectJsonWins ? projectName : (existing?.name ?? projectName)
-    const checks = inferredChecks(root, config, resolvedName, new Set(mergedTargets))
+    const checks = inferredChecks(root, config, resolvedName, new Set(mergedTargets), files)
     projects.set(id, {
       id,
       path,

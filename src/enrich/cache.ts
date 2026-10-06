@@ -1,3 +1,5 @@
+import type { ArtifactIOV1, StorageRequest } from '../storage/contract.js'
+import { readJsonArtifact, writeJsonArtifact } from '../index-builder/artifact-io.js'
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
@@ -91,3 +93,20 @@ export const createMemoryEnrichmentCache = (): EnrichmentCache => {
     },
   }
 }
+
+/** Cache keys remain unchanged; the artifact envelope supplies exact revision isolation. */
+export const createStoredEnrichmentCache = (io: ArtifactIOV1, request: StorageRequest) => ({
+  async read(input: EnrichmentCacheKeyInput) {
+    const key = enrichmentCacheKey(input)
+    return readJsonArtifact(io, request, { kind: 'cache', name: key }, 'EnrichmentCacheEntryV1', value => {
+      const entry = CacheEntrySchema.parse(value)
+      if (entry.key !== key || enrichmentCacheKey(entry) !== key) throw new Error('Invalid cache key')
+      return entry.proposals
+    })
+  },
+  async write(input: EnrichmentCacheKeyInput, proposals: readonly unknown[], expectedPreviousByteHash: string | null) {
+    const key = enrichmentCacheKey(input)
+    const entry = CacheEntrySchema.parse({ type: 'enrichment-cache-entry', key, ...input, proposals: [...proposals] })
+    return writeJsonArtifact(io, request, { kind: 'cache', name: key }, 'EnrichmentCacheEntryV1', entry, expectedPreviousByteHash)
+  },
+})

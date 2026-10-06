@@ -27,7 +27,7 @@ const starlightSlug = (relPath: string, raw: string): string => {
 
 export const starlightAdapter: HumanAdapter = {
   plugin: 'starlight',
-  scan: ({ root, config }) => {
+  scan: ({ root, config, files }) => {
     const contentDir = optionString(config.options, ['contentDir', 'docsDir', 'root'])
     if (!contentDir) return []
 
@@ -35,6 +35,6 @@ export const starlightAdapter: HumanAdapter = {
       includeRelPath: isStarlightPage,
       slugForDoc: starlightSlug,
       urlPrefix: config.options?.urlPrefix,
-    })
+    }, files)
   },
 }

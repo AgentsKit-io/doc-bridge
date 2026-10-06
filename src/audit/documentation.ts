@@ -266,6 +266,8 @@ const diagnosticMapping = (diagnostic: ReconciliationReportV1['diagnostics'][num
 
 export type DocumentationAuditOptions = {
   readonly root: string
+  /** Caller supplies verified exact-partition text; missing content must throw. */
+  readonly readDocument?: (path: string) => string
   readonly snapshot: DiscoverySnapshotV1
   readonly declared: DiscoverySnapshotV1
   readonly reconciliation: ReconciliationReportV1
@@ -281,7 +283,7 @@ export const auditDocumentation = (options: DocumentationAuditOptions): Document
   const requiredSections = config.requiredSections ?? []
   const documents: DocumentInput[] = options.snapshot.entities
     .filter((entity) => entity.kind === 'document' && entity.path)
-    .map((entity) => ({ path: normalizedPath(entity.path as string), content: readFileSync(resolve(options.root, entity.path as string), 'utf8') }))
+    .map((entity) => ({ path: normalizedPath(entity.path as string), content: options.readDocument ? options.readDocument(entity.path as string) : readFileSync(resolve(options.root, entity.path as string), 'utf8') }))
     .filter((document) => !matches(document.path, excluded))
     .sort((a, b) => a.path.localeCompare(b.path))
   const findings: DocumentationAuditFinding[] = []

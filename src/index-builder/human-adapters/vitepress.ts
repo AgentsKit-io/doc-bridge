@@ -29,7 +29,7 @@ const vitepressSlug = (relPath: string, cleanUrls: boolean): string => {
 
 export const vitepressAdapter: HumanAdapter = {
   plugin: 'vitepress',
-  scan: ({ root, config }) => {
+  scan: ({ root, config, files }) => {
     const docsDir = optionString(config.options, ['docsDir', 'root', 'srcDir'])
     if (!docsDir) return []
     const srcExclude = srcExcludePatterns(config.options?.srcExclude)
@@ -38,6 +38,6 @@ export const vitepressAdapter: HumanAdapter = {
       includeRelPath: (relPath) => isVitePressPage(relPath) && !isExcluded(relPath, srcExclude),
       slugForDoc: (relPath) => vitepressSlug(relPath, config.options?.cleanUrls === true),
       urlPrefix: config.options?.urlPrefix,
-    })
+    }, files)
   },
 }

@@ -38,6 +38,8 @@ type McpContext = {
   readonly root: string
   readonly config: DocBridgeConfigV1
   readonly loadIndex?: () => DocBridgeIndexV1
+  /** Verified exact-partition text; failures must throw rather than read local bytes. */
+  readonly readDocument?: (path: string) => string
 }
 
 export const MCP_TOOLS = [
@@ -380,7 +382,7 @@ export const handleMcpRequest = (ctx: McpContext, request: JsonRpcRequest): unkn
 
     if (name === 'doc.get') {
       const relPath = findDocPath(index(), parseToolArgs('doc.get', DocGetArgsSchema, args))
-      return textResult(readFileSync(resolveDocPath(ctx.root, relPath), 'utf8'))
+      return textResult(ctx.readDocument ? ctx.readDocument(relPath) : readFileSync(resolveDocPath(ctx.root, relPath), 'utf8'))
     }
 
     if (name === 'gate.status') return textResult(runGates(ctx.root, ctx.config))

@@ -175,3 +175,30 @@ over it. `retrieve('query', { limit })` still works.
 Nothing reachable from `search`, `query` or the projection imports anything under `src/agents`; a
 test walks the imports. The deterministic layer is complete on its own, and the enrichment stage
 never sits on its path.
+
+## Exact-partition storage integration
+
+`buildStoredDocBridgeIndex` reads document bodies through `RepositoryReadV1`
+using the inventory's expected file `ContentRef` and independently checking each
+snapshot document's Markdown evidence hash. Failed or mismatched reads
+never supply substitute text. The operation returns `limitations` beside its
+unchanged index payload, with exact `{partition: {repositoryId, revision}, path,
+status, code}`. Snapshot metadata still projects when an individual body is
+unavailable. A failed/incomplete listing prevents publication and carries the
+listing limitation plus any individually checked document failures.
+
+`loadStoredDocBridgeIndex` validates the exact partition envelope, existing
+index schema, projection algorithm and index hash. `loadFreshStoredDocBridgeIndex`
+also verifies source/configuration input fingerprints and retrieval versions
+through the same reader; an unavailable input is a failure, not fresh evidence.
+Legacy indexes without recorded inputs require an explicit rebuild for injected
+freshness. The synchronous local freshness facade retains its legacy rebuild
+path. Ranking, query scores, handoffs and BM25 preparation continue to operate on
+the unchanged loaded payload; no partition metadata is inserted into entity IDs.
+
+A caller-provided `SnapshotReadBinding` can bind source-only fingerprints to the
+verified discovery capture. It matches exact partition/revision, snapshot hash,
+listing policy hash and snapshot source evidence; absent or mismatched binding
+retains physical verification. Consumed document/configuration/manifest/sidebar
+bytes and freshness reads are always verified. Existing document/corpus/sidebar
+byte ceilings remain in force even when storage capability limits are larger.

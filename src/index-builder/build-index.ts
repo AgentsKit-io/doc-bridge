@@ -1,5 +1,11 @@
+import { readRepositoryFiles, repositoryText, repositoryBoundedText, INDEX_READ_PATTERNS, type RepositoryFiles, type AvailabilityLimitation, type SnapshotReadBinding } from './repository-io.js'
+import { readJsonArtifact, writeJsonArtifact } from './artifact-io.js'
+import { samePartition, type ArtifactIOV1, type RepositoryReadV1, type StorageRequest, type StorageResult, type StorageFailure, type ContentRef } from '../storage/contract.js'
+import { repositoryInputsFromFiles } from './project-corpus.js'
+export type { SnapshotReadBinding } from './repository-io.js'
+import { parseEnrichmentOverlay } from '../enrich/overlay.js'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
-import { dirname, join } from 'node:path'
+import { dirname, join, posix } from 'node:path'
 
 import type { DocBridgeConfigV1 } from '../config/schema.js'
 import { applyDocumentationDeclarations } from '../discovery/documentation.js'
@@ -55,10 +61,10 @@ export type BuildIndexResult = {
   readonly capabilitiesPath?: string
 }
 
-const projectName = (root: string, config: DocBridgeConfigV1): string => {
+const projectName = (root: string, config: DocBridgeConfigV1, files?: RepositoryFiles): string => {
   if (config.project?.name) return config.project.name
   try {
-    const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')) as { name?: string }
+    const pkg = JSON.parse(files ? repositoryText(files, root, join(root, 'package.json')) : readFileSync(join(root, 'package.json'), 'utf8')) as { name?: string }
     if (pkg.name) return pkg.name
   } catch {
     // ignore
@@ -82,6 +88,7 @@ const projectFromSnapshot = (
   curated: readonly KnowledgeEntry[],
   requested: BuildIndexOptions['overlay'],
   hashAlgorithm: HashAlgorithm,
+  files?: RepositoryFiles,
 ): { readonly projection: RetrievalIndexV1 } => {
   const scanned = given ?? discoverRepository({ root, config })
   const selected = { ...scanned, contentHashAlgo: hashAlgorithm }
@@ -91,7 +98,7 @@ const projectFromSnapshot = (
   for (const entity of observed.entities) {
     if (entity.kind !== 'document' || !entity.path) continue
     try {
-      contents.set(entity.path, readBoundedText(join(root, entity.path), budget))
+      contents.set(entity.path, files ? repositoryBoundedText(files, root, join(root, entity.path), budget) : readBoundedText(join(root, entity.path), budget))
     } catch {
       // Unreadable now: the entity still projects from what the snapshot recorded about it.
     }
@@ -135,7 +142,9 @@ const existingGeneratedAt = (indexPath: string, contentHash: string): string | u
   }
 }
 
-export const buildDocBridgeIndex = (opts: BuildIndexOptions): BuildIndexResult => {
+export const buildDocBridgeIndex = (opts: BuildIndexOptions): BuildIndexResult => buildIndex(opts)
+
+const buildIndex = (opts: BuildIndexOptions, files?: RepositoryFiles, fallbackProjectName?: string, contentRefs?: ReadonlyMap<string, ContentRef>, byteSizes?: ReadonlyMap<string, number>): BuildIndexResult => {
   const root = opts.root ?? process.cwd()
   const config = opts.config
   const write = opts.write ?? true
@@ -153,7 +162,7 @@ export const buildDocBridgeIndex = (opts: BuildIndexOptions): BuildIndexResult =
     }
   }
 
-  const corpus = scanAgentCorpus(root, config)
+  const corpus = scanAgentCorpus(root, config, files)
   const curated = corpus.map(({ absPath: _a, relPath: _r, frontmatter: _f, ...entry }) => entry)
   const retrieval = {
     lexiconVersion: SEARCH_LEXICON_VERSION,
@@ -169,14 +178,14 @@ export const buildDocBridgeIndex = (opts: BuildIndexOptions): BuildIndexResult =
 
   const discovered =
     config.routing?.plugin === 'nx'
-      ? discoverNxProjects(root, config)
+      ? discoverNxProjects(root, config, files, fallbackProjectName)
       : shouldDiscover
-        ? discoverPnpmPackages(root, config)
+        ? discoverPnpmPackages(root, config, files)
         : []
   const packages = collectPackages(config, discovered, corpus)
-  const humanDocs = scanHumanDocs(root, config)
+  const humanDocs = scanHumanDocs(root, config, files)
 
-  const { lookup, handoffs } = buildLookup(config, packages, corpus, outFile, humanDocs, root)
+  const { lookup, handoffs } = buildLookup(config, packages, corpus, outFile, humanDocs, root, files)
 
   /*
    * Retrieval reads this index, so whatever is missing here is invisible to an agent however well
@@ -185,9 +194,9 @@ export const buildDocBridgeIndex = (opts: BuildIndexOptions): BuildIndexResult =
    * the snapshot: the index has no scanner of its own, so a record retrieval can find is an entity
    * discovery observed, with the same id and the same content hash.
    */
-  const projected = config.retrieval?.corpus?.enabled === false ? undefined : projectFromSnapshot(root, config, opts.snapshot, lookup, curated, opts.overlay, opts.hashAlgorithm ?? SEMANTIC_HASH_ALGORITHM)
+  const projected = config.retrieval?.corpus?.enabled === false ? undefined : projectFromSnapshot(root, config, opts.snapshot, lookup, curated, opts.overlay, opts.hashAlgorithm ?? SEMANTIC_HASH_ALGORITHM, files)
   const projection = projected?.projection
-  const inputs = projected ? repositoryInputs(root, config, opts.hashAlgorithm ?? SEMANTIC_HASH_ALGORITHM) : undefined
+  const inputs = projected ? files ? repositoryInputsFromFiles(files, config, opts.hashAlgorithm ?? SEMANTIC_HASH_ALGORITHM, contentRefs, byteSizes) : repositoryInputs(root, config, opts.hashAlgorithm ?? SEMANTIC_HASH_ALGORITHM) : undefined
   const curatedPaths = new Set(curated.map((entry) => entry.path))
   /*
    * `knowledge[]` keeps every reader that predates the projection working: the curated sidecars
@@ -208,7 +217,7 @@ export const buildDocBridgeIndex = (opts: BuildIndexOptions): BuildIndexResult =
     contentHash: '0'.repeat(64),
     contentHashAlgo: opts.hashAlgorithm ?? SEMANTIC_HASH_ALGORITHM,
     generatedAt: new Date().toISOString(),
-    project: { name: projectName(root, config), root: '.' },
+    project: { name: files && !files.has('package.json') && !config.project?.name ? fallbackProjectName ?? 'project' : projectName(root, config, files), root: '.' },
     knowledge,
     handoffs,
     lookup,
@@ -218,7 +227,7 @@ export const buildDocBridgeIndex = (opts: BuildIndexOptions): BuildIndexResult =
   }
 
   index.contentHash = contentHashForIndex(index)
-  index.generatedAt = existingGeneratedAt(indexPath, index.contentHash) ?? index.generatedAt
+  index.generatedAt = (files ? undefined : existingGeneratedAt(indexPath, index.contentHash)) ?? index.generatedAt
 
   /*
    * An artifact its own parser refuses is not an artifact. The bound on `knowledge[]` used to be
@@ -277,4 +286,56 @@ export const buildDocBridgeIndex = (opts: BuildIndexOptions): BuildIndexResult =
     ...(llmsTxtPath ? { llmsTxtPath: toPosix(llmsTxtPath) } : {}),
     ...(capabilitiesPath ? { capabilitiesPath: toPosix(capabilitiesPath) } : {}),
   }
+}
+
+
+export type BuildStoredIndexOptions = StorageRequest & {
+  readonly repository: RepositoryReadV1
+  readonly artifacts: ArtifactIOV1
+  readonly config: DocBridgeConfigV1
+  readonly snapshot: DiscoverySnapshotV1
+  /** Trusted caller receipt from the same verified capture; absent means full verification. */
+  readonly snapshotBinding?: SnapshotReadBinding
+  readonly overlay?: EnrichmentOverlayV1 | 'ignore'
+  readonly hashAlgorithm?: HashAlgorithm
+  readonly write?: boolean
+}
+
+/** Exact-partition build. Local export files and Git migration belong to the sync facade. */
+export const buildStoredDocBridgeIndex = async (options: BuildStoredIndexOptions): Promise<StorageResult<{ index: DocBridgeIndexV1; limitations: readonly AvailabilityLimitation[]; byteHash?: string }> | (StorageFailure & { limitations: readonly AvailabilityLimitation[] })> => {
+  const request = { partition: options.partition, signal: options.signal }
+  if (!samePartition(options.repository.partition, options.partition) || !samePartition(options.artifacts.partition, options.partition)) return { status: 'denied', code: 'PARTITION_MISMATCH' }
+  const expected = new Map<string, string>()
+  for (const entity of options.snapshot.entities) {
+    if (entity.kind !== 'document' || !entity.path) continue
+    const hash = entity.evidence.find(evidence => evidence.path === entity.path)?.contentHash ?? entity.evidence[0]?.contentHash
+    if (!hash) return { status: 'denied', code: 'INVALID_CONTRACT' }
+    expected.set(entity.path, hash)
+  }
+  const consumedPaths = new Set(['doc-bridge.config.ts', 'doc-bridge.config.mts', 'doc-bridge.config.js', 'doc-bridge.config.mjs', 'doc-bridge.config.cjs'])
+  const human = options.config.corpus.human
+  for (const config of human ? Array.isArray(human) ? human : [human] : []) {
+    if (typeof config.options?.sidebarsFile === 'string') consumedPaths.add(posix.normalize(toPosix(config.options.sidebarsFile)))
+  }
+  const sourceCapture = options.snapshotBinding && options.config.safety?.maxBytes === undefined ? { snapshot: options.snapshot, binding: options.snapshotBinding, consumedPaths } : undefined
+  const { files, contentRefs, byteSizes, limitations } = await readRepositoryFiles(options.repository, request, INDEX_READ_PATTERNS, expected, sourceCapture)
+  if (limitations.some(limitation => limitation.path === '.')) return { status: limitations[0]!.status, code: limitations[0]!.code, limitations }
+  const key = { kind: 'index', name: 'index' } as const
+  const prior = await readJsonArtifact(options.artifacts, request, key, 'DocBridgeIndexV1', value => DocBridgeIndexV1Schema.parse(value))
+  if (prior.status !== 'ok' && prior.status !== 'missing') return prior
+  let overlay = options.overlay
+  if (overlay === undefined && options.config.intelligence?.registry?.enabled) {
+    const stored = await readJsonArtifact(options.artifacts, request, { kind: 'overlay', name: 'overlay' }, 'EnrichmentOverlayV1', value => {
+      const parsed = parseEnrichmentOverlay(value)
+      if (!parsed) throw new Error('Invalid overlay')
+      return parsed
+    })
+    if (stored.status === 'ok') overlay = stored.value.value
+    else if (stored.status !== 'missing') return stored
+  }
+  const index = buildIndex({ root: '/repository', config: options.config, write: false, snapshot: options.snapshot, overlay: overlay ?? 'ignore', ...(options.hashAlgorithm ? { hashAlgorithm: options.hashAlgorithm } : {}) }, files, options.snapshot.project.name, contentRefs, byteSizes).index
+  if (prior.status === 'ok' && prior.value.value.contentHash === index.contentHash) index.generatedAt = prior.value.value.generatedAt
+  if (options.write === false) return { status: 'ok', value: { index, limitations } }
+  const saved = await writeJsonArtifact(options.artifacts, request, key, 'DocBridgeIndexV1', index, prior.status === 'ok' ? prior.value.byteHash : null)
+  return saved.status === 'ok' ? { status: 'ok', value: { index, limitations, byteHash: saved.value.byteHash } } : saved
 }

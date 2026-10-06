@@ -161,3 +161,14 @@ import { parseDocBridgeIndex } from '@agentskit/doc-bridge'
 
 const index = parseDocBridgeIndex(JSON.parse(raw))
 ```
+
+## Partitioned persistence compatibility
+
+Module-level injected storage APIs persist this unchanged payload inside an
+`ArtifactIOV1` envelope with payload schema `DocBridgeIndexV1`, version `1`,
+kind `index`, name `index`. Repository/revision identity belongs to the envelope,
+not this payload or its embedded handoffs. Readers validate envelope identity
+and integrity before validating this schema/hash. Local synchronous compatibility
+continues to read/write the unpartitioned configured index file and check
+committed legacy drift before regeneration. Availability limitations belong to
+the injected operation result, never to the strict index/handoff schemas.

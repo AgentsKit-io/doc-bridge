@@ -96,6 +96,8 @@ export type LocalRepositoryReadOptions = Readonly<{
   limits: StorageLimits
   /** Caller-confirmed exact revision inventory; no implicit latest/Git fallback. */
   inventory: Readonly<Record<string, ContentRef>>
+  /** Explicit local visibility policy; omitted keeps the strict service default. */
+  excludes?: readonly string[]
 }>
 
 export const createLocalRepositoryRead = async (options: LocalRepositoryReadOptions): Promise<RepositoryReadV1> => {
@@ -108,7 +110,8 @@ export const createLocalRepositoryRead = async (options: LocalRepositoryReadOpti
   const ledger = new StorageLedger(partition, limits)
   // Caller setup only: reuse the repository's existing Git/nested-ignore policy.
   const ignored = createIgnoreFilter(root)
-  const excluded = (path: string) => DEFAULT_SAFETY_EXCLUDES.some(pattern => minimatch(path, pattern, { dot: true }))
+  const excludes = Object.freeze(z.array(z.string().min(1).max(512)).max(128).parse(options.excludes ?? DEFAULT_SAFETY_EXCLUDES))
+  const excluded = (path: string) => excludes.some(pattern => minimatch(path, pattern, { dot: true }))
   const verify = async (request: StorageRequest, path: string, expected?: ContentRef) => {
     if (excluded(path)) fail('denied', 'PATH_DENIED')
     const pinned = inventory[path]
@@ -183,7 +186,7 @@ export const createLocalRepositoryRead = async (options: LocalRepositoryReadOpti
           const hidden = parts.some((_, index) => hiddenPaths.has(parts.slice(0, index + 1).join('/')))
           if (under && !hidden && !excluded(path) && !ignored.isIgnored(join(root, path), false) && !observed.has(path)) fail('mismatch', 'REVISION_MISMATCH')
         }
-        return { status: 'ok' as const, value: { entries: entries.sort((a,b) => a.path.localeCompare(b.path)), complete: limitation === undefined, ...(limitation ? { limitation } : {}), visibilityPolicyHash: rawByteHash(Buffer.from(JSON.stringify({ mode: ignored.mode, excludes: DEFAULT_SAFETY_EXCLUDES, decisions }))) } }
+        return { status: 'ok' as const, value: { entries: entries.sort((a,b) => a.path.localeCompare(b.path)), complete: limitation === undefined, ...(limitation ? { limitation } : {}), visibilityPolicyHash: rawByteHash(Buffer.from(JSON.stringify({ mode: ignored.mode, excludes, decisions }))) } }
       } catch (error) { return storageFailure(error) }
     },
   } satisfies RepositoryReadV1)

@@ -142,3 +142,65 @@ index. This CLI currently does not accept a prior discovery snapshot; the script
 does not claim incremental-discovery or OS page-cache warmth. Physical I/O counts
 are not instrumented. Integrated adapter performance requires the later consumer
 migration; capturing this baseline alone does not prove its performance budget.
+
+## Index and artifact integration
+
+The index builder's `buildStoredDocBridgeIndex` accepts `RepositoryReadV1`,
+`ArtifactIOV1`, an explicit partition/signal, effective configuration and an
+already captured snapshot. It hydrates verified text once for the existing
+corpus, workspace/Nx routing, human adapters, declarations and freshness policy.
+There is no native-file or unpartitioned-index fallback. The caller must bind the
+snapshot and frozen reader inventory to the requested partition; project display
+names are not authorization identities.
+
+`readJsonArtifact` and `writeJsonArtifact` check capability/envelope partition,
+key, schema/version, encoding and integrity, delegating atomic CAS to the store.
+They support snapshot/index/overlay/cache/approval/workflow/proposal kinds.
+Typed snapshot, index, overlay, cache, approval and workflow persistence functions
+reuse existing payload schemas and hashes. Envelopes are persistence metadata;
+legacy index and handoff payloads have no extra fields. Missing artifacts and
+store failures are distinct results. Approval storage errors throw through the
+existing approval-store contract; they never become an absent approval.
+
+Workflow manifest revisions must match their partition. Workflow step artifacts
+are create-only, keyed by stage/input hash, and checked against the requested
+step's input/output hashes. Local workflow execution and process locking remain
+in the synchronous compatibility flow; this is not an injected workflow runner.
+
+The synchronous local APIs explicitly select local compatibility by their
+root/config arguments. They retain unpartitioned publication and the committed
+legacy drift diagnostic before regeneration. Injected APIs never import a legacy
+artifact implicitly. New public entrypoint/CLI orchestration wiring is separate
+from the module-level integration.
+
+The local repository reader optionally accepts explicit `excludes`; the effective
+list is included in `visibilityPolicyHash`. Omission keeps the strict safety
+excludes. Only an explicitly authorized local compatibility caller should pass
+the legacy curated/human walk excludes (`.git`, `node_modules`, `dist`, `coverage`,
+`.doc-bridge`). The strict injected default also excludes build/output directories
+(`build`, `.next`, `out`, `.turbo`, `.svelte-kit`, `.mcpb-build`, `.mcpb-output`)
+and secret-shaped paths (`.env*`, names containing `secret`/`credential`, PEM/key
+files). Git/nested ignore behavior is preserved in either policy. Policy differences
+are not payload parity evidence; compare builders only under matching visibility.
+
+File `ContentRef` and Markdown evidence are distinct identities: the file hash
+preserves BOM bytes under the existing normalized-file algorithm, while
+`markdownContentHash` removes a leading BOM. Body reads pass the listing/inventory
+file reference as `read(expected)` and independently verify returned raw text
+against the snapshot's Markdown evidence. Original raw text reaches corpus/human
+parsers unchanged. Neither algorithm is replaced, and either mismatch reports
+an exact partition/path availability limitation without substitute bytes.
+
+An optional `SnapshotReadBinding` sidecar carries `{partition, snapshotHash,
+visibilityPolicyHash}` from the trusted caller's verified discovery capture.
+When it matches the requested partition, snapshot revision/hash and current
+complete listing policy, source-only input fingerprints can reuse frozen
+inventory references whose hashes match all corresponding snapshot code evidence.
+Unbound, absent or conflicting evidence falls back to physical verification.
+Documents, manifests, configuration and configured sidebars are still physically
+read with expected file references; freshness loading also verifies every input.
+A configured byte cutoff disables this optimization because a ContentRef does
+not record the captured file size. This avoids mixing live size metadata into a
+bounded prior capture. Missing/invalid receipts retain full-verification behavior.
+Verified file hashes are reused for freshness and non-BOM Markdown evidence;
+BOM documents retain their separate Markdown hash calculation.

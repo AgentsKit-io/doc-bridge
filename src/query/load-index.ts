@@ -1,3 +1,7 @@
+import { readJsonArtifact } from '../index-builder/artifact-io.js'
+import { readRepositoryFiles, INDEX_READ_PATTERNS } from '../index-builder/repository-io.js'
+import { repositoryInputsFromFiles } from '../index-builder/project-corpus.js'
+import type { ArtifactIOV1, RepositoryReadV1, StorageRequest, StorageResult } from '../storage/contract.js'
 import { contentHashForIndex, sameHashIdentity } from '../index-builder/content-hash.js'
 import { existsSync, readFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
@@ -31,6 +35,10 @@ export const loadDocBridgeIndex = (root: string, config: DocBridgeConfigV1): Doc
   const path = indexFilePath(root, config)
   if (!existsSync(path)) throw new IndexNotFoundError(path)
   const raw = JSON.parse(readFileSync(path, 'utf8')) as unknown
+  return validateIndex(raw)
+}
+
+const validateIndex = (raw: unknown): DocBridgeIndexV1 => {
   const index = parseDocBridgeIndex(raw)
   if (index.projection && index.projection.contentHashAlgo !== index.contentHashAlgo) {
     throw new Error('Index and retrieval projection hash algorithms differ. Explicitly regenerate with ak-docs index.')
@@ -83,3 +91,22 @@ export const loadFreshDocBridgeIndex = (root: string, config: DocBridgeConfigV1)
 }
 
 export const resolveRoot = (cwd?: string): string => resolve(cwd ?? process.cwd())
+
+/** Load the exact partition only; never consult the legacy local index. */
+export const loadStoredDocBridgeIndex = async (io: ArtifactIOV1, request: StorageRequest): Promise<StorageResult<{ index: DocBridgeIndexV1; byteHash: string }>> => {
+  const result = await readJsonArtifact(io, request, { kind: 'index', name: 'index' }, 'DocBridgeIndexV1', validateIndex)
+  return result.status === 'ok' ? { status: 'ok', value: { index: result.value.value, byteHash: result.value.byteHash } } : result
+}
+
+/** Freshness is checked with verified bytes from the same exact partition. */
+export const loadFreshStoredDocBridgeIndex = async (io: ArtifactIOV1, reader: RepositoryReadV1, request: StorageRequest, config: DocBridgeConfigV1): Promise<StorageResult<{ index: DocBridgeIndexV1; byteHash: string }>> => {
+  const loaded = await loadStoredDocBridgeIndex(io, request)
+  if (loaded.status !== 'ok') return loaded
+  const index = loaded.value.index
+  if (!index.inputs || !index.retrieval) return { status: 'denied', code: 'INVALID_CONTRACT' }
+  const { files, contentRefs, byteSizes, limitations } = await readRepositoryFiles(reader, request, INDEX_READ_PATTERNS)
+  if (limitations.length) return { status: limitations[0]!.status, code: limitations[0]!.code }
+  const inputs = repositoryInputsFromFiles(files, config, index.contentHashAlgo, contentRefs, byteSizes)
+  const fresh = index.inputs.hash === inputs.hash && index.inputs.projectionVersion === inputs.projectionVersion && index.retrieval.lexiconVersion === SEARCH_LEXICON_VERSION && (!index.projection || (index.projection.lexiconVersion === SEARCH_LEXICON_VERSION && index.projection.graphMetricsVersion === GRAPH_ANALYZER_VERSION))
+  return fresh ? loaded : { status: 'mismatch', code: 'CONTENT_MISMATCH' }
+}

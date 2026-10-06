@@ -1,3 +1,4 @@
+import type { RepositoryFiles } from '../repository-io.js'
 import { realpathSync } from 'node:fs'
 import { resolve, sep } from 'node:path'
 
@@ -38,17 +39,18 @@ const canonicalPath = (path: string): string => {
 export const scanHumanDocRecords = (
   root: string,
   config: DocBridgeConfigV1,
+  files?: RepositoryFiles,
 ): HumanDocRecord[] => {
   const out: HumanDocRecord[] = []
   const seen = new Set<string>()
-  const agentRoot = canonicalPath(resolve(root, config.corpus.agent.root))
+  const agentRoot = files ? resolve(root, config.corpus.agent.root) : canonicalPath(resolve(root, config.corpus.agent.root))
 
   for (const human of humanConfigs(config)) {
     const adapter = ADAPTERS.find((candidate) => candidate.plugin === human.plugin)
     if (!adapter) continue
-    for (const record of adapter.scan({ root, config: human })) {
+    for (const record of adapter.scan({ root, config: human, ...(files ? { files } : {}) })) {
       // Never treat agent-corpus files as human docs (nested for-agents, etc.)
-      const recordPath = canonicalPath(record.path)
+      const recordPath = files ? record.path : canonicalPath(record.path)
       if (
         recordPath === agentRoot ||
         recordPath.startsWith(`${agentRoot}${sep}`) ||
@@ -66,5 +68,5 @@ export const scanHumanDocRecords = (
   return out
 }
 
-export const scanHumanDocs = (root: string, config: DocBridgeConfigV1): HumanDocMap =>
-  Object.fromEntries(scanHumanDocRecords(root, config).map((doc) => [doc.id, doc.url]))
+export const scanHumanDocs = (root: string, config: DocBridgeConfigV1, files?: RepositoryFiles): HumanDocMap =>
+  Object.fromEntries(scanHumanDocRecords(root, config, files).map((doc) => [doc.id, doc.url]))
