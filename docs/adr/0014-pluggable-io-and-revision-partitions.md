@@ -12,7 +12,7 @@ Discovery currently imports local filesystem functions directly (`src/discovery/
 
 ## Decision
 
-Propose caller-injected storage/I/O capabilities with a local filesystem default. The interface provides bounded file listing, metadata and exact-revision reads, artifact reads/writes, atomic artifact replacement and explicit missing/mismatched/error results. Keep revision resolution, repository authorization and storage selection caller-owned. The core ships no hosted database, vendor SDK, control plane or telemetry requirement. An optional consumer-owned backend implements the same interface; selecting it is never a repository-config permission to fetch arbitrary URLs.
+Adopt caller-injected storage/I/O capabilities with a local filesystem default. The interface provides bounded file listing, metadata and exact-revision reads, artifact reads/writes, atomic artifact replacement and explicit missing/mismatched/error results. Keep revision resolution, repository authorization and storage selection caller-owned. The core ships no hosted database, vendor SDK, control plane or telemetry requirement. An optional consumer-owned backend implements the same interface; selecting it is never a repository-config permission to fetch arbitrary URLs.
 
 Partition snapshots, indexes, overlays, caches and evidence by stable repository identity plus exact revision, with schema/algorithm versions in artifact metadata. Keep public entity IDs unchanged inside a partition. A multi-repository query identifies each authorized partition explicitly; there is no invented universal ecosystem revision. Cross-partition sharing may use semantic hashes only after authorization and provenance checks; semantic equality is not permission to return another repository's evidence.
 
