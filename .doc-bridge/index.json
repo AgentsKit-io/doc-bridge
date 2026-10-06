@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "contentHash": "4bb981b141ecc0f8453b2ec8bcd332cbb8064b799c5958080d2a7dace75c25b9",
+  "contentHash": "26541939e54fc8919325decd4371c3732d9b065b640d6bbdc744f1caa8bb22ca",
   "contentHashAlgo": "sha256-normalized-v1",
-  "generatedAt": "2026-10-03T00:24:40.714Z",
+  "generatedAt": "2026-10-06T20:32:47.128Z",
   "project": {
     "name": "@agentskit/doc-bridge",
     "root": "."
@@ -433,6 +433,78 @@
         "human"
       ],
       "contentHash": "37c8b9b072e943a285489cd9351a5c1c8db4b1753ed7dc717e5c7bf6e8365e23"
+    },
+    {
+      "id": "document:docs/adr/0010-versioned-change-set-and-semantic-identity.md",
+      "type": "document",
+      "title": "Versioned change sets and semantic identity",
+      "path": "docs/adr/0010-versioned-change-set-and-semantic-identity.md",
+      "description": "The rendering contract compares file-backed entity hashes and separates changed documents from unchanged documents requiring review (docs/spec/render-v1.md:96–103). Its implementation collects review impacts from current relations and changed/added targets, omitting removed targets from that lookup (src/render/data.ts:260–269).",
+      "tags": [
+        "document",
+        "human"
+      ],
+      "contentHash": "a8bcffcf31f26a22f3d31e094e9b4d01874ba92c018c71a0725badc1876f4bfb"
+    },
+    {
+      "id": "document:docs/adr/0011-findings-and-region-remediation.md",
+      "type": "document",
+      "title": "Findings and region remediation",
+      "path": "docs/adr/0011-findings-and-region-remediation.md",
+      "description": "The knowledge schema already defines confirmed, undocumented, stale-or-unverified, conflict, unresolved and not-analyzed, separately from severity (src/schemas/knowledge.ts:12–23). Fix application requires an approved, exactly bound proposal, checks base revision and entire affected files, then writes temporary files, renames them and rolls back on failure (src/fixes/proposals.ts:125–165).",
+      "tags": [
+        "document",
+        "human"
+      ],
+      "contentHash": "c886869cf5bd24bb601d8ad7e64ebf16d6a1f0aff8c6ae738e18a9a22be4041c"
+    },
+    {
+      "id": "document:docs/adr/0012-caller-enforced-service-profile.md",
+      "type": "document",
+      "title": "Caller-enforced service profile",
+      "path": "docs/adr/0012-caller-enforced-service-profile.md",
+      "description": "Configuration parsing is static, not arbitrary repository-code execution (src/config/load-config.ts:62–74, src/config/load-config.ts:105–112). That does not restrict later execution: Registry CLI invocation inherits process.env, and runner loading imports a configured local module (src/agents/registry-adapter.ts:124–126, src/agents/registry-adapter.ts:190–198).",
+      "tags": [
+        "document",
+        "human"
+      ],
+      "contentHash": "b94143f4993d0229a8a68cfb648da061c9faee694250096d2b82d7f7768790e0"
+    },
+    {
+      "id": "document:docs/adr/0013-language-neutral-discovery-adapters.md",
+      "type": "document",
+      "title": "Language-neutral discovery adapters",
+      "path": "docs/adr/0013-language-neutral-discovery-adapters.md",
+      "description": "The analyzer contract declares versioned capabilities, bounded inputs, canonical output and failure coverage (docs/spec/analyzer-plugin-v1.md:8–12). Its input currently contains language/framework/file metadata/value and its strict output contains entities/relations/coverage/diagnostics (src/plugins/contract.ts:21–39).",
+      "tags": [
+        "document",
+        "human"
+      ],
+      "contentHash": "36722275710e79cb391c010a42cd49220f2e75e2f4116e833f342f3f3eb55883"
+    },
+    {
+      "id": "document:docs/adr/0014-pluggable-io-and-revision-partitions.md",
+      "type": "document",
+      "title": "Pluggable I/O and revision partitions",
+      "path": "docs/adr/0014-pluggable-io-and-revision-partitions.md",
+      "description": "Discovery currently imports local filesystem functions directly (src/discovery/repository.ts:2–3). Retrieval reads document bodies from disk with a bounded budget and checks their hashes against snapshot evidence, falling back to snapshot data when the file changed (docs/spec/retrieval-index-v1.md:76–79).",
+      "tags": [
+        "document",
+        "human"
+      ],
+      "contentHash": "15bc9e55ee688c70a41c7f8e5da33404fbdbaa978816af9998fefd0a36e4e9f3"
+    },
+    {
+      "id": "document:docs/adr/0015-advisory-action-and-ci-built-index.md",
+      "type": "document",
+      "title": "Advisory Action and CI-built index",
+      "path": "docs/adr/0015-advisory-action-and-ci-built-index.md",
+      "description": "The Marketplace contract verifies a committed index without rebuilding first and tells users to commit regeneration when stale (docs/MARKETPLACE.md:8, docs/MARKETPLACE.md:29). The composite Action exposes config-path/gate/node-version/package-version inputs, runs gates and emits optional doctor annotations (action.yml:7–23, action.yml:51–82).",
+      "tags": [
+        "document",
+        "human"
+      ],
+      "contentHash": "ce1c4fa0dfd9bae4461f7bc1570ad210f5dff3617033d10cf8493eecb985aed1"
     },
     {
       "id": "document:docs/bench/README.md",
@@ -8115,8 +8187,8 @@
     "changes": {}
   },
   "inputs": {
-    "hash": "40d25cef6f3be53ac6c5c0f5a7bdbcf3fb859221140c5f11dd17bcfb7da353c4",
-    "fileCount": 445,
+    "hash": "d507b729b068b416d4f75307f1b2dcdbe7d25cf3fcc8863097b376dd8b227920",
+    "fileCount": 451,
     "projectionVersion": 2
   },
   "retrieval": {
@@ -8138,9 +8210,9 @@
   "projection": {
     "type": "retrieval-index",
     "schemaVersion": 1,
-    "contentHash": "e19e5700763c65a3c78bcf8fd02f001c1835817bd5a8559d433248107249b3fb",
+    "contentHash": "39051488b1b48b873e94c96dc1bb08bcdc864055a343004ed7be56d46bc39bc5",
     "contentHashAlgo": "sha256-normalized-v1",
-    "snapshotHash": "5e266be4de4764b63b7e9c1535b02ede2fde5b48b77cea90c258a5a36ae9b48f",
+    "snapshotHash": "26a6ad28ca4c2d25cab79d83ea47ea7283a43b950768ea7360c7a116bf09ec88",
     "overlayHash": "f99666ff9119084dd25c2974ae64eb6935ec2aa785ff5ad478fb9d541f7a5e94",
     "configurationHash": "91d46a4ecbfe3b55878e0b3c7608819775cf7b18aeafcc8f689eddfa462622b4",
     "lexiconVersion": 1,
@@ -8160,7 +8232,7 @@
     },
     "lexical": {
       "version": 1,
-      "documentCount": 473,
+      "documentCount": 479,
       "fieldNames": [
         "aliases",
         "body",
@@ -8171,13 +8243,13 @@
         "title"
       ],
       "averageFieldLength": {
-        "aliases": 3.463002114164905,
-        "body": 68.54968287526427,
-        "headings": 4.2579281183932345,
-        "path": 5.687103594080338,
-        "summary": 5.680761099365751,
-        "symbols": 11.66384778012685,
-        "title": 3.109936575052854
+        "aliases": 3.4446764091858038,
+        "body": 73.87682672233821,
+        "headings": 4.340292275574113,
+        "path": 5.7306889352818375,
+        "summary": 6.1837160751565765,
+        "symbols": 11.517745302713987,
+        "title": 3.1294363256784967
       }
     },
     "entries": [
@@ -10907,10 +10979,30 @@
         },
         "graph": {
           "pagerank": 0,
-          "inboundLinks": 0,
+          "inboundLinks": 3,
           "coveredBy": [],
-          "mentionedBy": [],
-          "inbound": [],
+          "mentionedBy": [
+            "document:docs/adr/0010-versioned-change-set-and-semantic-identity.md",
+            "document:docs/adr/0011-findings-and-region-remediation.md",
+            "document:docs/adr/0012-caller-enforced-service-profile.md"
+          ],
+          "inbound": [
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0010-versioned-change-set-and-semantic-identity.md",
+              "confidence": "fuzzy"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0011-findings-and-region-remediation.md",
+              "confidence": "fuzzy"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0012-caller-enforced-service-profile.md",
+              "confidence": "fuzzy"
+            }
+          ],
           "outbound": []
         },
         "contentHash": "b679cb6a47fa93cf3a1e16684e48b4d261ef7bf6500a1d17d9ea275678dd6b73",
@@ -11012,10 +11104,24 @@
         },
         "graph": {
           "pagerank": 0,
-          "inboundLinks": 0,
+          "inboundLinks": 2,
           "coveredBy": [],
-          "mentionedBy": [],
-          "inbound": [],
+          "mentionedBy": [
+            "document:docs/adr/0011-findings-and-region-remediation.md",
+            "document:docs/adr/0012-caller-enforced-service-profile.md"
+          ],
+          "inbound": [
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0011-findings-and-region-remediation.md",
+              "confidence": "fuzzy"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0012-caller-enforced-service-profile.md",
+              "confidence": "fuzzy"
+            }
+          ],
           "outbound": []
         },
         "contentHash": "9ce30e2fbf781421106516e6563cfa59825620c4fa7fc97e437cbd6b57eb4220",
@@ -11045,10 +11151,18 @@
         },
         "graph": {
           "pagerank": 0,
-          "inboundLinks": 0,
+          "inboundLinks": 1,
           "coveredBy": [],
-          "mentionedBy": [],
-          "inbound": [],
+          "mentionedBy": [
+            "document:docs/adr/0011-findings-and-region-remediation.md"
+          ],
+          "inbound": [
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0011-findings-and-region-remediation.md",
+              "confidence": "fuzzy"
+            }
+          ],
           "outbound": []
         },
         "contentHash": "54ebb47f027127810f2b8f5126619f71fff173c305663b16d570a1ca2e4ed618",
@@ -11151,6 +11265,560 @@
           "outbound": []
         },
         "contentHash": "37c8b9b072e943a285489cd9351a5c1c8db4b1753ed7dc717e5c7bf6e8365e23",
+        "provenance": "observed",
+        "confidence": "observed"
+      },
+      {
+        "id": "document:docs/adr/0010-versioned-change-set-and-semantic-identity.md",
+        "kind": "document",
+        "path": "docs/adr/0010-versioned-change-set-and-semantic-identity.md",
+        "title": "Versioned change sets and semantic identity",
+        "summary": "The rendering contract compares file-backed entity hashes and separates changed documents from unchanged documents requiring review (docs/spec/render-v1.md:96–103). Its implementation collects review impacts from current relations and changed/added targets, omitting removed targets from that lookup (src/render/data.ts:260–269).",
+        "audience": "human",
+        "aliases": [],
+        "tags": [
+          "document",
+          "human"
+        ],
+        "fields": {
+          "title": "Versioned change sets and semantic identity",
+          "headings": "Versioned change sets and semantic identity Context Decision Alternatives considered Consequences",
+          "path": "docs/adr/0010-versioned-change-set-and-semantic-identity.md",
+          "symbols": "",
+          "summary": "The rendering contract compares file-backed entity hashes and separates changed documents from unchanged documents requiring review (docs/spec/render-v1.md:96–103). Its implementation collects review impacts from current relations and changed/added targets, omitting removed targets from that lookup (src/render/data.ts:260–269).",
+          "body": "Versioned change sets and semantic identity Context The rendering contract compares file-backed entity hashes and separates changed documents from unchanged documents requiring review ( docs/spec/render-v1.md:96–103 ). Its implementation collects review impacts from current relations and changed/added targets, omitting removed targets from that lookup ( src/render/data.ts:260–269 ). Markdown symbol references target modules; relation IDs aggregate by document/kind/target without preserving the cited symbol ( docs/spec/markdown-analyzer-v1.md:16–24 ; src/discovery/markdown.ts:357–379 , src/discovery/markdown.ts:445–464 ). Historical references are needed because reused edges to removed internal targets are intentionally dropped ( docs/spec/incremental-scan-v1.md:53–57 ). Snapshot hashing includes source revision and coverage ( src/discovery/repository.ts:472–488 ); reuse-run coverage makes warm/cold snapshot hashes differ ( docs/spec/incremental-scan-v1.md:96–102 ). This is not a claim about every artifact: the public index excludes generatedAt ( docs/schemas/doc-bridge-index-v1.md:124–133 ). Retrieval identity depends on snapshot/overlay/configuration hashes, while freshness compares loaded and rebuilt index hashes ( docs/spec/retrieval-index-v1.md:60–62 ; src/gates/run-gates.ts:102–121 ). These dependencies require a migration rather than a global hash replacement. Decision Propose ChangeSetV1 as the deterministic evolution of change-digest , exposed through an ak-docs diff command and consumed by rendering and findings. It records repository/branch identity, base/head revisions, packages, release state, ordered changes, semantic hash and hash-algorithm version. Each change has kind ( symbol , module , doc-path , cli-command , cli-flag , config-key , signature , package ), operation ( added , removed , renamed , changed ) and applicable before/after identifiers with bounded path/line/hash evidence. Renames require explicit adapter evidence; similarity alone cannot prove a rename. Unsupported extraction is coverage, not an empty successful delta. Impact analysis must use both snapshots' documentation relations. Keep historical references in the prior snapshot/delta, without resurrecting dangling edges in the current graph. Symbol-level references retain the cited symbol, owner/module identity and each bounded citation location; distinct symbols in one module remain distinct references. A broken-reference finding requires the delta to prove removal of the cited target, including an old identity removed by a proven rename. Resolution failure alone produces uncertainty. Competing owners produce a separate ambiguous-reference category, without arbitrary target selection or automatic remediation. Findings integrate with ADR 0011. Changed documentation is not automatically validated: report its change separately from any remaining divergence. Reconciliation remains the authority for observed-versus-declared relations ( docs/adr/0002-documentation-audit-boundary.md:20 ). Separate semantic identity from run provenance. Snapshot and ChangeSet semantic hashes exclude revisions, timestamps and reuse-run statistics; those remain in provenance. Include repository identity, canonical entities/relations, evidence content, meaningful coverage/limitations, analyzer versions, effective configuration and pipeline semantics. Delta identity includes release state and package/version mapping, so stamping changes routing identity even when code changes are unchanged. Canonical ordering and explicit hash-algorithm versions are mandatory. File/region hashes and exact approval bindings are distinct; semantic equality cannot transfer approval across revisions. Keep existing study hashes unchanged. Version the hash projection and migrate dependent retrieval/index/gate contracts together. Readers identify legacy versus new algorithms, never compare unlike hashes as equivalent, and return an actionable migration diagnostic for unsupported versions. Legacy ",
+          "aliases": "document human"
+        },
+        "graph": {
+          "pagerank": 0,
+          "inboundLinks": 0,
+          "coveredBy": [],
+          "mentionedBy": [],
+          "inbound": [],
+          "outbound": [
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0002-documentation-audit-boundary.md",
+              "confidence": "fuzzy"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/PRD-doc-bridge-knowledge-engine.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/schemas/doc-bridge-index-v1.md",
+              "confidence": "fuzzy"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/spec/analyzer-plugin-v1.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/spec/cli.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/spec/config-v1.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/spec/incremental-scan-v1.md",
+              "confidence": "fuzzy"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/spec/markdown-analyzer-v1.md",
+              "confidence": "fuzzy"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/spec/public-parity-v1.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/spec/render-v1.md",
+              "confidence": "fuzzy"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/spec/retrieval-index-v1.md",
+              "confidence": "fuzzy"
+            },
+            {
+              "kind": "mentions",
+              "id": "module:src/discovery/markdown.ts",
+              "confidence": "fuzzy"
+            },
+            {
+              "kind": "mentions",
+              "id": "module:src/discovery/repository.ts",
+              "confidence": "fuzzy"
+            },
+            {
+              "kind": "mentions",
+              "id": "module:src/gates/run-gates.ts",
+              "confidence": "fuzzy"
+            },
+            {
+              "kind": "mentions",
+              "id": "module:src/render/data.ts",
+              "confidence": "fuzzy"
+            },
+            {
+              "kind": "mentions",
+              "id": "module:src/schemas/knowledge.ts",
+              "confidence": "observed"
+            }
+          ]
+        },
+        "contentHash": "a8bcffcf31f26a22f3d31e094e9b4d01874ba92c018c71a0725badc1876f4bfb",
+        "provenance": "observed",
+        "confidence": "observed"
+      },
+      {
+        "id": "document:docs/adr/0011-findings-and-region-remediation.md",
+        "kind": "document",
+        "path": "docs/adr/0011-findings-and-region-remediation.md",
+        "title": "Findings and region remediation",
+        "summary": "The knowledge schema already defines confirmed, undocumented, stale-or-unverified, conflict, unresolved and not-analyzed, separately from severity (src/schemas/knowledge.ts:12–23). Fix application requires an approved, exactly bound proposal, checks base revision and entire affected files, then writes temporary files, renames them and rolls back on failure (src/fixes/proposals.ts:125–165).",
+        "audience": "human",
+        "aliases": [],
+        "tags": [
+          "document",
+          "human"
+        ],
+        "fields": {
+          "title": "Findings and region remediation",
+          "headings": "Findings and region remediation Context Decision Narrow approval-boundary supersession Handoff compatibility Alternatives considered Consequences",
+          "path": "docs/adr/0011-findings-and-region-remediation.md",
+          "symbols": "",
+          "summary": "The knowledge schema already defines confirmed, undocumented, stale-or-unverified, conflict, unresolved and not-analyzed, separately from severity (src/schemas/knowledge.ts:12–23). Fix application requires an approved, exactly bound proposal, checks base revision and entire affected files, then writes temporary files, renames them and rolls back on failure (src/fixes/proposals.ts:125–165).",
+          "body": "Findings and region remediation Context The knowledge schema already defines confirmed , undocumented , stale-or-unverified , conflict , unresolved and not-analyzed , separately from severity ( src/schemas/knowledge.ts:12–23 ). Fix application requires an approved, exactly bound proposal, checks base revision and entire affected files, then writes temporary files, renames them and rolls back on failure ( src/fixes/proposals.ts:125–165 ). Its displayed diff currently uses whole-file minus/plus content and a bare @@ ( src/fixes/proposals.ts:38–42 ). Enrichment retains settled human/adjudicator rejections against cache replay ( src/enrich/stage.ts:199–201 ), and approval binds proposal and target content ( docs/spec/enrichment-overlay-v1.md:195–202 ). ADR 0006 requires approval before conversion to a fix or resolution, and verification after application ( docs/adr/0006-registry-semantic-grounding.md:13 ). ADR 0002 requires human approval of documentation changes and prohibits audit edits of generated documentation ( docs/adr/0002-documentation-audit-boundary.md:13–15 ). A caller-designated isolated review workspace needs a precise presentation boundary while retaining human acceptance authority. Decision Propose separate Finding, Remediation and Decision contracts. Findings reuse the existing knowledge status taxonomy above. Their category includes ADR 0010's proven broken-reference and separate ambiguous-reference . Layer, confidence, severity, entities, bounded doc/code evidence and policy routing are independent fields. Routing ( proposed , excluded , routed-to-L2 , pending-version ) never changes a finding's epistemic status. Preserve document classification/frontmatter overrides ( docs/adr/0005-documentation-quality-and-criticality.md:11–13 ); unify classification before routing. Historical/archived documents are excluded from patches with visible coverage; suspicious migration context routes to interpretation; generated regions point to their generator; out-of-range version targets remain pending. Deterministic evidence is recorded before policy disposition. A finding ID hashes category, assertion locator (document plus cited symbol/key) and relevant evidence content, excluding revision/time. Provenance retains analyzed revisions. Remediations bind a finding/evidence hash and edits {path, range, expectedRegionHash, replacement} , with lifecycle proposed → in-review → merged , or rejected , stale , superseded . Presentation is not resolution. Decisions name an authenticated caller-supplied human identity, target kind/ID, reason and evidence hash; the engine validates binding while the caller proves identity/authority. Rejecting a finding suppresses unchanged relevant evidence until it changes. Rejecting a remediation rejects only that correction, preserving the finding and allowing a different correction. Extend enrichment's settled persistence rather than adding another replay authority. A decision that implementation should change records that disposition without automatically creating an external issue. Closing a review alone is neither approval nor individual rejection. Region validation replaces whole-file staleness only after fresh evidence validation. Keep base revision/configuration provenance; a changed revision requires an explicit revalidation/rebinding record. Hash exact region bytes under a declared algorithm and coordinate convention. First check the specified range. Relocation is allowed only when the exact original region plus recorded bounded anchors has one match within the permitted file; zero or multiple matches are stale, with no fuzzy relocation. Never relocate across files. Reject overlapping or nested edit ranges, duplicate edits, ambiguous same-offset insertions and protected/generated-region intersections before any write. Apply non-overlapping edits from the end of each file. Unrelated edits outside proven regions may survive, but do not waive evidence, scope or approval checks. Use real unified di",
+          "aliases": "document human"
+        },
+        "graph": {
+          "pagerank": 0,
+          "inboundLinks": 0,
+          "coveredBy": [],
+          "mentionedBy": [],
+          "inbound": [],
+          "outbound": [
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0002-documentation-audit-boundary.md",
+              "confidence": "fuzzy"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0005-documentation-quality-and-criticality.md",
+              "confidence": "fuzzy"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0006-registry-semantic-grounding.md",
+              "confidence": "fuzzy"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/PRD-doc-bridge-knowledge-engine.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/PRD-knowledge-retrieval-and-enrichment.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/schemas/agent-handoff-v1.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/schemas/doc-bridge-index-v1.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/spec/cli.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/spec/documentation-audit-v1.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/spec/enrichment-overlay-v1.md",
+              "confidence": "fuzzy"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/spec/mcp-knowledge-tools-v1.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/spec/retrieval-index-v1.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "module:src/enrich/stage.ts",
+              "confidence": "fuzzy"
+            },
+            {
+              "kind": "mentions",
+              "id": "module:src/fixes/proposals.ts",
+              "confidence": "fuzzy"
+            },
+            {
+              "kind": "mentions",
+              "id": "module:src/schemas/agent-handoff.ts",
+              "confidence": "fuzzy"
+            },
+            {
+              "kind": "mentions",
+              "id": "module:src/schemas/knowledge.ts",
+              "confidence": "fuzzy"
+            },
+            {
+              "kind": "mentions-symbol",
+              "id": "module:src/schemas/agent-handoff.ts",
+              "confidence": "observed"
+            }
+          ]
+        },
+        "contentHash": "c886869cf5bd24bb601d8ad7e64ebf16d6a1f0aff8c6ae738e18a9a22be4041c",
+        "provenance": "observed",
+        "confidence": "observed"
+      },
+      {
+        "id": "document:docs/adr/0012-caller-enforced-service-profile.md",
+        "kind": "document",
+        "path": "docs/adr/0012-caller-enforced-service-profile.md",
+        "title": "Caller-enforced service profile",
+        "summary": "Configuration parsing is static, not arbitrary repository-code execution (src/config/load-config.ts:62–74, src/config/load-config.ts:105–112). That does not restrict later execution: Registry CLI invocation inherits process.env, and runner loading imports a configured local module (src/agents/registry-adapter.ts:124–126, src/agents/registry-adapter.ts:190–198).",
+        "audience": "human",
+        "aliases": [],
+        "tags": [
+          "document",
+          "human"
+        ],
+        "fields": {
+          "title": "Caller-enforced service profile",
+          "headings": "Caller-enforced service profile Context Decision Alternatives considered Consequences",
+          "path": "docs/adr/0012-caller-enforced-service-profile.md",
+          "symbols": "",
+          "summary": "Configuration parsing is static, not arbitrary repository-code execution (src/config/load-config.ts:62–74, src/config/load-config.ts:105–112). That does not restrict later execution: Registry CLI invocation inherits process.env, and runner loading imports a configured local module (src/agents/registry-adapter.ts:124–126, src/agents/registry-adapter.ts:190–198).",
+          "body": "Caller-enforced service profile Context Configuration parsing is static, not arbitrary repository-code execution ( src/config/load-config.ts:62–74 , src/config/load-config.ts:105–112 ). That does not restrict later execution: Registry CLI invocation inherits process.env , and runner loading imports a configured local module ( src/agents/registry-adapter.ts:124–126 , src/agents/registry-adapter.ts:190–198 ). Configuration exposes runtime and runner modules ( docs/spec/config-v1.md:773–786 ); federation fetches URLs and memory PR promotion pushes ( src/federation/llms.ts:25–29 ; src/memory/github-pr.ts:143–144 ). Watch and local agent paths are documented CLI capabilities ( docs/spec/cli.md:67–84 ). A hosted consumer requires a caller-owned ceiling below these entry points. Decision Propose an explicit service execution profile selected by the trusted caller before configuration loading. The immutable effective capability context propagates through config, discovery, query, CLI/MCP handlers and every execution/I/O entry point. Repository data, config, nested calls, defaults and cached state cannot widen it. Direct library calls must enforce the same ceiling as the top-level API. An absent capability context in a service-bound operation fails closed. Disable repository-selected Registry runner/runtime modules, agent/study CLIs and all repository-selected executable/custom plugin modules; federation fetch; memory PR promotion; and watch. Disable implicit provider/network activation. Trusted adapters are registered by the caller, not imported from repository paths. Reads use bounded contained storage capabilities (ADR 0014); writes are limited to caller-designated artifact storage or separately authorized review presentation (ADR 0011). A service profile is an engine capability restriction, not an OS sandbox or permission to publish. Caller-managed execution environments and credentials remain outside this ADR. Use the following exact repository-config leaf allowlist; arrays/maps admit only the named member leaves. Parent objects are containers, not wildcard grants. This is a proposed restricted subset of the existing config shapes ( src/config/schema.ts:16–30 , src/config/schema.ts:184–215 , src/config/schema.ts:250–290 ): Container Permitted leaves --- --- Root schemaVersion corpus.agent root , index , include[] , exclude[] , okf.requireType , okf.allowedTypes[] audit.documentation criticalPaths[] , generatedPaths[] , exclude[] , minWords , requiredSections[] , requireExamples , exactDuplicates , defaultTier , tierRules[].pattern , tierRules[].tier , tierRules[].critical , requiredCriticalMetadata[] reconciliation scope , requiredRelationKinds[] , requiredRelationTargets , includeOrphanedDocuments analysis.areas depth , roots[] , exclude[] safety exclude[] , maxFiles , maxBytes , maxTimeMs , maxMemoryMb , redactSecrets All other repository keys are ignored with deterministic diagnostics naming key and reason, never secret values; malformed permitted values fail validation. In particular, repository config cannot select human/custom plugins, modules, output destinations, network URLs, executable checks, transport listeners or gates that execute commands. A caller may supply trusted human-document adapters, storage, gate policy and additional restrictions separately; they are not repo-key exceptions. All permitted paths/globs remain inside caller-authorized read roots; limits combine by taking the stricter bound, excludes combine by union, and redaction cannot be disabled by repository input. Repo-selected generated/excluded paths remain visible as coverage rather than silently disappearing. Apply profile-safe defaults after filtering, with execution/network disabled regardless of ordinary local defaults. Unavailable analyzers, skipped agents, ignored options and exhausted budgets retain explicit not-analyzed /partial coverage. Natural-language correctness is not relabeled deterministic when agents are unavailable ( docs/adr/0002-d",
+          "aliases": "document human"
+        },
+        "graph": {
+          "pagerank": 0,
+          "inboundLinks": 0,
+          "coveredBy": [],
+          "mentionedBy": [],
+          "inbound": [],
+          "outbound": [
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0002-documentation-audit-boundary.md",
+              "confidence": "fuzzy"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0005-documentation-quality-and-criticality.md",
+              "confidence": "fuzzy"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/spec/analyzer-plugin-v1.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/spec/cli.md",
+              "confidence": "fuzzy"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/spec/config-v1.md",
+              "confidence": "fuzzy"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/spec/documentation-audit-v1.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/spec/enrichment-overlay-v1.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/spec/mcp-knowledge-tools-v1.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "module:src/agents/registry-adapter.ts",
+              "confidence": "fuzzy"
+            },
+            {
+              "kind": "mentions",
+              "id": "module:src/config/load-config.ts",
+              "confidence": "fuzzy"
+            },
+            {
+              "kind": "mentions",
+              "id": "module:src/config/schema.ts",
+              "confidence": "fuzzy"
+            },
+            {
+              "kind": "mentions",
+              "id": "module:src/federation/llms.ts",
+              "confidence": "fuzzy"
+            },
+            {
+              "kind": "mentions",
+              "id": "module:src/memory/github-pr.ts",
+              "confidence": "fuzzy"
+            },
+            {
+              "kind": "mentions-symbol",
+              "id": "module:src/safety/repository.ts",
+              "confidence": "observed"
+            }
+          ]
+        },
+        "contentHash": "b94143f4993d0229a8a68cfb648da061c9faee694250096d2b82d7f7768790e0",
+        "provenance": "observed",
+        "confidence": "observed"
+      },
+      {
+        "id": "document:docs/adr/0013-language-neutral-discovery-adapters.md",
+        "kind": "document",
+        "path": "docs/adr/0013-language-neutral-discovery-adapters.md",
+        "title": "Language-neutral discovery adapters",
+        "summary": "The analyzer contract declares versioned capabilities, bounded inputs, canonical output and failure coverage (docs/spec/analyzer-plugin-v1.md:8–12). Its input currently contains language/framework/file metadata/value and its strict output contains entities/relations/coverage/diagnostics (src/plugins/contract.ts:21–39).",
+        "audience": "human",
+        "aliases": [],
+        "tags": [
+          "document",
+          "human"
+        ],
+        "fields": {
+          "title": "Language-neutral discovery adapters",
+          "headings": "Language-neutral discovery adapters Context Decision Alternatives considered Consequences",
+          "path": "docs/adr/0013-language-neutral-discovery-adapters.md",
+          "symbols": "",
+          "summary": "The analyzer contract declares versioned capabilities, bounded inputs, canonical output and failure coverage (docs/spec/analyzer-plugin-v1.md:8–12). Its input currently contains language/framework/file metadata/value and its strict output contains entities/relations/coverage/diagnostics (src/plugins/contract.ts:21–39).",
+          "body": "Language-neutral discovery adapters Context The analyzer contract declares versioned capabilities, bounded inputs, canonical output and failure coverage ( docs/spec/analyzer-plugin-v1.md:8–12 ). Its input currently contains language/framework/file metadata/value and its strict output contains entities/relations/coverage/diagnostics ( src/plugins/contract.ts:21–39 ). Repository discovery directly imports TypeScript and local filesystem functions ( src/discovery/repository.ts:1–4 ). The language-independent delta and version-routing proposal needs a shared discovery contract with ecosystem-owned semantics rather than more language checks in the core. Decision Propose an extended, versioned analyzer/discovery contract. Migrate JavaScript/TypeScript discovery as the first built-in plugin using it, preserving stable public entity/relation IDs and existing deterministic outputs where semantics are unchanged. The core orchestrates bounded reads, validated canonical output, snapshots, diff and delta; it must not interpret language syntax or ecosystem version ordering. Adapters declare supported capabilities and unsupported constructs, limits, schema/pipeline compatibility and their own versions. Extend responsibilities to manifest and lockfile interpretation; tag/release-event to package/version mapping; exported symbol ownership/re-exports; CLI commands/flags; configuration keys; and signatures. Preserve purl identity and vers range representation from ADR 0010, with comparison and unresolved mapping evidence delegated to the relevant ecosystem adapter. Extraction returns observed facts with bounded path/line/hash evidence, never a release inferred without an event or an arbitrary ambiguous owner. Replace free filesystem access in adapter inputs with a caller-provided bounded read abstraction tied to the exact repository/revision partition (ADR 0014). Reads enforce allowed paths, file/byte/time/memory budgets and cancellation. Repository configuration selects only caller-registered plugins in the service profile (ADR 0012). Plugin ordering and output ordering remain deterministic; malformed/failed/unsupported output becomes explicit partial or not-analyzed coverage, not completed analysis. Version the extended input/output shapes and reject incompatible manifests before execution. A fake non-JS fixture adapter is mandatory acceptance evidence: it must read a synthetic manifest/lockfile and symbol/command/config/signature facts, create base/head snapshots, then produce diff and ChangeSet output through the same core API without any core change or language-specific condition. It must demonstrate package range comparison and release mapping as adapter responsibilities. An adapter that only registers or returns an empty snapshot does not establish this boundary. Alternatives considered - Leave JS/TS in the core and add plugins only for new languages: perpetuates a second discovery pipeline. - Let adapters return arbitrary diffs: duplicates delta semantics and prevents common validation. - Give plugins unrestricted paths or executable module selection from repo config: defeats bounded reads and the service ceiling. - Add production analyzers for every language now: unnecessary to prove the contract; the fixture plus JS/TS migration is sufficient. Consequences Required follow-up contracts: evolve docs/spec/analyzer-plugin-v1.md , src/plugins/contract.ts , docs/spec/markdown-analyzer-v1.md , docs/spec/incremental-scan-v1.md , docs/spec/config-v1.md , src/schemas/knowledge.ts , docs/PRD-enterprise-hardening.md and ADR 0010's proposed versioned-delta spec. Capability/contract version changes must invalidate relevant semantic caches; unsupported analysis stays visible. Implementation acceptance must run the fixture adapter's full snapshot → diff → delta flow, compare JS/TS parity for unchanged semantics, exercise symbols/re-exports and commands/flags/config/signatures, manifest/lockfile precedence, unresolved/ambiguous release mapping, ecosyst",
+          "aliases": "document human"
+        },
+        "graph": {
+          "pagerank": 0,
+          "inboundLinks": 0,
+          "coveredBy": [],
+          "mentionedBy": [],
+          "inbound": [],
+          "outbound": [
+            {
+              "kind": "mentions",
+              "id": "document:docs/PRD-enterprise-hardening.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/spec/analyzer-plugin-v1.md",
+              "confidence": "fuzzy"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/spec/config-v1.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/spec/incremental-scan-v1.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/spec/markdown-analyzer-v1.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "module:src/discovery/repository.ts",
+              "confidence": "fuzzy"
+            },
+            {
+              "kind": "mentions",
+              "id": "module:src/plugins/contract.ts",
+              "confidence": "fuzzy"
+            },
+            {
+              "kind": "mentions",
+              "id": "module:src/schemas/knowledge.ts",
+              "confidence": "observed"
+            }
+          ]
+        },
+        "contentHash": "36722275710e79cb391c010a42cd49220f2e75e2f4116e833f342f3f3eb55883",
+        "provenance": "observed",
+        "confidence": "observed"
+      },
+      {
+        "id": "document:docs/adr/0014-pluggable-io-and-revision-partitions.md",
+        "kind": "document",
+        "path": "docs/adr/0014-pluggable-io-and-revision-partitions.md",
+        "title": "Pluggable I/O and revision partitions",
+        "summary": "Discovery currently imports local filesystem functions directly (src/discovery/repository.ts:2–3). Retrieval reads document bodies from disk with a bounded budget and checks their hashes against snapshot evidence, falling back to snapshot data when the file changed (docs/spec/retrieval-index-v1.md:76–79).",
+        "audience": "human",
+        "aliases": [],
+        "tags": [
+          "document",
+          "human"
+        ],
+        "fields": {
+          "title": "Pluggable I/O and revision partitions",
+          "headings": "Pluggable I/O and revision partitions Context Decision Alternatives considered Consequences",
+          "path": "docs/adr/0014-pluggable-io-and-revision-partitions.md",
+          "symbols": "",
+          "summary": "Discovery currently imports local filesystem functions directly (src/discovery/repository.ts:2–3). Retrieval reads document bodies from disk with a bounded budget and checks their hashes against snapshot evidence, falling back to snapshot data when the file changed (docs/spec/retrieval-index-v1.md:76–79).",
+          "body": "Pluggable I/O and revision partitions Context Discovery currently imports local filesystem functions directly ( src/discovery/repository.ts:2–3 ). Retrieval reads document bodies from disk with a bounded budget and checks their hashes against snapshot evidence, falling back to snapshot data when the file changed ( docs/spec/retrieval-index-v1.md:76–79 ). The retrieval PRD excludes a hosted control plane, database-backed store and telemetry leaving the process ( docs/PRD-knowledge-retrieval-and-enrichment.md:456 ). A caller-injected storage boundary must preserve local behavior and exact evidence without requiring a hosted backend in the core. Decision Propose caller-injected storage/I/O capabilities with a local filesystem default. The interface provides bounded file listing, metadata and exact-revision reads, artifact reads/writes, atomic artifact replacement and explicit missing/mismatched/error results. Keep revision resolution, repository authorization and storage selection caller-owned. The core ships no hosted database, vendor SDK, control plane or telemetry requirement. An optional consumer-owned backend implements the same interface; selecting it is never a repository-config permission to fetch arbitrary URLs. Partition snapshots, indexes, overlays, caches and evidence by stable repository identity plus exact revision, with schema/algorithm versions in artifact metadata. Keep public entity IDs unchanged inside a partition. A multi-repository query identifies each authorized partition explicitly; there is no invented universal ecosystem revision. Cross-partition sharing may use semantic hashes only after authorization and provenance checks; semantic equality is not permission to return another repository's evidence. Every read names an exact revision and repository, validates containment and bounds, and verifies bytes against expected content evidence. Never fall back silently to latest/default-branch content or a neighboring partition. Missing bodies retain the snapshot-derived fallback only with an explicit availability limitation; stale live bytes cannot be substituted as if they matched. Local mutable workspaces must validate the revision and evidence for each read rather than treating a directory name as immutability. Artifact writes bind their partition and use atomic publication; interrupted writes cannot expose partial artifacts as valid. Cancellation and resource limits propagate through discovery and retrieval (ADR 0013). Clarify the retrieval PRD storage exclusion narrowly: the engine still does not implement or require a hosted control plane, database-backed store or outbound telemetry. A caller-owned injected storage implementation is permitted behind the generic interface; backend operation, authorization and deployment remain outside the core. This is a proposed scope clarification, not a claim that the existing PRD already documents injectable storage. Alternatives considered - A mandatory central database: changes the local engine's operating model without proving a need. - Key storage by repository alone: mixes revisions and invalidates citation provenance. - Use latest content on an exact-revision miss: produces unsupported answers. - Change every entity ID to carry repository/revision: couples public graph identity to storage layout; partition context suffices. Consequences Required follow-up contracts: new docs/spec/storage-io-v1.md ; evolve docs/spec/retrieval-index-v1.md , docs/spec/incremental-scan-v1.md , docs/spec/analyzer-plugin-v1.md , docs/spec/config-v1.md , docs/schemas/doc-bridge-index-v1.md , docs/spec/cli.md , docs/spec/mcp-knowledge-tools-v1.md and the exclusion at docs/PRD-knowledge-retrieval-and-enrichment.md . Specify repository/revision selection in public API docs and migration of unpartitioned local artifacts without ambiguous default reads. Implementation acceptance must compare local and injected storage snapshot/index/query outputs on the same bytes; run two repositories with ",
+          "aliases": "document human"
+        },
+        "graph": {
+          "pagerank": 0,
+          "inboundLinks": 0,
+          "coveredBy": [],
+          "mentionedBy": [],
+          "inbound": [],
+          "outbound": [
+            {
+              "kind": "mentions",
+              "id": "document:docs/PRD-knowledge-retrieval-and-enrichment.md",
+              "confidence": "fuzzy"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/schemas/doc-bridge-index-v1.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/spec/analyzer-plugin-v1.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/spec/cli.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/spec/config-v1.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/spec/incremental-scan-v1.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/spec/mcp-knowledge-tools-v1.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/spec/retrieval-index-v1.md",
+              "confidence": "fuzzy"
+            },
+            {
+              "kind": "mentions",
+              "id": "module:src/discovery/repository.ts",
+              "confidence": "fuzzy"
+            }
+          ]
+        },
+        "contentHash": "15bc9e55ee688c70a41c7f8e5da33404fbdbaa978816af9998fefd0a36e4e9f3",
+        "provenance": "observed",
+        "confidence": "observed"
+      },
+      {
+        "id": "document:docs/adr/0015-advisory-action-and-ci-built-index.md",
+        "kind": "document",
+        "path": "docs/adr/0015-advisory-action-and-ci-built-index.md",
+        "title": "Advisory Action and CI-built index",
+        "summary": "The Marketplace contract verifies a committed index without rebuilding first and tells users to commit regeneration when stale (docs/MARKETPLACE.md:8, docs/MARKETPLACE.md:29). The composite Action exposes config-path/gate/node-version/package-version inputs, runs gates and emits optional doctor annotations (action.yml:7–23, action.yml:51–82).",
+        "audience": "human",
+        "aliases": [],
+        "tags": [
+          "document",
+          "human"
+        ],
+        "fields": {
+          "title": "Advisory Action and CI-built index",
+          "headings": "Advisory Action and CI-built index Context Decision Alternatives considered Consequences",
+          "path": "docs/adr/0015-advisory-action-and-ci-built-index.md",
+          "symbols": "",
+          "summary": "The Marketplace contract verifies a committed index without rebuilding first and tells users to commit regeneration when stale (docs/MARKETPLACE.md:8, docs/MARKETPLACE.md:29). The composite Action exposes config-path/gate/node-version/package-version inputs, runs gates and emits optional doctor annotations (action.yml:7–23, action.yml:51–82).",
+          "body": "Advisory Action and CI-built index Context The Marketplace contract verifies a committed index without rebuilding first and tells users to commit regeneration when stale ( docs/MARKETPLACE.md:8 , docs/MARKETPLACE.md:29 ). The composite Action exposes config-path/gate/node-version/package-version inputs, runs gates and emits optional doctor annotations ( action.yml:7–23 , action.yml:51–82 ). Its documented workflow requests contents: read ( docs/MARKETPLACE.md:16–17 ). A CI-produced index and deterministic PR advisory need explicit modes without silently repairing committed-index drift. Decision Propose explicit index-source modes: committed remains the default and validates the checked-in index before any rebuild; ci-built builds an ephemeral index from the declared exact revision into an isolated artifact destination and validates that artifact's provenance/reproducibility. CI output is not written over the committed index. If a committed index exists in CI-built mode, check its drift independently first and report it under the configured blocking policy; selecting CI-built mode cannot hide that result. A missing committed index is expected only in explicitly selected CI-built mode. Reports label source mode and source revision, rather than presenting generated freshness as committed freshness. Add an opt-in advisory Layer-1 PR comment consuming the base/head snapshots and ADR 0010's ChangeSet. Show deterministic findings, evidence, analyzed revisions, policy exclusions, missing/partial coverage and a clear advisory label. This channel is separate from configured blocking gates: a successful comment does not clear a gate, and a missing comment does not alter gate results. Interpretation and remediation acceptance remain human-owned; no comment auto-merges or applies edits. Define exact base/head repository/revision inputs and trusted caller-owned gate/config selection. Treat PR content as untrusted data. Analysis must not execute head-revision scripts, dependencies, hooks, repository-selected modules or commands with write credentials; apply the service capability ceiling (ADR 0012). Any permitted executable generating check belongs to a separately authorized unprivileged sandbox, not the comment publisher. Builds use trusted installed engine/adapters and bounded reads. A privileged comment publisher consumes only validated bounded data artifacts from unprivileged analysis, verifies repository/PR/revision binding and never checks out or executes untrusted PR code. Escape comment content and never include credentials or raw unsafe agent output. Request read access only for analysis; enable a PR-comment write permission only for the separately opted-in publisher and only where the caller's event/token permits it. Specify the concrete token permission for the chosen comment endpoint in the future Action contract, including fork behavior. Do not use a privileged event to run untrusted head code. The engine does not create applications or request broad installation scopes. Deduplicate comments with a stable engine-owned marker scoped to repository/PR/advisory type. Verify author/marker before updating; update only the engine's own existing comment, reconcile uncertain create/update results before retrying, and avoid stale runs overwriting a newer analyzed head. Bind runs to base/head hashes and mode, report superseded runs and use bounded retries. When commenting is disabled, unauthorized, unavailable or unsupported, emit the same advisory to the local CI summary/artifact and explain the fallback. Comment failure never masks gate results; callers may require delivery separately without turning advisory findings into blocking gates. Alternatives considered - Always rebuild before freshness checks: masks committed-index drift. - Make advisory findings a new implicit blocking gate: changes configured policy without consent. - Analyze untrusted PR code in the privileged publisher: expands repository content into execution authority. -",
+          "aliases": "document human"
+        },
+        "graph": {
+          "pagerank": 0,
+          "inboundLinks": 0,
+          "coveredBy": [],
+          "mentionedBy": [],
+          "inbound": [],
+          "outbound": [
+            {
+              "kind": "mentions",
+              "id": "document:docs/guides/gate-ci.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/MARKETPLACE.md",
+              "confidence": "fuzzy"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/spec/cli.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/spec/config-v1.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/spec/public-parity-v1.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "module:scripts/marketplace-contract.test.mjs",
+              "confidence": "observed"
+            }
+          ]
+        },
+        "contentHash": "ce1c4fa0dfd9bae4461f7bc1570ad210f5dff3617033d10cf8493eecb985aed1",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -13406,9 +14074,11 @@
         },
         "graph": {
           "pagerank": 0.013518,
-          "inboundLinks": 6,
+          "inboundLinks": 7,
           "coveredBy": [],
-          "mentionedBy": [],
+          "mentionedBy": [
+            "document:docs/adr/0015-advisory-action-and-ci-built-index.md"
+          ],
           "inbound": [
             {
               "kind": "links-to",
@@ -13438,6 +14108,11 @@
             {
               "kind": "links-to",
               "id": "document:README.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0015-advisory-action-and-ci-built-index.md",
               "confidence": "observed"
             }
           ],
@@ -14257,9 +14932,11 @@
         },
         "graph": {
           "pagerank": 0.015073,
-          "inboundLinks": 5,
+          "inboundLinks": 6,
           "coveredBy": [],
-          "mentionedBy": [],
+          "mentionedBy": [
+            "document:docs/adr/0015-advisory-action-and-ci-built-index.md"
+          ],
           "inbound": [
             {
               "kind": "links-to",
@@ -14285,6 +14962,11 @@
               "kind": "links-to",
               "id": "document:README.md",
               "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0015-advisory-action-and-ci-built-index.md",
+              "confidence": "fuzzy"
             }
           ],
           "outbound": [
@@ -14649,12 +15331,24 @@
         },
         "graph": {
           "pagerank": 0,
-          "inboundLinks": 1,
+          "inboundLinks": 3,
           "coveredBy": [],
           "mentionedBy": [
+            "document:docs/adr/0010-versioned-change-set-and-semantic-identity.md",
+            "document:docs/adr/0011-findings-and-region-remediation.md",
             "document:docs/PRD-knowledge-retrieval-and-enrichment.md"
           ],
           "inbound": [
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0010-versioned-change-set-and-semantic-identity.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0011-findings-and-region-remediation.md",
+              "confidence": "observed"
+            },
             {
               "kind": "mentions",
               "id": "document:docs/PRD-knowledge-retrieval-and-enrichment.md",
@@ -14744,10 +15438,18 @@
         },
         "graph": {
           "pagerank": 0,
-          "inboundLinks": 0,
+          "inboundLinks": 1,
           "coveredBy": [],
-          "mentionedBy": [],
-          "inbound": [],
+          "mentionedBy": [
+            "document:docs/adr/0013-language-neutral-discovery-adapters.md"
+          ],
+          "inbound": [
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0013-language-neutral-discovery-adapters.md",
+              "confidence": "observed"
+            }
+          ],
           "outbound": []
         },
         "contentHash": "b6ebd33a2a139f20ca63a2d78560ee7a5659c860be06fc287e7891088b26fbd8",
@@ -14777,10 +15479,24 @@
         },
         "graph": {
           "pagerank": 0,
-          "inboundLinks": 0,
+          "inboundLinks": 2,
           "coveredBy": [],
-          "mentionedBy": [],
-          "inbound": [],
+          "mentionedBy": [
+            "document:docs/adr/0011-findings-and-region-remediation.md",
+            "document:docs/adr/0014-pluggable-io-and-revision-partitions.md"
+          ],
+          "inbound": [
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0011-findings-and-region-remediation.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0014-pluggable-io-and-revision-partitions.md",
+              "confidence": "fuzzy"
+            }
+          ],
           "outbound": [
             {
               "kind": "mentions",
@@ -15389,9 +16105,11 @@
         },
         "graph": {
           "pagerank": 0.014631,
-          "inboundLinks": 6,
+          "inboundLinks": 7,
           "coveredBy": [],
-          "mentionedBy": [],
+          "mentionedBy": [
+            "document:docs/adr/0011-findings-and-region-remediation.md"
+          ],
           "inbound": [
             {
               "kind": "links-to",
@@ -15421,6 +16139,11 @@
             {
               "kind": "links-to",
               "id": "document:docs/spec/config-v1.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0011-findings-and-region-remediation.md",
               "confidence": "observed"
             }
           ],
@@ -15469,9 +16192,13 @@
         },
         "graph": {
           "pagerank": 0.008274,
-          "inboundLinks": 2,
+          "inboundLinks": 5,
           "coveredBy": [],
-          "mentionedBy": [],
+          "mentionedBy": [
+            "document:docs/adr/0010-versioned-change-set-and-semantic-identity.md",
+            "document:docs/adr/0011-findings-and-region-remediation.md",
+            "document:docs/adr/0014-pluggable-io-and-revision-partitions.md"
+          ],
           "inbound": [
             {
               "kind": "links-to",
@@ -15481,6 +16208,21 @@
             {
               "kind": "links-to",
               "id": "document:docs/spec/config-v1.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0010-versioned-change-set-and-semantic-identity.md",
+              "confidence": "fuzzy"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0011-findings-and-region-remediation.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0014-pluggable-io-and-revision-partitions.md",
               "confidence": "observed"
             }
           ],
@@ -15677,12 +16419,36 @@
         },
         "graph": {
           "pagerank": 0,
-          "inboundLinks": 1,
+          "inboundLinks": 5,
           "coveredBy": [],
           "mentionedBy": [
+            "document:docs/adr/0010-versioned-change-set-and-semantic-identity.md",
+            "document:docs/adr/0012-caller-enforced-service-profile.md",
+            "document:docs/adr/0013-language-neutral-discovery-adapters.md",
+            "document:docs/adr/0014-pluggable-io-and-revision-partitions.md",
             "document:docs/spec/config-v1.md"
           ],
           "inbound": [
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0010-versioned-change-set-and-semantic-identity.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0012-caller-enforced-service-profile.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0013-language-neutral-discovery-adapters.md",
+              "confidence": "fuzzy"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0014-pluggable-io-and-revision-partitions.md",
+              "confidence": "observed"
+            },
             {
               "kind": "mentions",
               "id": "document:docs/spec/config-v1.md",
@@ -15757,11 +16523,16 @@
         },
         "graph": {
           "pagerank": 0.017521,
-          "inboundLinks": 11,
+          "inboundLinks": 16,
           "coveredBy": [],
           "mentionedBy": [
             "document:AGENTS.md",
             "document:CONTRIBUTING.md",
+            "document:docs/adr/0010-versioned-change-set-and-semantic-identity.md",
+            "document:docs/adr/0011-findings-and-region-remediation.md",
+            "document:docs/adr/0012-caller-enforced-service-profile.md",
+            "document:docs/adr/0014-pluggable-io-and-revision-partitions.md",
+            "document:docs/adr/0015-advisory-action-and-ci-built-index.md",
             "document:README.md"
           ],
           "inbound": [
@@ -15814,6 +16585,31 @@
               "kind": "mentions",
               "id": "document:CONTRIBUTING.md",
               "confidence": "fuzzy"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0010-versioned-change-set-and-semantic-identity.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0011-findings-and-region-remediation.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0012-caller-enforced-service-profile.md",
+              "confidence": "fuzzy"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0014-pluggable-io-and-revision-partitions.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0015-advisory-action-and-ci-built-index.md",
+              "confidence": "observed"
             },
             {
               "kind": "mentions",
@@ -15886,9 +16682,14 @@
         },
         "graph": {
           "pagerank": 0.024051,
-          "inboundLinks": 10,
+          "inboundLinks": 15,
           "coveredBy": [],
           "mentionedBy": [
+            "document:docs/adr/0010-versioned-change-set-and-semantic-identity.md",
+            "document:docs/adr/0012-caller-enforced-service-profile.md",
+            "document:docs/adr/0013-language-neutral-discovery-adapters.md",
+            "document:docs/adr/0014-pluggable-io-and-revision-partitions.md",
+            "document:docs/adr/0015-advisory-action-and-ci-built-index.md",
             "document:README.md"
           ],
           "inbound": [
@@ -15935,6 +16736,31 @@
             {
               "kind": "links-to",
               "id": "document:README.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0010-versioned-change-set-and-semantic-identity.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0012-caller-enforced-service-profile.md",
+              "confidence": "fuzzy"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0013-language-neutral-discovery-adapters.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0014-pluggable-io-and-revision-partitions.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0015-advisory-action-and-ci-built-index.md",
               "confidence": "observed"
             },
             {
@@ -16053,13 +16879,26 @@
         },
         "graph": {
           "pagerank": 0.005033,
-          "inboundLinks": 1,
+          "inboundLinks": 3,
           "coveredBy": [],
-          "mentionedBy": [],
+          "mentionedBy": [
+            "document:docs/adr/0011-findings-and-region-remediation.md",
+            "document:docs/adr/0012-caller-enforced-service-profile.md"
+          ],
           "inbound": [
             {
               "kind": "links-to",
               "id": "document:docs/index.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0011-findings-and-region-remediation.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0012-caller-enforced-service-profile.md",
               "confidence": "observed"
             }
           ],
@@ -16142,9 +16981,11 @@
         },
         "graph": {
           "pagerank": 0.011092,
-          "inboundLinks": 3,
+          "inboundLinks": 5,
           "coveredBy": [],
           "mentionedBy": [
+            "document:docs/adr/0011-findings-and-region-remediation.md",
+            "document:docs/adr/0012-caller-enforced-service-profile.md",
             "document:docs/agent-corpus/doc-bridge.md"
           ],
           "inbound": [
@@ -16156,6 +16997,16 @@
             {
               "kind": "links-to",
               "id": "document:docs/spec/measured-enrichment-v1.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0011-findings-and-region-remediation.md",
+              "confidence": "fuzzy"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0012-caller-enforced-service-profile.md",
               "confidence": "observed"
             },
             {
@@ -16349,15 +17200,33 @@
         },
         "graph": {
           "pagerank": 0.005033,
-          "inboundLinks": 2,
+          "inboundLinks": 5,
           "coveredBy": [],
           "mentionedBy": [
+            "document:docs/adr/0010-versioned-change-set-and-semantic-identity.md",
+            "document:docs/adr/0013-language-neutral-discovery-adapters.md",
+            "document:docs/adr/0014-pluggable-io-and-revision-partitions.md",
             "document:docs/spec/render-v1.md"
           ],
           "inbound": [
             {
               "kind": "links-to",
               "id": "document:docs/index.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0010-versioned-change-set-and-semantic-identity.md",
+              "confidence": "fuzzy"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0013-language-neutral-discovery-adapters.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0014-pluggable-io-and-revision-partitions.md",
               "confidence": "observed"
             },
             {
@@ -16395,9 +17264,11 @@
         },
         "graph": {
           "pagerank": 0.008621,
-          "inboundLinks": 3,
+          "inboundLinks": 5,
           "coveredBy": [],
           "mentionedBy": [
+            "document:docs/adr/0010-versioned-change-set-and-semantic-identity.md",
+            "document:docs/adr/0013-language-neutral-discovery-adapters.md",
             "document:docs/spec/render-v1.md"
           ],
           "inbound": [
@@ -16409,6 +17280,16 @@
             {
               "kind": "links-to",
               "id": "document:docs/knowledge-engine-runbook.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0010-versioned-change-set-and-semantic-identity.md",
+              "confidence": "fuzzy"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0013-language-neutral-discovery-adapters.md",
               "confidence": "observed"
             },
             {
@@ -16446,9 +17327,13 @@
         },
         "graph": {
           "pagerank": 0.006626,
-          "inboundLinks": 2,
+          "inboundLinks": 5,
           "coveredBy": [],
-          "mentionedBy": [],
+          "mentionedBy": [
+            "document:docs/adr/0011-findings-and-region-remediation.md",
+            "document:docs/adr/0012-caller-enforced-service-profile.md",
+            "document:docs/adr/0014-pluggable-io-and-revision-partitions.md"
+          ],
           "inbound": [
             {
               "kind": "links-to",
@@ -16458,6 +17343,21 @@
             {
               "kind": "links-to",
               "id": "document:docs/mcp.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0011-findings-and-region-remediation.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0012-caller-enforced-service-profile.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0014-pluggable-io-and-revision-partitions.md",
               "confidence": "observed"
             }
           ],
@@ -16675,13 +17575,26 @@
         },
         "graph": {
           "pagerank": 0.005033,
-          "inboundLinks": 1,
+          "inboundLinks": 3,
           "coveredBy": [],
-          "mentionedBy": [],
+          "mentionedBy": [
+            "document:docs/adr/0010-versioned-change-set-and-semantic-identity.md",
+            "document:docs/adr/0015-advisory-action-and-ci-built-index.md"
+          ],
           "inbound": [
             {
               "kind": "links-to",
               "id": "document:docs/index.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0010-versioned-change-set-and-semantic-identity.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0015-advisory-action-and-ci-built-index.md",
               "confidence": "observed"
             }
           ],
@@ -16774,9 +17687,11 @@
         },
         "graph": {
           "pagerank": 0.012918,
-          "inboundLinks": 3,
+          "inboundLinks": 4,
           "coveredBy": [],
-          "mentionedBy": [],
+          "mentionedBy": [
+            "document:docs/adr/0010-versioned-change-set-and-semantic-identity.md"
+          ],
           "inbound": [
             {
               "kind": "links-to",
@@ -16792,6 +17707,11 @@
               "kind": "links-to",
               "id": "document:docs/spec/config-v1.md",
               "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0010-versioned-change-set-and-semantic-identity.md",
+              "confidence": "fuzzy"
             }
           ],
           "outbound": [
@@ -16854,9 +17774,13 @@
         },
         "graph": {
           "pagerank": 0.008978,
-          "inboundLinks": 3,
+          "inboundLinks": 6,
           "coveredBy": [],
-          "mentionedBy": [],
+          "mentionedBy": [
+            "document:docs/adr/0010-versioned-change-set-and-semantic-identity.md",
+            "document:docs/adr/0011-findings-and-region-remediation.md",
+            "document:docs/adr/0014-pluggable-io-and-revision-partitions.md"
+          ],
           "inbound": [
             {
               "kind": "links-to",
@@ -16872,6 +17796,21 @@
               "kind": "links-to",
               "id": "document:docs/schemas/doc-bridge-index-v1.md",
               "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0010-versioned-change-set-and-semantic-identity.md",
+              "confidence": "fuzzy"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0011-findings-and-region-remediation.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0014-pluggable-io-and-revision-partitions.md",
+              "confidence": "fuzzy"
             }
           ],
           "outbound": [
@@ -21186,12 +22125,20 @@
         },
         "graph": {
           "pagerank": 0,
-          "inboundLinks": 0,
+          "inboundLinks": 1,
           "coveredBy": [],
-          "mentionedBy": [],
+          "mentionedBy": [
+            "document:docs/adr/0015-advisory-action-and-ci-built-index.md"
+          ],
           "areaId": "area:scripts",
           "packageId": "package:@agentskit/doc-bridge",
-          "inbound": [],
+          "inbound": [
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0015-advisory-action-and-ci-built-index.md",
+              "confidence": "observed"
+            }
+          ],
           "outbound": []
         },
         "contentHash": "e42883ef044817dfe228422e75204a105ffba2040d80d348684847f033eb9883",
@@ -22303,9 +23250,10 @@
         },
         "graph": {
           "pagerank": 0,
-          "inboundLinks": 3,
+          "inboundLinks": 4,
           "coveredBy": [],
           "mentionedBy": [
+            "document:docs/adr/0012-caller-enforced-service-profile.md",
             "document:docs/PRD-knowledge-retrieval-and-enrichment.md",
             "document:docs/spec/enrichment-overlay-v1.md",
             "document:docs/spec/registry-agents.md"
@@ -22337,6 +23285,11 @@
               "kind": "imports",
               "id": "module:tests/registry-adapter.test.ts",
               "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0012-caller-enforced-service-profile.md",
+              "confidence": "fuzzy"
             },
             {
               "kind": "mentions",
@@ -23966,9 +24919,10 @@
         },
         "graph": {
           "pagerank": 0,
-          "inboundLinks": 1,
+          "inboundLinks": 2,
           "coveredBy": [],
           "mentionedBy": [
+            "document:docs/adr/0012-caller-enforced-service-profile.md",
             "document:docs/agent-corpus/config.md"
           ],
           "areaId": "area:src/config",
@@ -23993,6 +24947,11 @@
               "kind": "imports",
               "id": "module:tests/tier-b.test.ts",
               "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0012-caller-enforced-service-profile.md",
+              "confidence": "fuzzy"
             },
             {
               "kind": "mentions-symbol",
@@ -25086,9 +26045,10 @@
         },
         "graph": {
           "pagerank": 0,
-          "inboundLinks": 1,
+          "inboundLinks": 2,
           "coveredBy": [],
           "mentionedBy": [
+            "document:docs/adr/0010-versioned-change-set-and-semantic-identity.md",
             "document:docs/PRD-knowledge-retrieval-and-enrichment.md"
           ],
           "areaId": "area:src/discovery",
@@ -25113,6 +26073,11 @@
               "kind": "imports",
               "id": "module:tests/render.test.ts",
               "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0010-versioned-change-set-and-semantic-identity.md",
+              "confidence": "fuzzy"
             },
             {
               "kind": "mentions",
@@ -25183,9 +26148,12 @@
         },
         "graph": {
           "pagerank": 0,
-          "inboundLinks": 3,
+          "inboundLinks": 6,
           "coveredBy": [],
           "mentionedBy": [
+            "document:docs/adr/0010-versioned-change-set-and-semantic-identity.md",
+            "document:docs/adr/0013-language-neutral-discovery-adapters.md",
+            "document:docs/adr/0014-pluggable-io-and-revision-partitions.md",
             "document:docs/PRD-knowledge-retrieval-and-enrichment.md",
             "document:CHANGELOG.md",
             "document:docs/PRD-knowledge-retrieval-and-enrichment.md"
@@ -25307,6 +26275,21 @@
               "kind": "imports",
               "id": "module:tests/retrieval-projection.test.ts",
               "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0010-versioned-change-set-and-semantic-identity.md",
+              "confidence": "fuzzy"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0013-language-neutral-discovery-adapters.md",
+              "confidence": "fuzzy"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0014-pluggable-io-and-revision-partitions.md",
+              "confidence": "fuzzy"
             },
             {
               "kind": "mentions",
@@ -26259,9 +27242,10 @@
         },
         "graph": {
           "pagerank": 0,
-          "inboundLinks": 2,
+          "inboundLinks": 3,
           "coveredBy": [],
           "mentionedBy": [
+            "document:docs/adr/0011-findings-and-region-remediation.md",
             "document:docs/spec/enrichment-overlay-v1.md",
             "document:docs/spec/measured-enrichment-v1.md"
           ],
@@ -26282,6 +27266,11 @@
               "kind": "imports",
               "id": "module:tests/overlay-statistics.test.ts",
               "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0011-findings-and-region-remediation.md",
+              "confidence": "fuzzy"
             },
             {
               "kind": "mentions-symbol",
@@ -26668,9 +27657,10 @@
         },
         "graph": {
           "pagerank": 0,
-          "inboundLinks": 1,
+          "inboundLinks": 2,
           "coveredBy": [],
           "mentionedBy": [
+            "document:docs/adr/0012-caller-enforced-service-profile.md",
             "document:docs/agent-corpus/federation.md"
           ],
           "areaId": "area:src/federation",
@@ -26685,6 +27675,11 @@
               "kind": "imports",
               "id": "module:tests/retriever.test.ts",
               "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0012-caller-enforced-service-profile.md",
+              "confidence": "fuzzy"
             },
             {
               "kind": "mentions-symbol",
@@ -26853,9 +27848,10 @@
         },
         "graph": {
           "pagerank": 0,
-          "inboundLinks": 1,
+          "inboundLinks": 2,
           "coveredBy": [],
           "mentionedBy": [
+            "document:docs/adr/0011-findings-and-region-remediation.md",
             "document:docs/agent-corpus/fixes.md"
           ],
           "areaId": "area:src/fixes",
@@ -26880,6 +27876,11 @@
               "kind": "imports",
               "id": "module:tests/fixes.test.ts",
               "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0011-findings-and-region-remediation.md",
+              "confidence": "fuzzy"
             },
             {
               "kind": "mentions-symbol",
@@ -26949,9 +27950,11 @@
         },
         "graph": {
           "pagerank": 0,
-          "inboundLinks": 0,
+          "inboundLinks": 1,
           "coveredBy": [],
-          "mentionedBy": [],
+          "mentionedBy": [
+            "document:docs/adr/0010-versioned-change-set-and-semantic-identity.md"
+          ],
           "areaId": "area:src/gates",
           "packageId": "package:@agentskit/doc-bridge",
           "inbound": [
@@ -26994,6 +27997,11 @@
               "kind": "imports",
               "id": "module:tests/reproducibility.test.ts",
               "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0010-versioned-change-set-and-semantic-identity.md",
+              "confidence": "fuzzy"
             },
             {
               "kind": "re-exports",
@@ -31249,9 +32257,10 @@
         },
         "graph": {
           "pagerank": 0,
-          "inboundLinks": 1,
+          "inboundLinks": 2,
           "coveredBy": [],
           "mentionedBy": [
+            "document:docs/adr/0012-caller-enforced-service-profile.md",
             "document:docs/PRD-knowledge-retrieval-and-enrichment.md"
           ],
           "areaId": "area:src/memory",
@@ -31271,6 +32280,11 @@
               "kind": "imports",
               "id": "module:tests/tier-b.test.ts",
               "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0012-caller-enforced-service-profile.md",
+              "confidence": "fuzzy"
             },
             {
               "kind": "mentions",
@@ -31929,9 +32943,10 @@
         },
         "graph": {
           "pagerank": 0,
-          "inboundLinks": 1,
+          "inboundLinks": 2,
           "coveredBy": [],
           "mentionedBy": [
+            "document:docs/adr/0013-language-neutral-discovery-adapters.md",
             "document:docs/agent-corpus/plugins.md"
           ],
           "areaId": "area:src/plugins",
@@ -31941,6 +32956,11 @@
               "kind": "imports",
               "id": "module:tests/analyzer-plugin.test.ts",
               "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0013-language-neutral-discovery-adapters.md",
+              "confidence": "fuzzy"
             },
             {
               "kind": "mentions-symbol",
@@ -32826,9 +33846,10 @@
         },
         "graph": {
           "pagerank": 0,
-          "inboundLinks": 2,
+          "inboundLinks": 3,
           "coveredBy": [],
           "mentionedBy": [
+            "document:docs/adr/0010-versioned-change-set-and-semantic-identity.md",
             "document:docs/agent-corpus/doc-bridge.md",
             "document:docs/spec/render-v1.md"
           ],
@@ -32849,6 +33870,11 @@
               "kind": "imports",
               "id": "module:tests/render.test.ts",
               "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0010-versioned-change-set-and-semantic-identity.md",
+              "confidence": "fuzzy"
             },
             {
               "kind": "mentions",
@@ -34129,10 +35155,11 @@
         },
         "graph": {
           "pagerank": 0,
-          "inboundLinks": 3,
+          "inboundLinks": 4,
           "coveredBy": [],
           "mentionedBy": [
             "document:CHANGELOG.md",
+            "document:docs/adr/0012-caller-enforced-service-profile.md",
             "document:docs/agent-corpus/safety.md",
             "document:docs/spec/enrichment-overlay-v1.md"
           ],
@@ -34211,6 +35238,11 @@
             },
             {
               "kind": "mentions-symbol",
+              "id": "document:docs/adr/0012-caller-enforced-service-profile.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions-symbol",
               "id": "document:docs/agent-corpus/safety.md",
               "confidence": "observed"
             },
@@ -34279,10 +35311,12 @@
         },
         "graph": {
           "pagerank": 0,
-          "inboundLinks": 6,
+          "inboundLinks": 8,
           "coveredBy": [],
           "mentionedBy": [
+            "document:docs/adr/0011-findings-and-region-remediation.md",
             "document:CHANGELOG.md",
+            "document:docs/adr/0011-findings-and-region-remediation.md",
             "document:docs/PRD-doc-bridge-knowledge-engine.md",
             "document:docs/PRD-knowledge-retrieval-and-enrichment.md",
             "document:docs/schemas/agent-handoff-v1.md",
@@ -34353,8 +35387,18 @@
               "confidence": "observed"
             },
             {
+              "kind": "mentions",
+              "id": "document:docs/adr/0011-findings-and-region-remediation.md",
+              "confidence": "fuzzy"
+            },
+            {
               "kind": "mentions-symbol",
               "id": "document:CHANGELOG.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions-symbol",
+              "id": "document:docs/adr/0011-findings-and-region-remediation.md",
               "confidence": "observed"
             },
             {
@@ -35062,9 +36106,12 @@
         },
         "graph": {
           "pagerank": 0,
-          "inboundLinks": 11,
+          "inboundLinks": 14,
           "coveredBy": [],
           "mentionedBy": [
+            "document:docs/adr/0010-versioned-change-set-and-semantic-identity.md",
+            "document:docs/adr/0011-findings-and-region-remediation.md",
+            "document:docs/adr/0013-language-neutral-discovery-adapters.md",
             "document:CHANGELOG.md",
             "document:docs/agent-corpus/audit.md",
             "document:docs/agent-corpus/doc-bridge.md",
@@ -35331,6 +36378,21 @@
               "confidence": "observed"
             },
             {
+              "kind": "mentions",
+              "id": "document:docs/adr/0010-versioned-change-set-and-semantic-identity.md",
+              "confidence": "observed"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0011-findings-and-region-remediation.md",
+              "confidence": "fuzzy"
+            },
+            {
+              "kind": "mentions",
+              "id": "document:docs/adr/0013-language-neutral-discovery-adapters.md",
+              "confidence": "observed"
+            },
+            {
               "kind": "mentions-symbol",
               "id": "document:CHANGELOG.md",
               "confidence": "observed"
@@ -35383,11 +36445,6 @@
             {
               "kind": "mentions-symbol",
               "id": "document:docs/spec/registry-agents.md",
-              "confidence": "observed"
-            },
-            {
-              "kind": "re-exports",
-              "id": "module:src/index.ts",
               "confidence": "observed"
             }
           ],
@@ -41572,7 +42629,7 @@
           ],
           "outbound": []
         },
-        "contentHash": "2d7191fc095ef5ed3d35c267a7cc4dd2bf75709c92bf6d4981dbb2a0a49607ba",
+        "contentHash": "eccd7e1e7d15dc92ba412a20b09387422b6a5599e93f94105547c7760f2dd7dc",
         "provenance": "observed",
         "confidence": "observed"
       }
