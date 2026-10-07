@@ -233,3 +233,14 @@ does not make same-repository findings pending. Explicit targets and resolved
 dependency targets on other packages retain adapter-owned version eligibility.
 Unreadable head context is explicit partial policy coverage; snapshot metadata
 can still establish historical classification and version targets.
+
+## Verified fenced citations
+
+Generic removal, ambiguity and changed-reference verification reads both inline
+code tokens and the Markdown analyzer's bounded, language-filtered fence tokens
+from verified head document bytes. Names must match exactly; the same owner and
+completeness rules apply. A changed signature/value remains review-required
+uncertainty. Correcting the head document to remove the old citation suppresses
+that reference finding. Head citations moved into generated regions remain
+visible to finding policy and are excluded with their generator; discovery still
+skips generated regions. These changes add no snapshot/index/handoff fields.

@@ -232,5 +232,6 @@ commands/flags, retaining known-bin qualification. Repeated citation lines use t
 eight-location bound and ambiguity metadata. Fence-only relations carry
 `metadata.citationContext: "code-fence"`; their symbol identity remains unchanged
 and retrieval excludes them from ranking signals. Existing inline relations
-retain their metadata when a fence adds another evidence line. Non-symbol facts use the separate
+retain their metadata and legacy inline evidence when a fence adds another
+evidence line. Same-line evidence deduplication applies only to fence citations. Non-symbol facts use the separate
 64-fact citation cap. Generated regions remain excluded.

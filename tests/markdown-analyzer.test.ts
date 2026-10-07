@@ -589,3 +589,9 @@ it('bounds fenced token work and keeps fact citations on their separate cap', ()
   expect(result.notes.some(note => note.scope === 'fence-tokens:guide.md')).toBe(true)
   expect(result.relations.every(relation => relation.metadata?.citationContext === 'code-fence')).toBe(true)
 })
+
+it('preserves legacy inline evidence while deduplicating repeated fenced lines', () => {
+  const document = parseMarkdownDocument('guide.md', '`run` and `run`\n```ts\nrun(); run();\n```\n')
+  const result = analyzeMarkdownDocument(document, 'document:guide.md', {documents: new Map(), modules: new Map(), packages: new Map(), symbols: new Map([['run', ['module:run']]])})
+  expect(result.relations[0]?.evidence.map(item => item.lineStart)).toEqual([1, 1, 3])
+})

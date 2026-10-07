@@ -135,7 +135,7 @@ const referenceDocument = (path: string, content: string) => {
   const parsed = parseMarkdownDocument(path, content)
   if (!parsed.generatedRegions.length) return parsed
   const expanded = parseMarkdownDocument(path, content.replace(/<!--\s*\/?\s*doc-bridge:generated\b[\s\S]*?-->/gu, marker => marker.replace(/[^\r\n]/gu, '')))
-  return { ...parsed, codeTokens: expanded.codeTokens, cliTokens: expanded.cliTokens, links: expanded.links }
+  return { ...parsed, codeTokens: expanded.codeTokens, fenceTokens: expanded.fenceTokens ?? [], fenceTokensTruncated: expanded.fenceTokensTruncated ?? false, cliTokens: expanded.cliTokens, links: expanded.links }
 }
 
 const citationsFromText = (document: KnowledgeEntity, base: DiscoverySnapshotV1, content: string, resolution: MarkdownResolution): KnowledgeRelation[] | undefined => {
@@ -208,7 +208,7 @@ const genericFindings = (base: DiscoverySnapshotV1, head: DiscoverySnapshotV1, c
     const parsed = documents.get(doc.id)
     const cli = fact.kind === 'cli-command' || fact.kind === 'cli-flag'
     const cliOwner = fact.kind === 'cli-command' ? fact.name : oldFacts.find(item => item.id === fact.ownerId)?.name
-    const citations = cli ? parsed?.cliTokens.filter(token => token.kind === fact.kind && (!token.bin || token.bin === cliOwner?.split(' ')[0])) : parsed?.codeTokens
+    const citations = cli ? parsed?.cliTokens.filter(token => token.kind === fact.kind && (!token.bin || token.bin === cliOwner?.split(' ')[0])) : parsed && [...parsed.codeTokens, ...(parsed.fenceTokens ?? [])]
     const tokens = citations?.filter(token => token.value === fact.name) ?? []
     if (parsed && !tokens.length) continue
     const code = ambiguous ? 'AMBIGUOUS_REFERENCE' : valueChange ? 'CHANGED_REFERENCE' : 'BROKEN_REFERENCE'

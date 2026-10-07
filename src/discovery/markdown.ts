@@ -473,7 +473,7 @@ export const analyzeMarkdownDocument = (
     const existing = relations.get(id)
     if (existing) {
       // One relation, every place the document says it — evidence accumulates, the edge does not.
-      if (existing.evidence.length < 8 && !existing.evidence.some(item => item.lineStart === line)) {
+      if (existing.evidence.length < 8 && (!codeFence || !existing.evidence.some(item => item.lineStart === line))) {
         relations.set(id, { ...existing, evidence: [...existing.evidence, documentEvidence(document.path, line)] })
       }
       return
