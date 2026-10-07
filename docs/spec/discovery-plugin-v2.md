@@ -270,3 +270,6 @@ other lock formats remain partial coverage, with unresolved locked versions;
 no approximate parsing. Lock lookup is deterministic and local. A present
 invalid/missing dependency resolution uses the bounded `unresolved` sentinel,
 which normalization rejects; it must not trigger manifest fallback.
+Supported lockfiles are parsed once per extraction run, shared across package
+owners and dependencies. Parse failures are reused only within that run; a
+subsequent scan reads and parses the current lockfile bytes again.

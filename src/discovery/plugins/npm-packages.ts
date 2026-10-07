@@ -14,6 +14,9 @@ const LOCKFILES = ['pnpm-lock.yaml', 'package-lock.json', 'yarn.lock', 'bun.lock
 /** Exact importer/node_modules lookup; no global name lookup across workspace owners. */
 export const lockedNpmVersion = (filename: string, text: string, owner: string, name: string, section: string): string | undefined => {
   const data = record(filename === 'pnpm-lock.yaml' ? parseYaml(text) : JSON.parse(text))
+  return lockedVersionFromData(filename, data, owner, name, section)
+}
+const lockedVersionFromData = (filename: string, data: Record<string, any>, owner: string, name: string, section: string): string | undefined => {
   if (filename === 'pnpm-lock.yaml') {
     const entry = record(record(record(data.importers)[owner])[section])[name]
     const version = typeof entry === 'string' ? entry : record(entry).version
@@ -26,6 +29,8 @@ export const lockedNpmVersion = (filename: string, text: string, owner: string, 
 }
 export const extractNpmPackages = (root: string, io: ScanIO, packages: readonly PackageInfo[]): { packages: PackageFact[]; coverage: Coverage[] } => {
   const facts: PackageFact[] = [], coverage: Coverage[] = []
+  // Scan-local: a later scan must observe changed lockfiles, including repaired parse failures.
+  const locks = new Map<string, Record<string, any> | undefined>()
   for (const pkg of packages) {
     const evidence: Evidence[] = [{ source: 'configuration', path: toPosix(relative(root, pkg.manifestPath)), contentHash: sha256NormalizedV1(io.readText(pkg.manifestPath)) }]
     let partial = false
@@ -38,6 +43,10 @@ export const extractNpmPackages = (root: string, io: ScanIO, packages: readonly 
       lockText = io.readText(lockPath)
       evidence.push({ source: 'configuration', path: toPosix(relative(root, lockPath)), contentHash: sha256NormalizedV1(lockText) })
       if (lockName !== 'pnpm-lock.yaml' && lockName !== 'package-lock.json') partial = true
+      else if (!locks.has(lockPath)) {
+        try { locks.set(lockPath, record(lockName === 'pnpm-lock.yaml' ? parseYaml(lockText) : JSON.parse(lockText))) }
+        catch { locks.set(lockPath, undefined) }
+      }
     }
     const dependencies = new Map<string, PackageFact['dependencies'][number]>()
     for (const section of ['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies']) for (const [name, raw] of Object.entries(record(pkg.manifest[section]))) {
@@ -51,7 +60,8 @@ export const extractNpmPackages = (root: string, io: ScanIO, packages: readonly 
         if (lockPath) {
           try {
             const owner = dirname(lockPath) === pkg.absPath ? '.' : pkg.path
-            lockedVersion = lockName === 'pnpm-lock.yaml' || lockName === 'package-lock.json' ? lockedNpmVersion(lockName, lockText!, owner, name, section) : undefined
+            const data = locks.get(lockPath)
+            lockedVersion = data ? lockedVersionFromData(lockName!, data, owner, name, section) : undefined
           } catch { partial = true }
           if (!lockedVersion || !semver.valid(lockedVersion)) { partial = true; lockedVersion = 'unresolved' }
         }

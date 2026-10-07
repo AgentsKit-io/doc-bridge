@@ -42,6 +42,8 @@
 
 ### Patch Changes
 
+- Parse each supported lockfile once per discovery extraction, preserving package ownership, unresolved coverage and scan-to-scan freshness.
+
 - Precompute semantic hash ordering keys once per entry and bound syntax-tree retention for index-only scans and reuse parsed trees in discovery, reducing index-build cost without changing artifact bytes or hash identity.
 
 ## 1.13.0

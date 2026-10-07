@@ -1,9 +1,11 @@
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync, readFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
-import { afterEach, expect, it } from 'vitest'
+import { afterEach, expect, it, vi } from 'vitest'
+import * as yaml from 'yaml'
+import type { ScanIO } from '../src/discovery/scan-io.js'
 import { npmPurl, npmNameFromPurl, npmRangeToVers, versToNpmRange, mapNpmRelease, npmVersionHooks } from '../src/discovery/plugins/npm-versions.js'
-import { lockedNpmVersion } from '../src/discovery/plugins/npm-packages.js'
+import { extractNpmPackages, lockedNpmVersion } from '../src/discovery/plugins/npm-packages.js'
 import { discoverRepository, discoverRepositoryWithRead } from '../src/discovery/repository.js'
 import { diffSnapshots, parseChangeSet } from '../src/diff/change-set.js'
 import { stampChangeSet, changeSetEligibility, type DocumentTarget } from '../src/diff/version-routing.js'
@@ -12,6 +14,7 @@ import { resolveDocumentTargets } from '../src/discovery/document-targets.js'
 import { packageFactFromEntity } from '../src/storage/facts.js'
 import { toySourcePlugin, toyLimits } from './toy-plugin.js'
 import { createLocalRepositoryRead, contentRef } from '../src/storage/local.js'
+vi.mock('yaml', { spy: true })
 const roots: string[] = []
 afterEach(() => roots.splice(0).forEach(root => rmSync(root, { recursive: true, force: true })))
 const fixture = () => { const root = mkdtempSync(join(tmpdir(), 'doc-bridge-version-')); roots.push(root); return root }
@@ -47,6 +50,22 @@ it('resolves pnpm importers and npm workspace locks without selecting sibling pa
   expect(lockedNpmVersion('pnpm-lock.yaml',pnpm,'packages/missing','dependency','dependencies')).toBeUndefined()
   const npm = JSON.stringify({packages:{'node_modules/dependency':{version:'0.4.2'},'packages/other/node_modules/dependency':{version:'0.5.0'}}})
   expect(lockedNpmVersion('package-lock.json',npm,'packages/other','dependency','dependencies')).toBe('0.5.0')
+})
+it('parses shared lockfiles once per extraction and retries repaired locks on the next scan', () => {
+  const root = join(tmpdir(), 'doc-bridge-version-cache')
+  let text = 'invalid: ['
+  const io = { readText: (path: string) => path.endsWith('pnpm-lock.yaml') ? text : '{}', exists: (path: string) => path === join(root, 'pnpm-lock.yaml') } as ScanIO
+  const packages = ['.', 'packages/other'].map(path => ({ id: path, name: path === '.' ? 'fixture' : 'other', path, absPath: join(root, path), manifestPath: join(root, path, 'package.json'), manifest: { dependencies: { dependency: '^0.4.1', second: '^0.4.1' } } }))
+  const parse = vi.mocked(yaml.parse)
+  parse.mockClear()
+  try {
+    expect(extractNpmPackages(root, io, packages).packages[0]?.dependencies[0]?.lockedVersion).toBe('unresolved')
+    expect(parse).toHaveBeenCalledTimes(1)
+    text = 'importers:\n  .:\n    dependencies:\n      dependency: {version: 0.4.2}\n  packages/other:\n    dependencies:\n      dependency: {version: 0.4.3}\n'
+    const result = extractNpmPackages(root, io, packages)
+    expect(parse).toHaveBeenCalledTimes(2)
+    expect(result.packages.map(pkg => pkg.dependencies[0]?.lockedVersion)).toEqual(['0.4.2', '0.4.3'])
+  } finally { parse.mockClear() }
 })
 it('resolves independent frontmatter > lock > manifest targets with no invalid fallback', () => {
   expect(resolveDocumentTargets('docbridge:\n  targets:\n    pkg:npm/dependency: 0.4.1',proof,owner,adapter)).toMatchObject([{state:'resolved',range:'vers:npm/0.4.1',source:'frontmatter'}])
