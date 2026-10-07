@@ -1,4 +1,4 @@
-import { readFileSync, statSync } from 'node:fs'
+import { readBoundedText } from '../lib/bounded-text.js'
 import { parseDocumentationDeclarations } from '../discovery/documentation.js'
 import { entityId } from '../discovery/identity.js'
 import { exportsOf, FILE_BACKED_KINDS } from '../discovery/incremental.js'
@@ -92,8 +92,9 @@ const resolutionFor = (base: SnapshotForChanges): MarkdownResolution => {
 const citationsInHead = (document: KnowledgeEntity, base: DiscoverySnapshotV1, root: string, resolution: MarkdownResolution): KnowledgeRelation[] | undefined => {
   try {
     const path = containedProjectPath(root, document.path!)
-    if (!path || statSync(path).size > 1_000_000) return undefined
-    const content = readFileSync(path, 'utf8')
+    if (!path) return undefined
+    // One descriptor for the size check and the read, so the file cannot change in between.
+    const content = readBoundedText(path, { used: 0 }, { maxFileBytes: 1_000_000 })
     const parsed = parseMarkdownDocument(document.path!, content)
     if (parsed.contentHash !== hashOf(document)) return undefined
     const observed = analyzeMarkdownDocument(parsed, document.id, resolution)

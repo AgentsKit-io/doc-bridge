@@ -8,7 +8,7 @@ import { applyConfigDefaults } from '../src/config/defaults.js'
 import { DocBridgeConfigV1Schema, type DocBridgeConfigV1 } from '../src/config/schema.js'
 import { discoverRepository } from '../src/discovery/repository.js'
 import { buildDocBridgeIndex } from '../src/index-builder/build-index.js'
-import { contentHashForIndex, sha256NormalizedV1 } from '../src/index-builder/content-hash.js'
+import { contentHashForIndex } from '../src/index-builder/content-hash.js'
 import {
   CORPUS_PROJECTION_VERSION,
   indexConfigurationHash,
