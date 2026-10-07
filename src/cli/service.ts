@@ -60,7 +60,6 @@ export const runServiceCli = (argv: readonly string[]): Promise<number> => withE
     if (discovered.metrics) process.stderr.write(`metrics: ${JSON.stringify(discovered.metrics)}\n`)
     if (discovered.status) { const { metrics: _metrics, ...partial } = discovered; output(partial); return 2 }
     if (command === 'discover') { output({ ...discovered.snapshot, limitations, diagnostics }); return 0 }
-    const signal = controller.signal
     const artifacts: ArtifactIOV1 = command === 'index' ? await createLocalArtifactIO({ root: resolve(artifactRoot!), partition, limits }) : {
       version: 1, partition, limits,
       read: async () => ({ status: 'missing', code: 'NOT_FOUND' }),
