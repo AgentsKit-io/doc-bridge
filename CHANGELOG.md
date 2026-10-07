@@ -8,6 +8,7 @@
 
 ### Minor Changes
 
+- Add public root entrypoints for reader-backed exact-partition index building, freshness loading and artifact persistence without changing index/handoff payloads or synchronous local compatibility. Missing or mismatched bodies carry exact repository/revision/path limitations. Local CLI diff uses frozen head citation reads.
 - Compare codec-backed surface and package facts with value hashes, extraction-aware generic citation findings and bounded injected head reads. Resolve generic citations with the built-in Markdown plugin and bounded owner ambiguity. Prove the language-neutral persisted flow with a test-only toy source adapter.
 
 - Add bounded injected discovery and built-in JS/TS and Markdown v2 plugins, retaining synchronous extraction and legacy evidence identity.

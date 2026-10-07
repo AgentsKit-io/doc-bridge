@@ -13,7 +13,7 @@ Core (no API key):
   ak-docs doctor [--text] [--badge] [--write-badge]
   ak-docs index [--watch]
   ak-docs discover [--text|--json]
-  ak-docs diff --base <snapshot.json> [--head <snapshot.json>] [--root <dir>] [--output <file>] [--json]
+  ak-docs diff --base <snapshot.json> [--head <snapshot.json>] [--root <dir>] [--output <file>] [--json]   verify frozen local head bytes
   ak-docs benchmark <fixture.json> <observation.json> [--text|--json]
   ak-docs bench retrieval <suite.json> [--index <file>] [--baseline <file>] [--limit <n>] [--text|--json]
   ak-docs bench retrieval <suite.json> --update-baseline --by <name> [--reason <text>]

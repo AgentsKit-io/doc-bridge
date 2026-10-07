@@ -1,8 +1,4 @@
-import { entityId } from '../src/discovery/identity.js'
-import { sha256NormalizedV1 } from '../src/index-builder/content-hash.js'
-import type { DiscoveryPluginV2, ExtractionV2, Resolution } from '../src/plugins/contract.js'
-import type { Evidence } from '../src/schemas/knowledge.js'
-import { surfaceFactEntityId, surfaceFactToEntity } from '../src/storage/facts.js'
+import { entityId, sha256NormalizedV1, surfaceFactEntityId, surfaceFactToEntity, type DiscoveryPluginV2, type ExtractionV2, type Resolution, type Evidence } from '../src/index.js'
 
 export const toyLimits = { maxFiles: 100_000, maxBytes: 512 * 1024 * 1024, maxFileBytes: 64 * 1024 * 1024, maxTimeMs: 60_000, maxMemoryMb: 2048 }
 const capabilities = ['manifest', 'lockfile', 'versions', 'release-map', 'symbols', 'cli-commands', 'cli-flags', 'config-keys', 'signatures'] as const

@@ -942,3 +942,150 @@ export type { LocalRepositoryReadOptions } from './storage/local.js'
 export type { LocalArtifactIOOptions } from './storage/artifacts.js'
 export type { SurfaceFact, PackageFact } from './storage/facts.js'
 export type { DiscoveryPluginManifestV2, DiscoveryPluginInputV2, ExtractionV2, ReleaseEvent, Resolution, DiscoveryPluginV2, DiscoveryRegistryV2 } from './plugins/contract.js'
+
+/** Strict validators for bounded storage capability requests and envelopes. */
+export { StorageHashSchema } from './storage/contract.js'
+/** Strict validators for bounded storage capability requests and envelopes. */
+export { StoragePathSchema } from './storage/contract.js'
+/** Strict validators for bounded storage capability requests and envelopes. */
+export { PartitionSchema } from './storage/contract.js'
+/** Strict validators for bounded storage capability requests and envelopes. */
+export { StorageLimitsSchema } from './storage/contract.js'
+/** Strict validators for bounded storage capability requests and envelopes. */
+export { StorageFailureCodeSchema } from './storage/contract.js'
+/** Strict validators for bounded storage capability requests and envelopes. */
+export { StorageFailureSchema } from './storage/contract.js'
+/** Strict validators for bounded storage capability requests and envelopes. */
+export { storageResultSchema } from './storage/contract.js'
+/** Strict validators for bounded storage capability requests and envelopes. */
+export { ContentRefSchema } from './storage/contract.js'
+/** Strict validators for bounded storage capability requests and envelopes. */
+export { FileMetaSchema } from './storage/contract.js'
+/** Strict validators for bounded storage capability requests and envelopes. */
+export { StorageRequestSchema } from './storage/contract.js'
+/** Strict validators for bounded storage capability requests and envelopes. */
+export { RepositoryListRequestSchema } from './storage/contract.js'
+/** Strict validators for bounded storage capability requests and envelopes. */
+export { RepositoryStatRequestSchema } from './storage/contract.js'
+/** Strict validators for bounded storage capability requests and envelopes. */
+export { RepositoryReadRequestSchema } from './storage/contract.js'
+/** Strict validators for bounded storage capability requests and envelopes. */
+export { RepositoryListingSchema } from './storage/contract.js'
+/** Strict validators for bounded storage capability requests and envelopes. */
+export { ArtifactKindSchema } from './storage/contract.js'
+/** Strict validators for bounded storage capability requests and envelopes. */
+export { ArtifactKeySchema } from './storage/contract.js'
+/** Strict validators for bounded storage capability requests and envelopes. */
+export { ArtifactEnvelopeSchema } from './storage/contract.js'
+/** Strict validators for bounded storage capability requests and envelopes. */
+export { ArtifactReadRequestSchema } from './storage/contract.js'
+/** Strict validators for bounded storage capability requests and envelopes. */
+export { ArtifactReplaceRequestSchema } from './storage/contract.js'
+/** Strict validators for bounded storage capability requests and envelopes. */
+export { ArtifactListRequestSchema } from './storage/contract.js'
+
+/** Capture verified local bytes against a caller-confirmed revision inventory. */
+export { createLocalRepositoryRead } from './storage/local.js'
+/** Capture verified local bytes against a caller-confirmed revision inventory. */
+export { contentRef } from './storage/local.js'
+
+/** Publish and validate partitioned artifacts with atomic compare-and-swap. */
+export { createLocalArtifactIO } from './storage/artifacts.js'
+/** Publish and validate partitioned artifacts with atomic compare-and-swap. */
+export { createArtifactEnvelope } from './storage/artifacts.js'
+/** Publish and validate partitioned artifacts with atomic compare-and-swap. */
+export { parseArtifactEnvelope } from './storage/artifacts.js'
+
+/** Validate and register caller-selected discovery v2 plugins. */
+export { DISCOVERY_PLUGIN_CONTRACT_VERSION } from './plugins/contract.js'
+/** Validate and register caller-selected discovery v2 plugins. */
+export { DiscoveryCapabilitySchema } from './plugins/contract.js'
+/** Validate and register caller-selected discovery v2 plugins. */
+export { DiscoveryPluginManifestV2Schema } from './plugins/contract.js'
+/** Validate and register caller-selected discovery v2 plugins. */
+export { DiscoveryPluginOutputV2Schema } from './plugins/contract.js'
+/** Validate and register caller-selected discovery v2 plugins. */
+export { DiscoveryPluginInputV2Schema } from './plugins/contract.js'
+/** Validate and register caller-selected discovery v2 plugins. */
+export { ReleaseEventSchema } from './plugins/contract.js'
+/** Validate and register caller-selected discovery v2 plugins. */
+export { resolutionSchema } from './plugins/contract.js'
+/** Validate and register caller-selected discovery v2 plugins. */
+export { createDiscoveryRegistryV2 } from './plugins/contract.js'
+
+/** Discover an exact partition and return its verified snapshot binding. */
+export { discoverRepositoryWithRead } from './discovery/repository.js'
+/** Discover an exact partition and return its verified snapshot binding. */
+export { type DiscoveryReadOptions } from './discovery/repository.js'
+/** Discover an exact partition and return its verified snapshot binding. */
+export { type DiscoveryReadResult } from './discovery/repository.js'
+
+/** Build an index from bounded exact-partition capabilities. */
+export { buildStoredDocBridgeIndex } from './index-builder/build-index.js'
+/** Build an index from bounded exact-partition capabilities. */
+export { type BuildStoredIndexOptions } from './index-builder/build-index.js'
+/** Build an index from bounded exact-partition capabilities. */
+export { type SnapshotReadBinding } from './index-builder/build-index.js'
+
+/** Describe unavailable exact-partition input evidence. */
+export { type AvailabilityLimitation } from './index-builder/repository-io.js'
+
+/** Load verified partitioned indexes and check current input freshness. */
+export { loadStoredDocBridgeIndex } from './query/load-index.js'
+/** Load verified partitioned indexes and check current input freshness. */
+export { loadFreshStoredDocBridgeIndex } from './query/load-index.js'
+
+/** Persist and restore strictly validated discovery snapshots. */
+export { readStoredSnapshot } from './index-builder/snapshot-io.js'
+/** Persist and restore strictly validated discovery snapshots. */
+export { writeStoredSnapshot } from './index-builder/snapshot-io.js'
+
+/** Persist schema-labelled JSON artifacts through bounded capabilities. */
+export { readJsonArtifact } from './index-builder/artifact-io.js'
+/** Persist schema-labelled JSON artifacts through bounded capabilities. */
+export { writeJsonArtifact } from './index-builder/artifact-io.js'
+
+/** Compare snapshots using verified head citation bytes from an exact partition. */
+export { diffSnapshotsWithRead } from './diff/change-set.js'
+
+/** Encode language-neutral surface and package facts in knowledge entities. */
+export { SurfaceFactKindSchema } from './storage/facts.js'
+/** Encode language-neutral surface and package facts in knowledge entities. */
+export { SurfaceFactSchema } from './storage/facts.js'
+/** Encode language-neutral surface and package facts in knowledge entities. */
+export { PackageFactSchema } from './storage/facts.js'
+/** Encode language-neutral surface and package facts in knowledge entities. */
+export { surfaceFactEntityId } from './storage/facts.js'
+/** Encode language-neutral surface and package facts in knowledge entities. */
+export { surfaceFactToEntity } from './storage/facts.js'
+/** Encode language-neutral surface and package facts in knowledge entities. */
+export { surfaceFactFromEntity } from './storage/facts.js'
+/** Encode language-neutral surface and package facts in knowledge entities. */
+export { packageFactToEntity } from './storage/facts.js'
+/** Encode language-neutral surface and package facts in knowledge entities. */
+export { packageFactFromEntity } from './storage/facts.js'
+
+/** Persist validated enrichment overlays in an exact partition. */
+export { readStoredEnrichmentOverlay } from './enrich/overlay.js'
+/** Persist validated enrichment overlays in an exact partition. */
+export { writeStoredEnrichmentOverlay } from './enrich/overlay.js'
+
+/** Isolate enrichment cache records by repository and revision. */
+export { createStoredEnrichmentCache } from './enrich/cache.js'
+
+/** Persist settled approval records in an exact partition. */
+export { createStoredApprovalStore } from './enrich/approvals.js'
+
+/** Persist validated workflow manifests and create-only step artifacts. */
+export { readStoredWorkflowManifest } from './workflow/engine.js'
+/** Persist validated workflow manifests and create-only step artifacts. */
+export { writeStoredWorkflowManifest } from './workflow/engine.js'
+/** Persist validated workflow manifests and create-only step artifacts. */
+export { readStoredWorkflowStep } from './workflow/engine.js'
+/** Persist validated workflow manifests and create-only step artifacts. */
+export { writeStoredWorkflowStep } from './workflow/engine.js'
+
+/** Built-in source adapters compatible with caller-registered discovery v2. */
+export { createJsTsPluginV2 } from './discovery/plugins/js-ts.js'
+/** Built-in bounded Markdown adapter for discovery v2. */
+export { createMarkdownPluginV2 } from './discovery/plugins/markdown.js'

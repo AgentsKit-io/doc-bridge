@@ -13,7 +13,12 @@ import {
 import { buildDocBridgeIndex } from '../index-builder/build-index.js'
 import { applyDocumentationDeclarations } from '../discovery/documentation.js'
 import { discoverRepository } from '../discovery/repository.js'
-import { diffSnapshots } from '../diff/change-set.js'
+import { createLocalRepositoryRead, contentRef } from '../storage/local.js'
+import { markdownManifest } from '../discovery/plugins/markdown.js'
+import { DOCUMENT_EXTENSIONS, safeWalkOptions } from '../discovery/inputs.js'
+import { safeWalkFiles } from '../safety/repository.js'
+import { readBoundedText } from '../lib/bounded-text.js'
+import { diffSnapshots, diffSnapshotsWithRead } from '../diff/change-set.js'
 import { discoverPnpmPackages } from '../index-builder/plugins/pnpm-monorepo.js'
 import { scanHumanDocRecords } from '../index-builder/human-adapters/index.js'
 import { retrieveHybridChunks } from '../federation/llms.js'
@@ -1562,7 +1567,7 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
     }
   }
 
-  if (command === 'diff') {
+  if (command === 'diff') return (async () => {
     try {
       const basePath = optionValues(argv, '--base')[0]
       if (!basePath) throw new Error('Usage: ak-docs diff --base <snapshot.json> [--head <snapshot.json>] [--root <dir>] [--output <file>] [--json]')
@@ -1582,7 +1587,17 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
       const base = parseDiscoverySnapshot(JSON.parse(readFileSync(resolve(basePath), 'utf8')))
       const head = headPath ? parseDiscoverySnapshot(JSON.parse(readFileSync(resolve(headPath), 'utf8')))
         : discoverRepository({ root, ...(config ? { config } : {}) })
-      const result = diffSnapshots(base, head, !headPath || rootOption ? { headRoot: root } : {})
+      let result: ReturnType<typeof diffSnapshots>
+      if (!headPath || rootOption) {
+        const ceilings = markdownManifest.resourceLimits
+        const limits = { ...ceilings, maxFiles: Math.min(config?.safety?.maxFiles ?? ceilings.maxFiles, ceilings.maxFiles), maxBytes: Math.min(config?.safety?.maxBytes ?? ceilings.maxBytes, ceilings.maxBytes), maxTimeMs: Math.min(config?.safety?.maxTimeMs ?? ceilings.maxTimeMs, ceilings.maxTimeMs), maxMemoryMb: Math.min(config?.safety?.maxMemoryMb ?? ceilings.maxMemoryMb, ceilings.maxMemoryMb) }
+        const listing = safeWalkFiles(root, { ...safeWalkOptions(config), ...limits, extensions: DOCUMENT_EXTENSIONS })
+        if (listing.incomplete) throw new Error(listing.reason ?? 'Incomplete head inventory')
+        const budget = { used: 0 }
+        const inventory = Object.fromEntries(listing.files.map(path => [relative(root, path).replaceAll('\\', '/'), contentRef(Buffer.from(readBoundedText(path, budget, { maxFileBytes: limits.maxFileBytes, maxCorpusBytes: limits.maxBytes })))]))
+        const read = await createLocalRepositoryRead({ root, partition: { repositoryId: head.project.name, revision: head.sourceRevision }, limits, inventory, excludes: safeWalkOptions(config).exclude ?? [] })
+        result = await diffSnapshotsWithRead(base, head, read)
+      } else result = diffSnapshots(base, head)
       const bytes = `${JSON.stringify(result, null, 2)}\n`
       const output = optionValues(argv, '--output')[0]
       if (output) {
@@ -1596,7 +1611,7 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
       process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`)
       return 2
     }
-  }
+  })()
 
   if (command === 'discover') {
     try {

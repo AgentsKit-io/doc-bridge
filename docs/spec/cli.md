@@ -180,10 +180,20 @@ versioned hashes. Snapshot files contain the raw discovery artifact, not the
 `--root` or the current project using its configuration and safe defaults when
 no configuration exists. With `--head`, `--root` explicitly supplies the matching
 head checkout for citation verification; omitting it produces snapshot-only
-`stale-or-unverified` removal findings. Head text must match its snapshot hash.
+`stale-or-unverified` removal findings. Local verification freezes an inventory using the existing safe repository walk
+and binds a `RepositoryReadV1` to the head snapshot's revision. The adapter checks
+pinned content references before `diffSnapshotsWithRead` verifies citation hashes;
+changed or unavailable bytes remain `stale-or-unverified`, without a latest-revision
+fallback. This local convenience does not prove that a dirty checkout is the
+committed revision; the inventory binds the bytes present at invocation. Incomplete
+or over-budget inventory capture exits 2. Head text must match its snapshot hash.
 
 Output is deterministic JSON containing `changeSet`, `impact` and `findings`.
 `--output` writes the same bytes printed on stdout. This command defaults to JSON;
 `--json` is accepted explicitly. Success exits 0, including advisory findings;
 missing inputs, invalid hashes, different project identities and I/O errors exit 2.
 See [ChangeSetV1](change-set-v1.md) for extraction limits and finding evidence.
+
+Library callers use the [injected storage guide](../guides/injected-storage.md)
+to provide their own exact-revision capabilities; no additional CLI or MCP tools
+are required.
