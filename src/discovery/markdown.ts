@@ -3,6 +3,7 @@ import remarkFrontmatter from 'remark-frontmatter'
 import remarkGfm from 'remark-gfm'
 import remarkParse from 'remark-parse'
 import { unified } from 'unified'
+import ts from 'typescript'
 import { visit } from 'unist-util-visit'
 import { parse as parseYaml } from 'yaml'
 import type { Root, RootContent } from 'mdast'
@@ -28,7 +29,7 @@ import { relationId } from './identity.js'
  * is inferred from a near-match unless the near-match is unambiguous.
  */
 
-export const MARKDOWN_ANALYZER_VERSION = '1.4.0'
+export const MARKDOWN_ANALYZER_VERSION = '1.4.1'
 
 /** Headings deeper than this are structure, not subject matter. */
 const MAX_HEADING_DEPTH = 3
@@ -91,13 +92,61 @@ export type MarkdownDocumentV1 = {
   readonly links: readonly MarkdownReference[]
   /** Inline code tokens outside generated regions. */
   readonly codeTokens: readonly MarkdownReference[]
-  /** Bounded lexical identifiers in fenced blocks; exact resolution only. */
-  readonly fenceTokens?: readonly MarkdownReference[]
+  /** Bounded syntactic references in fenced blocks; exact resolution only. */
+  readonly fenceTokens?: readonly (MarkdownReference & { readonly configOnly?: boolean })[]
   readonly fenceTokensTruncated?: boolean
   /** Lexical CLI citations; shell tokens still require a known bin during resolution. */
   readonly cliTokens: readonly MarkdownCliReference[]
   /** Raw frontmatter text and the line it starts on, for the declaration parser. */
   readonly frontmatterBlock?: { readonly value: string; readonly line: number }
+}
+
+/** Parse code examples without treating keys, strings or member names as API references. */
+function fenceReferences(value: string, language: string): (MarkdownReference & { configOnly?: boolean })[] {
+  if (['json', 'jsonc', 'yaml', 'yml', 'toml'].includes(language)) {
+    return value.split(/\r?\n/).flatMap((text, line) =>
+      [...text.matchAll(/(?<![\w$.-])[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)+(?![\w$.-])/g)]
+        .map(match => ({ value: match[0], line, configOnly: true })))
+  }
+  if (!['ts', 'tsx', 'js', 'jsx', 'mjs', 'cjs'].includes(language)) return []
+  const source = ts.createSourceFile('fence.' + language, value, ts.ScriptTarget.Latest, true,
+    language === 'tsx' || language === 'jsx' ? ts.ScriptKind.TSX : ts.ScriptKind.TS)
+  const references: (MarkdownReference & { configOnly?: boolean })[] = []
+  const add = (node: ts.Node, name: string, configOnly = false) => {
+    references.push({ value: name, line: source.getLineAndCharacterOfPosition(node.getStart(source)).line, ...(configOnly ? { configOnly } : {}) })
+  }
+  const walk = (node: ts.Node): void => {
+    // Dotted configuration references remain separate from export/member citations.
+    if (ts.isPropertyAccessExpression(node)) {
+      const name = node.getText(source)
+      if (/^[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)+$/.test(name)) add(node, name, true)
+    }
+    if (ts.isIdentifier(node)) {
+      const parent = node.parent
+      const reference =
+        (ts.isImportSpecifier(parent) && (parent.propertyName ?? parent.name) === node) ||
+        (ts.isExportSpecifier(parent) && (parent.propertyName ?? parent.name) === node) ||
+        (ts.isImportClause(parent) && parent.name === node) ||
+        (ts.isNamespaceImport(parent) && parent.name === node) ||
+        (ts.isCallExpression(parent) && (parent.expression === node || parent.arguments.includes(node))) ||
+        (ts.isNewExpression(parent) && (parent.expression === node || !!parent.arguments?.includes(node))) ||
+        ((ts.isJsxOpeningElement(parent) || ts.isJsxSelfClosingElement(parent)) && parent.tagName === node) ||
+        (ts.isTypeReferenceNode(parent) && parent.typeName === node) ||
+        (ts.isExpressionWithTypeArguments(parent) && parent.expression === node) ||
+        (ts.isVariableDeclaration(parent) && parent.initializer === node) ||
+        (ts.isBinaryExpression(parent) && parent.operatorToken.kind === ts.SyntaxKind.EqualsToken && parent.right === node) ||
+        (ts.isPropertyAssignment(parent) && parent.initializer === node) ||
+        (ts.isBindingElement(parent) && (parent.propertyName ?? parent.name) === node &&
+          ts.isObjectBindingPattern(parent.parent) && ts.isVariableDeclaration(parent.parent.parent) &&
+          !!parent.parent.parent.initializer && ts.isCallExpression(parent.parent.parent.initializer) &&
+          ['require', 'import'].includes(parent.parent.parent.initializer.expression.getText(source)) &&
+          parent.parent.parent.initializer.arguments.some(ts.isStringLiteral))
+      if (reference) add(node, node.text)
+    }
+    ts.forEachChild(node, walk)
+  }
+  walk(source)
+  return references
 }
 
 const processor = unified()
@@ -236,7 +285,7 @@ export const parseMarkdownDocument = (path: string, content: string): MarkdownDo
   const headings: MarkdownHeading[] = []
   const links: MarkdownReference[] = []
   const codeTokens: MarkdownReference[] = []
-  const fenceTokens: MarkdownReference[] = []
+  const fenceTokens: (MarkdownReference & { configOnly?: boolean })[] = []
   let fenceTokensTruncated = false
   const cliTokens: MarkdownCliReference[] = []
   let title: string | undefined
@@ -269,15 +318,12 @@ export const parseMarkdownDocument = (path: string, content: string): MarkdownDo
       return
     }
 
-    if (node.type === 'code' && ['ts', 'tsx', 'js', 'jsx', 'mjs', 'cjs', 'json', 'jsonc', 'yaml', 'yml', 'toml'].includes(node.lang ?? '')) {
-      for (const [offset, text] of node.value.split(/\r?\n/).entries()) {
-        const citationLine = line + offset + 1
+    if (node.type === 'code') {
+      for (const token of fenceReferences(node.value, node.lang ?? '')) {
+        const citationLine = line + token.line + 1
         if (withinGenerated(citationLine, regions)) continue
-        for (const match of text.matchAll(/(?<![\w$.-])(?:--?[A-Za-z][\w.-]*|[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*)(?![\w$.-])/g)) {
-          if (/^--?/.test(match[0])) continue
-          if (fenceTokens.length >= 4096) { fenceTokensTruncated = true; break }
-          fenceTokens.push({ value: match[0], line: citationLine })
-        }
+        if (fenceTokens.length >= 4096) { fenceTokensTruncated = true; break }
+        fenceTokens.push({ ...token, line: citationLine })
       }
     }
 
@@ -535,7 +581,9 @@ export const analyzeMarkdownDocument = (
 
   for (const token of document.fenceTokens ?? []) {
     const candidates = resolution.facts?.get(token.value)
-    if (resolution.symbols.has(token.value) || candidates?.some(fact => fact.kind !== 'cli-command' && fact.kind !== 'cli-flag')) resolveToken(token.value, token.line, undefined, true)
+    if (token.configOnly) {
+      if (configKeys.has(token.value)) resolveToken(token.value, token.line, 'config-key', true)
+    } else if (resolution.symbols.has(token.value) || candidates?.some(fact => fact.kind !== 'cli-command' && fact.kind !== 'cli-flag')) resolveToken(token.value, token.line, undefined, true)
   }
 
   // Signature facts reuse a uniquely resolved symbol citation, preserving its legacy edge.
@@ -555,7 +603,7 @@ export const analyzeMarkdownDocument = (
    * A legacy symbol resolves only when exactly one module exports it, because sending an
    * agent to one of two possible definitions is worse than sending it nowhere.
    */
-  function resolveToken(raw: string, line: number, cliKind?: 'cli-command' | 'cli-flag', exactOnly = false): void {
+  function resolveToken(raw: string, line: number, cliKind?: 'cli-command' | 'cli-flag' | 'config-key', exactOnly = false): void {
     const value = raw.trim()
     if (!value || value.length > 256) return
 
@@ -569,7 +617,7 @@ export const analyzeMarkdownDocument = (
 
     const signatureSymbol = !cliKind && resolveSignatureSymbol(value, line, exactOnly)
     const candidates = resolution.facts?.get(value)
-    const facts = [...(candidates ?? []).filter(fact => fact.kind !== 'config-key'), ...(cliKind ? [] : configKeys.get(value) ?? [])].filter(fact => (cliKind ? fact.kind === cliKind : fact.kind !== 'cli-command' && fact.kind !== 'cli-flag') && (fact.kind !== 'signature' || (!resolution.symbols.has(value) && !resolution.symbols.has(value.split('.')[0]!))))
+    const facts = [...(candidates ?? []).filter(fact => fact.kind !== 'config-key'), ...(cliKind && cliKind !== 'config-key' ? [] : configKeys.get(value) ?? [])].filter(fact => (cliKind ? fact.kind === cliKind : fact.kind !== 'cli-command' && fact.kind !== 'cli-flag') && (fact.kind !== 'signature' || (!resolution.symbols.has(value) && !resolution.symbols.has(value.split('.')[0]!))))
     if (facts?.length) {
       for (const kind of [...new Set(facts.map(fact => fact.kind))].sort()) {
         const candidates = facts.filter(fact => fact.kind === kind)

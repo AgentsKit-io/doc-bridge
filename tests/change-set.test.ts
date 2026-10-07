@@ -264,3 +264,17 @@ it('retains fenced generic head citations for generated-region policy exclusions
   expect(result.policy.findings).toMatchObject([{status: 'conflict', routing: 'excluded'}])
   expect(result.policy.counts.generator).toBe(1)
 })
+
+
+it('does not retain removed fence references when head code uses only keys or text', () => {
+  const { root } = fixture()
+  write(root, 'src/api.ts', 'export const metadata = () => 1;')
+  write(root, 'docs/api.md', '# API\n```ts\nmetadata();\n```\n')
+  const base = discoverRepository({ root })
+  write(root, 'src/api.ts', 'export const replacement = () => 1;')
+  expect(scanDiff(root, base).findings.some(f => f.code === 'BROKEN_REFERENCE')).toBe(true)
+  for (const code of ['const value = { metadata: true, metadata };', 'ctx.metadata();', 'const value = "metadata";', '// metadata()']) {
+    write(root, 'docs/api.md', '# API\n```ts\n' + code + '\n```\n')
+    expect(scanDiff(root, base).findings).toEqual([])
+  }
+})

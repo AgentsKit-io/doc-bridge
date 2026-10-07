@@ -222,9 +222,14 @@ successful hooks stay unresolved/ambiguous. See
 ## Fenced citations
 
 Only fences tagged `ts`, `tsx`, `js`, `jsx`, `mjs`, `cjs`, `json`, `jsonc`,
-`yaml`, `yml` or `toml` contribute symbols/config keys, at most 4,096 lexical
-tokens per document. Untagged, text, Markdown, diff and other fences are skipped. Tokens use
-identifier boundaries (including `$`, dots and dash flags); substrings and
+`yaml`, `yml` or `toml` contribute symbols/config keys, at most 4,096 citation
+tokens per document. Untagged, text, Markdown, diff and other fences are skipped. JS/TS examples use the TypeScript parser: import/export specifiers, calls, constructors,
+JSX tags, type references, and bare value identifiers in assignments/arguments qualify.
+Object keys, ordinary shorthand properties, member property names, strings, template
+text and comments never cite exports. Module import/destructuring specifiers qualify.
+Configuration fences contribute only dotted paths matching extracted configuration
+keys, never exports. Dotted JS/TS member expressions may cite configuration keys only.
+Substrings and
 fuzzy paths never create fence relations. Only extracted names resolve, with
 exactly one owner per kind. Dotted config keys retain package/fixture scoping.
 Shell fences (`sh`, `bash`, `zsh`, `console`, `shell`) contribute only CLI
