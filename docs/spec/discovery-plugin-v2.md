@@ -178,3 +178,16 @@ Codec-backed symbol facts resolve Markdown citations to `fact.ownerId`, retainin
 advertised by both facts and legacy `metadata.exports` are deduplicated. Surface
 and package fact roundtrips through the common orchestrator are exercised by the
 non-JS source fixture, including preservation of unrelated package metadata.
+
+## Built-in fact extractors
+
+The JS/TS built-in shares a caller-owned static fact extractor registry between
+synchronous and v2 discovery. An extractor declares `id` (`js-ts:<kind>`),
+`version`, supported fact `kinds`, and `extract`. Its input contains the bounded
+scan map, repository-relative TypeScript source-file map, discovered modules and
+packages. Extraction returns codec-compatible facts and capability-scoped
+coverage; component versions enter snapshot analyzer identity and the built-in
+registry's exact attribution allowlist. Facts are encoded before Markdown
+resolution, with their owning entities already present. A changed fact universe
+invalidates documentation relation reuse. An empty registry preserves the
+existing snapshot bytes, coverage and plugin capabilities.

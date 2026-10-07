@@ -1,3 +1,4 @@
+import { FACT_EXTRACTORS, runFactExtractors } from '../facts/index.js'
 import { builtInManifest, pluginScan, extractionGraph, extractionOutput } from './built-in.js'
 import type { DiscoveryPluginV2 } from '../../plugins/contract.js'
 import { CONFIG_EXTENSIONS, safeWalkOptions } from '../inputs.js'
@@ -648,7 +649,9 @@ const dependencyEntries = (manifest: JsonRecord): readonly { readonly name: stri
 }
 export type SourceState = ReturnType<ReturnType<typeof createJsTsExtraction>['prepare']>
 
-export const jsTsManifest = builtInManifest('js-ts', '1.3.5', [...new Set([...SOURCE_EXTENSIONS, ...CONFIG_EXTENSIONS])].map(extension => `**/*${extension}`))
+const baseManifest = builtInManifest('js-ts', '1.3.5', [...new Set([...SOURCE_EXTENSIONS, ...CONFIG_EXTENSIONS])].map(extension => `**/*${extension}`))
+const factCapabilities = { symbol: 'symbols', 'cli-command': 'cli-commands', 'cli-flag': 'cli-flags', 'config-key': 'config-keys', signature: 'signatures' } as const
+export const jsTsManifest = { ...baseManifest, capabilities: [...new Set([...baseManifest.capabilities, ...FACT_EXTRACTORS.flatMap(extractor => extractor.kinds.map(kind => factCapabilities[kind]))])] }
 export const createJsTsPluginV2 = (): DiscoveryPluginV2 => ({
   manifest: jsTsManifest,
   async discover(input) {
@@ -665,6 +668,7 @@ export const createJsTsPluginV2 = (): DiscoveryPluginV2 => ({
       { analyzer: 'js-ts', scope: 'generated-code', status: 'not-analyzed', reason: 'Generated code is not interpreted as source architecture.' },
     ]
     analyzer.finish({ root, opts, packageResult, ...graph, ...source, coverage, replayRelations: () => [] })
-    return extractionOutput(graph, coverage)
+    const output = runFactExtractors({ root, io, modules: source.modules, packages: packageResult.packages })
+    return { ...extractionOutput(graph, [...coverage, ...output.coverage]), facts: output.facts }
   },
 })
