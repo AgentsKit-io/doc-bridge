@@ -13,7 +13,7 @@ import { readStoredSnapshot, writeStoredSnapshot } from '../src/index-builder/sn
 import { ChangeIdentitySchema, ChangeSetV1JsonSchema } from '../src/schemas/change-set.js'
 import { canonicalJsonV1 } from '../src/index-builder/content-hash.js'
 import { packageFactFromEntity, surfaceFactFromEntity } from '../src/storage/facts.js'
-import { toySourcePlugin, toyDocumentationPlugin, toyLimits } from './toy-plugin.js'
+import { toySourcePlugin, toyLimits } from './toy-plugin.js'
 
 const roots: string[] = []
 afterEach(async () => { for (const root of roots.splice(0)) await rm(root, { recursive: true, force: true }) })
@@ -22,7 +22,7 @@ const fixture = async (revision: 'base' | 'head') => { const root = await tempor
 const reader = async (root: string, revision: string) => createLocalRepositoryRead({ root, partition: { repositoryId: 'doc-bridge-fixture', revision }, limits: toyLimits, inventory: Object.fromEntries(safeWalkFiles(root).files.map(path => [relative(root, path).split('\\').join('/'), contentRef(readFileSync(path))])) })
 const scan = async (root: string, revision: string, source = toySourcePlugin) => {
   const read = await reader(root, revision)
-  const { snapshot, binding } = await discoverRepositoryWithRead(read, { root: 'doc-bridge-fixture', plugins: [source, toyDocumentationPlugin], replaceSourcePlugins: true })
+  const { snapshot, binding } = await discoverRepositoryWithRead(read, { root: 'doc-bridge-fixture', plugins: [source], replaceSourcePlugins: true })
   const io = await createLocalArtifactIO({ root: await temporary(), partition: binding.partition, limits: toyLimits })
   const request = { partition: binding.partition, signal: new AbortController().signal }
   expect((await writeStoredSnapshot(io, request, snapshot, null)).status).toBe('ok')

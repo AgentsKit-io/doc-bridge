@@ -1,4 +1,4 @@
-import { surfaceFactFromEntity } from '../../storage/facts.js'
+import { packageFactFromEntity, surfaceFactFromEntity } from '../../storage/facts.js'
 import { builtInManifest, pluginScan, extractionGraph, extractionOutput, createReplayRelations } from './built-in.js'
 import type { DiscoveryPluginV2 } from '../../plugins/contract.js'
 import { DOCUMENT_EXTENSIONS, safeWalkOptions } from '../inputs.js'
@@ -12,7 +12,7 @@ import type { deriveAreas } from '../areas.js'
 import { entityId } from '../identity.js'
 import { toPosix } from '../../lib/paths.js'
 import { replayableRelations, resolutionFingerprint, type PriorFile } from '../incremental.js'
-import { MARKDOWN_ANALYZER_VERSION, analyzeMarkdownDocument, markdownPathCandidateIndex, declaredAudience, markdownContentHash, parseMarkdownDocument, type MarkdownDocumentV1, type AmbiguousSymbolReference } from '../markdown.js'
+import { MARKDOWN_ANALYZER_VERSION, analyzeMarkdownDocument, markdownPathCandidateIndex, declaredAudience, markdownContentHash, parseMarkdownDocument, type MarkdownDocumentV1, type AmbiguousSymbolReference, type MarkdownFact, type AmbiguousFactReference } from '../markdown.js'
 import { documentClassification } from '../inputs.js'
 import type { DiscoverySnapshotV1, Evidence, KnowledgeRelation } from '../../schemas/knowledge.js'
 const MAX_MARKDOWN_NOTES = 32
@@ -23,11 +23,12 @@ type DocumentContext = ExtractionGraph & SourceState & {
   packageResult: SourceContext['packageResult']
   coverage: DiscoverySnapshotV1['coverage']
   areas: ReturnType<typeof deriveAreas>
+  facts?: ReadonlyMap<string, readonly MarkdownFact[]>
   areasByPath: Map<string, string>
 }
 export const createMarkdownExtraction = (io: ScanIO) => ({
   manifest: markdownManifest, documentExtensions: DOCUMENT_EXTENSIONS,
-  extract({ root, opts, documentPaths, packageResult, entities, relations, addEntity, addRelation, coverage, prior, modulesByPath, moduleUniverse, reuseModuleRelations, symbolModules, ledger, areas, areasByPath }: DocumentContext) {
+  extract({ root, opts, documentPaths, packageResult, entities, relations, addEntity, addRelation, coverage, prior, modulesByPath, moduleUniverse, reuseModuleRelations, symbolModules, ledger, areas, areasByPath, facts }: DocumentContext) {
   /*
    * Documents are parsed first and added as entities after their relations are known, because
    * whether a document's references were truncated is part of what the entity has to say.
@@ -131,6 +132,7 @@ export const createMarkdownExtraction = (io: ScanIO) => ({
     areas: areasByPath,
     packages: packageNames,
     symbols: symbolModules,
+    ...(facts ? { facts } : {}),
     // One index for the whole run: the analyzer used to rebuild this per document.
     pathIndex: markdownPathCandidateIndex({ documents: documentsByPath, modules: modulesByPath, areas: areasByPath }),
   }
@@ -139,11 +141,15 @@ export const createMarkdownExtraction = (io: ScanIO) => ({
   const truncatedDocuments = new Set<string>()
   const ambiguitiesByDocument = new Map<string, readonly AmbiguousSymbolReference[]>()
   const truncatedAmbiguities = new Set<string>()
+  const factAmbiguities = new Map<string, readonly AmbiguousFactReference[]>()
+  const truncatedFactAmbiguities = new Set<string>()
   for (const document of markdownDocuments) {
     const analysis = analyzeMarkdownDocument(document, entityId('document', document.path), markdownResolution)
     for (const relation of analysis.relations) addRelation(relation)
     notesByDocument.set(document.path, analysis.notes)
     ambiguitiesByDocument.set(document.path, analysis.ambiguousSymbolReferences)
+    factAmbiguities.set(document.path, analysis.ambiguousFactReferences)
+    if (analysis.ambiguousFactReferencesTruncated) truncatedFactAmbiguities.add(document.path)
     if (analysis.ambiguousSymbolReferencesTruncated) truncatedAmbiguities.add(document.path)
     if (analysis.truncated) truncatedDocuments.add(document.path)
   }
@@ -190,6 +196,8 @@ export const createMarkdownExtraction = (io: ScanIO) => ({
         ...(parsed?.generatedRegions.length ? { generatedRegions: parsed.generatedRegions } : {}),
         ...(truncatedDocuments.has(path) ? { evidenceTruncated: true } : {}),
         ...(ambiguitiesByDocument.get(path)?.length ? { ambiguousSymbolReferences: ambiguitiesByDocument.get(path) } : {}),
+        ...(factAmbiguities.get(path)?.length ? { ambiguousFactReferences: factAmbiguities.get(path) } : {}),
+        ...(truncatedFactAmbiguities.has(path) ? { ambiguousFactReferencesTruncated: true } : {}),
         ...(truncatedAmbiguities.has(path) ? { ambiguousSymbolReferencesTruncated: true } : {}),
       },
     })
@@ -227,6 +235,14 @@ export const createMarkdownPluginV2 = (): DiscoveryPluginV2 => ({
     const graph = extractionGraph(input.resolution.entities, input.resolution.relations)
     const modulesByPath = new Map(input.resolution.entities.filter(entity => entity.kind === 'module' && entity.path).map(entity => [entity.path!, entity.id]))
     const packages = input.resolution.entities.filter(entity => entity.kind === 'package' && entity.path).map(entity => ({ id: entity.id, name: entity.name, path: entity.path!, absPath: resolve(root, entity.path!), manifestPath: join(root, entity.path!, 'package.json'), manifest: {} }))
+    const facts = new Map<string, MarkdownFact[]>()
+    for (const entity of input.resolution.entities) {
+      if (entity.metadata?.factCodecVersion !== 1) continue
+      const fact = entity.kind === 'package'
+        ? { kind: 'package', name: packageFactFromEntity(entity).purl, ownerId: entity.id }
+        : surfaceFactFromEntity(entity)
+      facts.set(fact.name, [...(facts.get(fact.name) ?? []), fact])
+    }
     const symbolModules = new Map<string, readonly string[]>()
     const forwarded = new Map<string, string[]>()
     for (const entity of input.resolution.entities) {
@@ -251,7 +267,7 @@ export const createMarkdownPluginV2 = (): DiscoveryPluginV2 => ({
       compiler: { options: {} }, ledger: emptyLedger(), prior: undefined,
       moduleUniverse: moduleUniverseFingerprint({ modulePaths: [...modulesByPath.keys()], packages, compilerOptions: {} }),
       reuseModuleRelations: false, modules: new Map(), modulesByPath, reusedModules: new Set(), areaModules: [], symbolModules,
-      areas: [], areasByPath,
+      areas: [], areasByPath, facts,
     })
     return extractionOutput(graph, coverage, input)
   },

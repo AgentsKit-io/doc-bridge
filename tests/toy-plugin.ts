@@ -1,9 +1,8 @@
-import { entityId, relationId } from '../src/discovery/identity.js'
-import { parseMarkdownDocument } from '../src/discovery/markdown.js'
+import { entityId } from '../src/discovery/identity.js'
 import { sha256NormalizedV1 } from '../src/index-builder/content-hash.js'
 import type { DiscoveryPluginV2, ExtractionV2, Resolution } from '../src/plugins/contract.js'
 import type { Evidence } from '../src/schemas/knowledge.js'
-import { surfaceFactEntityId, surfaceFactFromEntity, surfaceFactToEntity, packageFactFromEntity } from '../src/storage/facts.js'
+import { surfaceFactEntityId, surfaceFactToEntity } from '../src/storage/facts.js'
 
 export const toyLimits = { maxFiles: 100_000, maxBytes: 512 * 1024 * 1024, maxFileBytes: 64 * 1024 * 1024, maxTimeMs: 60_000, maxMemoryMb: 2048 }
 const capabilities = ['manifest', 'lockfile', 'versions', 'release-map', 'symbols', 'cli-commands', 'cli-flags', 'config-keys', 'signatures'] as const
@@ -75,31 +74,5 @@ export const toySourcePlugin: DiscoveryPluginV2 = {
     const matches = packages.filter(pkg => pkg.purl === `pkg:generic/${match[1]}`)
     if (matches.length !== 1) return { status: 'unresolved', reason: matches.length ? 'AMBIGUOUS_RELEASE' : 'UNMATCHED_RELEASE', evidence: event.evidence }
     return { status: 'resolved', value: [{ purl: matches[0]!.purl, version: match[2]! }], evidence: event.evidence }
-  },
-}
-
-/** Only generic fact identities cross into documentation relations. */
-export const toyDocumentationPlugin: DiscoveryPluginV2 = {
-  manifest: { ...manifest, id: 'zz-toy-documentation', languages: ['markdown'], capabilities: ['markdown'], inputPatterns: ['**/*.md'], unsupportedConstructs: [] },
-  async discover(input) {
-    const relations: ExtractionV2['relations'] = []
-    const facts = input.resolution.entities.filter(entity => entity.metadata?.factCodecVersion === 1).map(entity => {
-      if (entity.kind !== 'package') return surfaceFactFromEntity(entity)
-      const pkg = packageFactFromEntity(entity)
-      return { kind: 'package' as const, id: pkg.id, ownerId: pkg.id, name: pkg.purl, evidence: pkg.evidence }
-    })
-    for (const doc of input.resolution.entities.filter(entity => entity.kind === 'document' && entity.path)) {
-      const result = await input.read.read({ partition: input.read.partition, signal: input.signal, path: doc.path! })
-      if (result.status !== 'ok') throw new Error(result.code)
-      const parsed = parseMarkdownDocument(doc.path!, Buffer.from(result.value.bytes).toString('utf8'))
-      for (const fact of facts) {
-        const candidates = facts.filter(item => item.kind === fact.kind && item.name === fact.name)
-        if (candidates.length !== 1) continue
-        const tokens = parsed.codeTokens.filter(token => token.value === fact.name)
-        if (!tokens.length) continue
-        relations.push({ id: relationId(doc.id, 'mentions-symbol', fact.ownerId, `${fact.kind}:${fact.name}`), kind: 'mentions-symbol', from: doc.id, to: fact.ownerId, provenance: 'observed', metadata: fact.kind === 'symbol' ? { symbol: fact.name } : { factKind: fact.kind, factName: fact.name }, evidence: tokens.slice(0, 8).map(token => ({ source: 'documentation', path: doc.path!, lineStart: token.line, lineEnd: token.line, contentHash: result.value.content.hash })) })
-      }
-    }
-    return { entities: [], relations, facts: [], packages: [], diagnostics: [], coverage: [{ analyzer: 'zz-toy-documentation', scope: 'markdown', status: 'complete' }] }
   },
 }
