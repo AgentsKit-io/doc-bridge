@@ -171,9 +171,11 @@ export const publishAdvisory = async (env, request = fetch) => {
   if (!env.DOC_BRIDGE_ADVISORY_REPORT || !statSafe(env.DOC_BRIDGE_ADVISORY_REPORT)) return fallback('advisory artifact unavailable')
   try {
     const data = validateAdvisory(JSON.parse(readFileSync(env.DOC_BRIDGE_ADVISORY_REPORT, 'utf8')), env)
+    // URLs and revision checks use only the runner's trusted environment; the artifact supplies the comment text.
+    const trusted = { repository: env.GITHUB_REPOSITORY, pr: Number(env.DOC_BRIDGE_PR_NUMBER), base: exactRevision(env.DOC_BRIDGE_BASE_REVISION), head: exactRevision(env.DOC_BRIDGE_HEAD_REVISION) }
     if (!env.DOC_BRIDGE_TOKEN) return fallback('write token unavailable')
     // The endpoint is fixed; tokens are never sent to a caller-selected host.
-    const endpoint = `https://api.github.com/repos/${data.repository}`
+    const endpoint = `https://api.github.com/repos/${trusted.repository}`
     const api = async (path, method = 'GET', body) => {
       const response = await request(path === '/user' ? 'https://api.github.com/user' : `${endpoint}${path}`, { method, headers: { Authorization: `Bearer ${env.DOC_BRIDGE_TOKEN}`, Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' }, ...(body ? { body: JSON.stringify(body) } : {}), signal: AbortSignal.timeout(15000) })
       if (!response.ok) throw new Error(`Endpoint status ${response.status}`)
@@ -182,8 +184,8 @@ export const publishAdvisory = async (env, request = fetch) => {
       return bytes ? JSON.parse(bytes) : undefined
     }
     const current = async () => {
-      const pr = await api(`/pulls/${data.pr}`)
-      return pr.head?.sha === data.head && pr.base?.sha === data.base && pr.head?.repo?.full_name === data.repository && pr.base?.repo?.full_name === data.repository
+      const pr = await api(`/pulls/${trusted.pr}`)
+      return pr.head?.sha === trusted.head && pr.base?.sha === trusted.base && pr.head?.repo?.full_name === trusted.repository && pr.base?.repo?.full_name === trusted.repository
     }
     // Forks are summary-only, even if a privileged token was accidentally provided.
     if (!(await current())) return fallback('fork or superseded revision binding')
@@ -192,7 +194,7 @@ export const publishAdvisory = async (env, request = fetch) => {
     const comments = async () => {
       const found = []
       for (let page = 1; page <= 10; page++) {
-        const list = await api(`/issues/${data.pr}/comments?per_page=100&page=${page}`)
+        const list = await api(`/issues/${trusted.pr}/comments?per_page=100&page=${page}`)
         if (!Array.isArray(list)) throw new Error('Invalid comment listing')
         found.push(...list.filter(comment => comment.user?.id === actor.id && comment.user?.login === actor.login && typeof comment.body === 'string' && comment.body.startsWith(`${data.marker}\n`) && Number.isSafeInteger(comment.id)))
         if (list.length < 100) return found.sort((a,b) => a.id - b.id)
@@ -205,7 +207,7 @@ export const publishAdvisory = async (env, request = fetch) => {
       if (!(await current())) return fallback('superseded run')
       try {
         if (own.length) await api(`/issues/comments/${own[0].id}`, 'PATCH', { body: data.markdown })
-        else await api(`/issues/${data.pr}/comments`, 'POST', { body: data.markdown })
+        else await api(`/issues/${trusted.pr}/comments`, 'POST', { body: data.markdown })
         const observed = await comments()
         if (!(await current())) return fallback('superseded run after delivery')
         if (!observed.some(comment => comment.body === data.markdown)) throw new Error('Delivery not observed')
