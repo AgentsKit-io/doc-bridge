@@ -9,7 +9,7 @@ import { dirname, join, posix } from 'node:path'
 
 import type { DocBridgeConfigV1 } from '../config/schema.js'
 import { applyDocumentationDeclarations } from '../discovery/documentation.js'
-import { discoverRepository } from '../discovery/repository.js'
+import { discoverRepositoryForIndex } from '../discovery/repository.js'
 import { readBoundedText, type TextReadBudget } from '../lib/bounded-text.js'
 import { toPosix } from '../lib/paths.js'
 import { DocBridgeIndexV1Schema, type DocBridgeIndexV1, type KnowledgeEntry } from '../schemas/doc-bridge-index.js'
@@ -90,7 +90,7 @@ const projectFromSnapshot = (
   hashAlgorithm: HashAlgorithm,
   files?: RepositoryFiles,
 ): { readonly projection: RetrievalIndexV1 } => {
-  const scanned = given ?? discoverRepository({ root, config })
+  const scanned = given ?? discoverRepositoryForIndex({ root, config })
   const selected = { ...scanned, contentHashAlgo: hashAlgorithm }
   const observed = { ...selected, contentHash: contentHashForVersionedArtifact(selected) }
   const budget: TextReadBudget = { used: 0 }

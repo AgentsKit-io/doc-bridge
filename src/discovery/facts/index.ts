@@ -39,7 +39,7 @@ export const factAnalyzerVersions = (): Readonly<Record<string, string>> => Obje
 type FactTrees = ReadonlyMap<string, ts.SourceFile>
 const sourceTrees = new WeakMap<object, FactTrees>()
 
-export const runFactExtractors = (input: Omit<FactExtractorInput, 'sourceFiles'> & { previous?: PreviousSnapshot }) => {
+export const runFactExtractors = (input: Omit<FactExtractorInput, 'sourceFiles'> & { previous?: PreviousSnapshot; parsedTrees?: Map<string, ts.SourceFile>; retainTrees?: boolean }) => {
   const facts: SurfaceFact[] = []
   const coverage: DiscoverySnapshotV1['coverage'] = []
   const priorTrees = input.previous && sourceTrees.get(input.previous)
@@ -66,11 +66,30 @@ export const runFactExtractors = (input: Omit<FactExtractorInput, 'sourceFiles'>
       facts.push(...input.previous!.entities.filter(entity => kinds.has(entity.kind as FactKind) && entity.metadata?.factCodecVersion === 1).map(surfaceFactFromEntity))
       coverage.push(...input.previous!.coverage.filter(entry => FACT_EXTRACTORS.some(extractor => extractor.id === entry.analyzer)))
     } else {
-      sourceFiles = new Map([...input.modules.values()].map(module => {
-        const text = texts.get(module.path)!
-        const cached = priorTrees?.get(module.path)
-        return [module.path, cached?.fileName === module.absPath && cached.getFullText() === text ? cached : ts.createSourceFile(module.absPath, text, ts.ScriptTarget.Latest, true, scriptKind(module.path))]
-      }))
+      const modulesByPath = new Map([...input.modules.values()].map(module => [module.path, module]))
+      const trees = new Map<string, ts.SourceFile>()
+      const tree = (path: string): ts.SourceFile | undefined => {
+        const module = modulesByPath.get(path)
+        if (!module) return undefined
+        const text = texts.get(path)!
+        const cached = trees.get(path) ?? input.parsedTrees?.get(path) ?? priorTrees?.get(path)
+        const source = cached?.fileName === module.absPath && cached.getFullText() === text ? cached : ts.createSourceFile(module.absPath, text, ts.ScriptTarget.Latest, true, scriptKind(path))
+        trees.delete(path); trees.set(path, source)
+        // ponytail: one-tree index cache bounds retention; widen only after profiling reuse.
+        if (input.retainTrees === false && trees.size > 1) trees.delete(trees.keys().next().value!)
+        return source
+      }
+      if (input.retainTrees !== false) sourceFiles = new Map([...modulesByPath.keys()].map(path => [path, tree(path)!]))
+      else sourceFiles = {
+        size: modulesByPath.size,
+        has: path => modulesByPath.has(path),
+        get: tree,
+        keys: () => modulesByPath.keys(),
+        *values() { for (const path of modulesByPath.keys()) yield tree(path)!; return undefined },
+        *entries() { for (const path of modulesByPath.keys()) yield [path, tree(path)!] as [string, ts.SourceFile]; return undefined },
+        [Symbol.iterator]() { return this.entries() },
+        forEach(callback, thisArg) { for (const [path, source] of this) callback.call(thisArg, source, path, this) },
+      }
       coverage.push(...inputCoverage)
       for (const extractor of FACT_EXTRACTORS) {
         const output = extractor.extract({ ...input, sourceFiles })
@@ -79,5 +98,5 @@ export const runFactExtractors = (input: Omit<FactExtractorInput, 'sourceFiles'>
       }
     }
   }
-  return { facts, coverage, remember(snapshot: object) { sourceTrees.set(snapshot, sourceFiles) } }
+  return { facts, coverage, remember(snapshot: object) { if (input.retainTrees !== false) sourceTrees.set(snapshot, sourceFiles) } }
 }

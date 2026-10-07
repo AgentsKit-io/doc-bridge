@@ -11,11 +11,33 @@ export const SIGNATURE_ANALYZER_VERSION = '1.0.0'
 const MAX_FACTS = 4096
 const MAX_SIGNATURE_BYTES = 16_384
 
-/** Syntax leaves preserve literal/template contents and omit whitespace and comments. */
-const tokens = (node: ts.Node, source: ts.SourceFile): string[] => {
-  if (ts.isJSDoc(node)) return []
-  const children = node.getChildren(source)
-  return children.length ? children.flatMap(child => tokens(child, source)) : node.getText(source) ? [node.getText(source)] : []
+/** Traverse real syntax nodes; scan punctuation gaps without materializing getChildren caches. */
+const signatureTokens = (source: ts.SourceFile) => {
+  const scanner = ts.createScanner(ts.ScriptTarget.Latest, true, source.languageVariant)
+  return (node: ts.Node): string[] => {
+    const result: string[] = []
+    const gap = (start: number, end: number): void => {
+      scanner.setText(source.text, start, end - start)
+      while (scanner.scan() !== ts.SyntaxKind.EndOfFileToken) result.push(scanner.getTokenText())
+    }
+    const visit = (item: ts.Node): void => {
+      if (ts.isJSDoc(item)) return
+      if (item.kind <= ts.SyntaxKind.LastToken) {
+        const text = item.getText(source)
+        if (text) result.push(text)
+        return
+      }
+      let position = item.getStart(source)
+      ts.forEachChild(item, child => {
+        gap(position, child.getStart(source))
+        visit(child)
+        position = child.end
+      })
+      gap(position, item.end)
+    }
+    visit(node)
+    return result
+  }
 }
 const modifiers = (node: ts.Node) => ts.canHaveModifiers(node) ? ts.getModifiers(node) ?? [] : []
 const has = (node: ts.Node, kind: ts.SyntaxKind) => modifiers(node).some(item => item.kind === kind)
@@ -25,6 +47,7 @@ const memberName = (node: ts.NamedDeclaration): string | undefined => node.name 
 type Result = { facts: SurfaceFact[]; coverage: DiscoverySnapshotV1['coverage'] }
 /** No type checker: missing declarations are reported, never inferred from bodies. */
 export const extractSignatures = (source: ts.SourceFile, ownerId: string, path: string, contentHash: string): Result => {
+  const tokens = signatureTokens(source)
   const groups = new Map<string, { value: unknown; node: ts.Node }[]>()
   const functions = new Map<string, ts.FunctionDeclaration[]>()
   for (const statement of source.statements) if (ts.isFunctionDeclaration(statement) && isExported(statement) && statement.name) {
@@ -45,11 +68,11 @@ export const extractSignatures = (source: ts.SourceFile, ownerId: string, path: 
   const callable = (node: ts.SignatureDeclarationBase, constructor = false): unknown => {
     for (const parameter of node.parameters) if (!parameter.type) limitations.add('Parameter types are inferred or undeclared.')
     if (!constructor && !node.type) limitations.add('Return types are inferred or undeclared.')
-    return { parameters: node.parameters.map(parameter => ({ name: tokens(parameter.name, source),
+    return { parameters: node.parameters.map(parameter => ({ name: tokens(parameter.name),
       optional: Boolean(parameter.questionToken), rest: Boolean(parameter.dotDotDotToken), default: Boolean(parameter.initializer),
-      type: parameter.type ? tokens(parameter.type, source) : null })),
-      typeParameters: node.typeParameters?.map(parameter => tokens(parameter, source)) ?? [],
-      returnType: node.type ? tokens(node.type, source) : null }
+      type: parameter.type ? tokens(parameter.type) : null })),
+      typeParameters: node.typeParameters?.map(parameter => tokens(parameter)) ?? [],
+      returnType: node.type ? tokens(node.type) : null }
   }
   const callableGroup = (nodes: readonly ts.SignatureDeclarationBase[], constructor = false): unknown[] => {
     const overloads = nodes.filter(node => !('body' in node) || !node.body)
@@ -64,7 +87,7 @@ export const extractSignatures = (source: ts.SourceFile, ownerId: string, path: 
       add(name, { kind: 'function', signatures: [callable(node)] }, node)
     } else if (ts.isClassDeclaration(node) || ts.isInterfaceDeclaration(node) || ts.isTypeAliasDeclaration(node)) {
       const members = ts.isTypeAliasDeclaration(node) ? ts.isTypeLiteralNode(node.type) ? node.type.members : undefined : node.members
-      if (!members) { add(name, { kind: 'type', typeParameters: node.typeParameters?.map(parameter => tokens(parameter, source)) ?? [], type: tokens((node as ts.TypeAliasDeclaration).type, source) }, node); return }
+      if (!members) { add(name, { kind: 'type', typeParameters: node.typeParameters?.map(parameter => tokens(parameter)) ?? [], type: tokens((node as ts.TypeAliasDeclaration).type) }, node); return }
       const values = new Map<string, ts.Node[]>()
       for (const member of members) {
         if (has(member, ts.SyntaxKind.PrivateKeyword) || has(member, ts.SyntaxKind.ProtectedKeyword) || (member.name && ts.isPrivateIdentifier(member.name))) continue
@@ -82,13 +105,13 @@ export const extractSignatures = (source: ts.SourceFile, ownerId: string, path: 
           value = { optional: Boolean('questionToken' in first && first.questionToken), signatures: callableGroup(nodes as ts.SignatureDeclarationBase[], ts.isConstructorDeclaration(first)) }
         } else if (ts.isPropertySignature(first) || ts.isPropertyDeclaration(first)) {
           if (!first.type) limitations.add('Member types are inferred or undeclared.')
-          value = { optional: Boolean(first.questionToken), readonly: has(first, ts.SyntaxKind.ReadonlyKeyword), type: first.type ? tokens(first.type, source) : null }
+          value = { optional: Boolean(first.questionToken), readonly: has(first, ts.SyntaxKind.ReadonlyKeyword), type: first.type ? tokens(first.type) : null }
         } else { limitations.add('Accessor members are not analyzed.'); continue }
         signatures.push({ name: key, value })
         add(`${name}.${key}`, value, first)
       }
-      add(name, { kind: ts.isClassDeclaration(node) ? 'class' : 'type', typeParameters: node.typeParameters?.map(parameter => tokens(parameter, source)) ?? [],
-        heritage: !ts.isTypeAliasDeclaration(node) ? node.heritageClauses?.map(clause => tokens(clause, source)) ?? [] : [], members: signatures }, node)
+      add(name, { kind: ts.isClassDeclaration(node) ? 'class' : 'type', typeParameters: node.typeParameters?.map(parameter => tokens(parameter)) ?? [],
+        heritage: !ts.isTypeAliasDeclaration(node) ? node.heritageClauses?.map(clause => tokens(clause)) ?? [] : [], members: signatures }, node)
       if (ts.isClassDeclaration(node) && node.heritageClauses?.length) limitations.add('Inherited class members are not inferred.')
     } else limitations.add('An exported declaration has no supported syntactic signature.')
   }

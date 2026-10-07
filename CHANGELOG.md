@@ -33,6 +33,10 @@
 - Retain symbol-level documentation references and structured ambiguity metadata without inflating retrieval connection counts.
 - Registry agent runners receive an optional cancellation signal separately from their frozen context. Local and CLI deadlines now use `@agentskit/net`; CLI timeout and response overflow switch process-tree termination from `SIGTERM` to `SIGKILL`, while concurrency remains reserved until execution settles.
 
+### Patch Changes
+
+- Precompute semantic hash ordering keys once per entry and bound syntax-tree retention for index-only scans and reuse parsed trees in discovery, reducing index-build cost without changing artifact bytes or hash identity.
+
 ## 1.13.0
 
 ### Minor Changes

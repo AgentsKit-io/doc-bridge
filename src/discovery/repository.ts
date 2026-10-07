@@ -157,8 +157,8 @@ const addAreas = ({ entities, relations, addEntity, addRelation }: ReturnType<ty
   return { areas, areasByPath }
 }
 
-export const createDiscoveryScan = (io: ScanIO) => {
-  const jsTs = createJsTsExtraction(io)
+export const createDiscoveryScan = (io: ScanIO, retainFactTrees = true) => {
+  const jsTs = createJsTsExtraction(io, retainFactTrees)
   const markdown = createMarkdownExtraction(io)
   const { readJson, discoverPackages, relativePath } = jsTs
   return (opts: DiscoveryOptions = {}, documents = true): DiscoverySnapshotV1 => {
@@ -182,7 +182,7 @@ export const createDiscoveryScan = (io: ScanIO) => {
   const coverage = jsTs.initialCoverage(root, rootManifest, packageResult, compiler, [sourceWalk, documentWalk, configWalk])
 
   const facts = new Map<string, MarkdownFact[]>()
-  const extracted = runFactExtractors({ root, io, modules, packages: packageResult.packages, walkOptions: safeOptions, ...(prior && opts.previous ? { previous: opts.previous } : {}) })
+  const extracted = runFactExtractors({ root, io, modules, parsedTrees: source.sourceFiles, retainTrees: retainFactTrees, packages: packageResult.packages, walkOptions: safeOptions, ...(prior && opts.previous ? { previous: opts.previous } : {}) })
   for (const fact of extracted.facts) {
     addEntity(surfaceFactToEntity(fact))
     facts.set(fact.name, [...(facts.get(fact.name) ?? []), fact])
@@ -230,6 +230,9 @@ export const createDiscoveryScan = (io: ScanIO) => {
 }
 
 export const discoverRepository = (opts: DiscoveryOptions = {}): DiscoverySnapshotV1 => createDiscoveryScan(createLocalScanIO(resolve(opts.root ?? process.cwd()), opts))(opts)
+
+/** Index-owned snapshots do not need to retain syntax trees for incremental reuse. */
+export const discoverRepositoryForIndex = (opts: DiscoveryOptions): DiscoverySnapshotV1 => createDiscoveryScan(createLocalScanIO(resolve(opts.root ?? process.cwd()), opts), false)(opts)
 
 export type DiscoveryReadOptions = DiscoveryOptions & {
   readonly signal?: AbortSignal

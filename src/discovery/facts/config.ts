@@ -235,8 +235,9 @@ export const configFactExtractor: FactExtractor = {
   extract({ root, io, sourceFiles, modules, packages, walkOptions }) {
     const results: Result[] = []
     const owners = new Map([...modules.values()].map(module => [module.path, module.entityId]))
-    for (const [path, source] of [...sourceFiles].sort(([a], [b]) => a.localeCompare(b))) {
+    for (const path of [...sourceFiles.keys()].sort((a, b) => a.localeCompare(b))) {
       if (/(?:^|\/)(?:tests?|__tests__)\/fixtures\//.test(path)) continue
+      const source = sourceFiles.get(path)!
       const owner = owners.get(path)
       if (owner) results.push(configFactsFromSource(source, path, owner))
     }

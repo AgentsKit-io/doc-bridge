@@ -58,9 +58,10 @@ export const extractCliFacts = (root: string, packages: readonly PackageInfo[], 
       }
       let recognized = false
       for (const module of [...modules.values()].filter(module => module.packageId === pkg.id).sort((a, b) => a.path.localeCompare(b.path))) {
-        const text = io.readText(module.absPath)
-        const source = sourceFiles.get(module.path)!
         if (/(?:^|\/)(?:tests?|__tests__|fixtures)(?:\/|$)|\.(?:test|spec)\./.test(module.path)) continue
+        const text = io.readText(module.absPath)
+        if (!reachable.has(resolve(module.absPath)) && !text.includes('@')) continue
+        const source = sourceFiles.get(module.path)!
         const evidence = (node: ts.Node): Evidence => ({ source: 'code', path: module.path, lineStart: source.getLineAndCharacterOfPosition(node.getStart(source)).line + 1, lineEnd: source.getLineAndCharacterOfPosition(node.getEnd()).line + 1, contentHash: sha256NormalizedV1(text) })
         const staticBuilders = new Set<ts.Node>()
         const evaluated = new Set<ts.Node>()

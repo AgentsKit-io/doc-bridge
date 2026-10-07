@@ -18,7 +18,7 @@ import type { DiscoverySnapshotV1, Evidence } from '../../schemas/knowledge.js'
 const MAX_MARKDOWN_NOTES = 32
 const relativePath = (root: string, path: string): string => toPosix(relative(root, path)) || '.'
 const lineEvidence = (source: 'code' | 'configuration' | 'documentation', root: string, path: string, lineStart?: number, lineEnd?: number): Evidence => ({ source, path: relativePath(root, path), ...(lineStart !== undefined ? { lineStart } : {}), ...(lineEnd !== undefined ? { lineEnd } : {}) })
-type DocumentContext = ExtractionGraph & SourceState & {
+type DocumentContext = ExtractionGraph & Omit<SourceState, 'sourceFiles'> & {
   root: string; opts: DiscoveryOptions; documentPaths: readonly string[]
   packageResult: SourceContext['packageResult']
   coverage: DiscoverySnapshotV1['coverage']

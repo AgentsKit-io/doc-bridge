@@ -57,7 +57,7 @@ export type SourceContext = ExtractionGraph & {
 const DEFAULT_RUNTIME_WIRING_METHODS = ['register', 'use', 'mount', 'attach'] as const
 const TEST_MODULE_PATTERN = /(?:\.test|\.spec|__tests__)/
 const configurationHashOf = (config: DiscoveryOptions['config']): string => sha256NormalizedV1(config ?? {})
-export const createJsTsExtraction = (io: ScanIO) => {
+export const createJsTsExtraction = (io: ScanIO, retainTrees = true) => {
 const hasPackageManagerMetadata = (root: string, rootManifest: JsonRecord | undefined): boolean =>
   Boolean(
     rootManifest?.packageManager ||
@@ -461,6 +461,7 @@ const dependencyEntries = (manifest: JsonRecord): readonly { readonly name: stri
     ledger.invalidated.push('the set of modules, packages or compiler options changed')
   }
 
+  const sourceFiles = new Map<string, ts.SourceFile>()
   const modules = new Map<string, ModuleInfo>()
   const modulesByPath = new Map<string, string>()
   const reusedModules = new Set<string>()
@@ -500,6 +501,7 @@ const dependencyEntries = (manifest: JsonRecord): readonly { readonly name: stri
       registerSymbols(id, exportsOf(priorModule.entity), new Set(declaredExportsOf(priorModule.entity)))
     } else {
       const sourceFile = ts.createSourceFile(absPath, text, ts.ScriptTarget.Latest, true, scriptKind(absPath))
+      if (retainTrees) sourceFiles.set(path, sourceFile)
       const exports = exportedNames(sourceFile)
       const declared = new Set(exportedNames(sourceFile, { declaredOnly: true }))
       const reexports = exports.filter((name) => !declared.has(name))
@@ -533,9 +535,9 @@ const dependencyEntries = (manifest: JsonRecord): readonly { readonly name: stri
   for (const [name, owners] of declaringModules) symbolModules.set(name, owners)
   for (const [name, owners] of exportingModules) if (!symbolModules.has(name)) symbolModules.set(name, owners)
 
-    return { compiler, ledger, prior, moduleUniverse, reuseModuleRelations, modules, modulesByPath, reusedModules, areaModules, symbolModules }
+    return { sourceFiles, compiler, ledger, prior, moduleUniverse, reuseModuleRelations, modules, modulesByPath, reusedModules, areaModules, symbolModules }
   }
-  const finish = ({ root, opts, packageResult, entities, relations, addEntity, addRelation, coverage, compiler, prior, modules, reuseModuleRelations, reusedModules, ledger, replayRelations }: Omit<SourceContext, 'sourcePaths'> & ReturnType<typeof prepare> & { coverage: DiscoverySnapshotV1['coverage']; replayRelations: (prior: PriorFile) => readonly KnowledgeRelation[] }) => {
+  const finish = ({ root, opts, packageResult, entities, relations, addEntity, addRelation, coverage, sourceFiles, compiler, prior, modules, reuseModuleRelations, reusedModules, ledger, replayRelations }: Omit<SourceContext, 'sourcePaths'> & ReturnType<typeof prepare> & { coverage: DiscoverySnapshotV1['coverage']; replayRelations: (prior: PriorFile) => readonly KnowledgeRelation[] }) => {
   for (const pkg of packageResult.packages) {
     const text = io.readText(pkg.manifestPath)
     for (const dependency of dependencyEntries(pkg.manifest)) {
@@ -581,7 +583,7 @@ const dependencyEntries = (manifest: JsonRecord): readonly { readonly name: stri
     }
 
     const text = io.readText(module.absPath)
-    const sourceFile = ts.createSourceFile(module.absPath, text, ts.ScriptTarget.Latest, true, scriptKind(module.absPath))
+    const sourceFile = sourceFiles.get(module.path) ?? ts.createSourceFile(module.absPath, text, ts.ScriptTarget.Latest, true, scriptKind(module.absPath))
     const runtimeWiringMethods = includeTestRuntimeWiring || !TEST_MODULE_PATTERN.test(module.path) ? configuredRuntimeWiringMethods : new Set<string>()
     const references = moduleReferences(root, module.absPath, sourceFile, runtimeWiringMethods)
     ledger.parsedFiles.push(module.path)
@@ -668,7 +670,7 @@ export const createJsTsPluginV2 = (): DiscoveryPluginV2 => ({
       { analyzer: 'js-ts', scope: 'generated-code', status: 'not-analyzed', reason: 'Generated code is not interpreted as source architecture.' },
     ]
     analyzer.finish({ root, opts, packageResult, ...graph, ...source, coverage, replayRelations: () => [] })
-    const output = runFactExtractors({ root, io, modules: source.modules, packages: packageResult.packages, walkOptions: safeWalkOptions(opts.config) })
+    const output = runFactExtractors({ root, io, modules: source.modules, parsedTrees: source.sourceFiles, packages: packageResult.packages, walkOptions: safeWalkOptions(opts.config) })
     return { ...extractionOutput(graph, [...coverage, ...output.coverage]), facts: output.facts }
   },
 })

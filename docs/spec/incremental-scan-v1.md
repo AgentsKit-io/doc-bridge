@@ -154,6 +154,11 @@ parser accounting. A changed global input after loading a serialized snapshot
 may require reacquiring all source ASTs. This is a performance limit, not a claim
 of per-file independence or a reason to reuse stale results.
 
+Discovery scans share parsed syntax trees across exports, facts and imports.
+Index-owned scans instead parse fact trees on demand with a bounded scan-local
+cache, rather than retaining all trees for snapshot reuse; caller-provided discovery snapshots keep their cache.
+This changes allocation cost only, not serialized facts, coverage or hash identity.
+
 Prior and current Markdown resolution use the same sorted fact kind/name/owner
 fingerprint, leaving the legacy fingerprint unchanged for an empty fact universe.
 Changing a fact's value alone does not change citation ownership. Fact ambiguity
