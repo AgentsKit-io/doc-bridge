@@ -130,6 +130,7 @@ export type Resolution<T> = Readonly<{ status: 'resolved'; value: T; evidence: r
 export interface DiscoveryPluginV2 {
   readonly manifest: DiscoveryPluginManifestV2
   discover(input: DiscoveryPluginInputV2): Promise<unknown>
+  normalizeRange?(purl: string, value: string): Resolution<string>
   normalizeVersion?(purl: string, value: string): Resolution<string>
   compareVersions?(purl: string, left: string, right: string): Resolution<-1 | 0 | 1>
   satisfiesRange?(purl: string, version: string, versRange: string): Resolution<boolean>
@@ -163,7 +164,7 @@ export const createDiscoveryRegistryV2 = (options: { readonly pipelineVersion?: 
       Object.freeze(manifest.languages); Object.freeze(manifest.capabilities); Object.freeze(manifest.inputPatterns); Object.freeze(manifest.unsupportedConstructs); Object.freeze(manifest.resourceLimits); Object.freeze(manifest)
       const policy = options.builtIns?.find(entry => entry.plugin === plugin)
       if (policy) builtIns.set(manifest.id, Object.freeze({ ...policy.analyzerVersions }))
-      plugins.set(manifest.id, { manifest, discover: plugin.discover.bind(plugin), ...(plugin.normalizeVersion ? { normalizeVersion: plugin.normalizeVersion.bind(plugin) } : {}), ...(plugin.compareVersions ? { compareVersions: plugin.compareVersions.bind(plugin) } : {}), ...(plugin.satisfiesRange ? { satisfiesRange: plugin.satisfiesRange.bind(plugin) } : {}), ...(plugin.mapRelease ? { mapRelease: plugin.mapRelease.bind(plugin) } : {}) })
+      plugins.set(manifest.id, { manifest, discover: plugin.discover.bind(plugin), ...(plugin.normalizeRange ? { normalizeRange: plugin.normalizeRange.bind(plugin) } : {}), ...(plugin.normalizeVersion ? { normalizeVersion: plugin.normalizeVersion.bind(plugin) } : {}), ...(plugin.compareVersions ? { compareVersions: plugin.compareVersions.bind(plugin) } : {}), ...(plugin.satisfiesRange ? { satisfiesRange: plugin.satisfiesRange.bind(plugin) } : {}), ...(plugin.mapRelease ? { mapRelease: plugin.mapRelease.bind(plugin) } : {}) })
     },
     list() { return [...plugins.values()].map(plugin => plugin.manifest).sort((a,b) => a.id.localeCompare(b.id)) },
     async discover(id, rawInput) {

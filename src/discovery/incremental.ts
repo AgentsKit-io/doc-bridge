@@ -1,4 +1,4 @@
-import { surfaceFactFromEntity } from '../storage/facts.js'
+import { surfaceFactFromEntity, packageFactFromEntity } from '../storage/facts.js'
 import { sha256NormalizedV1 } from '../index-builder/content-hash.js'
 import type { DiscoverySnapshotV1, Coverage, KnowledgeEntity, KnowledgeRelation } from '../schemas/knowledge.js'
 
@@ -226,7 +226,7 @@ export const indexPriorSnapshot = (previous: PreviousSnapshot, compilerOptions: 
     documents,
     moduleUniverse,
     resolution: resolutionFingerprint({
-      moduleUniverse: factResolutionUniverse(moduleUniverse, previous.entities.filter(entity => entity.metadata?.factCodecVersion === 1 && entity.kind !== 'package').map(surfaceFactFromEntity)),
+      moduleUniverse: factResolutionUniverse(moduleUniverse, previous.entities.filter(entity => entity.metadata?.factCodecVersion === 1).map(entity => entity.kind === 'package' ? { kind: 'package', name: packageFactFromEntity(entity).purl, ownerId: entity.id } : surfaceFactFromEntity(entity))),
       documentPaths: [...documents.keys()],
       areaPaths: previous.entities.filter((entity) => entity.kind === 'area').map((entity) => entity.path ?? ''),
       symbols,

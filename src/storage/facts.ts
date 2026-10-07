@@ -30,7 +30,7 @@ export const packageFactToEntity = (input: PackageFact, existing?: KnowledgeEnti
   if (existing && (existing.kind !== 'package' || existing.id !== fact.id)) throw new Error('INVALID_PACKAGE_OWNER')
   const { id, evidence, ...metadata } = fact
   // Preserve unrelated package metadata; only the versioned codec namespace is owned here.
-  return EntitySchema.parse({ ...(existing ?? { id, kind: 'package', name: fact.purl, provenance: 'observed' }), evidence: existing ? existing.evidence : evidence, metadata: { ...existing?.metadata, factCodecVersion: 1, package: metadata } })
+  return EntitySchema.parse({ ...(existing ?? { id, kind: 'package', name: fact.purl, provenance: 'observed' }), evidence: existing ? [...existing.evidence, ...evidence.filter(item => !existing.evidence.some(prior => prior.path === item.path && prior.contentHash === item.contentHash))].slice(0, 64) : evidence, metadata: { ...existing?.metadata, factCodecVersion: 1, package: metadata } })
 }
 export const packageFactFromEntity = (input: KnowledgeEntity): PackageFact => {
   const entity = EntitySchema.parse(input)

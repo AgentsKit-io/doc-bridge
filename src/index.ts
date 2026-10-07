@@ -1097,3 +1097,7 @@ export { serviceConfig, SERVICE_CONFIG_LEAVES } from './execution/config.js'
 
 /** Static configuration from exact-partition caller storage. */
 export { loadConfigWithRead } from './config/load-config.js'
+
+export { stampChangeSet, changeSetEligibility, DocumentTargetSchema, type DocumentTarget, type VersionComparator } from './diff/version-routing.js'
+export { npmPurl, npmNameFromPurl, npmRangeToVers, versToNpmRange, mapNpmRelease } from './discovery/plugins/npm-versions.js'
+export { resolveDocumentTargets, type TargetAdapter } from './discovery/document-targets.js'

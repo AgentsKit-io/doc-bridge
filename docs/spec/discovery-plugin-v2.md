@@ -236,3 +236,40 @@ runtime completeness. This opt-in marker adds no configuration key.
 The hook also accepts additive `walkOptions` carrying the effective discovery
 safety policy. JSON Schema enumeration applies that same exclusion/limit policy
 to the scan-local map; it cannot expand configured scope.
+
+## Package versions and ranges
+
+The built-in JS/TS adapter `1.4.0` emits codec-backed facts on existing package
+entities: npm purl, valid manifest version, dependency vers range, optional
+lockfile-resolved version and bounded manifest/lock evidence. Dependency sections
+include dependencies, devDependencies, peerDependencies and optionalDependencies.
+Conflicting declarations for the same purl remain unresolved with partial coverage.
+Manifest/lockfile bytes participate in revision identity and package values in
+semantic identity. `packageurl-js` constructs/parses npm identities; `semver`
+implements npm ordering only inside the adapter.
+
+`normalizeRange(purl, value)` is an optional additive adapter method alongside
+normalizeVersion, compareVersions, satisfiesRange and mapRelease. Caller-supplied
+source adapters are passed to the Markdown plugin for target normalization.
+The core stores vers strings and delegates version semantics to adapters.
+
+`npmRangeToVers` expands npm shorthand using semver comparator sets; the reverse
+`versToNpmRange` handles canonical exact/disjoint intervals and wildcard ranges.
+Canonical constraints are ordered by ecosystem version, with unique versions
+and alternating interval bounds, following the
+[VERS specification](https://www.packageurl.org/docs/vers/specification.html).
+Overlapping OR intervals, exclusions, empty/impossible ranges and unsupported
+syntax return unresolved rather than inventing a different range. Prerelease
+eligibility follows node-semver range semantics. No general-purpose vers parser
+is added to core.
+
+Supported locks: pnpm importer dependency entries (peer suffixes removed) and
+npm package-lock node_modules entries, including workspace-local entries then
+hoisted root entries. Root npm v1 dependency entries are supported. Yarn and
+other lock formats remain partial coverage, with unresolved locked versions;
+no approximate parsing. Lock lookup is deterministic and local. A present
+invalid/missing dependency resolution uses the bounded `unresolved` sentinel,
+which normalization rejects; it must not trigger manifest fallback.
+Supported lockfiles are parsed once per extraction run, shared across package
+owners and dependencies. Parse failures are reused only within that run; a
+subsequent scan reads and parses the current lockfile bytes again.

@@ -45,9 +45,8 @@ extractor evidence report `not-analyzed`.
 
 Rename detection remains `not-analyzed`: no adapter rename-proof contract is
 available in this producer, and neither value equality nor similar paths proves a
-rename. Moved identities appear as removal and addition. Release state remains
-`unreleased`; mapping package facts does not implement release eligibility or
-version routing. Version comparison and caller-event release mapping belong to
+rename. Moved identities appear as removal and addition. Diff initially emits `unreleased`; a caller may stamp the result using an
+adapter mapping and explicit release event. Version comparison and caller-event release mapping belong to
 plugins and are exercised by the test-only toy adapter, without network access.
 
 Changes and coverage are sorted by canonical JSON. Findings are sorted by stable
@@ -97,8 +96,9 @@ When a cited symbol had exactly one base owner and appears in the head document'
 `unresolved`, separately from removal findings. It does not arbitrarily select
 an owner or propose remediation. Findings reuse existing `DiagnosticSchema` and
 are emitted in the envelope's `findings` array, outside ChangeSet identity.
-Policy routing, region remediation, release eligibility and acceptance are later
-contracts, not guarantees of this delta flow.
+Findings remain unchanged by version routing: consumers read each document
+target from entity metadata and call the pure eligibility function. Policy
+routing, region remediation and acceptance remain separate contracts.
 
 Finding IDs hash the category, document entity ID, relation kind, cited target ID,
 and cited symbol when present, plus the removed target identity recorded in the
@@ -136,3 +136,57 @@ local fallback or native file reads occur in this API. `diffSnapshots` retains
 its synchronous signature and optional local head verification. Root package
 exports and CLI wiring for the injected successor are a separate integration
 step.
+
+## Release stamping and eligibility
+
+Root export `stampChangeSet(changeSet, releaseEvent, adapterMapping)` is pure and
+performs no I/O. The caller obtains a `Resolution` mapping from its adapter and
+supplies `{eventId, tag, revision, evidence}`. The event revision must equal
+`headRevision`; a resolved mapping must identify exactly one purl present in
+`changeSet.packages`. Unmatched, unsupported or ambiguous mappings return an
+unresolved/ambiguous result with evidence and never stamp the delta. Multiple
+package mappings require separate caller-scoped deltas; this scalar release
+contract does not choose one package from a multi-package release event.
+
+A successful result is `Resolution<ChangeSetV1>`. It has a released state with
+purl, version and eventId, retains caller evidence in release-event coverage,
+removes the missing-event coverage entry and recomputes semantic identity.
+Repeating the same eventId/purl/version is idempotent. Any different stamp on an
+already released delta throws `CONFLICTING_RELEASE_STAMP` for review; the input
+is never mutated. No branch name, current manifest version or network lookup
+constitutes a release event. The JS adapter recognizes `v1.2.3`, `1.2.3` and
+`name@1.2.3` (including scoped names); a bare version is ambiguous when multiple
+npm package facts are present.
+
+Root export `changeSetEligibility(changeSet, target, adapterComparator?)`
+returns `Resolution<boolean>`. The comparator is an object with the existing
+adapter `satisfiesRange(purl, version, versRange)` hook. The core never parses or
+compares ecosystem versions. Unresolved targets stay unresolved; a missing
+comparator for a resolved range returns unsupported rather than eligibility.
+The caller selects the adapter for the target's ecosystem.
+
+| Target | Unreleased delta | Released delta |
+| --- | --- | --- |
+| latest-released (no declaration) | false | true |
+| default-branch or workspace range | true for matching package | false |
+| resolved range | false | adapter comparison for matching stamped purl |
+| unresolved | unresolved | unresolved |
+
+Default-branch and workspace targets track local sources, including numeric
+workspace bounds. They already receive the unreleased delta, so its released
+stamp is ineligible for those targets; stable finding identity also supports
+consumer deduplication.
+
+For example, `vers:npm/0.4.1` excludes release `0.5.0`, while
+`vers:npm/>=0.4.1|<0.5.0-0` includes `0.4.2`. The toy adapter demonstrates numeric
+`2 < 10` through the same API without semver in core. Latest-released means
+follow caller-supplied released deltas; the engine does not fetch a release
+catalog or infer which supplied event is newest.
+
+Document `metadata.targets` holds at most 32 independent bounded target records
+(see [Markdown targets](markdown-analyzer-v1.md#document-package-targets)).
+Eligibility is evaluated per target; consumers retain independent outcomes for
+multiple purls. Findings, finding IDs and strict diff envelope fields are
+unchanged. Version eligibility does not erase deterministic findings or approve
+remediation. This contract implements the version-routing decisions in
+[ADR 0010](../adr/0010-versioned-change-set-and-semantic-identity.md).

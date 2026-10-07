@@ -1,3 +1,6 @@
+import { resolveDocumentTargets, type TargetAdapter } from '../document-targets.js'
+import { createJsTsPluginV2 } from './js-ts.js'
+import { canonicalJsonV1 } from '../../index-builder/content-hash.js'
 import { packageFactFromEntity, surfaceFactFromEntity } from '../../storage/facts.js'
 import { builtInManifest, pluginScan, extractionGraph, extractionOutput, createReplayRelations } from './built-in.js'
 import type { DiscoveryPluginV2 } from '../../plugins/contract.js'
@@ -26,7 +29,7 @@ type DocumentContext = ExtractionGraph & Omit<SourceState, 'sourceFiles'> & {
   facts?: ReadonlyMap<string, readonly MarkdownFact[]>
   areasByPath: Map<string, string>
 }
-export const createMarkdownExtraction = (io: ScanIO) => ({
+export const createMarkdownExtraction = (io: ScanIO, adapters: readonly DiscoveryPluginV2[] = [createJsTsPluginV2()]) => ({
   manifest: markdownManifest, documentExtensions: DOCUMENT_EXTENSIONS,
   extract({ root, opts, documentPaths, packageResult, entities, relations, addEntity, addRelation, coverage, prior, modulesByPath, moduleUniverse, reuseModuleRelations, symbolModules, ledger, areas, areasByPath, facts }: DocumentContext) {
   /*
@@ -75,9 +78,11 @@ export const createMarkdownExtraction = (io: ScanIO) => ({
     areaPaths: areas.map((area) => area.path),
     symbols: symbolModules,
   })
-  const reuseDocumentRelations = Boolean(prior) && prior?.resolution === resolution
+  const packageUniverse = canonicalJsonV1([...entities.values()].filter(entity => entity.kind === 'package').sort((a,b) => a.id.localeCompare(b.id)).map(entity => entity.metadata))
+  const oldPackageUniverse = canonicalJsonV1(opts.previous?.entities.filter(entity => entity.kind === 'package').sort((a,b) => a.id.localeCompare(b.id)).map(entity => entity.metadata) ?? [])
+  const reuseDocumentRelations = Boolean(prior) && prior?.resolution === resolution && packageUniverse === oldPackageUniverse
   if (prior && reuseModuleRelations && !reuseDocumentRelations) {
-    ledger.invalidated.push('the set of documents, areas or exported symbols changed')
+    ledger.invalidated.push(prior?.resolution !== resolution ? 'the set of documents, areas or exported symbols changed' : 'package version facts changed')
   }
 
   const reusedDocuments = new Map<string, PriorFile>()
@@ -168,6 +173,7 @@ export const createMarkdownExtraction = (io: ScanIO) => ({
   // Notes follow the walk, not the order documents happened to be parsed in, so reuse cannot move them.
   const markdownNotes: readonly MarkdownNote[] = [...documentFiles.keys()].flatMap((path) => [...(notesByDocument.get(path) ?? [])])
 
+  const owners = [...entities.values()].filter(entity => entity.kind === 'package' && entity.metadata?.factCodecVersion === 1 && entity.path).sort((a,b) => b.path!.length - a.path!.length)
   const parsedDocuments = new Map(markdownDocuments.map((document) => [document.path, document]))
   for (const [path, absPath] of documentFiles) {
     const reused = reusedDocuments.get(path)
@@ -176,6 +182,13 @@ export const createMarkdownExtraction = (io: ScanIO) => ({
       continue
     }
     const parsed = parsedDocuments.get(path)
+    const owner = owners.find(entity => entity.path === '.' || path.startsWith(`${entity.path}/`))
+    const targetAdapter: TargetAdapter = { normalizeRange(purl, range) {
+      const results = adapters.flatMap(adapter => adapter.normalizeRange ? [adapter.normalizeRange(purl, range)] : [])
+      const matches = results.filter(result => result.status === 'resolved')
+      return matches.length === 1 ? matches[0]! : { status: matches.length ? 'ambiguous' : 'unresolved', reason: matches.length ? 'AMBIGUOUS_TARGET_ADAPTER' : 'UNRESOLVABLE_TARGET_RANGE', evidence: [] }
+    } }
+    const targets = parsed ? resolveDocumentTargets(parsed.frontmatterBlock?.value, { source: 'documentation', path, contentHash: parsed.contentHash, ...(parsed.frontmatterBlock ? { lineStart: parsed.frontmatterBlock.line } : {}) }, owner ? packageFactFromEntity(owner) : undefined, targetAdapter) : [{ state: 'unresolved', source: 'frontmatter', reason: 'UNREADABLE_DOCUMENT', evidence: [] }]
     addEntity({
       id: entityId('document', path),
       kind: 'document',
@@ -189,6 +202,7 @@ export const createMarkdownExtraction = (io: ScanIO) => ({
         },
       ],
       metadata: {
+        targets,
         classification: (parsed && declaredAudience(parsed.frontmatter)) ?? documentClassification(path),
         ...(parsed?.title ? { title: parsed.title } : {}),
         ...(parsed?.headings.length ? { headings: parsed.headings } : {}),
@@ -231,7 +245,7 @@ export const createMarkdownExtraction = (io: ScanIO) => ({
 })
 
 export const markdownManifest = builtInManifest('markdown', MARKDOWN_ANALYZER_VERSION, DOCUMENT_EXTENSIONS.map(extension => `**/*${extension}`))
-export const createMarkdownPluginV2 = (): DiscoveryPluginV2 => ({
+export const createMarkdownPluginV2 = (adapters: readonly DiscoveryPluginV2[] = [createJsTsPluginV2()]): DiscoveryPluginV2 => ({
   manifest: markdownManifest,
   async discover(input) {
     const { root, opts, io } = await pluginScan(input)
@@ -265,7 +279,7 @@ export const createMarkdownPluginV2 = (): DiscoveryPluginV2 => ({
     for (const [name, owners] of symbolModules) symbolModules.set(name, [...new Set(owners)])
     const areasByPath = new Map(input.resolution.entities.filter(entity => entity.kind === 'area' && entity.path).map(entity => [entity.path!, entity.id]))
     const coverage: DiscoverySnapshotV1['coverage'] = []
-    createMarkdownExtraction(io).extract({ root, opts, ...graph, documentPaths: io.walk(DOCUMENT_EXTENSIONS, safeWalkOptions(opts.config)).files,
+    createMarkdownExtraction(io, adapters).extract({ root, opts, ...graph, documentPaths: io.walk(DOCUMENT_EXTENSIONS, safeWalkOptions(opts.config)).files,
       packageResult: { packages, coverage: [] }, coverage,
       compiler: { options: {} }, ledger: emptyLedger(), prior: undefined,
       moduleUniverse: moduleUniverseFingerprint({ modulePaths: [...modulesByPath.keys()], packages, compilerOptions: {} }),

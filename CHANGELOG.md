@@ -8,6 +8,8 @@
 
 ### Minor Changes
 
+- Add npm purl/vers package facts and lockfile resolution, bounded document version targets, caller-event release stamping and adapter-owned change-set eligibility.
+
 - Add an opt-in caller-enforced service profile with restricted config, injected storage and explicit CLI/MCP limitations.
 - Preserve incremental zero-parse reuse and stable citation resolution when static fact extractors are registered, including serialized unchanged snapshots and fact ambiguity coverage.
 - Keep generic fact citations in discovery and change-set evidence while excluding them from retrieval graph signals and query scores.
@@ -39,6 +41,8 @@
 - Registry agent runners receive an optional cancellation signal separately from their frozen context. Local and CLI deadlines now use `@agentskit/net`; CLI timeout and response overflow switch process-tree termination from `SIGTERM` to `SIGKILL`, while concurrency remains reserved until execution settles.
 
 ### Patch Changes
+
+- Parse each supported lockfile once per discovery extraction, preserving package ownership, unresolved coverage and scan-to-scan freshness.
 
 - Precompute semantic hash ordering keys once per entry and bound syntax-tree retention for index-only scans and reuse parsed trees in discovery, reducing index-build cost without changing artifact bytes or hash identity.
 

@@ -1,3 +1,5 @@
+import { extractNpmPackages } from './npm-packages.js'
+import { npmVersionHooks } from './npm-versions.js'
 import { FACT_EXTRACTORS, runFactExtractors } from '../facts/index.js'
 import { builtInManifest, pluginScan, extractionGraph, extractionOutput } from './built-in.js'
 import type { DiscoveryPluginV2 } from '../../plugins/contract.js'
@@ -631,7 +633,7 @@ const dependencyEntries = (manifest: JsonRecord): readonly { readonly name: stri
     const configWalk = io.walk(CONFIG_EXTENSIONS, safeOptions)
     const sourcePaths = sourceWalk.files
     const configPaths = configWalk.files.filter(path => /(?:^|\/)(?:tsconfig|jsconfig|vite\.config|webpack\.config|rollup\.config|next\.config|jest\.config|eslint\.config|vitest\.config)/.test(relativePath(root, path)))
-    return { rootManifest, packageResult, sourceWalk, configWalk, sourcePaths, inputFiles: [rootManifestPath, ...sourcePaths, ...configPaths] }
+    return { rootManifest, packageResult, sourceWalk, configWalk, sourcePaths, inputFiles: [rootManifestPath, ...packageResult.packages.map(pkg => pkg.manifestPath), ...io.walk(['pnpm-lock.yaml', 'package-lock.json', 'yarn.lock', 'bun.lock', 'bun.lockb'], safeOptions).files, ...sourcePaths, ...configPaths] }
   }
   const initialCoverage = (root: string, rootManifest: JsonRecord | undefined, packageResult: SourceContext['packageResult'], compiler: ReturnType<typeof readCompilerOptions>, walks: readonly SafeWalkResult[]): DiscoverySnapshotV1['coverage'] => {
   const coverage: DiscoverySnapshotV1['coverage'] = [
@@ -647,15 +649,16 @@ const dependencyEntries = (manifest: JsonRecord): readonly { readonly name: stri
 
     return coverage
   }
-  return { manifest: jsTsManifest, inputs, initialCoverage, readJson, discoverPackages, relativePath, prepare, finish }
+  return { extractPackages: (root: string, packages: readonly PackageInfo[]) => extractNpmPackages(root, io, packages), manifest: jsTsManifest, inputs, initialCoverage, readJson, discoverPackages, relativePath, prepare, finish }
 }
 export type SourceState = ReturnType<ReturnType<typeof createJsTsExtraction>['prepare']>
 
-const baseManifest = builtInManifest('js-ts', '1.3.5', [...new Set([...SOURCE_EXTENSIONS, ...CONFIG_EXTENSIONS])].map(extension => `**/*${extension}`))
+const baseManifest = builtInManifest('js-ts', '1.4.0', [...new Set([...SOURCE_EXTENSIONS, ...CONFIG_EXTENSIONS])].map(extension => `**/*${extension}`))
 const factCapabilities = { symbol: 'symbols', 'cli-command': 'cli-commands', 'cli-flag': 'cli-flags', 'config-key': 'config-keys', signature: 'signatures' } as const
-export const jsTsManifest = { ...baseManifest, capabilities: [...new Set([...baseManifest.capabilities, ...FACT_EXTRACTORS.flatMap(extractor => extractor.kinds.map(kind => factCapabilities[kind]))])] }
+export const jsTsManifest = { ...baseManifest, capabilities: [...new Set([...baseManifest.capabilities, 'lockfile' as const, 'versions' as const, 'release-map' as const, ...FACT_EXTRACTORS.flatMap(extractor => extractor.kinds.map(kind => factCapabilities[kind]))])] }
 export const createJsTsPluginV2 = (): DiscoveryPluginV2 => ({
   manifest: jsTsManifest,
+  ...npmVersionHooks,
   async discover(input) {
     const { root, opts, io } = await pluginScan(input)
     const analyzer = createJsTsExtraction(io)
@@ -671,6 +674,7 @@ export const createJsTsPluginV2 = (): DiscoveryPluginV2 => ({
     ]
     analyzer.finish({ root, opts, packageResult, ...graph, ...source, coverage, replayRelations: () => [] })
     const output = runFactExtractors({ root, io, modules: source.modules, parsedTrees: source.sourceFiles, packages: packageResult.packages, walkOptions: safeWalkOptions(opts.config) })
-    return { ...extractionOutput(graph, [...coverage, ...output.coverage]), facts: output.facts }
+    const versions = extractNpmPackages(root, io, packageResult.packages)
+    return { ...extractionOutput(graph, [...coverage, ...output.coverage, ...versions.coverage]), facts: output.facts, packages: versions.packages }
   },
 })

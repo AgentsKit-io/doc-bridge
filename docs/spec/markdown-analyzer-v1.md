@@ -170,3 +170,48 @@ The v2 plugin parses documents afresh, so fact-universe changes cannot replay
 stale generic references. The synchronous shared fact hook incorporates the
 fact universe into the resolution fingerprint before reusing document relations.
 Each registered extractor carries its own component analyzer version.
+
+## Document package targets
+
+Markdown analyzer `1.3.0` adds engine-generic frontmatter `docbridge.targets`:
+
+```yaml
+---
+docbridge:
+  targets:
+    "pkg:npm/%40scope/name": "0.4.1"
+    "pkg:npm/dependency": null
+---
+```
+
+Keys are canonical unversioned package purls; values are adapter-native ranges,
+`vers:` ranges, `default-branch`, or `null`. A null value explicitly names a
+package while requesting lock/manifest resolution. This declaration may appear
+alone or alongside `covers` and `relations`. Target parsing never adds citation
+relations. Each purl resolves independently; one invalid declaration cannot
+change another target. Invalid frontmatter, target shape, purl, version or range
+stays unresolved with document evidence; it never silently falls through.
+
+For a null declaration, the nearest owning package's codec dependency facts
+supply the resolved lockfile version first, then the manifest range when no
+lockfile exists. A present unsupported, malformed or missing lock entry stays
+unresolved with lock/manifest evidence. No arbitrary global package-name lookup
+or sibling workspace importer is allowed. A named purl absent from the owner's
+dependencies stays unresolved. Documents without `docbridge.targets` (or an
+empty mapping) have one implicit latest-released target, receiving released
+deltas only. Packages are never silently selected from prose or path alone.
+
+Document entity `metadata.targets` is an array of at most 32 records with
+`state` (`resolved`, `unresolved`, `latest-released`, `default-branch`), optional
+`purl` (512 characters), optional `range` (512), `source` (`frontmatter`,
+`lockfile`, `manifest`, `implicit`), optional `reason` (256), and at most four
+existing evidence records. Over-limit input produces one unresolved record;
+no truncated target set is treated as complete. Changes in package version
+metadata invalidate warm document reuse even if document bytes are identical.
+
+Adapters own `normalizeRange(purl, value)` and `satisfiesRange`. JS accepts npm
+ranges/vers and `workspace:*`, `workspace:^`, `workspace:~` or valid npm workspace
+ranges; workspace/default-branch targets track unreleased work. Other schemes
+require caller-registered adapter normalization hooks; incompatible or multiple
+successful hooks stay unresolved/ambiguous. See
+[release eligibility](change-set-v1.md#release-stamping-and-eligibility).

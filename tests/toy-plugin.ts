@@ -52,6 +52,10 @@ export const toySourcePlugin: DiscoveryPluginV2 = {
     for (const scope of capabilities) output.coverage.push({ analyzer: manifest.id, scope, status: complete ? 'complete' : 'partial', evidence: proofs, ...(!complete ? { reason: 'UNSUPPORTED_DIRECTIVE_OR_PARTIAL_LIST' } : {}) })
     return output
   },
+  normalizeRange(purl, value) {
+    const range = value === '*' ? 'vers:toy/>=0' : version(value) !== undefined ? `vers:toy/=${value}` : value
+    return validPurl(purl) && /^vers:toy\/((>=|<=|>|<|=)\d+)(\|((>=|<=|>|<|=)\d+))*$/.test(range) ? resolved(range) : unresolved('INVALID_RANGE')
+  },
   normalizeVersion(purl, value) { return validPurl(purl) && version(value) !== undefined ? resolved(value) : unresolved('INVALID_VERSION') },
   compareVersions(purl, left, right) {
     const a = version(left), b = version(right)
