@@ -233,3 +233,6 @@ static-declaration inventory; helper calls with unsupported registration semanti
 remain partial. Removal proof concerns previously emitted declaration identities.
 Help-only extraction always remains partial: help examples do not establish
 runtime completeness. This opt-in marker adds no configuration key.
+The hook also accepts additive `walkOptions` carrying the effective discovery
+safety policy. JSON Schema enumeration applies that same exclusion/limit policy
+to the scan-local map; it cannot expand configured scope.

@@ -91,7 +91,7 @@ describe('generic fact diff through persisted exact-partition snapshots', () => 
 
   it('resolves removed commands, config keys, signatures and packages through owner/name citations', async () => {
     const baseRoot = await fixture('base'), headRoot = await fixture('head')
-    const text = '# Guide\n\nUse `output`, `Keep`, and `pkg:generic/doc-bridge`.\n\n```sh\ninspect\n```\n'
+    const text = '# Guide\n\nUse `output.format`, `Keep`, and `pkg:generic/doc-bridge`.\n\n```sh\ninspect\n```\n'
     await writeFile(join(baseRoot, 'docs/guide.md'), text)
     await writeFile(join(headRoot, 'docs/guide.md'), text)
     await writeFile(join(headRoot, 'src/main.toy'), 'symbol Keep\n')
@@ -113,7 +113,7 @@ describe('generic fact diff through persisted exact-partition snapshots', () => 
     const ambiguity = result.findings.find(finding => finding.code === 'AMBIGUOUS_REFERENCE')!
     expect(ambiguity).toMatchObject({ status: 'unresolved' })
     expect(ambiguity).not.toHaveProperty('remediation')
-    await writeFile(join(headRoot, 'docs/guide.md'), '# Guide\n\nIntroduction.\n\nUse `Gone`, `Keep`, `--brief`, `output`.\n')
+    await writeFile(join(headRoot, 'docs/guide.md'), '# Guide\n\nIntroduction.\n\nUse `Gone`, `Keep`, `--brief`, `output.format`.\n')
     const moved = await scan(headRoot, 'moved')
     expect((await diffSnapshotsWithRead(base.snapshot, moved.snapshot, moved.read)).findings.find(finding => finding.code === 'AMBIGUOUS_REFERENCE')!.id).toBe(ambiguity.id)
     await writeFile(join(headRoot, 'docs/guide.md'), '# Guide\n\nNo citations remain.\n')

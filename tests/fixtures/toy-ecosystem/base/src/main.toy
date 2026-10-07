@@ -2,5 +2,5 @@ symbol Keep
 symbol Gone
 command inspect
 flag inspect --brief
-config output text
+config output.format text
 signature Keep (value)->text

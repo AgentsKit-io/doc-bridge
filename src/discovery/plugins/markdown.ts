@@ -125,6 +125,7 @@ export const createMarkdownExtraction = (io: ScanIO) => ({
   }
 
   const markdownResolution = {
+    packagePaths: packageResult.packages.map(pkg => ({ id: pkg.id, path: pkg.path })),
     documents: documentsByPath,
     modules: modulesByPath,
     // Areas exist now, so a document naming a directory resolves to the unit, not to nothing.

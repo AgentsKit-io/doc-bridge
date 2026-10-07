@@ -120,6 +120,10 @@ uses fact kind/name in place of the symbol, retaining the existing owner target
 and removed identity (or sorted candidate owners). Evidence positions and hashes
 remain excluded from finding identity.
 
+Config-key ambiguity candidates reuse Markdown's package/fixture citation
+boundary. Adding the same dotted key in another package does not make an
+existing citation ambiguous.
+
 `diffSnapshotsWithRead(base, head, read, { signal?, branch? })` is the async
 module-level successor for injected callers. The reader must be bound to the head
 revision; a mismatch fails before reading. Caller-owned partition authorization

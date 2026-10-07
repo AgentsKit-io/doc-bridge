@@ -2,7 +2,7 @@ import { readBoundedText } from '../lib/bounded-text.js'
 import { parseDocumentationDeclarations } from '../discovery/documentation.js'
 import { entityId } from '../discovery/identity.js'
 import { exportsOf, FILE_BACKED_KINDS } from '../discovery/incremental.js'
-import { analyzeMarkdownDocument, markdownPathCandidateIndex, parseMarkdownDocument, type MarkdownResolution } from '../discovery/markdown.js'
+import { analyzeMarkdownDocument, configKeyCitationIndex, markdownPathCandidateIndex, parseMarkdownDocument, type MarkdownResolution } from '../discovery/markdown.js'
 import { canonicalJsonV1, contentHashForVersionedArtifact, sha256NormalizedV1 } from '../index-builder/content-hash.js'
 import { containedProjectPath } from '../lib/paths.js'
 import { ChangeSetV1Schema, type Change, type ChangeSetV1 } from '../schemas/change-set.js'
@@ -149,6 +149,12 @@ type VerifiedDocuments = ReadonlyMap<string, string>
 
 const referenceFacts = (snapshot: SnapshotForChanges) => [...factsOf(snapshot), ...packagesOf(snapshot).map(pkg => ({ kind: 'package' as const, id: pkg.id, ownerId: pkg.id, name: pkg.purl, evidence: pkg.evidence }))]
 
+const configKeyOwnerCandidates = (snapshot: DiscoverySnapshotV1, documentPath: string, name: string, facts: ReturnType<typeof referenceFacts>): string[] => {
+  const packages = snapshot.entities.filter(entity => entity.kind === 'package' && entity.path).map(entity => ({ id: entity.id, path: entity.path! }))
+  const matches = configKeyCitationIndex(new Map([[name, facts.filter(fact => fact.kind === 'config-key' && fact.name === name)]]), documentPath, packages).get(name) ?? []
+  return [...new Set(matches.map(fact => fact.ownerId))].sort()
+}
+
 const genericFindings = (base: DiscoverySnapshotV1, head: DiscoverySnapshotV1, changes: readonly Change[], texts: VerifiedDocuments) => {
   const oldFacts = referenceFacts(base)
   if (!oldFacts.length) return []
@@ -168,8 +174,8 @@ const genericFindings = (base: DiscoverySnapshotV1, head: DiscoverySnapshotV1, c
     const fact = byId.get(kind === 'package' ? relation.to : surfaceFactEntityId(kind as SurfaceFact['kind'], relation.to, name))
     const doc = after.get(relation.from)
     if (!fact || !doc?.path || doc.kind !== 'document') continue
-    const candidates = [...new Set(newFacts.filter(item => item.kind === fact.kind && item.name === fact.name).map(item => item.ownerId))].sort()
-    const baseCandidates = new Set(oldFacts.filter(item => item.kind === fact.kind && item.name === fact.name).map(item => item.ownerId))
+    const candidates = fact.kind === 'config-key' ? configKeyOwnerCandidates(head, doc.path, fact.name, newFacts) : [...new Set(newFacts.filter(item => item.kind === fact.kind && item.name === fact.name).map(item => item.ownerId))].sort()
+    const baseCandidates = new Set(fact.kind === 'config-key' ? configKeyOwnerCandidates(base, doc.path, fact.name, oldFacts) : oldFacts.filter(item => item.kind === fact.kind && item.name === fact.name).map(item => item.ownerId))
     const ambiguous = baseCandidates.size === 1 && candidates.length > 1
     if (!removed.has(fact.id) && !ambiguous) continue
     const text = texts.get(doc.id)

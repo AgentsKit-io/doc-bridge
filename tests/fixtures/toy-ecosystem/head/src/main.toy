@@ -1,5 +1,5 @@
 symbol Keep
 command inspect
 flag inspect --compact
-config output json
+config output.format json
 signature Keep (value,mode)->text

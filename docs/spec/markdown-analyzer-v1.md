@@ -44,8 +44,13 @@ These fields use existing open metadata records; strict snapshot, index and hand
 are unchanged. Retrieval and graph importance count unique document/module connections rather
 than increasing a module's importance for each cited symbol.
 
-A document referencing more than 64 relations records `evidenceTruncated` and a coverage note. An
+A document referencing more than 64 legacy relations records `evidenceTruncated` and a coverage note. An
 index page's sixty-fifth link is not knowledge, and an unbounded list is not evidence.
+
+Non-symbol fact citations (`metadata.factKind`) have a separate bounded cap of
+64 per document. They never consume or displace the legacy relation cap.
+Exceeding it records `evidenceTruncated` and a distinct `fact-relations:<path>`
+coverage note. Repeated citations still share the existing eight-location bound.
 
 ## Generated regions
 
@@ -115,6 +120,11 @@ Different kinds sharing a token are evaluated in sorted kind order.
 The relation discriminator is `${factKind}:${factName}`; repeated citations
 accumulate at most eight documentation evidence locations.
 
+Configuration facts use an isolated citation index: only dotted paths match,
+and source/document package and fixture boundaries must agree. Bare keys produce
+no config relation. Relations retain canonical dotted `metadata.factName`.
+See [configuration key facts](config-key-facts-v1.md).
+
 Generic ambiguity uses document `metadata.ambiguousFactReferences`, an array of
 `{ factKind, factName, candidateOwnerIds, candidateCount, lines }` sorted by
 kind/name. Names are bounded to 256 characters, sorted owner IDs to 32, sorted
@@ -162,3 +172,7 @@ preserving the legacy symbol relation and adding a signature relation to its
 module. Class/type citations refer to the aggregate public-member signature.
 No new token matching is introduced; existing relation/evidence bounds apply.
 See [signature facts v1](signature-facts-v1.md).
+The v2 plugin parses documents afresh, so fact-universe changes cannot replay
+stale generic references. The synchronous shared fact hook incorporates the
+fact universe into the resolution fingerprint before reusing document relations.
+Each registered extractor carries its own component analyzer version.

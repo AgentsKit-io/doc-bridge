@@ -668,7 +668,7 @@ export const createJsTsPluginV2 = (): DiscoveryPluginV2 => ({
       { analyzer: 'js-ts', scope: 'generated-code', status: 'not-analyzed', reason: 'Generated code is not interpreted as source architecture.' },
     ]
     analyzer.finish({ root, opts, packageResult, ...graph, ...source, coverage, replayRelations: () => [] })
-    const output = runFactExtractors({ root, io, modules: source.modules, packages: packageResult.packages })
+    const output = runFactExtractors({ root, io, modules: source.modules, packages: packageResult.packages, walkOptions: safeWalkOptions(opts.config) })
     return { ...extractionOutput(graph, [...coverage, ...output.coverage]), facts: output.facts }
   },
 })

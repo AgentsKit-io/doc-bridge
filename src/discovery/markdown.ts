@@ -38,6 +38,7 @@ const MAX_TITLE_LENGTH = 256
 
 /** A document with more relations than this is an index page; the tail adds noise, not knowledge. */
 export const MARKDOWN_RELATION_CAP = 64
+export const MARKDOWN_FACT_RELATION_CAP = 64
 
 /**
  * A region a generator owns. The analyzer skips it when collecting mentions, so Doc Bridge does
@@ -314,6 +315,7 @@ export type MarkdownResolution = {
   /** Exported symbol to the entity ids of every module exporting it. */
   readonly symbols: ReadonlyMap<string, readonly string[]>
   readonly facts?: ReadonlyMap<string, readonly MarkdownFact[]>
+  readonly packagePaths?: readonly { readonly id: string; readonly path: string }[]
   readonly relationCap?: number
   /**
    * Path candidates for near-miss resolution, indexed by length.
@@ -350,7 +352,25 @@ export type AmbiguousSymbolReference = {
   readonly lines: readonly number[]
 }
 
-export type MarkdownFact = { readonly kind: string; readonly name: string; readonly ownerId: string }
+export type MarkdownFact = { readonly kind: string; readonly name: string; readonly ownerId: string; readonly evidence?: readonly Evidence[] }
+
+/** Config citations require dotted names and the same fixture/package boundary. */
+export const configKeyCitationIndex = (facts: ReadonlyMap<string, readonly MarkdownFact[]> | undefined, documentPath: string, packages: MarkdownResolution['packagePaths']): ReadonlyMap<string, readonly MarkdownFact[]> => {
+  const index = new Map<string, MarkdownFact[]>()
+  const fixture = (path: string) => { const match = /(?:^|\/)(?:tests?|__tests__)\/fixtures\/[^/]+/.exec(path); return match ? path.slice(0, match.index + match[0].length) : '' }
+  const orderedPackages = [...(packages ?? [])].sort((a, b) => b.path.length - a.path.length)
+  const packageId = (path: string) => orderedPackages.find(pkg => pkg.path === '.' || path.startsWith(`${pkg.path}/`))?.id
+  const documentFixture = fixture(documentPath), documentPackage = packageId(documentPath)
+  for (const fact of facts?.values() ?? []) for (const item of fact) {
+    if (item.kind !== 'config-key' || !item.name.includes('.')) continue
+    const paths = item.evidence?.map(proof => proof.path) ?? [item.ownerId.replace(/^module:/, '')]
+    if (!paths.some(path => fixture(path) === documentFixture && packageId(path) === documentPackage)) continue
+    const matches = index.get(item.name) ?? []
+    if (!matches.some(match => match.ownerId === item.ownerId)) matches.push(item)
+    index.set(item.name, matches)
+  }
+  return index
+}
 
 export type AmbiguousFactReference = {
   readonly factKind: string
@@ -406,12 +426,26 @@ export const analyzeMarkdownDocument = (
 ): MarkdownAnalysis => {
   const cliBins = new Set([...(resolution.facts?.values() ?? [])].flatMap(facts => facts.filter(fact => fact.kind === 'cli-command').map(fact => fact.name.split(' ')[0]!)))
   const cap = resolution.relationCap ?? MARKDOWN_RELATION_CAP
+  const configKeys = configKeyCitationIndex(resolution.facts, document.path, resolution.packagePaths)
   const relations = new Map<string, KnowledgeRelation>()
   const notes: MarkdownNote[] = []
   const ambiguous = new Map<string, Evidence[]>()
   const ambiguousFacts = new Map<string, AmbiguousFactReference>()
   const signatureCitations = new Map<string, { fact: MarkdownFact; lines: number[] }>()
   let truncated = false
+  let factsTruncated = false
+  let legacyCount = 0
+  let factCount = 0
+  const reserveRelation = (fact: MarkdownFact | undefined): boolean => {
+    if (fact) {
+      if (factCount >= MARKDOWN_FACT_RELATION_CAP) { factsTruncated = true; return false }
+      factCount++
+    } else {
+      if (legacyCount >= cap) { truncated = true; return false }
+      legacyCount++
+    }
+    return true
+  }
 
   const add = (kind: string, to: string, line: number, confidence?: 'fuzzy', symbol?: string, fact?: MarkdownFact): void => {
     if (to === documentId) return
@@ -424,10 +458,7 @@ export const analyzeMarkdownDocument = (
       }
       return
     }
-    if (relations.size >= cap) {
-      truncated = true
-      return
-    }
+    if (!reserveRelation(fact)) return
     relations.set(id, {
       id,
       kind,
@@ -519,7 +550,7 @@ export const analyzeMarkdownDocument = (
 
     const signatureSymbol = !cliKind && resolveSignatureSymbol(value, line)
     const candidates = resolution.facts?.get(value)
-    const facts = candidates?.filter(fact => (cliKind ? fact.kind === cliKind : fact.kind !== 'cli-command' && fact.kind !== 'cli-flag') && (fact.kind !== 'signature' || (!resolution.symbols.has(value) && !resolution.symbols.has(value.split('.')[0]!))))
+    const facts = [...(candidates ?? []).filter(fact => fact.kind !== 'config-key'), ...(cliKind ? [] : configKeys.get(value) ?? [])].filter(fact => (cliKind ? fact.kind === cliKind : fact.kind !== 'cli-command' && fact.kind !== 'cli-flag') && (fact.kind !== 'signature' || (!resolution.symbols.has(value) && !resolution.symbols.has(value.split('.')[0]!))))
     if (facts?.length) {
       for (const kind of [...new Set(facts.map(fact => fact.kind))].sort()) {
         const candidates = facts.filter(fact => fact.kind === kind)
@@ -581,6 +612,7 @@ export const analyzeMarkdownDocument = (
       evidence: [documentEvidence(document.path, 1)],
     })
   }
+  if (factsTruncated) notes.push({ scope: `fact-relations:${document.path}`, reason: `Document references more than ${MARKDOWN_FACT_RELATION_CAP} facts; the remainder was not recorded.`, evidence: [documentEvidence(document.path, 1)] })
 
   const ambiguousSymbolReferences = [...ambiguous.entries()]
     .sort(([a], [b]) => a.localeCompare(b))
@@ -597,6 +629,6 @@ export const analyzeMarkdownDocument = (
     ambiguousSymbolReferencesTruncated: ambiguous.size > 64,
     relations: [...relations.values()].sort((a, b) => a.id.localeCompare(b.id)),
     notes,
-    truncated,
+    truncated: truncated || factsTruncated,
   }
 }

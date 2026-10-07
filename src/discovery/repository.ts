@@ -182,7 +182,7 @@ export const createDiscoveryScan = (io: ScanIO) => {
   const coverage = jsTs.initialCoverage(root, rootManifest, packageResult, compiler, [sourceWalk, documentWalk, configWalk])
 
   const facts = new Map<string, MarkdownFact[]>()
-  const extracted = runFactExtractors({ root, io, modules, packages: packageResult.packages, ...(prior && opts.previous ? { previous: opts.previous } : {}) })
+  const extracted = runFactExtractors({ root, io, modules, packages: packageResult.packages, walkOptions: safeOptions, ...(prior && opts.previous ? { previous: opts.previous } : {}) })
   for (const fact of extracted.facts) {
     addEntity(surfaceFactToEntity(fact))
     facts.set(fact.name, [...(facts.get(fact.name) ?? []), fact])
@@ -221,7 +221,8 @@ export const createDiscoveryScan = (io: ScanIO) => {
    */
   coverage.push(reuseCoverage(ledger))
 
-  const snapshot = artifact(root, opts.config, allFiles, [...entities.values()], [...relations.values()], coverage, io.revision ?? sourceRevision(root, allFiles, io.readText))
+  const revisionFiles = [...new Set([...allFiles, ...extracted.coverage.flatMap(entry => (entry.evidence ?? []).map(item => resolve(root, item.path))).filter(path => io.host.fileExists(path))])].sort()
+  const snapshot = artifact(root, opts.config, revisionFiles, [...entities.values()], [...relations.values()], coverage, io.revision ?? sourceRevision(root, revisionFiles, io.readText))
   extracted.remember(snapshot)
   return snapshot
 }

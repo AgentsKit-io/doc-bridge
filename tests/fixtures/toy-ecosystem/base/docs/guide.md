@@ -1,3 +1,3 @@
 # Guide
 
-Use `Gone`, `Keep`, `inspect`, `--brief`, `output`, and `Keep`.
+Use `Gone`, `Keep`, `inspect`, `--brief`, `output.format`, and `Keep`.

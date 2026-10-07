@@ -10,6 +10,7 @@ import type { DiscoverySnapshotV1 } from '../../schemas/knowledge.js'
 import { surfaceFactFromEntity, type SurfaceFact } from '../../storage/facts.js'
 import { sha256NormalizedV1 } from '../../index-builder/content-hash.js'
 import type { PreviousSnapshot } from '../incremental.js'
+import { configFactExtractor } from './config.js'
 import type { SafeWalkOptions } from '../../safety/repository.js'
 
 export type FactKind = SurfaceFact['kind']
@@ -31,7 +32,7 @@ export interface FactExtractor {
   readonly inputExtensions?: readonly string[]
   extract(input: FactExtractorInput): { facts: readonly SurfaceFact[]; coverage: DiscoverySnapshotV1['coverage'] }
 }
-export const FACT_EXTRACTORS: readonly FactExtractor[] = [cliFactExtractor, signatureExtractor]
+export const FACT_EXTRACTORS: readonly FactExtractor[] = [cliFactExtractor, configFactExtractor, signatureExtractor]
 
 export const factAnalyzerVersions = (): Readonly<Record<string, string>> => Object.fromEntries(FACT_EXTRACTORS.map(extractor => [extractor.id, extractor.version]))
 
