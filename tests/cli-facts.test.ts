@@ -45,7 +45,7 @@ it('marks dynamic registrations partial and cannot prove their removal', () => {
   const root = fixture(`import { Command } from 'commander'; const cli = new Command(); cli.option('--brief'); cli.command(process.argv[2]);`)
   writeFileSync(join(root, 'README.md'), '# Guide\n`--brief`\n')
   const base = discoverRepository({ root })
-  expect(base.coverage.filter(entry => entry.analyzer === 'js-ts:cli').every(entry => entry.status === 'partial')).toBe(true)
+  expect(base.coverage.filter(entry => entry.analyzer === 'js-ts:cli' && ['cli-commands', 'cli-flags'].includes(entry.scope)).every(entry => entry.status === 'partial')).toBe(true)
   writeFileSync(join(root, 'src/cli.ts'), `import { Command } from 'commander'; const cli = new Command(); cli.command(process.argv[2]);`)
   const head = discoverRepository({ root })
   expect(diffSnapshots(base, head, { headRoot: root }).findings.find(finding => finding.code === 'BROKEN_REFERENCE')?.status).toBe('stale-or-unverified')
@@ -125,4 +125,75 @@ it('keeps statically known array defaults, dotted flags and multiple aliases in 
 it('does not silently complete dynamic registration hidden in an uncontrolled callback', () => {
   const root = fixture(`import { Command } from 'commander'; const cli = new Command(); ['report'].forEach(name => cli.command(name));`)
   expect(discoverRepository({ root }).coverage.find(entry => entry.scope === 'cli-commands')?.status).toBe('partial')
+})
+
+it.each([
+  ['array table', `const options = [{ name: 'brief', alias: 'b' }];`],
+  ['object table', `const options = { brief: {flag: '--brief', alias: '-b'} };`],
+  ['switch', `switch (process.argv[2]) { case '--brief': break; case 'report': break; }`],
+  ['includes', `if (process.argv.includes('--brief')) console.log('yes');`],
+  ['token comparison', `function parse(argv) { const arg = argv[0]; if (arg === '--brief') return true; }`],
+  ['dispatch comparison', `const command = process.argv[2]; if (command === 'report') console.log('yes');`],
+])('extracts hand-rolled %s declarations', (pattern, source) => {
+  const result = facts(fixture(source))
+  expect(result.some(fact => fact.name === (pattern === 'dispatch comparison' ? 'doc-bridge report' : '--brief'))).toBe(true)
+})
+
+it('uses implementation rather than stale annotated help and names drift', () => {
+  const root = fixture('/** @docbridgeCliUsage */\nexport const help = `doc-bridge old [--old]`;\nconst command = process.argv[2]; if(command === "report") {} if(process.argv.includes("--brief")) {}')
+  const snapshot = discoverRepository({ root })
+  const names = snapshot.entities.filter(entity => ['cli-command', 'cli-flag'].includes(entity.kind)).map(entity => entity.name)
+  expect(names).toContain('doc-bridge report')
+  expect(names).toContain('--brief')
+  expect(names).not.toContain('doc-bridge old')
+  expect(names).not.toContain('--old')
+  expect(snapshot.coverage.find(entry => entry.scope === 'cli-usage-drift')?.reason).toMatch(/--old.*report|report.*--old/)
+})
+
+it('maps declared compiled imports to their source and detects flag removal', () => {
+  const root = fixture(`import '../dist/program.js'`)
+  writeFileSync(join(root, 'tsconfig.json'), JSON.stringify({compilerOptions: {rootDir: 'src', outDir: 'dist'}}))
+  writeFileSync(join(root, 'src/program.ts'), `if (process.argv.includes('--brief')) {}`)
+  const base = discoverRepository({root})
+  writeFileSync(join(root, 'src/program.ts'), `if (process.argv.includes('--compact')) {}`)
+  const delta = diffSnapshots(base, discoverRepository({root})).changeSet
+  expect(delta.changes.filter(change => change.kind === 'cli-flag').map(change => [change.op, change.before?.name ?? change.after?.name]).sort()).toEqual([['added', '--compact'], ['removed', '--brief']])
+})
+
+it('bounds drift notes to the snapshot reason limit', () => {
+  const help = Array.from({length: 70}, (_, i) => `doc-bridge command${i} [--flag${i}]`).join('\n')
+  const root = fixture(`/** @docbridgeCliUsage */\nexport const help = ${JSON.stringify(help)};\nif (process.argv.includes('--brief')) {}`)
+  expect(discoverRepository({root}).coverage.find(entry => entry.scope === 'cli-usage-drift')?.reason?.length).toBeLessThanOrEqual(1024)
+})
+
+it('does not promote interactive commands or nested positionals to root commands', () => {
+  const root = fixture(`const line = 'read'; const [command] = line.split(' '); if (command === 'read') {}\nconst positional = process.argv.slice(2); if(positional[1] === 'install') {} if(positional[0] === 'report') {}`)
+  const names = facts(root).filter(fact => fact.kind === 'cli-command').map(fact => fact.name)
+  expect(names).toEqual(['doc-bridge report', 'doc-bridge'])
+})
+
+it('invalidates warm CLI extraction when source mapping configuration changes', () => {
+  const root = fixture(`import '../dist/program.js'`)
+  writeFileSync(join(root, 'tsconfig.json'), '{"compilerOptions":{"rootDir":"src","outDir":"dist"}}')
+  writeFileSync(join(root, 'src/program.ts'), `if (process.argv.includes('--brief')) {}`)
+  const base = discoverRepository({root})
+  expect(base.entities.some(entity => entity.kind === 'cli-flag' && entity.name === '--brief')).toBe(true)
+  writeFileSync(join(root, 'tsconfig.json'), '{"compilerOptions":{"rootDir":"src","outDir":"build"}}')
+  const warm = discoverRepository({root, previous: base})
+  const cold = discoverRepository({root})
+  expect(warm.entities).toEqual(cold.entities)
+  expect(warm.entities.some(entity => entity.kind === 'cli-flag' && entity.name === '--brief')).toBe(false)
+})
+
+it('compares separate usage modules against prior implementation declarations', () => {
+  const root = fixture(`import './usage.js'; const command = process.argv[2]; if(command === 'report') {} if(process.argv.includes('--brief')) {}`)
+  writeFileSync(join(root, 'src/usage.ts'), '/** @docbridgeCliUsage */\nexport const help = `doc-bridge report [--brief]`;')
+  const snapshot = discoverRepository({root})
+  expect(snapshot.coverage.some(entry => entry.scope === 'cli-usage-drift')).toBe(false)
+  expect(snapshot.entities.find(entity => entity.kind === 'cli-flag' && entity.name === '--brief')?.evidence[0]?.path).toBe('src/cli.ts')
+})
+
+it('extracts direct first-argv command dispatch', () => {
+  const result = facts(fixture(`export function run(argv: string[]) { if (argv[0] === 'report') return 0; }`))
+  expect(result.some(fact => fact.name === 'doc-bridge report')).toBe(true)
 })

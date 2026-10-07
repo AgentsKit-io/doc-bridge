@@ -557,3 +557,35 @@ describe('generic Markdown fact citations', () => {
     expect(result.ambiguousFactReferences[0]?.lines).toHaveLength(8)
   })
 })
+
+it('resolves only exact bounded fence identifiers with citation lines and ambiguity', () => {
+  const document = parseMarkdownDocument('guide.md', '# Guide\n```ts\nrun(); prerun(); shared(); settings.mode;\n```\n')
+  const result = analyzeMarkdownDocument(document, 'document:guide.md', {
+    documents: new Map(), modules: new Map(), packages: new Map(),
+    symbols: new Map([['run', ['module:run']], ['shared', ['module:a', 'module:b']]]),
+    facts: new Map([['settings.mode', [{kind: 'config-key', name: 'settings.mode', ownerId: 'module:settings'}]]]),
+  })
+  expect(result.relations.map(relation => relation.metadata?.symbol ?? relation.metadata?.factName).sort()).toEqual(['run', 'settings.mode'])
+  expect(result.relations.every(relation => relation.evidence[0]?.lineStart === 3)).toBe(true)
+  expect(result.ambiguousSymbolReferences[0]?.symbol).toBe('shared')
+})
+
+it('limits symbol fences to code languages and preserves inline citation metadata', () => {
+  const document = parseMarkdownDocument('guide.md', '`run`\n\n```ts\nrun();\n```\n```text\nskip();\n```\n```sh\nskip\n```\n```\nskip\n```\n')
+  const result = analyzeMarkdownDocument(document, 'document:guide.md', {documents: new Map(), modules: new Map(), packages: new Map(), symbols: new Map([['run', ['module:run']], ['skip', ['module:skip']]])})
+  expect(result.relations).toHaveLength(1)
+  expect(result.relations[0]?.metadata).toEqual({symbol: 'run'})
+  expect(result.relations[0]?.evidence.map(item => item.lineStart)).toEqual([1,4])
+})
+
+it('bounds fenced token work and keeps fact citations on their separate cap', () => {
+  const names = Array.from({length: 70}, (_, i) => `settings.key${i}`)
+  const document = parseMarkdownDocument('guide.md', '```json\n' + names.join(' ') + '\n' + 'unknown '.repeat(4100) + '\n```')
+  const result = analyzeMarkdownDocument(document, 'document:guide.md', {documents: new Map(), modules: new Map(), packages: new Map(), symbols: new Map(), facts: new Map(names.map(name => [name, [{kind: 'config-key', name, ownerId: 'module:settings'}]]))})
+  expect(document.fenceTokens).toHaveLength(4096)
+  expect(result.relations).toHaveLength(64)
+  expect(result.factReferencesTruncated).toBe(true)
+  expect(result.truncated).toBe(false)
+  expect(result.notes.some(note => note.scope === 'fence-tokens:guide.md')).toBe(true)
+  expect(result.relations.every(relation => relation.metadata?.citationContext === 'code-fence')).toBe(true)
+})

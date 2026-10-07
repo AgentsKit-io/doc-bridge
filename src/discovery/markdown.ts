@@ -28,7 +28,7 @@ import { relationId } from './identity.js'
  * is inferred from a near-match unless the near-match is unambiguous.
  */
 
-export const MARKDOWN_ANALYZER_VERSION = '1.3.0'
+export const MARKDOWN_ANALYZER_VERSION = '1.4.0'
 
 /** Headings deeper than this are structure, not subject matter. */
 const MAX_HEADING_DEPTH = 3
@@ -91,6 +91,9 @@ export type MarkdownDocumentV1 = {
   readonly links: readonly MarkdownReference[]
   /** Inline code tokens outside generated regions. */
   readonly codeTokens: readonly MarkdownReference[]
+  /** Bounded lexical identifiers in fenced blocks; exact resolution only. */
+  readonly fenceTokens?: readonly MarkdownReference[]
+  readonly fenceTokensTruncated?: boolean
   /** Lexical CLI citations; shell tokens still require a known bin during resolution. */
   readonly cliTokens: readonly MarkdownCliReference[]
   /** Raw frontmatter text and the line it starts on, for the declaration parser. */
@@ -233,6 +236,8 @@ export const parseMarkdownDocument = (path: string, content: string): MarkdownDo
   const headings: MarkdownHeading[] = []
   const links: MarkdownReference[] = []
   const codeTokens: MarkdownReference[] = []
+  const fenceTokens: MarkdownReference[] = []
+  let fenceTokensTruncated = false
   const cliTokens: MarkdownCliReference[] = []
   let title: string | undefined
   let summary: string | undefined
@@ -262,6 +267,18 @@ export const parseMarkdownDocument = (path: string, content: string): MarkdownDo
       const text = mdastToString(node).trim()
       links.push({ value: node.url, ...(text ? { text } : {}), line })
       return
+    }
+
+    if (node.type === 'code' && ['ts', 'tsx', 'js', 'jsx', 'mjs', 'cjs', 'json', 'jsonc', 'yaml', 'yml', 'toml'].includes(node.lang ?? '')) {
+      for (const [offset, text] of node.value.split(/\r?\n/).entries()) {
+        const citationLine = line + offset + 1
+        if (withinGenerated(citationLine, regions)) continue
+        for (const match of text.matchAll(/(?<![\w$.-])(?:--?[A-Za-z][\w.-]*|[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*)(?![\w$.-])/g)) {
+          if (/^--?/.test(match[0])) continue
+          if (fenceTokens.length >= 4096) { fenceTokensTruncated = true; break }
+          fenceTokens.push({ value: match[0], line: citationLine })
+        }
+      }
     }
 
     if (node.type === 'code' && ['sh', 'bash', 'shell', 'zsh', 'console'].includes(node.lang ?? '')) {
@@ -297,7 +314,7 @@ export const parseMarkdownDocument = (path: string, content: string): MarkdownDo
     generatedRegions: regions,
     contentHash: markdownContentHash(normalized),
     links,
-    codeTokens, cliTokens,
+    codeTokens, cliTokens, fenceTokens, fenceTokensTruncated,
     ...(frontmatterNode
       ? { frontmatterBlock: { value: frontmatterNode.value, line: lineOf(frontmatterNode) } }
       : {}),
@@ -450,13 +467,13 @@ export const analyzeMarkdownDocument = (
     return true
   }
 
-  const add = (kind: string, to: string, line: number, confidence?: 'fuzzy', symbol?: string, fact?: MarkdownFact): void => {
+  const add = (kind: string, to: string, line: number, confidence?: 'fuzzy', symbol?: string, fact?: MarkdownFact, codeFence = false): void => {
     if (to === documentId) return
     const id = relationId(documentId, kind, to, fact ? `${fact.kind}:${fact.name}` : symbol)
     const existing = relations.get(id)
     if (existing) {
       // One relation, every place the document says it — evidence accumulates, the edge does not.
-      if (existing.evidence.length < 8) {
+      if (existing.evidence.length < 8 && !existing.evidence.some(item => item.lineStart === line)) {
         relations.set(id, { ...existing, evidence: [...existing.evidence, documentEvidence(document.path, line)] })
       }
       return
@@ -469,7 +486,7 @@ export const analyzeMarkdownDocument = (
       to,
       provenance: 'observed',
       evidence: [documentEvidence(document.path, line)],
-      ...(fact ? { metadata: { factKind: fact.kind, factName: fact.name } } : symbol ? { metadata: { symbol } } : confidence ? { metadata: { confidence } } : {}),
+      ...((fact || symbol || confidence || codeFence) ? { metadata: { ...(fact ? { factKind: fact.kind, factName: fact.name } : symbol ? { symbol } : confidence ? { confidence } : {}), ...(codeFence ? { citationContext: 'code-fence' } : {}) } } : {}),
     })
   }
 
@@ -516,14 +533,19 @@ export const analyzeMarkdownDocument = (
     resolveToken(token.value, token.line, token.kind)
   }
 
+  for (const token of document.fenceTokens ?? []) {
+    const candidates = resolution.facts?.get(token.value)
+    if (resolution.symbols.has(token.value) || candidates?.some(fact => fact.kind !== 'cli-command' && fact.kind !== 'cli-flag')) resolveToken(token.value, token.line, undefined, true)
+  }
+
   // Signature facts reuse a uniquely resolved symbol citation, preserving its legacy edge.
-  function resolveSignatureSymbol(value: string, line: number): boolean {
+  function resolveSignatureSymbol(value: string, line: number, codeFence: boolean): boolean {
     const owners = [...new Set(resolution.symbols.get(value) ?? [])]
     if (owners.length !== 1) return false
     const signature = resolution.facts?.get(value)?.find(fact => fact.kind === 'signature' && fact.ownerId === owners[0])
     if (!signature) return false
-    if (!resolution.facts?.get(value)?.some(fact => fact.kind === 'symbol')) add('mentions-symbol', owners[0]!, line, undefined, value)
-    add('mentions-symbol', signature.ownerId, line, undefined, undefined, signature)
+    if (!resolution.facts?.get(value)?.some(fact => fact.kind === 'symbol')) add('mentions-symbol', owners[0]!, line, undefined, value, undefined, codeFence)
+    add('mentions-symbol', signature.ownerId, line, undefined, undefined, signature, codeFence)
     return true
   }
 
@@ -533,11 +555,11 @@ export const analyzeMarkdownDocument = (
    * A legacy symbol resolves only when exactly one module exports it, because sending an
    * agent to one of two possible definitions is worse than sending it nowhere.
    */
-  function resolveToken(raw: string, line: number, cliKind?: 'cli-command' | 'cli-flag'): void {
+  function resolveToken(raw: string, line: number, cliKind?: 'cli-command' | 'cli-flag', exactOnly = false): void {
     const value = raw.trim()
     if (!value || value.length > 256) return
 
-    if (!cliKind && (pathShaped(value) || areas.has(value))) {
+    if (!exactOnly && !cliKind && (pathShaped(value) || areas.has(value))) {
       const direct = value.replace(/^\.\//, '')
       if (resolution.documents.has(direct) || resolution.modules.has(direct) || areas.has(direct)) {
         resolvePath(direct, line, 'mentions')
@@ -545,7 +567,7 @@ export const analyzeMarkdownDocument = (
       }
     }
 
-    const signatureSymbol = !cliKind && resolveSignatureSymbol(value, line)
+    const signatureSymbol = !cliKind && resolveSignatureSymbol(value, line, exactOnly)
     const candidates = resolution.facts?.get(value)
     const facts = [...(candidates ?? []).filter(fact => fact.kind !== 'config-key'), ...(cliKind ? [] : configKeys.get(value) ?? [])].filter(fact => (cliKind ? fact.kind === cliKind : fact.kind !== 'cli-command' && fact.kind !== 'cli-flag') && (fact.kind !== 'signature' || (!resolution.symbols.has(value) && !resolution.symbols.has(value.split('.')[0]!))))
     if (facts?.length) {
@@ -553,7 +575,7 @@ export const analyzeMarkdownDocument = (
         const candidates = facts.filter(fact => fact.kind === kind)
         const owners = [...new Set(candidates.map(fact => fact.ownerId))].sort()
         if (owners.length === 1) {
-          add('mentions-symbol', owners[0]!, line, undefined, kind === 'symbol' ? value : undefined, kind === 'symbol' ? undefined : candidates[0])
+          add('mentions-symbol', owners[0]!, line, undefined, kind === 'symbol' ? value : undefined, kind === 'symbol' ? undefined : candidates[0], exactOnly)
         } else {
           const key = `${kind}:${value}`
           const prior = ambiguousFacts.get(key)
@@ -568,14 +590,14 @@ export const analyzeMarkdownDocument = (
     if (signatureSymbol) return
 
     const packageEntity = resolution.packages.get(value)
-    if (packageEntity) {
+    if (!exactOnly && packageEntity) {
       add('mentions', packageEntity, line)
       return
     }
 
     const modules = resolution.symbols.get(value)
     if (modules?.length === 1 && modules[0]) {
-      add('mentions-symbol', modules[0], line, undefined, value)
+      add('mentions-symbol', modules[0], line, undefined, value, undefined, exactOnly)
       return
     }
     if (modules && modules.length > 1) {
@@ -585,7 +607,7 @@ export const analyzeMarkdownDocument = (
       return
     }
 
-    if (pathShaped(value)) resolvePath(value.replace(/^\.\//, ''), line, 'mentions')
+    if (!exactOnly && pathShaped(value)) resolvePath(value.replace(/^\.\//, ''), line, 'mentions')
   }
 
   for (const [token, evidence] of [...ambiguous.entries()].sort(([a], [b]) => a.localeCompare(b))) {
@@ -601,6 +623,8 @@ export const analyzeMarkdownDocument = (
       reason: `"${ambiguity.factName}" has ${ambiguity.candidateCount} ${ambiguity.factKind} owners; the reference is ambiguous and produced no relation.`,
       evidence: ambiguity.lines.map(line => documentEvidence(document.path, line)) })
   }
+
+  if (document.fenceTokensTruncated) notes.push({ scope: `fence-tokens:${document.path}`, reason: 'Document exceeds 4096 fenced identifier tokens; remaining citations were not analyzed.', evidence: [documentEvidence(document.path, 1)] })
 
   if (truncated) {
     notes.push({

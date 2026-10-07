@@ -236,3 +236,8 @@ capability defaults to the legacy field set. Default index and MCP writers never
 caveats. New strict readers accept legacy payloads; old strict readers receive legacy
 output. The public reader preserves negotiated caveats. Limitations cannot establish
 semantic validation or invent an answer.
+
+Fenced-code citation relations with `metadata.citationContext: "code-fence"`
+remain available to discovery/diff, but are excluded from retrieval ranking
+signals alongside generic fact citations. Existing inline relations retain their
+ranking behavior.
