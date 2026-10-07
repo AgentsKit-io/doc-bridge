@@ -109,9 +109,12 @@ export const cliCommandTokens = (value: string, line: number, shell = false): Ma
   const words = value.trim().split(/\s+/)
   if (!/^[A-Za-z][\w.-]*$/.test(words[0] ?? '')) return []
   const result: MarkdownCliReference[] = []
-  for (let size = shell ? 1 : 2; size <= words.length; size++) {
-    if (!words.slice(0, size).every(word => /^[A-Za-z][\w.-]*$/.test(word))) break
-    result.push({ value: words.slice(0, size).join(' '), line, kind: 'cli-command', ...(shell ? { bin: words[0]! } : {}) })
+  const prefix: string[] = []
+  for (const word of words) {
+    if (!/^[A-Za-z][\w.-]*$/.test(word)) break
+    prefix.push(word)
+    // A bare word is only a command when it is the first word of a shell line.
+    if (prefix.length >= (shell ? 1 : 2)) result.push({ value: prefix.join(' '), line, kind: 'cli-command', ...(shell ? { bin: words[0]! } : {}) })
   }
   return result
 }
