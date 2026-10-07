@@ -1,6 +1,8 @@
 import { cliFactExtractor } from './cli.js'
 import * as ts from 'typescript'
 import { signatureExtractor } from './signatures.js'
+import { relative, resolve } from 'node:path'
+import { toPosix } from '../../lib/paths.js'
 import { scriptKind } from '../inputs.js'
 import type { ScanIO } from '../scan-io.js'
 import type { ModuleInfo, PackageInfo } from '../plugins/js-ts.js'
@@ -8,6 +10,7 @@ import type { DiscoverySnapshotV1 } from '../../schemas/knowledge.js'
 import { surfaceFactFromEntity, type SurfaceFact } from '../../storage/facts.js'
 import { sha256NormalizedV1 } from '../../index-builder/content-hash.js'
 import type { PreviousSnapshot } from '../incremental.js'
+import type { SafeWalkOptions } from '../../safety/repository.js'
 
 export type FactKind = SurfaceFact['kind']
 export type FactExtractorInput = Readonly<{
@@ -16,6 +19,7 @@ export type FactExtractorInput = Readonly<{
   sourceFiles: ReadonlyMap<string, ts.SourceFile>
   modules: ReadonlyMap<string, ModuleInfo>
   packages: readonly PackageInfo[]
+  walkOptions?: SafeWalkOptions
 }>
 export interface FactExtractor {
   readonly id: `js-ts:${string}`
@@ -23,6 +27,8 @@ export interface FactExtractor {
   readonly kinds: readonly FactKind[]
   /** Global source/package inputs by default; changed input requires re-extraction. */
   readonly inputScope?: 'global'
+  /** Additional scan-safe inputs whose additions, removals and content invalidate reuse. */
+  readonly inputExtensions?: readonly string[]
   extract(input: FactExtractorInput): { facts: readonly SurfaceFact[]; coverage: DiscoverySnapshotV1['coverage'] }
 }
 export const FACT_EXTRACTORS: readonly FactExtractor[] = [cliFactExtractor, signatureExtractor]
@@ -41,7 +47,16 @@ export const runFactExtractors = (input: Omit<FactExtractorInput, 'sourceFiles'>
     const texts = new Map([...input.modules.values()].map(module => [module.path, input.io.readText(module.absPath)]))
     const priorModules = new Map(input.previous?.entities.filter(entity => entity.kind === 'module').map(entity => [entity.id, entity]) ?? [])
     const priorPackages = new Map(input.previous?.entities.filter(entity => entity.kind === 'package').map(entity => [entity.id, entity]) ?? [])
-    const unchanged = input.previous && priorModules.size === input.modules.size && priorPackages.size === input.packages.length &&
+    const inputCoverage = FACT_EXTRACTORS.filter(extractor => extractor.inputExtensions?.length).map(extractor => {
+      const walk = input.io.walk([...extractor.inputExtensions!], input.walkOptions ?? {})
+      const hashes = walk.files.slice().sort().map(path => [toPosix(relative(input.root, path)), sha256NormalizedV1(input.io.readText(path))])
+      return { analyzer: extractor.id, analyzerVersion: extractor.version, scope: `extractor-inputs:${sha256NormalizedV1(hashes)}`, status: walk.incomplete ? 'partial' as const : 'complete' as const, ...(walk.incomplete ? { reason: 'Additional extractor input walk is incomplete.' } : {}) }
+    })
+    const evidenceUnchanged = input.previous?.coverage.filter(entry => FACT_EXTRACTORS.some(extractor => extractor.id === entry.analyzer) && !entry.scope.startsWith('extractor-inputs:')).every(entry => (entry.evidence ?? []).every(evidence => {
+      const path = resolve(input.root, evidence.path)
+      return input.io.host.fileExists(path) && evidence.contentHash === sha256NormalizedV1(input.io.readText(path))
+    }))
+    const unchanged = evidenceUnchanged && inputCoverage.every(entry => entry.status === 'complete' && input.previous?.coverage.some(prior => prior.analyzer === entry.analyzer && prior.scope === entry.scope && prior.status === 'complete')) && input.previous && priorModules.size === input.modules.size && priorPackages.size === input.packages.length &&
       [...input.modules.values()].every(module => priorModules.get(module.entityId)?.evidence[0]?.contentHash === sha256NormalizedV1(texts.get(module.path)!)) &&
       input.packages.every(pkg => priorPackages.get(pkg.id)?.evidence[0]?.contentHash === sha256NormalizedV1(input.io.readText(pkg.manifestPath))) &&
       FACT_EXTRACTORS.every(extractor => input.previous?.analyzerVersions?.[extractor.id] === extractor.version && input.previous.coverage.some(entry => entry.analyzer === extractor.id))
@@ -55,6 +70,7 @@ export const runFactExtractors = (input: Omit<FactExtractorInput, 'sourceFiles'>
         const cached = priorTrees?.get(module.path)
         return [module.path, cached?.fileName === module.absPath && cached.getFullText() === text ? cached : ts.createSourceFile(module.absPath, text, ts.ScriptTarget.Latest, true, scriptKind(module.path))]
       }))
+      coverage.push(...inputCoverage)
       for (const extractor of FACT_EXTRACTORS) {
         const output = extractor.extract({ ...input, sourceFiles })
         facts.push(...output.facts)

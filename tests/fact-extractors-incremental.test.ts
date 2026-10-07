@@ -13,14 +13,17 @@ vi.mock('../src/discovery/facts/index.js', async importOriginal => {
   const { sha256NormalizedV1 } = await import('../src/index-builder/content-hash.js')
   const { surfaceFactEntityId } = await import('../src/storage/facts.js')
   const testExtractor: import('../src/discovery/facts/index.js').FactExtractor = {
-    id: 'js-ts:test', version: '1.0.0', kinds: ['signature'], inputScope: 'global',
+    id: 'js-ts:test', version: '1.0.0', kinds: ['signature'], inputScope: 'global', inputExtensions: ['.json'],
     extract(input) {
       state.extractions++
       const module = [...input.modules.values()].find(module => module.path === 'src/a.ts')!
       const text = input.sourceFiles.get(module.path)!.getFullText()
       const name = text.includes('Changed') ? 'Changed()' : 'Stable()'
+      const jsonPath = join(input.root, 'value.config-schema.json')
+      const json = input.io.host.fileExists(jsonPath) ? input.io.readText(jsonPath) : ''
       const evidence = [{ source: 'code' as const, path: module.path, lineStart: 1, contentHash: sha256NormalizedV1(text) }]
-      return { facts: [{ kind: 'signature', id: surfaceFactEntityId('signature', module.entityId, name), ownerId: module.entityId, name, valueHash: sha256NormalizedV1(name), evidence }], coverage: [{ analyzer: 'js-ts:test', scope: 'signatures', status: 'complete', evidence }] }
+      if (json) evidence.push({ source: 'code', path: 'value.config-schema.json', lineStart: 1, contentHash: sha256NormalizedV1(json) })
+      return { facts: [{ kind: 'signature', id: surfaceFactEntityId('signature', module.entityId, name), ownerId: module.entityId, name, valueHash: sha256NormalizedV1([name, json]), evidence }], coverage: [{ analyzer: 'js-ts:test', scope: 'signatures', status: 'complete', evidence }] }
     },
   }
   ;(real.FACT_EXTRACTORS as import('../src/discovery/facts/index.js').FactExtractor[]).push(testExtractor)
@@ -54,5 +57,28 @@ it('reuses codec facts and stable Markdown resolution with registered global ext
     expect(changed.entities).toEqual(clean.entities)
     expect(changed.relations).toEqual(clean.relations)
     expect(changed.contentHash).toBe(clean.contentHash)
+  } finally { rmSync(root, { recursive: true, force: true }) }
+})
+
+
+it('invalidates warm facts for JSON defaults, empty schema edits and file-list changes', () => {
+  const root = mkdtempSync(join(tmpdir(), 'doc-bridge-fact-json-'))
+  try {
+    mkdirSync(join(root, 'src'))
+    writeFileSync(join(root, 'package.json'), '{"name":"doc-bridge-fixture"}')
+    writeFileSync(join(root, 'src/a.ts'), 'export function Stable() {}\n')
+    const path = join(root, 'value.config-schema.json')
+    let previous = discoverRepository({ root })
+    for (const value of ['{"properties":{"mode":{"default":"memory"}}}', '{"properties":{"mode":{"default":"disk"}}}', '{"properties":{}}', '{"properties":{},"title":"Config"}', null]) {
+      if (value === null) rmSync(path)
+      else writeFileSync(path, value)
+      const count = state.extractions
+      const warm = discoverRepository({ root, previous: JSON.parse(JSON.stringify(previous)) })
+      expect(state.extractions).toBeGreaterThan(count)
+      const cold = discoverRepository({ root })
+      expect(warm.entities).toEqual(cold.entities)
+      expect(warm.contentHash).toBe(cold.contentHash)
+      previous = warm
+    }
   } finally { rmSync(root, { recursive: true, force: true }) }
 })

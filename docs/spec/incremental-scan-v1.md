@@ -160,3 +160,13 @@ Changing a fact's value alone does not change citation ownership. Fact ambiguity
 coverage is replayed alongside other document-scoped notes. Cold and warm entity,
 relation and semantic-hash equality remain required; reuse statistics remain
 provenance.
+
+### Additional fact inputs
+
+An extractor may declare `inputExtensions` for inputs outside the source module map.
+Their scan-safe, sorted path/content inventory is hashed into one `extractor-inputs`
+coverage scope (`extractor-inputs:<digest>`), with no synthetic evidence path. Additions, removals, content changes or an incomplete walk prevent
+fact reuse. Existing extractor evidence file hashes also participate in the reuse
+check; absent hashes conservatively prevent reuse. This applies to empty schemas as well as emitted facts; a missing prior
+inventory forces extraction. Configuration extraction declares `.json` inputs,
+so a JSON-only default edit cannot replay stale facts.
