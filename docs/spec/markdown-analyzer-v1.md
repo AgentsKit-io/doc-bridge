@@ -49,7 +49,8 @@ index page's sixty-fifth link is not knowledge, and an unbounded list is not evi
 
 Non-symbol fact citations (`metadata.factKind`) have a separate bounded cap of
 64 per document. They never consume or displace the legacy relation cap.
-Exceeding it records `evidenceTruncated` and a distinct `fact-relations:<path>`
+Exceeding it records `factReferencesTruncated` (without changing legacy
+`evidenceTruncated`) and a distinct `fact-relations:<path>`
 coverage note. Repeated citations still share the existing eight-location bound.
 
 ## Generated regions
@@ -133,11 +134,11 @@ additional entries set `metadata.ambiguousFactReferencesTruncated: true`.
 A partial coverage note also records ambiguity. Snapshot, index and handoff
 schemas remain compatible through their existing open metadata records.
 
-The base Markdown analyzer version remains 1.1.0. CLI extraction has its own
-component version; non-CLI resolution behavior is unchanged.
-The v2 plugin parses documents afresh, so fact-universe changes cannot replay
-stale generic references. Synchronous legacy discovery retains its existing
-resolution fingerprint and behavior.
+Markdown analyzer version `1.2.0` introduces an independent 64-relation fact
+citation cap for every fact kind. Fact citations cannot consume or displace the
+legacy relation cap; legacy relation identities and evidence remain unchanged.
+The v2 plugin parses documents afresh; the synchronous shared fact hook binds
+the fact universe into its resolution fingerprint before reusing document relations.
 
 ### Qualified CLI citations
 
@@ -154,17 +155,10 @@ Ambiguous owners retain the existing bounded ambiguity behavior.
 CLI lexical tokens are kept separately from ordinary inline-code tokens, so
 shell examples do not introduce symbol/config/path mentions. Generated regions,
 the 64-relation cap and eight citation locations per relation still apply.
-CLI relations are added after existing path/symbol/config relations, so the new
-capability cannot displace their bounded evidence.
+CLI relations use the independent fact cap, preserving bounded legacy evidence.
 Historical CLI removal findings verify these same tokens; shell tokens must
 retain the removed fact's bin context. Help-only partial source coverage yields
 stale-or-unverified removal candidates rather than proven conflicts.
-The legacy analyzer version remains 1.1.0. Built-in signature facts extend the
-citation universe as described below; existing non-signature relation identities
-are preserved. The v2 plugin parses documents afresh, so fact-universe changes
-cannot replay stale generic references. Synchronous legacy discovery retains its existing
-resolution fingerprint and behavior.
-
 ## Syntactic signature citations
 
 Built-in JS/TS signature facts reuse uniquely resolved exported-symbol citations,

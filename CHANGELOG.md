@@ -8,6 +8,7 @@
 
 ### Minor Changes
 
+- Extract configuration-key facts from static Zod and JSON Schema configuration schemas, with dotted paths, value hashes, explicit incomplete coverage and dotted Markdown citations within package and fixture boundaries. Include declared extractor inputs in index freshness and cap all fact citations independently, with separate fact truncation metadata. Preserve incomplete extractor status and reasons in change-set coverage.
 - Extract configuration-key facts from static Zod and JSON Schema configuration schemas, with dotted paths, value hashes, explicit incomplete coverage and dotted Markdown citations within package and fixture boundaries.
 - Extract bounded deterministic exported JS/TS signature facts with declared parameter/type hashes, overload and public-member handling, preserved symbol citations and signature change deltas.
 - Preserve incremental zero-parse reuse and stable citation resolution when static fact extractors are registered, including serialized unchanged snapshots and fact ambiguity coverage.

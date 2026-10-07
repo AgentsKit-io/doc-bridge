@@ -28,7 +28,7 @@ import { relationId } from './identity.js'
  * is inferred from a near-match unless the near-match is unambiguous.
  */
 
-export const MARKDOWN_ANALYZER_VERSION = '1.1.0'
+export const MARKDOWN_ANALYZER_VERSION = '1.2.0'
 
 /** Headings deeper than this are structure, not subject matter. */
 const MAX_HEADING_DEPTH = 3
@@ -388,6 +388,7 @@ export type MarkdownAnalysis = {
   readonly relations: readonly KnowledgeRelation[]
   readonly notes: readonly MarkdownNote[]
   readonly truncated: boolean
+  readonly factReferencesTruncated: boolean
 }
 
 const documentEvidence = (path: string, line: number): Evidence => ({
@@ -431,7 +432,6 @@ export const analyzeMarkdownDocument = (
   const notes: MarkdownNote[] = []
   const ambiguous = new Map<string, Evidence[]>()
   const ambiguousFacts = new Map<string, AmbiguousFactReference>()
-  const signatureCitations = new Map<string, { fact: MarkdownFact; lines: number[] }>()
   let truncated = false
   let factsTruncated = false
   let legacyCount = 0
@@ -512,8 +512,6 @@ export const analyzeMarkdownDocument = (
     if (token.bin && !cliBins.has(token.bin)) continue
     resolveToken(token.value, token.line, token.kind)
   }
-  // Append signature edges after legacy edges, so the shared cap cannot displace them.
-  for (const { fact, lines } of signatureCitations.values()) for (const line of lines) add('mentions-symbol', fact.ownerId, line, undefined, undefined, fact)
 
   // Signature facts reuse a uniquely resolved symbol citation, preserving its legacy edge.
   function resolveSignatureSymbol(value: string, line: number): boolean {
@@ -522,11 +520,7 @@ export const analyzeMarkdownDocument = (
     const signature = resolution.facts?.get(value)?.find(fact => fact.kind === 'signature' && fact.ownerId === owners[0])
     if (!signature) return false
     if (!resolution.facts?.get(value)?.some(fact => fact.kind === 'symbol')) add('mentions-symbol', owners[0]!, line, undefined, value)
-    const key = `${signature.ownerId}:${signature.name}`
-    const prior = signatureCitations.get(key)
-    if (prior) { if (prior.lines.length < 8) prior.lines.push(line) }
-    else if (signatureCitations.size < cap) signatureCitations.set(key, { fact: signature, lines: [line] })
-    else truncated = true
+    add('mentions-symbol', signature.ownerId, line, undefined, undefined, signature)
     return true
   }
 
@@ -629,6 +623,7 @@ export const analyzeMarkdownDocument = (
     ambiguousSymbolReferencesTruncated: ambiguous.size > 64,
     relations: [...relations.values()].sort((a, b) => a.id.localeCompare(b.id)),
     notes,
-    truncated: truncated || factsTruncated,
+    truncated,
+    factReferencesTruncated: factsTruncated,
   }
 }

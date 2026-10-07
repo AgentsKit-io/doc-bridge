@@ -10,6 +10,8 @@ import { diffSnapshots } from '../src/diff/change-set.js'
 import { safeWalkFiles } from '../src/safety/repository.js'
 import { contentRef, createLocalRepositoryRead } from '../src/storage/local.js'
 import { toPosix } from '../src/lib/paths.js'
+import { repositoryInputs, repositoryInputsFromFiles } from '../src/index-builder/project-corpus.js'
+import { SEMANTIC_HASH_ALGORITHM } from '../src/index-builder/content-hash.js'
 import { buildDocBridgeIndex } from '../src/index-builder/build-index.js'
 import { loadFreshDocBridgeIndex, IndexStaleError } from '../src/query/load-index.js'
 
@@ -144,6 +146,18 @@ describe('static configuration facts', () => {
     expect(head.relations.filter(relation=>relation.metadata?.factKind)).toHaveLength(64)
     expect(head.notes.map(note=>note.scope)).toEqual(expect.arrayContaining(['relations:README.md','fact-relations:README.md']))
   })
+  it('records fact-cap truncation without marking legacy evidence truncated', () => {
+    const root = fixture()
+    const names = Array.from({length:65},(_,index)=>`key${index}`)
+    writeFileSync(join(root,'storage.config-schema.json'),JSON.stringify({title:'StorageConfig',type:'object',properties:{output:{type:'object',properties:Object.fromEntries(names.map(name=>[name,{type:'string'}]))}}}))
+    writeFileSync(join(root,'README.md'),names.map(name=>`\`output.${name}\``).join(' '))
+    const snapshot = discoverRepository({root})
+    const document = snapshot.entities.find(entity=>entity.id==='document:README.md')!
+    expect(document.metadata?.factReferencesTruncated).toBe(true)
+    expect(document.metadata?.evidenceTruncated).toBeUndefined()
+    expect(snapshot.coverage.some(entry=>entry.scope==='fact-relations:README.md')).toBe(true)
+    expect(snapshot.coverage.some(entry=>entry.scope==='relations:README.md')).toBe(false)
+  })
   it('applies configured JSON exclusions even when the injected reader exposes the file', async () => {
     const root = fixture()
     const inventory = Object.fromEntries(safeWalkFiles(root).files.map(path=>[toPosix(relative(root,path)),contentRef(readFileSync(path))]))
@@ -179,9 +193,25 @@ describe('static configuration facts', () => {
     cpSync(join(root,'config.ts'),join(child,'config.ts'))
     expect(diffSnapshots(base,discoverRepository({root}),{headRoot:root}).findings).toEqual([])
   })
-  // Blocked: JSON Schema files are absent from the shared repository-input fingerprint.
-  // Enable after the index freshness policy includes those inputs.
-  it.skip('marks an index stale after a JSON-only default change', () => {
+  it('binds local and reader-backed freshness to additional fact inputs', () => {
+    const root = fixture()
+    const fingerprint = () => {
+      const files = new Map(safeWalkFiles(root, {extensions:['.ts','.md','.json']}).files.map(path => [toPosix(relative(root,path)), readFileSync(path,'utf8')]))
+      const local = repositoryInputs(root, undefined, SEMANTIC_HASH_ALGORITHM)
+      expect(repositoryInputsFromFiles(files, undefined, SEMANTIC_HASH_ALGORITHM)).toEqual(local)
+      return local.hash
+    }
+    const before = fingerprint()
+    const path = join(root,'extra.config-schema.json')
+    writeFileSync(path,'{"type":"object","properties":{}}')
+    const added = fingerprint()
+    expect(added).not.toBe(before)
+    writeFileSync(path,'{"type":"object","properties":{"value":{"default":1}}}')
+    expect(fingerprint()).not.toBe(added)
+    rmSync(path)
+    expect(fingerprint()).toBe(before)
+  })
+  it('marks an index stale after a JSON-only default change', () => {
     const root = fixture()
     const config = {schemaVersion:1 as const,corpus:{agent:{root:'.'}}}
     buildDocBridgeIndex({root,config,write:true})

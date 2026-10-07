@@ -9,7 +9,6 @@ import { changeDigestView } from '../src/render/data.js'
 import { ChangeSetV1Schema } from '../src/schemas/change-set.js'
 import { DocBridgeJsonSchemas } from '../src/schemas/json-schemas.js'
 import { contentHashForVersionedArtifact } from '../src/index-builder/content-hash.js'
-import { FACT_EXTRACTORS, type FactKind } from '../src/discovery/facts/index.js'
 
 const roots: string[] = []
 afterEach(() => { for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true }) })
@@ -135,11 +134,12 @@ describe('ChangeSetV1 real snapshot acceptance', () => {
   it('T2-A6 unsupported kinds and renames remain explicit coverage', () => {
     const { root, base } = fixture()
     const result = scanDiff(root, base)
-    const supported = new Set(FACT_EXTRACTORS.flatMap(extractor => extractor.kinds))
-    for (const scope of ['cli-command', 'cli-flag', 'config-key', 'signature', 'rename-detection', 'package-identity-and-version-routing']) {
-      if (supported.has(scope as FactKind)) expect(result.changeSet.coverage).not.toContainEqual(expect.objectContaining({ analyzer: 'diff', scope, status: 'not-analyzed' }))
-      else expect(result.changeSet.coverage).toContainEqual(expect.objectContaining({ scope, status: 'not-analyzed' }))
-    }
+    expect(base.coverage).toContainEqual(expect.objectContaining({ scope: 'cli-commands', status: 'not-applicable' }))
+    for (const scope of ['cli-command', 'cli-flag', 'config-key']) expect(result.changeSet.coverage).not.toContainEqual(expect.objectContaining({ analyzer: 'diff', scope }))
+    // Inferred constants do not establish syntactic signatures. Registration is not completeness.
+    expect(base.coverage).toContainEqual(expect.objectContaining({ scope: 'signatures', status: 'partial' }))
+    expect(result.changeSet.coverage).toContainEqual(expect.objectContaining({ analyzer: 'diff', scope: 'signature', status: 'partial', reason: expect.any(String) }))
+    for (const scope of ['rename-detection', 'package-identity-and-version-routing']) expect(result.changeSet.coverage).toContainEqual(expect.objectContaining({ analyzer: 'diff', scope, status: 'not-analyzed' }))
     expect(result.changeSet.packages).toEqual([])
     expect(result.changeSet.changes).toEqual([])
     expect(DocBridgeJsonSchemas.changeSetV1).toMatchObject({ type: 'object', additionalProperties: false })

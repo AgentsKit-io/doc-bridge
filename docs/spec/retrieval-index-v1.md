@@ -214,3 +214,9 @@ symbol relations (`metadata.symbol`) still contribute their existing deduplicate
 connections. The complete fact observations continue to participate in semantic
 snapshot/projection identity, so equality of ranking does not transfer artifact
 or revision approval. Index and handoff schema versions remain compatible.
+
+Declared fact-extractor input extensions also enter the repository freshness
+fingerprint under the effective safety exclusions and limits, for both local and
+reader-backed scans. This conservatively includes safe JSON inputs, so schema
+additions, removals, empty-schema edits and default-only changes invalidate an
+index even when no source or Markdown file changes.

@@ -39,7 +39,9 @@ head extraction. Another analyzer's complete coverage cannot mask a failed,
 partial or unsupported extractor. Repository limit coverage also prevents proof.
 Absence under incomplete extraction remains a removal candidate with
 `stale-or-unverified` findings, never a proven conflict. Supported complete kinds
-have no synthetic diff `not-analyzed` entry; unsupported kinds retain one.
+and explicitly not-applicable kinds have no synthetic diff coverage entry. Extracted kinds with incomplete capability
+or plugin coverage report diff `partial` with the extraction reason; kinds without
+extractor evidence report `not-analyzed`.
 
 Rename detection remains `not-analyzed`: no adapter rename-proof contract is
 available in this producer, and neither value equality nor similar paths proves a

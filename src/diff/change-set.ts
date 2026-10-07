@@ -244,12 +244,16 @@ const diffWithDocuments = (base: DiscoverySnapshotV1, head: DiscoverySnapshotV1,
     ...(packagesOf(head).length ? [{ analyzer: 'diff', scope: 'package-version-routing', status: 'not-analyzed' as const, reason: 'Package mappings do not establish version routing or release eligibility.' }] : []),
     ...base.coverage.map((entry) => ({ ...entry, scope: entityId('base', entry.scope) })),
     ...head.coverage.map((entry) => ({ ...entry, scope: entityId('head', entry.scope) })),
-    ...['cli-command', 'cli-flag', 'config-key', 'signature', 'rename-detection', 'package-identity-and-version-routing'].filter(scope => {
-      if (scope === 'rename-detection') return true
-      if (scope === 'package-identity-and-version-routing') return !packagesOf(head).length
+    ...['cli-command', 'cli-flag', 'config-key', 'signature', 'rename-detection', 'package-identity-and-version-routing'].flatMap((scope): ChangeSetV1['coverage'] => {
+      if (scope === 'package-identity-and-version-routing' && packagesOf(head).length) return []
       const capability = FACT_CAPABILITIES[scope as SurfaceFact['kind']]
-      return !head.coverage.some(entry => entry.scope === capability && entry.status === 'complete' && !head.coverage.some(other => other.analyzer === entry.analyzer && other.scope === 'plugin' && other.status !== 'complete'))
-    }).map((scope) => ({ analyzer: 'diff', scope, status: 'not-analyzed' as const, reason: 'No adapter extraction evidence is available.' })),
+      const extraction = head.coverage.filter(entry => entry.scope === capability)
+      if (extraction.length) {
+        const incomplete = [...extraction, ...head.coverage.filter(entry => entry.scope === 'plugin' && extraction.some(other => other.analyzer === entry.analyzer))].find(entry => entry.status !== 'complete' && entry.status !== 'not-applicable')
+        return incomplete ? [{ analyzer: 'diff', scope, status: 'partial', reason: incomplete.reason ?? 'Adapter extraction is incomplete.' }] : []
+      }
+      return [{ analyzer: 'diff', scope, status: 'not-analyzed', reason: 'No adapter extraction evidence is available.' }]
+    }),
   ].filter((entry) => !(entry.analyzer === 'repository' && entry.scope.endsWith(':reused-entities'))).sort((a, b) => canonicalJsonV1(a).localeCompare(canonicalJsonV1(b)))
   const analysisIdentity = (snapshot: DiscoverySnapshotV1) => ({ configurationHash: snapshot.configurationHash, pipelineVersion: snapshot.pipelineVersion, analyzerVersions: snapshot.analyzerVersions })
   const changeSet = ChangeSetV1Schema.parse({ type: 'change-set', schemaVersion: 1, repository: base.project, analysis: { base: analysisIdentity(base), head: analysisIdentity(head) },

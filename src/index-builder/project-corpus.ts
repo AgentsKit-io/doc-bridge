@@ -1,3 +1,4 @@
+import { FACT_EXTRACTORS } from '../discovery/facts/index.js'
 import type { ContentRef } from '../storage/contract.js'
 import { type RepositoryFiles } from './repository-io.js'
 import { Minimatch } from 'minimatch'
@@ -40,14 +41,14 @@ export const isProjectedEntry = (entry: Pick<KnowledgeEntry, 'type'>): boolean =
   (PROJECTED_ENTRY_TYPES as readonly string[]).includes(entry.type)
 
 /**
- * Configuration files the index is derived from. Narrow on purpose: any `.json` would make an
- * unrelated data file mark the index stale, and a generated artifact could then invalidate the
- * artifact generated from it.
+ * Configuration files the index is derived from, alongside declared fact-extractor inputs.
+ * Extractor extensions are conservative: additions and empty-schema edits must invalidate freshness.
  */
 const CONFIG_INPUT_PATTERN =
   /(?:^|\/)(?:package\.json|pnpm-workspace\.ya?ml|tsconfig(?:\.[\w.-]+)?\.json|jsconfig\.json|meta\.json|doc-bridge\.config\.(?:json|ya?ml|js|ts|mjs|cjs))$/
 
-const INPUT_EXTENSIONS = [...new Set([...SOURCE_EXTENSIONS, ...DOCUMENT_EXTENSIONS, '.json', '.yaml', '.yml'])]
+const FACT_INPUT_EXTENSIONS = [...new Set(FACT_EXTRACTORS.flatMap(extractor => extractor.inputExtensions ?? []))]
+const INPUT_EXTENSIONS = [...new Set([...SOURCE_EXTENSIONS, ...DOCUMENT_EXTENSIONS, ...FACT_INPUT_EXTENSIONS, '.json', '.yaml', '.yml'])]
 
 /**
  * Configuration sections the index is derived from.
@@ -79,7 +80,7 @@ const isInput = (path: string, name: string): boolean => {
   const extension = extname(name)
   if ((DOCUMENT_EXTENSIONS as readonly string[]).includes(extension)) return true
   if ((SOURCE_EXTENSIONS as readonly string[]).includes(extension)) return true
-  return CONFIG_INPUT_PATTERN.test(path)
+  return FACT_INPUT_EXTENSIONS.includes(extension) || CONFIG_INPUT_PATTERN.test(path)
 }
 
 /**

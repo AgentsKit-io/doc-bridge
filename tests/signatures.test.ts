@@ -127,8 +127,8 @@ describe('signature citation bounds and matching', () => {
     const baseline = analyzeMarkdownDocument(document, 'document:guide.md', { ...resolution, facts: undefined })
     const result = analyzeMarkdownDocument(document, 'document:guide.md', resolution)
     expect(result.relations.filter(relation => relation.metadata?.symbol)).toEqual(baseline.relations)
-    expect(result.relations).toHaveLength(64)
-    expect(result.truncated).toBe(true)
+    expect(result.relations).toHaveLength(80)
+    expect(result.truncated).toBe(false)
     const classResolution = { ...resolution, symbols: new Map([['Thing', ['module:api.ts']]]), facts: new Map([['Thing.run', [{ kind: 'signature', name: 'Thing.run', ownerId: 'module:api.ts' }]]]) }
     expect(analyzeMarkdownDocument(parseMarkdownDocument('guide.md', '`Thing.run`'), 'document:guide.md', classResolution).relations).toEqual([])
   })
