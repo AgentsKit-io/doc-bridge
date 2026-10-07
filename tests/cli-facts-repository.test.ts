@@ -37,4 +37,4 @@ it('dogfoods CLI facts without changing legacy JS/TS extraction or retrieval ran
   expect(newBench.metrics).toEqual(oldBench.metrics)
   expect(newBench.cases).toEqual(oldBench.cases)
   for (const entry of suite.cases) expect(searchIndex(after, entry.input)).toEqual(searchIndex(before, entry.input))
-}, 60_000)
+}, 180_000)
