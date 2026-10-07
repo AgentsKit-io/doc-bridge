@@ -1,4 +1,6 @@
 ---
+title: FindingV1
+description: Evidence-backed assertion identity, epistemic status and independent routing policy.
 owner: maintainers
 lifecycle: active
 sourceOfTruth: src/schemas/findings.ts

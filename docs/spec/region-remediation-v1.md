@@ -1,4 +1,6 @@
 ---
+title: Region remediation v1
+description: Validate region edits, isolated review presentation and authenticated human acceptance.
 owner: maintainers
 lifecycle: active
 sourceOfTruth: src/fixes/regions.ts

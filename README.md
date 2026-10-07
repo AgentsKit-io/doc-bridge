@@ -93,6 +93,37 @@ Example finding (anonymized)
   Action: review ownership and update the canonical document
 ```
 
+## Verify documentation divergence
+
+Compare revision snapshots deterministically: inspect symbol, CLI, configuration
+and signature changes, historical references and remaining head citations.
+Broken references require removal evidence; ambiguity and unsupported extraction
+stay explicit. Changed references require review. Default policy routes findings
+separately from their evidence status; use `--no-policy` to inspect raw diagnostics.
+
+From a built checkout, this runnable comparison snapshots a temporary copy of
+the signature fixture before and after removing a cited export. Use an installed
+`ak-docs`, or replace it with `node /path/to/checkout/bin/ak-docs.js` from a built
+checkout. The Node step extracts the raw snapshot from the discovery response:
+
+```bash
+set -e
+work=$(mktemp -d)
+cp -R tests/fixtures/signature-api "$work/repo"
+(cd "$work/repo" && ak-docs discover --json) > "$work/discovery.json"
+node -e 'const fs = require("node:fs"); const result = JSON.parse(fs.readFileSync(process.argv[1], "utf8")); fs.writeFileSync(process.argv[2], JSON.stringify(result.snapshot))' "$work/discovery.json" "$work/base.json"
+sed '/^export const describeThing/d' "$work/repo/api.ts" > "$work/api.ts"
+mv "$work/api.ts" "$work/repo/api.ts"
+ak-docs diff --base "$work/base.json" --root "$work/repo"
+ak-docs diff --base "$work/base.json" --root "$work/repo" --no-policy
+rm -rf "$work"
+```
+
+Capture each revision independently for a real delta. See
+[diff and findings](docs/guides/diff-and-findings.md) and
+[Action advisory mode](docs/guides/action-advisory.md) for bounded PR reports.
+Reports never approve documentation corrections.
+
 ## 60-second proof
 
 This README owns the one-command proof; the [Getting started guide](docs/getting-started.md)
@@ -238,13 +269,14 @@ When a human guide is missing, handoffs surface it as a feature:
 }
 ```
 
-## Four loops (with real commands)
+## Five loops (with real commands)
 
 | Loop | Command | What you see |
 |------|---------|--------------|
 | **Act** | `ak-docs query package auth --agent` | `editRoots`, `checks`, `startHere` |
 | **Bridge** | `ak-docs bootstrap agent-docs` | Draft agent docs from human site; `bridge.humanDoc` in handoff |
 | **Learn** | `ak-docs memory classify` → `promote` | HITL draft for agent corpus |
+| **Verify** | `ak-docs diff --base base.json --head head.json` | Revision delta, review impact and bounded reference findings |
 | **Explain** | `ak-docs ask "auth is broken in staging"` | Ownership match + handoff preview + next commands |
 
 ```bash

@@ -157,7 +157,7 @@ const llms = [
   '',
   '## Canonical documentation',
   '',
-  ...publicDocuments.map((doc) => `- [${doc.title}](${origin}/raw/${doc.file}): ${doc.description}`),
+  ...publicDocuments.filter((doc) => !doc.file.startsWith('spec/') && !doc.file.startsWith('schemas/')).map((doc) => `- [${doc.title}](${origin}/raw/${doc.file}): ${doc.description}`),
   '',
   ...ecosystemLines,
   '## Machine surfaces',

@@ -14,18 +14,20 @@ Source of truth for README, issues, RFCs, and external posts.
 ## What we are
 
 - A **bridge** between agent corpus (dense markdown) and human corpus (Fumadocs, Docusaurus, plain md, …)
+- A **verification engine** that proves documentation divergence deterministically from revision deltas and bounded citation evidence
 - A **task router** for coding agents (`startHere`, `editRoots`, `checks`, `humanDoc`)
 - A **memory pipeline** that turns local agent memory into draft project docs (HITL)
 - A **modular toolkit**: CLI, MCP, plugins, optional intelligence — install only what you need
 - **Offline-capable at the core** (Layer 0 needs no API key)
 
-## Four loops
+## Five loops
 
 | Loop | Job |
 |------|-----|
 | **Act** | Handoff JSON / MCP so agents edit the right place and run the right checks |
 | **Bridge** | Keep agent docs ↔ human docs linked and gate-validated |
 | **Learn** | Ingest Cursor/Claude-style memory → classify → promote drafts |
+| **Verify** | Prove documentation divergence deterministically: revision diffs, broken/ambiguous/changed references with evidence on both sides, symbol/CLI/config/signature facts, version-aware eligibility and an advisory PR report |
 | **Explain** | Optional RAG + terminal chat (`@agentskit/rag` + `@agentskit/ink`) with `handoffFirst` |
 
 ## What we are not
@@ -61,8 +63,9 @@ Engineering teams with real ownership (monorepos first). Secondary: solo libs, i
 
 | Dimension | Wiki + RAG | AGENTS.md | Context7 | doc-bridge |
 |-----------|------------|-----------|----------|------------|
-| Primary job | Explain | Static instructions | Library docs | **Act + bridge + memory** |
+| Primary job | Explain | Static instructions | Library docs | **Act + bridge + memory + verify** |
 | Correctness | Best-effort | Manual | Versioned remote | Index + CI gates |
+| Divergence proof | Best-effort retrieval | Manual review | Library version lookup | **Deterministic revision delta + citation evidence; unsupported analysis stays visible** |
 | Your monorepo ownership | Weak | Weak | N/A | **First-class** |
 | LLM required | Usually | No | No for setup | **No for Layer 0** |
 
@@ -78,6 +81,9 @@ optional:  Playbook / Registry federation
 
 ## Success metrics
 
+- Repeatable snapshot diffs and bounded before/after reference evidence on fixtures
+- Broken references distinguished from ambiguity and unsupported extraction
+- Version eligibility checked independently; advisory reports never approve corrections
 - Zero-key: `init` → `index` → `query --agent` in &lt; 2 minutes
 - Handoff from ownership-only config (no monorepo plugin required)
 - Human guide links gate green on fixture adapters

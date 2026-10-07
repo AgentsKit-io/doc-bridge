@@ -1,4 +1,6 @@
 ---
+title: ChangeSetV1
+description: Strict versioned delta identity, release state, changes and bounded evidence.
 owner: maintainers
 lifecycle: active
 sourceOfTruth: src/schemas/change-set.ts
