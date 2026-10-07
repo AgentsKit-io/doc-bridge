@@ -159,7 +159,7 @@ const addAreas = ({ entities, relations, addEntity, addRelation }: ReturnType<ty
 export const createDiscoveryScan = (io: ScanIO) => {
   const jsTs = createJsTsExtraction(io)
   const markdown = createMarkdownExtraction(io)
-  const { readJson, discoverPackages, relativePath } = jsTs
+  const { relativePath } = jsTs
   return (opts: DiscoveryOptions = {}, documents = true): DiscoverySnapshotV1 => {
   const root = resolve(opts.root ?? process.cwd())
   const safeOptions = safeWalkOptions(opts.config, {
@@ -174,7 +174,7 @@ export const createDiscoveryScan = (io: ScanIO) => {
   const { entities, relations, addEntity, addRelation } = extractionGraph()
 
   const source = jsTs.prepare({ root, opts, sourcePaths, packageResult, entities, relations, addEntity, addRelation })
-  const { compiler, ledger, prior, moduleUniverse, reuseModuleRelations, modules, modulesByPath, reusedModules, areaModules, symbolModules } = source
+  const { compiler, ledger, modulesByPath, reusedModules, areaModules, symbolModules } = source
 
   const { areas, areasByPath } = addAreas({ entities, relations, addEntity, addRelation }, areaModules, opts)
 

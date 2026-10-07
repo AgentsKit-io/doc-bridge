@@ -11,7 +11,7 @@ import type { SourceState, SourceContext, ExtractionGraph } from './js-ts.js'
 import type { deriveAreas } from '../areas.js'
 import { entityId } from '../identity.js'
 import { toPosix } from '../../lib/paths.js'
-import { replayableRelations, resolutionFingerprint, type PriorFile } from '../incremental.js'
+import { resolutionFingerprint, type PriorFile } from '../incremental.js'
 import { MARKDOWN_ANALYZER_VERSION, analyzeMarkdownDocument, markdownPathCandidateIndex, declaredAudience, markdownContentHash, parseMarkdownDocument, type MarkdownDocumentV1, type AmbiguousSymbolReference, type MarkdownFact, type AmbiguousFactReference } from '../markdown.js'
 import { documentClassification } from '../inputs.js'
 import type { DiscoverySnapshotV1, Evidence, KnowledgeRelation } from '../../schemas/knowledge.js'
@@ -50,7 +50,6 @@ export const createMarkdownExtraction = (io: ScanIO) => ({
    * plainly exists must not be dropped for arriving early.
    */
   const plannedIds = new Set([...modulesByPath.values(), ...documentsByPath.values()])
-  const willExist = (id: string): boolean => entities.has(id) || plannedIds.has(id)
 
   /**
    * Put a reused entity's edges back.
