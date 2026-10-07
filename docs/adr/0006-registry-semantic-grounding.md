@@ -18,3 +18,7 @@ Registry output remains advisory. Human approval is required before a proposal i
 - Deterministic facts remain separate from semantic agent judgment.
 - Agent swaps remain configurable and attributable.
 - The existing fix-proposal approval and verification flow remains the single mutation path.
+
+## Amendments
+
+- [ADR 0011](0011-findings-and-region-remediation.md) narrows the human-approval clause for remediations presented in an isolated review workspace or branch: presentation there is not acceptance, and acceptance is the human approval of that review. All other clauses are unchanged.

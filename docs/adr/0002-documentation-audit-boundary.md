@@ -20,3 +20,7 @@ Generated documentation is never edited by the audit. It receives presence and f
 - Reconciliation remains the source of truth for observed-versus-declared relations.
 - Teams can raise strictness per repository without changing the engine.
 - Semantic quality still requires agent or human review and cannot be honestly reduced to a deterministic score.
+
+## Amendments
+
+- [ADR 0011](0011-findings-and-region-remediation.md) narrows the human-approval clause for remediations presented in an isolated review workspace or branch: presentation there is not acceptance, and acceptance is the human approval of that review. All other clauses are unchanged.
