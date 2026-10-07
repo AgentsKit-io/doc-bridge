@@ -245,11 +245,11 @@ export const changeDigestView = (previous: SnapshotForDigest, current: SnapshotF
     [...ids].sort((a, b) => (of.get(a) as FileBacked).path.localeCompare((of.get(b) as FileBacked).path) || a.localeCompare(b))
 
   const changes = snapshotChanges(previous, current)
-  const changed = sortIds(changes.filter((change) => change.kind !== 'symbol' && change.op === 'changed').map((change) => change.after!.id), after)
+  const changed = sortIds([...after.keys()].filter(id => before.has(id) && before.get(id)!.hash !== after.get(id)!.hash), after)
     .map((id) => ({ id, kind: (after.get(id) as FileBacked).kind, path: (after.get(id) as FileBacked).path, previousHash: shortHash((before.get(id) as FileBacked).hash), currentHash: shortHash((after.get(id) as FileBacked).hash) }))
-  const added = sortIds(changes.filter((change) => change.kind !== 'symbol' && change.op === 'added').map((change) => change.after!.id), after)
+  const added = sortIds([...after.keys()].filter(id => !before.has(id)), after)
     .map((id) => ({ id, kind: (after.get(id) as FileBacked).kind, path: (after.get(id) as FileBacked).path, currentHash: shortHash((after.get(id) as FileBacked).hash) }))
-  const removed = sortIds(changes.filter((change) => change.kind !== 'symbol' && change.op === 'removed').map((change) => change.before!.id), before)
+  const removed = sortIds([...before.keys()].filter(id => !after.has(id)), before)
     .map((id) => ({ id, kind: (before.get(id) as FileBacked).kind, path: (before.get(id) as FileBacked).path, previousHash: shortHash((before.get(id) as FileBacked).hash) }))
 
   const { documentsToReview } = changeImpact(previous, current, changes)

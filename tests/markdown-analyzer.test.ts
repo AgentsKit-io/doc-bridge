@@ -92,7 +92,7 @@ describe('markdown analyzer', () => {
     const snapshot = discoverRepository({ root: fixture() })
     const markdown = snapshot.relations.filter((relation) => ['links-to', 'mentions', 'mentions-symbol'].includes(relation.kind))
 
-    expect(relationIds(markdown)).toEqual([
+    expect(relationIds(markdown.filter(relation => !relation.metadata?.factKind))).toEqual([
       'relation:document:docs/guide.md:mentions-symbol:module:src/reconcile.ts:reconcileKnowledge',
       'relation:document:docs/guide.md:mentions:package:fixture',
       'relation:document:docs/overview.md:links-to:document:docs/guide.md',
@@ -114,9 +114,11 @@ describe('markdown analyzer', () => {
     const snapshot = discoverRepository({ root: fixture() })
 
     // `reconcileKnowledge` is declared once and re-exported by the barrel: the definition wins.
-    expect(snapshot.relations.filter((relation) => relation.kind === 'mentions-symbol').map((relation) => relation.to)).toEqual([
+    expect(snapshot.relations.filter((relation) => relation.kind === 'mentions-symbol' && !relation.metadata?.factKind).map((relation) => relation.to)).toEqual([
       'module:src/reconcile.ts',
     ])
+
+    expect(snapshot.relations.filter(relation => relation.metadata?.factKind === 'signature').map(relation => relation.to)).toEqual(['module:src/reconcile.ts'])
 
     // `shared` is declared by two modules, so the reference resolves to neither.
     const fromDocuments = snapshot.relations.filter((relation) => relation.from.startsWith('document:'))
@@ -513,13 +515,13 @@ describe('generic Markdown fact citations', () => {
   const facts = new Map([
     ['--quiet', [{ kind: 'cli-flag', name: '--quiet', ownerId: 'cli-command:run' }]],
     ['cache.enabled', [{ kind: 'config-key', name: 'cache.enabled', ownerId: 'module:config' }]],
-    ['run', [{ kind: 'cli-command', name: 'run', ownerId: 'module:cli' }]],
+    ['doc-bridge run', [{ kind: 'cli-command', name: 'doc-bridge run', ownerId: 'module:cli' }]],
     ['run(value)', [{ kind: 'signature', name: 'run(value)', ownerId: 'module:cli' }]],
     ['pkg:generic/example', [{ kind: 'package', name: 'pkg:generic/example', ownerId: 'package:example' }]],
   ])
   const resolution = { documents: new Map<string, string>(), modules: new Map<string, string>(), packages: new Map<string, string>(), symbols: new Map<string, string[]>(), facts }
   it('resolves flag, config, command, signature and package facts with bounded citations', () => {
-    const result = analyzeMarkdownDocument(parseMarkdownDocument('guide.md', '`--quiet` `cache.enabled` `run` `run(value)` `pkg:generic/example`\n' + '`--quiet`\n'.repeat(10)), 'document:guide.md', resolution)
+    const result = analyzeMarkdownDocument(parseMarkdownDocument('guide.md', '`--quiet` `cache.enabled` `doc-bridge run` `run(value)` `pkg:generic/example`\n' + '`--quiet`\n'.repeat(10)), 'document:guide.md', resolution)
     expect(result.relations).toHaveLength(5)
     for (const [name, candidates] of facts) {
       const fact = candidates[0]!
@@ -536,17 +538,17 @@ describe('generic Markdown fact citations', () => {
     expect(result.notes[0]?.reason).toContain('ambiguous')
   })
   it('keeps exact paths first and codec facts ahead of legacy packages and exports', () => {
-    const result = analyzeMarkdownDocument(parseMarkdownDocument('guide.md', '`run` `cache.enabled` `--quiet`'), 'document:guide.md', {
-      ...resolution, modules: new Map([['cache.enabled', 'module:legacy-path']]), packages: new Map([['--quiet', 'package:legacy']]), symbols: new Map([['run', ['module:legacy-export']]]),
+    const result = analyzeMarkdownDocument(parseMarkdownDocument('guide.md', '`doc-bridge run` `cache.enabled` `--quiet`'), 'document:guide.md', {
+      ...resolution, modules: new Map([['cache.enabled', 'module:legacy-path']]), packages: new Map([['--quiet', 'package:legacy']]), symbols: new Map([['doc-bridge run', ['module:legacy-export']]]),
     })
     expect(result.relations.map(item => item.to).sort()).toEqual(['cli-command:run', 'module:cli', 'module:legacy-path'])
-    expect(result.relations.find(item => item.to === 'module:cli')?.metadata).toEqual({ factKind: 'cli-command', factName: 'run' })
-    const ambiguous = analyzeMarkdownDocument(parseMarkdownDocument('guide.md', '`run`'), 'document:guide.md', { ...resolution, symbols: new Map([['run', ['module:a', 'module:b']]]) })
+    expect(result.relations.find(item => item.to === 'module:cli')?.metadata).toEqual({ factKind: 'cli-command', factName: 'doc-bridge run' })
+    const ambiguous = analyzeMarkdownDocument(parseMarkdownDocument('guide.md', '`doc-bridge run`'), 'document:guide.md', { ...resolution, symbols: new Map([['doc-bridge run', ['module:a', 'module:b']]]) })
     expect(ambiguous.relations).toHaveLength(1)
     expect(ambiguous.ambiguousSymbolReferences).toHaveLength(0)
   })
   it('bounds generic ambiguity entries, owners and lines deterministically', () => {
-    const many = new Map(Array.from({ length: 65 }, (_, i) => [`flag${i}`, Array.from({ length: 40 }, (_, j) => ({ kind: 'cli-flag', name: `flag${i}`, ownerId: `owner:${j}` }))]))
+    const many = new Map(Array.from({ length: 65 }, (_, i) => [`--flag${i}`, Array.from({ length: 40 }, (_, j) => ({ kind: 'cli-flag', name: `--flag${i}`, ownerId: `owner:${j}` }))]))
     const result = analyzeMarkdownDocument(parseMarkdownDocument('guide.md', [...many.keys()].map(name => ('`' + name + '`\n').repeat(10)).join('')), 'document:guide.md', { ...resolution, facts: many })
     expect(result.ambiguousFactReferences).toHaveLength(64)
     expect(result.ambiguousFactReferencesTruncated).toBe(true)

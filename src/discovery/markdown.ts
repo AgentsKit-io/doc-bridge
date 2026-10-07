@@ -28,7 +28,7 @@ import { relationId } from './identity.js'
  * is inferred from a near-match unless the near-match is unambiguous.
  */
 
-export const MARKDOWN_ANALYZER_VERSION = '1.1.0'
+export const MARKDOWN_ANALYZER_VERSION = '1.2.0'
 
 /** Headings deeper than this are structure, not subject matter. */
 const MAX_HEADING_DEPTH = 3
@@ -38,6 +38,7 @@ const MAX_TITLE_LENGTH = 256
 
 /** A document with more relations than this is an index page; the tail adds noise, not knowledge. */
 export const MARKDOWN_RELATION_CAP = 64
+export const MARKDOWN_FACT_RELATION_CAP = 64
 
 /**
  * A region a generator owns. The analyzer skips it when collecting mentions, so Doc Bridge does
@@ -90,6 +91,8 @@ export type MarkdownDocumentV1 = {
   readonly links: readonly MarkdownReference[]
   /** Inline code tokens outside generated regions. */
   readonly codeTokens: readonly MarkdownReference[]
+  /** Lexical CLI citations; shell tokens still require a known bin during resolution. */
+  readonly cliTokens: readonly MarkdownCliReference[]
   /** Raw frontmatter text and the line it starts on, for the declaration parser. */
   readonly frontmatterBlock?: { readonly value: string; readonly line: number }
 }
@@ -98,6 +101,28 @@ const processor = unified()
   .use(remarkParse)
   .use(remarkFrontmatter, ['yaml'])
   .use(remarkGfm)
+
+export type MarkdownCliReference = MarkdownReference & { readonly kind: 'cli-command' | 'cli-flag'; readonly bin?: string }
+
+/** Qualified command prefixes and dash-prefixed flags, without evaluating shell syntax. */
+export const cliCommandTokens = (value: string, line: number, shell = false): MarkdownCliReference[] => {
+  const words = value.trim().split(/\s+/)
+  if (!/^[A-Za-z][\w.-]*$/.test(words[0] ?? '')) return []
+  const result: MarkdownCliReference[] = []
+  const prefix: string[] = []
+  for (const word of words) {
+    if (!/^[A-Za-z][\w.-]*$/.test(word)) break
+    prefix.push(word)
+    // A bare word is only a command when it is the first word of a shell line.
+    if (prefix.length >= (shell ? 1 : 2)) result.push({ value: prefix.join(' '), line, kind: 'cli-command', ...(shell ? { bin: words[0]! } : {}) })
+  }
+  return result
+}
+export const cliFlagTokens = (value: string, line: number, bin?: string): MarkdownCliReference[] =>
+  value.split(/\s+/).flatMap(word => {
+    const name = word.split('=')[0]!
+    return /^--?[A-Za-z][\w.-]*$/.test(name) ? [{ value: name, line, kind: 'cli-flag' as const, ...(bin ? { bin } : {}) }] : []
+  })
 
 type Positioned = { readonly position?: { readonly start: { readonly line: number } } | undefined }
 
@@ -208,6 +233,7 @@ export const parseMarkdownDocument = (path: string, content: string): MarkdownDo
   const headings: MarkdownHeading[] = []
   const links: MarkdownReference[] = []
   const codeTokens: MarkdownReference[] = []
+  const cliTokens: MarkdownCliReference[] = []
   let title: string | undefined
   let summary: string | undefined
 
@@ -238,9 +264,21 @@ export const parseMarkdownDocument = (path: string, content: string): MarkdownDo
       return
     }
 
+    if (node.type === 'code' && ['sh', 'bash', 'shell', 'zsh', 'console'].includes(node.lang ?? '')) {
+      for (const [offset, text] of node.value.split(/\r?\n/).entries()) {
+        const shellLine = line + offset + 1
+        if (withinGenerated(shellLine, regions)) continue
+        const bin = text.trim().split(/\s+/)[0]!
+        cliTokens.push(...cliCommandTokens(text, shellLine, true), ...cliFlagTokens(text, shellLine, bin))
+      }
+    }
+
     if (node.type === 'inlineCode' && !withinGenerated(line, regions)) {
       const value = node.value.trim()
-      if (value) codeTokens.push({ value, line })
+      if (value) {
+        codeTokens.push({ value, line })
+        cliTokens.push(...cliCommandTokens(value, line), ...cliFlagTokens(value, line))
+      }
     }
   })
 
@@ -259,7 +297,7 @@ export const parseMarkdownDocument = (path: string, content: string): MarkdownDo
     generatedRegions: regions,
     contentHash: markdownContentHash(normalized),
     links,
-    codeTokens,
+    codeTokens, cliTokens,
     ...(frontmatterNode
       ? { frontmatterBlock: { value: frontmatterNode.value, line: lineOf(frontmatterNode) } }
       : {}),
@@ -280,6 +318,7 @@ export type MarkdownResolution = {
   /** Exported symbol to the entity ids of every module exporting it. */
   readonly symbols: ReadonlyMap<string, readonly string[]>
   readonly facts?: ReadonlyMap<string, readonly MarkdownFact[]>
+  readonly packagePaths?: readonly { readonly id: string; readonly path: string }[]
   readonly relationCap?: number
   /**
    * Path candidates for near-miss resolution, indexed by length.
@@ -316,7 +355,25 @@ export type AmbiguousSymbolReference = {
   readonly lines: readonly number[]
 }
 
-export type MarkdownFact = { readonly kind: string; readonly name: string; readonly ownerId: string }
+export type MarkdownFact = { readonly kind: string; readonly name: string; readonly ownerId: string; readonly evidence?: readonly Evidence[] }
+
+/** Config citations require dotted names and the same fixture/package boundary. */
+export const configKeyCitationIndex = (facts: ReadonlyMap<string, readonly MarkdownFact[]> | undefined, documentPath: string, packages: MarkdownResolution['packagePaths']): ReadonlyMap<string, readonly MarkdownFact[]> => {
+  const index = new Map<string, MarkdownFact[]>()
+  const fixture = (path: string) => { const match = /(?:^|\/)(?:tests?|__tests__)\/fixtures\/[^/]+/.exec(path); return match ? path.slice(0, match.index + match[0].length) : '' }
+  const orderedPackages = [...(packages ?? [])].sort((a, b) => b.path.length - a.path.length)
+  const packageId = (path: string) => orderedPackages.find(pkg => pkg.path === '.' || path.startsWith(`${pkg.path}/`))?.id
+  const documentFixture = fixture(documentPath), documentPackage = packageId(documentPath)
+  for (const fact of facts?.values() ?? []) for (const item of fact) {
+    if (item.kind !== 'config-key' || !item.name.includes('.')) continue
+    const paths = item.evidence?.map(proof => proof.path) ?? [item.ownerId.replace(/^module:/, '')]
+    if (!paths.some(path => fixture(path) === documentFixture && packageId(path) === documentPackage)) continue
+    const matches = index.get(item.name) ?? []
+    if (!matches.some(match => match.ownerId === item.ownerId)) matches.push(item)
+    index.set(item.name, matches)
+  }
+  return index
+}
 
 export type AmbiguousFactReference = {
   readonly factKind: string
@@ -334,6 +391,7 @@ export type MarkdownAnalysis = {
   readonly relations: readonly KnowledgeRelation[]
   readonly notes: readonly MarkdownNote[]
   readonly truncated: boolean
+  readonly factReferencesTruncated: boolean
 }
 
 const documentEvidence = (path: string, line: number): Evidence => ({
@@ -370,12 +428,27 @@ export const analyzeMarkdownDocument = (
   documentId: string,
   resolution: MarkdownResolution,
 ): MarkdownAnalysis => {
+  const cliBins = new Set([...(resolution.facts?.values() ?? [])].flatMap(facts => facts.filter(fact => fact.kind === 'cli-command').map(fact => fact.name.split(' ')[0]!)))
   const cap = resolution.relationCap ?? MARKDOWN_RELATION_CAP
+  const configKeys = configKeyCitationIndex(resolution.facts, document.path, resolution.packagePaths)
   const relations = new Map<string, KnowledgeRelation>()
   const notes: MarkdownNote[] = []
   const ambiguous = new Map<string, Evidence[]>()
   const ambiguousFacts = new Map<string, AmbiguousFactReference>()
   let truncated = false
+  let factsTruncated = false
+  let legacyCount = 0
+  let factCount = 0
+  const reserveRelation = (fact: MarkdownFact | undefined): boolean => {
+    if (fact) {
+      if (factCount >= MARKDOWN_FACT_RELATION_CAP) { factsTruncated = true; return false }
+      factCount++
+    } else {
+      if (legacyCount >= cap) { truncated = true; return false }
+      legacyCount++
+    }
+    return true
+  }
 
   const add = (kind: string, to: string, line: number, confidence?: 'fuzzy', symbol?: string, fact?: MarkdownFact): void => {
     if (to === documentId) return
@@ -388,10 +461,7 @@ export const analyzeMarkdownDocument = (
       }
       return
     }
-    if (relations.size >= cap) {
-      truncated = true
-      return
-    }
+    if (!reserveRelation(fact)) return
     relations.set(id, {
       id,
       kind,
@@ -441,6 +511,21 @@ export const analyzeMarkdownDocument = (
   }
 
   for (const token of document.codeTokens) resolveToken(token.value, token.line)
+  for (const token of document.cliTokens) {
+    if (token.bin && !cliBins.has(token.bin)) continue
+    resolveToken(token.value, token.line, token.kind)
+  }
+
+  // Signature facts reuse a uniquely resolved symbol citation, preserving its legacy edge.
+  function resolveSignatureSymbol(value: string, line: number): boolean {
+    const owners = [...new Set(resolution.symbols.get(value) ?? [])]
+    if (owners.length !== 1) return false
+    const signature = resolution.facts?.get(value)?.find(fact => fact.kind === 'signature' && fact.ownerId === owners[0])
+    if (!signature) return false
+    if (!resolution.facts?.get(value)?.some(fact => fact.kind === 'symbol')) add('mentions-symbol', owners[0]!, line, undefined, value)
+    add('mentions-symbol', signature.ownerId, line, undefined, undefined, signature)
+    return true
+  }
 
   /**
    * Resolve exact paths, codec facts, legacy packages/exports, then fuzzy paths.
@@ -448,11 +533,11 @@ export const analyzeMarkdownDocument = (
    * A legacy symbol resolves only when exactly one module exports it, because sending an
    * agent to one of two possible definitions is worse than sending it nowhere.
    */
-  function resolveToken(raw: string, line: number): void {
+  function resolveToken(raw: string, line: number, cliKind?: 'cli-command' | 'cli-flag'): void {
     const value = raw.trim()
     if (!value || value.length > 256) return
 
-    if (pathShaped(value) || areas.has(value)) {
+    if (!cliKind && (pathShaped(value) || areas.has(value))) {
       const direct = value.replace(/^\.\//, '')
       if (resolution.documents.has(direct) || resolution.modules.has(direct) || areas.has(direct)) {
         resolvePath(direct, line, 'mentions')
@@ -460,7 +545,9 @@ export const analyzeMarkdownDocument = (
       }
     }
 
-    const facts = resolution.facts?.get(value)
+    const signatureSymbol = !cliKind && resolveSignatureSymbol(value, line)
+    const candidates = resolution.facts?.get(value)
+    const facts = [...(candidates ?? []).filter(fact => fact.kind !== 'config-key'), ...(cliKind ? [] : configKeys.get(value) ?? [])].filter(fact => (cliKind ? fact.kind === cliKind : fact.kind !== 'cli-command' && fact.kind !== 'cli-flag') && (fact.kind !== 'signature' || (!resolution.symbols.has(value) && !resolution.symbols.has(value.split('.')[0]!))))
     if (facts?.length) {
       for (const kind of [...new Set(facts.map(fact => fact.kind))].sort()) {
         const candidates = facts.filter(fact => fact.kind === kind)
@@ -476,6 +563,9 @@ export const analyzeMarkdownDocument = (
       }
       return
     }
+
+    if (cliKind || candidates?.some(fact => fact.kind === 'cli-command' ? value.includes(' ') : fact.kind === 'cli-flag' && /^--?[A-Za-z][\w.-]*$/.test(value))) return
+    if (signatureSymbol) return
 
     const packageEntity = resolution.packages.get(value)
     if (packageEntity) {
@@ -519,6 +609,7 @@ export const analyzeMarkdownDocument = (
       evidence: [documentEvidence(document.path, 1)],
     })
   }
+  if (factsTruncated) notes.push({ scope: `fact-relations:${document.path}`, reason: `Document references more than ${MARKDOWN_FACT_RELATION_CAP} facts; the remainder was not recorded.`, evidence: [documentEvidence(document.path, 1)] })
 
   const ambiguousSymbolReferences = [...ambiguous.entries()]
     .sort(([a], [b]) => a.localeCompare(b))
@@ -536,5 +627,6 @@ export const analyzeMarkdownDocument = (
     relations: [...relations.values()].sort((a, b) => a.id.localeCompare(b.id)),
     notes,
     truncated,
+    factReferencesTruncated: factsTruncated,
   }
 }

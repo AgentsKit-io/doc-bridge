@@ -44,8 +44,14 @@ These fields use existing open metadata records; strict snapshot, index and hand
 are unchanged. Retrieval and graph importance count unique document/module connections rather
 than increasing a module's importance for each cited symbol.
 
-A document referencing more than 64 relations records `evidenceTruncated` and a coverage note. An
+A document referencing more than 64 legacy relations records `evidenceTruncated` and a coverage note. An
 index page's sixty-fifth link is not knowledge, and an unbounded list is not evidence.
+
+Non-symbol fact citations (`metadata.factKind`) have a separate bounded cap of
+64 per document. They never consume or displace the legacy relation cap.
+Exceeding it records `factReferencesTruncated` (without changing legacy
+`evidenceTruncated`) and a distinct `fact-relations:<path>`
+coverage note. Repeated citations still share the existing eight-location bound.
 
 ## Generated regions
 
@@ -115,6 +121,11 @@ Different kinds sharing a token are evaluated in sorted kind order.
 The relation discriminator is `${factKind}:${factName}`; repeated citations
 accumulate at most eight documentation evidence locations.
 
+Configuration facts use an isolated citation index: only dotted paths match,
+and source/document package and fixture boundaries must agree. Bare keys produce
+no config relation. Relations retain canonical dotted `metadata.factName`.
+See [configuration key facts](config-key-facts-v1.md).
+
 Generic ambiguity uses document `metadata.ambiguousFactReferences`, an array of
 `{ factKind, factName, candidateOwnerIds, candidateCount, lines }` sorted by
 kind/name. Names are bounded to 256 characters, sorted owner IDs to 32, sorted
@@ -123,8 +134,39 @@ additional entries set `metadata.ambiguousFactReferencesTruncated: true`.
 A partial coverage note also records ambiguity. Snapshot, index and handoff
 schemas remain compatible through their existing open metadata records.
 
-The analyzer version remains 1.1.0: existing JS/TS output has no codec-backed
-facts, and its relations, metadata, coverage and analyzer versions are unchanged.
+Markdown analyzer version `1.2.0` introduces an independent 64-relation fact
+citation cap for every fact kind. Fact citations cannot consume or displace the
+legacy relation cap; legacy relation identities and evidence remain unchanged.
+The v2 plugin parses documents afresh; the synchronous shared fact hook binds
+the fact universe into its resolution fingerprint before reusing document relations.
+
+### Qualified CLI citations
+
+CLI commands require an exact bin-prefixed command path in inline code, such as
+`doc-bridge report`; an unqualified common word such as `report` is not a CLI
+citation. Command prefixes are matched exactly against codec facts. In shell
+fences (`sh`, `bash`, `shell`, `zsh`, `console`), the first word of a line must
+be an exact known bin; root commands may also be cited there. Shell expressions,
+prompts, scripts for unknown executables and ordinary prose do not qualify.
+Only whitespace-delimited dash-prefixed flag tokens are candidates; `--flag=value`
+is normalized to `--flag`. Short aliases resolve through their own facts.
+Ambiguous owners retain the existing bounded ambiguity behavior.
+
+CLI lexical tokens are kept separately from ordinary inline-code tokens, so
+shell examples do not introduce symbol/config/path mentions. Generated regions,
+the 64-relation cap and eight citation locations per relation still apply.
+CLI relations use the independent fact cap, preserving bounded legacy evidence.
+Historical CLI removal findings verify these same tokens; shell tokens must
+retain the removed fact's bin context. Help-only partial source coverage yields
+stale-or-unverified removal candidates rather than proven conflicts.
+## Syntactic signature citations
+
+Built-in JS/TS signature facts reuse uniquely resolved exported-symbol citations,
+preserving the legacy symbol relation and adding a signature relation to its
+module. Class/type citations refer to the aggregate public-member signature.
+No new token matching is introduced; existing relation/evidence bounds apply.
+See [signature facts v1](signature-facts-v1.md).
 The v2 plugin parses documents afresh, so fact-universe changes cannot replay
-stale generic references. Synchronous legacy discovery retains its existing
-resolution fingerprint and behavior.
+stale generic references. The synchronous shared fact hook incorporates the
+fact universe into the resolution fingerprint before reusing document relations.
+Each registered extractor carries its own component analyzer version.

@@ -101,12 +101,12 @@ const repositoryFacts = (snapshot: DiscoverySnapshotV1) => ({
 })
 
 describe('per-entity content hashes', () => {
-  it('hashes every file-backed entity and nothing else', () => {
+  it('hashes file-backed entities and codec fact evidence', () => {
     const snapshot = discoverRepository({ root: fixture() })
 
     for (const item of snapshot.entities) {
       const hash = item.evidence[0]?.contentHash
-      if (item.kind === 'module' || item.kind === 'document' || item.kind === 'package') {
+      if (item.kind === 'module' || item.kind === 'document' || item.kind === 'package' || item.metadata?.factCodecVersion === 1) {
         expect(hash, `${item.id} should carry a hash`).toMatch(/^[0-9a-f]{64}$/)
       } else {
         expect(hash, `${item.id} should carry no hash`).toBeUndefined()
@@ -255,7 +255,15 @@ describe('invalidation', () => {
     const after = hashes(reused)
     expect(after['module:src/ranking/bm25.ts']).not.toBe(before['module:src/ranking/bm25.ts'])
     for (const [id, hash] of Object.entries(before)) {
-      if (id === 'module:src/ranking/bm25.ts') continue
+      const item = entity(cold, id)
+      const fact = item.metadata?.fact as { ownerId?: string; valueHash?: string } | undefined
+      if (id === 'module:src/ranking/bm25.ts' || fact?.ownerId === 'module:src/ranking/bm25.ts') {
+        if (fact) {
+          expect(after[id], `${id} evidence follows its changed source file`).not.toBe(hash)
+          expect((entity(reused, id).metadata?.fact as { valueHash: string }).valueHash).toBe(fact.valueHash)
+        }
+        continue
+      }
       expect(after[id], `${id} changed`).toBe(hash)
     }
   })

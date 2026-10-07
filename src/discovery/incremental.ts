@@ -1,3 +1,4 @@
+import { surfaceFactFromEntity } from '../storage/facts.js'
 import { sha256NormalizedV1 } from '../index-builder/content-hash.js'
 import type { DiscoverySnapshotV1, Coverage, KnowledgeEntity, KnowledgeRelation } from '../schemas/knowledge.js'
 
@@ -81,7 +82,7 @@ const hashOf = (entity: KnowledgeEntity): string | undefined => entity.evidence[
 /** Coverage scopes that belong to a single module, by the topic they start with. */
 const MODULE_COVERAGE_PREFIXES = ['dynamic-imports:', 'runtime-wiring:'] as const
 /** Coverage scopes that belong to a single document. */
-const DOCUMENT_COVERAGE_PREFIXES = ['relations:', 'mentions-symbol:'] as const
+const DOCUMENT_COVERAGE_PREFIXES = ['relations:', 'mentions-symbol:', 'mentions-fact:'] as const
 
 const stringList = (value: unknown): readonly string[] =>
   Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : []
@@ -106,6 +107,9 @@ export const exportsOf = (entity: KnowledgeEntity): readonly string[] => stringL
  * options that decide how a specifier becomes a path. A change to any of them can turn an
  * unresolved import into a relation, so it invalidates relation reuse for every module.
  */
+export const factResolutionUniverse = (moduleUniverse: string, facts: readonly { kind: string; name: string; ownerId: string }[]): string =>
+  facts.length ? sha256NormalizedV1({ moduleUniverse, facts: facts.map(({ kind, name, ownerId }) => ({ kind, name, ownerId })).sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b))) }) : moduleUniverse
+
 export const moduleUniverseFingerprint = (input: {
   readonly modulePaths: readonly string[]
   readonly packages: readonly { readonly id: string; readonly path: string; readonly name?: string }[]
@@ -222,7 +226,7 @@ export const indexPriorSnapshot = (previous: PreviousSnapshot, compilerOptions: 
     documents,
     moduleUniverse,
     resolution: resolutionFingerprint({
-      moduleUniverse,
+      moduleUniverse: factResolutionUniverse(moduleUniverse, previous.entities.filter(entity => entity.metadata?.factCodecVersion === 1 && entity.kind !== 'package').map(surfaceFactFromEntity)),
       documentPaths: [...documents.keys()],
       areaPaths: previous.entities.filter((entity) => entity.kind === 'area').map((entity) => entity.path ?? ''),
       symbols,

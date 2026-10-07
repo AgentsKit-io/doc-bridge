@@ -74,8 +74,8 @@ fact kind, ID/name match the fact, and evidence remains top-level. Metadata is
 strictly `{ factCodecVersion: 1, fact: { kind, id, ownerId, name, valueHash } }`.
 `surfaceFactFromEntity` rejects malformed/unknown codec metadata and mismatched
 identity. This preserves the snapshot v1 shape while allowing persisted facts to
-round-trip without side channels. New kinds have intentional semantic significance
-when a later plugin emits them; no built-in extraction behavior changes here.
+round-trip without side channels. The codec itself does not enable extraction. Registered built-in extractors below
+declare the kinds whose facts they emit.
 
 `PackageFact` carries ID, purl, optional version, dependency purls/ranges/locked
 versions and manifest/lockfile evidence. Purl syntax has a bounded structural
@@ -111,9 +111,9 @@ orchestrator/diff migration and is not proven by these contract tests.
 JS/TS (`createJsTsPluginV2`, effective analyzer version 1.3.5) and Markdown
 (`createMarkdownPluginV2`, the existing Markdown analyzer version) are caller-
 registered v2 plugins. Their syntax extraction is shared with the synchronous
-`discoverRepository` compatibility facade. JS/TS declares manifests and symbols;
-Markdown declares Markdown. Neither emits additional surface-fact entities by
-default. Syntax algorithms, IDs, evidence codecs, coverage attribution and
+`discoverRepository` compatibility facade. JS/TS declares manifests, symbols and registered fact capabilities;
+Markdown declares Markdown. The JS/TS signature component emits bounded syntactic signature facts; see
+[signature facts v1](signature-facts-v1.md). Syntax algorithms, IDs, evidence codecs, coverage attribution and
 incremental reuse ordering retain their established versions.
 
 `discoverRepositoryWithRead(read, options)` preloads the exact `RepositoryReadV1`
@@ -178,3 +178,61 @@ Codec-backed symbol facts resolve Markdown citations to `fact.ownerId`, retainin
 advertised by both facts and legacy `metadata.exports` are deduplicated. Surface
 and package fact roundtrips through the common orchestrator are exercised by the
 non-JS source fixture, including preservation of unrelated package metadata.
+
+## Built-in fact extractors
+
+The JS/TS built-in shares a caller-owned static fact extractor registry between
+synchronous and v2 discovery. An extractor declares `id` (`js-ts:<kind>`),
+`version`, supported fact `kinds`, and `extract`. Its input contains the bounded
+scan map, repository-relative TypeScript source-file map, discovered modules and
+packages. Extraction returns codec-compatible facts and capability-scoped
+coverage; component versions enter snapshot analyzer identity and the built-in
+registry's exact attribution allowlist. Facts are encoded before Markdown
+resolution, with their owning entities already present. A changed fact universe
+invalidates documentation relation reuse. An empty registry preserves the
+existing snapshot bytes, coverage and plugin capabilities.
+
+### Built-in CLI facts
+
+`js-ts:cli` version `1.0.0` emits `cli-command` and `cli-flag` facts. Package
+`bin` string/object entries establish command roots owned by the package. A
+subcommand is owned by its parent command and named with its complete bin-prefixed
+command path. Flags are owned by the command they configure. Each declared
+spelling, including a short alias, has its own flag fact. Its value hash covers
+`name`, sorted `aliases`, `takesValue`, and statically known required/default
+values; literal parseArgs `multiple` also participates. Changing the long alias
+removes/adds those spellings and changes any retained short alias's value hash.
+Command hashes cover their qualified name and literal declaration; roots also
+include the declared entrypoint. No codec/index/handoff shape changes.
+
+Supported AST patterns bind imported Commander `Command`/`program`, yargs or
+`yargs/yargs` factories, cac factories, and `node:util`/`util` `parseArgs`.
+Named imports may be locally aliased. Static `.command`, `.option`, and
+Commander `.requiredOption` chains retain command ownership; yargs supports
+literal option objects and inline builder callbacks. ParseArgs requires literal
+`options` objects with literal option names/types/short/default/multiple values.
+No repository code is executed. Arbitrary similarly named methods do not count.
+Unsupported methods, computed/spread options, nonliteral declarations/defaults,
+conditional/function-based registration, conflicting declarations, unrecognized
+entrypoints and output limits produce partial or not-analyzed capability coverage.
+Missing bin entries are not applicable; a missing manifest is not analyzed.
+Imported-library declarations require reachability from the literal bin entry
+through scanned static relative imports/re-exports. Missing build-output mappings
+and dynamic loading remain partial; entrypoint ownership is never guessed. Test/fixture modules are excluded from CLI declarations.
+At most 4096 facts are emitted, in stable ID order; excluded declarations and
+limits cannot prove removal.
+
+An exported string/no-substitution-template literal with explicit JSDoc
+`@docbridgeCliUsage` declares conservative help examples. Only lines beginning
+with an exact package bin and literal command words are recognized. Alternative
+command syntax is excluded; placeholder/value syntax stops the command path.
+Dash-prefixed flags on accepted lines belong to that command. An explicit
+`Global flags:` section belongs to bins named elsewhere in that literal.
+Implicit library-generated default help/version flags are outside the explicit
+static-declaration inventory; helper calls with unsupported registration semantics
+remain partial. Removal proof concerns previously emitted declaration identities.
+Help-only extraction always remains partial: help examples do not establish
+runtime completeness. This opt-in marker adds no configuration key.
+The hook also accepts additive `walkOptions` carrying the effective discovery
+safety policy. JSON Schema enumeration applies that same exclusion/limit policy
+to the scan-local map; it cannot expand configured scope.

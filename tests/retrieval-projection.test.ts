@@ -108,6 +108,20 @@ const gitFixture = (): { readonly root: string; readonly config: DocBridgeConfig
 }
 
 describe('the projection is a function of the snapshot', () => {
+  it('excludes generic fact relations from ranking while preserving observation identity', () => {
+    const { root, config } = fixture()
+    const snapshot = discoverRepository({ root, config })
+    const baseline = projectRetrievalIndex({ snapshot, config })
+    const relations = ['cli-command', 'cli-flag', 'config-key', 'signature', 'package'].map(factKind => ({
+      id: `relation:fact:${factKind}`, kind: 'mentions-symbol', from: 'document:docs/mention.md', to: 'module:src/ranking/bm25.ts', provenance: 'observed' as const,
+      metadata: { factKind, factName: 'declared-value' }, evidence: [{ source: 'documentation' as const, path: 'docs/mention.md', lineStart: 3 }],
+    }))
+    const observed = { ...snapshot, relations: [...snapshot.relations, ...relations] }
+    const withFacts = projectRetrievalIndex({ snapshot: observed, config })
+    expect(withFacts.entries).toEqual(baseline.entries)
+    expect(snapshotObservationHash(observed)).not.toBe(snapshotObservationHash(snapshot))
+  })
+
   it('keeps module importance and handoffs stable across multiple cited symbols', () => {
     const { root, config } = fixture()
     write(root, 'src/ranking/bm25.ts', 'export const rank = (): number => 2\nexport const score = (): number => 3\n')

@@ -1,3 +1,4 @@
+import { FACT_EXTRACTORS, factAnalyzerVersions, runFactExtractors } from './facts/index.js'
 import { execFileSync } from 'node:child_process'
 import { basename, relative, resolve } from 'node:path'
 
@@ -15,8 +16,8 @@ import { createLocalScanIO, type ScanIO } from './scan-io.js'
 import { GRAPH_ANALYZER_VERSION, areaSuggestionCoverage } from '../graph/build.js'
 import { deriveAreas, type AreaModule } from './areas.js'
 import { entityId } from './identity.js'
-import { reuseCoverage, type PreviousSnapshot } from './incremental.js'
-import { MARKDOWN_ANALYZER_VERSION } from './markdown.js'
+import { reuseCoverage, factResolutionUniverse, type PreviousSnapshot } from './incremental.js'
+import { MARKDOWN_ANALYZER_VERSION, type MarkdownFact } from './markdown.js'
 import { DEFAULT_MAX_FILES, safeWalkOptions } from './inputs.js'
 import {
   DiscoverySnapshotV1Schema,
@@ -69,7 +70,7 @@ const sourceRevision = (root: string, files: readonly string[], readText: (path:
 }
 
 export const PIPELINE_VERSION = '1.5.0'
-export const ANALYZER_VERSIONS: Readonly<Record<string, string>> = { repository: '1.3.0', 'js-ts': '1.3.5', markdown: MARKDOWN_ANALYZER_VERSION, graph: GRAPH_ANALYZER_VERSION }
+export const ANALYZER_VERSIONS: Readonly<Record<string, string>> = { repository: '1.3.0', 'js-ts': '1.3.5', markdown: MARKDOWN_ANALYZER_VERSION, graph: GRAPH_ANALYZER_VERSION, ...factAnalyzerVersions() }
 const configurationHashOf = (config: DocBridgeConfigV1 | undefined): string => sha256NormalizedV1(config ?? {})
 
 const artifact = (root: string, config: DocBridgeConfigV1 | undefined, files: readonly string[], entities: readonly KnowledgeEntity[], relations: readonly KnowledgeRelation[], coverage: DiscoverySnapshotV1['coverage'], suppliedRevision: { readonly value: string; readonly kind: 'git' | 'content' }): DiscoverySnapshotV1 => {
@@ -155,8 +156,8 @@ const addAreas = ({ entities, relations, addEntity, addRelation }: ReturnType<ty
   return { areas, areasByPath }
 }
 
-export const createDiscoveryScan = (io: ScanIO) => {
-  const jsTs = createJsTsExtraction(io)
+export const createDiscoveryScan = (io: ScanIO, retainFactTrees = true) => {
+  const jsTs = createJsTsExtraction(io, retainFactTrees)
   const markdown = createMarkdownExtraction(io)
   const { relativePath } = jsTs
   return (opts: DiscoveryOptions = {}, documents = true): DiscoverySnapshotV1 => {
@@ -173,11 +174,19 @@ export const createDiscoveryScan = (io: ScanIO) => {
   const { entities, relations, addEntity, addRelation } = extractionGraph()
 
   const source = jsTs.prepare({ root, opts, sourcePaths, packageResult, entities, relations, addEntity, addRelation })
-  const { compiler, ledger, modulesByPath, areaModules } = source
+  const { compiler, ledger, prior, moduleUniverse, modules, modulesByPath, areaModules } = source
 
   const { areas, areasByPath } = addAreas({ entities, relations, addEntity, addRelation }, areaModules, opts)
 
   const coverage = jsTs.initialCoverage(root, rootManifest, packageResult, compiler, [sourceWalk, documentWalk, configWalk])
+
+  const facts = new Map<string, MarkdownFact[]>()
+  const extracted = runFactExtractors({ root, io, modules, parsedTrees: source.sourceFiles, retainTrees: retainFactTrees, packages: packageResult.packages, walkOptions: safeOptions, ...(prior && opts.previous ? { previous: opts.previous } : {}) })
+  for (const fact of extracted.facts) {
+    addEntity(surfaceFactToEntity(fact))
+    facts.set(fact.name, [...(facts.get(fact.name) ?? []), fact])
+  }
+  coverage.push(...extracted.coverage)
 
   /*
    * What the documentation says, as edges.
@@ -186,7 +195,7 @@ export const createDiscoveryScan = (io: ScanIO) => {
    * claim the repository makes about itself, with a line number to check it against. Package
    * names resolve by their manifest name and, when unambiguous, by their directory name.
    */
-  const { replayRelations } = documents ? markdown.extract({ root, opts, documentPaths, packageResult, entities, relations, addEntity, addRelation, coverage, ...source, areas, areasByPath }) : { replayRelations: createReplayRelations({ entities, relations, addEntity, addRelation }, new Set([...modulesByPath.values(), ...documentPaths.map(path => entityId('document', relativePath(root, path)))])) }
+  const { replayRelations } = documents ? markdown.extract({ root, opts, documentPaths, packageResult, entities, relations, addEntity, addRelation, coverage, ...source, areas, areasByPath, ...(FACT_EXTRACTORS.length ? { facts, moduleUniverse: factResolutionUniverse(moduleUniverse, [...facts.values()].flat()) } : {}) }) : { replayRelations: createReplayRelations({ entities, relations, addEntity, addRelation }, new Set([...modulesByPath.values(), ...documentPaths.map(path => entityId('document', relativePath(root, path)))])) }
 
   jsTs.finish({ root, opts, packageResult, entities, relations, addEntity, addRelation, coverage, ...source, replayRelations })
 
@@ -211,12 +220,18 @@ export const createDiscoveryScan = (io: ScanIO) => {
    */
   coverage.push(reuseCoverage(ledger))
 
-  return artifact(root, opts.config, allFiles, [...entities.values()], [...relations.values()], coverage, io.revision ?? sourceRevision(root, allFiles, io.readText))
+  const revisionFiles = [...new Set([...allFiles, ...extracted.coverage.flatMap(entry => (entry.evidence ?? []).map(item => resolve(root, item.path))).filter(path => io.host.fileExists(path))])].sort()
+  const snapshot = artifact(root, opts.config, revisionFiles, [...entities.values()], [...relations.values()], coverage, io.revision ?? sourceRevision(root, revisionFiles, io.readText))
+  extracted.remember(snapshot)
+  return snapshot
 }
 
 }
 
 export const discoverRepository = (opts: DiscoveryOptions = {}): DiscoverySnapshotV1 => createDiscoveryScan(createLocalScanIO(resolve(opts.root ?? process.cwd()), opts))(opts)
+
+/** Index-owned snapshots do not need to retain syntax trees for incremental reuse. */
+export const discoverRepositoryForIndex = (opts: DiscoveryOptions): DiscoverySnapshotV1 => createDiscoveryScan(createLocalScanIO(resolve(opts.root ?? process.cwd()), opts), false)(opts)
 
 export type DiscoveryReadOptions = DiscoveryOptions & {
   readonly signal?: AbortSignal
@@ -246,7 +261,7 @@ export const discoverRepositoryWithRead = async (read: RepositoryReadV1, opts: D
   const source = createJsTsPluginV2()
   const documents = createMarkdownPluginV2()
   const registry = createDiscoveryRegistryV2({ builtIns: [
-    { plugin: source, analyzerVersions: { 'js-ts': source.manifest.version } },
+    { plugin: source, analyzerVersions: { 'js-ts': source.manifest.version, ...factAnalyzerVersions() } },
     { plugin: documents, analyzerVersions: { markdown: documents.manifest.version } },
   ] })
   if (!opts.replaceSourcePlugins) registry.register(source)

@@ -1,3 +1,4 @@
+import { factAnalyzerVersions } from '../src/discovery/facts/index.js'
 import fs from 'node:fs'
 import { join, relative, resolve } from 'node:path'
 import { tmpdir } from 'node:os'
@@ -55,7 +56,7 @@ describe('bounded discovery acquisition', () => {
     const read = memory(root, 'fixture-revision')
     const source = createJsTsPluginV2()
     const markdown = createMarkdownPluginV2()
-    const registry = createDiscoveryRegistryV2({ builtIns: [{ plugin: source, analyzerVersions: { 'js-ts': source.manifest.version } }, { plugin: markdown, analyzerVersions: { markdown: markdown.manifest.version } }] })
+    const registry = createDiscoveryRegistryV2({ builtIns: [{ plugin: source, analyzerVersions: { 'js-ts': source.manifest.version, ...factAnalyzerVersions() } }, { plugin: markdown, analyzerVersions: { markdown: markdown.manifest.version } }] })
     registry.register(source); registry.register(markdown)
     const input = { read, signal: new AbortController().signal, configuration: {}, resolution: { entities: [], relations: [] } }
     const extracted = await registry.discover('js-ts', input)

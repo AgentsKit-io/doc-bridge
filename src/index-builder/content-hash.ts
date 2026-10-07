@@ -5,11 +5,13 @@ const sortValue = (value: unknown): unknown => {
   if (Array.isArray(value)) return value.map(sortValue)
   if (value && typeof value === 'object') {
     const record = value as Record<string, unknown>
-    return Object.fromEntries(
-      Object.keys(record)
-        .sort()
-        .map((key) => [key, sortValue(record[key])]),
-    )
+    const sorted: Record<string, unknown> = {}
+    for (const key of Object.keys(record).sort()) {
+      const value = sortValue(record[key])
+      if (key === '__proto__') Object.defineProperty(sorted, key, { value, enumerable: true, writable: true, configurable: true })
+      else sorted[key] = value
+    }
+    return sorted
   }
   return value
 }
@@ -38,14 +40,27 @@ export const contentHashForVersionedArtifact = <T extends { readonly contentHash
   const algorithm = VersionedHashAlgorithmSchema.parse(artifact.contentHashAlgo)
   if (algorithm === LEGACY_HASH_ALGORITHM) return contentHashForArtifactV1(artifact)
   const { contentHash: _hash, sourceRevision: _revision, sourceRevisionKind: _kind, generatedAt: _generated, ...payload } = artifact as Record<string, unknown>
-  if (Array.isArray(payload.coverage)) {
-    payload.coverage = payload.coverage.filter((entry) => !(entry.analyzer === 'repository' && entry.scope === 'reused-entities'))
-      .sort((a, b) => canonicalJsonV1(a).localeCompare(canonicalJsonV1(b)))
+  const hash = createHash('sha256')
+  // JSON object ordering puts integer keys first, even after lexical insertion.
+  const keys = Object.keys(Object.fromEntries(Object.keys(payload).sort().map(key => [key, null])))
+  hash.update('{')
+  let separator = ''
+  for (const key of keys) {
+    const value = payload[key]
+    const orderedArray = Array.isArray(value) && ['coverage', 'entities', 'relations'].includes(key)
+    const json = orderedArray ? undefined : canonicalJsonV1(value)
+    if (!orderedArray && json === undefined) continue
+    hash.update(`${separator}${JSON.stringify(key)}:`)
+    separator = ','
+    if (orderedArray) {
+      const entries = (key === 'coverage' ? value.filter(entry => !(entry.analyzer === 'repository' && entry.scope === 'reused-entities')) : value)
+        .map(canonicalJsonV1).sort((a, b) => a.localeCompare(b))
+      hash.update('[')
+      for (let i = 0; i < entries.length; i++) hash.update(`${i ? ',' : ''}${entries[i]}`)
+      hash.update(']')
+    } else hash.update(json!)
   }
-  for (const key of ['entities', 'relations']) {
-    if (Array.isArray(payload[key])) payload[key] = [...payload[key]].sort((a, b) => canonicalJsonV1(a).localeCompare(canonicalJsonV1(b)))
-  }
-  return sha256NormalizedV1(payload)
+  return hash.update('}').digest('hex')
 }
 
 /** The legacy public index used a narrower projection than knowledge artifacts. */

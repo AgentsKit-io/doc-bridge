@@ -202,3 +202,21 @@ listing policy hash and snapshot source evidence; absent or mismatched binding
 retains physical verification. Consumed document/configuration/manifest/sidebar
 bytes and freshness reads are always verified. Existing document/corpus/sidebar
 byte ceilings remain in force even when storage capability limits are larger.
+
+
+## Generic fact relation isolation
+
+Relations carrying `metadata.factKind` retain their discovery, change-set and
+finding semantics but are excluded from retrieval graph edges and canonicality.
+CLI/config/signature/package fact citations cannot introduce ranked entries,
+boost existing entries, or change query scores through graph signals. Legacy
+symbol relations (`metadata.symbol`) still contribute their existing deduplicated
+connections. The complete fact observations continue to participate in semantic
+snapshot/projection identity, so equality of ranking does not transfer artifact
+or revision approval. Index and handoff schema versions remain compatible.
+
+Declared fact-extractor input extensions also enter the repository freshness
+fingerprint under the effective safety exclusions and limits, for both local and
+reader-backed scans. This conservatively includes safe JSON inputs, so schema
+additions, removals, empty-schema edits and default-only changes invalidate an
+index even when no source or Markdown file changes.

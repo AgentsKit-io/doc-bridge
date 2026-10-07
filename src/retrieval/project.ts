@@ -217,7 +217,8 @@ export const projectRetrievalIndex = (options: ProjectRetrievalOptions): Retriev
   const overlayHash = options.overlay?.hash ?? EMPTY_OVERLAY_HASH
   const overlay = options.overlay
   // Proposed relations sit next to the observed ones: one more edge each, with its own confidence.
-  const relations = overlay?.relations?.length ? [...snapshot.relations, ...overlay.relations] : snapshot.relations
+  const relations = (overlay?.relations?.length ? [...snapshot.relations, ...overlay.relations] : snapshot.relations)
+    .filter(relation => relation.metadata?.factKind === undefined)
   const entities = new Map(snapshot.entities.map((entity) => [entity.id, entity]))
   const byPath = new Map<string, KnowledgeEntity>()
   for (const entity of snapshot.entities) if (entity.path && !byPath.has(entity.path)) byPath.set(entity.path, entity)

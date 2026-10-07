@@ -18,7 +18,7 @@ import type { DiscoverySnapshotV1, Evidence } from '../../schemas/knowledge.js'
 const MAX_MARKDOWN_NOTES = 32
 const relativePath = (root: string, path: string): string => toPosix(relative(root, path)) || '.'
 const lineEvidence = (source: 'code' | 'configuration' | 'documentation', root: string, path: string, lineStart?: number, lineEnd?: number): Evidence => ({ source, path: relativePath(root, path), ...(lineStart !== undefined ? { lineStart } : {}), ...(lineEnd !== undefined ? { lineEnd } : {}) })
-type DocumentContext = ExtractionGraph & SourceState & {
+type DocumentContext = ExtractionGraph & Omit<SourceState, 'sourceFiles'> & {
   root: string; opts: DiscoveryOptions; documentPaths: readonly string[]
   packageResult: SourceContext['packageResult']
   coverage: DiscoverySnapshotV1['coverage']
@@ -125,6 +125,7 @@ export const createMarkdownExtraction = (io: ScanIO) => ({
   }
 
   const markdownResolution = {
+    packagePaths: packageResult.packages.map(pkg => ({ id: pkg.id, path: pkg.path })),
     documents: documentsByPath,
     modules: modulesByPath,
     // Areas exist now, so a document naming a directory resolves to the unit, not to nothing.
@@ -138,6 +139,7 @@ export const createMarkdownExtraction = (io: ScanIO) => ({
   type MarkdownNote = { readonly scope: string; readonly reason: string; readonly evidence: readonly Evidence[] }
   const notesByDocument = new Map<string, readonly MarkdownNote[]>()
   const truncatedDocuments = new Set<string>()
+  const truncatedFactReferences = new Set<string>()
   const ambiguitiesByDocument = new Map<string, readonly AmbiguousSymbolReference[]>()
   const truncatedAmbiguities = new Set<string>()
   const factAmbiguities = new Map<string, readonly AmbiguousFactReference[]>()
@@ -151,6 +153,7 @@ export const createMarkdownExtraction = (io: ScanIO) => ({
     if (analysis.ambiguousFactReferencesTruncated) truncatedFactAmbiguities.add(document.path)
     if (analysis.ambiguousSymbolReferencesTruncated) truncatedAmbiguities.add(document.path)
     if (analysis.truncated) truncatedDocuments.add(document.path)
+    if (analysis.factReferencesTruncated) truncatedFactReferences.add(document.path)
   }
 
   for (const [path, priorDocument] of reusedDocuments) {
@@ -194,6 +197,7 @@ export const createMarkdownExtraction = (io: ScanIO) => ({
         ...(parsed && Object.keys(parsed.frontmatter).length ? { frontmatter: parsed.frontmatter } : {}),
         ...(parsed?.generatedRegions.length ? { generatedRegions: parsed.generatedRegions } : {}),
         ...(truncatedDocuments.has(path) ? { evidenceTruncated: true } : {}),
+        ...(truncatedFactReferences.has(path) ? { factReferencesTruncated: true } : {}),
         ...(ambiguitiesByDocument.get(path)?.length ? { ambiguousSymbolReferences: ambiguitiesByDocument.get(path) } : {}),
         ...(factAmbiguities.get(path)?.length ? { ambiguousFactReferences: factAmbiguities.get(path) } : {}),
         ...(truncatedFactAmbiguities.has(path) ? { ambiguousFactReferencesTruncated: true } : {}),

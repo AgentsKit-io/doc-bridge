@@ -93,6 +93,11 @@ federation retriever and the freshness gate — and its bytes are unchanged from
 
 ## The change digest
 
+Added, changed and removed rows compare actual file-backed identities and byte hashes.
+Codec facts have no file rows; their deltas still contribute documentation review
+impact through the common change-set flow. A fact-only delta cannot create a file
+row or attempt to sort a fact ID as a file path.
+
 The digest compares two discovery snapshots by the content hash each file-backed entity carries
 (`docs/spec/incremental-scan-v1.md`): an entity in both with a different hash is *changed*, one
 only in the current snapshot is *added*, one only in the previous is *removed*. An entity without

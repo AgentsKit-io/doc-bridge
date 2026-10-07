@@ -8,6 +8,12 @@
 
 ### Minor Changes
 
+- Extract configuration-key facts from static Zod and JSON Schema configuration schemas, with dotted paths, value hashes, explicit incomplete coverage and dotted Markdown citations within package and fixture boundaries. Include declared extractor inputs in index freshness and cap all fact citations independently, with separate fact truncation metadata. Preserve incomplete extractor status and reasons in change-set coverage.
+- Extract configuration-key facts from static Zod and JSON Schema configuration schemas, with dotted paths, value hashes, explicit incomplete coverage and dotted Markdown citations within package and fixture boundaries.
+- Extract bounded deterministic exported JS/TS signature facts with declared parameter/type hashes, overload and public-member handling, preserved symbol citations and signature change deltas.
+- Preserve incremental zero-parse reuse and stable citation resolution when static fact extractors are registered, including serialized unchanged snapshots and fact ambiguity coverage.
+- Keep generic fact citations in discovery and change-set evidence while excluding them from retrieval graph signals and query scores.
+- Extract deterministic CLI command and flag facts from package bins, static library declarations and explicitly marked help text. Resolve qualified command and dash-prefixed flag citations, including shell examples, and verify historical CLI references in change sets.
 - Add public root entrypoints for reader-backed exact-partition index building, freshness loading and artifact persistence without changing index/handoff payloads or synchronous local compatibility. Missing or mismatched bodies carry exact repository/revision/path limitations. Local CLI diff uses frozen head citation reads.
 - Compare codec-backed surface and package facts with value hashes, extraction-aware generic citation findings and bounded injected head reads. Resolve generic citations with the built-in Markdown plugin and bounded owner ambiguity. Prove the language-neutral persisted flow with a test-only toy source adapter.
 
@@ -26,6 +32,10 @@
   gates continue to verify freshness under the stored algorithm.
 - Retain symbol-level documentation references and structured ambiguity metadata without inflating retrieval connection counts.
 - Registry agent runners receive an optional cancellation signal separately from their frozen context. Local and CLI deadlines now use `@agentskit/net`; CLI timeout and response overflow switch process-tree termination from `SIGTERM` to `SIGKILL`, while concurrency remains reserved until execution settles.
+
+### Patch Changes
+
+- Precompute semantic hash ordering keys once per entry and bound syntax-tree retention for index-only scans and reuse parsed trees in discovery, reducing index-build cost without changing artifact bytes or hash identity.
 
 ## 1.13.0
 

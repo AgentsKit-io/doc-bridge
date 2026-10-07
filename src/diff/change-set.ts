@@ -2,7 +2,7 @@ import { readBoundedText } from '../lib/bounded-text.js'
 import { parseDocumentationDeclarations } from '../discovery/documentation.js'
 import { entityId } from '../discovery/identity.js'
 import { exportsOf, FILE_BACKED_KINDS } from '../discovery/incremental.js'
-import { analyzeMarkdownDocument, markdownPathCandidateIndex, parseMarkdownDocument, type MarkdownResolution } from '../discovery/markdown.js'
+import { analyzeMarkdownDocument, configKeyCitationIndex, markdownPathCandidateIndex, parseMarkdownDocument, type MarkdownResolution } from '../discovery/markdown.js'
 import { canonicalJsonV1, contentHashForVersionedArtifact, sha256NormalizedV1 } from '../index-builder/content-hash.js'
 import { containedProjectPath } from '../lib/paths.js'
 import { ChangeSetV1Schema, type Change, type ChangeSetV1 } from '../schemas/change-set.js'
@@ -149,6 +149,12 @@ type VerifiedDocuments = ReadonlyMap<string, string>
 
 const referenceFacts = (snapshot: SnapshotForChanges) => [...factsOf(snapshot), ...packagesOf(snapshot).map(pkg => ({ kind: 'package' as const, id: pkg.id, ownerId: pkg.id, name: pkg.purl, evidence: pkg.evidence }))]
 
+const configKeyOwnerCandidates = (snapshot: DiscoverySnapshotV1, documentPath: string, name: string, facts: ReturnType<typeof referenceFacts>): string[] => {
+  const packages = snapshot.entities.filter(entity => entity.kind === 'package' && entity.path).map(entity => ({ id: entity.id, path: entity.path! }))
+  const matches = configKeyCitationIndex(new Map([[name, facts.filter(fact => fact.kind === 'config-key' && fact.name === name)]]), documentPath, packages).get(name) ?? []
+  return [...new Set(matches.map(fact => fact.ownerId))].sort()
+}
+
 const genericFindings = (base: DiscoverySnapshotV1, head: DiscoverySnapshotV1, changes: readonly Change[], texts: VerifiedDocuments) => {
   const oldFacts = referenceFacts(base)
   if (!oldFacts.length) return []
@@ -168,14 +174,17 @@ const genericFindings = (base: DiscoverySnapshotV1, head: DiscoverySnapshotV1, c
     const fact = byId.get(kind === 'package' ? relation.to : surfaceFactEntityId(kind as SurfaceFact['kind'], relation.to, name))
     const doc = after.get(relation.from)
     if (!fact || !doc?.path || doc.kind !== 'document') continue
-    const candidates = [...new Set(newFacts.filter(item => item.kind === fact.kind && item.name === fact.name).map(item => item.ownerId))].sort()
-    const baseCandidates = new Set(oldFacts.filter(item => item.kind === fact.kind && item.name === fact.name).map(item => item.ownerId))
+    const candidates = fact.kind === 'config-key' ? configKeyOwnerCandidates(head, doc.path, fact.name, newFacts) : [...new Set(newFacts.filter(item => item.kind === fact.kind && item.name === fact.name).map(item => item.ownerId))].sort()
+    const baseCandidates = new Set(fact.kind === 'config-key' ? configKeyOwnerCandidates(base, doc.path, fact.name, oldFacts) : oldFacts.filter(item => item.kind === fact.kind && item.name === fact.name).map(item => item.ownerId))
     const ambiguous = baseCandidates.size === 1 && candidates.length > 1
     if (!removed.has(fact.id) && !ambiguous) continue
     const text = texts.get(doc.id)
     if (!documents.has(doc.id)) documents.set(doc.id, text === undefined ? undefined : parseMarkdownDocument(doc.path, text))
     const parsed = documents.get(doc.id)
-    const tokens = parsed?.codeTokens.filter(token => token.value === fact.name) ?? []
+    const cli = fact.kind === 'cli-command' || fact.kind === 'cli-flag'
+    const cliOwner = fact.kind === 'cli-command' ? fact.name : oldFacts.find(item => item.id === fact.ownerId)?.name
+    const citations = cli ? parsed?.cliTokens.filter(token => token.kind === fact.kind && (!token.bin || token.bin === cliOwner?.split(' ')[0])) : parsed?.codeTokens
+    const tokens = citations?.filter(token => token.value === fact.name) ?? []
     if (parsed && !tokens.length) continue
     const code = ambiguous ? 'AMBIGUOUS_REFERENCE' : 'BROKEN_REFERENCE'
     const status = ambiguous ? 'unresolved' : parsed && extractionComplete(base, head, fact.kind, fact.evidence) ? 'conflict' : 'stale-or-unverified'
@@ -235,12 +244,16 @@ const diffWithDocuments = (base: DiscoverySnapshotV1, head: DiscoverySnapshotV1,
     ...(packagesOf(head).length ? [{ analyzer: 'diff', scope: 'package-version-routing', status: 'not-analyzed' as const, reason: 'Package mappings do not establish version routing or release eligibility.' }] : []),
     ...base.coverage.map((entry) => ({ ...entry, scope: entityId('base', entry.scope) })),
     ...head.coverage.map((entry) => ({ ...entry, scope: entityId('head', entry.scope) })),
-    ...['cli-command', 'cli-flag', 'config-key', 'signature', 'rename-detection', 'package-identity-and-version-routing'].filter(scope => {
-      if (scope === 'rename-detection') return true
-      if (scope === 'package-identity-and-version-routing') return !packagesOf(head).length
+    ...['cli-command', 'cli-flag', 'config-key', 'signature', 'rename-detection', 'package-identity-and-version-routing'].flatMap((scope): ChangeSetV1['coverage'] => {
+      if (scope === 'package-identity-and-version-routing' && packagesOf(head).length) return []
       const capability = FACT_CAPABILITIES[scope as SurfaceFact['kind']]
-      return !head.coverage.some(entry => entry.scope === capability && entry.status === 'complete' && !head.coverage.some(other => other.analyzer === entry.analyzer && other.scope === 'plugin' && other.status !== 'complete'))
-    }).map((scope) => ({ analyzer: 'diff', scope, status: 'not-analyzed' as const, reason: 'No adapter extraction evidence is available.' })),
+      const extraction = head.coverage.filter(entry => entry.scope === capability)
+      if (extraction.length) {
+        const incomplete = [...extraction, ...head.coverage.filter(entry => entry.scope === 'plugin' && extraction.some(other => other.analyzer === entry.analyzer))].find(entry => entry.status !== 'complete' && entry.status !== 'not-applicable')
+        return incomplete ? [{ analyzer: 'diff', scope, status: 'partial', reason: incomplete.reason ?? 'Adapter extraction is incomplete.' }] : []
+      }
+      return [{ analyzer: 'diff', scope, status: 'not-analyzed', reason: 'No adapter extraction evidence is available.' }]
+    }),
   ].filter((entry) => !(entry.analyzer === 'repository' && entry.scope.endsWith(':reused-entities'))).sort((a, b) => canonicalJsonV1(a).localeCompare(canonicalJsonV1(b)))
   const analysisIdentity = (snapshot: DiscoverySnapshotV1) => ({ configurationHash: snapshot.configurationHash, pipelineVersion: snapshot.pipelineVersion, analyzerVersions: snapshot.analyzerVersions })
   const changeSet = ChangeSetV1Schema.parse({ type: 'change-set', schemaVersion: 1, repository: base.project, analysis: { base: analysisIdentity(base), head: analysisIdentity(head) },

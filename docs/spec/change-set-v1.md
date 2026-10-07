@@ -19,8 +19,9 @@ content hash. Documents use change kind `doc-path`. Export name sets are compare
 per module; added/removed exports use distinct symbol identities with `ownerId`.
 Retained exports are not marked changed solely because another export or the
 module body changed. Their owning module change still contributes review impact.
-The current analyzer provides module file evidence for exports, without signature
-or declaration-region extraction.
+Legacy exports retain module file evidence. The built-in signature component
+adds bounded declaration evidence and normalized syntactic value hashes; see
+[signature facts v1](signature-facts-v1.md).
 
 Codec-backed surface facts (`symbol`, `cli-command`, `cli-flag`, `config-key`,
 `signature`) are compared by stable owner/name ID and adapter-provided value hash.
@@ -38,7 +39,9 @@ head extraction. Another analyzer's complete coverage cannot mask a failed,
 partial or unsupported extractor. Repository limit coverage also prevents proof.
 Absence under incomplete extraction remains a removal candidate with
 `stale-or-unverified` findings, never a proven conflict. Supported complete kinds
-have no synthetic diff `not-analyzed` entry; unsupported kinds retain one.
+and explicitly not-applicable kinds have no synthetic diff coverage entry. Extracted kinds with incomplete capability
+or plugin coverage report diff `partial` with the extraction reason; kinds without
+extractor evidence report `not-analyzed`.
 
 Rename detection remains `not-analyzed`: no adapter rename-proof contract is
 available in this producer, and neither value equality nor similar paths proves a
@@ -118,6 +121,10 @@ A changed document is still checked for residual citations. The generic locator
 uses fact kind/name in place of the symbol, retaining the existing owner target
 and removed identity (or sorted candidate owners). Evidence positions and hashes
 remain excluded from finding identity.
+
+Config-key ambiguity candidates reuse Markdown's package/fixture citation
+boundary. Adding the same dotted key in another package does not make an
+existing citation ambiguous.
 
 `diffSnapshotsWithRead(base, head, read, { signal?, branch? })` is the async
 module-level successor for injected callers. The reader must be bound to the head
