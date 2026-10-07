@@ -1,4 +1,6 @@
 ---
+title: Configuration key facts v1
+description: Extract bounded static configuration keys and resolve dotted Markdown citations.
 owner: maintainers
 lifecycle: active
 sourceOfTruth: src/discovery/facts/config.ts

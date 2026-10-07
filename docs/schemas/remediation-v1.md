@@ -1,4 +1,6 @@
 ---
+title: RemediationV1
+description: Bounded region correction proposals with exact evidence and review bindings.
 owner: maintainers
 lifecycle: active
 sourceOfTruth: src/schemas/findings.ts

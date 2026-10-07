@@ -1,4 +1,6 @@
 ---
+title: Service profile v1
+description: Caller-selected capability restrictions for bounded deterministic service execution.
 owner: maintainers
 lifecycle: active
 sourceOfTruth: docs/adr/0012-caller-enforced-service-profile.md

@@ -7,6 +7,13 @@
     "gate-ci",
     "mcp-agents",
     "memory-pipeline",
-    "cli-map"
+    "cli-map",
+    "diff-and-findings",
+    "facts-and-citations",
+    "service-profile",
+    "versions-and-release-stamping",
+    "findings-and-remediation",
+    "action-advisory",
+    "injected-storage"
   ]
 }

@@ -1,4 +1,6 @@
 ---
+title: Deterministic change sets
+description: Compare revision snapshots with historical citation evidence and explicit extraction coverage.
 owner: maintainers
 lifecycle: active
 sourceOfTruth: src/diff/change-set.ts

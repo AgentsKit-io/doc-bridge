@@ -1,4 +1,6 @@
 ---
+title: DecisionV1
+description: Authenticated finding or remediation rejection bound to relevant evidence.
 owner: maintainers
 lifecycle: active
 sourceOfTruth: src/schemas/findings.ts

@@ -77,3 +77,12 @@ Machine surfaces: [llms.txt](/llms.txt) · [llms-full.txt](/llms-full.txt) · [r
 ## Ecosystem
 
 Part of AgentsKit — next to [AgentsKit](https://www.agentskit.io), [Registry](https://registry.agentskit.io), [Chat](https://chat.agentskit.io), [Code Review](https://code-review.agentskit.io), and [Harness](https://harness.agentskit.io/).
+
+## Verify
+
+- [Diff and findings](./guides/diff-and-findings.md)
+- [Facts and citations](./guides/facts-and-citations.md)
+- [Service profile](./guides/service-profile.md)
+- [Versions and release stamping](./guides/versions-and-release-stamping.md)
+- [Findings and remediation](./guides/findings-and-remediation.md)
+- [Action advisory](./guides/action-advisory.md)
