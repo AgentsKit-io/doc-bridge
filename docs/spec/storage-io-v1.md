@@ -212,3 +212,45 @@ The [service profile](service-profile-v1.md) propagates the immutable ceiling
 through storage callbacks. This field is stripped before strict storage wire
 requests; envelope and index schemas remain unchanged. Repository configuration
 never supplies this metadata.
+
+## Operation observation
+
+Injected discovery, partitioned index building and injected diff accept caller
+`OperationOptions`: `signal`, `limits` (a partial `StorageLimits` ceiling),
+`maxDurationMs` (positive integer milliseconds), `onProgress` and opt-in
+`collectMetrics: true`. Limits intersect
+with the reader ceiling; they cannot broaden authority. Discovery's existing
+`maxFiles`/`maxBytes` options also tighten the run ledger. Each operation has a
+fresh cumulative ledger, in addition to the capability's lifetime ledger.
+Listed entries, listed sizes, stat/read operations and acquired bytes consume
+that ledger. A bounded prior source receipt is not reused when the caller sets a
+byte cutoff. Time/heap limits include synchronous computation and are checked
+at stages and existing host checkpoints; they are cooperative, not preemptive.
+
+Progress events contain `stage`, nonnegative `processed`, optional `total` and
+`elapsedMs`. Acquisition reports the listing total when known; reads report the
+first file and every 64th file through 8192, plus stage boundaries, capped at 256 events per operation. Counts and
+stage order are deterministic for the same input and options; elapsed time is
+observational. Events carry no paths or wall-clock timestamps. Callbacks must
+not throw or mutate inputs. Callback presence changes neither serialized
+artifacts nor their hashes. Callback execution time consumes the duration budget.
+
+`RunMetrics` is returned beside artifacts only with `collectMetrics: true`: `durationMs`, duration by stage in
+`stages`, `filesRead`, `bytesRead`, and `peakHeapBytes` sampled at progress/stage
+boundaries and completion. Read counts describe successful capability reads,
+including bytes rejected by the operation budget, rather than physical system
+calls. They exclude capability-internal stat verification. Metrics are not
+persisted in snapshots, indexes or change sets and do not affect semantic hashes.
+
+Stopped discovery returns `status: partial|cancelled`, optional metrics, and a valid
+snapshot whose `partial` coverage names `limits:<stage>` and the storage failure
+code. If acquisition/analysis cannot finish, the conservative snapshot contains
+no asserted entities or relations. Partial listings retain existing scan limit
+coverage. Stopped diff retains the snapshot-derived delta, adds the same stage
+coverage, and downgrades unverified conflict findings. An injected diff adds `partial|cancelled` status only when stopped, separately
+from the change set's capability coverage. Completed discovery/diff retain their
+legacy result shape; no success status or metrics field is added by default.
+Stopped index building returns the storage failure with optional metrics and stage
+coverage; it never publishes an index after a limit/cancellation. Cancellation
+is passed through to atomic replacement, whose adapter must check it before
+rename and clean owned temporary files. Strict index/handoff schemas are unchanged.

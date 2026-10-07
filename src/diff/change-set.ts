@@ -1,4 +1,6 @@
 import { readBoundedText } from '../lib/bounded-text.js'
+import { createOperation, type OperationOptions } from '../storage/operation.js'
+import { StorageFault } from '../storage/local.js'
 import { withExecutionProfile, type ExecutionProfile } from '../execution/profile.js'
 import { parseDocumentationDeclarations } from '../discovery/documentation.js'
 import { entityId } from '../discovery/identity.js'
@@ -219,20 +221,44 @@ const verifiedLocalDocuments = (head: DiscoverySnapshotV1, root: string): Map<st
 }
 
 /** Exact head reader; the synchronous public facade below remains available. */
-export const diffSnapshotsWithRead = async (base: DiscoverySnapshotV1, head: DiscoverySnapshotV1, read: RepositoryReadV1, options: { signal?: AbortSignal; branch?: string; profile?: ExecutionProfile } = {}) => withExecutionProfile(options.profile, async () => {
+export const diffSnapshotsWithRead = async (base: DiscoverySnapshotV1, head: DiscoverySnapshotV1, read: RepositoryReadV1, options: OperationOptions & { branch?: string; profile?: ExecutionProfile } = {}) => withExecutionProfile(options.profile, async () => {
   if (read.partition.revision !== head.sourceRevision) throw new Error('HEAD_PARTITION_MISMATCH')
   const partition = Object.freeze({ ...read.partition })
-  const signal = options.signal ?? new AbortController().signal
+  const operation = createOperation(read, options)
+  read = operation.read
+  const signal = operation.signal
   const texts = new Map<string, string>()
-  for (const doc of head.entities.filter(entity => entity.kind === 'document' && entity.path)) {
-    const meta = await read.stat({ partition, signal, path: doc.path! })
-    if (meta.status !== 'ok' || meta.value.kind !== 'file' || meta.value.bytes > 1_000_000) continue
-    const result = await read.read({ partition, signal, path: doc.path!, ...(meta.value.content ? { expected: meta.value.content } : {}) })
-    if (result.status !== 'ok' || result.value.bytes.length > 1_000_000 || contentRef(result.value.bytes).hash !== result.value.content.hash) continue
-    const text = Buffer.from(result.value.bytes).toString('utf8')
-    if (parseMarkdownDocument(doc.path!, text).contentHash === hashOf(doc)) texts.set(doc.id, text)
+  let limitation: import('../storage/contract.js').StorageFailure | undefined
+  try {
+    operation.boundary('diff-documents')
+    for (const doc of head.entities.filter(entity => entity.kind === 'document' && entity.path).sort((a,b) => a.id.localeCompare(b.id))) {
+      const meta = await read.stat({ partition, signal, path: doc.path! })
+      if (meta.status === 'limit' || meta.status === 'cancelled') operation.stop(meta)
+      if (meta.status !== 'ok' || meta.value.kind !== 'file' || meta.value.bytes > 1_000_000) continue
+      const result = await read.read({ partition, signal, path: doc.path!, ...(meta.value.content ? { expected: meta.value.content } : {}) })
+      if (result.status === 'limit' || result.status === 'cancelled') operation.stop(result)
+      if (result.status !== 'ok' || result.value.bytes.length > 1_000_000 || contentRef(result.value.bytes).hash !== result.value.content.hash) continue
+      const text = Buffer.from(result.value.bytes).toString('utf8')
+      if (parseMarkdownDocument(doc.path!, text).contentHash === hashOf(doc)) texts.set(doc.id, text)
+    }
+    operation.boundary('diff-analysis')
+    operation.check()
+  } catch (error) {
+    if (!(error instanceof StorageFault) || !['limit', 'cancelled'].includes(error.failure.status)) throw error
+    limitation = error.failure
   }
-  return diffWithDocuments(base, head, options, texts)
+  const result = diffWithDocuments(base, head, options, texts)
+  try { operation.check() } catch (error) {
+    if (!(error instanceof StorageFault)) throw error
+    limitation ??= error.failure
+  }
+  if (limitation) {
+    result.changeSet.coverage.push(...operation.coverage(limitation))
+    result.changeSet.coverage.sort((a,b) => canonicalJsonV1(a).localeCompare(canonicalJsonV1(b)))
+    result.changeSet.contentHash = changeSetContentHash(result.changeSet)
+    for (const finding of result.findings) if (finding.status === 'conflict') finding.status = 'stale-or-unverified'
+  }
+  return { ...result, ...(limitation ? { status: limitation.status === 'cancelled' ? 'cancelled' as const : 'partial' as const } : {}), ...(options.collectMetrics ? { metrics: operation.finish() } : {}) }
 })
 
 export const diffSnapshots = (base: DiscoverySnapshotV1, head: DiscoverySnapshotV1, options: DiffOptions = {}) =>

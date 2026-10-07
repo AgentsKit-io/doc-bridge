@@ -1,3 +1,5 @@
+import { createOperation, type OperationOptions, type RunMetrics } from '../storage/operation.js'
+import { StorageFault } from '../storage/local.js'
 import { restrictServiceRead } from '../execution/repository.js'
 import { redactValue } from '../safety/repository.js'
 import { denyServiceOperation, withExecutionProfile, executionContext, isServiceProfile, bindServiceCapability, serviceCoverage, type ExecutionProfile } from '../execution/profile.js'
@@ -245,7 +247,7 @@ export const discoverRepository = (opts: DiscoveryOptions = {}): DiscoverySnapsh
 /** Index-owned snapshots do not need to retain syntax trees for incremental reuse. */
 export const discoverRepositoryForIndex = (opts: DiscoveryOptions): DiscoverySnapshotV1 => withExecutionProfile(opts.profile, () => { denyServiceOperation('legacy discovery', opts.config); return createDiscoveryScan(createLocalScanIO(resolve(opts.root ?? process.cwd()), opts), false)(opts) })
 
-export type DiscoveryReadOptions = DiscoveryOptions & {
+export type DiscoveryReadOptions = DiscoveryOptions & OperationOptions & {
   readonly signal?: AbortSignal
   readonly sourceRevisionKind?: 'git' | 'content'
   readonly plugins?: readonly DiscoveryPluginV2[]
@@ -254,6 +256,8 @@ export type DiscoveryReadOptions = DiscoveryOptions & {
 
 export type DiscoveryReadResult = Readonly<{
   snapshot: DiscoverySnapshotV1
+  status?: 'partial' | 'cancelled'
+  metrics?: RunMetrics
   binding: Readonly<{ partition: Partition; snapshotHash: string; visibilityPolicyHash: string }>
 }>
 
@@ -261,86 +265,101 @@ export type DiscoveryReadResult = Readonly<{
 export const discoverRepositoryWithRead = async (read: RepositoryReadV1, opts: DiscoveryReadOptions = {}): Promise<DiscoveryReadResult> => withExecutionProfile(isServiceProfile(opts.config) ? 'service' : opts.profile, async () => {
   const filtered = executionContext().profile === 'service' ? serviceConfig(opts.config ?? { schemaVersion: 1, corpus: { agent: { root: 'docs/agent' } } }) : undefined
   if (filtered) { opts = { ...opts, config: filtered.config }; read = restrictServiceRead(read, filtered.config) }
+  const operation = createOperation(read, { ...opts, limits: { ...opts.limits, ...(opts.maxFiles === undefined ? {} : { maxFiles: opts.maxFiles }), ...(opts.maxBytes === undefined ? {} : { maxBytes: opts.maxBytes }) } })
+  read = operation.read
   const root = resolve(opts.root ?? 'repository')
   const partition = Object.freeze({ ...read.partition })
-  const signal = opts.signal ?? new AbortController().signal
+  const signal = operation.signal
   const ceilings = createMarkdownPluginV2().manifest.resourceLimits
   for (const key of Object.keys(ceilings) as (keyof typeof ceilings)[]) if (read.limits[key] > ceilings[key]) throw new Error('INCOMPATIBLE_RESOURCE_LIMITS')
-  const io = await preloadScan(read, signal, root).catch(error => {
-    if (filtered) throw new Error('not-analyzed: service repository acquisition ' + (error instanceof Error ? error.message : 'failed'))
-    throw error
-  })
-  const bound = (snapshot: DiscoverySnapshotV1): DiscoveryReadResult => {
-    if (filtered) {
-      const value = DiscoverySnapshotV1Schema.parse(redactValue({ ...snapshot, coverage: [...snapshot.coverage, ...serviceCoverage([...filtered.diagnostics, ...(filtered.config.safety?.exclude ?? []).map(path => `safety.exclude: ${path}`), ...(filtered.config.audit?.documentation?.generatedPaths ?? []).map(path => `audit.documentation.generatedPaths: ${path}`), ...(filtered.config.audit?.documentation?.exclude ?? []).map(path => `audit.documentation.exclude: ${path}`)])] }))
-      snapshot = bindServiceCapability(DiscoverySnapshotV1Schema.parse({ ...value, contentHash: contentHashForVersionedArtifact(value) }))
+  let io: ScanIO | undefined
+  try {
+    operation.boundary('acquisition')
+    io = await preloadScan(read, signal, root).catch(error => {
+      if (error instanceof StorageFault) throw error
+      if (filtered) throw new Error('not-analyzed: service repository acquisition ' + (error instanceof Error ? error.message : 'failed'))
+      throw error
+    })
+    const bound = (snapshot: DiscoverySnapshotV1): DiscoveryReadResult => {
+      if (filtered) {
+        const value = DiscoverySnapshotV1Schema.parse(redactValue({ ...snapshot, coverage: [...snapshot.coverage, ...serviceCoverage([...filtered.diagnostics, ...(filtered.config.safety?.exclude ?? []).map(path => `safety.exclude: ${path}`), ...(filtered.config.audit?.documentation?.generatedPaths ?? []).map(path => `audit.documentation.generatedPaths: ${path}`), ...(filtered.config.audit?.documentation?.exclude ?? []).map(path => `audit.documentation.exclude: ${path}`)])] }))
+        snapshot = bindServiceCapability(DiscoverySnapshotV1Schema.parse({ ...value, contentHash: contentHashForVersionedArtifact(value) }))
+      }
+      operation.check()
+      const partial = snapshot.coverage.some(entry => entry.status === 'partial' && entry.scope.startsWith('limits:'))
+      return { snapshot, ...(partial ? { status: 'partial' as const } : {}), ...(opts.collectMetrics ? { metrics: operation.finish() } : {}), binding: { partition, snapshotHash: snapshot.contentHash, visibilityPolicyHash: io!.visibilityPolicyHash! } }
     }
-    return { snapshot, binding: { partition, snapshotHash: snapshot.contentHash, visibilityPolicyHash: io.visibilityPolicyHash! } }
-  }
-  const provenance = { value: partition.revision, kind: opts.sourceRevisionKind ?? 'content' as const }
-  const scan = createDiscoveryScan({ ...io, revision: provenance })
-  // The compatibility fast path runs the identical built-in stages as the synchronous facade.
-  if (!opts.plugins?.length && !opts.replaceSourcePlugins) return bound(scan({ ...opts, root }))
-  const source = createJsTsPluginV2()
-  const documents = createMarkdownPluginV2([source, ...(opts.plugins ?? [])])
-  const registry = createDiscoveryRegistryV2({ builtIns: [
-    { plugin: source, analyzerVersions: { 'js-ts': source.manifest.version, ...factAnalyzerVersions() } },
-    { plugin: documents, analyzerVersions: { markdown: documents.manifest.version } },
-  ] })
-  if (!opts.replaceSourcePlugins) registry.register(source)
-  registry.register(documents)
-  for (const plugin of opts.plugins ?? []) registry.register(plugin)
-  const graph = extractionGraph()
-  const coverage: DiscoverySnapshotV1['coverage'] = []
-  const packageOwners = new Set<string>()
-  const merge = (output: ExtractionV2): void => {
-    for (const entity of output.entities) {
-      if (graph.entities.has(entity.id)) throw new Error('DUPLICATE_OWNER')
-      graph.addEntity(entity)
+    const provenance = { value: partition.revision, kind: opts.sourceRevisionKind ?? 'content' as const }
+    operation.boundary('analysis')
+    const scan = createDiscoveryScan({ ...io, revision: provenance })
+    // The compatibility fast path runs the identical built-in stages as the synchronous facade.
+    if (!opts.plugins?.length && !opts.replaceSourcePlugins) return bound(scan({ ...opts, root }))
+    const source = createJsTsPluginV2()
+    const documents = createMarkdownPluginV2([source, ...(opts.plugins ?? [])])
+    const registry = createDiscoveryRegistryV2({ builtIns: [
+      { plugin: source, analyzerVersions: { 'js-ts': source.manifest.version, ...factAnalyzerVersions() } },
+      { plugin: documents, analyzerVersions: { markdown: documents.manifest.version } },
+    ] })
+    if (!opts.replaceSourcePlugins) registry.register(source)
+    registry.register(documents)
+    for (const plugin of opts.plugins ?? []) registry.register(plugin)
+    const graph = extractionGraph()
+    const coverage: DiscoverySnapshotV1['coverage'] = []
+    const packageOwners = new Set<string>()
+    const merge = (output: ExtractionV2): void => {
+      for (const entity of output.entities) {
+        if (graph.entities.has(entity.id)) throw new Error('DUPLICATE_OWNER')
+        graph.addEntity(entity)
+      }
+      for (const relation of output.relations) {
+        if (graph.relations.has(relation.id)) throw new Error('DUPLICATE_OUTPUT')
+        graph.addRelation(relation)
+      }
+      for (const fact of output.facts) {
+        if (graph.entities.has(fact.id)) throw new Error('DUPLICATE_OWNER')
+        graph.addEntity(surfaceFactToEntity(fact))
+      }
+      for (const pkg of output.packages) {
+        if (packageOwners.has(pkg.id)) throw new Error('DUPLICATE_OWNER')
+        packageOwners.add(pkg.id)
+        const existing = graph.entities.get(pkg.id)
+        graph.entities.set(pkg.id, packageFactToEntity(pkg, existing))
+      }
+      coverage.push(...output.coverage)
     }
-    for (const relation of output.relations) {
-      if (graph.relations.has(relation.id)) throw new Error('DUPLICATE_OUTPUT')
-      graph.addRelation(relation)
+    const configured = [...(opts.plugins ?? [])].sort((a,b) => a.manifest.id.localeCompare(b.manifest.id))
+    const execute = async (plugin: DiscoveryPluginV2): Promise<void> => {
+      operation.boundary(`plugin:${plugin.manifest.id}`)
+      const output = await registry.discover(plugin.manifest.id, { read, signal, configuration: opts.config ?? {}, resolution: { entities: [...graph.entities.values()], relations: [...graph.relations.values()] } })
+      merge(output)
     }
-    for (const fact of output.facts) {
-      if (graph.entities.has(fact.id)) throw new Error('DUPLICATE_OWNER')
-      graph.addEntity(surfaceFactToEntity(fact))
+    const sourcePlugins = [...(opts.replaceSourcePlugins ? [] : [source]), ...configured.filter(plugin => !plugin.manifest.capabilities.includes('markdown'))].sort((a,b) => a.manifest.id.localeCompare(b.manifest.id))
+    for (const plugin of sourcePlugins) {
+      if (plugin !== source) { await execute(plugin); continue }
+      const initial = scan({ ...opts, root }, false)
+      merge({ entities: initial.entities, relations: initial.relations, facts: [], packages: [], diagnostics: [], coverage: initial.coverage.filter(entry => entry.scope !== 'incremental-reuse') })
     }
-    for (const pkg of output.packages) {
-      if (packageOwners.has(pkg.id)) throw new Error('DUPLICATE_OWNER')
-      packageOwners.add(pkg.id)
-      const existing = graph.entities.get(pkg.id)
-      graph.entities.set(pkg.id, packageFactToEntity(pkg, existing))
+    const packages = [...graph.entities.values()].filter(entity => entity.kind === 'package' && entity.path)
+    const areaModules = [...graph.entities.values()].filter(entity => entity.kind === 'module' && entity.path).flatMap(entity => {
+      const owner = packages.filter(pkg => pkg.path === '.' || entity.path!.startsWith(`${pkg.path}/`)).sort((a,b) => b.path!.length - a.path!.length)[0]
+      return owner ? [{ moduleId: entity.id, path: entity.path!, packageId: owner.id, packagePath: owner.path! }] : []
+    })
+    addAreas(graph, areaModules, opts)
+    for (const plugin of [documents, ...configured.filter(plugin => plugin.manifest.capabilities.includes('markdown'))].sort((a,b) => a.manifest.id.localeCompare(b.manifest.id))) await execute(plugin)
+    const mergedCoverage = coverage.filter(entry => entry.analyzer !== 'graph')
+    mergedCoverage.push(...areaSuggestionCoverage({ entities: [...graph.entities.values()], relations: [...graph.relations.values()] }))
+    const sealed = artifact(root, opts.config, [], [...graph.entities.values()], [...graph.relations.values()], mergedCoverage, provenance)
+    const semantic = {
+      ...sealed,
+      configurationHash: sha256NormalizedV1({ configuration: opts.config ?? {}, replaceSourcePlugins: opts.replaceSourcePlugins ?? false, plugins: configured.map(plugin => plugin.manifest) }),
+      analyzerVersions: { ...(opts.replaceSourcePlugins ? { markdown: documents.manifest.version, graph: GRAPH_ANALYZER_VERSION } : ANALYZER_VERSIONS), ...Object.fromEntries(configured.map(plugin => [plugin.manifest.id, plugin.manifest.version])) },
     }
-    coverage.push(...output.coverage)
+    return bound(DiscoverySnapshotV1Schema.parse({ ...semantic, contentHash: contentHashForVersionedArtifact(semantic) }))
+  } catch (error) {
+    if (!(error instanceof StorageFault) || !['limit', 'cancelled'].includes(error.failure.status)) throw error
+    const snapshot = artifact(root, opts.config, [], [], [], operation.coverage(error.failure), { value: partition.revision, kind: opts.sourceRevisionKind ?? 'content' })
+    return { snapshot, status: error.failure.status === 'cancelled' ? 'cancelled' : 'partial', ...(opts.collectMetrics ? { metrics: operation.finish() } : {}), binding: { partition, snapshotHash: snapshot.contentHash, visibilityPolicyHash: io?.visibilityPolicyHash ?? EMPTY_HASH } }
   }
-  const configured = [...(opts.plugins ?? [])].sort((a,b) => a.manifest.id.localeCompare(b.manifest.id))
-  const execute = async (plugin: DiscoveryPluginV2): Promise<void> => {
-    const output = await registry.discover(plugin.manifest.id, { read, signal, configuration: opts.config ?? {}, resolution: { entities: [...graph.entities.values()], relations: [...graph.relations.values()] } })
-    merge(output)
-  }
-  const sourcePlugins = [...(opts.replaceSourcePlugins ? [] : [source]), ...configured.filter(plugin => !plugin.manifest.capabilities.includes('markdown'))].sort((a,b) => a.manifest.id.localeCompare(b.manifest.id))
-  for (const plugin of sourcePlugins) {
-    if (plugin !== source) { await execute(plugin); continue }
-    const initial = scan({ ...opts, root }, false)
-    merge({ entities: initial.entities, relations: initial.relations, facts: [], packages: [], diagnostics: [], coverage: initial.coverage.filter(entry => entry.scope !== 'incremental-reuse') })
-  }
-  const packages = [...graph.entities.values()].filter(entity => entity.kind === 'package' && entity.path)
-  const areaModules = [...graph.entities.values()].filter(entity => entity.kind === 'module' && entity.path).flatMap(entity => {
-    const owner = packages.filter(pkg => pkg.path === '.' || entity.path!.startsWith(`${pkg.path}/`)).sort((a,b) => b.path!.length - a.path!.length)[0]
-    return owner ? [{ moduleId: entity.id, path: entity.path!, packageId: owner.id, packagePath: owner.path! }] : []
-  })
-  addAreas(graph, areaModules, opts)
-  for (const plugin of [documents, ...configured.filter(plugin => plugin.manifest.capabilities.includes('markdown'))].sort((a,b) => a.manifest.id.localeCompare(b.manifest.id))) await execute(plugin)
-  const mergedCoverage = coverage.filter(entry => entry.analyzer !== 'graph')
-  mergedCoverage.push(...areaSuggestionCoverage({ entities: [...graph.entities.values()], relations: [...graph.relations.values()] }))
-  const sealed = artifact(root, opts.config, [], [...graph.entities.values()], [...graph.relations.values()], mergedCoverage, provenance)
-  const semantic = {
-    ...sealed,
-    configurationHash: sha256NormalizedV1({ configuration: opts.config ?? {}, replaceSourcePlugins: opts.replaceSourcePlugins ?? false, plugins: configured.map(plugin => plugin.manifest) }),
-    analyzerVersions: { ...(opts.replaceSourcePlugins ? { markdown: documents.manifest.version, graph: GRAPH_ANALYZER_VERSION } : ANALYZER_VERSIONS), ...Object.fromEntries(configured.map(plugin => [plugin.manifest.id, plugin.manifest.version])) },
-  }
-  return bound(DiscoverySnapshotV1Schema.parse({ ...semantic, contentHash: contentHashForVersionedArtifact(semantic) }))
 })
 
 export type { DiscoveryOptions }

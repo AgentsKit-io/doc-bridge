@@ -17,6 +17,9 @@ import { withExecutionProfile, serviceCoverage } from '../execution/profile.js'
 export const runServiceCli = (argv: readonly string[]): Promise<number> => withExecutionProfile('service', async () => {
   const value = (name: string): string | undefined => { const index = argv.indexOf(name); return index < 0 ? undefined : argv[index + 1] }
   const command = argv[0]
+  const controller = new AbortController()
+  const abort = () => controller.abort()
+  process.on('SIGINT', abort)
   try {
     if (argv.includes('--watch')) throw new Error('not-analyzed: service profile denies watch')
     const supported = ['validate-config', 'discover', 'index', 'search', 'mcp']
@@ -32,6 +35,10 @@ export const runServiceCli = (argv: readonly string[]): Promise<number> => withE
     for (const path of diagnostics) process.stderr.write(`service-profile: ignored ${path}\n`)
     const output = (payload: unknown): void => { process.stdout.write(`${JSON.stringify(redactValue(payload), null, 2)}\n`) }
     if (command === 'validate-config') { output({ ok: true, schemaVersion: config.schemaVersion, diagnostics, limitations }); return 0 }
+    const duration = value('--max-duration')
+    const maxDurationMs = duration === undefined ? undefined : Number(duration)
+    if (argv.includes('--max-duration') && (duration === undefined || !Number.isSafeInteger(maxDurationMs) || maxDurationMs! <= 0)) throw new Error('--max-duration requires a positive integer in milliseconds')
+    const controls = { signal: controller.signal, collectMetrics: argv.includes('--progress'), ...(maxDurationMs === undefined ? {} : { maxDurationMs }), ...(argv.includes('--progress') ? { onProgress: (event: import('../storage/operation.js').ProgressEvent) => process.stderr.write(`${event.stage}: ${event.processed} (${Math.round(event.elapsedMs)} ms)\n`) } : {}) }
     const ceilings = markdownManifest.resourceLimits
     const limits = { ...ceilings,
       maxFiles: Math.min(config.safety?.maxFiles ?? ceilings.maxFiles, ceilings.maxFiles),
@@ -49,16 +56,19 @@ export const runServiceCli = (argv: readonly string[]): Promise<number> => withE
     const inventory = Object.fromEntries(listing.files.map(path => [toPosix(relative(root, path)), contentRef(Buffer.from(readBoundedText(path, budget, { maxFileBytes: limits.maxFileBytes, maxCorpusBytes: limits.maxBytes })))]))
     const partition = { repositoryId: 'repository', revision: sha256NormalizedV1(inventory) }
     const repository = await createLocalRepositoryRead({ root, partition, limits, inventory, excludes })
-    const discovered = await discoverRepositoryWithRead(repository, { profile: 'service', config })
+    const discovered = await discoverRepositoryWithRead(repository, { profile: 'service', config, ...controls })
+    if (discovered.metrics) process.stderr.write(`metrics: ${JSON.stringify(discovered.metrics)}\n`)
+    if (discovered.status) { const { metrics: _metrics, ...partial } = discovered; output(partial); return 2 }
     if (command === 'discover') { output({ ...discovered.snapshot, limitations, diagnostics }); return 0 }
-    const signal = new AbortController().signal
+    const signal = controller.signal
     const artifacts: ArtifactIOV1 = command === 'index' ? await createLocalArtifactIO({ root: resolve(artifactRoot!), partition, limits }) : {
       version: 1, partition, limits,
       read: async () => ({ status: 'missing', code: 'NOT_FOUND' }),
       list: async () => ({ status: 'ok', value: [] }),
       replaceAtomic: async () => ({ status: 'denied', code: 'PATH_DENIED' }),
     } as ArtifactIOV1
-    const built = await buildStoredDocBridgeIndex({ repository, artifacts, partition, signal, config, snapshot: discovered.snapshot, snapshotBinding: discovered.binding, profile: 'service', write: command === 'index' })
+    const built = await buildStoredDocBridgeIndex({ repository, artifacts, partition, config, snapshot: discovered.snapshot, snapshotBinding: discovered.binding, profile: 'service', write: command === 'index', ...controls })
+    if (built.status === 'ok' && built.value.metrics) process.stderr.write(`metrics: ${JSON.stringify(built.value.metrics)}\n`)
     if (built.status !== 'ok') throw new Error(`not-analyzed: ${built.code}`)
     if (command === 'mcp') {
       startMcpStdioServer({ root, config, profile: 'service', loadIndex: () => built.value.index, readDocument: () => { throw new Error('not-analyzed: synchronous document text unavailable; use knowledge.search') } })
@@ -67,4 +77,5 @@ export const runServiceCli = (argv: readonly string[]): Promise<number> => withE
     output({ ...(command === 'search' ? { results: searchIndex(built.value.index, argv[1] ?? '') } : { index: built.value.index }), limitations: [...limitations, ...built.value.limitations], diagnostics })
     return 0
   } catch (error) { process.stderr.write(`${error instanceof Error ? error.message : 'Service operation failed'}\n`); return 2 }
+  finally { process.off('SIGINT', abort) }
 })

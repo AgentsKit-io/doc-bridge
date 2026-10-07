@@ -1,3 +1,4 @@
+import { runOperationCli } from './operation.js'
 import { executionContext } from '../execution/profile.js'
 import { runServiceCli } from './service.js'
 import { runActionCli, runAdvisoryDiff } from './action.js'
@@ -1537,6 +1538,7 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
   if (argv[0] === 'action') return runActionCli(argv.slice(1))
   if (argv[0] === 'diff' && argv.includes('--advisory')) return runAdvisoryDiff(argv.slice(1))
   const { command, flags, configPath, positional } = parseArgs(argv)
+  if (['discover', 'index', 'diff'].includes(command) && (argv.includes('--max-duration') || argv.includes('--progress'))) return runOperationCli(argv, command)
 
   if (command === 'help') {
     process.stdout.write(usage)
@@ -1609,7 +1611,10 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
         const budget = { used: 0 }
         const inventory = Object.fromEntries(listing.files.map(path => [toPosix(relative(root, path)), contentRef(Buffer.from(readBoundedText(path, budget, { maxFileBytes: limits.maxFileBytes, maxCorpusBytes: limits.maxBytes })))]))
         const read = await createLocalRepositoryRead({ root, partition: { repositoryId: head.project.name, revision: head.sourceRevision }, limits, inventory, excludes: safeWalkOptions(config).exclude ?? [] })
-        result = await diffSnapshotsWithRead(base, head, read)
+        const observed = await diffSnapshotsWithRead(base, head, read)
+        const { metrics: _metrics, status, ...artifact } = observed
+        if (status) { writeJson({ ...artifact, status }); return 2 }
+        result = artifact
       } else result = diffSnapshots(base, head)
       const bytes = `${JSON.stringify(result, null, 2)}\n`
       const output = optionValues(argv, '--output')[0]

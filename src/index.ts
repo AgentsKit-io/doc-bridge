@@ -1111,3 +1111,4 @@ export { recordDecision, findingSuppressed, replayRemediation } from './enrich/s
 export { HandoffCaveatsSchema } from './schemas/agent-handoff.js'
 export type { HandoffCaveats } from './schemas/agent-handoff.js'
 export { FindingV1JsonSchema, RemediationV1JsonSchema, DecisionV1JsonSchema } from './schemas/json-schemas.js'
+export type { OperationOptions, ProgressEvent, RunMetrics } from './storage/operation.js'

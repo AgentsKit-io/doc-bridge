@@ -8,6 +8,7 @@
 
 ### Minor Changes
 
+- Add observable caller limits, cancellation, bounded deterministic progress and transient run metrics for injected discovery, partitioned indexing and diff, plus async CLI duration/progress controls that prevent cancelled publication.
 - Add explicit committed/CI-built Action index sources, bounded exact-revision reference advisories and an opt-in deduplicated PR comment publisher with summary fallback, preserving independent blocking gate results.
 - Add deterministic findings, region remediations, settled decisions and opt-in handoff caveats, preserving legacy fix readers and human acceptance authority.
 
