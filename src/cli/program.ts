@@ -1,7 +1,7 @@
 import { closeSync, existsSync, mkdirSync, openSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs'
 import { dirname, relative, resolve } from 'node:path'
 import { createInterface } from 'node:readline/promises'
-import { splitFrontmatter } from '@agentskit/cross-platform'
+import { splitFrontmatter, toPosix } from '@agentskit/cross-platform'
 
 import { ConfigNotFoundError, loadConfig, projectRootFromConfigPath } from '../config/load-config.js'
 import type { DocBridgeConfigV1, RuleId, RuleSeverity } from '../config/schema.js'
@@ -1594,7 +1594,7 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
         const listing = safeWalkFiles(root, { ...safeWalkOptions(config), ...limits, extensions: DOCUMENT_EXTENSIONS })
         if (listing.incomplete) throw new Error(listing.reason ?? 'Incomplete head inventory')
         const budget = { used: 0 }
-        const inventory = Object.fromEntries(listing.files.map(path => [relative(root, path).replaceAll('\\', '/'), contentRef(Buffer.from(readBoundedText(path, budget, { maxFileBytes: limits.maxFileBytes, maxCorpusBytes: limits.maxBytes })))]))
+        const inventory = Object.fromEntries(listing.files.map(path => [toPosix(relative(root, path)), contentRef(Buffer.from(readBoundedText(path, budget, { maxFileBytes: limits.maxFileBytes, maxCorpusBytes: limits.maxBytes })))]))
         const read = await createLocalRepositoryRead({ root, partition: { repositoryId: head.project.name, revision: head.sourceRevision }, limits, inventory, excludes: safeWalkOptions(config).exclude ?? [] })
         result = await diffSnapshotsWithRead(base, head, read)
       } else result = diffSnapshots(base, head)

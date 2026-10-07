@@ -1,4 +1,5 @@
-import { basename, dirname, extname, join, relative, resolve, sep } from 'node:path'
+import { basename, dirname, extname, join, relative, resolve } from 'node:path'
+import { toPosix } from '@agentskit/cross-platform'
 import * as ts from 'typescript'
 import { minimatch } from 'minimatch'
 import { PartitionSchema, StorageLimitsSchema, FileMetaSchema, RepositoryListingSchema, type RepositoryReadV1 } from '../storage/contract.js'
@@ -41,7 +42,7 @@ export const preloadScan = async (read: RepositoryReadV1, signal: AbortSignal, r
 }
 
 export const createScanMap = (root: string, files: ReadonlyMap<string, { readonly text: string; readonly bytes: number }>, directories: ReadonlySet<string>, revision: { readonly value: string; readonly kind: 'git' | 'content' }, listingComplete = true, listingLimitation?: string, check = (): void => {}): ScanIO => {
-  const pathOf = (path: string): string => relative(root, path).split(sep).join('/')
+  const pathOf = (path: string): string => toPosix(relative(root, path))
   const host: ts.ParseConfigHost & ts.ModuleResolutionHost = {
     useCaseSensitiveFileNames: true,
     fileExists: path => { check(); return files.has(resolve(path)) },
@@ -52,7 +53,7 @@ export const createScanMap = (root: string, files: ReadonlyMap<string, { readonl
       check()
       const base = resolve(directory)
       return [...files.keys()].filter(path => {
-        const rel = relative(base, path).split(sep).join('/')
+        const rel = toPosix(relative(base, path))
         if (rel === '..' || rel.startsWith('../') || rel.startsWith('/')) return false
         if (depth !== undefined && rel.split('/').length > depth) return false
         if (extensions?.length && !extensions.includes(extname(path))) return false

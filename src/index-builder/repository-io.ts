@@ -1,3 +1,4 @@
+import { toPosix } from '@agentskit/cross-platform'
 import { MAX_DOCUMENT_BYTES, MAX_CORPUS_BYTES, type TextReadBudget } from '../lib/bounded-text.js'
 import type { DiscoverySnapshotV1 } from '../schemas/knowledge.js'
 import { SOURCE_EXTENSIONS } from '../discovery/inputs.js'
@@ -19,7 +20,7 @@ export const repositoryContainedPath = (root: string, path: string): string | un
   return relative === '..' || relative.startsWith('../') || posix.isAbsolute(relative) ? undefined : target
 }
 
-export const repositoryPath = (root: string, path: string): string => posix.relative(root, path.replaceAll('\\', '/'))
+export const repositoryPath = (root: string, path: string): string => posix.relative(root, toPosix(path))
 export const repositoryText = (files: RepositoryFiles, root: string, path: string): string => {
   const value = files.get(repositoryPath(root, path))
   if (value === undefined) throw new Error('Repository content unavailable')
