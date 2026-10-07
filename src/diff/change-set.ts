@@ -21,6 +21,7 @@ const packagesOf = (snapshot: SnapshotForChanges) => snapshot.entities.filter(en
 const factIdentity = (fact: SurfaceFact) => ({ id: fact.id, ownerId: fact.ownerId, name: fact.name, valueHash: fact.valueHash, evidence: fact.evidence })
 const DOCUMENT_RELATIONS = new Set(['covers', 'mentions', 'mentions-symbol', 'links-to'])
 const hashOf = (entity: KnowledgeEntity) => entity.evidence.find((item) => item.contentHash)?.contentHash
+const uniqueEvidence = (items: Evidence[]): Evidence[] => [...new Map(items.map(item => [canonicalJsonV1(item), item])).values()]
 const identity = (entity: KnowledgeEntity) => ({ id: entity.id, name: entity.name, evidence: entity.evidence })
 
 /** File deltas and per-owner export identities share the existing discovery IDs and evidence. */
@@ -142,6 +143,7 @@ const extractionComplete = (base: DiscoverySnapshotV1, head: DiscoverySnapshotV1
   const matching = candidates.filter(entry => entry.evidence?.some(item => evidence.some(proof => proof.path === item.path)))
   const relevant = matching.length ? matching : candidates
   return relevant.length > 0 && relevant.every(entry => {
+    if (entry.status !== 'complete') return false
     const current = head.coverage.filter(item => item.analyzer === entry.analyzer && (item.scope === capability || item.scope === 'plugin'))
     return current.some(item => item.scope === capability && item.status === 'complete') && current.every(item => item.status === 'complete')
   }) && !head.coverage.some(entry => entry.status !== 'complete' && entry.scope.startsWith('limits:'))
@@ -166,9 +168,11 @@ const genericFindings = (base: DiscoverySnapshotV1, head: DiscoverySnapshotV1, c
   const documents = new Map<string, ReturnType<typeof parseMarkdownDocument> | undefined>()
   const after = new Map(head.entities.map(entity => [entity.id, entity]))
   const before = new Map(base.entities.map(entity => [entity.id, entity]))
+  const removedExports = new Set(changes.filter(change => change.kind === 'symbol' && ['removed', 'renamed'].includes(change.op)).map(change => canonicalJsonV1([change.before!.ownerId, change.before!.name])))
+  const symbolAssertions = new Set(base.relations.filter(relation => DOCUMENT_RELATIONS.has(relation.kind) && typeof relation.metadata?.symbol === 'string').map(relation => canonicalJsonV1([relation.from, relation.to, relation.metadata!.symbol])))
   const removed = new Set(changes.filter(change => change.op === 'removed' || change.op === 'renamed').map(change => change.before!.id))
   const findings = new Map<string, ReturnType<typeof DiagnosticSchema.parse>>()
-  for (const relation of base.relations) {
+  for (const relation of [...base.relations].sort((a, b) => a.id.localeCompare(b.id))) {
     if (!DOCUMENT_RELATIONS.has(relation.kind) || relation.metadata?.confidence === 'fuzzy') continue
     const symbol = typeof relation.metadata?.symbol === 'string' ? relation.metadata.symbol : undefined
     const kind = symbol ? 'symbol' : relation.metadata?.factKind
@@ -177,6 +181,8 @@ const genericFindings = (base: DiscoverySnapshotV1, head: DiscoverySnapshotV1, c
     const fact = byId.get(kind === 'package' ? relation.to : surfaceFactEntityId(kind as SurfaceFact['kind'], relation.to, name))
     const doc = after.get(relation.from)
     if (!fact || !doc?.path || doc.kind !== 'document') continue
+    // A signature of a removed export is the same assertion; retain the symbol finding ID.
+    if (fact.kind === 'signature' && removedExports.has(canonicalJsonV1([fact.ownerId, fact.name])) && symbolAssertions.has(canonicalJsonV1([doc.id, fact.ownerId, fact.name]))) continue
     const candidates = fact.kind === 'config-key' ? configKeyOwnerCandidates(head, doc.path, fact.name, newFacts) : [...new Set(newFacts.filter(item => item.kind === fact.kind && item.name === fact.name).map(item => item.ownerId))].sort()
     const baseCandidates = new Set(fact.kind === 'config-key' ? configKeyOwnerCandidates(base, doc.path, fact.name, oldFacts) : oldFacts.filter(item => item.kind === fact.kind && item.name === fact.name).map(item => item.ownerId))
     const ambiguous = baseCandidates.size === 1 && candidates.length > 1
@@ -191,18 +197,18 @@ const genericFindings = (base: DiscoverySnapshotV1, head: DiscoverySnapshotV1, c
     if (parsed && !tokens.length) continue
     const code = ambiguous ? 'AMBIGUOUS_REFERENCE' : 'BROKEN_REFERENCE'
     const status = ambiguous ? 'unresolved' : parsed && extractionComplete(base, head, fact.kind, fact.evidence) ? 'conflict' : 'stale-or-unverified'
-    const evidence: Evidence[] = [
+    const evidence: Evidence[] = uniqueEvidence([
       ...relation.evidence.map(item => ({ ...item, context: 'Base citation' })),
       ...tokens.slice(0, 8).map(token => ({ source: 'documentation' as const, path: doc.path!, lineStart: token.line, lineEnd: token.line, contentHash: parsed!.contentHash, context: 'Head citation' })),
       ...fact.evidence.map(item => ({ ...item, context: 'Base target removed or no longer uniquely resolved' })),
       ...(after.get(fact.ownerId)?.evidence ?? []).map(item => ({ ...item, context: 'Head owner' })),
-    ].slice(0, 64)
+    ]).slice(0, 64)
     // Preserve the symbol locator and target projection used by existing findings.
     const id = entityId('finding', sha256NormalizedV1({ code, document: doc.id, relationKind: relation.kind, target: relation.to,
       ...(symbol ? { symbol } : { factKind: fact.kind, factName: fact.name }),
       ...(ambiguous ? { candidateModuleIds: candidates } : { removedTargetId: fact.id }),
     }))
-    findings.set(id, DiagnosticSchema.parse({ id, code, status, severity: 'warn', message: `${doc.path} cites ${fact.name}, which ${ambiguous ? 'is no longer uniquely resolved' : 'is recorded as removed in the snapshot delta'}.`, evidence, entityIds: [doc.id, before.get(fact.ownerId)!.id], relationIds: [relation.id] }))
+    findings.set(ambiguous ? id : canonicalJsonV1({ document: doc.id, name: fact.name, removedTargetId: fact.id }), DiagnosticSchema.parse({ id, code, status, severity: 'warn', message: `${doc.path} cites ${fact.name}, which ${ambiguous ? 'is no longer uniquely resolved' : 'is recorded as removed in the snapshot delta'}.`, evidence, entityIds: [doc.id, before.get(fact.ownerId)!.id], relationIds: [relation.id] }))
   }
   return [...findings.values()]
 }
@@ -293,7 +299,7 @@ const diffWithDocuments = (base: DiscoverySnapshotV1, head: DiscoverySnapshotV1,
   const baseFacts = factsOf(base)
   const factIds = new Set(referenceFacts(base).map(fact => fact.id))
   const removals = new Map(changes.filter((change) => change.op === 'removed' && ['module', 'doc-path', 'symbol'].includes(change.kind)).map((change) => [change.before!.id, change]))
-  const partial = head.coverage.some((entry) => entry.status === 'partial' && (entry.scope.startsWith('limits:') || entry.scope === 'static-imports-and-exports' || entry.scope === 'workspace-packages'))
+  const partial = [...base.coverage, ...head.coverage].some((entry) => entry.status !== 'complete' && entry.status !== 'not-applicable' && (entry.scope.startsWith('limits:') || entry.scope === 'static-imports-and-exports'))
   const citations = new Map<string, KnowledgeRelation[] | undefined>()
   const findings = new Map<string, ReturnType<typeof DiagnosticSchema.parse>>()
   for (const relation of [...base.relations].sort((a, b) => a.id.localeCompare(b.id))) {
@@ -314,16 +320,16 @@ const diffWithDocuments = (base: DiscoverySnapshotV1, head: DiscoverySnapshotV1,
     const citation = currentCitations?.find((item) => item.kind === relation.kind && item.to === relation.to && item.metadata?.symbol === symbol)
     if (removed && currentCitations && !citation) continue
     const code = ambiguous ? 'AMBIGUOUS_REFERENCE' : 'BROKEN_REFERENCE'
-    const ownerFacts = baseFacts.filter(fact => fact.ownerId === relation.to)
+    const ownerFacts = baseFacts.filter(fact => fact.ownerId === relation.to && (!symbol || fact.kind === 'symbol'))
     const ownerComplete = ownerFacts.every(fact => extractionComplete(base, head, fact.kind, fact.evidence))
     const status = ambiguous ? 'unresolved' : citation && !partial && ownerComplete ? 'conflict' : 'stale-or-unverified'
     const headEvidence: Evidence[] = citation?.evidence ?? (ambiguous && Array.isArray(ambiguous.lines) ? ambiguous.lines.filter((line: unknown): line is number => typeof line === 'number').slice(0, 8).map((line: number) => ({ source: 'documentation' as const, path: doc.path!, lineStart: line, lineEnd: line, contentHash: hashOf(doc) })) : [])
-    const evidence = [...relation.evidence.map((item) => ({ ...item, context: 'Base citation' })), ...headEvidence.map((item) => ({ ...item, context: 'Head citation' })), ...(removed?.before?.evidence ?? target.evidence).map((item) => ({ ...item, context: 'Base target removed or no longer uniquely resolved' })), ...(after.get(target.id)?.evidence ?? []).map((item) => ({ ...item, context: 'Head owner' }))].slice(0, 64)
+    const evidence = uniqueEvidence([...relation.evidence.map((item) => ({ ...item, context: 'Base citation' })), ...headEvidence.map((item) => ({ ...item, context: 'Head citation' })), ...(removed?.before?.evidence ?? target.evidence).map((item) => ({ ...item, context: 'Base target removed or no longer uniquely resolved' })), ...(after.get(target.id)?.evidence ?? []).map((item) => ({ ...item, context: 'Head owner' }))]).slice(0, 64)
     const relevantIdentity = ambiguous
       ? { candidateModuleIds: Array.isArray(ambiguous.candidateModuleIds) ? [...new Set(ambiguous.candidateModuleIds.filter((id: unknown): id is string => typeof id === 'string'))].sort() : [] }
       : { removedTargetId: removed!.before!.id }
     const id = entityId('finding', sha256NormalizedV1({ code, document: doc.id, relationKind: relation.kind, target: relation.to, symbol, ...relevantIdentity }))
-    findings.set(id, DiagnosticSchema.parse({ id, code, status, severity: 'warn', message: `${doc.path} cites ${symbol ?? target.path ?? target.name}, which ${ambiguous ? 'is no longer uniquely resolved' : 'is recorded as removed in the snapshot delta'}.`, evidence, entityIds: [doc.id, target.id], relationIds: [relation.id] }))
+    findings.set(ambiguous ? id : canonicalJsonV1({ document: doc.id, name: symbol ?? target.name, removedTargetId: removed!.before!.id }), DiagnosticSchema.parse({ id, code, status, severity: 'warn', message: `${doc.path} cites ${symbol ?? target.path ?? target.name}, which ${ambiguous ? 'is no longer uniquely resolved' : 'is recorded as removed in the snapshot delta'}.`, evidence, entityIds: [doc.id, target.id], relationIds: [relation.id] }))
   }
   return { changeSet, impact: changeImpact(base, head, changes), findings: [...findings.values(), ...genericFindings(base, head, changes, texts)].sort((a, b) => a.id.localeCompare(b.id)) }
 }

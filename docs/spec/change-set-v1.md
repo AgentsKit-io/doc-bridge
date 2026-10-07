@@ -190,3 +190,12 @@ multiple purls. Findings, finding IDs and strict diff envelope fields are
 unchanged. Version eligibility does not erase deterministic findings or approve
 remediation. This contract implements the version-routing decisions in
 [ADR 0010](../adr/0010-versioned-change-set-and-semantic-identity.md).
+
+## Removal advisory quality
+
+A removed export also represented as a signature produces only the symbol
+finding, preserving its existing identity projection. Extraction completeness
+is checked for the cited kind; unrelated partial signature coverage cannot
+downgrade a proven symbol removal. Same-kind incomplete extraction and unverified
+snapshot-only head citations remain `stale-or-unverified`. Identical evidence
+entries are deduplicated while base and head contexts remain distinct.

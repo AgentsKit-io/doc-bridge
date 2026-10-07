@@ -99,9 +99,33 @@ describe('signature fixture snapshot and delta acceptance', () => {
     const removed = discoverRepository({ root })
     const removal = diffSnapshots(base, removed, { headRoot: root })
     expect(removal.changeSet.changes).toContainEqual(expect.objectContaining({ kind: 'signature', op: 'removed', before: expect.objectContaining({ name: 'createThing' }) }))
-    expect(removal.findings).toContainEqual(expect.objectContaining({ code: 'BROKEN_REFERENCE', status: 'conflict', relationIds: [signature!.id] }))
+    expect(removal.findings).toContainEqual(expect.objectContaining({ code: 'BROKEN_REFERENCE', status: 'conflict', relationIds: [symbol!.id] }))
     const facts = base.entities.filter(entity => entity.kind === 'signature').map(surfaceFactFromEntity)
     expect(facts.map(fact => fact.name)).toContain('ThingStore.create')
+  })
+
+  it('keeps one proven symbol removal despite unrelated inferred signature coverage', () => {
+    const root = mkdtempSync(join(tmpdir(), 'doc-bridge-signatures-')); roots.push(root)
+    cpSync(resolve('tests/fixtures/signature-api'), root, { recursive: true })
+    writeFileSync(join(root, 'api.ts'), 'export function removeThing() { return 1 }\nexport function retained() { return 2 }\n')
+    writeFileSync(join(root, 'README.md'), '# Guide\n\nCall `removeThing` twice: `removeThing`.\n')
+    const base = discoverRepository({ root })
+    writeFileSync(join(root, 'api.ts'), 'export function retained() { return 2 }\n')
+    const head = discoverRepository({ root })
+    const findings = diffSnapshots(base, head, { headRoot: root }).findings
+    expect(findings).toHaveLength(1)
+    expect(findings[0]?.status).toBe('conflict')
+    const evidence = findings[0]!.evidence
+    expect(new Set(evidence.map(item => JSON.stringify(item))).size).toBe(evidence.length)
+    expect(new Set(evidence.filter(item => item.source === 'documentation').map(item => item.context))).toEqual(new Set(['Base citation', 'Head citation']))
+    expect(diffSnapshots(base, head).findings[0]?.status).toBe('stale-or-unverified')
+    const repeated = structuredClone(base)
+    const citation = repeated.relations.find(item => item.metadata?.symbol === 'removeThing')!
+    repeated.relations.push({ ...citation, id: `${citation.id}:repeated`, kind: 'mentions' })
+    expect(diffSnapshots(repeated, head).findings).toHaveLength(1)
+    const partial = structuredClone(head)
+    partial.coverage.push({ analyzer: 'js-ts', scope: 'static-imports-and-exports', status: 'partial' })
+    expect(diffSnapshots(base, partial, { headRoot: root }).findings[0]?.status).toBe('stale-or-unverified')
   })
   it('partial extraction cannot prove removal and body-only changes do not change signatures', () => {
     const root = mkdtempSync(join(tmpdir(), 'doc-bridge-signatures-')); roots.push(root)
@@ -113,7 +137,8 @@ describe('signature fixture snapshot and delta acceptance', () => {
     writeFileSync(path, original.replace(/export function createThing[\s\S]*?\n}\n/, '') + '\nexport {unknown} from "other"\n')
     const findings = diffSnapshots(base, discoverRepository({ root }), { headRoot: root }).findings.filter(finding => finding.code === 'BROKEN_REFERENCE')
     expect(findings.length).toBeGreaterThan(0)
-    expect(findings.every(finding => finding.status === 'stale-or-unverified')).toBe(true)
+    expect(findings).toHaveLength(1)
+    expect(findings[0]?.status).toBe('conflict')
   })
 })
 

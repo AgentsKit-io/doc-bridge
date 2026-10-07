@@ -287,3 +287,13 @@ be printed with coverage but is never written to `--output` as a complete result
 Service discover/index accept the same flags and pass cancellation to their
 partitioned artifact store. Service diff remains unavailable under its existing
 command ceiling.
+
+Action failure diagnostics include a bounded cause in logs and the job summary.
+The `index-report` output points to a retained report outside the checkout,
+including configuration failures; it persists until job cleanup. Artifact upload
+is caller opt-in. Advisory unavailability identifies the base/head object or
+diff evidence stage and the known missing evidence or limit. Advisory Markdown
+summarizes deduplicated coverage counts and at most five change-relevant gaps;
+expected service denials appear once as the service profile notice. Full coverage
+remains in the adjacent diff artifact, and citation locations distinguish base
+from head.

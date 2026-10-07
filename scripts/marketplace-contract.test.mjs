@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { runCommand } from '@agentskit/cross-platform'
+import { runCommand, splitLines } from '@agentskit/cross-platform'
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
@@ -226,7 +226,7 @@ test('publisher contract falls back for no-write, forks and superseded runs; rej
 test('missing base object stays advisory-only; capture rejects ref names and cleans up failures', async () => fixture(async ({ repo, env }) => {
   env.DOC_BRIDGE_BASE_REVISION = 'a'.repeat(40)
   assert.equal(await analyzeAdvisory(env), 0)
-  assert.match(readFileSync(env.GITHUB_STEP_SUMMARY, 'utf8'), /Advisory unavailable/u)
+  assert.match(readFileSync(env.GITHUB_STEP_SUMMARY, 'utf8'), /Advisory unavailable \(base object a{40}\).*exact revision object missing/u)
   await assert.rejects(withRevision(repo, 'HEAD', () => {}), /Exact base\/head/u)
   await assert.rejects(withRevision(repo, env.DOC_BRIDGE_HEAD_REVISION, () => { throw new Error('synthetic failure') }), /synthetic failure/u)
   assert.equal((await git(repo, 'worktree', 'list', '--porcelain')).match(/^worktree /gmu).length, 1)
@@ -243,3 +243,57 @@ test('repository CI generates an ignored index before dogfood gates and Action s
   assert.match(ci.slice(build, gates), /node bin\/ak-docs\.js index[\s\S]*node bin\/ak-docs\.js index[\s\S]*cmp/u)
   assert.doesNotMatch(ci, /run: node bin\/ak-docs\.js gate run index-freshness/u)
 })
+
+
+test('missing config produces a persistent index report and a useful bounded cause through a symlink', async () => fixture(async ({ directory, env }) => {
+  env.DOC_BRIDGE_CONFIG_PATH = 'missing.config.json'
+  const runner = join(directory, 'runner.mjs')
+  symlinkSync(resolve(root, 'scripts/action-runner.mjs'), runner)
+  const result = await runCommand(process.execPath, [runner, 'index'], { env })
+  assert.equal(result.code, 1)
+  assert.match(result.stdout, /No doc-bridge config found.*run ak-docs init or pass config-path/u)
+  const report = JSON.parse(readFileSync(reportPath(env), 'utf8'))
+  assert.equal(report.ok, false)
+  assert.match(report.error, /No doc-bridge config found/u)
+  assert.match(readFileSync(env.GITHUB_STEP_SUMMARY, 'utf8'), /No doc-bridge config found/u)
+  assert.equal(await analyzeAdvisory(env), 0)
+  assert.match(readFileSync(env.GITHUB_STEP_SUMMARY, 'utf8'), /Advisory unavailable \(base object [0-9a-f]+\): No doc-bridge config found/u)
+}))
+
+test('removed function and flag produce two conflicts and a collapsed coverage Markdown snapshot', async () => fixture(async ({ repo, env }) => {
+  rmSync(join(repo, 'docs/guide@team.md'))
+  put(repo, 'package.json', JSON.stringify({ name: 'doc-bridge-fixture', version: '1.0.0', bin: { 'doc-bridge': 'cli.js' } }))
+  put(repo, 'src/api.ts', 'export function removeThing() { return 1 }\nexport function retained() { return 2 }\n')
+  put(repo, 'cli.js', "import { parseArgs } from 'node:util'; parseArgs({options: {brief: {type: 'boolean'}}});\n")
+  put(repo, 'docs/guide.md', '# Guide\n\nCall `removeThing` or use `doc-bridge --brief`.\n')
+  env.DOC_BRIDGE_BASE_REVISION = await commit(repo)
+  put(repo, 'src/api.ts', 'export function retained() { return 2 }\n')
+  put(repo, 'cli.js', "import { parseArgs } from 'node:util'; parseArgs({options: {short: {type: 'boolean'}}});\n")
+  env.DOC_BRIDGE_HEAD_REVISION = await commit(repo)
+  assert.equal(await analyzeAdvisory(env), 0)
+  const data = JSON.parse(readFileSync(reportPath(env), 'utf8'))
+  const diff = JSON.parse(readFileSync(`${reportPath(env)}.diff.json`, 'utf8'))
+  assert.equal(data.findingCount, 2)
+  assert.ok(diff.findings.every(item => item.status === 'conflict'))
+  assert.doesNotMatch(data.markdown, /ceiling|\.\./u)
+  assert.match(data.markdown, /Base citation: docs\/guide.md:3, Head citation: docs\/guide.md:3/u)
+  assert.equal(splitLines(data.markdown).filter(line => /Coverage gaps|Analysis ran under|^- .*: (partial|not-analyzed);/u.test(line)).join('\n'),
+    'Coverage gaps / policy exclusions: not-analyzed: 4; partial: 5.\nAnalysis ran under the service profile; full coverage detail is in the diff artifact.\n- signature: partial; Return types are inferred or undeclared.')
+  put(repo, 'docs/guide.md', '# Guide\n\nCall `removeThing`.\n')
+  env.DOC_BRIDGE_HEAD_REVISION = await commit(repo)
+  assert.equal(await analyzeAdvisory(env), 0)
+  assert.equal(JSON.parse(readFileSync(reportPath(env), 'utf8')).findingCount, 1)
+  env.DOC_BRIDGE_ADVISORY_REPORT = reportPath(env); env.DOC_BRIDGE_COMMENT = 'true'; env.DOC_BRIDGE_TOKEN = 'synthetic-read-only-token'
+  assert.equal(await publishAdvisory(env, async () => new Response('{}', { status: 403 })), 'summary')
+  assert.equal(JSON.parse(readFileSync(env.DOC_BRIDGE_ADVISORY_REPORT, 'utf8')).findingCount, 1)
+}))
+
+
+test('advisory unavailability names the exhausted capture limit', async () => fixture(async ({ repo, env }) => {
+  const config = JSON.parse(readFileSync(join(repo, 'doc-bridge.config.json'), 'utf8'))
+  config.safety = { maxFiles: 1 }
+  put(repo, 'doc-bridge.config.json', JSON.stringify(config))
+  env.DOC_BRIDGE_BASE_REVISION = env.DOC_BRIDGE_HEAD_REVISION = await commit(repo)
+  assert.equal(await analyzeAdvisory(env), 0)
+  assert.match(readFileSync(env.GITHUB_STEP_SUMMARY, 'utf8'), /Advisory unavailable \(base object [0-9a-f]+\): Repository scan exceeded the 1 file limit/u)
+}))

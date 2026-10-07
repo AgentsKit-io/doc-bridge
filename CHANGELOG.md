@@ -4,6 +4,8 @@
 
 ### Patch Changes
 
+- Deduplicate removed-export advisories, preserve kind-specific conflict status and distinct citation evidence, summarize advisory coverage, and retain actionable Action failure reports with symlink-safe runner invocation.
+
 - Registry CLI failures wait for child execution to settle and release concurrency before rejecting, allowing immediate retries after deadlines or output overflow.
 
 ### Minor Changes

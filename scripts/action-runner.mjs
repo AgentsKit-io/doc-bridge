@@ -24,7 +24,7 @@ const git = async (root, args, cli) => {
   const filters = args[0] === 'status' ? await filtersFor(root, cli) : []
   const disabled = filters.flatMap(key => ['-c', `${key}=${key.endsWith('.required') ? 'false' : ''}`])
   const result = await runCommand('git', ['-c', 'core.hooksPath=', '-c', 'core.fsmonitor=false', ...disabled, ...args], { cwd: root, timeoutMs: 60000, maxOutputBytes: 64 * 1024 * 1024 })
-  if (result.code !== 0 || result.truncated) throw new Error('Git capture unavailable')
+  if (result.code !== 0 || result.truncated) throw new Error(`Git ${args[0]} evidence unavailable${args[0] === 'worktree' ? ': exact revision object missing or capture unavailable' : ''}${result.truncated ? ': output limit exceeded' : ''}`)
   return result.stdout
 }
 const blob = async (root, hash, bytes, cli) => {
@@ -87,7 +87,23 @@ const engine = async (env, args) => {
     env: childEnv,
     maxOutputBytes: 64 * 1024 * 1024, timeoutMs: 180000,
   })
-  if (result.code !== 0 || result.truncated) throw new Error('Trusted engine analysis failed')
+  if (result.code !== 0 || result.truncated) {
+    let cause = result.timedOut ? 'engine analysis time limit exceeded' : result.truncated ? 'engine output limit exceeded' : `${args[0] === 'action' ? args[1] : args[0]} evidence unavailable (engine exit ${result.code})`
+    if (/No doc-bridge config found/u.test(result.stderr ?? '')) cause = 'No doc-bridge config found — run ak-docs init or pass config-path'
+    else if (args[0] === 'action' && args[1] === 'index' && args.includes('--report')) {
+      const path = args[args.indexOf('--report') + 1]
+      if (statSafe(path)) {
+        const report = JSON.parse(readFileSync(path, 'utf8'))
+        const failed = report.results?.filter(item => item.ok === false).map(item => item.id).slice(0, 5)
+        if (failed?.length) cause = `Blocking gates failed: ${failed.join(', ')}`
+      }
+    } else {
+      // Only known diagnostics leave the child-output boundary; never log arbitrary PR text.
+      const known = ['HEAD_PARTITION_MISMATCH', 'INCOMPATIBLE_RESOURCE_LIMITS', 'Analysis requires a clean checkout', 'Revision exceeds', 'exceeds byte budget', 'exceeds time budget', 'Advisory Markdown exceeds', 'Artifact destination must be outside', 'Service configuration path escapes', 'Invalid permitted service configuration']
+      cause = /(?:Repository scan exceeded the \d+ (?:ms time|MiB memory|file|byte) limit|Documentation (?:file|corpus) exceeds the \d+ byte (?:limit|read budget))/u.exec(result.stderr ?? '')?.[0] ?? known.find(message => (result.stderr ?? '').includes(message)) ?? cause
+    }
+    throw new Error(cause)
+  }
   return result.stdout
 }
 const configArgs = env => env.DOC_BRIDGE_CONFIG_PATH ? ['--config', env.DOC_BRIDGE_CONFIG_PATH] : []
@@ -109,8 +125,10 @@ export const analyzeIndex = async env => {
     else await withRevision(workspace, head, analyze, env.DOC_BRIDGE_CLI_PATH)
     if (env.GITHUB_STEP_SUMMARY) appendFileSync(env.GITHUB_STEP_SUMMARY, `### Doc Bridge blocking gates\n\nIndex source: ${source}; revision: ${head}.\n\n${summaryCode(readFileSync(report, 'utf8'))}\n`)
     return 0
-  } catch {
-    console.log('::error title=Doc Bridge gates::Blocking validation failed; see the index report artifact (advisory delivery does not clear this result)')
+  } catch (error) {
+    const cause = error instanceof Error ? error.message.slice(0, 1000) : 'Blocking validation failed'
+    if (!statSafe(report)) writeFileSync(report, JSON.stringify({ ok: false, error: cause }, null, 2))
+    console.log(`::error title=Doc Bridge gates::${cause.replaceAll('%', '%25').replaceAll('\r', '%0D').replaceAll('\n', '%0A')}; see index-report output (advisory delivery does not clear this result)`)
     if (env.GITHUB_STEP_SUMMARY) appendFileSync(env.GITHUB_STEP_SUMMARY, `### Doc Bridge blocking gates failed\n\nIndex source: ${source}; revision: ${head}.\n\n${statSafe(report) ? summaryCode(readFileSync(report, 'utf8')) : 'Analysis did not produce a report; check exact revision/configuration availability.'}\n`)
     return 1
   }
@@ -126,11 +144,14 @@ export const analyzeAdvisory = async env => {
   const source = sourceMode(env.DOC_BRIDGE_INDEX_SOURCE ?? 'committed')
   output('report', report, env)
   let exit = 0
+  let phase = `base object ${base}`
   try {
     const baseFile = join(directory, 'base.json'), headFile = join(directory, 'head.json')
     await withRevision(env.GITHUB_WORKSPACE, base, root => engine(env, ['action', 'snapshot', '--root', root, '--revision', base, '--output', baseFile, ...configArgs(env)]), env.DOC_BRIDGE_CLI_PATH)
+    phase = `head object ${head}`
     await withRevision(env.GITHUB_WORKSPACE, head, async root => {
       await engine(env, ['action', 'snapshot', '--root', root, '--revision', head, '--output', headFile, ...configArgs(env)])
+      phase = 'base/head diff evidence'
       await engine(env, ['diff', '--advisory', '--base', baseFile, '--head', headFile, '--root', root, '--repository', env.GITHUB_REPOSITORY, '--pr', env.DOC_BRIDGE_PR_NUMBER, '--index-source', source, '--output', report, ...configArgs(env)])
     }, env.DOC_BRIDGE_CLI_PATH)
     const artifact = validateAdvisory(JSON.parse(readFileSync(report, 'utf8')), env)
@@ -138,9 +159,9 @@ export const analyzeAdvisory = async env => {
     console.log(annotation(`Advisory findings: ${artifact.findingCount}. The full report is in the job summary.`))
     if (boolean(env.DOC_BRIDGE_FAIL_ON_FINDINGS) && artifact.findingCount > 0) exit = 1
     output('status', 'analyzed', env)
-  } catch {
+  } catch (error) {
     output('status', 'unavailable', env)
-    const message = 'Advisory unavailable: exact base/head objects or bounded analysis evidence could not be acquired. Blocking gate results are unchanged.'
+    const message = `Advisory unavailable (${phase}): ${error instanceof Error ? error.message.slice(0, 1000) : 'analysis evidence unavailable'}. Blocking gate results are unchanged.`
     if (env.GITHUB_STEP_SUMMARY) appendFileSync(env.GITHUB_STEP_SUMMARY, `### Doc Bridge advisory unavailable\n\n${message}\n`)
     console.log(annotation(message))
   }
@@ -227,7 +248,7 @@ export const publishAdvisory = async (env, request = fetch) => {
   return fallback('delivery not confirmed')
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+if (process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url))) {
   try {
     const mode = process.argv[2]
     process.exitCode = mode === 'index' ? await analyzeIndex(process.env) : mode === 'advisory' ? await analyzeAdvisory(process.env) : mode === 'publish' ? (await publishAdvisory(process.env), 0) : 2
