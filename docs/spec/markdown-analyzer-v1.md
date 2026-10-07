@@ -198,8 +198,11 @@ lockfile exists. A present unsupported, malformed or missing lock entry stays
 unresolved with lock/manifest evidence. No arbitrary global package-name lookup
 or sibling workspace importer is allowed. A named purl absent from the owner's
 dependencies stays unresolved. Documents without `docbridge.targets` (or an
-empty mapping) have one implicit latest-released target, receiving released
-deltas only. Packages are never silently selected from prose or path alone.
+empty mapping) retain one implicit latest-released metadata target. Cross-package
+consumer eligibility uses released deltas; default diff policy treats same-repository
+documents without explicit targets or dependency targets on another package as
+branch-tracking, including
+unreleased deltas. Packages are never silently selected from prose or path alone.
 
 Document entity `metadata.targets` is an array of at most 32 records with
 `state` (`resolved`, `unresolved`, `latest-released`, `default-branch`), optional

@@ -1,3 +1,4 @@
+import { splitLines } from '@agentskit/cross-platform'
 import { classifyDocument } from './classification.js'
 import { declaredAudience, parseMarkdownDocument } from '../discovery/markdown.js'
 import { entityId } from '../discovery/identity.js'
@@ -27,13 +28,16 @@ export const routeFinding = (input: unknown, options: FindingRoutingOptions): Fi
   const lifecycle = classification.lifecycle
   const audience = declaredAudience(document.frontmatter) ?? options.classification?.audience ?? classification.discoveryAudience
   let routing: FindingV1['routing'] = 'proposed', reason = 'Eligible for review'
-  if (lifecycle === 'archived' || lifecycle === 'historical' || audience === 'archive') { routing = 'excluded'; reason = 'Historical/archived documentation remains visible without patches' }
-  else if (options.migrationSuspicious) { routing = 'routed-to-L2'; reason = 'Suspicious migration context needs interpretation' }
+  const lines = splitLines(options.content)
+  const migrationContext = finding.evidence.filter(item => item.path === document.path && item.source === 'documentation' && item.context !== 'Base citation' && item.lineStart !== undefined).some(item => /\b(?:migration|deprecated|renamed|previously|formerly|antes)\b/iu.test(lines.slice(Math.max(0, item.lineStart! - 4), item.lineStart! + 3).join(' ')))
+  const historicalPath = /(?:^|\/)(?:adr\/|changelog(?:\.|$))/iu.test(document.path)
+  if (historicalPath || lifecycle === 'archived' || lifecycle === 'historical' || audience === 'archive') { routing = 'excluded'; reason = 'Historical/archived documentation remains visible without patches' }
+  else if (options.migrationSuspicious || migrationContext) { routing = 'routed-to-L2'; reason = 'Suspicious migration context needs interpretation' }
   else if (options.changeSet && options.target) {
     const eligibility = changeSetEligibility(options.changeSet, options.target, options.adapter)
     if (eligibility.status !== 'resolved' || !eligibility.value) { routing = 'pending-version'; reason = eligibility.status === 'resolved' ? 'Target outside eligible release range' : eligibility.reason }
   }
-  const generated = finding.evidence.some(evidence => evidence.path === document.path && evidence.lineStart !== undefined && document.generatedRegions.some(region => evidence.lineStart! <= region.lineEnd && (evidence.lineEnd ?? evidence.lineStart!) >= region.lineStart))
+  const generated = finding.evidence.some(evidence => evidence.path === document.path && evidence.context !== 'Base citation' && evidence.lineStart !== undefined && document.generatedRegions.some(region => evidence.lineStart! <= region.lineEnd && (evidence.lineEnd ?? evidence.lineStart!) >= region.lineStart))
   if (generated || options.generator) { routing = 'excluded'; reason = 'Generated region: correct the generator' }
   return FindingV1Schema.parse({ ...finding, routing, ...(generated || options.generator ? { generator: options.generator ?? 'ak-docs render' } : {}), coverage: [...finding.coverage, { analyzer: 'finding-policy', scope: document.path, status: 'complete', reason }] })
 }

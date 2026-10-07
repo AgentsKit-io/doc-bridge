@@ -26,3 +26,16 @@ frontmatter overrides. Historical/archived documents remain visible as `excluded
 coverage; suspicious migration context is `routed-to-L2`; generated content is excluded
 and names its generator; adapter-owned version eligibility produces `pending-version`
 for ineligible or unresolved targets. Routing never changes knowledge status.
+
+`changed-reference` is produced for a cited fact's before/after value-hash
+change. It remains stale-or-unverified and routes to Layer 2 review, with no
+automatic remediation. Relevant identity includes the cited target and both
+value hashes, not revision or line position. Before/head evidence contexts
+retain those hashes; available codec summaries may describe the values, while
+hash-only codecs do not invent summaries.
+
+Default diff policy emits these unchanged strict records in a policy sidecar.
+ADR/CHANGELOG references are historical; migration markers near citation
+locations require interpretation. Same-repository implicit targets track the
+analyzed branch; explicit or resolved another-package dependency targets keep version
+eligibility. Generator references remain excluded and identify their generator.

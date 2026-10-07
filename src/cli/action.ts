@@ -1,7 +1,7 @@
 import { runCommand, toPosix } from '@agentskit/cross-platform'
 import { appendFileSync, existsSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs'
 import { dirname, isAbsolute, relative, resolve, sep } from 'node:path'
-import { loadCliConfig } from '../config/load-config.js'
+import { ConfigNotFoundError, loadCliConfig } from '../config/load-config.js'
 import { parseDocBridgeIndex, parseDiscoverySnapshot } from '../validate.js'
 import { discoverRepositoryWithRead } from '../discovery/repository.js'
 import { markdownManifest } from '../discovery/plugins/markdown.js'
@@ -115,7 +115,14 @@ export const runActionCli = async (argv: readonly string[]): Promise<number> => 
       return 0
     }
     throw new Error('Usage: ak-docs action index|snapshot --revision <sha> --root <checkout> --output <outside-artifact>')
-  } catch (error) { process.stderr.write(`${error instanceof Error ? error.message : 'Action analysis failed'}\n`); return 2 }
+  } catch (error) {
+    const message = error instanceof ConfigNotFoundError ? 'No doc-bridge config found — run ak-docs init or pass config-path.' : redactSecrets(error instanceof Error ? error.message : 'Action analysis failed').slice(0, 1000)
+    process.stderr.write(`${message}\n`)
+    if (argv[0] === 'index' && value(argv, '--report')) {
+      try { save(outside(realpathSync(resolve(value(argv, '--root') ?? process.cwd())), value(argv, '--report')!), json({ ok: false, error: message })) } catch { /* Preserve the original failure if the artifact destination is invalid. */ }
+    }
+    return 2
+  }
 }
 
 /** The advisory variant of ak-docs diff uses the same core diff with service-bound head reads. */
@@ -132,22 +139,25 @@ export const runAdvisoryDiff = async (argv: readonly string[]): Promise<number> 
     if (!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/u.test(repository) || repository.length > 256 || !Number.isSafeInteger(pr) || pr < 1) throw new Error('Invalid repository/PR binding')
     const config = serviceConfig(staticConfig(root, argv, true).config).config
     const read = await capture(root, head.sourceRevision, config)
-    const diff = await diffSnapshotsWithRead(base, head, read, { profile: 'service' })
+    const diff = await diffSnapshotsWithRead(base, head, read, { profile: 'service', policy: !argv.includes('--no-policy') })
     await exactHead(root, head.sourceRevision)
-    const findings = diff.findings.filter(finding => ['BROKEN_REFERENCE', 'AMBIGUOUS_REFERENCE'].includes(finding.code))
+    const findings = diff.findings.filter(finding => ['BROKEN_REFERENCE', 'AMBIGUOUS_REFERENCE', 'CHANGED_REFERENCE'].includes(finding.code))
     const marker = `<!-- doc-bridge:advisory:v1:${repository}:${pr} -->`
     const binding = `<!-- doc-bridge:revisions:${base.sourceRevision}:${head.sourceRevision}:${source} -->`
     const lines = [marker, binding, '## Doc Bridge advisory (Layer 1)', '', `Repository: ${repository}; PR: ${pr}.`, `Base: ${base.sourceRevision}; head: ${head.sourceRevision}; index source: ${source}.`, '', 'Advisory only. Blocking gates are reported independently; interpretation and acceptance remain human-owned.', '', `Findings: ${findings.length}.`]
     for (const finding of findings.slice(0, 30)) {
-      const locations = finding.evidence.filter(item => item.source === 'documentation').slice(0, 3).map(item => `${item.path}${item.lineStart ? `:${item.lineStart}` : ''}`)
+      const locations = [...new Set(finding.evidence.filter(item => item.source === 'documentation').map(item => `${item.context ?? 'Citation'}: ${item.path}${item.lineStart ? `:${item.lineStart}` : ''}`))].slice(0, 3)
       lines.push(`- **${finding.code}** (${finding.status}): ${escape(finding.message)} Evidence: ${locations.map(location => escape(location, 150)).join(', ')}.`)
     }
     if (findings.length > 30) lines.push(`- ${findings.length - 30} additional findings in the diff artifact.`)
-    const gaps = diff.changeSet.coverage.filter(item => item.status !== 'complete' && item.status !== 'not-applicable')
-    lines.push('', `Coverage gaps / policy exclusions: ${gaps.length}.`)
-    for (const gap of gaps.slice(0, 20)) lines.push(`- ${escape(gap.scope)}: ${gap.status}; ${escape(gap.reason ?? 'No reason provided')}.`)
-    if (gaps.length > 20) lines.push(`- ${gaps.length - 20} additional gaps in the diff artifact.`)
-    lines.push('', 'Policy routing and version exclusions are not applied by this advisory; all deterministic reference findings are shown, including historical/generated documents. No edits are proposed.', '')
+    const gaps = [...new Map(diff.changeSet.coverage.filter(item => item.status !== 'complete' && item.status !== 'not-applicable' && !item.analyzer.endsWith('service-profile')).map(item => [JSON.stringify({ ...item, analyzer: item.analyzer.replace(/^(base|head):/u, '') }), item])).values()]
+    const coverageCounts = [...new Set(gaps.map(item => item.status))].sort().map(status => `${status}: ${gaps.filter(item => item.status === status).length}`)
+    lines.push('', `Coverage gaps / policy exclusions: ${coverageCounts.join('; ') || 'none'}.`, 'Analysis ran under the service profile; full coverage detail is in the diff artifact.')
+    const scopes = new Set<string>(diff.changeSet.changes.map(change => change.kind))
+    const capabilities: Record<string, string> = { symbols: 'symbol', signatures: 'signature', 'cli-commands': 'cli-command', 'cli-flags': 'cli-flag', 'config-keys': 'config-key', manifest: 'package' }
+    for (const gap of gaps.filter(item => scopes.has(capabilities[item.scope] ?? item.scope)).slice(0, 5)) lines.push(`- ${escape(gap.scope)}: ${gap.status}; ${escape((gap.reason ?? 'No reason provided').replace(/[.\s]+$/u, ''))}.`)
+    const counts = diff.policy.counts
+    lines.push('', `Policy routing: excluded: ${counts.excluded}; pending-version: ${counts['pending-version']}; generator: ${counts.generator}; routed-to-L2: ${counts['routed-to-L2']}.`, diff.policy.enabled ? 'Historical, generated and ineligible version findings are summarized here; full details remain in the diff artifact. Changed references and migration context require review; no edits are proposed.' : 'Policy routing disabled for raw debugging output; no edits are proposed.', '')
     const markdown = lines.join('\n')
     if (Buffer.byteLength(markdown) > 60000) throw new Error('Advisory Markdown exceeds the comment budget')
     const output = outside(root, required(argv, '--output'))

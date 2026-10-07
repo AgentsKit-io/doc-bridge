@@ -51,8 +51,9 @@ describe('generic fact diff through persisted exact-partition snapshots', () => 
     }
     expect(changes.some(change => change.kind === 'module')).toBe(true)
     expect(result.changeSet.packages).toEqual([{ id: 'package:doc-bridge', purl: 'pkg:generic/doc-bridge', version: '2' }])
-    expect(result.findings).toHaveLength(2)
-    expect(result.findings.every(finding => finding.code === 'BROKEN_REFERENCE' && finding.status === 'conflict')).toBe(true)
+    expect(result.findings.filter(item => item.code === 'BROKEN_REFERENCE')).toHaveLength(2)
+    expect(result.findings.filter(item => item.code === 'CHANGED_REFERENCE')).toHaveLength(2)
+    expect(result.findings.every(finding => finding.code === 'CHANGED_REFERENCE' ? finding.status === 'stale-or-unverified' : finding.status === 'conflict')).toBe(true)
     expect(result.impact.changedDocumentation.map(doc => doc.path)).toEqual(['docs/guide.md'])
     expect(result.impact.documentsToReview).toEqual([])
     expect(canonicalJsonV1(await diffSnapshotsWithRead(base.snapshot, head.snapshot, head.read))).toBe(canonicalJsonV1(result))

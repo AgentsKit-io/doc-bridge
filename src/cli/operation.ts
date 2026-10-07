@@ -81,7 +81,7 @@ export const runOperationCli = async (argv: readonly string[], command: string):
       const basePath = value('--base')
       if (!basePath) throw new Error('diff requires --base <snapshot.json>')
       const base = parseDiscoverySnapshot(JSON.parse(await readFile(resolve(basePath), 'utf8')))
-      const result = await diffSnapshotsWithRead(base, snapshot, repository, controls())
+      const result = await diffSnapshotsWithRead(base, snapshot, repository, { ...controls(), policy: !argv.includes('--no-policy') })
       await check()
       const { metrics, ...artifact } = result
       if (metrics) process.stderr.write(`metrics: ${JSON.stringify(metrics)}\n`)

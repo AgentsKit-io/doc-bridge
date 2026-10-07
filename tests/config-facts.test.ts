@@ -110,7 +110,8 @@ describe('static configuration facts', () => {
     const delta = changed.changeSet.changes.find(change=>change.kind==='config-key' && change.before?.name==='output.format')!
     expect(delta.op).toBe('changed')
     expect(delta.before?.valueHash).not.toBe(delta.after?.valueHash)
-    expect(changed.findings).toEqual([])
+    expect(changed.findings).toContainEqual(expect.objectContaining({ code: 'CHANGED_REFERENCE', status: 'stale-or-unverified' }))
+    expect(changed.policy.findings.every(item => item.routing === 'routed-to-L2')).toBe(true)
     writeFileSync(join(root, 'config.ts'), source.replace('format:', 'encoding:'))
     const head = discoverRepository({root})
     const removed = diffSnapshots(base, head, {headRoot:root})
