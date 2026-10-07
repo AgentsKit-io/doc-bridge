@@ -134,6 +134,7 @@ const DocbridgeRelationSchema = z
 
 const DocbridgeBlockSchema = z
   .object({
+    targets: z.record(z.string().min(5).max(512), z.string().min(1).max(512).nullable()).refine(value => Object.keys(value).length <= 32, 'At most 32 package targets').optional(),
     covers: z.array(z.string().min(1)).optional(),
     relations: z.array(DocbridgeRelationSchema).optional(),
   })
@@ -278,6 +279,7 @@ const parseDocbridgeYaml = (
   end: number,
 ):
   | {
+      readonly targetsDeclared?: boolean
       readonly covers: readonly { value: string; line: number }[]
       readonly relations: readonly RelationFields[]
       readonly diagnostics: readonly DocumentationDiagnostic[]
@@ -346,13 +348,13 @@ const parseDocbridgeYaml = (
     }
   }
 
-  return { covers, relations, diagnostics }
+  return { covers, relations, diagnostics, targetsDeclared: !!record && Object.hasOwn(record, 'targets') }
 }
 
 const parseBlock = (
   input: DocumentationDeclarationInput,
   options: Pick<DocumentationDeclarationOptions, 'agentRoot'> = {},
-): { readonly covers: readonly { value: string; line: number }[]; readonly relations: readonly RelationFields[]; readonly diagnostics: readonly DocumentationDiagnostic[]; readonly hasDocbridge: boolean } => {
+): { readonly targetsDeclared?: boolean; readonly covers: readonly { value: string; line: number }[]; readonly relations: readonly RelationFields[]; readonly diagnostics: readonly DocumentationDiagnostic[]; readonly hasDocbridge: boolean } => {
   const conventionalPath = conventionalPackageReference(input.path, options.agentRoot ?? 'docs/for-agents')
   const frontmatter = findFrontmatter(input.content)
   if (!frontmatter) {
@@ -510,8 +512,8 @@ export const parseDocumentationDeclarations = (
   const relationClaims = new Map<string, string>()
   const lookup = options.entityLookup ?? entityLookup(options.snapshot.entities)
 
-  if (!parsed.covers.length && !parsed.relations.length) {
-    addDiagnostic(diagnostics, input, 'DOCBRIDGE_CONTENT_MISSING', 'docbridge must declare covers or relations.', 1)
+  if (!parsed.covers.length && !parsed.relations.length && !parsed.targetsDeclared) {
+    addDiagnostic(diagnostics, input, 'DOCBRIDGE_CONTENT_MISSING', 'docbridge must declare covers, relations or targets.', 1)
   }
 
   for (const [index, cover] of parsed.covers.entries()) {

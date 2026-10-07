@@ -28,7 +28,7 @@ import { relationId } from './identity.js'
  * is inferred from a near-match unless the near-match is unambiguous.
  */
 
-export const MARKDOWN_ANALYZER_VERSION = '1.2.0'
+export const MARKDOWN_ANALYZER_VERSION = '1.3.0'
 
 /** Headings deeper than this are structure, not subject matter. */
 const MAX_HEADING_DEPTH = 3

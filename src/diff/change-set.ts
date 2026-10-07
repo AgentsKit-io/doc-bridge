@@ -242,7 +242,7 @@ const diffWithDocuments = (base: DiscoverySnapshotV1, head: DiscoverySnapshotV1,
   if (canonicalJsonV1(base.project) !== canonicalJsonV1(head.project)) throw new Error('Cannot diff different project identities; provide snapshots from the same repository.')
   const changes = snapshotChanges(base, head)
   const coverage: ChangeSetV1['coverage'] = [
-    ...(packagesOf(head).length ? [{ analyzer: 'diff', scope: 'package-version-routing', status: 'not-analyzed' as const, reason: 'Package mappings do not establish version routing or release eligibility.' }] : []),
+    ...(packagesOf(head).length ? [{ analyzer: 'diff', scope: 'release-event', status: 'not-analyzed' as const, reason: 'No caller-provided release event was stamped.' }] : []),
     ...base.coverage.map((entry) => ({ ...entry, scope: entityId('base', entry.scope) })),
     ...head.coverage.map((entry) => ({ ...entry, scope: entityId('head', entry.scope) })),
     ...['cli-command', 'cli-flag', 'config-key', 'signature', 'rename-detection', 'package-identity-and-version-routing'].flatMap((scope): ChangeSetV1['coverage'] => {

@@ -76,7 +76,7 @@ const sourceRevision = (root: string, files: readonly string[], readText: (path:
 }
 
 export const PIPELINE_VERSION = '1.5.0'
-export const ANALYZER_VERSIONS: Readonly<Record<string, string>> = { repository: '1.3.0', 'js-ts': '1.3.5', markdown: MARKDOWN_ANALYZER_VERSION, graph: GRAPH_ANALYZER_VERSION, ...factAnalyzerVersions() }
+export const ANALYZER_VERSIONS: Readonly<Record<string, string>> = { repository: '1.3.0', 'js-ts': '1.4.0', markdown: MARKDOWN_ANALYZER_VERSION, graph: GRAPH_ANALYZER_VERSION, ...factAnalyzerVersions() }
 const configurationHashOf = (config: DocBridgeConfigV1 | undefined): string => sha256NormalizedV1(config ?? {})
 
 const artifact = (root: string, config: DocBridgeConfigV1 | undefined, files: readonly string[], entities: readonly KnowledgeEntity[], relations: readonly KnowledgeRelation[], coverage: DiscoverySnapshotV1['coverage'], suppliedRevision: { readonly value: string; readonly kind: 'git' | 'content' }): DiscoverySnapshotV1 => {
@@ -193,6 +193,12 @@ export const createDiscoveryScan = (io: ScanIO, retainFactTrees = true) => {
     facts.set(fact.name, [...(facts.get(fact.name) ?? []), fact])
   }
   coverage.push(...extracted.coverage)
+  const packageVersions = jsTs.extractPackages(root, packageResult.packages)
+  coverage.push(...packageVersions.coverage)
+  for (const pkg of packageVersions.packages) {
+    entities.set(pkg.id, packageFactToEntity(pkg, entities.get(pkg.id)))
+    facts.set(pkg.purl, [{ kind: 'package', name: pkg.purl, ownerId: pkg.id }])
+  }
 
   /*
    * What the documentation says, as edges.
@@ -276,7 +282,7 @@ export const discoverRepositoryWithRead = async (read: RepositoryReadV1, opts: D
   // The compatibility fast path runs the identical built-in stages as the synchronous facade.
   if (!opts.plugins?.length && !opts.replaceSourcePlugins) return bound(scan({ ...opts, root }))
   const source = createJsTsPluginV2()
-  const documents = createMarkdownPluginV2()
+  const documents = createMarkdownPluginV2([source, ...(opts.plugins ?? [])])
   const registry = createDiscoveryRegistryV2({ builtIns: [
     { plugin: source, analyzerVersions: { 'js-ts': source.manifest.version, ...factAnalyzerVersions() } },
     { plugin: documents, analyzerVersions: { markdown: documents.manifest.version } },

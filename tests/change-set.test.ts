@@ -139,8 +139,8 @@ describe('ChangeSetV1 real snapshot acceptance', () => {
     // Inferred constants do not establish syntactic signatures. Registration is not completeness.
     expect(base.coverage).toContainEqual(expect.objectContaining({ scope: 'signatures', status: 'partial' }))
     expect(result.changeSet.coverage).toContainEqual(expect.objectContaining({ analyzer: 'diff', scope: 'signature', status: 'partial', reason: expect.any(String) }))
-    for (const scope of ['rename-detection', 'package-identity-and-version-routing']) expect(result.changeSet.coverage).toContainEqual(expect.objectContaining({ analyzer: 'diff', scope, status: 'not-analyzed' }))
-    expect(result.changeSet.packages).toEqual([])
+    for (const scope of ['rename-detection']) expect(result.changeSet.coverage).toContainEqual(expect.objectContaining({ analyzer: 'diff', scope, status: 'not-analyzed' }))
+    expect(result.changeSet.packages).toEqual([{ id: 'package:fixture', purl: 'pkg:npm/fixture', version: '1.0.0' }])
     expect(result.changeSet.changes).toEqual([])
     expect(DocBridgeJsonSchemas.changeSetV1).toMatchObject({ type: 'object', additionalProperties: false })
     expect(ChangeSetV1Schema.safeParse({ ...result.changeSet, changes: [{ kind: 'module', op: 'added' }] }).success).toBe(false)

@@ -18,7 +18,7 @@ This new artifact does not add fields to `DocBridgeIndexV1` or `AgentHandoffV1`.
 | `analysis` | Base/head configuration hashes, pipeline versions and analyzer versions |
 | `branch` | Optional caller-provided branch identity; never inferred as a release |
 | `baseRevision`, `headRevision` | Required bounded revision strings, retained as provenance |
-| `release` | Strict `{ "state": "unreleased" }`; release stamping is not implemented |
+| `release` | Strict `{ "state": "unreleased" }` or `{ "state": "released", "version", "eventId", "purl" }` supplied by caller-event stamping |
 | `packages` | Head codec-backed package purl/version mapping array; empty for legacy extraction |
 | `changes` | Canonically ordered change records, maximum 100,000 |
 | `contentHash` | 64 lowercase hexadecimal characters |
@@ -58,3 +58,10 @@ The diff envelope contains `changeSet`, `impact`, and `findings`. Findings reuse
 can change certainty without changing the snapshot delta. Findings retain both
 citation and target evidence and identify their relation and entities. See the
 [behavior contract](../spec/change-set-v1.md).
+
+The unreleased v1 schema evolves in place: `schemaVersion` remains `1`.
+A released stamp requires bounded nonempty version (256), event identity (256),
+and package purl (512). Release state and mapping participate in the semantic
+hash. Stamping retains the event evidence in bounded `release-event` coverage;
+the matched revision remains `headRevision`. The index and handoff envelopes
+are unchanged. See [release routing](../spec/change-set-v1.md#release-stamping-and-eligibility).

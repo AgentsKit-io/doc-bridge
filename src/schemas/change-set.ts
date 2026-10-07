@@ -33,7 +33,10 @@ const ChangeSetShape = z.object({
   branch: z.string().min(1).max(256).optional(),
   baseRevision: z.string().min(1).max(128),
   headRevision: z.string().min(1).max(128),
-  release: z.object({ state: z.literal('unreleased') }).strict(),
+  release: z.discriminatedUnion('state', [
+    z.object({ state: z.literal('unreleased') }).strict(),
+    z.object({ state: z.literal('released'), version: z.string().min(1).max(256), eventId: z.string().min(1).max(256), purl: z.string().min(5).max(512) }).strict(),
+  ]),
   // Ecosystem adapters will supply purl/version mappings; core does not infer them.
   packages: z.array(z.object({ id: z.string().min(1).max(256), purl: z.string().min(1).max(512), version: z.string().min(1).max(256).optional() }).strict()).max(50_000),
   changes: z.array(ChangeShape).max(100_000),

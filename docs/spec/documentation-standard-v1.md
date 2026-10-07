@@ -139,3 +139,12 @@ The required/recommended rule split received product-owner HITL approval in
 contract was delivered by
 [AgentsKit #1208](https://github.com/AgentsKit-io/agentskit/pull/1208). The profile is stable;
 future breaking rule changes require a new version.
+
+## Optional version targets
+
+Documents may declare `docbridge.targets` using the bounded, package-neutral
+[Markdown target contract](markdown-analyzer-v1.md#document-package-targets).
+Target-only declarations are valid documentation declarations. This does not
+add a required frontmatter field or replace owner/lifecycle/source-of-truth/
+validation metadata. Unresolved targets require review; they do not establish
+release applicability or permit lower-priority fallback.

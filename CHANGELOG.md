@@ -8,6 +8,8 @@
 
 ### Minor Changes
 
+- Add npm purl/vers package facts and lockfile resolution, bounded document version targets, caller-event release stamping and adapter-owned change-set eligibility.
+
 - Add an opt-in caller-enforced service profile with restricted config, injected storage and explicit CLI/MCP limitations.
 - Preserve incremental zero-parse reuse and stable citation resolution when static fact extractors are registered, including serialized unchanged snapshots and fact ambiguity coverage.
 - Keep generic fact citations in discovery and change-set evidence while excluding them from retrieval graph signals and query scores.

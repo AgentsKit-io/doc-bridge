@@ -115,6 +115,7 @@ describe('bounded discovery acquisition', () => {
     const template = createJsTsPluginV2().manifest
     for (const builtIn of [false, true]) {
       const plugin: DiscoveryPluginV2 = {
+        ...createJsTsPluginV2(),
         manifest: { ...template, id: 'policy' },
         async discover(input) {
           await input.read.read({ partition: input.read.partition, signal: input.signal, path: 'src/a.ts' })

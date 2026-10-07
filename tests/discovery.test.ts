@@ -40,6 +40,7 @@ describe('repository discovery', () => {
     expect(entityIds).toContain('module:packages/app/src/index.ts')
     expect(entityIds).toContain('document:docs/architecture.md')
     expect(snapshot.entities.find((entity) => entity.id === 'document:docs/architecture.md')?.metadata).toEqual({
+      targets: [{ state: 'latest-released', source: 'implicit', evidence: [] }],
       classification: 'human',
       title: 'Architecture',
       headings: [{ depth: 1, text: 'Architecture', line: 1 }],
@@ -61,6 +62,7 @@ describe('repository discovery', () => {
 
     const document = discoverRepository({ root }).entities.find((entity) => entity.id === 'document:docs-archive/legacy.md')
     expect(document?.metadata).toEqual({
+      targets: [{ state: 'latest-released', source: 'implicit', evidence: [] }],
       classification: 'archive',
       title: 'Legacy',
       headings: [{ depth: 1, text: 'Legacy', line: 1 }],
