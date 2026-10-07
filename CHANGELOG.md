@@ -50,6 +50,52 @@
 
 - Precompute semantic hash ordering keys once per entry and bound syntax-tree retention for index-only scans and reuse parsed trees in discovery, reducing index-build cost without changing artifact bytes or hash identity.
 
+## 1.14.0-next.0
+
+### Minor Changes
+
+- d1a42d1: Add explicit committed and isolated CI-built Action index modes, deterministic base/head reference advisories, and a separately opted-in PR comment publisher with summary fallback and revision binding. Preserve independent blocking gates and require an explicit unprivileged checkout engine for self-CI.
+- 14337ae: Add bounded injected discovery, caller-registered source plugins, and built-in JS/TS and Markdown discovery v2 adapters while retaining synchronous extraction compatibility.
+- 14337ae: Add storage I/O v1 capability types, strict discovery plugin v2 contracts, a
+  partition-bound local filesystem adapter and versioned fact codecs while retaining
+  existing analyzer v1 and synchronous consumer behavior.
+- 3915742: Add an opt-in caller-enforced service profile with restricted repository configuration, injected storage boundaries, explicit analysis limitations, and deterministic CLI/MCP restrictions.
+- 20cdb31: Add the ChangeSetV1 contract and deterministic snapshot diff CLI with historical documentation impact, broken-reference and ambiguous-reference findings. Include references to removed targets in rendered change digests and report unsupported extraction as coverage.
+- 20cdb31: Retain distinct cited symbols and bounded ambiguity metadata in deterministic Markdown discovery, while preserving unique document connections in retrieval signals.
+- 222e1e4: Discover deterministic CLI command and flag facts from package bins, static CLI library declarations and explicitly marked help text. Resolve qualified inline and shell CLI citations and verify removed facts through historical change-set references without changing index or handoff schemas.
+- 222e1e4: Extract deterministic configuration-key facts from statically recognized Zod and JSON Schema configuration schemas. Resolve dotted Markdown citations within package and fixture boundaries, and retain value hashes and historical citations for configuration changes and removed-key findings.
+  
+  Bind local and reader-backed index freshness to declared fact-extractor inputs, including JSON-only schema changes. Markdown analyzer 1.2.0 isolates all fact citations from the legacy relation cap.
+  
+  Preserve partial extraction status and its reason in ChangeSet coverage instead of collapsing registered incomplete kinds into not-analyzed.
+- 14337ae: Add exact-partition reader-backed index building and artifact persistence APIs while retaining synchronous local index and handoff payload compatibility. Report missing or mismatched document bodies beside the payload and isolate enrichment caches, approvals and workflow artifacts by repository and revision.
+  
+  Expose the injected storage, discovery, partitioned index and typed persistence entrypoints from the package root, with a caller-facing exact-revision guide.
+- 14337ae: Compare codec-backed surface and package facts with bounded before/after value hashes and generic owner/name citation findings. Add extraction-aware certainty and exact-partition head reads while preserving synchronous export-based comparison.
+  
+  Resolve codec-backed citations in the built-in Markdown plugin, including bounded owner ambiguity and deterministic legacy-reference precedence.
+  
+  Route local CLI head citation verification through a frozen, partition-bound reader.
+- 8c8ec5a: Add caller-controlled operation limits, cancellation, bounded progress and transient run metrics to injected discovery, partitioned indexing and diff, with opt-in async CLI controls and explicit stopped-stage coverage.
+- 4a5fa2f: Add deterministic npm package facts, document version targets, caller-event release stamping and adapter-owned change-set eligibility. Evolve the unreleased ChangeSetV1 release contract while preserving strict index and handoff schemas.
+- 35f2293: Add deterministic Finding, Remediation and Decision contracts, safe region review/application with settled rejection persistence, and opt-in handoff caveats while retaining legacy fix and handoff readers.
+- 20cdb31: Version semantic snapshot, derived report, retrieval and index identity as sha256-semantic-v1,
+  excluding revision/time and scan reuse provenance. Preserve legacy verification and study hashes.
+  
+  Migration: upgrade readers before explicitly running ak-docs index. Old strict readers reject the
+  new algorithm with a schema error. Freshness verifies legacy indexes under their original algorithm;
+  explicit regeneration warns about drift in the legacy index being replaced before writing the migrated index.
+- 222e1e4: Extract bounded deterministic exported JS/TS signature facts and reuse symbol citations to expose signature changes and documentation review impact without changing snapshot, index or handoff schemas.
+
+### Patch Changes
+
+- 222e1e4: Invalidate incremental fact reuse when declared additional inputs or evidence files change.
+- 222e1e4: Reuse persisted static facts and unchanged ASTs across validated warm scans, and reconstruct the same fact-aware Markdown resolution fingerprint and ambiguity coverage from prior snapshots.
+- 222e1e4: Exclude generic codec fact citations from retrieval ranking graph signals while retaining their semantic observation identity and legacy symbol connections.
+- 96959e1: Patch the KaTeX prototype-pollution advisory (GHSA-238p-pmpm-9mq7) reached through mermaid by pinning katex 0.18.11.
+- 9d41d7d: Release Registry CLI concurrency before reporting a failed call so immediate retries after deadlines or output overflow can proceed.
+- 222e1e4: Precompute semantic hash ordering keys once per entry and bound syntax-tree retention for index-only scans and reuse parsed trees in discovery without changing artifact bytes or hash identity.
+
 ## 1.13.0
 
 ### Minor Changes
