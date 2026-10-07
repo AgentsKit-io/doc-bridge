@@ -1,3 +1,7 @@
+import { restrictServiceRead } from '../execution/repository.js'
+import { redactValue } from '../safety/repository.js'
+import { denyServiceOperation, withExecutionProfile, executionContext, isServiceProfile, bindServiceCapability, serviceCoverage, type ExecutionProfile } from '../execution/profile.js'
+import { serviceConfig } from '../execution/config.js'
 import { FACT_EXTRACTORS, factAnalyzerVersions, runFactExtractors } from './facts/index.js'
 import { execFileSync } from 'node:child_process'
 import { basename, relative, resolve } from 'node:path'
@@ -29,6 +33,7 @@ import {
 const EMPTY_HASH = '0'.repeat(64)
 
 type DiscoveryOptions = {
+  readonly profile?: ExecutionProfile
   readonly root?: string
   readonly config?: DocBridgeConfigV1
   readonly maxFiles?: number
@@ -54,6 +59,7 @@ const sourceRevision = (root: string, files: readonly string[], readText: (path:
     kind: 'content',
   })
 
+  if (isServiceProfile()) return contentRevision()
   try {
     const status = execFileSync('git', ['status', '--porcelain', '--untracked-files=all'], {
       cwd: root,
@@ -228,10 +234,10 @@ export const createDiscoveryScan = (io: ScanIO, retainFactTrees = true) => {
 
 }
 
-export const discoverRepository = (opts: DiscoveryOptions = {}): DiscoverySnapshotV1 => createDiscoveryScan(createLocalScanIO(resolve(opts.root ?? process.cwd()), opts))(opts)
+export const discoverRepository = (opts: DiscoveryOptions = {}): DiscoverySnapshotV1 => withExecutionProfile(opts.profile, () => { denyServiceOperation('legacy discovery', opts.config); return createDiscoveryScan(createLocalScanIO(resolve(opts.root ?? process.cwd()), opts))(opts) })
 
 /** Index-owned snapshots do not need to retain syntax trees for incremental reuse. */
-export const discoverRepositoryForIndex = (opts: DiscoveryOptions): DiscoverySnapshotV1 => createDiscoveryScan(createLocalScanIO(resolve(opts.root ?? process.cwd()), opts), false)(opts)
+export const discoverRepositoryForIndex = (opts: DiscoveryOptions): DiscoverySnapshotV1 => withExecutionProfile(opts.profile, () => { denyServiceOperation('legacy discovery', opts.config); return createDiscoveryScan(createLocalScanIO(resolve(opts.root ?? process.cwd()), opts), false)(opts) })
 
 export type DiscoveryReadOptions = DiscoveryOptions & {
   readonly signal?: AbortSignal
@@ -246,14 +252,25 @@ export type DiscoveryReadResult = Readonly<{
 }>
 
 /** Caller binds exact source provenance; acquisition cannot infer another revision. */
-export const discoverRepositoryWithRead = async (read: RepositoryReadV1, opts: DiscoveryReadOptions = {}): Promise<DiscoveryReadResult> => {
+export const discoverRepositoryWithRead = async (read: RepositoryReadV1, opts: DiscoveryReadOptions = {}): Promise<DiscoveryReadResult> => withExecutionProfile(isServiceProfile(opts.config) ? 'service' : opts.profile, async () => {
+  const filtered = executionContext().profile === 'service' ? serviceConfig(opts.config ?? { schemaVersion: 1, corpus: { agent: { root: 'docs/agent' } } }) : undefined
+  if (filtered) { opts = { ...opts, config: filtered.config }; read = restrictServiceRead(read, filtered.config) }
   const root = resolve(opts.root ?? 'repository')
   const partition = Object.freeze({ ...read.partition })
   const signal = opts.signal ?? new AbortController().signal
   const ceilings = createMarkdownPluginV2().manifest.resourceLimits
   for (const key of Object.keys(ceilings) as (keyof typeof ceilings)[]) if (read.limits[key] > ceilings[key]) throw new Error('INCOMPATIBLE_RESOURCE_LIMITS')
-  const io = await preloadScan(read, signal, root)
-  const bound = (snapshot: DiscoverySnapshotV1): DiscoveryReadResult => ({ snapshot, binding: { partition, snapshotHash: snapshot.contentHash, visibilityPolicyHash: io.visibilityPolicyHash! } })
+  const io = await preloadScan(read, signal, root).catch(error => {
+    if (filtered) throw new Error('not-analyzed: service repository acquisition ' + (error instanceof Error ? error.message : 'failed'))
+    throw error
+  })
+  const bound = (snapshot: DiscoverySnapshotV1): DiscoveryReadResult => {
+    if (filtered) {
+      const value = DiscoverySnapshotV1Schema.parse(redactValue({ ...snapshot, coverage: [...snapshot.coverage, ...serviceCoverage([...filtered.diagnostics, ...(filtered.config.safety?.exclude ?? []).map(path => `safety.exclude: ${path}`), ...(filtered.config.audit?.documentation?.generatedPaths ?? []).map(path => `audit.documentation.generatedPaths: ${path}`), ...(filtered.config.audit?.documentation?.exclude ?? []).map(path => `audit.documentation.exclude: ${path}`)])] }))
+      snapshot = bindServiceCapability(DiscoverySnapshotV1Schema.parse({ ...value, contentHash: contentHashForVersionedArtifact(value) }))
+    }
+    return { snapshot, binding: { partition, snapshotHash: snapshot.contentHash, visibilityPolicyHash: io.visibilityPolicyHash! } }
+  }
   const provenance = { value: partition.revision, kind: opts.sourceRevisionKind ?? 'content' as const }
   const scan = createDiscoveryScan({ ...io, revision: provenance })
   // The compatibility fast path runs the identical built-in stages as the synchronous facade.
@@ -318,6 +335,6 @@ export const discoverRepositoryWithRead = async (read: RepositoryReadV1, opts: D
     analyzerVersions: { ...(opts.replaceSourcePlugins ? { markdown: documents.manifest.version, graph: GRAPH_ANALYZER_VERSION } : ANALYZER_VERSIONS), ...Object.fromEntries(configured.map(plugin => [plugin.manifest.id, plugin.manifest.version])) },
   }
   return bound(DiscoverySnapshotV1Schema.parse({ ...semantic, contentHash: contentHashForVersionedArtifact(semantic) }))
-}
+})
 
 export type { DiscoveryOptions }

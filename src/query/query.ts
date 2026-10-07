@@ -1,3 +1,5 @@
+import { withExecutionProfile, isServiceProfile, executionContext } from '../execution/profile.js'
+import { serviceConfig } from '../execution/config.js'
 import type { DocBridgeConfigV1 } from '../config/schema.js'
 import {
   normalizeAgentHandoff,
@@ -87,7 +89,8 @@ export const runQuery = (
   config: DocBridgeConfigV1,
   req: QueryRequest,
   options: HandoffOptions = {},
-): QueryResult => {
+): QueryResult => withExecutionProfile(isServiceProfile(index) || isServiceProfile(config) ? 'service' : options.profile, () => {
+  if (executionContext().profile === 'service') config = serviceConfig(config).config
   if (req.kind === 'search') {
     const term = req.term ?? req.id ?? ''
     const matches = searchIndex(index, term, 20, { ...(req.explain ? { explain: true } : {}), ...(req.agent ? { agent: true } : {}) })
@@ -190,4 +193,4 @@ export const runQuery = (
   }
 
   throw new Error(`Unsupported query kind: ${req.kind as string}`)
-}
+})

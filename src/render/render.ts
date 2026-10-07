@@ -1,3 +1,4 @@
+import { denyServiceOperation } from '../execution/profile.js'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join, relative, resolve } from 'node:path'
 
@@ -135,6 +136,7 @@ const loadOverlay = (options: RenderArtifactOptions): { readonly overlay: Overla
 }
 
 export const renderArtifact = (options: RenderArtifactOptions): RenderArtifactResult => {
+  denyServiceOperation('renderArtifact')
   const { root, config, template } = options
   const origin = resolveTemplateSource(template, config, root).origin
   const page = (path: string, variables: TemplateVariables): RenderedPage => ({ path, content: renderPage(template, variables, config, root) })
@@ -181,6 +183,7 @@ export const renderArtifact = (options: RenderArtifactOptions): RenderArtifactRe
  * to `root`, in page order.
  */
 export const writeRenderedPages = (result: RenderArtifactResult, target: string, root: string): string[] => {
+  denyServiceOperation('writeRenderedPages')
   const single = result.pages.length === 1 && !RENDER_TEMPLATES[result.template].multiPage
   const written: string[] = []
   const write = (path: string, content: string): string => {

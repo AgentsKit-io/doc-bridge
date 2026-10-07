@@ -1,3 +1,4 @@
+import { denyServiceOperation } from '../execution/profile.js'
 import type { ChildProcess } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { mkdirSync, writeFileSync } from 'node:fs'
@@ -120,6 +121,7 @@ const withUpdatedObservation = (observation: ControlledStudyObservationV1, adjud
 }
 
 export const independentlyAdjudicateStudyObservation = async (task: StudyTaskV1, observation: ControlledStudyObservationV1, config: StudyAdjudicatorCli, cwd: string, maxRuntimeMs: number, configurationHash: string): Promise<ControlledStudyObservationV1> => {
+  denyServiceOperation('independentlyAdjudicateStudyObservation')
   validateStudyProviderCommand(config, cwd)
   const input = adjudicatorInput(task, observation)
   if (Buffer.byteLength(input, 'utf8') > config.maxInputBytes) throw new Error(`Adjudicator input limit ${config.maxInputBytes} bytes exceeded for ${task.id}.`)
@@ -188,6 +190,7 @@ export const independentlyAdjudicateStudyLedger = async (options: IndependentStu
 }
 
 export const persistIndependentlyAdjudicatedLedger = (path: string, ledger: ControlledStudyObservationLedgerV1): string => {
+  denyServiceOperation('persistIndependentlyAdjudicatedLedger')
   parseControlledStudyLedger(ledger)
   mkdirSync(dirname(resolve(path)), { recursive: true })
   writeFileSync(resolve(path), `${JSON.stringify(ledger, null, 2)}\n`, 'utf8')

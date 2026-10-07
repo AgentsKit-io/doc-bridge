@@ -1,3 +1,4 @@
+import { denyServiceOperation } from '../execution/profile.js'
 import { existsSync, readdirSync, readFileSync, realpathSync, renameSync, unlinkSync, writeFileSync } from 'node:fs'
 import { basename, dirname, extname, join, relative, resolve } from 'node:path'
 import { splitLines, toPosix } from '@agentskit/cross-platform'
@@ -123,6 +124,7 @@ const bindingHash = (proposal: FixProposalV1): string => {
 }
 
 export const applyFixProposal = (root: string, proposalInput: unknown, options: FixApplyOptions = {}): FixProposalV1 => {
+  denyServiceOperation('applyFixProposal')
   const proposal = FixProposalV1Schema.parse(proposalInput)
   if (proposal.status !== 'approved' || !proposal.approval) throw new Error('Only an explicitly approved fix proposal can be applied.')
   if (proposal.approval.proposalHash !== bindingHash(proposal)) throw new Error('Approval is not bound to the exact proposal content.')

@@ -1,3 +1,4 @@
+import { denyServiceOperation } from '../execution/profile.js'
 import type { ArtifactIOV1, StorageRequest } from '../storage/contract.js'
 import { readJsonArtifact, writeJsonArtifact } from '../index-builder/artifact-io.js'
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
@@ -58,6 +59,7 @@ export const parseEnrichmentOverlay = (value: unknown): EnrichmentOverlayV1 | un
 }
 
 export const writeEnrichmentOverlay = (root: string, overlay: EnrichmentOverlayV1): string => {
+  denyServiceOperation('writeEnrichmentOverlay')
   const path = enrichmentOverlayPath(root)
   mkdirSync(enrichmentDir(root), { recursive: true })
   const sealed = EnrichmentOverlayV1Schema.parse({ ...overlay, contentHash: enrichmentOverlayContentHash(overlay) })

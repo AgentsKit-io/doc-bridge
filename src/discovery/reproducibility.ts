@@ -1,3 +1,4 @@
+import { denyServiceOperation } from '../execution/profile.js'
 /**
  * Whether a committed index could have been produced by a clean checkout.
  *
@@ -84,6 +85,7 @@ export const checkIndexReproducibility = (
   indexPath: string,
   paths: readonly string[],
 ): IndexReproducibility => {
+  denyServiceOperation('checkIndexReproducibility')
   if (git(root, ['rev-parse', '--is-inside-work-tree']) === undefined) return NOT_CHECKED('no-git')
   if (git(root, ['ls-files', '--error-unmatch', '--', indexPath]) === undefined) {
     return NOT_CHECKED('index-untracked')

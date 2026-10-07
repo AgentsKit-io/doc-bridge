@@ -1,3 +1,4 @@
+import { denyServiceOperation } from '../execution/profile.js'
 import { repositoryHas, repositoryText, type RepositoryFiles } from '../index-builder/repository-io.js'
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -5,6 +6,7 @@ import { join } from 'node:path'
 export type PackageManager = 'pnpm' | 'npm' | 'yarn' | 'bun'
 
 export const detectPackageManager = (root: string): PackageManager => {
+  denyServiceOperation('legacy package-script reads')
   if (existsSync(join(root, 'pnpm-lock.yaml')) || existsSync(join(root, 'pnpm-workspace.yaml'))) {
     return 'pnpm'
   }

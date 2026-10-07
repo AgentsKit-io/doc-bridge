@@ -1,3 +1,5 @@
+import { withExecutionProfile, executionContext, isServiceProfile, serviceCoverage, type ExecutionProfile } from '../execution/profile.js'
+import { serviceConfig } from '../execution/config.js'
 import { mkdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs'
 import { join, relative, resolve } from 'node:path'
 
@@ -25,7 +27,7 @@ import { decideEnrichment, listEnrichment } from '../enrich/review.js'
 import { sha256NormalizedV1 } from '../index-builder/content-hash.js'
 import { discoverRepository } from '../discovery/repository.js'
 import { FixProposalV1Schema, type DiscoverySnapshotV1, type ReconciliationReportV1, type FixProposalV1 } from '../schemas/knowledge.js'
-import { redactValue } from '../safety/repository.js'
+import { redactValue, redactSecrets } from '../safety/repository.js'
 
 type JsonRpcRequest = {
   readonly jsonrpc?: '2.0'
@@ -34,7 +36,8 @@ type JsonRpcRequest = {
   readonly params?: unknown
 }
 
-type McpContext = {
+export type McpContext = {
+  readonly profile?: ExecutionProfile
   readonly root: string
   readonly config: DocBridgeConfigV1
   readonly loadIndex?: () => DocBridgeIndexV1
@@ -262,7 +265,7 @@ const textResult = (value: unknown) => ({
   content: [
     {
       type: 'text',
-      text: typeof value === 'string' ? value : JSON.stringify(value, null, 2),
+      text: typeof value === 'string' ? executionContext().profile === 'service' ? redactSecrets(value) : value : JSON.stringify(executionContext().profile === 'service' ? redactValue(value) : value, null, 2),
     },
   ],
 })
@@ -329,7 +332,15 @@ const assertMcpToolEnabled = (ctx: McpContext, name: string): void => {
   if (!enabledMcpTools(ctx).some((tool) => tool.name === name)) throw new Error(`MCP tool "${name}" is disabled by configuration.`)
 }
 
-export const handleMcpRequest = (ctx: McpContext, request: JsonRpcRequest): unknown => {
+export const handleMcpRequest = (ctx: McpContext, request: JsonRpcRequest): unknown => withExecutionProfile(isServiceProfile(ctx.config) ? 'service' : ctx.profile, () => {
+  const service = executionContext().profile === 'service'
+  if (service) ctx = { ...ctx, config: serviceConfig(ctx.config).config }
+  const toolResult = (value: unknown) => {
+    const response = textResult(value)
+    if (!service) return response
+    const diagnostics = serviceConfig(ctx.config).diagnostics
+    return { ...response, _meta: { serviceProfile: { diagnostics, coverage: serviceCoverage(diagnostics) } } }
+  }
   if (request.method === 'initialize') {
     return {
       protocolVersion: '2024-11-05',
@@ -338,13 +349,14 @@ export const handleMcpRequest = (ctx: McpContext, request: JsonRpcRequest): unkn
     }
   }
 
-  if (request.method === 'tools/list') return { tools: enabledMcpTools(ctx) }
+  if (request.method === 'tools/list') return { tools: service ? enabledMcpTools(ctx).filter(tool => ['knowledge.search', 'knowledge.lookup', 'handoff.resolve', 'doc.search', 'doc.get', 'retriever.query', 'playbook.pattern.get', 'registry.topology'].includes(tool.name)) : enabledMcpTools(ctx) }
 
   if (request.method === 'tools/call') {
     const params = asRecord(request.params)
     const name = params.name
     const args = asRecord(params.arguments)
     if (typeof name !== 'string') throw new Error('MCP tools/call requires a tool name.')
+    if (service && (!['knowledge.search', 'knowledge.lookup', 'handoff.resolve', 'doc.search', 'doc.get', 'retriever.query', 'playbook.pattern.get', 'registry.topology'].includes(name) || !ctx.loadIndex || (name === 'doc.get' && !ctx.readDocument))) throw new Error('not-analyzed: service profile requires injected reads and refuses mutating/agent or filesystem tools')
     assertMcpToolEnabled(ctx, name)
     const index = () => ctx.loadIndex?.() ?? loadFreshDocBridgeIndex(ctx.root, ctx.config)
 
@@ -355,53 +367,53 @@ export const handleMcpRequest = (ctx: McpContext, request: JsonRpcRequest): unkn
         kind: parsed.kind === 'package' ? 'package' : 'ownership',
         id: parsed.id,
         agent: true,
-      }, { root: ctx.root })
+      }, service ? {} : { root: ctx.root })
       // The payload is the handoff it always was; a declared budget adds `budget` and may shed `related` and the summary note.
-      return textResult(parsed.budgetTokens === undefined ? handoff : budgetedHandoff(loaded, handoff as AgentHandoffV1, parsed.budgetTokens))
+      return toolResult(parsed.budgetTokens === undefined ? handoff : budgetedHandoff(loaded, handoff as AgentHandoffV1, parsed.budgetTokens))
     }
 
     if (name === 'knowledge.search') {
       const { format, ...parsed } = parseToolArgs('knowledge.search', KnowledgeSearchArgsSchema, args)
       const response = knowledgeSearch(index(), parsed)
-      return textResult(format === 'text' ? formatKnowledgeSearchText(response) : response)
+      return toolResult(format === 'text' ? formatKnowledgeSearchText(response) : response)
     }
 
     if (name === 'knowledge.lookup') {
       const { format, ...parsed } = parseToolArgs('knowledge.lookup', KnowledgeLookupArgsSchema, args)
       // Diagnostics come from the latest workflow run when there is one; a repository never checked still gets its lookup.
       const report = () => { try { return workflowReport(ctx) } catch { return undefined } }
-      const response = knowledgeLookup(index(), ctx.config, parsed, { root: ctx.root, report })
-      return textResult(format === 'text' ? formatKnowledgeLookupText(response) : response)
+      const response = knowledgeLookup(index(), ctx.config, parsed, service ? {} : { root: ctx.root, report })
+      return toolResult(format === 'text' ? formatKnowledgeLookupText(response) : response)
     }
 
     if (name === 'doc.search') {
       const parsed = parseToolArgs('doc.search', DocSearchArgsSchema, args)
-      if (parsed.agent) return textResult(runQuery(index(), ctx.config, { kind: 'search', term: parsed.term, agent: true, ...(parsed.mode === undefined ? {} : { mode: parsed.mode }), ...(parsed.contextBudgetTokens === undefined ? {} : { contextBudgetTokens: parsed.contextBudgetTokens }) }))
-      return textResult(searchIndex(index(), parsed.term, parsed.limit ?? 20))
+      if (parsed.agent) return toolResult(runQuery(index(), ctx.config, { kind: 'search', term: parsed.term, agent: true, ...(parsed.mode === undefined ? {} : { mode: parsed.mode }), ...(parsed.contextBudgetTokens === undefined ? {} : { contextBudgetTokens: parsed.contextBudgetTokens }) }))
+      return toolResult(searchIndex(index(), parsed.term, parsed.limit ?? 20))
     }
 
     if (name === 'doc.get') {
       const relPath = findDocPath(index(), parseToolArgs('doc.get', DocGetArgsSchema, args))
-      return textResult(ctx.readDocument ? ctx.readDocument(relPath) : readFileSync(resolveDocPath(ctx.root, relPath), 'utf8'))
+      return toolResult(ctx.readDocument ? ctx.readDocument(relPath) : readFileSync(resolveDocPath(ctx.root, relPath), 'utf8'))
     }
 
-    if (name === 'gate.status') return textResult(runGates(ctx.root, ctx.config))
+    if (name === 'gate.status') return toolResult(runGates(ctx.root, ctx.config))
 
     if (name === 'retriever.query') {
       const parsed = parseToolArgs('retriever.query', RetrieverQueryArgsSchema, args)
-      return textResult(retrieveDocBridgeChunks(index(), parsed.query, parsed.limit ? { limit: parsed.limit } : {}))
+      return toolResult(retrieveDocBridgeChunks(index(), parsed.query, parsed.limit ? { limit: parsed.limit } : {}))
     }
 
     if (name === 'memory.classify') {
-      return textResult(classifyMemoryCandidates(ingestMemoryCandidates(ctx.root), index()))
+      return toolResult(classifyMemoryCandidates(ingestMemoryCandidates(ctx.root), index()))
     }
 
     if (name === 'memory.promoteDraft') {
-      return textResult(draftMemoryPromotion(classifyMemoryCandidates(ingestMemoryCandidates(ctx.root), index())))
+      return toolResult(draftMemoryPromotion(classifyMemoryCandidates(ingestMemoryCandidates(ctx.root), index())))
     }
 
     if (name === 'registry.topology') {
-      return textResult({
+      return toolResult({
         id: 'doc-curator',
         delegates: ['docs-chat', 'knowledge-promoter', 'code-review'],
         tools: ['handoff.resolve', 'doc.search', 'doc.get', 'gate.status', 'retriever.query'],
@@ -412,12 +424,12 @@ export const handleMcpRequest = (ctx: McpContext, request: JsonRpcRequest): unkn
 
     if (name === 'docbridge.snapshot') {
       const parsed = parseToolArgs('docbridge.snapshot', WorkflowRunArgsSchema, args)
-      return textResult(redactValue(workflowSnapshot(ctx, parsed.runId)))
+      return toolResult(redactValue(workflowSnapshot(ctx, parsed.runId)))
     }
 
     if (name === 'docbridge.report') {
       const parsed = parseToolArgs('docbridge.report', WorkflowRunArgsSchema, args)
-      return textResult(redactValue(workflowReport(ctx, parsed.runId)))
+      return toolResult(redactValue(workflowReport(ctx, parsed.runId)))
     }
 
     if (name === 'docbridge.diagnostics') {
@@ -426,39 +438,39 @@ export const handleMcpRequest = (ctx: McpContext, request: JsonRpcRequest): unkn
         (!parsed.status || diagnostic.status === parsed.status) && (!parsed.severity || diagnostic.severity === parsed.severity),
       )
       // `finding` is the ecosystem shape; the filters above still speak the internal vocabulary.
-      if (parsed.format === 'finding') return textResult(redactValue({ reportHash: workflowReport(ctx).contentHash, findings: findingsFromDiagnostics(diagnostics) }))
-      return textResult(redactValue({ reportHash: workflowReport(ctx).contentHash, diagnostics }))
+      if (parsed.format === 'finding') return toolResult(redactValue({ reportHash: workflowReport(ctx).contentHash, findings: findingsFromDiagnostics(diagnostics) }))
+      return toolResult(redactValue({ reportHash: workflowReport(ctx).contentHash, diagnostics }))
     }
 
     if (name === 'docbridge.relations') {
       const parsed = parseToolArgs('docbridge.relations', RelationsArgsSchema, args)
       const snapshot = workflowSnapshot(ctx)
-      return textResult({ snapshotHash: snapshot.contentHash, relations: snapshot.relations.filter((relation) => !parsed.kind || relation.kind === parsed.kind).slice(0, parsed.limit ?? 100) })
+      return toolResult({ snapshotHash: snapshot.contentHash, relations: snapshot.relations.filter((relation) => !parsed.kind || relation.kind === parsed.kind).slice(0, parsed.limit ?? 100) })
     }
 
     if (name === 'docbridge.run') {
       parseToolArgs('docbridge.run', z.object({}), args)
-      return textResult(workflowRun(ctx))
+      return toolResult(workflowRun(ctx))
     }
 
     if (name === 'docbridge.proposals') {
       const parsed = parseToolArgs('docbridge.proposals', ProposalsArgsSchema, args)
       const run = (() => { try { return workflowRun(ctx) } catch { return undefined } })()
       // KR-10: enrichment proposals share this tool; a decision goes through the ecosystem approval gate.
-      if (parsed.action === 'enrich-list') return textResult(redactValue({ ...(run ? { runId: run.runId } : {}), enrichment: listEnrichment(ctx.root) ?? null }))
+      if (parsed.action === 'enrich-list') return toolResult(redactValue({ ...(run ? { runId: run.runId } : {}), enrichment: listEnrichment(ctx.root) ?? null }))
       if (parsed.action === 'enrich-approve' || parsed.action === 'enrich-reject') {
         if (!parsed.proposalId) throw new Error(`docbridge.proposals ${parsed.action} requires proposalId`)
         const proposalId = parsed.proposalId
         return (async () => {
           const snapshot = (() => { try { return workflowSnapshot(ctx) } catch { return undefined } })()
           const decided = await decideEnrichment({ root: ctx.root, proposalId, decision: parsed.action === 'enrich-approve' ? 'approved' : 'rejected', by: parsed.approvedBy ?? 'human', ...(parsed.reason ? { reason: parsed.reason } : {}), ...(snapshot ? { snapshot } : {}) })
-          return textResult(redactValue({ ...(run ? { runId: run.runId } : {}), approvalId: decided.approvalId, entry: decided.entry, overlayHash: decided.overlay.contentHash }))
+          return toolResult(redactValue({ ...(run ? { runId: run.runId } : {}), approvalId: decided.approvalId, entry: decided.entry, overlayHash: decided.overlay.contentHash }))
         })()
       }
       if (!parsed.action || parsed.action === 'list') {
         let proposal: FixProposalV1 | undefined
         try { proposal = readSavedProposal(ctx, undefined) } catch { proposal = undefined }
-        return textResult(redactValue({ ...(run ? { runId: run.runId } : {}), proposals: proposal ? [proposal] : [] }))
+        return toolResult(redactValue({ ...(run ? { runId: run.runId } : {}), proposals: proposal ? [proposal] : [] }))
       }
       if (parsed.action === 'suggest') {
         return (async () => {
@@ -468,7 +480,7 @@ export const handleMcpRequest = (ctx: McpContext, request: JsonRpcRequest): unkn
           const adapter = createRegistryAgentAdapter(ctx.root, ctx.config, ctx.config.intelligence?.registry?.cli ? undefined : runner)
           const proposal = await adapter.run(snapshot, report)
           const savedPath = persistRegistryAgentProposal(workflowStateDir(ctx), proposal)
-          return textResult(redactValue({ ...(run ? { runId: run.runId } : {}), proposal, proposalPath: savedPath }))
+          return toolResult(redactValue({ ...(run ? { runId: run.runId } : {}), proposal, proposalPath: savedPath }))
         })()
       }
       const discovered = discoverRepository({ root: ctx.root, config: ctx.config })
@@ -476,23 +488,23 @@ export const handleMcpRequest = (ctx: McpContext, request: JsonRpcRequest): unkn
       if (parsed.action === 'propose-links') {
         const proposal = createMarkdownLinkFixProposal(ctx.root, options)
         if (proposal) saveProposal(ctx, proposal)
-        return textResult(redactValue({ ...(run ? { runId: run.runId } : {}), proposal: proposal ?? null }))
+        return toolResult(redactValue({ ...(run ? { runId: run.runId } : {}), proposal: proposal ?? null }))
       }
       if (parsed.action === 'propose-normalize') {
         if (!parsed.artifactPath) throw new Error('docbridge.proposals propose-normalize requires artifactPath')
         const proposal = createArtifactNormalizationProposal(ctx.root, parsed.artifactPath, options)
         if (proposal) saveProposal(ctx, proposal)
-        return textResult(redactValue({ ...(run ? { runId: run.runId } : {}), proposal: proposal ?? null }))
+        return toolResult(redactValue({ ...(run ? { runId: run.runId } : {}), proposal: proposal ?? null }))
       }
       if (parsed.action === 'approve') {
         const proposal = approveFixProposal(readSavedProposal(ctx, parsed.proposal), parsed.approvedBy ?? 'human')
         if (parsed.proposalHash && proposal.approval?.proposalHash !== parsed.proposalHash) throw new Error('proposalHash does not match the saved proposal')
         saveProposal(ctx, proposal)
-        return textResult(redactValue({ ...(run ? { runId: run.runId } : {}), proposal }))
+        return toolResult(redactValue({ ...(run ? { runId: run.runId } : {}), proposal }))
       }
       const proposal = applyFixProposal(ctx.root, readSavedProposal(ctx, parsed.proposal), { currentRevision: discovered.sourceRevision })
       saveProposal(ctx, proposal)
-      return textResult(redactValue({ ...(run ? { runId: run.runId } : {}), proposal }))
+      return toolResult(redactValue({ ...(run ? { runId: run.runId } : {}), proposal }))
     }
 
     throw new Error(`Unknown tool "${String(name)}"`)
@@ -500,7 +512,7 @@ export const handleMcpRequest = (ctx: McpContext, request: JsonRpcRequest): unkn
 
   if (request.method?.startsWith('notifications/')) return undefined
   throw new Error(`Unsupported MCP method "${request.method ?? ''}"`)
-}
+})
 
 type StdioFraming = 'content-length' | 'json-line'
 

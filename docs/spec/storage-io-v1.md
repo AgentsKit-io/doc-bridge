@@ -204,3 +204,11 @@ not record the captured file size. This avoids mixing live size metadata into a
 bounded prior capture. Missing/invalid receipts retain full-verification behavior.
 Verified file hashes are reused for freshness and non-BOM Markdown evidence;
 BOM documents retain their separate Markdown hash calculation.
+
+## Caller execution metadata
+
+Partitioned artifact APIs accept an optional caller `profile` on `StorageRequest`.
+The [service profile](service-profile-v1.md) propagates the immutable ceiling
+through storage callbacks. This field is stripped before strict storage wire
+requests; envelope and index schemas remain unchanged. Repository configuration
+never supplies this metadata.

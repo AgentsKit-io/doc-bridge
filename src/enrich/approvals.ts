@@ -1,3 +1,4 @@
+import { denyServiceOperation, isServiceProfile, bindServiceCapability } from '../execution/profile.js'
 import { z } from 'zod'
 import type { ArtifactIOV1, StorageRequest } from '../storage/contract.js'
 import { readJsonArtifact, writeJsonArtifact } from '../index-builder/artifact-io.js'
@@ -69,8 +70,10 @@ export const enrichmentApprovalId = (proposalId: string, targetContentHash: stri
 export const fixApprovalId = (proposalId: string, proposalHash: string): string => sha256NormalizedV1({ proposalId, proposalHash })
 
 export const createFileApprovalStore = (dir: string): ApprovalStore => {
+  denyServiceOperation('createFileApprovalStore')
   const pathFor = (id: string): string => join(dir, `${safeId(id)}.json`)
   const write = (approval: Approval): void => {
+    denyServiceOperation('cached local artifact write')
     mkdirSync(dir, { recursive: true })
     const path = pathFor(approval.id)
     const temporary = `${path}.tmp-${process.pid}`
@@ -166,6 +169,7 @@ type CoreHitl = { createApprovalGate: <T>(store: ApprovalStore) => ApprovalGate<
  * is read by the other, and by any AgentsKit surface that opens the same store.
  */
 export const loadApprovalGate = async <TPayload = unknown>(store: ApprovalStore): Promise<{ readonly gate: ApprovalGate<TPayload>; readonly source: 'ecosystem' | 'mirror' }> => {
+  if (isServiceProfile(store)) return { gate: createApprovalGateMirror<TPayload>(store), source: 'mirror' }
   try {
     const core = await importPeer<CoreHitl>('@agentskit/core/hitl')
     if (typeof core.createApprovalGate === 'function') return { gate: core.createApprovalGate<TPayload>(store), source: 'ecosystem' }
@@ -209,7 +213,7 @@ export const createStoredApprovalStore = (io: ArtifactIOV1, request: StorageRequ
     const result = await writeJsonArtifact(io, request, { kind: 'approval', name: safeId(approval.id) }, 'ApprovalV1', ApprovalSchema.parse(approval), expectedPreviousByteHash)
     if (result.status !== 'ok') throw new Error(result.code)
   }
-  return {
+  const store: ApprovalStore = {
     async get<T>(id: string) { return (await read(id))?.value as Approval<T> | undefined ?? null },
     async put<T>(approval: Approval<T>) {
       const prior = await read(approval.id)
@@ -224,4 +228,5 @@ export const createStoredApprovalStore = (io: ArtifactIOV1, request: StorageRequ
       return next
     },
   }
+  return request.profile === 'service' || isServiceProfile() ? bindServiceCapability(store) : store
 }

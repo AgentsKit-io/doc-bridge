@@ -27,3 +27,6 @@ export {
   type ReportConfig,
   type RetrievalConfig,
 } from './schema.js'
+
+/** Static configuration from exact-partition caller storage. */
+export { loadConfigWithRead } from './load-config.js'

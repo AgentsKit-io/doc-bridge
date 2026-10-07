@@ -1,3 +1,4 @@
+import type { ExecutionProfile } from '../execution/profile.js'
 import { z } from 'zod'
 
 export const StorageHashSchema = z.string().regex(/^[a-f0-9]{64}$/)
@@ -16,7 +17,7 @@ export type ContentRef = Readonly<z.infer<typeof ContentRefSchema>>
 export const FileMetaSchema = z.object({ path: StoragePathSchema, kind: z.enum(['file', 'directory', 'symlink']), bytes: z.number().int().nonnegative(), content: ContentRefSchema.optional() }).strict()
 export type FileMeta = Readonly<z.infer<typeof FileMetaSchema>>
 export const StorageRequestSchema = z.object({ partition: PartitionSchema, signal: z.instanceof(AbortSignal) }).strict()
-export type StorageRequest = Readonly<z.infer<typeof StorageRequestSchema>>
+export type StorageRequest = Readonly<z.infer<typeof StorageRequestSchema> & { profile?: ExecutionProfile }>
 const patterns = z.array(z.string().min(1).max(512)).max(128)
 export const RepositoryListRequestSchema = StorageRequestSchema.extend({ under: z.union([z.literal('.'), StoragePathSchema]), include: patterns, exclude: patterns }).strict()
 export const RepositoryStatRequestSchema = StorageRequestSchema.extend({ path: StoragePathSchema }).strict()

@@ -1053,3 +1053,13 @@ export default defineConfig({
 - [AgentHandoff v1](../schemas/agent-handoff-v1.md)
 - [DocBridgeIndex v1](../schemas/doc-bridge-index-v1.md)
 - [MemoryCandidate v1](../schemas/memory-candidate-v1.md)
+
+## Caller service profile
+
+The caller-selected [service profile v1](service-profile-v1.md) restricts this
+surface before repository configuration is interpreted. Repository config admits
+only the enumerated leaves; ignored options retain path-only diagnostics and
+`not-analyzed` coverage. Agent execution, repository module imports, federation,
+watch and legacy writes are denied. Service library calls use injected storage;
+service CLI writes require `--artifact-root`. MCP mutating/agent operations and
+filesystem fallbacks are refused. Ordinary local calls remain unchanged.

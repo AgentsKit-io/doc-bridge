@@ -1,3 +1,4 @@
+import { denyServiceOperation } from '../execution/profile.js'
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
@@ -188,6 +189,7 @@ const runCli = (root: string, cli: RegistryCliConfig, context: RegistryAgentCont
 })
 
 export const loadRegistryAgentRunner = async (root: string, config: DocBridgeConfigV1): Promise<RegistryAgentRunner> => {
+  denyServiceOperation('loadRegistryAgentRunner', config)
   const metadata = loadRegistryAgentMetadata(root, config)
   const configured = registryConfig(config)?.runnerModule
   const modulePath = configured ? containedPath(root, configured) : containedPath(root, join(metadata.root, 'doc-bridge-adapter.js'))
@@ -213,6 +215,7 @@ export const loadRegistryAgentMetadata = (root: string, config: DocBridgeConfigV
 
 /** Create an adapter whose local runner receives `RegistryAgentExecutionOptions.signal` separately from its frozen context; see `RegistryAgentAdapter` for deadline errors. */
 export const createRegistryAgentAdapter = (root: string, config: DocBridgeConfigV1, runner?: RegistryAgentRunner): RegistryAgentAdapter => {
+  denyServiceOperation('createRegistryAgentAdapter', config)
   if (!registryConfig(config)?.enabled) throw new Error('Registry agents are disabled. Set intelligence.registry.enabled: true to run an assisted workflow.')
   const metadata = loadRegistryAgentMetadata(resolve(root), config)
   const settings = registryConfig(config) ?? {}
@@ -225,6 +228,7 @@ export const createRegistryAgentAdapter = (root: string, config: DocBridgeConfig
   const deterministicCache = new Map<string, AgentProposalV1>()
   /** One transport for both protocols: the configured CLI, or the local runner, under the same limits. */
   const transport = async (context: RegistryAgentContext | RegistryEnrichmentContext): Promise<unknown> => {
+    denyServiceOperation('Registry transport', config)
     if (active >= maxConcurrency) throw new Error(`Registry agent concurrency limit ${maxConcurrency} exceeded.`)
     if (!settings.cli && !runner) throw new Error('Registry agent requires either intelligence.registry.cli or a local runner module.')
     active += 1
@@ -266,6 +270,7 @@ export const createRegistryAgentAdapter = (root: string, config: DocBridgeConfig
   return {
     metadata,
     enrich: async (task, packs, options = {}) => {
+      denyServiceOperation('Registry enrichment', config)
       const input = JSON.stringify(packs)
       if (Buffer.byteLength(input, 'utf8') > maxInputBytes) throw new Error(`Registry agent input limit ${maxInputBytes} bytes exceeded.`)
       const context = deepFreeze({
@@ -286,6 +291,8 @@ export const createRegistryAgentAdapter = (root: string, config: DocBridgeConfig
       return proposals
     },
     run: async (snapshot, report, evidence = report.diagnostics.flatMap((diagnostic) => diagnostic.evidence).slice(0, 64), documentation) => {
+      denyServiceOperation('Registry agent run', config)
+      denyServiceOperation('Registry service snapshot', snapshot)
       const cacheKey = sha256NormalizedV1({ snapshotHash: snapshot.contentHash, snapshotHashAlgo: snapshot.contentHashAlgo, sourceRevision: snapshot.sourceRevision, sourceRevisionKind: snapshot.sourceRevisionKind, reportHash: report.contentHash, documentationAuditHash: documentation?.contentHash ?? null, agentId: metadata.id, agentVersion: metadata.version, cli: settings.cli ?? null, maxInputBytes, evidence })
       if (settings.deterministic && deterministicCache.has(cacheKey)) return deterministicCache.get(cacheKey) as AgentProposalV1
       const context = deepFreeze({
@@ -323,6 +330,7 @@ export const createRegistryAgentAdapter = (root: string, config: DocBridgeConfig
 }
 
 export const persistRegistryAgentProposal = (stateDir: string, proposal: AgentProposalV1): string => {
+  denyServiceOperation('persistRegistryAgentProposal')
   AgentProposalV1Schema.parse(proposal)
   if (proposal.contentHash !== contentHashForArtifactV1(proposal)) throw new Error('Cannot persist a Registry agent proposal with an invalid contentHash.')
   const safeHash = contentHashForArtifactV1(proposal)

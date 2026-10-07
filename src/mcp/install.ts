@@ -1,3 +1,4 @@
+import { denyServiceOperation } from '../execution/profile.js'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
@@ -47,6 +48,7 @@ export const installMcpConfig = (
   root: string,
   target: McpInstallTarget,
 ): McpInstallResult => {
+  denyServiceOperation('installMcpConfig')
   const configPath = resolveTargetPath(target, root)
   const created = !existsSync(configPath)
   const existing = readJson(configPath)

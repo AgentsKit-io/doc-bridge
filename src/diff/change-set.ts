@@ -1,4 +1,5 @@
 import { readBoundedText } from '../lib/bounded-text.js'
+import { withExecutionProfile, type ExecutionProfile } from '../execution/profile.js'
 import { parseDocumentationDeclarations } from '../discovery/documentation.js'
 import { entityId } from '../discovery/identity.js'
 import { exportsOf, FILE_BACKED_KINDS } from '../discovery/incremental.js'
@@ -218,7 +219,7 @@ const verifiedLocalDocuments = (head: DiscoverySnapshotV1, root: string): Map<st
 }
 
 /** Exact head reader; the synchronous public facade below remains available. */
-export const diffSnapshotsWithRead = async (base: DiscoverySnapshotV1, head: DiscoverySnapshotV1, read: RepositoryReadV1, options: { signal?: AbortSignal; branch?: string } = {}) => {
+export const diffSnapshotsWithRead = async (base: DiscoverySnapshotV1, head: DiscoverySnapshotV1, read: RepositoryReadV1, options: { signal?: AbortSignal; branch?: string; profile?: ExecutionProfile } = {}) => withExecutionProfile(options.profile, async () => {
   if (read.partition.revision !== head.sourceRevision) throw new Error('HEAD_PARTITION_MISMATCH')
   const partition = Object.freeze({ ...read.partition })
   const signal = options.signal ?? new AbortController().signal
@@ -232,7 +233,7 @@ export const diffSnapshotsWithRead = async (base: DiscoverySnapshotV1, head: Dis
     if (parseMarkdownDocument(doc.path!, text).contentHash === hashOf(doc)) texts.set(doc.id, text)
   }
   return diffWithDocuments(base, head, options, texts)
-}
+})
 
 export const diffSnapshots = (base: DiscoverySnapshotV1, head: DiscoverySnapshotV1, options: DiffOptions = {}) =>
   diffWithDocuments(base, head, options, options.headRoot && referenceFacts(base).length ? verifiedLocalDocuments(head, options.headRoot) : new Map())

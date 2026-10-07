@@ -1,3 +1,7 @@
+import { restrictServiceRead } from '../execution/repository.js'
+import { redactValue, redactSecrets } from '../safety/repository.js'
+import { denyServiceOperation, withExecutionProfile, executionContext, isServiceProfile, bindServiceCapability, serviceCoverage, type ExecutionProfile } from '../execution/profile.js'
+import { serviceConfig } from '../execution/config.js'
 import { readRepositoryFiles, repositoryText, repositoryBoundedText, INDEX_READ_PATTERNS, type RepositoryFiles, type AvailabilityLimitation, type SnapshotReadBinding } from './repository-io.js'
 import { readJsonArtifact, writeJsonArtifact } from './artifact-io.js'
 import { samePartition, type ArtifactIOV1, type RepositoryReadV1, type StorageRequest, type StorageResult, type StorageFailure, type ContentRef } from '../storage/contract.js'
@@ -32,6 +36,7 @@ import { projectEnrichmentOverlay, readEnrichmentOverlay } from '../enrich/overl
 import type { EnrichmentOverlayV1 } from '../schemas/enrichment.js'
 
 export type BuildIndexOptions = {
+  readonly profile?: ExecutionProfile
   readonly root?: string
   readonly config: DocBridgeConfigV1
   readonly write?: boolean
@@ -103,6 +108,7 @@ const projectFromSnapshot = (
       // Unreadable now: the entity still projects from what the snapshot recorded about it.
     }
   }
+  if (executionContext().profile === 'service') for (const [path, content] of contents) contents.set(path, redactSecrets(content))
   const declared = applyDocumentationDeclarations(
     observed,
     [...contents.entries()].map(([path, content]) => ({ path, content })),
@@ -142,7 +148,7 @@ const existingGeneratedAt = (indexPath: string, contentHash: string): string | u
   }
 }
 
-export const buildDocBridgeIndex = (opts: BuildIndexOptions): BuildIndexResult => buildIndex(opts)
+export const buildDocBridgeIndex = (opts: BuildIndexOptions): BuildIndexResult => withExecutionProfile(opts.profile, () => { denyServiceOperation('legacy index', opts.config); return buildIndex(opts) })
 
 const buildIndex = (opts: BuildIndexOptions, files?: RepositoryFiles, fallbackProjectName?: string, contentRefs?: ReadonlyMap<string, ContentRef>, byteSizes?: ReadonlyMap<string, number>): BuildIndexResult => {
   const root = opts.root ?? process.cwd()
@@ -212,7 +218,7 @@ const buildIndex = (opts: BuildIndexOptions, files?: RepositoryFiles, fallbackPr
       ]
     : curated
 
-  const index: DocBridgeIndexV1 = {
+  let index: DocBridgeIndexV1 = {
     schemaVersion: 1,
     contentHash: '0'.repeat(64),
     contentHashAlgo: opts.hashAlgorithm ?? SEMANTIC_HASH_ALGORITHM,
@@ -226,7 +232,9 @@ const buildIndex = (opts: BuildIndexOptions, files?: RepositoryFiles, fallbackPr
     ...(projection ? { projection } : {}),
   }
 
+  if (executionContext().profile === 'service') index = DocBridgeIndexV1Schema.parse(redactValue(index))
   index.contentHash = contentHashForIndex(index)
+  if (executionContext().profile === 'service') bindServiceCapability(index)
   index.generatedAt = (files ? undefined : existingGeneratedAt(indexPath, index.contentHash)) ?? index.generatedAt
 
   /*
@@ -290,6 +298,7 @@ const buildIndex = (opts: BuildIndexOptions, files?: RepositoryFiles, fallbackPr
 
 
 export type BuildStoredIndexOptions = StorageRequest & {
+  readonly profile?: ExecutionProfile
   readonly repository: RepositoryReadV1
   readonly artifacts: ArtifactIOV1
   readonly config: DocBridgeConfigV1
@@ -302,7 +311,10 @@ export type BuildStoredIndexOptions = StorageRequest & {
 }
 
 /** Exact-partition build. Local export files and Git migration belong to the sync facade. */
-export const buildStoredDocBridgeIndex = async (options: BuildStoredIndexOptions): Promise<StorageResult<{ index: DocBridgeIndexV1; limitations: readonly AvailabilityLimitation[]; byteHash?: string }> | (StorageFailure & { limitations: readonly AvailabilityLimitation[] })> => {
+export const buildStoredDocBridgeIndex = async (options: BuildStoredIndexOptions): Promise<StorageResult<{ index: DocBridgeIndexV1; limitations: readonly AvailabilityLimitation[]; coverage?: DiscoverySnapshotV1['coverage']; byteHash?: string }> | (StorageFailure & { limitations: readonly AvailabilityLimitation[] })> => withExecutionProfile(isServiceProfile(options.config) || isServiceProfile(options.snapshot) ? 'service' : options.profile, async () => {
+  if (executionContext().profile === 'service') { const config = serviceConfig(options.config).config; const { snapshotBinding: _binding, ...rest } = options; options = { ...rest, config, repository: restrictServiceRead(options.repository, config), overlay: 'ignore' } }
+  const coverage = executionContext().profile === 'service' ? serviceCoverage(serviceConfig(options.config).diagnostics) : undefined
+  const profileResult = coverage ? { coverage } : {}
   const request = { partition: options.partition, signal: options.signal }
   if (!samePartition(options.repository.partition, options.partition) || !samePartition(options.artifacts.partition, options.partition)) return { status: 'denied', code: 'PARTITION_MISMATCH' }
   const expected = new Map<string, string>()
@@ -335,7 +347,7 @@ export const buildStoredDocBridgeIndex = async (options: BuildStoredIndexOptions
   }
   const index = buildIndex({ root: '/repository', config: options.config, write: false, snapshot: options.snapshot, overlay: overlay ?? 'ignore', ...(options.hashAlgorithm ? { hashAlgorithm: options.hashAlgorithm } : {}) }, files, options.snapshot.project.name, contentRefs, byteSizes).index
   if (prior.status === 'ok' && prior.value.value.contentHash === index.contentHash) index.generatedAt = prior.value.value.generatedAt
-  if (options.write === false) return { status: 'ok', value: { index, limitations } }
+  if (options.write === false) return { status: 'ok', value: { index, limitations, ...profileResult } }
   const saved = await writeJsonArtifact(options.artifacts, request, key, 'DocBridgeIndexV1', index, prior.status === 'ok' ? prior.value.byteHash : null)
-  return saved.status === 'ok' ? { status: 'ok', value: { index, limitations, byteHash: saved.value.byteHash } } : saved
-}
+  return saved.status === 'ok' ? { status: 'ok', value: { index, limitations, ...profileResult, byteHash: saved.value.byteHash } } : saved
+})

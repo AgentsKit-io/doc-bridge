@@ -154,3 +154,18 @@ respective projections; unsupported algorithms require a compatible version and 
 Revision/time and reuse statistics remain provenance, not semantic identity. Legacy handoff field
 sets and exact proposal, fix and study hash bindings are unchanged. See
 [incremental scan v1](incremental-scan-v1.md) and [index schema v1](../schemas/doc-bridge-index-v1.md).
+
+## Caller service profile
+
+The caller-selected [service profile v1](service-profile-v1.md) restricts this
+surface before repository configuration is interpreted. Repository config admits
+only the enumerated leaves; ignored options retain path-only diagnostics and
+`not-analyzed` coverage. Agent execution, repository module imports, federation,
+watch and legacy writes are denied. Service library calls use injected storage;
+service CLI writes require `--artifact-root`. MCP mutating/agent operations and
+filesystem fallbacks are refused. Ordinary local calls remain unchanged.
+
+Service MCP tool results keep their existing `content` payload and add
+`_meta.serviceProfile` containing path-only `diagnostics` and `coverage` entries
+for ignored/restricted options and unavailable capabilities. Local results carry
+no service metadata.

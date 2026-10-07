@@ -1,3 +1,4 @@
+import { denyServiceOperation } from '../execution/profile.js'
 import { basename, resolve } from 'node:path'
 
 import { DEFAULT_REGISTRY_AGENT_ID, createRegistryAgentAdapter, loadRegistryAgentMetadata, loadRegistryAgentRunner, type RegistryAgentAdapter, type RegistryAgentRunner } from '../agents/registry-adapter.js'
@@ -178,6 +179,8 @@ const attribute = (proposals: readonly unknown[], packs: readonly ContextPack[])
  *    seal, write.
  */
 export const runEnrichment = async (options: EnrichmentRunOptions): Promise<EnrichmentRunResult> => {
+  denyServiceOperation('agent enrichment', options.snapshot)
+  denyServiceOperation('agent enrichment', options.config)
   const { root, config, snapshot, report } = options
   if (!config.intelligence?.registry?.enabled) throw new Error('Registry agents are disabled. Set intelligence.registry.enabled: true to run enrichment.')
   const roles = resolveEnrichmentRoles(config)

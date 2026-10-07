@@ -30,3 +30,13 @@ typed surface/package facts, version/release hooks and issued-evidence validatio
 It has separate strict manifest/input/output schemas and a separate registry;
 v2 fields are never appended to a v1 object. Existing v1 consumers keep their
 original exports and byte-compatible field sets. Discovery migration is separate.
+
+## Caller service profile
+
+The caller-selected [service profile v1](service-profile-v1.md) restricts this
+surface before repository configuration is interpreted. Repository config admits
+only the enumerated leaves; ignored options retain path-only diagnostics and
+`not-analyzed` coverage. Agent execution, repository module imports, federation,
+watch and legacy writes are denied. Service library calls use injected storage;
+service CLI writes require `--artifact-root`. MCP mutating/agent operations and
+filesystem fallbacks are refused. Ordinary local calls remain unchanged.

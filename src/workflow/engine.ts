@@ -1,3 +1,4 @@
+import { denyServiceOperation } from '../execution/profile.js'
 import type { ArtifactIOV1, StorageRequest } from '../storage/contract.js'
 import { readJsonArtifact, writeJsonArtifact } from '../index-builder/artifact-io.js'
 import { appendFileSync, existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs'
@@ -202,6 +203,7 @@ const selectedStages = (stage: WorkflowOptions['stage']): readonly WorkflowStage
   stage && stage !== 'all' ? [stage] : WORKFLOW_STAGES
 
 export const runWorkflow = (options: WorkflowOptions): WorkflowExecutionResult => {
+  denyServiceOperation('runWorkflow')
   const root = resolve(options.root)
   const stateDir = resolve(root, options.stateDir ?? defaultStateDir(root))
   mkdirSync(join(stateDir, 'artifacts'), { recursive: true })
