@@ -264,3 +264,26 @@ Invalid inputs, unavailable reads or invalid artifacts return 2. Action-level
 analysis unavailability is separately reported with an explanation and does not
 change blocking results; publisher errors also fall back without changing gates.
 The publisher is separate from the CLI and does not execute the source checkout.
+
+## Long-operation controls
+
+`discover`, `index` and `diff` accept `--max-duration <ms>` (positive integer) and
+`--progress` (bounded human-readable stage/count/elapsed events on stderr).
+The local CLI selects the async injected reader path when either flag is present;
+commands without these flags retain their synchronous compatibility behavior.
+These controls remain deterministic and local. `--watch` cannot be combined with
+them. With `--progress`, run metrics are printed only on stderr; progress never enters a
+snapshot/index/change-set payload or its hash.
+
+The async path handles Ctrl-C with an `AbortSignal`, exits nonzero and does not
+publish a cancelled/limited computation. It yields during inventory acquisition
+and before publication so a queued SIGINT is observed after synchronous parsing.
+Limits are cooperative at file/host/stage boundaries; a synchronous parse is not
+preempted halfway through. `--max-duration` includes local inventory acquisition.
+Local index exports are prepared only after successful computation and replaced
+with same-directory temporary files; handled failures remove owned temp files.
+Individual exports are atomic, not a multi-file transaction. A limited diff can
+be printed with coverage but is never written to `--output` as a complete result.
+Service discover/index accept the same flags and pass cancellation to their
+partitioned artifact store. Service diff remains unavailable under its existing
+command ceiling.

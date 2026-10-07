@@ -273,3 +273,15 @@ which normalization rejects; it must not trigger manifest fallback.
 Supported lockfiles are parsed once per extraction run, shared across package
 owners and dependencies. Parse failures are reused only within that run; a
 subsequent scan reads and parses the current lockfile bytes again.
+
+## Run observation and cancellation
+
+`discoverRepositoryWithRead` accepts `OperationOptions` from
+[storage I/O](storage-io-v1.md#operation-observation). Acquisition, analysis and
+registered plugin boundaries emit bounded deterministic progress. The run ledger
+wraps the reader passed to each plugin; plugins cannot broaden caller ceilings.
+An abort or exhausted duration/file/byte/heap budget returns explicit partial
+stage coverage rather than a smaller complete capture. Opt-in metrics and a stopped `partial|cancelled` run status live beside the
+snapshot, preserving its
+strict schema and deterministic identity. Snapshot capability coverage remains
+the authority for unsupported extraction, independent of run completion.

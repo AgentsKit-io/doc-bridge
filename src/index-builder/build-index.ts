@@ -1,10 +1,12 @@
+import { createOperation, type OperationOptions, type RunMetrics } from '../storage/operation.js'
+import { StorageFault } from '../storage/local.js'
 import { restrictServiceRead } from '../execution/repository.js'
 import { redactValue, redactSecrets } from '../safety/repository.js'
 import { denyServiceOperation, withExecutionProfile, executionContext, isServiceProfile, bindServiceCapability, serviceCoverage, type ExecutionProfile } from '../execution/profile.js'
 import { serviceConfig } from '../execution/config.js'
 import { readRepositoryFiles, repositoryText, repositoryBoundedText, INDEX_READ_PATTERNS, type RepositoryFiles, type AvailabilityLimitation, type SnapshotReadBinding } from './repository-io.js'
 import { readJsonArtifact, writeJsonArtifact } from './artifact-io.js'
-import { samePartition, type ArtifactIOV1, type RepositoryReadV1, type StorageRequest, type StorageResult, type StorageFailure, type ContentRef } from '../storage/contract.js'
+import { samePartition, StorageFailureCodeSchema, type ArtifactIOV1, type RepositoryReadV1, type StorageRequest, type StorageFailure, type ContentRef } from '../storage/contract.js'
 import { repositoryInputsFromFiles } from './project-corpus.js'
 export type { SnapshotReadBinding } from './repository-io.js'
 import { parseEnrichmentOverlay } from '../enrich/overlay.js'
@@ -297,7 +299,7 @@ const buildIndex = (opts: BuildIndexOptions, files?: RepositoryFiles, fallbackPr
 }
 
 
-export type BuildStoredIndexOptions = StorageRequest & {
+export type BuildStoredIndexOptions = StorageRequest & OperationOptions & {
   readonly profile?: ExecutionProfile
   readonly repository: RepositoryReadV1
   readonly artifacts: ArtifactIOV1
@@ -311,43 +313,61 @@ export type BuildStoredIndexOptions = StorageRequest & {
 }
 
 /** Exact-partition build. Local export files and Git migration belong to the sync facade. */
-export const buildStoredDocBridgeIndex = async (options: BuildStoredIndexOptions): Promise<StorageResult<{ index: DocBridgeIndexV1; limitations: readonly AvailabilityLimitation[]; coverage?: DiscoverySnapshotV1['coverage']; byteHash?: string }> | (StorageFailure & { limitations: readonly AvailabilityLimitation[] })> => withExecutionProfile(isServiceProfile(options.config) || isServiceProfile(options.snapshot) ? 'service' : options.profile, async () => {
+export const buildStoredDocBridgeIndex = async (options: BuildStoredIndexOptions): Promise<{ status: 'ok'; value: { index: DocBridgeIndexV1; limitations: readonly AvailabilityLimitation[]; coverage?: DiscoverySnapshotV1['coverage']; byteHash?: string; metrics?: RunMetrics } } | (StorageFailure & { limitations?: readonly AvailabilityLimitation[]; coverage?: DiscoverySnapshotV1['coverage']; metrics?: RunMetrics })> => withExecutionProfile(isServiceProfile(options.config) || isServiceProfile(options.snapshot) ? 'service' : options.profile, async () => {
   if (executionContext().profile === 'service') { const config = serviceConfig(options.config).config; const { snapshotBinding: _binding, ...rest } = options; options = { ...rest, config, repository: restrictServiceRead(options.repository, config), overlay: 'ignore' } }
-  const coverage = executionContext().profile === 'service' ? serviceCoverage(serviceConfig(options.config).diagnostics) : undefined
-  const profileResult = coverage ? { coverage } : {}
-  const request = { partition: options.partition, signal: options.signal }
-  if (!samePartition(options.repository.partition, options.partition) || !samePartition(options.artifacts.partition, options.partition)) return { status: 'denied', code: 'PARTITION_MISMATCH' }
-  const expected = new Map<string, string>()
-  for (const entity of options.snapshot.entities) {
-    if (entity.kind !== 'document' || !entity.path) continue
-    const hash = entity.evidence.find(evidence => evidence.path === entity.path)?.contentHash ?? entity.evidence[0]?.contentHash
-    if (!hash) return { status: 'denied', code: 'INVALID_CONTRACT' }
-    expected.set(entity.path, hash)
+  const operation = createOperation(options.repository, options)
+  options = { ...options, repository: operation.read, signal: operation.signal }
+  try {
+    operation.boundary('index-acquisition')
+    const incomplete = options.snapshot.coverage.find(entry => entry.status === 'partial' && entry.scope.startsWith('limits:'))
+    if (incomplete) {
+      const parsed = StorageFailureCodeSchema.safeParse(incomplete.reason)
+      const code = parsed.success ? parsed.data : 'FILE_LIMIT'
+      return { status: code === 'ABORTED' ? 'cancelled' : 'limit', code, coverage: [incomplete], ...(options.collectMetrics ? { metrics: operation.finish() } : {}) }
+    }
+    const coverage = executionContext().profile === 'service' ? serviceCoverage(serviceConfig(options.config).diagnostics) : undefined
+    const profileResult = coverage ? { coverage } : {}
+    const request = { partition: options.partition, signal: options.signal }
+    if (!samePartition(options.repository.partition, options.partition) || !samePartition(options.artifacts.partition, options.partition)) return { status: 'denied', code: 'PARTITION_MISMATCH', ...(options.collectMetrics ? { metrics: operation.finish() } : {}) }
+    const expected = new Map<string, string>()
+    for (const entity of options.snapshot.entities) {
+      if (entity.kind !== 'document' || !entity.path) continue
+      const hash = entity.evidence.find(evidence => evidence.path === entity.path)?.contentHash ?? entity.evidence[0]?.contentHash
+      if (!hash) return { status: 'denied', code: 'INVALID_CONTRACT', ...(options.collectMetrics ? { metrics: operation.finish() } : {}) }
+      expected.set(entity.path, hash)
+    }
+    const consumedPaths = new Set(['doc-bridge.config.ts', 'doc-bridge.config.mts', 'doc-bridge.config.js', 'doc-bridge.config.mjs', 'doc-bridge.config.cjs'])
+    const human = options.config.corpus.human
+    for (const config of human ? Array.isArray(human) ? human : [human] : []) {
+      if (typeof config.options?.sidebarsFile === 'string') consumedPaths.add(posix.normalize(toPosix(config.options.sidebarsFile)))
+    }
+    const sourceCapture = options.snapshotBinding && options.config.safety?.maxBytes === undefined && options.limits?.maxBytes === undefined && options.limits?.maxFileBytes === undefined ? { snapshot: options.snapshot, binding: options.snapshotBinding, consumedPaths } : undefined
+    const { files, contentRefs, byteSizes, limitations } = await readRepositoryFiles(options.repository, request, INDEX_READ_PATTERNS, expected, sourceCapture)
+    const stopped = limitations.find(limitation => limitation.status === 'limit' || limitation.status === 'cancelled')
+    if (stopped) return { ...stopped, limitations, coverage: operation.coverage(stopped), ...(options.collectMetrics ? { metrics: operation.finish() } : {}) }
+    if (limitations.some(limitation => limitation.path === '.')) return { status: limitations[0]!.status, code: limitations[0]!.code, limitations, ...(options.collectMetrics ? { metrics: operation.finish() } : {}) }
+    const key = { kind: 'index', name: 'index' } as const
+    const prior = await readJsonArtifact(options.artifacts, request, key, 'DocBridgeIndexV1', value => DocBridgeIndexV1Schema.parse(value))
+    if (prior.status !== 'ok' && prior.status !== 'missing') return { ...prior, ...(options.collectMetrics ? { metrics: operation.finish() } : {}), coverage: operation.coverage(prior) }
+    let overlay = options.overlay
+    if (overlay === undefined && options.config.intelligence?.registry?.enabled) {
+      const stored = await readJsonArtifact(options.artifacts, request, { kind: 'overlay', name: 'overlay' }, 'EnrichmentOverlayV1', value => {
+        const parsed = parseEnrichmentOverlay(value)
+        if (!parsed) throw new Error('Invalid overlay')
+        return parsed
+      })
+      if (stored.status === 'ok') overlay = stored.value.value
+      else if (stored.status !== 'missing') return { ...stored, ...(options.collectMetrics ? { metrics: operation.finish() } : {}), coverage: operation.coverage(stored) }
+    }
+    operation.boundary('index-projection')
+    const index = buildIndex({ root: '/repository', config: options.config, write: false, snapshot: options.snapshot, overlay: overlay ?? 'ignore', ...(options.hashAlgorithm ? { hashAlgorithm: options.hashAlgorithm } : {}) }, files, options.snapshot.project.name, contentRefs, byteSizes).index
+    if (prior.status === 'ok' && prior.value.value.contentHash === index.contentHash) index.generatedAt = prior.value.value.generatedAt
+    operation.boundary('index-publication')
+    if (options.write === false) return { status: 'ok', value: { index, limitations, ...profileResult, ...(options.collectMetrics ? { metrics: operation.finish() } : {}) } }
+    const saved = await writeJsonArtifact(options.artifacts, request, key, 'DocBridgeIndexV1', index, prior.status === 'ok' ? prior.value.byteHash : null)
+    return saved.status === 'ok' ? { status: 'ok', value: { index, limitations, ...profileResult, ...(options.collectMetrics ? { metrics: operation.finish() } : {}), byteHash: saved.value.byteHash } } : { ...saved, coverage: operation.coverage(saved), ...(options.collectMetrics ? { metrics: operation.finish() } : {}) }
+  } catch (error) {
+    if (!(error instanceof StorageFault)) throw error
+    return { ...error.failure, coverage: operation.coverage(error.failure), ...(options.collectMetrics ? { metrics: operation.finish() } : {}) }
   }
-  const consumedPaths = new Set(['doc-bridge.config.ts', 'doc-bridge.config.mts', 'doc-bridge.config.js', 'doc-bridge.config.mjs', 'doc-bridge.config.cjs'])
-  const human = options.config.corpus.human
-  for (const config of human ? Array.isArray(human) ? human : [human] : []) {
-    if (typeof config.options?.sidebarsFile === 'string') consumedPaths.add(posix.normalize(toPosix(config.options.sidebarsFile)))
-  }
-  const sourceCapture = options.snapshotBinding && options.config.safety?.maxBytes === undefined ? { snapshot: options.snapshot, binding: options.snapshotBinding, consumedPaths } : undefined
-  const { files, contentRefs, byteSizes, limitations } = await readRepositoryFiles(options.repository, request, INDEX_READ_PATTERNS, expected, sourceCapture)
-  if (limitations.some(limitation => limitation.path === '.')) return { status: limitations[0]!.status, code: limitations[0]!.code, limitations }
-  const key = { kind: 'index', name: 'index' } as const
-  const prior = await readJsonArtifact(options.artifacts, request, key, 'DocBridgeIndexV1', value => DocBridgeIndexV1Schema.parse(value))
-  if (prior.status !== 'ok' && prior.status !== 'missing') return prior
-  let overlay = options.overlay
-  if (overlay === undefined && options.config.intelligence?.registry?.enabled) {
-    const stored = await readJsonArtifact(options.artifacts, request, { kind: 'overlay', name: 'overlay' }, 'EnrichmentOverlayV1', value => {
-      const parsed = parseEnrichmentOverlay(value)
-      if (!parsed) throw new Error('Invalid overlay')
-      return parsed
-    })
-    if (stored.status === 'ok') overlay = stored.value.value
-    else if (stored.status !== 'missing') return stored
-  }
-  const index = buildIndex({ root: '/repository', config: options.config, write: false, snapshot: options.snapshot, overlay: overlay ?? 'ignore', ...(options.hashAlgorithm ? { hashAlgorithm: options.hashAlgorithm } : {}) }, files, options.snapshot.project.name, contentRefs, byteSizes).index
-  if (prior.status === 'ok' && prior.value.value.contentHash === index.contentHash) index.generatedAt = prior.value.value.generatedAt
-  if (options.write === false) return { status: 'ok', value: { index, limitations, ...profileResult } }
-  const saved = await writeJsonArtifact(options.artifacts, request, key, 'DocBridgeIndexV1', index, prior.status === 'ok' ? prior.value.byteHash : null)
-  return saved.status === 'ok' ? { status: 'ok', value: { index, limitations, ...profileResult, byteHash: saved.value.byteHash } } : saved
 })

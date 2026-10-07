@@ -121,6 +121,7 @@ export const readRepositoryFiles = async (
       if (result.failure) note(result.path, result.failure)
       else if (result.text !== undefined && result.content) { files.set(result.path, result.text); contentRefs.set(result.path, result.content); byteSizes.set(result.path, result.bytes) }
     }
+    if (limitations.some(limitation => limitation.status === 'limit' || limitation.status === 'cancelled')) break
   }
   return { files, contentRefs, byteSizes, limitations }
 }
