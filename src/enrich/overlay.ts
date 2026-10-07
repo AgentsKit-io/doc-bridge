@@ -1,3 +1,5 @@
+import type { ArtifactIOV1, StorageRequest } from '../storage/contract.js'
+import { readJsonArtifact, writeJsonArtifact } from '../index-builder/artifact-io.js'
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 
@@ -253,3 +255,15 @@ export const assertObservedSurvive = (
 /** Accepted entries that are findings rather than facts, for a reviewer or a renderer. */
 export const enrichmentFindings = (overlay: EnrichmentOverlayV1): readonly AcceptedEnrichment[] =>
   overlay.accepted.filter((entry) => ENRICHMENT_POLICY[entry.proposal.kind] === 'finding')
+
+/** Exact-partition overlay persistence; failures remain distinct from an absent overlay. */
+export const readStoredEnrichmentOverlay = (io: ArtifactIOV1, request: StorageRequest) => readJsonArtifact(io, request, { kind: 'overlay', name: 'overlay' }, 'EnrichmentOverlayV1', value => {
+  const overlay = parseEnrichmentOverlay(value)
+  if (!overlay) throw new Error('Invalid enrichment overlay')
+  return overlay
+})
+export const writeStoredEnrichmentOverlay = (io: ArtifactIOV1, request: StorageRequest, overlay: EnrichmentOverlayV1, expectedPreviousByteHash: string | null) => {
+  const validated = parseEnrichmentOverlay(overlay)
+  if (!validated) return Promise.resolve({ status: 'denied', code: 'INVALID_CONTRACT' } as const)
+  return writeJsonArtifact(io, request, { kind: 'overlay', name: 'overlay' }, 'EnrichmentOverlayV1', validated, expectedPreviousByteHash)
+}

@@ -279,6 +279,7 @@ export type MarkdownResolution = {
   readonly packages: ReadonlyMap<string, string>
   /** Exported symbol to the entity ids of every module exporting it. */
   readonly symbols: ReadonlyMap<string, readonly string[]>
+  readonly facts?: ReadonlyMap<string, readonly MarkdownFact[]>
   readonly relationCap?: number
   /**
    * Path candidates for near-miss resolution, indexed by length.
@@ -315,7 +316,19 @@ export type AmbiguousSymbolReference = {
   readonly lines: readonly number[]
 }
 
+export type MarkdownFact = { readonly kind: string; readonly name: string; readonly ownerId: string }
+
+export type AmbiguousFactReference = {
+  readonly factKind: string
+  readonly factName: string
+  readonly candidateOwnerIds: readonly string[]
+  readonly candidateCount: number
+  readonly lines: readonly number[]
+}
+
 export type MarkdownAnalysis = {
+  readonly ambiguousFactReferences: readonly AmbiguousFactReference[]
+  readonly ambiguousFactReferencesTruncated: boolean
   readonly ambiguousSymbolReferences: readonly AmbiguousSymbolReference[]
   readonly ambiguousSymbolReferencesTruncated: boolean
   readonly relations: readonly KnowledgeRelation[]
@@ -361,11 +374,12 @@ export const analyzeMarkdownDocument = (
   const relations = new Map<string, KnowledgeRelation>()
   const notes: MarkdownNote[] = []
   const ambiguous = new Map<string, Evidence[]>()
+  const ambiguousFacts = new Map<string, AmbiguousFactReference>()
   let truncated = false
 
-  const add = (kind: string, to: string, line: number, confidence?: 'fuzzy', symbol?: string): void => {
+  const add = (kind: string, to: string, line: number, confidence?: 'fuzzy', symbol?: string, fact?: MarkdownFact): void => {
     if (to === documentId) return
-    const id = relationId(documentId, kind, to, symbol)
+    const id = relationId(documentId, kind, to, fact ? `${fact.kind}:${fact.name}` : symbol)
     const existing = relations.get(id)
     if (existing) {
       // One relation, every place the document says it — evidence accumulates, the edge does not.
@@ -385,7 +399,7 @@ export const analyzeMarkdownDocument = (
       to,
       provenance: 'observed',
       evidence: [documentEvidence(document.path, line)],
-      ...(symbol ? { metadata: { symbol } } : confidence ? { metadata: { confidence } } : {}),
+      ...(fact ? { metadata: { factKind: fact.kind, factName: fact.name } } : symbol ? { metadata: { symbol } } : confidence ? { metadata: { confidence } } : {}),
     })
   }
 
@@ -429,8 +443,9 @@ export const analyzeMarkdownDocument = (
   for (const token of document.codeTokens) resolveToken(token.value, token.line)
 
   /**
-   * An inline code token or a link label. In order: a repository path, a package name, then an
-   * exported symbol — and a symbol only when exactly one module exports it, because sending an
+   * Resolve exact paths, codec facts, legacy packages/exports, then fuzzy paths.
+   * Codec facts take precedence over legacy exports; distinct kinds resolve independently.
+   * A legacy symbol resolves only when exactly one module exports it, because sending an
    * agent to one of two possible definitions is worse than sending it nowhere.
    */
   function resolveToken(raw: string, line: number): void {
@@ -443,6 +458,23 @@ export const analyzeMarkdownDocument = (
         resolvePath(direct, line, 'mentions')
         return
       }
+    }
+
+    const facts = resolution.facts?.get(value)
+    if (facts?.length) {
+      for (const kind of [...new Set(facts.map(fact => fact.kind))].sort()) {
+        const candidates = facts.filter(fact => fact.kind === kind)
+        const owners = [...new Set(candidates.map(fact => fact.ownerId))].sort()
+        if (owners.length === 1) {
+          add('mentions-symbol', owners[0]!, line, undefined, kind === 'symbol' ? value : undefined, kind === 'symbol' ? undefined : candidates[0])
+        } else {
+          const key = `${kind}:${value}`
+          const prior = ambiguousFacts.get(key)
+          ambiguousFacts.set(key, { factKind: kind, factName: value, candidateOwnerIds: owners.slice(0, 32), candidateCount: owners.length,
+            lines: [...new Set([...(prior?.lines ?? []), line])].sort((a, b) => a - b).slice(0, 8) })
+        }
+      }
+      return
     }
 
     const packageEntity = resolution.packages.get(value)
@@ -474,6 +506,12 @@ export const analyzeMarkdownDocument = (
     })
   }
 
+  for (const [key, ambiguity] of [...ambiguousFacts.entries()].sort(([a], [b]) => a.localeCompare(b))) {
+    notes.push({ scope: `mentions-fact:${document.path}:${key}`,
+      reason: `"${ambiguity.factName}" has ${ambiguity.candidateCount} ${ambiguity.factKind} owners; the reference is ambiguous and produced no relation.`,
+      evidence: ambiguity.lines.map(line => documentEvidence(document.path, line)) })
+  }
+
   if (truncated) {
     notes.push({
       scope: `relations:${document.path}`,
@@ -491,6 +529,8 @@ export const analyzeMarkdownDocument = (
         lines: [...new Set(evidence.map((item) => item.lineStart as number))].sort((a, b) => a - b) }
     })
   return {
+    ambiguousFactReferences: [...ambiguousFacts.entries()].sort(([a], [b]) => a.localeCompare(b)).slice(0, 64).map(([, value]) => value),
+    ambiguousFactReferencesTruncated: ambiguousFacts.size > 64,
     ambiguousSymbolReferences,
     ambiguousSymbolReferencesTruncated: ambiguous.size > 64,
     relations: [...relations.values()].sort((a, b) => a.id.localeCompare(b.id)),

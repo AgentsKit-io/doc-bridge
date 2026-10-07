@@ -507,3 +507,51 @@ describe('docbridge declarations on YAML', () => {
     expect(result.relations).toEqual([])
   })
 })
+
+
+describe('generic Markdown fact citations', () => {
+  const facts = new Map([
+    ['--quiet', [{ kind: 'cli-flag', name: '--quiet', ownerId: 'cli-command:run' }]],
+    ['cache.enabled', [{ kind: 'config-key', name: 'cache.enabled', ownerId: 'module:config' }]],
+    ['run', [{ kind: 'cli-command', name: 'run', ownerId: 'module:cli' }]],
+    ['run(value)', [{ kind: 'signature', name: 'run(value)', ownerId: 'module:cli' }]],
+    ['pkg:generic/example', [{ kind: 'package', name: 'pkg:generic/example', ownerId: 'package:example' }]],
+  ])
+  const resolution = { documents: new Map<string, string>(), modules: new Map<string, string>(), packages: new Map<string, string>(), symbols: new Map<string, string[]>(), facts }
+  it('resolves flag, config, command, signature and package facts with bounded citations', () => {
+    const result = analyzeMarkdownDocument(parseMarkdownDocument('guide.md', '`--quiet` `cache.enabled` `run` `run(value)` `pkg:generic/example`\n' + '`--quiet`\n'.repeat(10)), 'document:guide.md', resolution)
+    expect(result.relations).toHaveLength(5)
+    for (const [name, candidates] of facts) {
+      const fact = candidates[0]!
+      expect(result.relations).toContainEqual(expect.objectContaining({ to: fact.ownerId, kind: 'mentions-symbol', metadata: { factKind: fact.kind, factName: name } }))
+    }
+    expect(result.relations.find(item => item.metadata?.factName === '--quiet')?.evidence).toHaveLength(8)
+  })
+  it('records bounded ambiguity across two owners without a relation', () => {
+    const result = analyzeMarkdownDocument(parseMarkdownDocument('guide.md', '`--quiet`\n`--quiet`'), 'document:guide.md', {
+      ...resolution, facts: new Map([['--quiet', [...facts.get('--quiet')!, { kind: 'cli-flag', name: '--quiet', ownerId: 'cli-command:other' }]]]),
+    })
+    expect(result.relations).toEqual([])
+    expect(result.ambiguousFactReferences).toEqual([{ factKind: 'cli-flag', factName: '--quiet', candidateOwnerIds: ['cli-command:other', 'cli-command:run'], candidateCount: 2, lines: [1, 2] }])
+    expect(result.notes[0]?.reason).toContain('ambiguous')
+  })
+  it('keeps exact paths first and codec facts ahead of legacy packages and exports', () => {
+    const result = analyzeMarkdownDocument(parseMarkdownDocument('guide.md', '`run` `cache.enabled` `--quiet`'), 'document:guide.md', {
+      ...resolution, modules: new Map([['cache.enabled', 'module:legacy-path']]), packages: new Map([['--quiet', 'package:legacy']]), symbols: new Map([['run', ['module:legacy-export']]]),
+    })
+    expect(result.relations.map(item => item.to).sort()).toEqual(['cli-command:run', 'module:cli', 'module:legacy-path'])
+    expect(result.relations.find(item => item.to === 'module:cli')?.metadata).toEqual({ factKind: 'cli-command', factName: 'run' })
+    const ambiguous = analyzeMarkdownDocument(parseMarkdownDocument('guide.md', '`run`'), 'document:guide.md', { ...resolution, symbols: new Map([['run', ['module:a', 'module:b']]]) })
+    expect(ambiguous.relations).toHaveLength(1)
+    expect(ambiguous.ambiguousSymbolReferences).toHaveLength(0)
+  })
+  it('bounds generic ambiguity entries, owners and lines deterministically', () => {
+    const many = new Map(Array.from({ length: 65 }, (_, i) => [`flag${i}`, Array.from({ length: 40 }, (_, j) => ({ kind: 'cli-flag', name: `flag${i}`, ownerId: `owner:${j}` }))]))
+    const result = analyzeMarkdownDocument(parseMarkdownDocument('guide.md', [...many.keys()].map(name => ('`' + name + '`\n').repeat(10)).join('')), 'document:guide.md', { ...resolution, facts: many })
+    expect(result.ambiguousFactReferences).toHaveLength(64)
+    expect(result.ambiguousFactReferencesTruncated).toBe(true)
+    expect(result.ambiguousFactReferences[0]).toMatchObject({ candidateCount: 40 })
+    expect(result.ambiguousFactReferences[0]?.candidateOwnerIds).toHaveLength(32)
+    expect(result.ambiguousFactReferences[0]?.lines).toHaveLength(8)
+  })
+})

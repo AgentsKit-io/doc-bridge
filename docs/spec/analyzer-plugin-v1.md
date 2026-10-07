@@ -22,3 +22,11 @@ registry.register({
   analyze: () => ({ entities: [], relations: [], coverage: [], diagnostics: [] }),
 })
 ```
+
+## Additive discovery v2
+
+[Discovery plugin v2](discovery-plugin-v2.md) adds exact-partition bounded reads,
+typed surface/package facts, version/release hooks and issued-evidence validation.
+It has separate strict manifest/input/output schemas and a separate registry;
+v2 fields are never appended to a v1 object. Existing v1 consumers keep their
+original exports and byte-compatible field sets. Discovery migration is separate.

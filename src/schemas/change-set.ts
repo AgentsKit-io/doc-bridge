@@ -6,6 +6,7 @@ export const ChangeIdentitySchema = z.object({
   id: z.string().min(1).max(256),
   ownerId: z.string().min(1).max(256).optional(),
   name: z.string().min(1).max(256),
+  valueHash: z.string().regex(/^[a-f0-9]{64}$/).optional(),
   evidence: z.array(EvidenceSchema).max(64),
 }).strict()
 const ChangeShape = z.object({

@@ -1,3 +1,7 @@
+import { z } from 'zod'
+import type { ArtifactIOV1, StorageRequest } from '../storage/contract.js'
+import { readJsonArtifact, writeJsonArtifact } from '../index-builder/artifact-io.js'
+const ApprovalSchema = z.object({ id: z.string().regex(/^[a-f0-9]{16,64}$/), name: z.string(), payload: z.unknown(), status: z.enum(['pending', 'approved', 'rejected', 'cancelled']), createdAt: z.string(), decidedAt: z.string().optional(), decisionMetadata: z.record(z.string(), z.unknown()).optional() }).strict()
 import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 
@@ -187,4 +191,37 @@ export const recordApproval = async (
   if (existing.status !== 'pending') throw new Error(`Approval ${input.id} was already ${existing.status}.`)
   const approval = await gate.decide(input.id, input.decision, { by: input.by, ...(input.reason ? { reason: input.reason } : {}) })
   return { approval, source }
+}
+
+/** Store failures throw instead of being mistaken for a missing approval. */
+export const createStoredApprovalStore = (io: ArtifactIOV1, request: StorageRequest): ApprovalStore => {
+  const read = async (id: string) => {
+    const result = await readJsonArtifact(io, request, { kind: 'approval', name: safeId(id) }, 'ApprovalV1', value => {
+      const parsed = ApprovalSchema.parse(value)
+      if (parsed.id !== id) throw new Error('Invalid approval id')
+      return parsed
+    })
+    if (result.status === 'missing') return null
+    if (result.status !== 'ok') throw new Error(result.code)
+    return result.value
+  }
+  const write = async (approval: Approval, expectedPreviousByteHash: string | null) => {
+    const result = await writeJsonArtifact(io, request, { kind: 'approval', name: safeId(approval.id) }, 'ApprovalV1', ApprovalSchema.parse(approval), expectedPreviousByteHash)
+    if (result.status !== 'ok') throw new Error(result.code)
+  }
+  return {
+    async get<T>(id: string) { return (await read(id))?.value as Approval<T> | undefined ?? null },
+    async put<T>(approval: Approval<T>) {
+      const prior = await read(approval.id)
+      await write(approval, prior?.byteHash ?? null)
+    },
+    async patch<T>(id: string, update: Partial<Approval<T>>) {
+      const prior = await read(id)
+      if (!prior) return null
+      if (update.id !== undefined && update.id !== id) throw new Error('Approval id cannot change')
+      const next = { ...prior.value, ...update } as Approval<T>
+      await write(next, prior.byteHash)
+      return next
+    },
+  }
 }

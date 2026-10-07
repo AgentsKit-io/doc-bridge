@@ -1,5 +1,6 @@
+import type { RepositoryFiles } from './repository-io.js'
 import type { DocBridgeConfigV1 } from '../config/schema.js'
-import { defaultChecksForTarget } from '../lib/package-manager.js'
+import { defaultChecksForTarget, defaultChecksForTargetFromFiles } from '../lib/package-manager.js'
 import type { AgentHandoffV1 } from '../schemas/agent-handoff.js'
 import {
   guessAgentDocForPackage,
@@ -140,6 +141,7 @@ export const buildLookup = (
   indexOutFile: string,
   humanDocs: HumanDocMap = {},
   root = process.cwd(),
+  files?: RepositoryFiles,
 ): { lookup: IndexLookup; handoffs: Record<string, AgentHandoffV1> } => {
   const ownership: Record<string, OwnershipRecord> = {}
   const handoffs: Record<string, AgentHandoffV1> = {}
@@ -173,7 +175,7 @@ export const buildLookup = (
         : pkg.checks
           ? { checks: pkg.checks, source: 'package-scripts' }
           : {
-              checks: defaultChecksForTarget(root, {
+              checks: (files ? (opts: Parameters<typeof defaultChecksForTarget>[1]) => defaultChecksForTargetFromFiles(root, files, opts) : (opts: Parameters<typeof defaultChecksForTarget>[1]) => defaultChecksForTarget(root, opts))({
                 packageId: pkg.id,
                 packagePath: path,
                 ...(pkg.name ? { packageName: pkg.name } : {}),

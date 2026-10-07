@@ -123,3 +123,16 @@ Before explicit index regeneration migrates a legacy algorithm, the builder read
 the on-disk index being replaced and warns about legacy drift before writing. The warning concerns
 that artifact; in a clean checkout it equals the committed index. CI's `gate run index-freshness`
 still verifies the committed state under its stored algorithm and fails closed on drift.
+
+## Discovery v2 acquisition
+
+The synchronous local facade and `discoverRepositoryWithRead` share extraction
+and replay code over the same scan-local inventory shape. For matching bytes,
+configuration and source provenance, cold and warm outputs retain their original
+reuse ledger and semantic identity. The injected path never acquires a different
+revision or falls back to native TypeScript hosts. Config files outside its
+partition are unsupported, and each external base URL/path/root-directory mapping
+is reported explicitly; those intentional visibility limitations affect semantic
+identity. Additional registered plugins and replacement source sets contribute
+their effective manifests to configuration identity. The v2 transport alone does
+not change built-in analyzer versions or default fact emission.

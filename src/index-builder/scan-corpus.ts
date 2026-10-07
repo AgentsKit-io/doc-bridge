@@ -1,3 +1,4 @@
+import { repositoryWalk, repositoryBoundedText, repositoryContainedPath, type RepositoryFiles } from './repository-io.js'
 import type { DocBridgeConfigV1 } from '../config/schema.js'
 import { minimatch } from 'minimatch'
 import { readBoundedText } from '../lib/bounded-text.js'
@@ -44,20 +45,20 @@ const configuredPathMatches = (
   return included.length === 0 || included.some((pattern) => minimatch(relPath, pattern, { dot: true }))
 }
 
-export const scanAgentCorpus = (root: string, config: DocBridgeConfigV1): CorpusDoc[] => {
-  const agentRoot = containedProjectPath(root, config.corpus.agent.root)
+export const scanAgentCorpus = (root: string, config: DocBridgeConfigV1, files?: RepositoryFiles): CorpusDoc[] => {
+  const agentRoot = files ? repositoryContainedPath(root, config.corpus.agent.root) : containedProjectPath(root, config.corpus.agent.root)
   if (!agentRoot) throw new Error('Agent corpus root escapes the project root.')
-  const files = walkFiles(agentRoot, { extensions: ['.md', '.mdx'] }).filter((abs) => {
+  const paths = (files ? repositoryWalk(files, root, agentRoot, ['.md', '.mdx']) : walkFiles(agentRoot, { extensions: ['.md', '.mdx'] })).filter((abs) => {
     const relToCorpus = toPosix(abs.replace(`${toPosix(agentRoot)}/`, ''))
     return configuredPathMatches(relToCorpus, config.corpus.agent.include, config.corpus.agent.exclude)
   })
   const corpusRelRoot = toPosix(config.corpus.agent.root)
 
   const budget = { used: 0 }
-  return files.map((abs) => {
+  return paths.map((abs) => {
     const relToCorpus = toPosix(abs.replace(`${toPosix(agentRoot)}/`, ''))
     const relPath = `${corpusRelRoot}/${relToCorpus}`
-    const raw = readBoundedText(abs, budget)
+    const raw = files ? repositoryBoundedText(files, root, abs, budget) : readBoundedText(abs, budget)
     const { data: frontmatter } = parseFrontmatter(raw)
     const id =
       frontmatterString(frontmatter, 'id') ??

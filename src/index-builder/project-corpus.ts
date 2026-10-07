@@ -1,3 +1,6 @@
+import type { ContentRef } from '../storage/contract.js'
+import { type RepositoryFiles } from './repository-io.js'
+import { Minimatch } from 'minimatch'
 import { basename, extname, relative, resolve } from 'node:path'
 import { readFileSync } from 'node:fs'
 
@@ -99,6 +102,10 @@ export const repositoryInputs = (root: string, config: DocBridgeConfigV1 | undef
     }
   }
 
+  return sealRepositoryInputs(fingerprints, config, algorithm, walk.incomplete)
+}
+
+const sealRepositoryInputs = (fingerprints: [string, string][], config: DocBridgeConfigV1 | undefined, algorithm: HashAlgorithm, incomplete: boolean): RepositoryInputsV1 => {
   return {
     hash: sha256NormalizedV1({
       ...(algorithm !== LEGACY_HASH_ALGORITHM ? {
@@ -113,6 +120,25 @@ export const repositoryInputs = (root: string, config: DocBridgeConfigV1 | undef
     }),
     fileCount: fingerprints.length,
     projectionVersion: CORPUS_PROJECTION_VERSION,
-    ...(walk.incomplete ? { incomplete: true } : {}),
+    ...(incomplete ? { incomplete: true } : {}),
   }
+}
+
+/** Freshness uses the same input policy and seal over verified reader bytes. */
+export const repositoryInputsFromFiles = (files: RepositoryFiles, config: DocBridgeConfigV1 | undefined, algorithm: HashAlgorithm, contentRefs?: ReadonlyMap<string, ContentRef>, byteSizes?: ReadonlyMap<string, number>): RepositoryInputsV1 => {
+  const options = safeWalkOptions(config)
+  const excludes = options.exclude?.map(pattern => new Minimatch(pattern, { dot: true }))
+  const fingerprints: [string, string][] = []
+  let bytes = 0
+  let count = 0
+  let incomplete = false
+  for (const path of [...new Set([...files.keys(), ...(contentRefs?.keys() ?? [])])].sort()) {
+    const text = files.get(path)
+    if (!INPUT_EXTENSIONS.some(extension => path.endsWith(extension)) || excludes?.some(pattern => pattern.match(path))) continue
+    bytes += byteSizes?.get(path) ?? Buffer.byteLength(text ?? '')
+    if (count >= (options.maxFiles ?? 10_000) || (options.maxBytes !== undefined && bytes > options.maxBytes)) { incomplete = true; break }
+    count++
+    if (isInput(path, basename(path))) fingerprints.push([path, contentRefs?.get(path)?.hash ?? sha256NormalizedV1(text ?? 'unreadable')])
+  }
+  return sealRepositoryInputs(fingerprints, config, algorithm, incomplete)
 }

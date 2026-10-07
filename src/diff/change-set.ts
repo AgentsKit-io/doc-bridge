@@ -6,9 +6,16 @@ import { analyzeMarkdownDocument, markdownPathCandidateIndex, parseMarkdownDocum
 import { canonicalJsonV1, contentHashForVersionedArtifact, sha256NormalizedV1 } from '../index-builder/content-hash.js'
 import { containedProjectPath } from '../lib/paths.js'
 import { ChangeSetV1Schema, type Change, type ChangeSetV1 } from '../schemas/change-set.js'
+import { surfaceFactFromEntity, surfaceFactEntityId, packageFactFromEntity, SurfaceFactKindSchema, type SurfaceFact } from '../storage/facts.js'
+import { contentRef } from '../storage/local.js'
+import type { RepositoryReadV1 } from '../storage/contract.js'
 import { DiagnosticSchema, type DiscoverySnapshotV1, type Evidence, type KnowledgeEntity, type KnowledgeRelation } from '../schemas/knowledge.js'
 
 export type SnapshotForChanges = Pick<DiscoverySnapshotV1, 'entities' | 'relations' | 'sourceRevision'>
+const FACT_CAPABILITIES = { symbol: 'symbols', 'cli-command': 'cli-commands', 'cli-flag': 'cli-flags', 'config-key': 'config-keys', signature: 'signatures', package: 'manifest' } as const
+const factsOf = (snapshot: SnapshotForChanges) => snapshot.entities.filter(entity => entity.metadata?.factCodecVersion === 1 && SurfaceFactKindSchema.safeParse(entity.kind).success).map(surfaceFactFromEntity)
+const packagesOf = (snapshot: SnapshotForChanges) => snapshot.entities.filter(entity => entity.kind === 'package' && entity.metadata?.factCodecVersion === 1).map(packageFactFromEntity)
+const factIdentity = (fact: SurfaceFact) => ({ id: fact.id, ownerId: fact.ownerId, name: fact.name, valueHash: fact.valueHash, evidence: fact.evidence })
 const DOCUMENT_RELATIONS = new Set(['covers', 'mentions', 'mentions-symbol', 'links-to'])
 const hashOf = (entity: KnowledgeEntity) => entity.evidence.find((item) => item.contentHash)?.contentHash
 const identity = (entity: KnowledgeEntity) => ({ id: entity.id, name: entity.name, evidence: entity.evidence })
@@ -21,16 +28,32 @@ export const snapshotChanges = (base: SnapshotForChanges, head: SnapshotForChang
   const before = entities(base)
   const after = entities(head)
   const changes: Change[] = []
+  const oldFacts = new Map(factsOf(base).map(fact => [fact.id, fact]))
+  const newFacts = new Map(factsOf(head).map(fact => [fact.id, fact]))
+  const factOwners = new Set([...oldFacts.values(), ...newFacts.values()].filter(fact => fact.kind === 'symbol').map(fact => fact.ownerId))
+  const oldPackages = new Map(packagesOf(base).map(pkg => [pkg.id, pkg]))
+  const newPackages = new Map(packagesOf(head).map(pkg => [pkg.id, pkg]))
+  const packageIdentity = (pkg: ReturnType<typeof packageFactFromEntity>) => ({ id: pkg.id, name: pkg.purl, evidence: pkg.evidence, valueHash: sha256NormalizedV1({ purl: pkg.purl, version: pkg.version, dependencies: pkg.dependencies }) })
+  for (const id of new Set([...oldFacts.keys(), ...newFacts.keys(), ...oldPackages.keys(), ...newPackages.keys()])) {
+    const old = oldFacts.get(id) ?? oldPackages.get(id)
+    const next = newFacts.get(id) ?? newPackages.get(id)
+    const asIdentity = (fact: SurfaceFact | ReturnType<typeof packageFactFromEntity>) => 'kind' in fact ? factIdentity(fact) : packageIdentity(fact)
+    if (!old || !next || asIdentity(old).valueHash !== asIdentity(next).valueHash) changes.push({
+      kind: (newFacts.get(id) ?? oldFacts.get(id))?.kind ?? 'package',
+      op: !old ? 'added' : !next ? 'removed' : 'changed',
+      ...(old ? { before: asIdentity(old) } : {}), ...(next ? { after: asIdentity(next) } : {}),
+    })
+  }
   for (const id of new Set([...before.keys(), ...after.keys()])) {
     const old = before.get(id)
     const next = after.get(id)
     const entity = next ?? old!
-    if (!old || !next || hashOf(old) !== hashOf(next)) changes.push({
+    if (!oldPackages.has(id) && !newPackages.has(id) && (!old || !next || hashOf(old) !== hashOf(next))) changes.push({
       kind: entity.kind === 'document' ? 'doc-path' : entity.kind as 'module' | 'package',
       op: !old ? 'added' : !next ? 'removed' : 'changed',
       ...(old ? { before: identity(old) } : {}), ...(next ? { after: identity(next) } : {}),
     })
-    if (entity.kind !== 'module') continue
+    if (entity.kind !== 'module' || factOwners.has(id)) continue
     const oldSymbols = new Set(old ? exportsOf(old) : [])
     const newSymbols = new Set(next ? exportsOf(next) : [])
     for (const symbol of new Set([...oldSymbols, ...newSymbols])) {
@@ -95,32 +118,140 @@ const citationsInHead = (document: KnowledgeEntity, base: DiscoverySnapshotV1, r
     if (!path) return undefined
     // One descriptor for the size check and the read, so the file cannot change in between.
     const content = readBoundedText(path, { used: 0 }, { maxFileBytes: 1_000_000 })
-    const parsed = parseMarkdownDocument(document.path!, content)
-    if (parsed.contentHash !== hashOf(document)) return undefined
-    const observed = analyzeMarkdownDocument(parsed, document.id, resolution)
-    if (observed.truncated) return undefined
-    const declared = parseDocumentationDeclarations({ path: document.path!, content }, { snapshot: base, documentId: document.id })
-    return [...observed.relations, ...declared.relations].filter((relation) => relation.metadata?.confidence !== 'fuzzy')
-      .map((relation) => ({ ...relation, evidence: relation.evidence.map((item) => ({ ...item, contentHash: parsed.contentHash })) }))
+    return citationsFromText(document, base, content, resolution)
   } catch { return undefined }
 }
 
-export const diffSnapshots = (base: DiscoverySnapshotV1, head: DiscoverySnapshotV1, options: { headRoot?: string; branch?: string } = {}) => {
+const citationsFromText = (document: KnowledgeEntity, base: DiscoverySnapshotV1, content: string, resolution: MarkdownResolution): KnowledgeRelation[] | undefined => {
+  const parsed = parseMarkdownDocument(document.path!, content)
+  if (parsed.contentHash !== hashOf(document)) return undefined
+  const observed = analyzeMarkdownDocument(parsed, document.id, resolution)
+  if (observed.truncated) return undefined
+  const declared = parseDocumentationDeclarations({ path: document.path!, content }, { snapshot: base, documentId: document.id })
+  return [...observed.relations, ...declared.relations].filter((relation) => relation.metadata?.confidence !== 'fuzzy')
+    .map((relation) => ({ ...relation, evidence: relation.evidence.map((item) => ({ ...item, contentHash: parsed.contentHash })) }))
+}
+
+/** Completeness belongs to the extracting analyzer, not another plugin supporting the same kind. */
+const extractionComplete = (base: DiscoverySnapshotV1, head: DiscoverySnapshotV1, kind: keyof typeof FACT_CAPABILITIES, evidence: readonly Evidence[]): boolean => {
+  const capability = FACT_CAPABILITIES[kind]
+  const candidates = base.coverage.filter(entry => entry.scope === capability)
+  const matching = candidates.filter(entry => entry.evidence?.some(item => evidence.some(proof => proof.path === item.path)))
+  const relevant = matching.length ? matching : candidates
+  return relevant.length > 0 && relevant.every(entry => {
+    const current = head.coverage.filter(item => item.analyzer === entry.analyzer && (item.scope === capability || item.scope === 'plugin'))
+    return current.some(item => item.scope === capability && item.status === 'complete') && current.every(item => item.status === 'complete')
+  }) && !head.coverage.some(entry => entry.status !== 'complete' && entry.scope.startsWith('limits:'))
+}
+
+type DiffOptions = { headRoot?: string; branch?: string }
+type VerifiedDocuments = ReadonlyMap<string, string>
+
+const referenceFacts = (snapshot: SnapshotForChanges) => [...factsOf(snapshot), ...packagesOf(snapshot).map(pkg => ({ kind: 'package' as const, id: pkg.id, ownerId: pkg.id, name: pkg.purl, evidence: pkg.evidence }))]
+
+const genericFindings = (base: DiscoverySnapshotV1, head: DiscoverySnapshotV1, changes: readonly Change[], texts: VerifiedDocuments) => {
+  const oldFacts = referenceFacts(base)
+  if (!oldFacts.length) return []
+  const byId = new Map(oldFacts.map(fact => [fact.id, fact]))
+  const newFacts = referenceFacts(head)
+  const documents = new Map<string, ReturnType<typeof parseMarkdownDocument> | undefined>()
+  const after = new Map(head.entities.map(entity => [entity.id, entity]))
+  const before = new Map(base.entities.map(entity => [entity.id, entity]))
+  const removed = new Set(changes.filter(change => change.op === 'removed' || change.op === 'renamed').map(change => change.before!.id))
+  const findings = new Map<string, ReturnType<typeof DiagnosticSchema.parse>>()
+  for (const relation of base.relations) {
+    if (!DOCUMENT_RELATIONS.has(relation.kind) || relation.metadata?.confidence === 'fuzzy') continue
+    const symbol = typeof relation.metadata?.symbol === 'string' ? relation.metadata.symbol : undefined
+    const kind = symbol ? 'symbol' : relation.metadata?.factKind
+    const name = symbol ?? relation.metadata?.factName
+    if (typeof name !== 'string' || (kind !== 'package' && !SurfaceFactKindSchema.safeParse(kind).success)) continue
+    const fact = byId.get(kind === 'package' ? relation.to : surfaceFactEntityId(kind as SurfaceFact['kind'], relation.to, name))
+    const doc = after.get(relation.from)
+    if (!fact || !doc?.path || doc.kind !== 'document') continue
+    const candidates = [...new Set(newFacts.filter(item => item.kind === fact.kind && item.name === fact.name).map(item => item.ownerId))].sort()
+    const baseCandidates = new Set(oldFacts.filter(item => item.kind === fact.kind && item.name === fact.name).map(item => item.ownerId))
+    const ambiguous = baseCandidates.size === 1 && candidates.length > 1
+    if (!removed.has(fact.id) && !ambiguous) continue
+    const text = texts.get(doc.id)
+    if (!documents.has(doc.id)) documents.set(doc.id, text === undefined ? undefined : parseMarkdownDocument(doc.path, text))
+    const parsed = documents.get(doc.id)
+    const tokens = parsed?.codeTokens.filter(token => token.value === fact.name) ?? []
+    if (parsed && !tokens.length) continue
+    const code = ambiguous ? 'AMBIGUOUS_REFERENCE' : 'BROKEN_REFERENCE'
+    const status = ambiguous ? 'unresolved' : parsed && extractionComplete(base, head, fact.kind, fact.evidence) ? 'conflict' : 'stale-or-unverified'
+    const evidence: Evidence[] = [
+      ...relation.evidence.map(item => ({ ...item, context: 'Base citation' })),
+      ...tokens.slice(0, 8).map(token => ({ source: 'documentation' as const, path: doc.path!, lineStart: token.line, lineEnd: token.line, contentHash: parsed!.contentHash, context: 'Head citation' })),
+      ...fact.evidence.map(item => ({ ...item, context: 'Base target removed or no longer uniquely resolved' })),
+      ...(after.get(fact.ownerId)?.evidence ?? []).map(item => ({ ...item, context: 'Head owner' })),
+    ].slice(0, 64)
+    // Preserve the symbol locator and target projection used by existing findings.
+    const id = entityId('finding', sha256NormalizedV1({ code, document: doc.id, relationKind: relation.kind, target: relation.to,
+      ...(symbol ? { symbol } : { factKind: fact.kind, factName: fact.name }),
+      ...(ambiguous ? { candidateModuleIds: candidates } : { removedTargetId: fact.id }),
+    }))
+    findings.set(id, DiagnosticSchema.parse({ id, code, status, severity: 'warn', message: `${doc.path} cites ${fact.name}, which ${ambiguous ? 'is no longer uniquely resolved' : 'is recorded as removed in the snapshot delta'}.`, evidence, entityIds: [doc.id, before.get(fact.ownerId)!.id], relationIds: [relation.id] }))
+  }
+  return [...findings.values()]
+}
+
+const verifiedLocalDocuments = (head: DiscoverySnapshotV1, root: string): Map<string, string> => {
+  const texts = new Map<string, string>()
+  for (const doc of head.entities.filter(entity => entity.kind === 'document' && entity.path)) {
+    try {
+      const path = containedProjectPath(root, doc.path!)
+      if (!path) continue
+      const text = readBoundedText(path, { used: 0 }, { maxFileBytes: 1_000_000 })
+      if (parseMarkdownDocument(doc.path!, text).contentHash === hashOf(doc)) texts.set(doc.id, text)
+    } catch { /* Unavailable text cannot prove a current citation. */ }
+  }
+  return texts
+}
+
+/** Exact head reader; the synchronous public facade below remains available. */
+export const diffSnapshotsWithRead = async (base: DiscoverySnapshotV1, head: DiscoverySnapshotV1, read: RepositoryReadV1, options: { signal?: AbortSignal; branch?: string } = {}) => {
+  if (read.partition.revision !== head.sourceRevision) throw new Error('HEAD_PARTITION_MISMATCH')
+  const partition = Object.freeze({ ...read.partition })
+  const signal = options.signal ?? new AbortController().signal
+  const texts = new Map<string, string>()
+  for (const doc of head.entities.filter(entity => entity.kind === 'document' && entity.path)) {
+    const meta = await read.stat({ partition, signal, path: doc.path! })
+    if (meta.status !== 'ok' || meta.value.kind !== 'file' || meta.value.bytes > 1_000_000) continue
+    const result = await read.read({ partition, signal, path: doc.path!, ...(meta.value.content ? { expected: meta.value.content } : {}) })
+    if (result.status !== 'ok' || result.value.bytes.length > 1_000_000 || contentRef(result.value.bytes).hash !== result.value.content.hash) continue
+    const text = Buffer.from(result.value.bytes).toString('utf8')
+    if (parseMarkdownDocument(doc.path!, text).contentHash === hashOf(doc)) texts.set(doc.id, text)
+  }
+  return diffWithDocuments(base, head, options, texts)
+}
+
+export const diffSnapshots = (base: DiscoverySnapshotV1, head: DiscoverySnapshotV1, options: DiffOptions = {}) =>
+  diffWithDocuments(base, head, options, options.headRoot && referenceFacts(base).length ? verifiedLocalDocuments(head, options.headRoot) : new Map())
+
+const diffWithDocuments = (base: DiscoverySnapshotV1, head: DiscoverySnapshotV1, options: DiffOptions, texts: VerifiedDocuments) => {
   if (canonicalJsonV1(base.project) !== canonicalJsonV1(head.project)) throw new Error('Cannot diff different project identities; provide snapshots from the same repository.')
   const changes = snapshotChanges(base, head)
   const coverage: ChangeSetV1['coverage'] = [
+    ...(packagesOf(head).length ? [{ analyzer: 'diff', scope: 'package-version-routing', status: 'not-analyzed' as const, reason: 'Package mappings do not establish version routing or release eligibility.' }] : []),
     ...base.coverage.map((entry) => ({ ...entry, scope: entityId('base', entry.scope) })),
     ...head.coverage.map((entry) => ({ ...entry, scope: entityId('head', entry.scope) })),
-    ...['cli-command', 'cli-flag', 'config-key', 'signature', 'rename-detection', 'package-identity-and-version-routing'].map((scope) => ({ analyzer: 'diff', scope, status: 'not-analyzed' as const, reason: 'No adapter extraction evidence is available.' })),
+    ...['cli-command', 'cli-flag', 'config-key', 'signature', 'rename-detection', 'package-identity-and-version-routing'].filter(scope => {
+      if (scope === 'rename-detection') return true
+      if (scope === 'package-identity-and-version-routing') return !packagesOf(head).length
+      const capability = FACT_CAPABILITIES[scope as SurfaceFact['kind']]
+      return !head.coverage.some(entry => entry.scope === capability && entry.status === 'complete' && !head.coverage.some(other => other.analyzer === entry.analyzer && other.scope === 'plugin' && other.status !== 'complete'))
+    }).map((scope) => ({ analyzer: 'diff', scope, status: 'not-analyzed' as const, reason: 'No adapter extraction evidence is available.' })),
   ].filter((entry) => !(entry.analyzer === 'repository' && entry.scope.endsWith(':reused-entities'))).sort((a, b) => canonicalJsonV1(a).localeCompare(canonicalJsonV1(b)))
   const analysisIdentity = (snapshot: DiscoverySnapshotV1) => ({ configurationHash: snapshot.configurationHash, pipelineVersion: snapshot.pipelineVersion, analyzerVersions: snapshot.analyzerVersions })
   const changeSet = ChangeSetV1Schema.parse({ type: 'change-set', schemaVersion: 1, repository: base.project, analysis: { base: analysisIdentity(base), head: analysisIdentity(head) },
     ...(options.branch ? { branch: options.branch } : {}), baseRevision: base.sourceRevision, headRevision: head.sourceRevision,
-    release: { state: 'unreleased' }, packages: [], changes, contentHash: '0'.repeat(64), contentHashAlgo: 'sha256-semantic-v1', coverage })
+    release: { state: 'unreleased' }, packages: packagesOf(head).map(({ id, purl, version }) => ({ id, purl, ...(version ? { version } : {}) })).sort((a,b) => canonicalJsonV1(a).localeCompare(canonicalJsonV1(b))), changes, contentHash: '0'.repeat(64), contentHashAlgo: 'sha256-semantic-v1', coverage })
   changeSet.contentHash = changeSetContentHash(changeSet)
   const after = new Map(head.entities.map((entity) => [entity.id, entity]))
   const before = new Map(base.entities.map((entity) => [entity.id, entity]))
   const resolution = resolutionFor(base)
+  const baseFacts = factsOf(base)
+  const factIds = new Set(referenceFacts(base).map(fact => fact.id))
   const removals = new Map(changes.filter((change) => change.op === 'removed' && ['module', 'doc-path', 'symbol'].includes(change.kind)).map((change) => [change.before!.id, change]))
   const partial = head.coverage.some((entry) => entry.status === 'partial' && (entry.scope.startsWith('limits:') || entry.scope === 'static-imports-and-exports' || entry.scope === 'workspace-packages'))
   const citations = new Map<string, KnowledgeRelation[] | undefined>()
@@ -131,16 +262,21 @@ export const diffSnapshots = (base: DiscoverySnapshotV1, head: DiscoverySnapshot
     const target = before.get(relation.to)
     if (!doc?.path || doc.kind !== 'document' || !target) continue
     const symbol = typeof relation.metadata?.symbol === 'string' ? relation.metadata.symbol : undefined
+    const factKind = symbol ? 'symbol' : relation.metadata?.factKind
+    const factName = symbol ?? relation.metadata?.factName
+    if (typeof factName === 'string' && (factKind === 'package' ? factIds.has(relation.to) : SurfaceFactKindSchema.safeParse(factKind).success && factIds.has(surfaceFactEntityId(factKind as SurfaceFact['kind'], relation.to, factName)))) continue
     const removed = removals.get(symbol ? entityId('symbol', `${relation.to}:${symbol}`) : relation.to)
     const ambiguous = symbol && resolution.symbols.get(symbol)?.length === 1 && Array.isArray(doc.metadata?.ambiguousSymbolReferences)
       ? doc.metadata.ambiguousSymbolReferences.find((item) => item && typeof item === 'object' && item.symbol === symbol) : undefined
     if (!removed && !ambiguous) continue
-    if (!citations.has(doc.id)) citations.set(doc.id, options.headRoot ? citationsInHead(doc, base, options.headRoot, resolution) : undefined)
+    if (!citations.has(doc.id)) citations.set(doc.id, options.headRoot ? citationsInHead(doc, base, options.headRoot, resolution) : texts.has(doc.id) ? citationsFromText(doc, base, texts.get(doc.id)!, resolution) : undefined)
     const currentCitations = citations.get(doc.id)
     const citation = currentCitations?.find((item) => item.kind === relation.kind && item.to === relation.to && item.metadata?.symbol === symbol)
     if (removed && currentCitations && !citation) continue
     const code = ambiguous ? 'AMBIGUOUS_REFERENCE' : 'BROKEN_REFERENCE'
-    const status = ambiguous ? 'unresolved' : citation && !partial ? 'conflict' : 'stale-or-unverified'
+    const ownerFacts = baseFacts.filter(fact => fact.ownerId === relation.to)
+    const ownerComplete = ownerFacts.every(fact => extractionComplete(base, head, fact.kind, fact.evidence))
+    const status = ambiguous ? 'unresolved' : citation && !partial && ownerComplete ? 'conflict' : 'stale-or-unverified'
     const headEvidence: Evidence[] = citation?.evidence ?? (ambiguous && Array.isArray(ambiguous.lines) ? ambiguous.lines.filter((line: unknown): line is number => typeof line === 'number').slice(0, 8).map((line: number) => ({ source: 'documentation' as const, path: doc.path!, lineStart: line, lineEnd: line, contentHash: hashOf(doc) })) : [])
     const evidence = [...relation.evidence.map((item) => ({ ...item, context: 'Base citation' })), ...headEvidence.map((item) => ({ ...item, context: 'Head citation' })), ...(removed?.before?.evidence ?? target.evidence).map((item) => ({ ...item, context: 'Base target removed or no longer uniquely resolved' })), ...(after.get(target.id)?.evidence ?? []).map((item) => ({ ...item, context: 'Head owner' }))].slice(0, 64)
     const relevantIdentity = ambiguous
@@ -149,5 +285,5 @@ export const diffSnapshots = (base: DiscoverySnapshotV1, head: DiscoverySnapshot
     const id = entityId('finding', sha256NormalizedV1({ code, document: doc.id, relationKind: relation.kind, target: relation.to, symbol, ...relevantIdentity }))
     findings.set(id, DiagnosticSchema.parse({ id, code, status, severity: 'warn', message: `${doc.path} cites ${symbol ?? target.path ?? target.name}, which ${ambiguous ? 'is no longer uniquely resolved' : 'is recorded as removed in the snapshot delta'}.`, evidence, entityIds: [doc.id, target.id], relationIds: [relation.id] }))
   }
-  return { changeSet, impact: changeImpact(base, head, changes), findings: [...findings.values()].sort((a, b) => a.id.localeCompare(b.id)) }
+  return { changeSet, impact: changeImpact(base, head, changes), findings: [...findings.values(), ...genericFindings(base, head, changes, texts)].sort((a, b) => a.id.localeCompare(b.id)) }
 }

@@ -1,0 +1,5 @@
+symbol Keep
+command inspect
+flag inspect --compact
+config output json
+signature Keep (value,mode)->text

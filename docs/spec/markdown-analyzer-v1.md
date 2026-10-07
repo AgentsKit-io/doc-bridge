@@ -86,3 +86,45 @@ Both only ever over-estimate `m`, so a candidate they skip could not have matche
 speed-up with no effect on results, tied scores included. `MarkdownResolution.pathIndex` carries it,
 built once per run; an analyzer called without one builds its own and produces the same output more
 slowly.
+
+## Discovery v2 transport
+
+The Markdown built-in v2 plugin shares this analyzer with synchronous discovery.
+Acquisition supplies verified scan-local content and generic resolution owners;
+Markdown does not read native files or interpret source syntax. Declared versus
+forwarded ownership, ambiguous references, document collection, generated regions,
+BOM/CRLF normalization and bounded note ordering are unchanged. Documentation
+hashes retain the BOM-stripping Markdown codec even when the storage content
+reference uses the source/configuration codec. The built-in registry validates
+that distinction against issued bytes. Caller-provided symbol fact owners may
+join the resolution universe without adding a language branch to Markdown.
+
+
+## Generic codec fact citations
+
+The built-in Markdown v2 plugin resolves codec-backed `symbol`, `cli-command`,
+`cli-flag`, `config-key`, `signature` and `package` entities without interpreting
+source syntax. Package facts are cited by purl. Exact repository paths take precedence, then
+codec facts, legacy package names and exports, and finally fuzzy paths. A token
+matching both a legacy export and a codec fact resolves through codec facts.
+Symbol facts retain `metadata.symbol` and existing symbol relation IDs.
+Other facts resolve independently by kind and exact name: one owner produces a
+`mentions-symbol` relation to `ownerId` with `metadata.factKind` and
+`metadata.factName`; multiple owners produce no relation for that kind.
+Different kinds sharing a token are evaluated in sorted kind order.
+The relation discriminator is `${factKind}:${factName}`; repeated citations
+accumulate at most eight documentation evidence locations.
+
+Generic ambiguity uses document `metadata.ambiguousFactReferences`, an array of
+`{ factKind, factName, candidateOwnerIds, candidateCount, lines }` sorted by
+kind/name. Names are bounded to 256 characters, sorted owner IDs to 32, sorted
+citation lines to eight and entries to 64. The true owner count is retained;
+additional entries set `metadata.ambiguousFactReferencesTruncated: true`.
+A partial coverage note also records ambiguity. Snapshot, index and handoff
+schemas remain compatible through their existing open metadata records.
+
+The analyzer version remains 1.1.0: existing JS/TS output has no codec-backed
+facts, and its relations, metadata, coverage and analyzer versions are unchanged.
+The v2 plugin parses documents afresh, so fact-universe changes cannot replay
+stale generic references. Synchronous legacy discovery retains its existing
+resolution fingerprint and behavior.

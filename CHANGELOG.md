@@ -8,6 +8,15 @@
 
 ### Minor Changes
 
+- Add public root entrypoints for reader-backed exact-partition index building, freshness loading and artifact persistence without changing index/handoff payloads or synchronous local compatibility. Missing or mismatched bodies carry exact repository/revision/path limitations. Local CLI diff uses frozen head citation reads.
+- Compare codec-backed surface and package facts with value hashes, extraction-aware generic citation findings and bounded injected head reads. Resolve generic citations with the built-in Markdown plugin and bounded owner ambiguity. Prove the language-neutral persisted flow with a test-only toy source adapter.
+
+- Add bounded injected discovery and built-in JS/TS and Markdown v2 plugins, retaining synchronous extraction and legacy evidence identity.
+
+- Add reader-backed exact-partition index building, freshness loading and artifact persistence without changing index/handoff payloads or synchronous local compatibility. Missing or mismatched bodies carry exact repository/revision/path limitations.
+- Add bounded injected discovery and built-in JS/TS and Markdown v2 plugins, retaining synchronous extraction and legacy evidence identity.
+- Add bounded exact-partition storage I/O v1 and strict discovery plugin v2 contracts with local atomic artifact publication, preserving existing consumers.
+
 - Add deterministic `ChangeSetV1` and `ak-docs diff`, with historical documentation impact, proven-removal and ambiguity findings, and explicit unsupported extraction coverage. Change digests now include documentation citing removed targets.
 - Retain symbol-level documentation references and structured ambiguity metadata without inflating retrieval connection counts.
 - Version semantic snapshot, derived report, retrieval and index hashes as `sha256-semantic-v1`;

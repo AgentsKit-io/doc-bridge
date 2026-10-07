@@ -1,3 +1,5 @@
+import { resolve } from 'node:path'
+import { repositoryBoundedText, repositoryHas, type RepositoryFiles } from '../repository-io.js'
 import { existsSync } from 'node:fs'
 
 import { readBoundedText } from '../../lib/bounded-text.js'
@@ -44,10 +46,10 @@ const docusaurusRecordId = (relPath: string, raw: string): string => {
   return frontmatter.package ?? frontmatter.module ?? docusaurusSidebarId(relPath, raw)
 }
 
-const readSidebars = (sidebarsFile: string | undefined): SidebarDocFilter => {
+const readSidebars = (sidebarsFile: string | undefined, root: string, files?: RepositoryFiles): SidebarDocFilter => {
   if (!sidebarsFile) return { enabled: false, ids: new Set(), autogenDirs: [] }
-  if (!existsSync(sidebarsFile)) return { enabled: false, ids: new Set(), autogenDirs: [] }
-  const raw = readBoundedText(sidebarsFile, { used: 0 }, { maxFileBytes: 1_048_576, maxCorpusBytes: 1_048_576 })
+  if (!(files ? repositoryHas(files, root, sidebarsFile) : existsSync(sidebarsFile))) return { enabled: false, ids: new Set(), autogenDirs: [] }
+  const raw = files ? repositoryBoundedText(files, root, sidebarsFile, { used: 0 }, 1_048_576, 1_048_576) : readBoundedText(sidebarsFile, { used: 0 }, { maxFileBytes: 1_048_576, maxCorpusBytes: 1_048_576 })
   const filter = { ids: new Set<string>(), autogenDirs: [] as string[] }
   const visit = (value: unknown): void => {
     if (typeof value === 'string') {
@@ -83,16 +85,16 @@ const isIncludedBySidebar = (filter: SidebarDocFilter, id: string): boolean => {
 
 export const docusaurusAdapter: HumanAdapter = {
   plugin: 'docusaurus',
-  scan: ({ root, config }) => {
+  scan: ({ root, config, files }) => {
     const docsDir = optionString(config.options, ['docsDir', 'root'])
     if (!docsDir) return []
     const sidebarsFile = optionString(config.options, ['sidebarsFile'])
-    const sidebarFilter = readSidebars(sidebarsFile ? containedProjectPath(root, sidebarsFile) : undefined)
+    const sidebarFilter = readSidebars(sidebarsFile ? files ? resolve(root, sidebarsFile) : containedProjectPath(root, sidebarsFile) : undefined, root, files)
     return scanMarkdownDocs(root, docsDir, {
       includeRelPath: (relPath, raw) => isIncludedBySidebar(sidebarFilter, docusaurusSidebarId(relPath, raw)),
       idForDoc: docusaurusRecordId,
       slugForDoc: docusaurusSlug,
       urlPrefix: config.options?.urlPrefix,
-    })
+    }, files)
   },
 }
