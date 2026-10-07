@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "contentHash": "ee4ef87d0d488abdad8443d4a40749fac136c08e87c40451226bda2cf65df379",
+  "contentHash": "c7f041ae487c6bb3c86a70d2c5b370242c23b2a59586645374ebe0947f91856b",
   "contentHashAlgo": "sha256-normalized-v1",
-  "generatedAt": "2026-10-06T20:48:13.068Z",
+  "generatedAt": "2026-10-07T13:10:42.933Z",
   "project": {
     "name": "@agentskit/doc-bridge",
     "root": "."
@@ -295,12 +295,12 @@
       "type": "document",
       "title": "Changelog",
       "path": "CHANGELOG.md",
-      "description": "Registry agent runners receive an optional cancellation signal separately from their frozen context. Local and CLI deadlines now use @agentskit/net; CLI timeout and response overflow switch process-tree termination from SIGTERM to SIGKILL, while concurrency remains reserved until execution settles.",
+      "description": "Registry CLI failures wait for child execution to settle and release concurrency before rejecting, allowing immediate retries after deadlines or output overflow.",
       "tags": [
         "document",
         "project"
       ],
-      "contentHash": "f54ce72916e8f6a3f83535896623b3f9d6a5d9345c9c121c2427a2cc98192050"
+      "contentHash": "173082bc66cac6ef01d1840d989a21b03cdb2136618b6abc714617e8690af316"
     },
     {
       "id": "document:CODE_OF_CONDUCT.md",
@@ -1093,7 +1093,7 @@
         "document",
         "human"
       ],
-      "contentHash": "08f8c910fa4452281467d1aee2848ed98a637c07b9e99d589a87c6f47144c755"
+      "contentHash": "7aa0a2998839c03f438e93d23cfdb46edf4dcc1f76d0f8ace755ea981f65782d"
     },
     {
       "id": "document:docs/spec/render-v1.md",
@@ -2837,7 +2837,7 @@
         "ts",
         "agents"
       ],
-      "contentHash": "916bf2835daeabca13f63df881d191a5f150963ac4d09cbb0b5683e2e3a5e7df"
+      "contentHash": "33f54525b917572385d63818fec1d9a26ebcace4dd5e29d6c63309ff22650255"
     },
     {
       "id": "module:src/audit/documentation.ts",
@@ -6618,7 +6618,7 @@
         "test",
         "tests"
       ],
-      "contentHash": "77f0b79289412bacf68ac16ebf63ecdec5cb5f6d09dc4756c8ef00837899a766"
+      "contentHash": "1a16850454e3711f61a51deceaa373ef077e039c583cc74845cf9c7909236885"
     },
     {
       "id": "module:tests/render.test.ts",
@@ -8187,7 +8187,7 @@
     "changes": {}
   },
   "inputs": {
-    "hash": "a3f3644a5d0db476abf01614f8901e7af621a01f442a130af6854f9f1269d2b7",
+    "hash": "5af6c09fb422a3c74838289e42d561ce35473bd1af55cbb2de713794db6b52e8",
     "fileCount": 451,
     "projectionVersion": 2
   },
@@ -8210,9 +8210,9 @@
   "projection": {
     "type": "retrieval-index",
     "schemaVersion": 1,
-    "contentHash": "df8621d1fb3b9c85508ad8e2281651582636c2f8d0aaa6b8f26fc1c8b1fbdb85",
+    "contentHash": "3dc3f3d7a104380c446c56e5cc01ae91bc0d36ef75c0610c07b62cd1ff731617",
     "contentHashAlgo": "sha256-normalized-v1",
-    "snapshotHash": "d9f888d48505890db1e1bd8b48d3c2d8f271ea48973aae2d59d57ac2e5d76924",
+    "snapshotHash": "2374cf9f13f13669312fa27b967f58d774c8316b9209a943b74a1136d812f778",
     "overlayHash": "f99666ff9119084dd25c2974ae64eb6935ec2aa785ff5ad478fb9d541f7a5e94",
     "configurationHash": "91d46a4ecbfe3b55878e0b3c7608819775cf7b18aeafcc8f689eddfa462622b4",
     "lexiconVersion": 1,
@@ -8244,10 +8244,10 @@
       ],
       "averageFieldLength": {
         "aliases": 3.4446764091858038,
-        "body": 73.96450939457202,
+        "body": 74.00208768267224,
         "headings": 4.34446764091858,
         "path": 5.7306889352818375,
-        "summary": 6.1837160751565765,
+        "summary": 6.146137787056367,
         "symbols": 11.517745302713987,
         "title": 3.1294363256784967
       }
@@ -10499,7 +10499,7 @@
         "kind": "document",
         "path": "CHANGELOG.md",
         "title": "Changelog",
-        "summary": "Registry agent runners receive an optional cancellation signal separately from their frozen context. Local and CLI deadlines now use @agentskit/net; CLI timeout and response overflow switch process-tree termination from SIGTERM to SIGKILL, while concurrency remains reserved until execution settles.",
+        "summary": "Registry CLI failures wait for child execution to settle and release concurrency before rejecting, allowing immediate retries after deadlines or output overflow.",
         "audience": "human",
         "aliases": [],
         "tags": [
@@ -10508,11 +10508,11 @@
         ],
         "fields": {
           "title": "Changelog",
-          "headings": "Changelog Unreleased Minor Changes 1.13.0 Minor Changes Patch Changes 1.12.0 Minor Changes Patch Changes 1.11.2 Patch Changes 1.11.1 Patch Changes 1.11.0 Minor Changes 1.10.1 Patch Changes 1.10.0 Minor Changes 1.9.0 Minor Changes Patch Changes 1.8.0 Minor Changes Patch Changes 1.7.45 Patch Changes 1.7.44 1.7.43 1.7.42 1.7.41 1.7.40 1.7.39 1.7.38 1.7.37 1.7.36 1.7.35 1.7.34 1.7.33 1.7.32 1.7.31 1.7.30 1.7.29 1.7.28 1.7.27 Patch Changes 1.7.26 Patch Changes 1.7.25 Patch Changes 1.7.24 Patch Changes 1.7.23 Patch Changes 1.7.22 Patch Changes 1.7.21 Patch Changes 1.7.20 Patch Changes 1.7.19 Patch Changes 1.7.18 Patch Changes",
+          "headings": "Changelog Unreleased Patch Changes Minor Changes 1.13.0 Minor Changes Patch Changes 1.12.0 Minor Changes Patch Changes 1.11.2 Patch Changes 1.11.1 Patch Changes 1.11.0 Minor Changes 1.10.1 Patch Changes 1.10.0 Minor Changes 1.9.0 Minor Changes Patch Changes 1.8.0 Minor Changes Patch Changes 1.7.45 Patch Changes 1.7.44 1.7.43 1.7.42 1.7.41 1.7.40 1.7.39 1.7.38 1.7.37 1.7.36 1.7.35 1.7.34 1.7.33 1.7.32 1.7.31 1.7.30 1.7.29 1.7.28 1.7.27 Patch Changes 1.7.26 Patch Changes 1.7.25 Patch Changes 1.7.24 Patch Changes 1.7.23 Patch Changes 1.7.22 Patch Changes 1.7.21 Patch Changes 1.7.20 Patch Changes 1.7.19 Patch Changes 1.7.18",
           "path": "CHANGELOG.md",
           "symbols": "",
-          "summary": "Registry agent runners receive an optional cancellation signal separately from their frozen context. Local and CLI deadlines now use @agentskit/net; CLI timeout and response overflow switch process-tree termination from SIGTERM to SIGKILL, while concurrency remains reserved until execution settles.",
-          "body": "Changelog Unreleased Minor Changes - Registry agent runners receive an optional cancellation signal separately from their frozen context. Local and CLI deadlines now use @agentskit/net ; CLI timeout and response overflow switch process-tree termination from SIGTERM to SIGKILL , while concurrency remains reserved until execution settles. 1.13.0 Minor Changes - a4e741d: Add separate runner cancellation signals and switch CLI process-tree termination from SIGTERM to SIGKILL at deadlines or output limits. Patch Changes - 3138e23: Use @agentskit/cross-platform for process spawning, process-tree termination, path separators, line splitting and frontmatter detection. Registry agent and study CLIs that are .cmd shims now start on Windows without a shell, timed-out children no longer leave orphaned grandchildren on Windows, and the okf-type and docs-style gates read CRLF frontmatter. pnpm check:cross-platform guards against new portability regressions with a ratchet baseline. - 4d75499: Documentation index: the ecosystem list now names Code Review and Harness alongside AgentsKit, Registry, and Chat (Playbook is no longer listed as an ecosystem product). - 5639dc5: Clarify the optional vectra dependency diagnostic with the install command npm install vectra. - 5639dc5: Patch brace-expansion to 5.0.11 to prevent stack exhaustion from deeply nested brace patterns. - 8503696: Patch Dependabot advisories: brace-expansion 5.0.12 (quadratic {a},b} expansion DoS, via minimatch) and dompurify 3.4.16 (IN PLACE afterSanitize hook XSS, via mermaid), plus dev-only next 16.3.8, ip-address 10.7.2 and qs 6.16.0. - b9470b5: Redact more real token shapes: Slack ( xoxb- / xoxp- / xoxa- / xoxr- / xoxs- / xapp- ), OpenAI ( sk- , sk-proj- ), Anthropic ( sk-ant- ), all GitHub token prefixes, AWS ASIA ids, Google API keys, Stripe restricted keys, npm tokens, Bearer credentials and PEM private key blocks. The list is exported once as SECRET PATTERNS (with containsSecret ), and the memory promotion safety scan now uses it too. - 3c720f7: Sync the public ecosystem catalog with AgentsKit main: Harness replaces AKOS, and claim figures follow the canonical ledger. 1.12.0 Minor Changes - 6d552b3: Repository scans now respect ignore rules. ak-docs index , doctor , scan / check , gates, and link-fix proposals skip every path the repository ignores — via git ls-files --cached --others --exclude-standard inside a Git work tree (nested .gitignore , .git/info/exclude , and global excludes included; tracked files are kept), or the on-disk .gitignore files outside Git — in addition to the built-in safety excludes. Build output such as .next/ , .source/ , generated API pages, or next-env.d.ts no longer enters a committed index, so index-freshness and index-reproducible agree across clean checkouts. Agent-memory ingestion still reads gitignored memory directories. Patch Changes - 6d552b3: The documentation-standard ecosystem contract no longer hard-codes product membership. It used to require the deprecated properties shim to project either a fixed three-product list that included Playbook or a fixed six-product list without Harness, which forced repositories to keep a hidden playbook record in ecosystem.json . Membership now comes from the canonical manifest: the shim is optional, and each entry must name a distinct products[] record and match it exactly. 1.11.2 Patch Changes - 221b4a6: Retire a deprecated ecosystem contract and generated documentation references. 1.11.1 Patch Changes - faf29f5: Stop reporting a path an ignore rule rescues as unreproducible. git check-ignore --verbose emits a record for every path that matched a rule, including the path a ! negation rescues — and such a path is precisely one Git does not ignore. The reproducibility check read the record without reading the pattern, so dist/ plus !dist/keep.js reported dist/keep.js as a reason the index could not be rebuilt from a clean checkout. The opposite of what the rule says, stated confidently. The win",
+          "summary": "Registry CLI failures wait for child execution to settle and release concurrency before rejecting, allowing immediate retries after deadlines or output overflow.",
+          "body": "Changelog Unreleased Patch Changes - Registry CLI failures wait for child execution to settle and release concurrency before rejecting, allowing immediate retries after deadlines or output overflow. Minor Changes - Registry agent runners receive an optional cancellation signal separately from their frozen context. Local and CLI deadlines now use @agentskit/net ; CLI timeout and response overflow switch process-tree termination from SIGTERM to SIGKILL , while concurrency remains reserved until execution settles. 1.13.0 Minor Changes - a4e741d: Add separate runner cancellation signals and switch CLI process-tree termination from SIGTERM to SIGKILL at deadlines or output limits. Patch Changes - 3138e23: Use @agentskit/cross-platform for process spawning, process-tree termination, path separators, line splitting and frontmatter detection. Registry agent and study CLIs that are .cmd shims now start on Windows without a shell, timed-out children no longer leave orphaned grandchildren on Windows, and the okf-type and docs-style gates read CRLF frontmatter. pnpm check:cross-platform guards against new portability regressions with a ratchet baseline. - 4d75499: Documentation index: the ecosystem list now names Code Review and Harness alongside AgentsKit, Registry, and Chat (Playbook is no longer listed as an ecosystem product). - 5639dc5: Clarify the optional vectra dependency diagnostic with the install command npm install vectra. - 5639dc5: Patch brace-expansion to 5.0.11 to prevent stack exhaustion from deeply nested brace patterns. - 8503696: Patch Dependabot advisories: brace-expansion 5.0.12 (quadratic {a},b} expansion DoS, via minimatch) and dompurify 3.4.16 (IN PLACE afterSanitize hook XSS, via mermaid), plus dev-only next 16.3.8, ip-address 10.7.2 and qs 6.16.0. - b9470b5: Redact more real token shapes: Slack ( xoxb- / xoxp- / xoxa- / xoxr- / xoxs- / xapp- ), OpenAI ( sk- , sk-proj- ), Anthropic ( sk-ant- ), all GitHub token prefixes, AWS ASIA ids, Google API keys, Stripe restricted keys, npm tokens, Bearer credentials and PEM private key blocks. The list is exported once as SECRET PATTERNS (with containsSecret ), and the memory promotion safety scan now uses it too. - 3c720f7: Sync the public ecosystem catalog with AgentsKit main: Harness replaces AKOS, and claim figures follow the canonical ledger. 1.12.0 Minor Changes - 6d552b3: Repository scans now respect ignore rules. ak-docs index , doctor , scan / check , gates, and link-fix proposals skip every path the repository ignores — via git ls-files --cached --others --exclude-standard inside a Git work tree (nested .gitignore , .git/info/exclude , and global excludes included; tracked files are kept), or the on-disk .gitignore files outside Git — in addition to the built-in safety excludes. Build output such as .next/ , .source/ , generated API pages, or next-env.d.ts no longer enters a committed index, so index-freshness and index-reproducible agree across clean checkouts. Agent-memory ingestion still reads gitignored memory directories. Patch Changes - 6d552b3: The documentation-standard ecosystem contract no longer hard-codes product membership. It used to require the deprecated properties shim to project either a fixed three-product list that included Playbook or a fixed six-product list without Harness, which forced repositories to keep a hidden playbook record in ecosystem.json . Membership now comes from the canonical manifest: the shim is optional, and each entry must name a distinct products[] record and match it exactly. 1.11.2 Patch Changes - 221b4a6: Retire a deprecated ecosystem contract and generated documentation references. 1.11.1 Patch Changes - faf29f5: Stop reporting a path an ignore rule rescues as unreproducible. git check-ignore --verbose emits a record for every path that matched a rule, including the path a ! negation rescues — and such a path is precisely one Git does not ignore. The reproducibility check read the record without reading the pattern, s",
           "aliases": "document project"
         },
         "graph": {
@@ -10744,7 +10744,7 @@
             }
           ]
         },
-        "contentHash": "f54ce72916e8f6a3f83535896623b3f9d6a5d9345c9c121c2427a2cc98192050",
+        "contentHash": "173082bc66cac6ef01d1840d989a21b03cdb2136618b6abc714617e8690af316",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -17661,7 +17661,7 @@
           "path": "docs/spec/registry-agents.md",
           "symbols": "",
           "summary": "doc-bridge exposes deterministic tools; Registry agents can compose them into maintenance flows.",
-          "body": "Registry Agent Topology doc-bridge exposes deterministic tools; Registry agents can compose them into maintenance flows. doc-curator Supervisor flow: Runtime Notes - The MCP server is local: ak-docs mcp . - The flow must not require a private repository shape. - knowledge-promoter may draft PR content, but must never merge. - code-review runs after gates so reviewers see deterministic failures first. - Future RAG mode should inject createDocBridgeRetriever(index) and keep exact handoff resolution ahead of semantic results. Grounding and approval boundary The adapter accepts only a typed AgentProposalV1 whose base snapshot and report hashes match the supplied artifacts. A proposal must identify the configured Registry agent and exact installed version, reference known diagnostics, and include evidence present in the supplied snapshot or reconciliation report. When ak-docs suggest --documentation is used, the bounded documentation-audit context is also supplied; the proposal must bind baseDocumentationAuditHash and may reference audit finding IDs and evidence. Unknown diagnostics, out-of-scope evidence, malformed output, timeout, response limits, and token limits fail closed. Local runners receive the frozen registry context as their first argument and may accept an optional RegistryAgentExecutionOptions second argument with an AbortSignal . The signal is execution-only: it is not part of the serialized context. Existing one-argument runners remain compatible. The adapter aborts at intelligence.registry.timeoutMs ; runners should pass the signal to cancellable work such as fetch . A runner that ignores cancellation still causes a timeout response, while its concurrency slot remains occupied until that runner settles. CLI mode uses the same deadline and response budgets, sends SIGKILL to the child process tree on timeout or output overflow, and retains the slot until the child closes. Timeouts expose AK NET TIMEOUT while preserving the Registry timeout message. The adapter returns advisory evidence only. It does not apply documentation changes, mark findings resolved, or approve its own output. Convert an accepted suggestion into the existing human-gated fix-proposal flow, run post-apply verification, and treat the new source revision as a new evidence run. An alternate Registry agent is selected by changing intelligence.registry.agentId and installing matching metadata under agentRoot ; the common adapter and evidence contract remain unchanged.",
+          "body": "Registry Agent Topology doc-bridge exposes deterministic tools; Registry agents can compose them into maintenance flows. doc-curator Supervisor flow: Runtime Notes - The MCP server is local: ak-docs mcp . - The flow must not require a private repository shape. - knowledge-promoter may draft PR content, but must never merge. - code-review runs after gates so reviewers see deterministic failures first. - Future RAG mode should inject createDocBridgeRetriever(index) and keep exact handoff resolution ahead of semantic results. Grounding and approval boundary The adapter accepts only a typed AgentProposalV1 whose base snapshot and report hashes match the supplied artifacts. A proposal must identify the configured Registry agent and exact installed version, reference known diagnostics, and include evidence present in the supplied snapshot or reconciliation report. When ak-docs suggest --documentation is used, the bounded documentation-audit context is also supplied; the proposal must bind baseDocumentationAuditHash and may reference audit finding IDs and evidence. Unknown diagnostics, out-of-scope evidence, malformed output, timeout, response limits, and token limits fail closed. Local runners receive the frozen registry context as their first argument and may accept an optional RegistryAgentExecutionOptions second argument with an AbortSignal . The signal is execution-only: it is not part of the serialized context. Existing one-argument runners remain compatible. The adapter aborts at intelligence.registry.timeoutMs ; runners should pass the signal to cancellable work such as fetch . A runner that ignores cancellation still causes a timeout response, while its concurrency slot remains occupied until that runner settles. CLI mode uses the same deadline and response budgets, sends SIGKILL to the child process tree on timeout or output overflow, and retains the slot until the child closes. CLI failures are reported only after execution settles and the slot is released, so awaiting a rejected CLI call permits an immediate retry. Local runners that ignore cancellation still retain their slot after the deadline response. Timeouts expose AK NET TIMEOUT while preserving the Registry timeout message. The adapter returns advisory evidence only. It does not apply documentation changes, mark findings resolved, or approve its own output. Convert an accepted suggestion into the existing human-gated fix-proposal flow, run post-apply verification, and treat the new source revision as a new evidence run. An alternate Registry agent is selected by changing intelligence.registry.agentId and installing matching metadata under agentRoot ; the common adapter and evidence contract remain unchanged.",
           "aliases": "document human"
         },
         "graph": {
@@ -17683,7 +17683,7 @@
             }
           ]
         },
-        "contentHash": "08f8c910fa4452281467d1aee2848ed98a637c07b9e99d589a87c6f47144c755",
+        "contentHash": "7aa0a2998839c03f438e93d23cfdb46edf4dcc1f76d0f8ace755ea981f65782d",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -23363,7 +23363,7 @@
             }
           ]
         },
-        "contentHash": "916bf2835daeabca13f63df881d191a5f150963ac4d09cbb0b5683e2e3a5e7df",
+        "contentHash": "33f54525b917572385d63818fec1d9a26ebcace4dd5e29d6c63309ff22650255",
         "provenance": "observed",
         "confidence": "observed"
       },
@@ -41042,7 +41042,7 @@
             }
           ]
         },
-        "contentHash": "77f0b79289412bacf68ac16ebf63ecdec5cb5f6d09dc4756c8ef00837899a766",
+        "contentHash": "1a16850454e3711f61a51deceaa373ef077e039c583cc74845cf9c7909236885",
         "provenance": "observed",
         "confidence": "observed"
       },

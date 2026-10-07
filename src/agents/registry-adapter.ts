@@ -255,7 +255,11 @@ export const createRegistryAgentAdapter = (root: string, config: DocBridgeConfig
       if (Math.ceil(responseBytes / 4) > maxTokens) throw new Error(`Registry agent token budget ${maxTokens} exceeded.`)
       return raw
     } finally {
-      if (execution) void execution.then(release, release)
+      // CLI cancellation closes the child before reporting failure, so an awaited call can retry.
+      if (settings.cli && execution) {
+        await execution.then(() => {}, () => {})
+        release()
+      } else if (execution) void execution.then(release, release)
       else release()
     }
   }

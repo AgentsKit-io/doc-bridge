@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Patch Changes
+
+- Registry CLI failures wait for child execution to settle and release concurrency before rejecting, allowing immediate retries after deadlines or output overflow.
+
 ### Minor Changes
 
 - Registry agent runners receive an optional cancellation signal separately from their frozen context. Local and CLI deadlines now use `@agentskit/net`; CLI timeout and response overflow switch process-tree termination from `SIGTERM` to `SIGKILL`, while concurrency remains reserved until execution settles.
