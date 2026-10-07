@@ -16,13 +16,12 @@ import { createLocalScanIO, type ScanIO } from './scan-io.js'
 import { GRAPH_ANALYZER_VERSION, areaSuggestionCoverage } from '../graph/build.js'
 import { deriveAreas, type AreaModule } from './areas.js'
 import { entityId } from './identity.js'
-import { reuseCoverage, factResolutionUniverse, type PreviousSnapshot, type PriorFile } from './incremental.js'
+import { reuseCoverage, factResolutionUniverse, type PreviousSnapshot } from './incremental.js'
 import { MARKDOWN_ANALYZER_VERSION, type MarkdownFact } from './markdown.js'
 import { DEFAULT_MAX_FILES, safeWalkOptions } from './inputs.js'
 import {
   DiscoverySnapshotV1Schema,
   type DiscoverySnapshotV1,
-  type Evidence,
   type KnowledgeEntity,
   type KnowledgeRelation,
 } from '../schemas/knowledge.js'
@@ -160,7 +159,7 @@ const addAreas = ({ entities, relations, addEntity, addRelation }: ReturnType<ty
 export const createDiscoveryScan = (io: ScanIO, retainFactTrees = true) => {
   const jsTs = createJsTsExtraction(io, retainFactTrees)
   const markdown = createMarkdownExtraction(io)
-  const { readJson, discoverPackages, relativePath } = jsTs
+  const { relativePath } = jsTs
   return (opts: DiscoveryOptions = {}, documents = true): DiscoverySnapshotV1 => {
   const root = resolve(opts.root ?? process.cwd())
   const safeOptions = safeWalkOptions(opts.config, {
@@ -175,7 +174,7 @@ export const createDiscoveryScan = (io: ScanIO, retainFactTrees = true) => {
   const { entities, relations, addEntity, addRelation } = extractionGraph()
 
   const source = jsTs.prepare({ root, opts, sourcePaths, packageResult, entities, relations, addEntity, addRelation })
-  const { compiler, ledger, prior, moduleUniverse, reuseModuleRelations, modules, modulesByPath, reusedModules, areaModules, symbolModules } = source
+  const { compiler, ledger, prior, moduleUniverse, modules, modulesByPath, areaModules } = source
 
   const { areas, areasByPath } = addAreas({ entities, relations, addEntity, addRelation }, areaModules, opts)
 
