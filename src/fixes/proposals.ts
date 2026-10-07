@@ -1,7 +1,10 @@
+import { assertGeneratedContentPreserved } from './regions.js'
+import { unifiedDiff } from './diff.js'
+import { replaceFiles } from './write.js'
 import { denyServiceOperation } from '../execution/profile.js'
-import { existsSync, readdirSync, readFileSync, realpathSync, renameSync, unlinkSync, writeFileSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync, realpathSync } from 'node:fs'
 import { basename, dirname, extname, join, relative, resolve } from 'node:path'
-import { splitLines, toPosix } from '@agentskit/cross-platform'
+import { toPosix } from '@agentskit/cross-platform'
 
 import { contentHashForArtifactV1, sha256NormalizedV1 } from '../index-builder/content-hash.js'
 import { FixProposalV1Schema, type FixProposalV1 } from '../schemas/knowledge.js'
@@ -35,12 +38,6 @@ const artifactMetadata = (root: string, options: FixProposalOptions) => ({
   pipelineVersion: '1.0.0',
   analyzerVersions: { fixes: options.toolVersion ?? '1.0.0' },
 })
-
-const unifiedDiff = (changes: readonly FixChange[]): string => changes.map((change) => {
-  const before = splitLines(change.before, { dropTrailingEmpty: false }).map((line) => `-${line}`).join('\n')
-  const after = splitLines(change.after, { dropTrailingEmpty: false }).map((line) => `+${line}`).join('\n')
-  return `--- a/${change.path}\n+++ b/${change.path}\n@@\n${before}\n${after}`
-}).join('\n')
 
 const makeProposal = (root: string, options: FixProposalOptions, changes: readonly FixChange[], preconditions: readonly string[], postconditions: readonly string[]): FixProposalV1 => {
   const draft = {
@@ -142,30 +139,12 @@ export const applyFixProposal = (root: string, proposalInput: unknown, options: 
     if (!absolute || !existsSync(absolute)) throw new Error(`Affected file is unavailable or escapes the repository root: ${file.path}`)
     const current = readFileSync(absolute, 'utf8')
     if (sha256NormalizedV1(current) !== file.contentHash) throw new Error(`Affected file changed since proposal creation: ${file.path}`)
+    if (originals.has(absolute)) throw new Error('Duplicate canonical affected file.')
     originals.set(absolute, current)
   }
 
-  try {
-    for (const change of proposal.changes) {
-      const absolute = resolve(projectRoot, change.path)
-      writeFileSync(`${absolute}.docbridge-${process.pid}.tmp`, change.after, 'utf8')
-    }
-    for (const change of proposal.changes) {
-      const absolute = resolve(projectRoot, change.path)
-      renameSync(`${absolute}.docbridge-${process.pid}.tmp`, absolute)
-    }
-    for (const change of proposal.changes) {
-      if (readFileSync(resolve(projectRoot, change.path), 'utf8') !== change.after) throw new Error(`Postcondition failed for ${change.path}`)
-    }
-    options.verify?.(proposal.changes.map((change) => change.path))
-  } catch (error) {
-    for (const [absolute, content] of originals) writeFileSync(absolute, content, 'utf8')
-    for (const change of proposal.changes) {
-      const temp = `${resolve(projectRoot, change.path)}.docbridge-${process.pid}.tmp`
-      if (existsSync(temp)) unlinkSync(temp)
-    }
-    throw error
-  }
+  for (const change of proposal.changes) assertGeneratedContentPreserved(change.path, change.before, change.after)
+  replaceFiles(proposal.changes.map(change => ({ absolute: containedPath(projectRoot, change.path)!, before: originals.get(containedPath(projectRoot, change.path)!)!, after: change.after })), () => options.verify?.(proposal.changes!.map(change => change.path)))
   const applied = { ...proposal, status: 'applied' as const, contentHash: '0'.repeat(64) }
   return FixProposalV1Schema.parse({ ...applied, contentHash: contentHashForArtifactV1(applied) })
 }

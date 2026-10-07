@@ -1,3 +1,4 @@
+import { classifyDocument } from '../findings/classification.js'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { toPosix } from '@agentskit/cross-platform'
@@ -173,28 +174,6 @@ const metadataPresent = (content: string, key: string): boolean => {
   return typeof value === 'string' ? value.trim().length > 0 : value === true
 }
 
-const inferredDocumentType = (path: string): string => {
-  const lower = path.toLocaleLowerCase()
-  if (lower === 'agents.md' || lower.endsWith('/agents.md') || lower.includes('/for-agents/')) return 'agent-guidance'
-  if (lower.includes('/adr/') || lower.startsWith('adr/')) return 'architecture-decision'
-  if (lower.includes('runbook') || lower.includes('/operations/')) return 'runbook'
-  if (lower.includes('security')) return 'security'
-  if (lower.includes('contribut')) return 'contribution'
-  if (lower.includes('architecture')) return 'architecture'
-  if (lower.includes('/api/') || lower.includes('/reference/')) return 'reference'
-  if (lower.includes('/example') || lower.includes('/recipe')) return 'example'
-  return 'guide'
-}
-
-const inferredAudience = (path: string): string => {
-  const lower = path.toLocaleLowerCase()
-  if (lower.includes('/agent-corpus/') || lower.includes('/for-agents/') || lower.endsWith('agents.md')) return 'agent'
-  if (lower === 'readme.md' || lower.includes('/readme.')) return 'human-and-agent'
-  return 'human'
-}
-
-const inferredLifecycle = (path: string): string => /(?:^|\/)(?:archive|archived|historical)(?:\/|$)/i.test(path) ? 'archived' : 'active'
-
 const inferredTier = (path: string): DocumentationTier => {
   const lower = path.toLocaleLowerCase()
   if (lower === 'agents.md' || lower.endsWith('/agents.md') || lower.includes('/agent-corpus/') || lower.includes('/for-agents/') || lower.includes('security') || lower.includes('contribut') || lower.includes('runbook') || lower.includes('/operations/')) return 'tier-0'
@@ -345,12 +324,13 @@ export const auditDocumentation = (options: DocumentationAuditOptions): Document
     const examples = hasExample(document.content)
     const sections = requiredSections.every((section) => hasHeading(document.content, section))
     const qualityAnalyzed = !matches(document.path, generatedPaths)
+    const classification = classifyDocument(document.path, data)
     const assessment: DocumentationAuditDocument = {
       path: document.path,
       classification: {
-        type: frontmatterString(data, 'type') ?? inferredDocumentType(document.path),
-        audience: frontmatterString(data, 'audience') ?? inferredAudience(document.path),
-        lifecycle: frontmatterString(data, 'lifecycle') ?? inferredLifecycle(document.path),
+        type: classification.type,
+        audience: classification.audience,
+        lifecycle: classification.lifecycle,
         tier: tiering.tier,
         critical: tiering.critical,
       },

@@ -8,6 +8,8 @@
 
 ### Minor Changes
 
+- Add deterministic findings, region remediations, settled decisions and opt-in handoff caveats, preserving legacy fix readers and human acceptance authority.
+
 - Add npm purl/vers package facts and lockfile resolution, bounded document version targets, caller-event release stamping and adapter-owned change-set eligibility.
 
 - Add an opt-in caller-enforced service profile with restricted config, injected storage and explicit CLI/MCP limitations.

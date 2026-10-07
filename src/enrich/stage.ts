@@ -15,6 +15,7 @@ import {
 } from '../schemas/enrichment.js'
 import type { DiscoverySnapshotV1, ReconciliationReportV1 } from '../schemas/knowledge.js'
 import { approvalsDir, createFileApprovalStore, enrichmentApprovalId, loadApprovalGate, ENRICHMENT_APPROVAL_GATE, type ApprovalGate } from './approvals.js'
+import { settledRejections } from './settled.js'
 import { createEnrichmentCache, type EnrichmentCache } from './cache.js'
 import { cacheHitRate, enrichmentStability, formatEnrichmentStatsText, inventedReferenceCount, type EnrichmentStability } from './stats.js'
 import { batchContextPacks, buildContextPacks, type ContextPack, type EnrichmentTask } from './context-pack.js'
@@ -200,7 +201,7 @@ export const runEnrichment = async (options: EnrichmentRunOptions): Promise<Enri
     return entity !== undefined && effectiveEnrichment({ accepted: [{ ...entry, acceptedAt: now(), acceptedBy: 'policy' }] }, snapshot).live.length === 1
   })
   // A decision that settled a proposal — a person's, or an adjudicator's — is not reopened by the cache replaying it.
-  const settled = (previous?.rejected ?? []).filter((entry) => entry.reason === 'human-rejected' || entry.reason === 'adjudicated')
+  const settled = settledRejections(previous?.rejected ?? [])
   const humanRejected = new Set(settled.map((entry) => entry.proposalId))
 
   const stats = emptyStats()

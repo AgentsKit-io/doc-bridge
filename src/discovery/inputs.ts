@@ -1,3 +1,4 @@
+import { classifyDocument } from '../findings/classification.js'
 import { extname } from 'node:path'
 import * as ts from 'typescript'
 
@@ -30,13 +31,7 @@ export const safeWalkOptions = (config: DocBridgeConfigV1 | undefined, overrides
 }
 
 /** Which audience a documentation file is written for, from its location. */
-export const documentClassification = (path: string): string => {
-  if (/(^|\/)docs\/for-agents(?:\/|$)/.test(path)) return 'agent'
-  if (/(^|\/)docs-archive(?:\/|$)/.test(path)) return 'archive'
-  if (/(^|\/)docs(?:\/|$)/.test(path)) return 'human'
-  if (/(^|\/)(README|CONTRIBUTING|SECURITY|CHANGELOG)(?:\.|$)/i.test(path)) return 'project'
-  return 'unclassified'
-}
+export const documentClassification = (path: string): string => classifyDocument(path).discoveryAudience
 
 export const scriptKind = (path: string): ts.ScriptKind => {
   switch (extname(path)) {

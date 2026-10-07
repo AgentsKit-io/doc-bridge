@@ -58,6 +58,14 @@ export const HandoffRelatedSchema = z
 
 export type HandoffRelated = z.infer<typeof HandoffRelatedSchema>
 
+/** Negotiated, bounded limitations; unknown consumers receive the legacy field set. */
+export const HandoffCaveatsSchema = z.object({
+  pendingFindings: z.array(z.object({ id: z.string().min(1).max(128), status: z.string().min(1).max(64), routing: z.enum(['proposed', 'excluded', 'routed-to-L2', 'pending-version']) }).strict()).max(32),
+  analyzed: z.array(z.object({ repository: z.string().min(1).max(512), revision: z.string().min(1).max(128) }).strict()).max(16),
+  coverage: z.array(z.object({ scope: z.string().min(1).max(512), status: z.enum(['complete', 'partial', 'not-analyzed', 'not-applicable']), reason: z.string().max(1_024).optional() }).strict()).max(32),
+}).strict()
+export type HandoffCaveats = z.infer<typeof HandoffCaveatsSchema>
+
 /** v1 — canonical AgentHandoff. Legacy payloads may omit schemaVersion. */
 export const AgentHandoffV1Schema = z
   .object({
@@ -98,6 +106,7 @@ export const AgentHandoffV1Schema = z
     metadata: z.record(z.string().min(1).max(64), z.unknown()).optional(),
     /** Present only when the caller declared `budgetTokens`: what the payload cost and what it shed to fit. */
     budget: BudgetReportSchema.optional(),
+    caveats: HandoffCaveatsSchema.optional(),
   })
   .strict()
 
@@ -145,5 +154,9 @@ export const AgentSearchV1Schema = z
 
 export type AgentSearchV1 = z.infer<typeof AgentSearchV1Schema>
 
-export const normalizeAgentHandoff = (input: unknown): AgentHandoffV1 =>
-  AgentHandoffV1Schema.parse(AgentHandoffLegacySchema.parse(input))
+export const normalizeAgentHandoff = (input: unknown, options: { includeCaveats?: boolean } = {}): AgentHandoffV1 => {
+  const handoff = AgentHandoffV1Schema.parse(AgentHandoffLegacySchema.parse(input))
+  if (options.includeCaveats === true) return handoff
+  const { caveats: _caveats, ...legacy } = handoff
+  return legacy
+}
