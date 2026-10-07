@@ -1063,3 +1063,19 @@ only the enumerated leaves; ignored options retain path-only diagnostics and
 watch and legacy writes are denied. Service library calls use injected storage;
 service CLI writes require `--artifact-root`. MCP mutating/agent operations and
 filesystem fallbacks are refused. Ordinary local calls remain unchanged.
+
+## Action configuration boundary
+
+Action `config-path` and `gate` selection belong to the trusted caller workflow.
+Blocking gates retain static configuration parsing under the trusted installed
+engine; the Action never executes configuration, repository scripts or modules.
+`index-source` is an Action input, not a new configuration/schema field. CI-built
+output preserves the original index projection configuration, writes outside the
+checkout, verifies repeated hashes and reports committed drift independently.
+
+Advisory snapshots and diff apply the service profile's permitted leaves and
+bounded reads. Repository agent, network and module options are ignored with
+explicit coverage, even if the head configuration requests them. Advisory source
+capture cannot opt out of this ceiling. Policy routing/version exclusions remain
+not analyzed in this advisory; this limitation does not silently imply validation.
+See [Marketplace](../MARKETPLACE.md) for permissions and the self-CI exception.

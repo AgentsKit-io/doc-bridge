@@ -8,6 +8,7 @@
 
 ### Minor Changes
 
+- Add explicit committed/CI-built Action index sources, bounded exact-revision reference advisories and an opt-in deduplicated PR comment publisher with summary fallback, preserving independent blocking gate results.
 - Add deterministic findings, region remediations, settled decisions and opt-in handoff caveats, preserving legacy fix readers and human acceptance authority.
 
 - Add npm purl/vers package facts and lockfile resolution, bounded document version targets, caller-event release stamping and adapter-owned change-set eligibility.

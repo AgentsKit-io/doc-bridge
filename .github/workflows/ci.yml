@@ -85,6 +85,8 @@ jobs:
         with:
           config-path: doc-bridge.config.json
           package-version: ${{ steps.published-doc-bridge.outputs.version }}
+          engine: checkout
+          head-revision: ${{ github.sha }}
       - name: Ollama smoke (optional)
         continue-on-error: true
         run: pnpm smoke:ollama

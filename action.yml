@@ -1,26 +1,75 @@
 name: doc-bridge-gate
-description: Run doc-bridge index freshness and configured gates on pull requests
+description: Run independent documentation gates and optional deterministic PR advisories
 branding:
   icon: book
   color: blue
 
 inputs:
   config-path:
-    description: Path to doc-bridge.config.json (default discovers from repo root)
+    description: Caller-selected static config path within the exact revision checkout
     required: false
     default: ''
   gate:
-    description: Optional single gate id (default runs all configured gates)
+    description: Optional caller-selected blocking gate (default configured gates)
     required: false
     default: ''
+  index-source:
+    description: committed validates before rebuild; ci-built produces an isolated exact-revision artifact
+    required: false
+    default: committed
+  advisory:
+    description: Analyze exact PR base/head snapshots for advisory reference findings
+    required: false
+    default: 'false'
+  comment:
+    description: Opt into a separate PR comment publisher (pull-requests write required)
+    required: false
+    default: 'false'
+  fail-on-findings:
+    description: Explicitly fail for advisory reference findings, independently of blocking gates
+    required: false
+    default: 'false'
+  base-revision:
+    description: Exact base commit already acquired by checkout (no implicit fetch)
+    required: false
+    default: ${{ github.event.pull_request.base.sha }}
+  head-revision:
+    description: Exact head commit already acquired by checkout
+    required: false
+    default: ${{ github.event.pull_request.head.sha || github.sha }}
+  pr-number:
+    description: PR number bound to the analyzed repository and exact revisions
+    required: false
+    default: ${{ github.event.pull_request.number }}
   node-version:
     description: Node.js version for ak-docs
     required: false
     default: '22'
+  engine:
+    description: published (default) or explicit unprivileged checkout engine for doc-bridge self-CI only
+    required: false
+    default: published
   package-version:
-    description: Exact @agentskit/doc-bridge npm version (kept in sync with this Action release)
+    description: Exact trusted doc-bridge npm version (kept in sync with this Action release)
     required: false
     default: '1.13.0'
+
+outputs:
+  index-report:
+    description: Blocking gate JSON report path outside the checkout
+    value: ${{ steps.index.outputs.report }}
+  index-source:
+    description: Analyzed index source mode
+    value: ${{ steps.index.outputs.source }}
+  source-revision:
+    description: Exact analyzed head revision
+    value: ${{ steps.index.outputs.revision }}
+  advisory-report:
+    description: Bounded advisory JSON artifact path (adjacent Markdown and diff artifacts)
+    value: ${{ steps.advisory.outputs.report }}
+  comment-status:
+    description: comment, summary, disabled, or unavailable delivery status
+    value: ${{ steps.publish.outputs.status || steps.advisory.outputs.status }}
 
 runs:
   using: composite
@@ -30,53 +79,110 @@ runs:
       with:
         node-version: ${{ inputs.node-version }}
 
-    - name: Install ak-docs
+    - name: Install trusted ak-docs
+      id: install
       shell: bash
       env:
         DOC_BRIDGE_PACKAGE_VERSION: ${{ inputs.package-version }}
+        DOC_BRIDGE_ENGINE: ${{ inputs.engine }}
+        DOC_BRIDGE_ADVISORY: ${{ inputs.advisory }}
+        DOC_BRIDGE_FAIL_ON_FINDINGS: ${{ inputs.fail-on-findings }}
+        DOC_BRIDGE_COMMENT: ${{ inputs.comment }}
       run: |
-        if [[ ! "$DOC_BRIDGE_PACKAGE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
-          echo "::error title=Invalid package-version::Use an exact semver version such as 1.2.1"
+        for BOOLEAN_INPUT in "$DOC_BRIDGE_ADVISORY" "$DOC_BRIDGE_COMMENT" "$DOC_BRIDGE_FAIL_ON_FINDINGS"; do
+          if [ "$BOOLEAN_INPUT" != true ] && [ "$BOOLEAN_INPUT" != false ]; then
+            echo "::error title=Invalid boolean input::Use true or false"
+            exit 2
+          fi
+        done
+        if [ "$DOC_BRIDGE_ENGINE" = checkout ]; then
+          if [ "$GITHUB_REPOSITORY" != AgentsKit-io/doc-bridge ] || [ "$DOC_BRIDGE_COMMENT" != false ]; then
+            echo "::error title=Unsafe checkout engine::Checkout engine is restricted to unprivileged self-CI without comment publishing"
+            exit 2
+          fi
+          if [ ! -f "$GITHUB_WORKSPACE/dist/cli/program.js" ]; then
+            echo "::error title=Missing checkout build::Build the self-CI engine before running the Action"
+            exit 2
+          fi
+          echo "cli-path=$GITHUB_WORKSPACE/bin/ak-docs.js" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+        if [ "$DOC_BRIDGE_ENGINE" != published ]; then
+          echo "::error title=Invalid engine::Use published or checkout"
           exit 2
         fi
-        # When this Action runs against the Doc Bridge repository itself (CI dogfood),
-        # install the workspace package so gates exercise the PR under test — not a
-        # stale published npm version that may lag the local ecosystem contract.
-        if [ -f package.json ] && [ "$(node -p "try{require('./package.json').name}catch{''}")" = "@agentskit/doc-bridge" ]; then
-          npm install -g .
-        else
-          npm install -g "@agentskit/doc-bridge@${DOC_BRIDGE_PACKAGE_VERSION}"
+        if [[ ! "$DOC_BRIDGE_PACKAGE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+          echo "::error title=Invalid package-version::Use an exact semver version"
+          exit 2
         fi
+        RUNTIME="$(mktemp -d "$RUNNER_TEMP/doc-bridge-runtime.XXXXXX")"
+        npm install --prefix "$RUNTIME" --ignore-scripts --no-audit --no-fund "@agentskit/doc-bridge@${DOC_BRIDGE_PACKAGE_VERSION}"
+        echo "cli-path=$RUNTIME/node_modules/@agentskit/doc-bridge/bin/ak-docs.js" >> "$GITHUB_OUTPUT"
+        echo "runtime=$RUNTIME" >> "$GITHUB_OUTPUT"
 
-    - name: Run gates
-      shell: bash
-      env:
-        DOC_BRIDGE_CONFIG_PATH: ${{ inputs.config-path }}
-        DOC_BRIDGE_GATE_ID: ${{ inputs.gate }}
-      run: |
-        if [ -n "$DOC_BRIDGE_GATE_ID" ] && [ -n "$DOC_BRIDGE_CONFIG_PATH" ]; then
-          ak-docs gate run "$DOC_BRIDGE_GATE_ID" --config "$DOC_BRIDGE_CONFIG_PATH"
-        elif [ -n "$DOC_BRIDGE_GATE_ID" ]; then
-          ak-docs gate run "$DOC_BRIDGE_GATE_ID"
-        elif [ -n "$DOC_BRIDGE_CONFIG_PATH" ]; then
-          ak-docs gate run --config "$DOC_BRIDGE_CONFIG_PATH"
-        else
-          ak-docs gate run
-        fi
-
-    - name: Doctor coverage (annotation)
+    - name: Validate index source and blocking gates
+      id: index
       shell: bash
       continue-on-error: true
       env:
+        DOC_BRIDGE_CLI_PATH: ${{ steps.install.outputs.cli-path }}
         DOC_BRIDGE_CONFIG_PATH: ${{ inputs.config-path }}
+        DOC_BRIDGE_GATE_ID: ${{ inputs.gate }}
+        DOC_BRIDGE_INDEX_SOURCE: ${{ inputs.index-source }}
+        DOC_BRIDGE_HEAD_REVISION: ${{ inputs.head-revision }}
+      run: node "$GITHUB_ACTION_PATH/scripts/action-runner.mjs" index
+
+    - name: Analyze advisory (unprivileged)
+      id: advisory
+      if: ${{ always() && inputs.advisory == 'true' }}
+      shell: bash
+      continue-on-error: true
+      env:
+        DOC_BRIDGE_CLI_PATH: ${{ steps.install.outputs.cli-path }}
+        DOC_BRIDGE_CONFIG_PATH: ${{ inputs.config-path }}
+        DOC_BRIDGE_INDEX_SOURCE: ${{ inputs.index-source }}
+        DOC_BRIDGE_BASE_REVISION: ${{ inputs.base-revision }}
+        DOC_BRIDGE_HEAD_REVISION: ${{ inputs.head-revision }}
+        DOC_BRIDGE_PR_NUMBER: ${{ inputs.pr-number }}
+        DOC_BRIDGE_ADVISORY: ${{ inputs.advisory }}
+        DOC_BRIDGE_FAIL_ON_FINDINGS: ${{ inputs.fail-on-findings }}
+      run: node "$GITHUB_ACTION_PATH/scripts/action-runner.mjs" advisory
+
+    - name: Publish validated advisory (no checkout execution)
+      id: publish
+      if: ${{ always() && inputs.advisory == 'true' }}
+      shell: bash
+      env:
+        DOC_BRIDGE_INDEX_SOURCE: ${{ inputs.index-source }}
+        DOC_BRIDGE_BASE_REVISION: ${{ inputs.base-revision }}
+        DOC_BRIDGE_HEAD_REVISION: ${{ inputs.head-revision }}
+        DOC_BRIDGE_PR_NUMBER: ${{ inputs.pr-number }}
+        DOC_BRIDGE_COMMENT: ${{ inputs.comment }}
+        DOC_BRIDGE_ADVISORY_REPORT: ${{ steps.advisory.outputs.report }}
+        DOC_BRIDGE_TOKEN: ${{ github.token }}
+      run: node "$GITHUB_ACTION_PATH/scripts/action-runner.mjs" publish
+
+    - name: Clean installed runtime
+      if: ${{ always() }}
+      shell: bash
+      env:
+        DOC_BRIDGE_RUNTIME: ${{ steps.install.outputs.runtime }}
       run: |
-        if [ -n "$DOC_BRIDGE_CONFIG_PATH" ]; then
-          REPORT="$(ak-docs doctor --text --config "$DOC_BRIDGE_CONFIG_PATH" 2>&1 || true)"
-        else
-          REPORT="$(ak-docs doctor --text 2>&1 || true)"
+        if [ -n "$DOC_BRIDGE_RUNTIME" ]; then
+          rm -rf -- "$DOC_BRIDGE_RUNTIME"
         fi
-        echo "$REPORT"
-        SCORE="$(echo "$REPORT" | sed -n 's/^Score: \([0-9]*\)\/.*/\1/p' | head -1)"
-        if [ -n "$SCORE" ]; then
-          echo "::notice title=doc-bridge coverage::Score ${SCORE}/100 — run ak-docs doctor locally for next actions"
+
+    - name: Preserve independent blocking results
+      if: ${{ always() }}
+      shell: bash
+      env:
+        DOC_BRIDGE_INDEX_OUTCOME: ${{ steps.index.outcome }}
+        DOC_BRIDGE_ADVISORY_OUTCOME: ${{ steps.advisory.outcome }}
+        DOC_BRIDGE_FAIL_ON_FINDINGS: ${{ inputs.fail-on-findings }}
+      run: |
+        if [ "$DOC_BRIDGE_INDEX_OUTCOME" != success ]; then
+          exit 1
+        fi
+        if [ "$DOC_BRIDGE_FAIL_ON_FINDINGS" = true ] && [ "$DOC_BRIDGE_ADVISORY_OUTCOME" = failure ]; then
+          exit 1
         fi
