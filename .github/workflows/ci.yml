@@ -42,13 +42,27 @@ jobs:
       - run: npm pack --dry-run
       - name: Packaged smoke (2-min path + MCP)
         run: pnpm smoke:packaged
-      # `index` used to run first, which made `index-freshness` a tautology: it compared an
-      # artifact written seconds earlier against a rebuild of the same tree, and could not fail.
-      # The committed index is what consumers are told to verify, so verify that one. The badge
-      # writes into `.doc-bridge/`, which the scan excludes, and runs after the gate regardless.
-      - name: Doc Bridge index freshness (committed index matches the tree)
-        run: node bin/ak-docs.js gate run index-freshness
-      - name: Dogfood gate and documentation conformance (against the committed index)
+      # This repository generates its index instead of committing it. Building twice
+      # verifies deterministic artifact bytes and committed source inputs. The
+      # committed-index reproducibility gate skips this untracked artifact; docs
+      # gates still apply. No step claims committed-index freshness.
+      - name: Build deterministic repository index
+        run: |
+          node bin/ak-docs.js index
+          first_index=$(mktemp)
+          trap 'rm -f "$first_index"' EXIT
+          cp .doc-bridge/index.json "$first_index"
+          node bin/ak-docs.js index
+          cmp "$first_index" .doc-bridge/index.json
+          node --input-type=module <<'NODE'
+          import { readFileSync } from 'node:fs'
+          import { execFileSync } from 'node:child_process'
+          const tracked = new Set(execFileSync('git', ['ls-files', '-z'], { encoding: 'utf8' }).split('\0'))
+          const index = JSON.parse(readFileSync('.doc-bridge/index.json', 'utf8'))
+          const untracked = index.knowledge.filter(entry => !tracked.has(entry.path))
+          if (untracked.length) throw new Error(`Index includes untracked inputs: ${untracked.map(entry => entry.path).join(', ')}`)
+          NODE
+      - name: Dogfood gate and documentation conformance (generated index)
         run: |
           node bin/ak-docs.js gate run
           node bin/ak-docs.js conformance run documentation-standard-v1 --text
@@ -64,6 +78,8 @@ jobs:
       - name: Resolve a published version for the pre-release Action smoke
         id: published-doc-bridge
         run: echo "version=$(npm view @agentskit/doc-bridge version)" >> "$GITHUB_OUTPUT"
+      # The self-smoke consumes the index generated above; the Action still defaults
+      # to committed indexes for consumer repositories and does not rebuild it.
       - name: Run the public composite Action contract
         uses: ./
         with:

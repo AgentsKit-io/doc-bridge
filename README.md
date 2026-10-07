@@ -303,17 +303,17 @@ Coverage is repository-specific. Run `ak-docs doctor --badge` locally to emit
 current handoff and human-bridge badges, or `pnpm coverage:badge` in CI; this
 README intentionally avoids publishing a stale static percentage.
 
-Or locally, as two steps rather than one, because they answer different questions:
+For this repository, generate the ignored index before local checks:
 
 ```bash
-ak-docs index     # after changing docs or config — then review and commit the result
-ak-docs gate run  # verifies the committed index, which is what CI verifies
+node bin/ak-docs.js index
+node bin/ak-docs.js gate run
 ```
 
-Chaining them (`index && gate run`) cannot report a stale index: it gates an artifact written a
-second earlier against a rebuild of the same tree. The gate's value is that the committed index
-and the repository agree, so run it the way CI does, against what is committed. It fails with
-`Index is stale. Run: ak-docs index` — the same check, and the same annotation, as in CI.
+Never commit this repository's `.doc-bridge/index.json`. CI builds it twice and
+compares artifact bytes, then checks reproducibility and documentation conformance.
+This verifies deterministic generation, not committed-index freshness. Consumer
+repositories using the Action still verify their committed index before rebuilding.
 
 ## Product surface
 

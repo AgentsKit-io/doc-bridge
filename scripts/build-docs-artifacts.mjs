@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url'
 import { computeLocalKnowledgeArtifactContentHash, LocalKnowledgeArtifactSchema } from '@agentskit/chat/protocol'
 import { createRequire } from 'node:module'
 import { aliases } from './lib/aliases.mjs'
-import { toPosix } from '@agentskit/cross-platform'
+import { spawnProcess, toPosix } from '@agentskit/cross-platform'
 
 const require = createRequire(import.meta.url)
 /** Prefer package export; fall back to source when running pre-build. */
@@ -41,6 +41,10 @@ function loadFormatEcosystemLlmsBlock() {
 const formatEcosystemLlmsBlock = loadFormatEcosystemLlmsBlock()
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
+const indexBuild = await spawnProcess(process.execPath, ['bin/ak-docs.js', 'index'], {
+  cwd: root, stdout: 'inherit', stderr: 'inherit',
+}).exited
+if (indexBuild.code !== 0) throw new Error('Repository index generation failed')
 const docsRoot = join(root, 'docs')
 const publicRoot = join(root, 'apps/docs/public')
 const ecosystemManifestPath = join(root, 'ecosystem.json')

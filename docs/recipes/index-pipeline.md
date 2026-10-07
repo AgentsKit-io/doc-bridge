@@ -7,6 +7,11 @@ description: Compose indexing, querying, gating, and CI into repeatable document
 
 Keep `.doc-bridge/index.json` fresh during development and in CI.
 
+These recipes describe consumer repositories. In the doc-bridge repository itself,
+`.doc-bridge/index.json` is ignored: generate it locally or in CI and never commit
+it. Its CI checks two builds for determinism, reproducibility, and documentation
+conformance rather than committed-index freshness.
+
 ## Watch mode (local dev)
 
 ```bash

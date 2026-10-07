@@ -41,7 +41,8 @@ Or with a global/local bin:
 }
 ```
 
-Run from the repo root (or pass config discovery that resolves to it). Always `ak-docs index` after doc changes (or gate in CI).
+Run from the repo root (or pass config discovery that resolves to it). Run `ak-docs index` before starting MCP in a fresh checkout and after doc changes.
+In this repository the index is generated locally and ignored, never committed.
 
 ## Claude Desktop MCP Bundle
 

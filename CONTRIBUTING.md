@@ -18,6 +18,13 @@ pnpm test
 pnpm build
 ```
 
+## Repository index
+
+Run `node bin/ak-docs.js index` before local gates, parity, benchmarks, or MCP
+queries. This repository generates `.doc-bridge/index.json` locally and in CI;
+never commit it. CI compares two builds for determinism and checks reproducibility
+and documentation conformance. Consumer repositories may still commit their index.
+
 ## Development rules
 
 - Keep Layer 0 deterministic: no LLM/API key required for `init`, `index`, `query`, `list`, gates, or MCP handoff tools.
