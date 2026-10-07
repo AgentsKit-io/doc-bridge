@@ -19,8 +19,9 @@ content hash. Documents use change kind `doc-path`. Export name sets are compare
 per module; added/removed exports use distinct symbol identities with `ownerId`.
 Retained exports are not marked changed solely because another export or the
 module body changed. Their owning module change still contributes review impact.
-The current analyzer provides module file evidence for exports, without signature
-or declaration-region extraction.
+Legacy exports retain module file evidence. The built-in signature component
+adds bounded declaration evidence and normalized syntactic value hashes; see
+[signature facts v1](signature-facts-v1.md).
 
 Codec-backed surface facts (`symbol`, `cli-command`, `cli-flag`, `config-key`,
 `signature`) are compared by stable owner/name ID and adapter-provided value hash.

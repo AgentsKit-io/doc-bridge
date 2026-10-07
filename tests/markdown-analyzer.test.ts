@@ -92,7 +92,7 @@ describe('markdown analyzer', () => {
     const snapshot = discoverRepository({ root: fixture() })
     const markdown = snapshot.relations.filter((relation) => ['links-to', 'mentions', 'mentions-symbol'].includes(relation.kind))
 
-    expect(relationIds(markdown)).toEqual([
+    expect(relationIds(markdown.filter(relation => !relation.metadata?.factKind))).toEqual([
       'relation:document:docs/guide.md:mentions-symbol:module:src/reconcile.ts:reconcileKnowledge',
       'relation:document:docs/guide.md:mentions:package:fixture',
       'relation:document:docs/overview.md:links-to:document:docs/guide.md',
@@ -114,9 +114,11 @@ describe('markdown analyzer', () => {
     const snapshot = discoverRepository({ root: fixture() })
 
     // `reconcileKnowledge` is declared once and re-exported by the barrel: the definition wins.
-    expect(snapshot.relations.filter((relation) => relation.kind === 'mentions-symbol').map((relation) => relation.to)).toEqual([
+    expect(snapshot.relations.filter((relation) => relation.kind === 'mentions-symbol' && !relation.metadata?.factKind).map((relation) => relation.to)).toEqual([
       'module:src/reconcile.ts',
     ])
+
+    expect(snapshot.relations.filter(relation => relation.metadata?.factKind === 'signature').map(relation => relation.to)).toEqual(['module:src/reconcile.ts'])
 
     // `shared` is declared by two modules, so the reference resolves to neither.
     const fromDocuments = snapshot.relations.filter((relation) => relation.from.startsWith('document:'))

@@ -111,9 +111,9 @@ orchestrator/diff migration and is not proven by these contract tests.
 JS/TS (`createJsTsPluginV2`, effective analyzer version 1.3.5) and Markdown
 (`createMarkdownPluginV2`, the existing Markdown analyzer version) are caller-
 registered v2 plugins. Their syntax extraction is shared with the synchronous
-`discoverRepository` compatibility facade. JS/TS declares manifests and symbols;
-Markdown declares Markdown. Neither emits additional surface-fact entities by
-default. Syntax algorithms, IDs, evidence codecs, coverage attribution and
+`discoverRepository` compatibility facade. JS/TS declares manifests, symbols and registered fact capabilities;
+Markdown declares Markdown. The JS/TS signature component emits bounded syntactic signature facts; see
+[signature facts v1](signature-facts-v1.md). Syntax algorithms, IDs, evidence codecs, coverage attribution and
 incremental reuse ordering retain their established versions.
 
 `discoverRepositoryWithRead(read, options)` preloads the exact `RepositoryReadV1`

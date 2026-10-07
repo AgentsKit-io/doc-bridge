@@ -268,6 +268,22 @@ describe('project templates', () => {
 })
 
 describe('the change digest', () => {
+  it('keeps added, changed and removed codec facts out of file rows while retaining review impact', () => {
+    const { root, config } = fixture()
+    const previous = discoverRepository({ root, config })
+    const signature = previous.entities.find(entity => entity.kind === 'signature' && entity.name === 'parseQuery')!
+    expect(signature).toBeDefined()
+    const absent = { ...previous, entities: previous.entities.filter(entity => entity.id !== signature.id) }
+    const changed = structuredClone(previous)
+    const fact = changed.entities.find(entity => entity.id === signature.id)!
+    ;(fact.metadata!.fact as { valueHash: string }).valueHash = '0'.repeat(64)
+    for (const [base, head] of [[absent, previous], [previous, changed], [previous, absent]]) {
+      const digest = changeDigestView(base!, head!)
+      expect([digest.changed, digest.added, digest.removed]).toEqual([[], [], []])
+      expect(digest.documentsToReview.map(document => document.path)).toContain('docs/for-agents/query.md')
+    }
+  })
+
   it('lists exactly the entities whose content hash moved between two snapshots, and the documents that should follow', () => {
     const { root, config } = fixture()
     const previous = discoverRepository({ root, config })

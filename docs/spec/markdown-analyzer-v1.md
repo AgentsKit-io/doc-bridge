@@ -149,3 +149,16 @@ capability cannot displace their bounded evidence.
 Historical CLI removal findings verify these same tokens; shell tokens must
 retain the removed fact's bin context. Help-only partial source coverage yields
 stale-or-unverified removal candidates rather than proven conflicts.
+The legacy analyzer version remains 1.1.0. Built-in signature facts extend the
+citation universe as described below; existing non-signature relation identities
+are preserved. The v2 plugin parses documents afresh, so fact-universe changes
+cannot replay stale generic references. Synchronous legacy discovery retains its existing
+resolution fingerprint and behavior.
+
+## Syntactic signature citations
+
+Built-in JS/TS signature facts reuse uniquely resolved exported-symbol citations,
+preserving the legacy symbol relation and adding a signature relation to its
+module. Class/type citations refer to the aggregate public-member signature.
+No new token matching is introduced; existing relation/evidence bounds apply.
+See [signature facts v1](signature-facts-v1.md).

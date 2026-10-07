@@ -8,6 +8,7 @@
 
 ### Minor Changes
 
+- Extract bounded deterministic exported JS/TS signature facts with declared parameter/type hashes, overload and public-member handling, preserved symbol citations and signature change deltas.
 - Preserve incremental zero-parse reuse and stable citation resolution when static fact extractors are registered, including serialized unchanged snapshots and fact ambiguity coverage.
 - Keep generic fact citations in discovery and change-set evidence while excluding them from retrieval graph signals and query scores.
 - Extract deterministic CLI command and flag facts from package bins, static library declarations and explicitly marked help text. Resolve qualified command and dash-prefixed flag citations, including shell examples, and verify historical CLI references in change sets.
