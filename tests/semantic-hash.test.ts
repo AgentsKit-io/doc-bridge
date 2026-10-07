@@ -101,15 +101,14 @@ describe('versioned semantic identity', () => {
     expect(runGate(root, config, 'index-freshness').ok).toBe(false)
   })
 
-  it('reports committed legacy drift before migration writes and keeps freshness fail-closed', () => {
-    const { root, git } = fixture()
+  it('reports replaced legacy drift before migration writes and keeps freshness fail-closed', () => {
+    const { root } = fixture()
     buildDocBridgeIndex({ root, config, hashAlgorithm: LEGACY_HASH_ALGORITHM })
-    git('add', '.doc-bridge/index.json'); git('commit', '-qm', 'test: legacy artifact')
     writeFileSync(join(root, 'src/run.ts'), 'export const run = () => 3\n')
     expect(runGate(root, config, 'index-freshness').ok).toBe(false)
     const before = readFileSync(join(root, '.doc-bridge/index.json'), 'utf8')
     const warning = vi.spyOn(console, 'warn').mockImplementation((message: string) => {
-      expect(message).toContain('Committed index drift detected under sha256-normalized-v1')
+      expect(message).toContain('Replaced index drift detected under sha256-normalized-v1')
       expect(message).toContain('migrates to sha256-semantic-v1')
       expect(readFileSync(join(root, '.doc-bridge/index.json'), 'utf8')).toBe(before)
     })

@@ -118,3 +118,8 @@ File/evidence hashes, workflow-run seals and revision-based workflow reuse, fix 
 proposal seals and approval bindings remain unchanged. Semantic equality cannot rebind approval
 across revisions; registry proposal caches include the exact revision and snapshot algorithm.
 Existing study artifact hash projections are unchanged.
+
+Before explicit index regeneration migrates a legacy algorithm, the builder reads and verifies
+the on-disk index being replaced and warns about legacy drift before writing. The warning concerns
+that artifact; in a clean checkout it equals the committed index. CI's `gate run index-freshness`
+still verifies the committed state under its stored algorithm and fails closed on drift.

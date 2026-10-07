@@ -1,6 +1,5 @@
-import { execFileSync } from 'node:child_process'
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
-import { dirname, join, relative } from 'node:path'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { dirname, join } from 'node:path'
 
 import type { DocBridgeConfigV1 } from '../config/schema.js'
 import { applyDocumentationDeclarations } from '../discovery/documentation.js'
@@ -144,20 +143,12 @@ export const buildDocBridgeIndex = (opts: BuildIndexOptions): BuildIndexResult =
   const indexPath = join(root, outFile)
 
   if (write && (opts.hashAlgorithm ?? SEMANTIC_HASH_ALGORITHM) !== LEGACY_HASH_ALGORITHM) {
-    let committed: unknown
-    try {
-      committed = JSON.parse(execFileSync('git', ['show', `HEAD:${toPosix(relative(root, indexPath))}`], {
-        cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], maxBuffer: 64 * 1024 * 1024,
-      }))
-    } catch {
-      // No committed artifact to migrate.
-    }
-    if (committed !== undefined) {
-      const prior = DocBridgeIndexV1Schema.parse(committed)
+    if (existsSync(indexPath)) {
+      const prior = DocBridgeIndexV1Schema.parse(JSON.parse(readFileSync(indexPath, 'utf8')))
       if (prior.contentHashAlgo === LEGACY_HASH_ALGORITHM) {
         const expected = buildDocBridgeIndex({ ...opts, write: false, hashAlgorithm: prior.contentHashAlgo }).index
         const drift = prior.contentHash !== contentHashForIndex(prior) || prior.contentHash !== expected.contentHash
-        console.warn(`Committed index ${drift ? 'drift detected' : 'verified'} under ${prior.contentHashAlgo}; explicit regeneration migrates to ${SEMANTIC_HASH_ALGORITHM}. New readers are required.`)
+        console.warn(`Replaced index ${drift ? 'drift detected' : 'verified'} under ${prior.contentHashAlgo}; explicit regeneration migrates to ${SEMANTIC_HASH_ALGORITHM}. New readers are required.`)
       }
     }
   }
