@@ -16,7 +16,7 @@ import { createLocalScanIO, type ScanIO } from './scan-io.js'
 import { GRAPH_ANALYZER_VERSION, areaSuggestionCoverage } from '../graph/build.js'
 import { deriveAreas, type AreaModule } from './areas.js'
 import { entityId } from './identity.js'
-import { reuseCoverage, type PreviousSnapshot, type PriorFile } from './incremental.js'
+import { reuseCoverage, factResolutionUniverse, type PreviousSnapshot, type PriorFile } from './incremental.js'
 import { MARKDOWN_ANALYZER_VERSION, type MarkdownFact } from './markdown.js'
 import { DEFAULT_MAX_FILES, safeWalkOptions } from './inputs.js'
 import {
@@ -182,7 +182,7 @@ export const createDiscoveryScan = (io: ScanIO) => {
   const coverage = jsTs.initialCoverage(root, rootManifest, packageResult, compiler, [sourceWalk, documentWalk, configWalk])
 
   const facts = new Map<string, MarkdownFact[]>()
-  const extracted = runFactExtractors({ root, io, modules, packages: packageResult.packages })
+  const extracted = runFactExtractors({ root, io, modules, packages: packageResult.packages, ...(prior && opts.previous ? { previous: opts.previous } : {}) })
   for (const fact of extracted.facts) {
     addEntity(surfaceFactToEntity(fact))
     facts.set(fact.name, [...(facts.get(fact.name) ?? []), fact])
@@ -196,7 +196,7 @@ export const createDiscoveryScan = (io: ScanIO) => {
    * claim the repository makes about itself, with a line number to check it against. Package
    * names resolve by their manifest name and, when unambiguous, by their directory name.
    */
-  const { replayRelations } = documents ? markdown.extract({ root, opts, documentPaths, packageResult, entities, relations, addEntity, addRelation, coverage, ...source, areas, areasByPath, ...(FACT_EXTRACTORS.length ? { facts, moduleUniverse: sha256NormalizedV1({ modules: moduleUniverse, facts: [...facts] }) } : {}) }) : { replayRelations: createReplayRelations({ entities, relations, addEntity, addRelation }, new Set([...modulesByPath.values(), ...documentPaths.map(path => entityId('document', relativePath(root, path)))])) }
+  const { replayRelations } = documents ? markdown.extract({ root, opts, documentPaths, packageResult, entities, relations, addEntity, addRelation, coverage, ...source, areas, areasByPath, ...(FACT_EXTRACTORS.length ? { facts, moduleUniverse: factResolutionUniverse(moduleUniverse, [...facts.values()].flat()) } : {}) }) : { replayRelations: createReplayRelations({ entities, relations, addEntity, addRelation }, new Set([...modulesByPath.values(), ...documentPaths.map(path => entityId('document', relativePath(root, path)))])) }
 
   jsTs.finish({ root, opts, packageResult, entities, relations, addEntity, addRelation, coverage, ...source, replayRelations })
 
@@ -221,7 +221,9 @@ export const createDiscoveryScan = (io: ScanIO) => {
    */
   coverage.push(reuseCoverage(ledger))
 
-  return artifact(root, opts.config, allFiles, [...entities.values()], [...relations.values()], coverage, io.revision ?? sourceRevision(root, allFiles, io.readText))
+  const snapshot = artifact(root, opts.config, allFiles, [...entities.values()], [...relations.values()], coverage, io.revision ?? sourceRevision(root, allFiles, io.readText))
+  extracted.remember(snapshot)
+  return snapshot
 }
 
 }

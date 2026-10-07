@@ -136,3 +136,27 @@ is reported explicitly; those intentional visibility limitations affect semantic
 identity. Additional registered plugins and replacement source sets contribute
 their effective manifests to configuration identity. The v2 transport alone does
 not change built-in analyzer versions or default fact emission.
+
+## Static fact extractor reuse
+
+Built-in fact extractors currently declare global source/package inputs
+(`inputScope: global`, also the compatibility default). Reusing facts requires
+validated pipeline/analyzer/configuration identity and identical inventories and
+content hashes for every scanned source module and package manifest. Under that
+condition, facts are decoded from the previous snapshot codec and their component
+coverage is replayed, including complete-empty and partial results. A serialized
+unchanged previous snapshot requires no TypeScript parsing.
+
+Changed global inputs trigger re-extraction. Within a live snapshot chain, a
+weak snapshot-bound AST cache reuses identical source trees; source-map keys are
+repository-relative while TypeScript filenames remain absolute for existing
+parser accounting. A changed global input after loading a serialized snapshot
+may require reacquiring all source ASTs. This is a performance limit, not a claim
+of per-file independence or a reason to reuse stale results.
+
+Prior and current Markdown resolution use the same sorted fact kind/name/owner
+fingerprint, leaving the legacy fingerprint unchanged for an empty fact universe.
+Changing a fact's value alone does not change citation ownership. Fact ambiguity
+coverage is replayed alongside other document-scoped notes. Cold and warm entity,
+relation and semantic-hash equality remain required; reuse statistics remain
+provenance.
