@@ -1,0 +1,3630 @@
+{
+  "schemaVersion": 1,
+  "targets": {
+    "precision": 0.95,
+    "coverage": 0.9
+  },
+  "repositories": [
+    {
+      "id": "doc-bridge",
+      "url": "https://github.com/AgentsKit-io/doc-bridge.git",
+      "sha": "888e288fc974ed22485840e0f977aa110c529b79"
+    },
+    {
+      "id": "chat",
+      "url": "https://github.com/AgentsKit-io/agentskit-chat.git",
+      "sha": "1e69e93e34894f2441b60b08afd1154e0ce3d40f"
+    },
+    {
+      "id": "playbook",
+      "url": "https://github.com/AgentsKit-io/agents-playbook.git",
+      "sha": "11fdda977598d26ff953593bddea032937d553ee"
+    }
+  ],
+  "notApplicable": [
+    {
+      "repository": "chat",
+      "kind": "cli-command/cli-flag",
+      "reason": "No native package bin"
+    },
+    {
+      "repository": "playbook",
+      "kind": "config-key",
+      "reason": "No native configuration schema"
+    },
+    {
+      "repository": "playbook",
+      "kind": "cited-symbol",
+      "reason": "No confirmed exported-symbol citations in native Markdown; uncited mutation retained"
+    }
+  ],
+  "history": {
+    "limit": "First-parent mining inspected 149 doc-bridge, 115 chat and 77 playbook commits. Export-token/doc-diff overlap shortlisted 29 pairs; manually inspected examples were concurrent changes, release rollups, new observer APIs, import-path migration or new docs rather than a later stale-claim fix. Zero delayed fixes confirmed; bounded search does not prove none exist.",
+    "confirmed": 0,
+    "rejectedExamples": [
+      {
+        "repository": "doc-bridge",
+        "code": "0926c57e60",
+        "docs": "b8f67d28ab",
+        "reason": "Release consumes changeset into changelog, no active-doc repair"
+      },
+      {
+        "repository": "doc-bridge",
+        "code": "9a775a5522",
+        "docs": "7ceccf438d",
+        "reason": "Release removes changeset, no active-doc repair"
+      },
+      {
+        "repository": "chat",
+        "code": "daa15aabf5",
+        "docs": "91aaa21398",
+        "reason": "Later observer documentation concerns new API, not prior persistence signature"
+      },
+      {
+        "repository": "chat",
+        "code": "79d8ccac82",
+        "docs": "40ee0fdabb",
+        "reason": "Later package consolidation changes import path, not prior component signature"
+      }
+    ]
+  },
+  "limits": "Native numbers are the headline; fixture-backed results never mix into native numbers. Frozen scopes select fact kinds/tokens and affected doc files; other findings within those doc files are FP. FACT_CHANGE is a benchmark expectation for diagnosed stale values/signatures, not an engine diagnostic contract. Fact extraction and reference findings have separate denominators. Small purposive cases are not a random sample or release-readiness claim. Historical recall is not analyzed: no confirmed delayed-doc cases within the bounded search. No upstream code is executed or installed. Authored fixtures exist only in temporary checkouts. Plain command/token citations are matched by file/token; distinct lines in one file count once.",
+  "cases": [
+    {
+      "id": "doc-bridge-symbol-rename",
+      "repository": "doc-bridge",
+      "origin": "native",
+      "mutations": [
+        {
+          "path": "src/config/define-config.ts",
+          "from": "export const defineConfig",
+          "to": "export const benchmarkdefineConfig",
+          "count": 1
+        }
+      ],
+      "scope": {
+        "facts": [
+          {
+            "kind": "symbol",
+            "names": [
+              "defineConfig",
+              "benchmarkdefineConfig"
+            ]
+          }
+        ],
+        "documents": [
+          "docs/spec/config-v1.md",
+          "docs/spec/cli.md"
+        ]
+      },
+      "expected": [
+        {
+          "channel": "fact",
+          "kind": "symbol",
+          "op": "removed",
+          "name": "defineConfig",
+          "path": "src/config/define-config.ts"
+        },
+        {
+          "channel": "fact",
+          "kind": "symbol",
+          "op": "added",
+          "name": "benchmarkdefineConfig",
+          "path": "src/config/define-config.ts"
+        },
+        {
+          "channel": "finding",
+          "kind": "BROKEN_REFERENCE",
+          "name": "defineConfig",
+          "path": "docs/spec/config-v1.md"
+        },
+        {
+          "channel": "finding",
+          "kind": "BROKEN_REFERENCE",
+          "name": "defineConfig",
+          "path": "docs/spec/cli.md"
+        }
+      ],
+      "citations": [
+        {
+          "path": "docs/spec/config-v1.md",
+          "token": "defineConfig",
+          "lines": [
+            39,
+            902,
+            904,
+            918,
+            920,
+            938,
+            940,
+            965,
+            967
+          ]
+        },
+        {
+          "path": "docs/spec/cli.md",
+          "token": "defineConfig",
+          "lines": [
+            149,
+            151
+          ]
+        }
+      ],
+      "factCause": "Unsupported/incomplete native extraction or different owner projection; inspect raw coverage. No extractor tuning was performed.",
+      "findingCause": "Raw diff diagnoses removed/ambiguous references only; changed values/signatures lack divergence diagnostics, or citation ownership/extraction is unresolved. Raw diff does not apply policy exclusions."
+    },
+    {
+      "id": "doc-bridge-signature-change",
+      "repository": "doc-bridge",
+      "origin": "native",
+      "mutations": [
+        {
+          "path": "src/config/define-config.ts",
+          "from": "(config: DocBridgeConfigV1)",
+          "to": "(config: DocBridgeConfigV1, required: boolean)",
+          "count": 1
+        }
+      ],
+      "scope": {
+        "facts": [
+          {
+            "kind": "signature",
+            "names": [
+              "defineConfig",
+              "benchmarkdefineConfig"
+            ]
+          }
+        ],
+        "documents": [
+          "docs/spec/config-v1.md",
+          "docs/spec/cli.md"
+        ]
+      },
+      "expected": [
+        {
+          "channel": "fact",
+          "kind": "signature",
+          "op": "changed",
+          "name": "defineConfig",
+          "path": "src/config/define-config.ts"
+        },
+        {
+          "channel": "finding",
+          "kind": "FACT_CHANGE",
+          "name": "defineConfig",
+          "path": "docs/spec/config-v1.md"
+        },
+        {
+          "channel": "finding",
+          "kind": "FACT_CHANGE",
+          "name": "defineConfig",
+          "path": "docs/spec/cli.md"
+        }
+      ],
+      "citations": [
+        {
+          "path": "docs/spec/config-v1.md",
+          "token": "defineConfig",
+          "lines": [
+            39,
+            902,
+            904,
+            918,
+            920,
+            938,
+            940,
+            965,
+            967
+          ]
+        },
+        {
+          "path": "docs/spec/cli.md",
+          "token": "defineConfig",
+          "lines": [
+            149,
+            151
+          ]
+        }
+      ],
+      "factCause": "Unsupported/incomplete native extraction or different owner projection; inspect raw coverage. No extractor tuning was performed.",
+      "findingCause": "Raw diff diagnoses removed/ambiguous references only; changed values/signatures lack divergence diagnostics, or citation ownership/extraction is unresolved. Raw diff does not apply policy exclusions."
+    },
+    {
+      "id": "doc-bridge-config-rename",
+      "repository": "doc-bridge",
+      "origin": "native",
+      "mutations": [
+        {
+          "path": "src/config/schema.ts",
+          "from": "schemaVersion: z.literal(CONFIG_SCHEMA_VERSION)",
+          "to": "benchmarkschemaVersion: z.literal(CONFIG_SCHEMA_VERSION)",
+          "count": 1
+        }
+      ],
+      "scope": {
+        "facts": [
+          {
+            "kind": "config-key",
+            "names": [
+              "schemaVersion",
+              "benchmarkschemaVersion"
+            ]
+          }
+        ],
+        "documents": [
+          "docs/spec/config-v1.md"
+        ]
+      },
+      "expected": [
+        {
+          "channel": "fact",
+          "kind": "config-key",
+          "op": "removed",
+          "name": "schemaVersion",
+          "path": "src/config/schema.ts"
+        },
+        {
+          "channel": "fact",
+          "kind": "config-key",
+          "op": "added",
+          "name": "benchmarkschemaVersion",
+          "path": "src/config/schema.ts"
+        },
+        {
+          "channel": "finding",
+          "kind": "BROKEN_REFERENCE",
+          "name": "schemaVersion",
+          "path": "docs/spec/config-v1.md"
+        }
+      ],
+      "citations": [
+        {
+          "path": "docs/spec/config-v1.md",
+          "token": "schemaVersion",
+          "lines": [
+            22,
+            53,
+            868,
+            905,
+            921,
+            941,
+            968,
+            998,
+            1035,
+            1046
+          ]
+        }
+      ],
+      "factCause": "Unsupported/incomplete native extraction or different owner projection; inspect raw coverage. No extractor tuning was performed.",
+      "findingCause": "Raw diff diagnoses removed/ambiguous references only; changed values/signatures lack divergence diagnostics, or citation ownership/extraction is unresolved. Raw diff does not apply policy exclusions."
+    },
+    {
+      "id": "doc-bridge-flag-rename",
+      "repository": "doc-bridge",
+      "origin": "native",
+      "mutations": [
+        {
+          "path": "src/cli/program.ts",
+          "from": "flags.has('--explain')",
+          "to": "flags.has('--benchmark-explain')",
+          "count": 1
+        }
+      ],
+      "scope": {
+        "facts": [
+          {
+            "kind": "cli-flag",
+            "names": [
+              "--explain",
+              "--benchmark-explain"
+            ]
+          }
+        ],
+        "documents": [
+          "docs/spec/cli.md"
+        ]
+      },
+      "expected": [
+        {
+          "channel": "fact",
+          "kind": "cli-flag",
+          "op": "removed",
+          "name": "--explain",
+          "path": "src/cli/program.ts"
+        },
+        {
+          "channel": "fact",
+          "kind": "cli-flag",
+          "op": "added",
+          "name": "--benchmark-explain",
+          "path": "src/cli/program.ts"
+        },
+        {
+          "channel": "finding",
+          "kind": "BROKEN_REFERENCE",
+          "name": "--explain",
+          "path": "docs/spec/cli.md"
+        }
+      ],
+      "citations": [
+        {
+          "path": "docs/spec/cli.md",
+          "token": "--explain",
+          "lines": [
+            69
+          ]
+        }
+      ],
+      "factCause": "Unsupported/incomplete native extraction or different owner projection; inspect raw coverage. No extractor tuning was performed.",
+      "findingCause": "Raw diff diagnoses removed/ambiguous references only; changed values/signatures lack divergence diagnostics, or citation ownership/extraction is unresolved. Raw diff does not apply policy exclusions."
+    },
+    {
+      "id": "doc-bridge-command-rename",
+      "repository": "doc-bridge",
+      "origin": "native",
+      "mutations": [
+        {
+          "path": "src/cli/program.ts",
+          "from": "'query'",
+          "to": "'benchmark-query'",
+          "count": 4
+        }
+      ],
+      "scope": {
+        "facts": [
+          {
+            "kind": "cli-command",
+            "names": [
+              "ak-docs query",
+              "ak-docs benchmark-query"
+            ]
+          }
+        ],
+        "documents": [
+          "docs/spec/cli.md"
+        ]
+      },
+      "expected": [
+        {
+          "channel": "fact",
+          "kind": "cli-command",
+          "op": "removed",
+          "name": "ak-docs query",
+          "path": "src/cli/program.ts"
+        },
+        {
+          "channel": "fact",
+          "kind": "cli-command",
+          "op": "added",
+          "name": "ak-docs benchmark-query",
+          "path": "src/cli/program.ts"
+        },
+        {
+          "channel": "finding",
+          "kind": "BROKEN_REFERENCE",
+          "name": "ak-docs query",
+          "path": "docs/spec/cli.md"
+        }
+      ],
+      "citations": [
+        {
+          "path": "docs/spec/cli.md",
+          "token": "ak-docs query",
+          "lines": [
+            68,
+            125,
+            126,
+            161
+          ]
+        }
+      ],
+      "factCause": "Unsupported/incomplete native extraction or different owner projection; inspect raw coverage. No extractor tuning was performed.",
+      "findingCause": "Raw diff diagnoses removed/ambiguous references only; changed values/signatures lack divergence diagnostics, or citation ownership/extraction is unresolved. Raw diff does not apply policy exclusions."
+    },
+    {
+      "id": "doc-bridge-default-change",
+      "repository": "doc-bridge",
+      "origin": "native",
+      "mutations": [
+        {
+          "path": "src/config/defaults.ts",
+          "from": "bin: 'ak-docs'",
+          "to": "bin: 'ak-bench-docs'",
+          "count": 1
+        }
+      ],
+      "scope": {
+        "facts": [
+          {
+            "kind": "config-key",
+            "names": [
+              "surfaces.cli.bin"
+            ]
+          }
+        ],
+        "documents": [
+          "docs/spec/config-v1.md"
+        ]
+      },
+      "expected": [
+        {
+          "channel": "fact",
+          "kind": "config-key",
+          "op": "changed",
+          "name": "surfaces.cli.bin",
+          "path": "src/config/defaults.ts"
+        },
+        {
+          "channel": "finding",
+          "kind": "FACT_CHANGE",
+          "name": "surfaces.cli.bin",
+          "path": "docs/spec/config-v1.md"
+        }
+      ],
+      "citations": [
+        {
+          "path": "docs/spec/config-v1.md",
+          "token": "default: 'ak-docs'",
+          "lines": [
+            702
+          ]
+        }
+      ],
+      "factCause": "Unsupported/incomplete native extraction or different owner projection; inspect raw coverage. No extractor tuning was performed.",
+      "findingCause": "The operational default is applied outside the declarative schema; raw diff does not compare documented default values."
+    },
+    {
+      "id": "doc-bridge-internal-refactor",
+      "repository": "doc-bridge",
+      "origin": "native",
+      "mutations": [
+        {
+          "path": "src/config/define-config.ts",
+          "from": "applyConfigDefaults(DocBridgeConfigV1Schema.parse(config))",
+          "to": "(applyConfigDefaults(DocBridgeConfigV1Schema.parse(config)))",
+          "count": 1
+        }
+      ],
+      "scope": {
+        "facts": [
+          {
+            "kind": "signature",
+            "names": [
+              "defineConfig",
+              "benchmarkdefineConfig"
+            ]
+          }
+        ],
+        "documents": [
+          "docs/spec/cli.md"
+        ]
+      },
+      "expected": [],
+      "citations": [
+        {
+          "path": "docs/spec/cli.md",
+          "token": "defineConfig",
+          "lines": [
+            149,
+            151
+          ]
+        }
+      ],
+      "factCause": "Unsupported/incomplete native extraction or different owner projection; inspect raw coverage. No extractor tuning was performed.",
+      "findingCause": "Raw diff diagnoses removed/ambiguous references only; changed values/signatures lack divergence diagnostics, or citation ownership/extraction is unresolved. Raw diff does not apply policy exclusions."
+    },
+    {
+      "id": "chat-symbol-rename",
+      "repository": "chat",
+      "origin": "native",
+      "mutations": [
+        {
+          "path": "packages/protocol/src/index.ts",
+          "from": "export const createAssistantContentEncoder",
+          "to": "export const benchmarkcreateAssistantContentEncoder",
+          "count": 1
+        }
+      ],
+      "scope": {
+        "facts": [
+          {
+            "kind": "symbol",
+            "names": [
+              "createAssistantContentEncoder",
+              "benchmarkcreateAssistantContentEncoder"
+            ]
+          }
+        ],
+        "documents": [
+          "docs/protocol/v1.md",
+          "packages/protocol/README.md"
+        ]
+      },
+      "expected": [
+        {
+          "channel": "fact",
+          "kind": "symbol",
+          "op": "removed",
+          "name": "createAssistantContentEncoder",
+          "path": "packages/protocol/src/index.ts"
+        },
+        {
+          "channel": "fact",
+          "kind": "symbol",
+          "op": "added",
+          "name": "benchmarkcreateAssistantContentEncoder",
+          "path": "packages/protocol/src/index.ts"
+        },
+        {
+          "channel": "finding",
+          "kind": "BROKEN_REFERENCE",
+          "name": "createAssistantContentEncoder",
+          "path": "docs/protocol/v1.md"
+        },
+        {
+          "channel": "finding",
+          "kind": "BROKEN_REFERENCE",
+          "name": "createAssistantContentEncoder",
+          "path": "packages/protocol/README.md"
+        }
+      ],
+      "citations": [
+        {
+          "path": "docs/protocol/v1.md",
+          "token": "createAssistantContentEncoder",
+          "lines": [
+            8,
+            10
+          ]
+        },
+        {
+          "path": "packages/protocol/README.md",
+          "token": "createAssistantContentEncoder",
+          "lines": [
+            32
+          ]
+        }
+      ],
+      "factCause": "Unsupported/incomplete native extraction or different owner projection; inspect raw coverage. No extractor tuning was performed.",
+      "findingCause": "Raw diff diagnoses removed/ambiguous references only; changed values/signatures lack divergence diagnostics, or citation ownership/extraction is unresolved. Raw diff does not apply policy exclusions."
+    },
+    {
+      "id": "chat-signature-change",
+      "repository": "chat",
+      "origin": "native",
+      "mutations": [
+        {
+          "path": "packages/protocol/src/index.ts",
+          "from": "createAssistantContentEncoder = ()",
+          "to": "createAssistantContentEncoder = (required: boolean)",
+          "count": 1
+        }
+      ],
+      "scope": {
+        "facts": [
+          {
+            "kind": "signature",
+            "names": [
+              "createAssistantContentEncoder",
+              "benchmarkcreateAssistantContentEncoder"
+            ]
+          }
+        ],
+        "documents": [
+          "docs/protocol/v1.md"
+        ]
+      },
+      "expected": [
+        {
+          "channel": "fact",
+          "kind": "signature",
+          "op": "changed",
+          "name": "createAssistantContentEncoder",
+          "path": "packages/protocol/src/index.ts"
+        },
+        {
+          "channel": "finding",
+          "kind": "FACT_CHANGE",
+          "name": "createAssistantContentEncoder",
+          "path": "docs/protocol/v1.md"
+        }
+      ],
+      "citations": [
+        {
+          "path": "docs/protocol/v1.md",
+          "token": "createAssistantContentEncoder",
+          "lines": [
+            8,
+            10
+          ]
+        }
+      ],
+      "factCause": "Unsupported/incomplete native extraction or different owner projection; inspect raw coverage. No extractor tuning was performed.",
+      "findingCause": "Raw diff diagnoses removed/ambiguous references only; changed values/signatures lack divergence diagnostics, or citation ownership/extraction is unresolved. Raw diff does not apply policy exclusions."
+    },
+    {
+      "id": "chat-internal-refactor",
+      "repository": "chat",
+      "origin": "native",
+      "mutations": [
+        {
+          "path": "packages/protocol/src/index.ts",
+          "from": "createAssistantContentEncoder = ()",
+          "to": "createAssistantContentEncoder = ( )",
+          "count": 1
+        }
+      ],
+      "scope": {
+        "facts": [
+          {
+            "kind": "signature",
+            "names": [
+              "createAssistantContentEncoder",
+              "benchmarkcreateAssistantContentEncoder"
+            ]
+          }
+        ],
+        "documents": [
+          "docs/protocol/v1.md"
+        ]
+      },
+      "expected": [],
+      "citations": [
+        {
+          "path": "docs/protocol/v1.md",
+          "token": "createAssistantContentEncoder",
+          "lines": [
+            8,
+            10
+          ]
+        }
+      ],
+      "factCause": "Unsupported/incomplete native extraction or different owner projection; inspect raw coverage. No extractor tuning was performed.",
+      "findingCause": "Raw diff diagnoses removed/ambiguous references only; changed values/signatures lack divergence diagnostics, or citation ownership/extraction is unresolved. Raw diff does not apply policy exclusions."
+    },
+    {
+      "id": "playbook-uncited-rename",
+      "repository": "playbook",
+      "origin": "native",
+      "mutations": [
+        {
+          "path": "lib/frontmatter.mjs",
+          "from": "export const frontmatterString",
+          "to": "export const benchmarkfrontmatterString",
+          "count": 1
+        }
+      ],
+      "scope": {
+        "facts": [
+          {
+            "kind": "symbol",
+            "names": [
+              "frontmatterString",
+              "benchmarkfrontmatterString"
+            ]
+          }
+        ],
+        "documents": []
+      },
+      "expected": [
+        {
+          "channel": "fact",
+          "kind": "symbol",
+          "op": "removed",
+          "name": "frontmatterString",
+          "path": "lib/frontmatter.mjs"
+        },
+        {
+          "channel": "fact",
+          "kind": "symbol",
+          "op": "added",
+          "name": "benchmarkfrontmatterString",
+          "path": "lib/frontmatter.mjs"
+        }
+      ],
+      "citations": [],
+      "factCause": "Unsupported/incomplete native extraction or different owner projection; inspect raw coverage. No extractor tuning was performed.",
+      "findingCause": "Raw diff diagnoses removed/ambiguous references only; changed values/signatures lack divergence diagnostics, or citation ownership/extraction is unresolved. Raw diff does not apply policy exclusions."
+    },
+    {
+      "id": "playbook-flag-rename",
+      "repository": "playbook",
+      "origin": "native",
+      "mutations": [
+        {
+          "path": "packages/playbook/bin/agents-playbook.mjs",
+          "from": "arg === '--fast'",
+          "to": "arg === '--benchmark-fast'",
+          "count": 1
+        }
+      ],
+      "scope": {
+        "facts": [
+          {
+            "kind": "cli-flag",
+            "names": [
+              "--fast",
+              "--benchmark-fast"
+            ]
+          }
+        ],
+        "documents": [
+          "packages/playbook/README.md",
+          "content/docs/scripts/index.md"
+        ]
+      },
+      "expected": [
+        {
+          "channel": "fact",
+          "kind": "cli-flag",
+          "op": "removed",
+          "name": "--fast",
+          "path": "packages/playbook/bin/agents-playbook.mjs"
+        },
+        {
+          "channel": "fact",
+          "kind": "cli-flag",
+          "op": "added",
+          "name": "--benchmark-fast",
+          "path": "packages/playbook/bin/agents-playbook.mjs"
+        },
+        {
+          "channel": "finding",
+          "kind": "BROKEN_REFERENCE",
+          "name": "--fast",
+          "path": "packages/playbook/README.md"
+        },
+        {
+          "channel": "finding",
+          "kind": "BROKEN_REFERENCE",
+          "name": "--fast",
+          "path": "content/docs/scripts/index.md"
+        }
+      ],
+      "citations": [
+        {
+          "path": "packages/playbook/README.md",
+          "token": "--fast",
+          "lines": [
+            8,
+            15
+          ]
+        },
+        {
+          "path": "content/docs/scripts/index.md",
+          "token": "--fast",
+          "lines": [
+            15
+          ]
+        }
+      ],
+      "factCause": "Unsupported/incomplete native extraction or different owner projection; inspect raw coverage. No extractor tuning was performed.",
+      "findingCause": "Raw diff diagnoses removed/ambiguous references only; changed values/signatures lack divergence diagnostics, or citation ownership/extraction is unresolved. Raw diff does not apply policy exclusions."
+    },
+    {
+      "id": "playbook-command-rename",
+      "repository": "playbook",
+      "origin": "native",
+      "mutations": [
+        {
+          "path": "packages/playbook/bin/agents-playbook.mjs",
+          "from": "command === 'run'",
+          "to": "command === 'benchmark-run'",
+          "count": 1
+        }
+      ],
+      "scope": {
+        "facts": [
+          {
+            "kind": "cli-command",
+            "names": [
+              "agents-playbook run",
+              "agents-playbook benchmark-run"
+            ]
+          }
+        ],
+        "documents": [
+          "packages/playbook/README.md",
+          "content/docs/scripts/index.md"
+        ]
+      },
+      "expected": [
+        {
+          "channel": "fact",
+          "kind": "cli-command",
+          "op": "removed",
+          "name": "agents-playbook run",
+          "path": "packages/playbook/bin/agents-playbook.mjs"
+        },
+        {
+          "channel": "fact",
+          "kind": "cli-command",
+          "op": "added",
+          "name": "agents-playbook benchmark-run",
+          "path": "packages/playbook/bin/agents-playbook.mjs"
+        },
+        {
+          "channel": "finding",
+          "kind": "BROKEN_REFERENCE",
+          "name": "agents-playbook run",
+          "path": "packages/playbook/README.md"
+        },
+        {
+          "channel": "finding",
+          "kind": "BROKEN_REFERENCE",
+          "name": "agents-playbook run",
+          "path": "content/docs/scripts/index.md"
+        }
+      ],
+      "citations": [
+        {
+          "path": "packages/playbook/README.md",
+          "token": "playbook run",
+          "lines": [
+            7,
+            8,
+            15,
+            16
+          ]
+        },
+        {
+          "path": "content/docs/scripts/index.md",
+          "token": "playbook run",
+          "lines": [
+            14,
+            15
+          ]
+        }
+      ],
+      "factCause": "Unsupported/incomplete native extraction or different owner projection; inspect raw coverage. No extractor tuning was performed.",
+      "findingCause": "Raw diff diagnoses removed/ambiguous references only; changed values/signatures lack divergence diagnostics, or citation ownership/extraction is unresolved. Raw diff does not apply policy exclusions."
+    },
+    {
+      "id": "playbook-internal-refactor",
+      "repository": "playbook",
+      "origin": "native",
+      "mutations": [
+        {
+          "path": "lib/frontmatter.mjs",
+          "from": "const { frontmatter } = splitFrontmatter(text)",
+          "to": "const { frontmatter } = (splitFrontmatter(text))",
+          "count": 1
+        }
+      ],
+      "scope": {
+        "facts": [
+          {
+            "kind": "signature",
+            "names": [
+              "parseFrontmatter",
+              "benchmarkparseFrontmatter"
+            ]
+          }
+        ],
+        "documents": []
+      },
+      "expected": [],
+      "citations": [],
+      "factCause": "Unsupported/incomplete native extraction or different owner projection; inspect raw coverage. No extractor tuning was performed.",
+      "findingCause": "Raw diff diagnoses removed/ambiguous references only; changed values/signatures lack divergence diagnostics, or citation ownership/extraction is unresolved. Raw diff does not apply policy exclusions."
+    },
+    {
+      "id": "doc-bridge-fixture-symbol-rename",
+      "repository": "doc-bridge",
+      "origin": "fixture-backed",
+      "mutations": [
+        {
+          "path": "packages/layer1-benchmark/src/api.ts",
+          "from": "benchCited",
+          "to": "benchmarkbenchCited",
+          "count": 1
+        }
+      ],
+      "scope": {
+        "facts": [
+          {
+            "kind": "symbol",
+            "names": [
+              "benchCited",
+              "benchmarkbenchCited"
+            ]
+          }
+        ],
+        "documents": [
+          "packages/layer1-benchmark/docs/api.md"
+        ]
+      },
+      "expected": [
+        {
+          "channel": "fact",
+          "kind": "symbol",
+          "op": "removed",
+          "name": "benchCited",
+          "path": "packages/layer1-benchmark/src/api.ts"
+        },
+        {
+          "channel": "fact",
+          "kind": "symbol",
+          "op": "added",
+          "name": "benchmarkbenchCited",
+          "path": "packages/layer1-benchmark/src/api.ts"
+        },
+        {
+          "channel": "finding",
+          "kind": "BROKEN_REFERENCE",
+          "name": "benchCited",
+          "path": "packages/layer1-benchmark/docs/api.md"
+        }
+      ],
+      "citations": [
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "token": "benchCited",
+          "lines": [
+            3
+          ]
+        }
+      ],
+      "factCause": "Unsupported/incomplete native extraction or different owner projection; inspect raw coverage. No extractor tuning was performed.",
+      "findingCause": "Raw diff diagnoses removed/ambiguous references only; changed values/signatures lack divergence diagnostics, or citation ownership/extraction is unresolved. Raw diff does not apply policy exclusions.",
+      "setup": [
+        {
+          "path": "packages/layer1-benchmark/package.json",
+          "content": "{\"name\": \"@agentskit/layer1-benchmark-fixture\", \"version\": \"1.0.0\", \"bin\": {\"ak-bench-fixture\": \"src/cli.ts\"}}\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/api.ts",
+          "content": "export function benchCited(value: string): string { return value }\nexport function benchUncited(value: string): string { return value }\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/config-schema.ts",
+          "content": "import { z } from 'zod'\nexport const BenchmarkConfigSchema = z.object({ benchLimit: z.number().default(10) })\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/cli.ts",
+          "content": "import { Command } from 'commander'\nconst cli = new Command()\ncli.command('inspect').option('--bench-strict')\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "content": "# Benchmark API\n\nCall `benchCited` with a string.\nSet `benchLimit` to 10 by default.\nRun `ak-bench-fixture inspect --bench-strict`.\n"
+        }
+      ]
+    },
+    {
+      "id": "doc-bridge-fixture-uncited-rename",
+      "repository": "doc-bridge",
+      "origin": "fixture-backed",
+      "mutations": [
+        {
+          "path": "packages/layer1-benchmark/src/api.ts",
+          "from": "benchUncited",
+          "to": "benchmarkbenchUncited",
+          "count": 1
+        }
+      ],
+      "scope": {
+        "facts": [
+          {
+            "kind": "symbol",
+            "names": [
+              "benchUncited",
+              "benchmarkbenchUncited"
+            ]
+          }
+        ],
+        "documents": []
+      },
+      "expected": [
+        {
+          "channel": "fact",
+          "kind": "symbol",
+          "op": "removed",
+          "name": "benchUncited",
+          "path": "packages/layer1-benchmark/src/api.ts"
+        },
+        {
+          "channel": "fact",
+          "kind": "symbol",
+          "op": "added",
+          "name": "benchmarkbenchUncited",
+          "path": "packages/layer1-benchmark/src/api.ts"
+        }
+      ],
+      "citations": [],
+      "factCause": "Unsupported/incomplete native extraction or different owner projection; inspect raw coverage. No extractor tuning was performed.",
+      "findingCause": "Raw diff diagnoses removed/ambiguous references only; changed values/signatures lack divergence diagnostics, or citation ownership/extraction is unresolved. Raw diff does not apply policy exclusions.",
+      "setup": [
+        {
+          "path": "packages/layer1-benchmark/package.json",
+          "content": "{\"name\": \"@agentskit/layer1-benchmark-fixture\", \"version\": \"1.0.0\", \"bin\": {\"ak-bench-fixture\": \"src/cli.ts\"}}\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/api.ts",
+          "content": "export function benchCited(value: string): string { return value }\nexport function benchUncited(value: string): string { return value }\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/config-schema.ts",
+          "content": "import { z } from 'zod'\nexport const BenchmarkConfigSchema = z.object({ benchLimit: z.number().default(10) })\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/cli.ts",
+          "content": "import { Command } from 'commander'\nconst cli = new Command()\ncli.command('inspect').option('--bench-strict')\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "content": "# Benchmark API\n\nCall `benchCited` with a string.\nSet `benchLimit` to 10 by default.\nRun `ak-bench-fixture inspect --bench-strict`.\n"
+        }
+      ]
+    },
+    {
+      "id": "doc-bridge-fixture-signature-change",
+      "repository": "doc-bridge",
+      "origin": "fixture-backed",
+      "mutations": [
+        {
+          "path": "packages/layer1-benchmark/src/api.ts",
+          "from": "benchCited(value: string)",
+          "to": "benchCited(value: string, required: boolean)",
+          "count": 1
+        }
+      ],
+      "scope": {
+        "facts": [
+          {
+            "kind": "signature",
+            "names": [
+              "benchCited",
+              "benchmarkbenchCited"
+            ]
+          }
+        ],
+        "documents": [
+          "packages/layer1-benchmark/docs/api.md"
+        ]
+      },
+      "expected": [
+        {
+          "channel": "fact",
+          "kind": "signature",
+          "op": "changed",
+          "name": "benchCited",
+          "path": "packages/layer1-benchmark/src/api.ts"
+        },
+        {
+          "channel": "finding",
+          "kind": "FACT_CHANGE",
+          "name": "benchCited",
+          "path": "packages/layer1-benchmark/docs/api.md"
+        }
+      ],
+      "citations": [
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "token": "benchCited",
+          "lines": [
+            3
+          ]
+        }
+      ],
+      "factCause": "Unsupported/incomplete native extraction or different owner projection; inspect raw coverage. No extractor tuning was performed.",
+      "findingCause": "Raw diff diagnoses removed/ambiguous references only; changed values/signatures lack divergence diagnostics, or citation ownership/extraction is unresolved. Raw diff does not apply policy exclusions.",
+      "setup": [
+        {
+          "path": "packages/layer1-benchmark/package.json",
+          "content": "{\"name\": \"@agentskit/layer1-benchmark-fixture\", \"version\": \"1.0.0\", \"bin\": {\"ak-bench-fixture\": \"src/cli.ts\"}}\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/api.ts",
+          "content": "export function benchCited(value: string): string { return value }\nexport function benchUncited(value: string): string { return value }\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/config-schema.ts",
+          "content": "import { z } from 'zod'\nexport const BenchmarkConfigSchema = z.object({ benchLimit: z.number().default(10) })\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/cli.ts",
+          "content": "import { Command } from 'commander'\nconst cli = new Command()\ncli.command('inspect').option('--bench-strict')\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "content": "# Benchmark API\n\nCall `benchCited` with a string.\nSet `benchLimit` to 10 by default.\nRun `ak-bench-fixture inspect --bench-strict`.\n"
+        }
+      ]
+    },
+    {
+      "id": "doc-bridge-fixture-config-rename",
+      "repository": "doc-bridge",
+      "origin": "fixture-backed",
+      "mutations": [
+        {
+          "path": "packages/layer1-benchmark/src/config-schema.ts",
+          "from": "benchLimit:",
+          "to": "benchmarkbenchLimit:",
+          "count": 1
+        }
+      ],
+      "scope": {
+        "facts": [
+          {
+            "kind": "config-key",
+            "names": [
+              "benchLimit",
+              "benchmarkbenchLimit"
+            ]
+          }
+        ],
+        "documents": [
+          "packages/layer1-benchmark/docs/api.md"
+        ]
+      },
+      "expected": [
+        {
+          "channel": "fact",
+          "kind": "config-key",
+          "op": "removed",
+          "name": "benchLimit",
+          "path": "packages/layer1-benchmark/src/config-schema.ts"
+        },
+        {
+          "channel": "fact",
+          "kind": "config-key",
+          "op": "added",
+          "name": "benchmarkbenchLimit",
+          "path": "packages/layer1-benchmark/src/config-schema.ts"
+        },
+        {
+          "channel": "finding",
+          "kind": "BROKEN_REFERENCE",
+          "name": "benchLimit",
+          "path": "packages/layer1-benchmark/docs/api.md"
+        }
+      ],
+      "citations": [
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "token": "benchLimit",
+          "lines": [
+            4
+          ]
+        }
+      ],
+      "factCause": "Unsupported/incomplete native extraction or different owner projection; inspect raw coverage. No extractor tuning was performed.",
+      "findingCause": "Raw diff diagnoses removed/ambiguous references only; changed values/signatures lack divergence diagnostics, or citation ownership/extraction is unresolved. Raw diff does not apply policy exclusions.",
+      "setup": [
+        {
+          "path": "packages/layer1-benchmark/package.json",
+          "content": "{\"name\": \"@agentskit/layer1-benchmark-fixture\", \"version\": \"1.0.0\", \"bin\": {\"ak-bench-fixture\": \"src/cli.ts\"}}\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/api.ts",
+          "content": "export function benchCited(value: string): string { return value }\nexport function benchUncited(value: string): string { return value }\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/config-schema.ts",
+          "content": "import { z } from 'zod'\nexport const BenchmarkConfigSchema = z.object({ benchLimit: z.number().default(10) })\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/cli.ts",
+          "content": "import { Command } from 'commander'\nconst cli = new Command()\ncli.command('inspect').option('--bench-strict')\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "content": "# Benchmark API\n\nCall `benchCited` with a string.\nSet `benchLimit` to 10 by default.\nRun `ak-bench-fixture inspect --bench-strict`.\n"
+        }
+      ]
+    },
+    {
+      "id": "doc-bridge-fixture-default-change",
+      "repository": "doc-bridge",
+      "origin": "fixture-backed",
+      "mutations": [
+        {
+          "path": "packages/layer1-benchmark/src/config-schema.ts",
+          "from": ".default(10)",
+          "to": ".default(20)",
+          "count": 1
+        }
+      ],
+      "scope": {
+        "facts": [
+          {
+            "kind": "config-key",
+            "names": [
+              "benchLimit",
+              "benchmarkbenchLimit"
+            ]
+          }
+        ],
+        "documents": [
+          "packages/layer1-benchmark/docs/api.md"
+        ]
+      },
+      "expected": [
+        {
+          "channel": "fact",
+          "kind": "config-key",
+          "op": "changed",
+          "name": "benchLimit",
+          "path": "packages/layer1-benchmark/src/config-schema.ts"
+        },
+        {
+          "channel": "finding",
+          "kind": "FACT_CHANGE",
+          "name": "benchLimit",
+          "path": "packages/layer1-benchmark/docs/api.md"
+        }
+      ],
+      "citations": [
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "token": "benchLimit",
+          "lines": [
+            4
+          ]
+        }
+      ],
+      "factCause": "Unsupported/incomplete native extraction or different owner projection; inspect raw coverage. No extractor tuning was performed.",
+      "findingCause": "Raw diff diagnoses removed/ambiguous references only; changed values/signatures lack divergence diagnostics, or citation ownership/extraction is unresolved. Raw diff does not apply policy exclusions.",
+      "setup": [
+        {
+          "path": "packages/layer1-benchmark/package.json",
+          "content": "{\"name\": \"@agentskit/layer1-benchmark-fixture\", \"version\": \"1.0.0\", \"bin\": {\"ak-bench-fixture\": \"src/cli.ts\"}}\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/api.ts",
+          "content": "export function benchCited(value: string): string { return value }\nexport function benchUncited(value: string): string { return value }\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/config-schema.ts",
+          "content": "import { z } from 'zod'\nexport const BenchmarkConfigSchema = z.object({ benchLimit: z.number().default(10) })\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/cli.ts",
+          "content": "import { Command } from 'commander'\nconst cli = new Command()\ncli.command('inspect').option('--bench-strict')\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "content": "# Benchmark API\n\nCall `benchCited` with a string.\nSet `benchLimit` to 10 by default.\nRun `ak-bench-fixture inspect --bench-strict`.\n"
+        }
+      ]
+    },
+    {
+      "id": "doc-bridge-fixture-flag-rename",
+      "repository": "doc-bridge",
+      "origin": "fixture-backed",
+      "mutations": [
+        {
+          "path": "packages/layer1-benchmark/src/cli.ts",
+          "from": "--bench-strict",
+          "to": "--benchmarkbench-strict",
+          "count": 1
+        }
+      ],
+      "scope": {
+        "facts": [
+          {
+            "kind": "cli-flag",
+            "names": [
+              "--bench-strict",
+              "--benchmarkbench-strict"
+            ]
+          }
+        ],
+        "documents": [
+          "packages/layer1-benchmark/docs/api.md"
+        ]
+      },
+      "expected": [
+        {
+          "channel": "fact",
+          "kind": "cli-flag",
+          "op": "removed",
+          "name": "--bench-strict",
+          "path": "packages/layer1-benchmark/src/cli.ts"
+        },
+        {
+          "channel": "fact",
+          "kind": "cli-flag",
+          "op": "added",
+          "name": "--benchmarkbench-strict",
+          "path": "packages/layer1-benchmark/src/cli.ts"
+        },
+        {
+          "channel": "finding",
+          "kind": "BROKEN_REFERENCE",
+          "name": "--bench-strict",
+          "path": "packages/layer1-benchmark/docs/api.md"
+        }
+      ],
+      "citations": [
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "token": "--bench-strict",
+          "lines": [
+            5
+          ]
+        }
+      ],
+      "factCause": "Unsupported/incomplete native extraction or different owner projection; inspect raw coverage. No extractor tuning was performed.",
+      "findingCause": "Raw diff diagnoses removed/ambiguous references only; changed values/signatures lack divergence diagnostics, or citation ownership/extraction is unresolved. Raw diff does not apply policy exclusions.",
+      "setup": [
+        {
+          "path": "packages/layer1-benchmark/package.json",
+          "content": "{\"name\": \"@agentskit/layer1-benchmark-fixture\", \"version\": \"1.0.0\", \"bin\": {\"ak-bench-fixture\": \"src/cli.ts\"}}\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/api.ts",
+          "content": "export function benchCited(value: string): string { return value }\nexport function benchUncited(value: string): string { return value }\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/config-schema.ts",
+          "content": "import { z } from 'zod'\nexport const BenchmarkConfigSchema = z.object({ benchLimit: z.number().default(10) })\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/cli.ts",
+          "content": "import { Command } from 'commander'\nconst cli = new Command()\ncli.command('inspect').option('--bench-strict')\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "content": "# Benchmark API\n\nCall `benchCited` with a string.\nSet `benchLimit` to 10 by default.\nRun `ak-bench-fixture inspect --bench-strict`.\n"
+        }
+      ]
+    },
+    {
+      "id": "doc-bridge-fixture-command-rename",
+      "repository": "doc-bridge",
+      "origin": "fixture-backed",
+      "mutations": [
+        {
+          "path": "packages/layer1-benchmark/src/cli.ts",
+          "from": "'inspect'",
+          "to": "'benchmark-inspect'",
+          "count": 1
+        }
+      ],
+      "scope": {
+        "facts": [
+          {
+            "kind": "cli-command",
+            "names": [
+              "ak-bench-fixture inspect",
+              "ak-bench-fixture benchmark-inspect"
+            ]
+          }
+        ],
+        "documents": [
+          "packages/layer1-benchmark/docs/api.md"
+        ]
+      },
+      "expected": [
+        {
+          "channel": "fact",
+          "kind": "cli-command",
+          "op": "removed",
+          "name": "ak-bench-fixture inspect",
+          "path": "packages/layer1-benchmark/src/cli.ts"
+        },
+        {
+          "channel": "fact",
+          "kind": "cli-command",
+          "op": "added",
+          "name": "ak-bench-fixture benchmark-inspect",
+          "path": "packages/layer1-benchmark/src/cli.ts"
+        },
+        {
+          "channel": "finding",
+          "kind": "BROKEN_REFERENCE",
+          "name": "ak-bench-fixture inspect",
+          "path": "packages/layer1-benchmark/docs/api.md"
+        }
+      ],
+      "citations": [
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "token": "ak-bench-fixture inspect",
+          "lines": [
+            5
+          ]
+        }
+      ],
+      "factCause": "Unsupported/incomplete native extraction or different owner projection; inspect raw coverage. No extractor tuning was performed.",
+      "findingCause": "Raw diff diagnoses removed/ambiguous references only; changed values/signatures lack divergence diagnostics, or citation ownership/extraction is unresolved. Raw diff does not apply policy exclusions.",
+      "setup": [
+        {
+          "path": "packages/layer1-benchmark/package.json",
+          "content": "{\"name\": \"@agentskit/layer1-benchmark-fixture\", \"version\": \"1.0.0\", \"bin\": {\"ak-bench-fixture\": \"src/cli.ts\"}}\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/api.ts",
+          "content": "export function benchCited(value: string): string { return value }\nexport function benchUncited(value: string): string { return value }\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/config-schema.ts",
+          "content": "import { z } from 'zod'\nexport const BenchmarkConfigSchema = z.object({ benchLimit: z.number().default(10) })\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/cli.ts",
+          "content": "import { Command } from 'commander'\nconst cli = new Command()\ncli.command('inspect').option('--bench-strict')\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "content": "# Benchmark API\n\nCall `benchCited` with a string.\nSet `benchLimit` to 10 by default.\nRun `ak-bench-fixture inspect --bench-strict`.\n"
+        }
+      ]
+    },
+    {
+      "id": "doc-bridge-fixture-internal-refactor",
+      "repository": "doc-bridge",
+      "origin": "fixture-backed",
+      "mutations": [
+        {
+          "path": "packages/layer1-benchmark/src/api.ts",
+          "from": "return value",
+          "to": "return (value)",
+          "count": 2
+        }
+      ],
+      "scope": {
+        "facts": [
+          {
+            "kind": "signature",
+            "names": [
+              "benchCited",
+              "benchmarkbenchCited"
+            ]
+          }
+        ],
+        "documents": [
+          "packages/layer1-benchmark/docs/api.md"
+        ]
+      },
+      "expected": [],
+      "citations": [
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "token": "benchCited",
+          "lines": [
+            3
+          ]
+        }
+      ],
+      "factCause": "Unsupported/incomplete native extraction or different owner projection; inspect raw coverage. No extractor tuning was performed.",
+      "findingCause": "Raw diff diagnoses removed/ambiguous references only; changed values/signatures lack divergence diagnostics, or citation ownership/extraction is unresolved. Raw diff does not apply policy exclusions.",
+      "setup": [
+        {
+          "path": "packages/layer1-benchmark/package.json",
+          "content": "{\"name\": \"@agentskit/layer1-benchmark-fixture\", \"version\": \"1.0.0\", \"bin\": {\"ak-bench-fixture\": \"src/cli.ts\"}}\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/api.ts",
+          "content": "export function benchCited(value: string): string { return value }\nexport function benchUncited(value: string): string { return value }\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/config-schema.ts",
+          "content": "import { z } from 'zod'\nexport const BenchmarkConfigSchema = z.object({ benchLimit: z.number().default(10) })\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/cli.ts",
+          "content": "import { Command } from 'commander'\nconst cli = new Command()\ncli.command('inspect').option('--bench-strict')\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "content": "# Benchmark API\n\nCall `benchCited` with a string.\nSet `benchLimit` to 10 by default.\nRun `ak-bench-fixture inspect --bench-strict`.\n"
+        }
+      ]
+    },
+    {
+      "id": "doc-bridge-fixture-ambiguous",
+      "repository": "doc-bridge",
+      "origin": "fixture-backed",
+      "mutations": [
+        {
+          "path": "packages/layer1-benchmark/src/other.ts",
+          "content": "export function benchCited(value: string): string { return value }\n"
+        }
+      ],
+      "scope": {
+        "facts": [
+          {
+            "kind": "symbol",
+            "names": [
+              "benchCited",
+              "benchmarkbenchCited"
+            ]
+          }
+        ],
+        "documents": [
+          "packages/layer1-benchmark/docs/api.md"
+        ]
+      },
+      "expected": [
+        {
+          "channel": "fact",
+          "kind": "symbol",
+          "op": "added",
+          "name": "benchCited",
+          "path": "packages/layer1-benchmark/src/other.ts"
+        },
+        {
+          "channel": "finding",
+          "kind": "AMBIGUOUS_REFERENCE",
+          "name": "benchCited",
+          "path": "packages/layer1-benchmark/docs/api.md"
+        }
+      ],
+      "citations": [
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "token": "benchCited",
+          "lines": [
+            3
+          ]
+        }
+      ],
+      "factCause": "Unsupported/incomplete native extraction or different owner projection; inspect raw coverage. No extractor tuning was performed.",
+      "findingCause": "Raw diff diagnoses removed/ambiguous references only; changed values/signatures lack divergence diagnostics, or citation ownership/extraction is unresolved. Raw diff does not apply policy exclusions.",
+      "setup": [
+        {
+          "path": "packages/layer1-benchmark/package.json",
+          "content": "{\"name\": \"@agentskit/layer1-benchmark-fixture\", \"version\": \"1.0.0\", \"bin\": {\"ak-bench-fixture\": \"src/cli.ts\"}}\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/api.ts",
+          "content": "export function benchCited(value: string): string { return value }\nexport function benchUncited(value: string): string { return value }\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/config-schema.ts",
+          "content": "import { z } from 'zod'\nexport const BenchmarkConfigSchema = z.object({ benchLimit: z.number().default(10) })\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/cli.ts",
+          "content": "import { Command } from 'commander'\nconst cli = new Command()\ncli.command('inspect').option('--bench-strict')\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "content": "# Benchmark API\n\nCall `benchCited` with a string.\nSet `benchLimit` to 10 by default.\nRun `ak-bench-fixture inspect --bench-strict`.\n"
+        }
+      ]
+    },
+    {
+      "id": "doc-bridge-fixture-negative-adr",
+      "repository": "doc-bridge",
+      "origin": "fixture-backed",
+      "mutations": [
+        {
+          "path": "packages/layer1-benchmark/src/api.ts",
+          "from": "benchCited",
+          "to": "benchmarkbenchCited",
+          "count": 1
+        }
+      ],
+      "scope": {
+        "facts": [],
+        "documents": [
+          "packages/layer1-benchmark/docs/adr/0001-api.md"
+        ]
+      },
+      "expected": [],
+      "citations": [
+        {
+          "path": "packages/layer1-benchmark/docs/adr/0001-api.md",
+          "token": "benchCited",
+          "lines": [
+            3
+          ]
+        }
+      ],
+      "factCause": "Unsupported/incomplete native extraction or different owner projection; inspect raw coverage. No extractor tuning was performed.",
+      "findingCause": "Raw diff does not route classification or version eligibility; a raw diagnostic here is policy noise at this API boundary.",
+      "setup": [
+        {
+          "path": "packages/layer1-benchmark/package.json",
+          "content": "{\"name\": \"@agentskit/layer1-benchmark-fixture\", \"version\": \"1.0.0\", \"bin\": {\"ak-bench-fixture\": \"src/cli.ts\"}}\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/api.ts",
+          "content": "export function benchCited(value: string): string { return value }\nexport function benchUncited(value: string): string { return value }\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/config-schema.ts",
+          "content": "import { z } from 'zod'\nexport const BenchmarkConfigSchema = z.object({ benchLimit: z.number().default(10) })\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/cli.ts",
+          "content": "import { Command } from 'commander'\nconst cli = new Command()\ncli.command('inspect').option('--bench-strict')\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "content": "# Benchmark API\n\nCall `benchCited` with a string.\nSet `benchLimit` to 10 by default.\nRun `ak-bench-fixture inspect --bench-strict`.\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/docs/adr/0001-api.md",
+          "content": "# Earlier API\n\nUse `benchCited`.\n"
+        }
+      ]
+    },
+    {
+      "id": "doc-bridge-fixture-negative-changelog",
+      "repository": "doc-bridge",
+      "origin": "fixture-backed",
+      "mutations": [
+        {
+          "path": "packages/layer1-benchmark/src/api.ts",
+          "from": "benchCited",
+          "to": "benchmarkbenchCited",
+          "count": 1
+        }
+      ],
+      "scope": {
+        "facts": [],
+        "documents": [
+          "packages/layer1-benchmark/CHANGELOG.md"
+        ]
+      },
+      "expected": [],
+      "citations": [
+        {
+          "path": "packages/layer1-benchmark/CHANGELOG.md",
+          "token": "benchCited",
+          "lines": [
+            3
+          ]
+        }
+      ],
+      "factCause": "Unsupported/incomplete native extraction or different owner projection; inspect raw coverage. No extractor tuning was performed.",
+      "findingCause": "Raw diff does not route classification or version eligibility; a raw diagnostic here is policy noise at this API boundary.",
+      "setup": [
+        {
+          "path": "packages/layer1-benchmark/package.json",
+          "content": "{\"name\": \"@agentskit/layer1-benchmark-fixture\", \"version\": \"1.0.0\", \"bin\": {\"ak-bench-fixture\": \"src/cli.ts\"}}\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/api.ts",
+          "content": "export function benchCited(value: string): string { return value }\nexport function benchUncited(value: string): string { return value }\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/config-schema.ts",
+          "content": "import { z } from 'zod'\nexport const BenchmarkConfigSchema = z.object({ benchLimit: z.number().default(10) })\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/cli.ts",
+          "content": "import { Command } from 'commander'\nconst cli = new Command()\ncli.command('inspect').option('--bench-strict')\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "content": "# Benchmark API\n\nCall `benchCited` with a string.\nSet `benchLimit` to 10 by default.\nRun `ak-bench-fixture inspect --bench-strict`.\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/CHANGELOG.md",
+          "content": "# Earlier API\n\nUse `benchCited`.\n"
+        }
+      ]
+    },
+    {
+      "id": "doc-bridge-fixture-negative-historical",
+      "repository": "doc-bridge",
+      "origin": "fixture-backed",
+      "mutations": [
+        {
+          "path": "packages/layer1-benchmark/src/api.ts",
+          "from": "benchCited",
+          "to": "benchmarkbenchCited",
+          "count": 1
+        }
+      ],
+      "scope": {
+        "facts": [],
+        "documents": [
+          "packages/layer1-benchmark/docs/historical/api.md"
+        ]
+      },
+      "expected": [],
+      "citations": [
+        {
+          "path": "packages/layer1-benchmark/docs/historical/api.md",
+          "token": "benchCited",
+          "lines": [
+            6
+          ]
+        }
+      ],
+      "factCause": "Unsupported/incomplete native extraction or different owner projection; inspect raw coverage. No extractor tuning was performed.",
+      "findingCause": "Raw diff does not route classification or version eligibility; a raw diagnostic here is policy noise at this API boundary.",
+      "setup": [
+        {
+          "path": "packages/layer1-benchmark/package.json",
+          "content": "{\"name\": \"@agentskit/layer1-benchmark-fixture\", \"version\": \"1.0.0\", \"bin\": {\"ak-bench-fixture\": \"src/cli.ts\"}}\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/api.ts",
+          "content": "export function benchCited(value: string): string { return value }\nexport function benchUncited(value: string): string { return value }\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/config-schema.ts",
+          "content": "import { z } from 'zod'\nexport const BenchmarkConfigSchema = z.object({ benchLimit: z.number().default(10) })\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/cli.ts",
+          "content": "import { Command } from 'commander'\nconst cli = new Command()\ncli.command('inspect').option('--bench-strict')\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "content": "# Benchmark API\n\nCall `benchCited` with a string.\nSet `benchLimit` to 10 by default.\nRun `ak-bench-fixture inspect --bench-strict`.\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/docs/historical/api.md",
+          "content": "---\nlifecycle: historical\n---\n# Earlier API\n\nUse `benchCited`.\n"
+        }
+      ]
+    },
+    {
+      "id": "doc-bridge-fixture-negative-pinned-version",
+      "repository": "doc-bridge",
+      "origin": "fixture-backed",
+      "mutations": [
+        {
+          "path": "packages/layer1-benchmark/src/api.ts",
+          "from": "benchCited",
+          "to": "benchmarkbenchCited",
+          "count": 1
+        }
+      ],
+      "scope": {
+        "facts": [],
+        "documents": [
+          "packages/layer1-benchmark/docs/pinned.md"
+        ]
+      },
+      "expected": [],
+      "citations": [
+        {
+          "path": "packages/layer1-benchmark/docs/pinned.md",
+          "token": "benchCited",
+          "lines": [
+            8
+          ]
+        }
+      ],
+      "factCause": "Unsupported/incomplete native extraction or different owner projection; inspect raw coverage. No extractor tuning was performed.",
+      "findingCause": "Raw diff does not route classification or version eligibility; a raw diagnostic here is policy noise at this API boundary.",
+      "setup": [
+        {
+          "path": "packages/layer1-benchmark/package.json",
+          "content": "{\"name\": \"@agentskit/layer1-benchmark-fixture\", \"version\": \"1.0.0\", \"bin\": {\"ak-bench-fixture\": \"src/cli.ts\"}}\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/api.ts",
+          "content": "export function benchCited(value: string): string { return value }\nexport function benchUncited(value: string): string { return value }\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/config-schema.ts",
+          "content": "import { z } from 'zod'\nexport const BenchmarkConfigSchema = z.object({ benchLimit: z.number().default(10) })\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/cli.ts",
+          "content": "import { Command } from 'commander'\nconst cli = new Command()\ncli.command('inspect').option('--bench-strict')\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "content": "# Benchmark API\n\nCall `benchCited` with a string.\nSet `benchLimit` to 10 by default.\nRun `ak-bench-fixture inspect --bench-strict`.\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/docs/pinned.md",
+          "content": "---\ndocbridge:\n  targets:\n    \"pkg:npm/%40agentskit/layer1-benchmark-fixture\": \"0.1.0\"\n---\n# Earlier API\n\nUse `benchCited`.\n"
+        }
+      ]
+    },
+    {
+      "id": "chat-fixture-symbol-rename",
+      "repository": "chat",
+      "origin": "fixture-backed",
+      "mutations": [
+        {
+          "path": "packages/layer1-benchmark/src/api.ts",
+          "from": "benchCited",
+          "to": "benchmarkbenchCited",
+          "count": 1
+        }
+      ],
+      "scope": {
+        "facts": [
+          {
+            "kind": "symbol",
+            "names": [
+              "benchCited",
+              "benchmarkbenchCited"
+            ]
+          }
+        ],
+        "documents": [
+          "packages/layer1-benchmark/docs/api.md"
+        ]
+      },
+      "expected": [
+        {
+          "channel": "fact",
+          "kind": "symbol",
+          "op": "removed",
+          "name": "benchCited",
+          "path": "packages/layer1-benchmark/src/api.ts"
+        },
+        {
+          "channel": "fact",
+          "kind": "symbol",
+          "op": "added",
+          "name": "benchmarkbenchCited",
+          "path": "packages/layer1-benchmark/src/api.ts"
+        },
+        {
+          "channel": "finding",
+          "kind": "BROKEN_REFERENCE",
+          "name": "benchCited",
+          "path": "packages/layer1-benchmark/docs/api.md"
+        }
+      ],
+      "citations": [
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "token": "benchCited",
+          "lines": [
+            3
+          ]
+        }
+      ],
+      "factCause": "Unsupported/incomplete native extraction or different owner projection; inspect raw coverage. No extractor tuning was performed.",
+      "findingCause": "Raw diff diagnoses removed/ambiguous references only; changed values/signatures lack divergence diagnostics, or citation ownership/extraction is unresolved. Raw diff does not apply policy exclusions.",
+      "setup": [
+        {
+          "path": "packages/layer1-benchmark/package.json",
+          "content": "{\"name\": \"@agentskit/layer1-benchmark-fixture\", \"version\": \"1.0.0\", \"bin\": {\"ak-bench-fixture\": \"src/cli.ts\"}}\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/api.ts",
+          "content": "export function benchCited(value: string): string { return value }\nexport function benchUncited(value: string): string { return value }\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/config-schema.ts",
+          "content": "import { z } from 'zod'\nexport const BenchmarkConfigSchema = z.object({ benchLimit: z.number().default(10) })\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/cli.ts",
+          "content": "import { Command } from 'commander'\nconst cli = new Command()\ncli.command('inspect').option('--bench-strict')\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "content": "# Benchmark API\n\nCall `benchCited` with a string.\nSet `benchLimit` to 10 by default.\nRun `ak-bench-fixture inspect --bench-strict`.\n"
+        }
+      ]
+    },
+    {
+      "id": "chat-fixture-uncited-rename",
+      "repository": "chat",
+      "origin": "fixture-backed",
+      "mutations": [
+        {
+          "path": "packages/layer1-benchmark/src/api.ts",
+          "from": "benchUncited",
+          "to": "benchmarkbenchUncited",
+          "count": 1
+        }
+      ],
+      "scope": {
+        "facts": [
+          {
+            "kind": "symbol",
+            "names": [
+              "benchUncited",
+              "benchmarkbenchUncited"
+            ]
+          }
+        ],
+        "documents": []
+      },
+      "expected": [
+        {
+          "channel": "fact",
+          "kind": "symbol",
+          "op": "removed",
+          "name": "benchUncited",
+          "path": "packages/layer1-benchmark/src/api.ts"
+        },
+        {
+          "channel": "fact",
+          "kind": "symbol",
+          "op": "added",
+          "name": "benchmarkbenchUncited",
+          "path": "packages/layer1-benchmark/src/api.ts"
+        }
+      ],
+      "citations": [],
+      "factCause": "Unsupported/incomplete native extraction or different owner projection; inspect raw coverage. No extractor tuning was performed.",
+      "findingCause": "Raw diff diagnoses removed/ambiguous references only; changed values/signatures lack divergence diagnostics, or citation ownership/extraction is unresolved. Raw diff does not apply policy exclusions.",
+      "setup": [
+        {
+          "path": "packages/layer1-benchmark/package.json",
+          "content": "{\"name\": \"@agentskit/layer1-benchmark-fixture\", \"version\": \"1.0.0\", \"bin\": {\"ak-bench-fixture\": \"src/cli.ts\"}}\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/api.ts",
+          "content": "export function benchCited(value: string): string { return value }\nexport function benchUncited(value: string): string { return value }\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/config-schema.ts",
+          "content": "import { z } from 'zod'\nexport const BenchmarkConfigSchema = z.object({ benchLimit: z.number().default(10) })\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/cli.ts",
+          "content": "import { Command } from 'commander'\nconst cli = new Command()\ncli.command('inspect').option('--bench-strict')\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "content": "# Benchmark API\n\nCall `benchCited` with a string.\nSet `benchLimit` to 10 by default.\nRun `ak-bench-fixture inspect --bench-strict`.\n"
+        }
+      ]
+    },
+    {
+      "id": "chat-fixture-signature-change",
+      "repository": "chat",
+      "origin": "fixture-backed",
+      "mutations": [
+        {
+          "path": "packages/layer1-benchmark/src/api.ts",
+          "from": "benchCited(value: string)",
+          "to": "benchCited(value: string, required: boolean)",
+          "count": 1
+        }
+      ],
+      "scope": {
+        "facts": [
+          {
+            "kind": "signature",
+            "names": [
+              "benchCited",
+              "benchmarkbenchCited"
+            ]
+          }
+        ],
+        "documents": [
+          "packages/layer1-benchmark/docs/api.md"
+        ]
+      },
+      "expected": [
+        {
+          "channel": "fact",
+          "kind": "signature",
+          "op": "changed",
+          "name": "benchCited",
+          "path": "packages/layer1-benchmark/src/api.ts"
+        },
+        {
+          "channel": "finding",
+          "kind": "FACT_CHANGE",
+          "name": "benchCited",
+          "path": "packages/layer1-benchmark/docs/api.md"
+        }
+      ],
+      "citations": [
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "token": "benchCited",
+          "lines": [
+            3
+          ]
+        }
+      ],
+      "factCause": "Unsupported/incomplete native extraction or different owner projection; inspect raw coverage. No extractor tuning was performed.",
+      "findingCause": "Raw diff diagnoses removed/ambiguous references only; changed values/signatures lack divergence diagnostics, or citation ownership/extraction is unresolved. Raw diff does not apply policy exclusions.",
+      "setup": [
+        {
+          "path": "packages/layer1-benchmark/package.json",
+          "content": "{\"name\": \"@agentskit/layer1-benchmark-fixture\", \"version\": \"1.0.0\", \"bin\": {\"ak-bench-fixture\": \"src/cli.ts\"}}\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/api.ts",
+          "content": "export function benchCited(value: string): string { return value }\nexport function benchUncited(value: string): string { return value }\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/config-schema.ts",
+          "content": "import { z } from 'zod'\nexport const BenchmarkConfigSchema = z.object({ benchLimit: z.number().default(10) })\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/cli.ts",
+          "content": "import { Command } from 'commander'\nconst cli = new Command()\ncli.command('inspect').option('--bench-strict')\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "content": "# Benchmark API\n\nCall `benchCited` with a string.\nSet `benchLimit` to 10 by default.\nRun `ak-bench-fixture inspect --bench-strict`.\n"
+        }
+      ]
+    },
+    {
+      "id": "chat-fixture-config-rename",
+      "repository": "chat",
+      "origin": "fixture-backed",
+      "mutations": [
+        {
+          "path": "packages/layer1-benchmark/src/config-schema.ts",
+          "from": "benchLimit:",
+          "to": "benchmarkbenchLimit:",
+          "count": 1
+        }
+      ],
+      "scope": {
+        "facts": [
+          {
+            "kind": "config-key",
+            "names": [
+              "benchLimit",
+              "benchmarkbenchLimit"
+            ]
+          }
+        ],
+        "documents": [
+          "packages/layer1-benchmark/docs/api.md"
+        ]
+      },
+      "expected": [
+        {
+          "channel": "fact",
+          "kind": "config-key",
+          "op": "removed",
+          "name": "benchLimit",
+          "path": "packages/layer1-benchmark/src/config-schema.ts"
+        },
+        {
+          "channel": "fact",
+          "kind": "config-key",
+          "op": "added",
+          "name": "benchmarkbenchLimit",
+          "path": "packages/layer1-benchmark/src/config-schema.ts"
+        },
+        {
+          "channel": "finding",
+          "kind": "BROKEN_REFERENCE",
+          "name": "benchLimit",
+          "path": "packages/layer1-benchmark/docs/api.md"
+        }
+      ],
+      "citations": [
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "token": "benchLimit",
+          "lines": [
+            4
+          ]
+        }
+      ],
+      "factCause": "Unsupported/incomplete native extraction or different owner projection; inspect raw coverage. No extractor tuning was performed.",
+      "findingCause": "Raw diff diagnoses removed/ambiguous references only; changed values/signatures lack divergence diagnostics, or citation ownership/extraction is unresolved. Raw diff does not apply policy exclusions.",
+      "setup": [
+        {
+          "path": "packages/layer1-benchmark/package.json",
+          "content": "{\"name\": \"@agentskit/layer1-benchmark-fixture\", \"version\": \"1.0.0\", \"bin\": {\"ak-bench-fixture\": \"src/cli.ts\"}}\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/api.ts",
+          "content": "export function benchCited(value: string): string { return value }\nexport function benchUncited(value: string): string { return value }\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/config-schema.ts",
+          "content": "import { z } from 'zod'\nexport const BenchmarkConfigSchema = z.object({ benchLimit: z.number().default(10) })\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/cli.ts",
+          "content": "import { Command } from 'commander'\nconst cli = new Command()\ncli.command('inspect').option('--bench-strict')\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "content": "# Benchmark API\n\nCall `benchCited` with a string.\nSet `benchLimit` to 10 by default.\nRun `ak-bench-fixture inspect --bench-strict`.\n"
+        }
+      ]
+    },
+    {
+      "id": "chat-fixture-default-change",
+      "repository": "chat",
+      "origin": "fixture-backed",
+      "mutations": [
+        {
+          "path": "packages/layer1-benchmark/src/config-schema.ts",
+          "from": ".default(10)",
+          "to": ".default(20)",
+          "count": 1
+        }
+      ],
+      "scope": {
+        "facts": [
+          {
+            "kind": "config-key",
+            "names": [
+              "benchLimit",
+              "benchmarkbenchLimit"
+            ]
+          }
+        ],
+        "documents": [
+          "packages/layer1-benchmark/docs/api.md"
+        ]
+      },
+      "expected": [
+        {
+          "channel": "fact",
+          "kind": "config-key",
+          "op": "changed",
+          "name": "benchLimit",
+          "path": "packages/layer1-benchmark/src/config-schema.ts"
+        },
+        {
+          "channel": "finding",
+          "kind": "FACT_CHANGE",
+          "name": "benchLimit",
+          "path": "packages/layer1-benchmark/docs/api.md"
+        }
+      ],
+      "citations": [
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "token": "benchLimit",
+          "lines": [
+            4
+          ]
+        }
+      ],
+      "factCause": "Unsupported/incomplete native extraction or different owner projection; inspect raw coverage. No extractor tuning was performed.",
+      "findingCause": "Raw diff diagnoses removed/ambiguous references only; changed values/signatures lack divergence diagnostics, or citation ownership/extraction is unresolved. Raw diff does not apply policy exclusions.",
+      "setup": [
+        {
+          "path": "packages/layer1-benchmark/package.json",
+          "content": "{\"name\": \"@agentskit/layer1-benchmark-fixture\", \"version\": \"1.0.0\", \"bin\": {\"ak-bench-fixture\": \"src/cli.ts\"}}\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/api.ts",
+          "content": "export function benchCited(value: string): string { return value }\nexport function benchUncited(value: string): string { return value }\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/config-schema.ts",
+          "content": "import { z } from 'zod'\nexport const BenchmarkConfigSchema = z.object({ benchLimit: z.number().default(10) })\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/cli.ts",
+          "content": "import { Command } from 'commander'\nconst cli = new Command()\ncli.command('inspect').option('--bench-strict')\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "content": "# Benchmark API\n\nCall `benchCited` with a string.\nSet `benchLimit` to 10 by default.\nRun `ak-bench-fixture inspect --bench-strict`.\n"
+        }
+      ]
+    },
+    {
+      "id": "chat-fixture-flag-rename",
+      "repository": "chat",
+      "origin": "fixture-backed",
+      "mutations": [
+        {
+          "path": "packages/layer1-benchmark/src/cli.ts",
+          "from": "--bench-strict",
+          "to": "--benchmarkbench-strict",
+          "count": 1
+        }
+      ],
+      "scope": {
+        "facts": [
+          {
+            "kind": "cli-flag",
+            "names": [
+              "--bench-strict",
+              "--benchmarkbench-strict"
+            ]
+          }
+        ],
+        "documents": [
+          "packages/layer1-benchmark/docs/api.md"
+        ]
+      },
+      "expected": [
+        {
+          "channel": "fact",
+          "kind": "cli-flag",
+          "op": "removed",
+          "name": "--bench-strict",
+          "path": "packages/layer1-benchmark/src/cli.ts"
+        },
+        {
+          "channel": "fact",
+          "kind": "cli-flag",
+          "op": "added",
+          "name": "--benchmarkbench-strict",
+          "path": "packages/layer1-benchmark/src/cli.ts"
+        },
+        {
+          "channel": "finding",
+          "kind": "BROKEN_REFERENCE",
+          "name": "--bench-strict",
+          "path": "packages/layer1-benchmark/docs/api.md"
+        }
+      ],
+      "citations": [
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "token": "--bench-strict",
+          "lines": [
+            5
+          ]
+        }
+      ],
+      "factCause": "Unsupported/incomplete native extraction or different owner projection; inspect raw coverage. No extractor tuning was performed.",
+      "findingCause": "Raw diff diagnoses removed/ambiguous references only; changed values/signatures lack divergence diagnostics, or citation ownership/extraction is unresolved. Raw diff does not apply policy exclusions.",
+      "setup": [
+        {
+          "path": "packages/layer1-benchmark/package.json",
+          "content": "{\"name\": \"@agentskit/layer1-benchmark-fixture\", \"version\": \"1.0.0\", \"bin\": {\"ak-bench-fixture\": \"src/cli.ts\"}}\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/api.ts",
+          "content": "export function benchCited(value: string): string { return value }\nexport function benchUncited(value: string): string { return value }\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/config-schema.ts",
+          "content": "import { z } from 'zod'\nexport const BenchmarkConfigSchema = z.object({ benchLimit: z.number().default(10) })\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/cli.ts",
+          "content": "import { Command } from 'commander'\nconst cli = new Command()\ncli.command('inspect').option('--bench-strict')\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "content": "# Benchmark API\n\nCall `benchCited` with a string.\nSet `benchLimit` to 10 by default.\nRun `ak-bench-fixture inspect --bench-strict`.\n"
+        }
+      ]
+    },
+    {
+      "id": "chat-fixture-command-rename",
+      "repository": "chat",
+      "origin": "fixture-backed",
+      "mutations": [
+        {
+          "path": "packages/layer1-benchmark/src/cli.ts",
+          "from": "'inspect'",
+          "to": "'benchmark-inspect'",
+          "count": 1
+        }
+      ],
+      "scope": {
+        "facts": [
+          {
+            "kind": "cli-command",
+            "names": [
+              "ak-bench-fixture inspect",
+              "ak-bench-fixture benchmark-inspect"
+            ]
+          }
+        ],
+        "documents": [
+          "packages/layer1-benchmark/docs/api.md"
+        ]
+      },
+      "expected": [
+        {
+          "channel": "fact",
+          "kind": "cli-command",
+          "op": "removed",
+          "name": "ak-bench-fixture inspect",
+          "path": "packages/layer1-benchmark/src/cli.ts"
+        },
+        {
+          "channel": "fact",
+          "kind": "cli-command",
+          "op": "added",
+          "name": "ak-bench-fixture benchmark-inspect",
+          "path": "packages/layer1-benchmark/src/cli.ts"
+        },
+        {
+          "channel": "finding",
+          "kind": "BROKEN_REFERENCE",
+          "name": "ak-bench-fixture inspect",
+          "path": "packages/layer1-benchmark/docs/api.md"
+        }
+      ],
+      "citations": [
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "token": "ak-bench-fixture inspect",
+          "lines": [
+            5
+          ]
+        }
+      ],
+      "factCause": "Unsupported/incomplete native extraction or different owner projection; inspect raw coverage. No extractor tuning was performed.",
+      "findingCause": "Raw diff diagnoses removed/ambiguous references only; changed values/signatures lack divergence diagnostics, or citation ownership/extraction is unresolved. Raw diff does not apply policy exclusions.",
+      "setup": [
+        {
+          "path": "packages/layer1-benchmark/package.json",
+          "content": "{\"name\": \"@agentskit/layer1-benchmark-fixture\", \"version\": \"1.0.0\", \"bin\": {\"ak-bench-fixture\": \"src/cli.ts\"}}\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/api.ts",
+          "content": "export function benchCited(value: string): string { return value }\nexport function benchUncited(value: string): string { return value }\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/config-schema.ts",
+          "content": "import { z } from 'zod'\nexport const BenchmarkConfigSchema = z.object({ benchLimit: z.number().default(10) })\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/cli.ts",
+          "content": "import { Command } from 'commander'\nconst cli = new Command()\ncli.command('inspect').option('--bench-strict')\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "content": "# Benchmark API\n\nCall `benchCited` with a string.\nSet `benchLimit` to 10 by default.\nRun `ak-bench-fixture inspect --bench-strict`.\n"
+        }
+      ]
+    },
+    {
+      "id": "chat-fixture-internal-refactor",
+      "repository": "chat",
+      "origin": "fixture-backed",
+      "mutations": [
+        {
+          "path": "packages/layer1-benchmark/src/api.ts",
+          "from": "return value",
+          "to": "return (value)",
+          "count": 2
+        }
+      ],
+      "scope": {
+        "facts": [
+          {
+            "kind": "signature",
+            "names": [
+              "benchCited",
+              "benchmarkbenchCited"
+            ]
+          }
+        ],
+        "documents": [
+          "packages/layer1-benchmark/docs/api.md"
+        ]
+      },
+      "expected": [],
+      "citations": [
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "token": "benchCited",
+          "lines": [
+            3
+          ]
+        }
+      ],
+      "factCause": "Unsupported/incomplete native extraction or different owner projection; inspect raw coverage. No extractor tuning was performed.",
+      "findingCause": "Raw diff diagnoses removed/ambiguous references only; changed values/signatures lack divergence diagnostics, or citation ownership/extraction is unresolved. Raw diff does not apply policy exclusions.",
+      "setup": [
+        {
+          "path": "packages/layer1-benchmark/package.json",
+          "content": "{\"name\": \"@agentskit/layer1-benchmark-fixture\", \"version\": \"1.0.0\", \"bin\": {\"ak-bench-fixture\": \"src/cli.ts\"}}\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/api.ts",
+          "content": "export function benchCited(value: string): string { return value }\nexport function benchUncited(value: string): string { return value }\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/config-schema.ts",
+          "content": "import { z } from 'zod'\nexport const BenchmarkConfigSchema = z.object({ benchLimit: z.number().default(10) })\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/cli.ts",
+          "content": "import { Command } from 'commander'\nconst cli = new Command()\ncli.command('inspect').option('--bench-strict')\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "content": "# Benchmark API\n\nCall `benchCited` with a string.\nSet `benchLimit` to 10 by default.\nRun `ak-bench-fixture inspect --bench-strict`.\n"
+        }
+      ]
+    },
+    {
+      "id": "chat-fixture-ambiguous",
+      "repository": "chat",
+      "origin": "fixture-backed",
+      "mutations": [
+        {
+          "path": "packages/layer1-benchmark/src/other.ts",
+          "content": "export function benchCited(value: string): string { return value }\n"
+        }
+      ],
+      "scope": {
+        "facts": [
+          {
+            "kind": "symbol",
+            "names": [
+              "benchCited",
+              "benchmarkbenchCited"
+            ]
+          }
+        ],
+        "documents": [
+          "packages/layer1-benchmark/docs/api.md"
+        ]
+      },
+      "expected": [
+        {
+          "channel": "fact",
+          "kind": "symbol",
+          "op": "added",
+          "name": "benchCited",
+          "path": "packages/layer1-benchmark/src/other.ts"
+        },
+        {
+          "channel": "finding",
+          "kind": "AMBIGUOUS_REFERENCE",
+          "name": "benchCited",
+          "path": "packages/layer1-benchmark/docs/api.md"
+        }
+      ],
+      "citations": [
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "token": "benchCited",
+          "lines": [
+            3
+          ]
+        }
+      ],
+      "factCause": "Unsupported/incomplete native extraction or different owner projection; inspect raw coverage. No extractor tuning was performed.",
+      "findingCause": "Raw diff diagnoses removed/ambiguous references only; changed values/signatures lack divergence diagnostics, or citation ownership/extraction is unresolved. Raw diff does not apply policy exclusions.",
+      "setup": [
+        {
+          "path": "packages/layer1-benchmark/package.json",
+          "content": "{\"name\": \"@agentskit/layer1-benchmark-fixture\", \"version\": \"1.0.0\", \"bin\": {\"ak-bench-fixture\": \"src/cli.ts\"}}\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/api.ts",
+          "content": "export function benchCited(value: string): string { return value }\nexport function benchUncited(value: string): string { return value }\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/config-schema.ts",
+          "content": "import { z } from 'zod'\nexport const BenchmarkConfigSchema = z.object({ benchLimit: z.number().default(10) })\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/cli.ts",
+          "content": "import { Command } from 'commander'\nconst cli = new Command()\ncli.command('inspect').option('--bench-strict')\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "content": "# Benchmark API\n\nCall `benchCited` with a string.\nSet `benchLimit` to 10 by default.\nRun `ak-bench-fixture inspect --bench-strict`.\n"
+        }
+      ]
+    },
+    {
+      "id": "chat-fixture-negative-adr",
+      "repository": "chat",
+      "origin": "fixture-backed",
+      "mutations": [
+        {
+          "path": "packages/layer1-benchmark/src/api.ts",
+          "from": "benchCited",
+          "to": "benchmarkbenchCited",
+          "count": 1
+        }
+      ],
+      "scope": {
+        "facts": [],
+        "documents": [
+          "packages/layer1-benchmark/docs/adr/0001-api.md"
+        ]
+      },
+      "expected": [],
+      "citations": [
+        {
+          "path": "packages/layer1-benchmark/docs/adr/0001-api.md",
+          "token": "benchCited",
+          "lines": [
+            3
+          ]
+        }
+      ],
+      "factCause": "Unsupported/incomplete native extraction or different owner projection; inspect raw coverage. No extractor tuning was performed.",
+      "findingCause": "Raw diff does not route classification or version eligibility; a raw diagnostic here is policy noise at this API boundary.",
+      "setup": [
+        {
+          "path": "packages/layer1-benchmark/package.json",
+          "content": "{\"name\": \"@agentskit/layer1-benchmark-fixture\", \"version\": \"1.0.0\", \"bin\": {\"ak-bench-fixture\": \"src/cli.ts\"}}\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/api.ts",
+          "content": "export function benchCited(value: string): string { return value }\nexport function benchUncited(value: string): string { return value }\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/config-schema.ts",
+          "content": "import { z } from 'zod'\nexport const BenchmarkConfigSchema = z.object({ benchLimit: z.number().default(10) })\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/cli.ts",
+          "content": "import { Command } from 'commander'\nconst cli = new Command()\ncli.command('inspect').option('--bench-strict')\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "content": "# Benchmark API\n\nCall `benchCited` with a string.\nSet `benchLimit` to 10 by default.\nRun `ak-bench-fixture inspect --bench-strict`.\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/docs/adr/0001-api.md",
+          "content": "# Earlier API\n\nUse `benchCited`.\n"
+        }
+      ]
+    },
+    {
+      "id": "chat-fixture-negative-changelog",
+      "repository": "chat",
+      "origin": "fixture-backed",
+      "mutations": [
+        {
+          "path": "packages/layer1-benchmark/src/api.ts",
+          "from": "benchCited",
+          "to": "benchmarkbenchCited",
+          "count": 1
+        }
+      ],
+      "scope": {
+        "facts": [],
+        "documents": [
+          "packages/layer1-benchmark/CHANGELOG.md"
+        ]
+      },
+      "expected": [],
+      "citations": [
+        {
+          "path": "packages/layer1-benchmark/CHANGELOG.md",
+          "token": "benchCited",
+          "lines": [
+            3
+          ]
+        }
+      ],
+      "factCause": "Unsupported/incomplete native extraction or different owner projection; inspect raw coverage. No extractor tuning was performed.",
+      "findingCause": "Raw diff does not route classification or version eligibility; a raw diagnostic here is policy noise at this API boundary.",
+      "setup": [
+        {
+          "path": "packages/layer1-benchmark/package.json",
+          "content": "{\"name\": \"@agentskit/layer1-benchmark-fixture\", \"version\": \"1.0.0\", \"bin\": {\"ak-bench-fixture\": \"src/cli.ts\"}}\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/api.ts",
+          "content": "export function benchCited(value: string): string { return value }\nexport function benchUncited(value: string): string { return value }\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/config-schema.ts",
+          "content": "import { z } from 'zod'\nexport const BenchmarkConfigSchema = z.object({ benchLimit: z.number().default(10) })\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/cli.ts",
+          "content": "import { Command } from 'commander'\nconst cli = new Command()\ncli.command('inspect').option('--bench-strict')\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "content": "# Benchmark API\n\nCall `benchCited` with a string.\nSet `benchLimit` to 10 by default.\nRun `ak-bench-fixture inspect --bench-strict`.\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/CHANGELOG.md",
+          "content": "# Earlier API\n\nUse `benchCited`.\n"
+        }
+      ]
+    },
+    {
+      "id": "chat-fixture-negative-historical",
+      "repository": "chat",
+      "origin": "fixture-backed",
+      "mutations": [
+        {
+          "path": "packages/layer1-benchmark/src/api.ts",
+          "from": "benchCited",
+          "to": "benchmarkbenchCited",
+          "count": 1
+        }
+      ],
+      "scope": {
+        "facts": [],
+        "documents": [
+          "packages/layer1-benchmark/docs/historical/api.md"
+        ]
+      },
+      "expected": [],
+      "citations": [
+        {
+          "path": "packages/layer1-benchmark/docs/historical/api.md",
+          "token": "benchCited",
+          "lines": [
+            6
+          ]
+        }
+      ],
+      "factCause": "Unsupported/incomplete native extraction or different owner projection; inspect raw coverage. No extractor tuning was performed.",
+      "findingCause": "Raw diff does not route classification or version eligibility; a raw diagnostic here is policy noise at this API boundary.",
+      "setup": [
+        {
+          "path": "packages/layer1-benchmark/package.json",
+          "content": "{\"name\": \"@agentskit/layer1-benchmark-fixture\", \"version\": \"1.0.0\", \"bin\": {\"ak-bench-fixture\": \"src/cli.ts\"}}\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/api.ts",
+          "content": "export function benchCited(value: string): string { return value }\nexport function benchUncited(value: string): string { return value }\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/config-schema.ts",
+          "content": "import { z } from 'zod'\nexport const BenchmarkConfigSchema = z.object({ benchLimit: z.number().default(10) })\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/cli.ts",
+          "content": "import { Command } from 'commander'\nconst cli = new Command()\ncli.command('inspect').option('--bench-strict')\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "content": "# Benchmark API\n\nCall `benchCited` with a string.\nSet `benchLimit` to 10 by default.\nRun `ak-bench-fixture inspect --bench-strict`.\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/docs/historical/api.md",
+          "content": "---\nlifecycle: historical\n---\n# Earlier API\n\nUse `benchCited`.\n"
+        }
+      ]
+    },
+    {
+      "id": "chat-fixture-negative-pinned-version",
+      "repository": "chat",
+      "origin": "fixture-backed",
+      "mutations": [
+        {
+          "path": "packages/layer1-benchmark/src/api.ts",
+          "from": "benchCited",
+          "to": "benchmarkbenchCited",
+          "count": 1
+        }
+      ],
+      "scope": {
+        "facts": [],
+        "documents": [
+          "packages/layer1-benchmark/docs/pinned.md"
+        ]
+      },
+      "expected": [],
+      "citations": [
+        {
+          "path": "packages/layer1-benchmark/docs/pinned.md",
+          "token": "benchCited",
+          "lines": [
+            8
+          ]
+        }
+      ],
+      "factCause": "Unsupported/incomplete native extraction or different owner projection; inspect raw coverage. No extractor tuning was performed.",
+      "findingCause": "Raw diff does not route classification or version eligibility; a raw diagnostic here is policy noise at this API boundary.",
+      "setup": [
+        {
+          "path": "packages/layer1-benchmark/package.json",
+          "content": "{\"name\": \"@agentskit/layer1-benchmark-fixture\", \"version\": \"1.0.0\", \"bin\": {\"ak-bench-fixture\": \"src/cli.ts\"}}\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/api.ts",
+          "content": "export function benchCited(value: string): string { return value }\nexport function benchUncited(value: string): string { return value }\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/config-schema.ts",
+          "content": "import { z } from 'zod'\nexport const BenchmarkConfigSchema = z.object({ benchLimit: z.number().default(10) })\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/cli.ts",
+          "content": "import { Command } from 'commander'\nconst cli = new Command()\ncli.command('inspect').option('--bench-strict')\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "content": "# Benchmark API\n\nCall `benchCited` with a string.\nSet `benchLimit` to 10 by default.\nRun `ak-bench-fixture inspect --bench-strict`.\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/docs/pinned.md",
+          "content": "---\ndocbridge:\n  targets:\n    \"pkg:npm/%40agentskit/layer1-benchmark-fixture\": \"0.1.0\"\n---\n# Earlier API\n\nUse `benchCited`.\n"
+        }
+      ]
+    },
+    {
+      "id": "playbook-fixture-symbol-rename",
+      "repository": "playbook",
+      "origin": "fixture-backed",
+      "mutations": [
+        {
+          "path": "packages/layer1-benchmark/src/api.ts",
+          "from": "benchCited",
+          "to": "benchmarkbenchCited",
+          "count": 1
+        }
+      ],
+      "scope": {
+        "facts": [
+          {
+            "kind": "symbol",
+            "names": [
+              "benchCited",
+              "benchmarkbenchCited"
+            ]
+          }
+        ],
+        "documents": [
+          "packages/layer1-benchmark/docs/api.md"
+        ]
+      },
+      "expected": [
+        {
+          "channel": "fact",
+          "kind": "symbol",
+          "op": "removed",
+          "name": "benchCited",
+          "path": "packages/layer1-benchmark/src/api.ts"
+        },
+        {
+          "channel": "fact",
+          "kind": "symbol",
+          "op": "added",
+          "name": "benchmarkbenchCited",
+          "path": "packages/layer1-benchmark/src/api.ts"
+        },
+        {
+          "channel": "finding",
+          "kind": "BROKEN_REFERENCE",
+          "name": "benchCited",
+          "path": "packages/layer1-benchmark/docs/api.md"
+        }
+      ],
+      "citations": [
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "token": "benchCited",
+          "lines": [
+            3
+          ]
+        }
+      ],
+      "factCause": "Unsupported/incomplete native extraction or different owner projection; inspect raw coverage. No extractor tuning was performed.",
+      "findingCause": "Raw diff diagnoses removed/ambiguous references only; changed values/signatures lack divergence diagnostics, or citation ownership/extraction is unresolved. Raw diff does not apply policy exclusions.",
+      "setup": [
+        {
+          "path": "packages/layer1-benchmark/package.json",
+          "content": "{\"name\": \"@agentskit/layer1-benchmark-fixture\", \"version\": \"1.0.0\", \"bin\": {\"ak-bench-fixture\": \"src/cli.ts\"}}\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/api.ts",
+          "content": "export function benchCited(value: string): string { return value }\nexport function benchUncited(value: string): string { return value }\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/config-schema.ts",
+          "content": "import { z } from 'zod'\nexport const BenchmarkConfigSchema = z.object({ benchLimit: z.number().default(10) })\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/cli.ts",
+          "content": "import { Command } from 'commander'\nconst cli = new Command()\ncli.command('inspect').option('--bench-strict')\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "content": "# Benchmark API\n\nCall `benchCited` with a string.\nSet `benchLimit` to 10 by default.\nRun `ak-bench-fixture inspect --bench-strict`.\n"
+        }
+      ]
+    },
+    {
+      "id": "playbook-fixture-uncited-rename",
+      "repository": "playbook",
+      "origin": "fixture-backed",
+      "mutations": [
+        {
+          "path": "packages/layer1-benchmark/src/api.ts",
+          "from": "benchUncited",
+          "to": "benchmarkbenchUncited",
+          "count": 1
+        }
+      ],
+      "scope": {
+        "facts": [
+          {
+            "kind": "symbol",
+            "names": [
+              "benchUncited",
+              "benchmarkbenchUncited"
+            ]
+          }
+        ],
+        "documents": []
+      },
+      "expected": [
+        {
+          "channel": "fact",
+          "kind": "symbol",
+          "op": "removed",
+          "name": "benchUncited",
+          "path": "packages/layer1-benchmark/src/api.ts"
+        },
+        {
+          "channel": "fact",
+          "kind": "symbol",
+          "op": "added",
+          "name": "benchmarkbenchUncited",
+          "path": "packages/layer1-benchmark/src/api.ts"
+        }
+      ],
+      "citations": [],
+      "factCause": "Unsupported/incomplete native extraction or different owner projection; inspect raw coverage. No extractor tuning was performed.",
+      "findingCause": "Raw diff diagnoses removed/ambiguous references only; changed values/signatures lack divergence diagnostics, or citation ownership/extraction is unresolved. Raw diff does not apply policy exclusions.",
+      "setup": [
+        {
+          "path": "packages/layer1-benchmark/package.json",
+          "content": "{\"name\": \"@agentskit/layer1-benchmark-fixture\", \"version\": \"1.0.0\", \"bin\": {\"ak-bench-fixture\": \"src/cli.ts\"}}\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/api.ts",
+          "content": "export function benchCited(value: string): string { return value }\nexport function benchUncited(value: string): string { return value }\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/config-schema.ts",
+          "content": "import { z } from 'zod'\nexport const BenchmarkConfigSchema = z.object({ benchLimit: z.number().default(10) })\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/cli.ts",
+          "content": "import { Command } from 'commander'\nconst cli = new Command()\ncli.command('inspect').option('--bench-strict')\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "content": "# Benchmark API\n\nCall `benchCited` with a string.\nSet `benchLimit` to 10 by default.\nRun `ak-bench-fixture inspect --bench-strict`.\n"
+        }
+      ]
+    },
+    {
+      "id": "playbook-fixture-signature-change",
+      "repository": "playbook",
+      "origin": "fixture-backed",
+      "mutations": [
+        {
+          "path": "packages/layer1-benchmark/src/api.ts",
+          "from": "benchCited(value: string)",
+          "to": "benchCited(value: string, required: boolean)",
+          "count": 1
+        }
+      ],
+      "scope": {
+        "facts": [
+          {
+            "kind": "signature",
+            "names": [
+              "benchCited",
+              "benchmarkbenchCited"
+            ]
+          }
+        ],
+        "documents": [
+          "packages/layer1-benchmark/docs/api.md"
+        ]
+      },
+      "expected": [
+        {
+          "channel": "fact",
+          "kind": "signature",
+          "op": "changed",
+          "name": "benchCited",
+          "path": "packages/layer1-benchmark/src/api.ts"
+        },
+        {
+          "channel": "finding",
+          "kind": "FACT_CHANGE",
+          "name": "benchCited",
+          "path": "packages/layer1-benchmark/docs/api.md"
+        }
+      ],
+      "citations": [
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "token": "benchCited",
+          "lines": [
+            3
+          ]
+        }
+      ],
+      "factCause": "Unsupported/incomplete native extraction or different owner projection; inspect raw coverage. No extractor tuning was performed.",
+      "findingCause": "Raw diff diagnoses removed/ambiguous references only; changed values/signatures lack divergence diagnostics, or citation ownership/extraction is unresolved. Raw diff does not apply policy exclusions.",
+      "setup": [
+        {
+          "path": "packages/layer1-benchmark/package.json",
+          "content": "{\"name\": \"@agentskit/layer1-benchmark-fixture\", \"version\": \"1.0.0\", \"bin\": {\"ak-bench-fixture\": \"src/cli.ts\"}}\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/api.ts",
+          "content": "export function benchCited(value: string): string { return value }\nexport function benchUncited(value: string): string { return value }\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/config-schema.ts",
+          "content": "import { z } from 'zod'\nexport const BenchmarkConfigSchema = z.object({ benchLimit: z.number().default(10) })\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/cli.ts",
+          "content": "import { Command } from 'commander'\nconst cli = new Command()\ncli.command('inspect').option('--bench-strict')\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "content": "# Benchmark API\n\nCall `benchCited` with a string.\nSet `benchLimit` to 10 by default.\nRun `ak-bench-fixture inspect --bench-strict`.\n"
+        }
+      ]
+    },
+    {
+      "id": "playbook-fixture-config-rename",
+      "repository": "playbook",
+      "origin": "fixture-backed",
+      "mutations": [
+        {
+          "path": "packages/layer1-benchmark/src/config-schema.ts",
+          "from": "benchLimit:",
+          "to": "benchmarkbenchLimit:",
+          "count": 1
+        }
+      ],
+      "scope": {
+        "facts": [
+          {
+            "kind": "config-key",
+            "names": [
+              "benchLimit",
+              "benchmarkbenchLimit"
+            ]
+          }
+        ],
+        "documents": [
+          "packages/layer1-benchmark/docs/api.md"
+        ]
+      },
+      "expected": [
+        {
+          "channel": "fact",
+          "kind": "config-key",
+          "op": "removed",
+          "name": "benchLimit",
+          "path": "packages/layer1-benchmark/src/config-schema.ts"
+        },
+        {
+          "channel": "fact",
+          "kind": "config-key",
+          "op": "added",
+          "name": "benchmarkbenchLimit",
+          "path": "packages/layer1-benchmark/src/config-schema.ts"
+        },
+        {
+          "channel": "finding",
+          "kind": "BROKEN_REFERENCE",
+          "name": "benchLimit",
+          "path": "packages/layer1-benchmark/docs/api.md"
+        }
+      ],
+      "citations": [
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "token": "benchLimit",
+          "lines": [
+            4
+          ]
+        }
+      ],
+      "factCause": "Unsupported/incomplete native extraction or different owner projection; inspect raw coverage. No extractor tuning was performed.",
+      "findingCause": "Raw diff diagnoses removed/ambiguous references only; changed values/signatures lack divergence diagnostics, or citation ownership/extraction is unresolved. Raw diff does not apply policy exclusions.",
+      "setup": [
+        {
+          "path": "packages/layer1-benchmark/package.json",
+          "content": "{\"name\": \"@agentskit/layer1-benchmark-fixture\", \"version\": \"1.0.0\", \"bin\": {\"ak-bench-fixture\": \"src/cli.ts\"}}\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/api.ts",
+          "content": "export function benchCited(value: string): string { return value }\nexport function benchUncited(value: string): string { return value }\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/config-schema.ts",
+          "content": "import { z } from 'zod'\nexport const BenchmarkConfigSchema = z.object({ benchLimit: z.number().default(10) })\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/cli.ts",
+          "content": "import { Command } from 'commander'\nconst cli = new Command()\ncli.command('inspect').option('--bench-strict')\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "content": "# Benchmark API\n\nCall `benchCited` with a string.\nSet `benchLimit` to 10 by default.\nRun `ak-bench-fixture inspect --bench-strict`.\n"
+        }
+      ]
+    },
+    {
+      "id": "playbook-fixture-default-change",
+      "repository": "playbook",
+      "origin": "fixture-backed",
+      "mutations": [
+        {
+          "path": "packages/layer1-benchmark/src/config-schema.ts",
+          "from": ".default(10)",
+          "to": ".default(20)",
+          "count": 1
+        }
+      ],
+      "scope": {
+        "facts": [
+          {
+            "kind": "config-key",
+            "names": [
+              "benchLimit",
+              "benchmarkbenchLimit"
+            ]
+          }
+        ],
+        "documents": [
+          "packages/layer1-benchmark/docs/api.md"
+        ]
+      },
+      "expected": [
+        {
+          "channel": "fact",
+          "kind": "config-key",
+          "op": "changed",
+          "name": "benchLimit",
+          "path": "packages/layer1-benchmark/src/config-schema.ts"
+        },
+        {
+          "channel": "finding",
+          "kind": "FACT_CHANGE",
+          "name": "benchLimit",
+          "path": "packages/layer1-benchmark/docs/api.md"
+        }
+      ],
+      "citations": [
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "token": "benchLimit",
+          "lines": [
+            4
+          ]
+        }
+      ],
+      "factCause": "Unsupported/incomplete native extraction or different owner projection; inspect raw coverage. No extractor tuning was performed.",
+      "findingCause": "Raw diff diagnoses removed/ambiguous references only; changed values/signatures lack divergence diagnostics, or citation ownership/extraction is unresolved. Raw diff does not apply policy exclusions.",
+      "setup": [
+        {
+          "path": "packages/layer1-benchmark/package.json",
+          "content": "{\"name\": \"@agentskit/layer1-benchmark-fixture\", \"version\": \"1.0.0\", \"bin\": {\"ak-bench-fixture\": \"src/cli.ts\"}}\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/api.ts",
+          "content": "export function benchCited(value: string): string { return value }\nexport function benchUncited(value: string): string { return value }\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/config-schema.ts",
+          "content": "import { z } from 'zod'\nexport const BenchmarkConfigSchema = z.object({ benchLimit: z.number().default(10) })\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/cli.ts",
+          "content": "import { Command } from 'commander'\nconst cli = new Command()\ncli.command('inspect').option('--bench-strict')\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "content": "# Benchmark API\n\nCall `benchCited` with a string.\nSet `benchLimit` to 10 by default.\nRun `ak-bench-fixture inspect --bench-strict`.\n"
+        }
+      ]
+    },
+    {
+      "id": "playbook-fixture-flag-rename",
+      "repository": "playbook",
+      "origin": "fixture-backed",
+      "mutations": [
+        {
+          "path": "packages/layer1-benchmark/src/cli.ts",
+          "from": "--bench-strict",
+          "to": "--benchmarkbench-strict",
+          "count": 1
+        }
+      ],
+      "scope": {
+        "facts": [
+          {
+            "kind": "cli-flag",
+            "names": [
+              "--bench-strict",
+              "--benchmarkbench-strict"
+            ]
+          }
+        ],
+        "documents": [
+          "packages/layer1-benchmark/docs/api.md"
+        ]
+      },
+      "expected": [
+        {
+          "channel": "fact",
+          "kind": "cli-flag",
+          "op": "removed",
+          "name": "--bench-strict",
+          "path": "packages/layer1-benchmark/src/cli.ts"
+        },
+        {
+          "channel": "fact",
+          "kind": "cli-flag",
+          "op": "added",
+          "name": "--benchmarkbench-strict",
+          "path": "packages/layer1-benchmark/src/cli.ts"
+        },
+        {
+          "channel": "finding",
+          "kind": "BROKEN_REFERENCE",
+          "name": "--bench-strict",
+          "path": "packages/layer1-benchmark/docs/api.md"
+        }
+      ],
+      "citations": [
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "token": "--bench-strict",
+          "lines": [
+            5
+          ]
+        }
+      ],
+      "factCause": "Unsupported/incomplete native extraction or different owner projection; inspect raw coverage. No extractor tuning was performed.",
+      "findingCause": "Raw diff diagnoses removed/ambiguous references only; changed values/signatures lack divergence diagnostics, or citation ownership/extraction is unresolved. Raw diff does not apply policy exclusions.",
+      "setup": [
+        {
+          "path": "packages/layer1-benchmark/package.json",
+          "content": "{\"name\": \"@agentskit/layer1-benchmark-fixture\", \"version\": \"1.0.0\", \"bin\": {\"ak-bench-fixture\": \"src/cli.ts\"}}\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/api.ts",
+          "content": "export function benchCited(value: string): string { return value }\nexport function benchUncited(value: string): string { return value }\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/config-schema.ts",
+          "content": "import { z } from 'zod'\nexport const BenchmarkConfigSchema = z.object({ benchLimit: z.number().default(10) })\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/cli.ts",
+          "content": "import { Command } from 'commander'\nconst cli = new Command()\ncli.command('inspect').option('--bench-strict')\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "content": "# Benchmark API\n\nCall `benchCited` with a string.\nSet `benchLimit` to 10 by default.\nRun `ak-bench-fixture inspect --bench-strict`.\n"
+        }
+      ]
+    },
+    {
+      "id": "playbook-fixture-command-rename",
+      "repository": "playbook",
+      "origin": "fixture-backed",
+      "mutations": [
+        {
+          "path": "packages/layer1-benchmark/src/cli.ts",
+          "from": "'inspect'",
+          "to": "'benchmark-inspect'",
+          "count": 1
+        }
+      ],
+      "scope": {
+        "facts": [
+          {
+            "kind": "cli-command",
+            "names": [
+              "ak-bench-fixture inspect",
+              "ak-bench-fixture benchmark-inspect"
+            ]
+          }
+        ],
+        "documents": [
+          "packages/layer1-benchmark/docs/api.md"
+        ]
+      },
+      "expected": [
+        {
+          "channel": "fact",
+          "kind": "cli-command",
+          "op": "removed",
+          "name": "ak-bench-fixture inspect",
+          "path": "packages/layer1-benchmark/src/cli.ts"
+        },
+        {
+          "channel": "fact",
+          "kind": "cli-command",
+          "op": "added",
+          "name": "ak-bench-fixture benchmark-inspect",
+          "path": "packages/layer1-benchmark/src/cli.ts"
+        },
+        {
+          "channel": "finding",
+          "kind": "BROKEN_REFERENCE",
+          "name": "ak-bench-fixture inspect",
+          "path": "packages/layer1-benchmark/docs/api.md"
+        }
+      ],
+      "citations": [
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "token": "ak-bench-fixture inspect",
+          "lines": [
+            5
+          ]
+        }
+      ],
+      "factCause": "Unsupported/incomplete native extraction or different owner projection; inspect raw coverage. No extractor tuning was performed.",
+      "findingCause": "Raw diff diagnoses removed/ambiguous references only; changed values/signatures lack divergence diagnostics, or citation ownership/extraction is unresolved. Raw diff does not apply policy exclusions.",
+      "setup": [
+        {
+          "path": "packages/layer1-benchmark/package.json",
+          "content": "{\"name\": \"@agentskit/layer1-benchmark-fixture\", \"version\": \"1.0.0\", \"bin\": {\"ak-bench-fixture\": \"src/cli.ts\"}}\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/api.ts",
+          "content": "export function benchCited(value: string): string { return value }\nexport function benchUncited(value: string): string { return value }\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/config-schema.ts",
+          "content": "import { z } from 'zod'\nexport const BenchmarkConfigSchema = z.object({ benchLimit: z.number().default(10) })\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/cli.ts",
+          "content": "import { Command } from 'commander'\nconst cli = new Command()\ncli.command('inspect').option('--bench-strict')\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "content": "# Benchmark API\n\nCall `benchCited` with a string.\nSet `benchLimit` to 10 by default.\nRun `ak-bench-fixture inspect --bench-strict`.\n"
+        }
+      ]
+    },
+    {
+      "id": "playbook-fixture-internal-refactor",
+      "repository": "playbook",
+      "origin": "fixture-backed",
+      "mutations": [
+        {
+          "path": "packages/layer1-benchmark/src/api.ts",
+          "from": "return value",
+          "to": "return (value)",
+          "count": 2
+        }
+      ],
+      "scope": {
+        "facts": [
+          {
+            "kind": "signature",
+            "names": [
+              "benchCited",
+              "benchmarkbenchCited"
+            ]
+          }
+        ],
+        "documents": [
+          "packages/layer1-benchmark/docs/api.md"
+        ]
+      },
+      "expected": [],
+      "citations": [
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "token": "benchCited",
+          "lines": [
+            3
+          ]
+        }
+      ],
+      "factCause": "Unsupported/incomplete native extraction or different owner projection; inspect raw coverage. No extractor tuning was performed.",
+      "findingCause": "Raw diff diagnoses removed/ambiguous references only; changed values/signatures lack divergence diagnostics, or citation ownership/extraction is unresolved. Raw diff does not apply policy exclusions.",
+      "setup": [
+        {
+          "path": "packages/layer1-benchmark/package.json",
+          "content": "{\"name\": \"@agentskit/layer1-benchmark-fixture\", \"version\": \"1.0.0\", \"bin\": {\"ak-bench-fixture\": \"src/cli.ts\"}}\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/api.ts",
+          "content": "export function benchCited(value: string): string { return value }\nexport function benchUncited(value: string): string { return value }\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/config-schema.ts",
+          "content": "import { z } from 'zod'\nexport const BenchmarkConfigSchema = z.object({ benchLimit: z.number().default(10) })\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/cli.ts",
+          "content": "import { Command } from 'commander'\nconst cli = new Command()\ncli.command('inspect').option('--bench-strict')\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "content": "# Benchmark API\n\nCall `benchCited` with a string.\nSet `benchLimit` to 10 by default.\nRun `ak-bench-fixture inspect --bench-strict`.\n"
+        }
+      ]
+    },
+    {
+      "id": "playbook-fixture-ambiguous",
+      "repository": "playbook",
+      "origin": "fixture-backed",
+      "mutations": [
+        {
+          "path": "packages/layer1-benchmark/src/other.ts",
+          "content": "export function benchCited(value: string): string { return value }\n"
+        }
+      ],
+      "scope": {
+        "facts": [
+          {
+            "kind": "symbol",
+            "names": [
+              "benchCited",
+              "benchmarkbenchCited"
+            ]
+          }
+        ],
+        "documents": [
+          "packages/layer1-benchmark/docs/api.md"
+        ]
+      },
+      "expected": [
+        {
+          "channel": "fact",
+          "kind": "symbol",
+          "op": "added",
+          "name": "benchCited",
+          "path": "packages/layer1-benchmark/src/other.ts"
+        },
+        {
+          "channel": "finding",
+          "kind": "AMBIGUOUS_REFERENCE",
+          "name": "benchCited",
+          "path": "packages/layer1-benchmark/docs/api.md"
+        }
+      ],
+      "citations": [
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "token": "benchCited",
+          "lines": [
+            3
+          ]
+        }
+      ],
+      "factCause": "Unsupported/incomplete native extraction or different owner projection; inspect raw coverage. No extractor tuning was performed.",
+      "findingCause": "Raw diff diagnoses removed/ambiguous references only; changed values/signatures lack divergence diagnostics, or citation ownership/extraction is unresolved. Raw diff does not apply policy exclusions.",
+      "setup": [
+        {
+          "path": "packages/layer1-benchmark/package.json",
+          "content": "{\"name\": \"@agentskit/layer1-benchmark-fixture\", \"version\": \"1.0.0\", \"bin\": {\"ak-bench-fixture\": \"src/cli.ts\"}}\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/api.ts",
+          "content": "export function benchCited(value: string): string { return value }\nexport function benchUncited(value: string): string { return value }\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/config-schema.ts",
+          "content": "import { z } from 'zod'\nexport const BenchmarkConfigSchema = z.object({ benchLimit: z.number().default(10) })\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/cli.ts",
+          "content": "import { Command } from 'commander'\nconst cli = new Command()\ncli.command('inspect').option('--bench-strict')\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "content": "# Benchmark API\n\nCall `benchCited` with a string.\nSet `benchLimit` to 10 by default.\nRun `ak-bench-fixture inspect --bench-strict`.\n"
+        }
+      ]
+    },
+    {
+      "id": "playbook-fixture-negative-adr",
+      "repository": "playbook",
+      "origin": "fixture-backed",
+      "mutations": [
+        {
+          "path": "packages/layer1-benchmark/src/api.ts",
+          "from": "benchCited",
+          "to": "benchmarkbenchCited",
+          "count": 1
+        }
+      ],
+      "scope": {
+        "facts": [],
+        "documents": [
+          "packages/layer1-benchmark/docs/adr/0001-api.md"
+        ]
+      },
+      "expected": [],
+      "citations": [
+        {
+          "path": "packages/layer1-benchmark/docs/adr/0001-api.md",
+          "token": "benchCited",
+          "lines": [
+            3
+          ]
+        }
+      ],
+      "factCause": "Unsupported/incomplete native extraction or different owner projection; inspect raw coverage. No extractor tuning was performed.",
+      "findingCause": "Raw diff does not route classification or version eligibility; a raw diagnostic here is policy noise at this API boundary.",
+      "setup": [
+        {
+          "path": "packages/layer1-benchmark/package.json",
+          "content": "{\"name\": \"@agentskit/layer1-benchmark-fixture\", \"version\": \"1.0.0\", \"bin\": {\"ak-bench-fixture\": \"src/cli.ts\"}}\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/api.ts",
+          "content": "export function benchCited(value: string): string { return value }\nexport function benchUncited(value: string): string { return value }\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/config-schema.ts",
+          "content": "import { z } from 'zod'\nexport const BenchmarkConfigSchema = z.object({ benchLimit: z.number().default(10) })\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/cli.ts",
+          "content": "import { Command } from 'commander'\nconst cli = new Command()\ncli.command('inspect').option('--bench-strict')\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "content": "# Benchmark API\n\nCall `benchCited` with a string.\nSet `benchLimit` to 10 by default.\nRun `ak-bench-fixture inspect --bench-strict`.\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/docs/adr/0001-api.md",
+          "content": "# Earlier API\n\nUse `benchCited`.\n"
+        }
+      ]
+    },
+    {
+      "id": "playbook-fixture-negative-changelog",
+      "repository": "playbook",
+      "origin": "fixture-backed",
+      "mutations": [
+        {
+          "path": "packages/layer1-benchmark/src/api.ts",
+          "from": "benchCited",
+          "to": "benchmarkbenchCited",
+          "count": 1
+        }
+      ],
+      "scope": {
+        "facts": [],
+        "documents": [
+          "packages/layer1-benchmark/CHANGELOG.md"
+        ]
+      },
+      "expected": [],
+      "citations": [
+        {
+          "path": "packages/layer1-benchmark/CHANGELOG.md",
+          "token": "benchCited",
+          "lines": [
+            3
+          ]
+        }
+      ],
+      "factCause": "Unsupported/incomplete native extraction or different owner projection; inspect raw coverage. No extractor tuning was performed.",
+      "findingCause": "Raw diff does not route classification or version eligibility; a raw diagnostic here is policy noise at this API boundary.",
+      "setup": [
+        {
+          "path": "packages/layer1-benchmark/package.json",
+          "content": "{\"name\": \"@agentskit/layer1-benchmark-fixture\", \"version\": \"1.0.0\", \"bin\": {\"ak-bench-fixture\": \"src/cli.ts\"}}\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/api.ts",
+          "content": "export function benchCited(value: string): string { return value }\nexport function benchUncited(value: string): string { return value }\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/config-schema.ts",
+          "content": "import { z } from 'zod'\nexport const BenchmarkConfigSchema = z.object({ benchLimit: z.number().default(10) })\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/cli.ts",
+          "content": "import { Command } from 'commander'\nconst cli = new Command()\ncli.command('inspect').option('--bench-strict')\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "content": "# Benchmark API\n\nCall `benchCited` with a string.\nSet `benchLimit` to 10 by default.\nRun `ak-bench-fixture inspect --bench-strict`.\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/CHANGELOG.md",
+          "content": "# Earlier API\n\nUse `benchCited`.\n"
+        }
+      ]
+    },
+    {
+      "id": "playbook-fixture-negative-historical",
+      "repository": "playbook",
+      "origin": "fixture-backed",
+      "mutations": [
+        {
+          "path": "packages/layer1-benchmark/src/api.ts",
+          "from": "benchCited",
+          "to": "benchmarkbenchCited",
+          "count": 1
+        }
+      ],
+      "scope": {
+        "facts": [],
+        "documents": [
+          "packages/layer1-benchmark/docs/historical/api.md"
+        ]
+      },
+      "expected": [],
+      "citations": [
+        {
+          "path": "packages/layer1-benchmark/docs/historical/api.md",
+          "token": "benchCited",
+          "lines": [
+            6
+          ]
+        }
+      ],
+      "factCause": "Unsupported/incomplete native extraction or different owner projection; inspect raw coverage. No extractor tuning was performed.",
+      "findingCause": "Raw diff does not route classification or version eligibility; a raw diagnostic here is policy noise at this API boundary.",
+      "setup": [
+        {
+          "path": "packages/layer1-benchmark/package.json",
+          "content": "{\"name\": \"@agentskit/layer1-benchmark-fixture\", \"version\": \"1.0.0\", \"bin\": {\"ak-bench-fixture\": \"src/cli.ts\"}}\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/api.ts",
+          "content": "export function benchCited(value: string): string { return value }\nexport function benchUncited(value: string): string { return value }\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/config-schema.ts",
+          "content": "import { z } from 'zod'\nexport const BenchmarkConfigSchema = z.object({ benchLimit: z.number().default(10) })\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/cli.ts",
+          "content": "import { Command } from 'commander'\nconst cli = new Command()\ncli.command('inspect').option('--bench-strict')\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "content": "# Benchmark API\n\nCall `benchCited` with a string.\nSet `benchLimit` to 10 by default.\nRun `ak-bench-fixture inspect --bench-strict`.\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/docs/historical/api.md",
+          "content": "---\nlifecycle: historical\n---\n# Earlier API\n\nUse `benchCited`.\n"
+        }
+      ]
+    },
+    {
+      "id": "playbook-fixture-negative-pinned-version",
+      "repository": "playbook",
+      "origin": "fixture-backed",
+      "mutations": [
+        {
+          "path": "packages/layer1-benchmark/src/api.ts",
+          "from": "benchCited",
+          "to": "benchmarkbenchCited",
+          "count": 1
+        }
+      ],
+      "scope": {
+        "facts": [],
+        "documents": [
+          "packages/layer1-benchmark/docs/pinned.md"
+        ]
+      },
+      "expected": [],
+      "citations": [
+        {
+          "path": "packages/layer1-benchmark/docs/pinned.md",
+          "token": "benchCited",
+          "lines": [
+            8
+          ]
+        }
+      ],
+      "factCause": "Unsupported/incomplete native extraction or different owner projection; inspect raw coverage. No extractor tuning was performed.",
+      "findingCause": "Raw diff does not route classification or version eligibility; a raw diagnostic here is policy noise at this API boundary.",
+      "setup": [
+        {
+          "path": "packages/layer1-benchmark/package.json",
+          "content": "{\"name\": \"@agentskit/layer1-benchmark-fixture\", \"version\": \"1.0.0\", \"bin\": {\"ak-bench-fixture\": \"src/cli.ts\"}}\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/api.ts",
+          "content": "export function benchCited(value: string): string { return value }\nexport function benchUncited(value: string): string { return value }\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/config-schema.ts",
+          "content": "import { z } from 'zod'\nexport const BenchmarkConfigSchema = z.object({ benchLimit: z.number().default(10) })\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/cli.ts",
+          "content": "import { Command } from 'commander'\nconst cli = new Command()\ncli.command('inspect').option('--bench-strict')\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "content": "# Benchmark API\n\nCall `benchCited` with a string.\nSet `benchLimit` to 10 by default.\nRun `ak-bench-fixture inspect --bench-strict`.\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/docs/pinned.md",
+          "content": "---\ndocbridge:\n  targets:\n    \"pkg:npm/%40agentskit/layer1-benchmark-fixture\": \"0.1.0\"\n---\n# Earlier API\n\nUse `benchCited`.\n"
+        }
+      ]
+    }
+  ]
+}
