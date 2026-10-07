@@ -13,6 +13,8 @@ Core (no API key):
   ak-docs demo [--fixture example|monorepo] [--text] [--in-project]
   ak-docs doctor [--text] [--badge] [--write-badge]
   ak-docs index [--watch]
+  ak-docs action index|snapshot --revision <sha> --root <checkout> --output <outside-artifact>
+  ak-docs diff --advisory --base <snapshot> --head <snapshot> --root <checkout> --repository <owner/repo> --pr <number> --output <artifact>
   ak-docs discover [--text|--json]
   ak-docs diff --base <snapshot.json> [--head <snapshot.json>] [--root <dir>] [--output <file>] [--json]   verify frozen local head bytes
   ak-docs benchmark <fixture.json> <observation.json> [--text|--json]

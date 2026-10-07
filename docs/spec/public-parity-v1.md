@@ -117,3 +117,14 @@ contains a secret-shaped string and a four-hundred-character line.
   and nothing in the report is a timestamp.
 - `missingSurfaces` names a surface the registry addresses that the checkout does not contain, so a
   claim cannot pass by pointing at nothing.
+
+## Action evidence boundary
+
+Action source-mode, exact-revision, blocking-gate and advisory delivery reports are
+separate evidence. A fresh CI-built artifact cannot prove a committed index fresh,
+and successful comment delivery cannot clear blocking gates or establish semantic
+documentation correctness. `check:marketplace` and local fixture tests support the
+Action contract, while real PR/token/fork/concurrency flows remain required before
+claiming live Action acceptance. The [Marketplace verification matrix](../MARKETPLACE.md#verification-boundary)
+lists those currently unverified flows. Advisory policy/version routing is explicitly
+not analyzed, and no handoff/index schema compatibility claim changes.

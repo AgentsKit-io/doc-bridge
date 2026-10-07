@@ -223,3 +223,44 @@ capability defaults to the legacy field set. Default index and MCP writers never
 caveats. New strict readers accept legacy payloads; old strict readers receive legacy
 output. The public reader preserves negotiated caveats. Limitations cannot establish
 semantic validation or invent an answer.
+
+## Action analysis commands
+
+These deterministic commands support the Action contract in
+[Marketplace](../MARKETPLACE.md). They add no fields to `DocBridgeIndexV1` or
+`AgentHandoffV1`.
+
+```bash
+ak-docs action index --root <checkout> --revision <exact-sha> --index-source committed --report <outside-json>
+ak-docs action index --root <checkout> --revision <exact-sha> --index-source ci-built --output <outside-index-json> --report <outside-json>
+ak-docs action snapshot --root <checkout> --revision <exact-sha> --output <outside-snapshot-json>
+ak-docs diff --advisory --base <snapshot-json> --head <snapshot-json> --root <head-checkout> --repository <owner/repo> --pr <number> --index-source committed --output <outside-advisory-json>
+```
+
+All commands require clean exact-revision checkouts and accept a caller-selected
+`--config <path>`. Ref names, dirty captures, escaped service configuration paths
+and in-checkout artifact destinations are rejected. `action index` runs existing
+static-config gates; `--gate <id>` selects a blocking gate. In `ci-built` mode it
+checks any existing committed drift before an in-memory build, writes and reloads
+an isolated artifact, compares a repeated hash and writes a provenance sidecar.
+Drift blocks only under the configured freshness policy and remains visible under
+other policies. Missing committed indexes are permitted only in explicit CI-built
+mode. The repeated artifact hash check does not prove semantic correctness.
+
+`action snapshot` applies the service capability ceiling, captures bounded reads
+and binds the snapshot's source revision to the declared Git hash. It never executes
+repository-selected modules, scripts, agents, providers or hooks. `diff --advisory`
+uses the same ChangeSet/reference engine as `diff`, with bounded service head reads.
+It writes a bounded binding envelope, adjacent Markdown (`.md`) and full diff
+(`.diff.json`). The envelope binds repository, PR, exact base/head hashes and source
+mode, with a stable hidden marker. Escaped Markdown lists deterministic broken and
+ambiguous references, evidence/status and incomplete coverage. Historical/generated
+findings remain visible; policy routing and version exclusions are not analyzed by
+this command. Nothing proposes edits or approves findings.
+
+`--summary <file>` appends that same advisory Markdown to a caller-provided summary.
+`--fail-on-findings` returns 1 for reference findings; otherwise findings return 0.
+Invalid inputs, unavailable reads or invalid artifacts return 2. Action-level
+analysis unavailability is separately reported with an explanation and does not
+change blocking results; publisher errors also fall back without changing gates.
+The publisher is separate from the CLI and does not execute the source checkout.

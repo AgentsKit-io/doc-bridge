@@ -1,5 +1,6 @@
 import { executionContext } from '../execution/profile.js'
 import { runServiceCli } from './service.js'
+import { runActionCli, runAdvisoryDiff } from './action.js'
 import { closeSync, existsSync, mkdirSync, openSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs'
 import { dirname, relative, resolve } from 'node:path'
 import { createInterface } from 'node:readline/promises'
@@ -1533,6 +1534,8 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
     argv = argv.filter((_, index) => index !== profileIndex && index !== profileIndex + 1)
   }
   if (executionContext().profile === 'service') return runServiceCli(argv)
+  if (argv[0] === 'action') return runActionCli(argv.slice(1))
+  if (argv[0] === 'diff' && argv.includes('--advisory')) return runAdvisoryDiff(argv.slice(1))
   const { command, flags, configPath, positional } = parseArgs(argv)
 
   if (command === 'help') {
