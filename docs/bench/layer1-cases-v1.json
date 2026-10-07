@@ -68,7 +68,7 @@
       }
     ]
   },
-  "limits": "Native numbers are the headline; fixture-backed results never mix into native numbers. Frozen scopes select fact kinds/tokens and affected doc files; other findings within those doc files are FP. FACT_CHANGE is a benchmark expectation for diagnosed stale values/signatures, not an engine diagnostic contract. Fact extraction and reference findings have separate denominators. Small purposive cases are not a random sample or release-readiness claim. Historical recall is not analyzed: no confirmed delayed-doc cases within the bounded search. No upstream code is executed or installed. Authored fixtures exist only in temporary checkouts. Plain command/token citations are matched by file/token; distinct lines in one file count once.",
+  "limits": "Native numbers are the headline; fixture-backed results never mix into native numbers. Frozen scopes select fact kinds/tokens and affected doc files; other findings within those doc files are FP. CHANGED_REFERENCE replaces the frozen placeholder FACT_CHANGE to match the shipped stale-or-unverified review-candidate contract; expected tokens and locations are unchanged. Fact extraction and reference findings have separate denominators. Small purposive cases are not a random sample or release-readiness claim. Historical recall is not analyzed: no confirmed delayed-doc cases within the bounded search. No upstream code is executed or installed. Authored fixtures exist only in temporary checkouts. Plain command/token citations are matched by file/token; distinct lines in one file count once.",
   "cases": [
     {
       "id": "doc-bridge-symbol-rename",
@@ -190,13 +190,13 @@
         },
         {
           "channel": "finding",
-          "kind": "FACT_CHANGE",
+          "kind": "CHANGED_REFERENCE",
           "name": "defineConfig",
           "path": "docs/spec/config-v1.md"
         },
         {
           "channel": "finding",
-          "kind": "FACT_CHANGE",
+          "kind": "CHANGED_REFERENCE",
           "name": "defineConfig",
           "path": "docs/spec/cli.md"
         }
@@ -456,7 +456,7 @@
         },
         {
           "channel": "finding",
-          "kind": "FACT_CHANGE",
+          "kind": "CHANGED_REFERENCE",
           "name": "surfaces.cli.bin",
           "path": "docs/spec/config-v1.md"
         }
@@ -624,7 +624,7 @@
         },
         {
           "channel": "finding",
-          "kind": "FACT_CHANGE",
+          "kind": "CHANGED_REFERENCE",
           "name": "createAssistantContentEncoder",
           "path": "docs/protocol/v1.md"
         }
@@ -1092,7 +1092,7 @@
         },
         {
           "channel": "finding",
-          "kind": "FACT_CHANGE",
+          "kind": "CHANGED_REFERENCE",
           "name": "benchCited",
           "path": "packages/layer1-benchmark/docs/api.md"
         }
@@ -1249,7 +1249,7 @@
         },
         {
           "channel": "finding",
-          "kind": "FACT_CHANGE",
+          "kind": "CHANGED_REFERENCE",
           "name": "benchLimit",
           "path": "packages/layer1-benchmark/docs/api.md"
         }
@@ -1998,7 +1998,7 @@
         },
         {
           "channel": "finding",
-          "kind": "FACT_CHANGE",
+          "kind": "CHANGED_REFERENCE",
           "name": "benchCited",
           "path": "packages/layer1-benchmark/docs/api.md"
         }
@@ -2155,7 +2155,7 @@
         },
         {
           "channel": "finding",
-          "kind": "FACT_CHANGE",
+          "kind": "CHANGED_REFERENCE",
           "name": "benchLimit",
           "path": "packages/layer1-benchmark/docs/api.md"
         }
@@ -2904,7 +2904,7 @@
         },
         {
           "channel": "finding",
-          "kind": "FACT_CHANGE",
+          "kind": "CHANGED_REFERENCE",
           "name": "benchCited",
           "path": "packages/layer1-benchmark/docs/api.md"
         }
@@ -3061,7 +3061,7 @@
         },
         {
           "channel": "finding",
-          "kind": "FACT_CHANGE",
+          "kind": "CHANGED_REFERENCE",
           "name": "benchLimit",
           "path": "packages/layer1-benchmark/docs/api.md"
         }

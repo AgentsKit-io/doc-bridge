@@ -7,6 +7,7 @@
 - Resolve unique configuration example leaves only with schema-owner context, and include statically linked operational defaults in configuration value hashes.
 
 - Preserve declaring-owner resolution through re-exports during historical citation checks, and normalize known-bin and indexed-package runner invocations with command-scoped flag citations.
+- Refresh the deterministic Layer-1 benchmark for default policy routing, changed-reference vocabulary and exact pinned corpus acquisition, publishing raw scores separately.
 
 - Parse fenced JS/TS citations by syntax and restrict configuration fences to dotted config facts, excluding export collisions in keys, strings, comments and member properties.
 

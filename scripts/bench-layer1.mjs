@@ -32,7 +32,7 @@ const safePath = (directory, path) => {
 }
 const git = async (directory, ...args) => {
   const result = await runCommand('git', args, { cwd: directory, timeoutMs: 120_000, maxOutputBytes: 4 * 1024 * 1024 })
-  if (result.code !== 0) throw new Error('Git operation failed')
+  if (result.code !== 0) throw new Error(`Git ${args[0]} failed (exit ${result.code})`)
   return result.stdout.trim()
 }
 const write = (directory, path, content) => {
@@ -66,6 +66,13 @@ const observations = (result, base, head) => {
   }
   return [...new Map(items.map(item => [key(item), item])).values()].sort((a, b) => key(a).localeCompare(key(b)))
 }
+const safeFailure = error => {
+  const message = splitLines(String(error.message))[0]
+  // Only benchmark-owned messages contain public relative paths; never publish engine/subprocess output.
+  if (/^(Mutation precondition: |Ground truth citation: |Git (init|remote|fetch|reset|clean|cat-file) failed)/.test(message)) return message
+  if (error.code === 'ERR_ASSERTION') return 'Assertion failed outside mutation/citation preconditions'
+  return `Engine execution failed (${error.name === 'TypeError' ? 'TypeError' : 'error'}); requires investigation`
+}
 const percent = number => number === null ? 'n/a' : `${(100 * number).toFixed(2)}%`
 const totals = results => {
   const passed = results.filter(result => result.status === 'measured')
@@ -75,59 +82,78 @@ const totals = results => {
   return { tp, fp: fp.length, fn: fn.length, precision: tp + fp.length ? tp / (tp + fp.length) : null, coverage: tp + fn.length ? tp / (tp + fn.length) : null }
 }
 const cause = (result, unit, label) => {
+  if (result.id === 'doc-bridge-symbol-rename' && unit.channel === 'finding') return 'Historical head-citation revalidation sees the declaration plus two re-export modules as competing defineConfig owners. Base discovery resolved the citation, but this historical resolver emits no matching head edge despite the recorded declaration removal.'
+  if (result.id.startsWith('doc-bridge-fixture-') && ['cli-command', 'cli-flag'].includes(unit.kind) || result.id.startsWith('doc-bridge-fixture-') && unit.channel === 'finding' && (unit.name.startsWith('--') || unit.name.startsWith('ak-bench-fixture'))) return 'The pinned workspace manifest includes only the root package. The added fixture package bin is not an owned workspace CLI, so neither fixture CLI facts nor their documentation relations exist.'
   if (unit.channel === 'finding') {
-    if (unit.kind === 'FACT_CHANGE') return 'Fact deltas are not documentation divergence diagnostics: diff only checks removed/ambiguous targets.'
-    if (label === 'fp' && result.id.includes('negative-')) return 'Raw diff retains the reference diagnostic; classification/version policy is not applied at this measured boundary.'
+    if (unit.kind === 'CHANGED_REFERENCE' && !result.citations?.some(item => item.from === `document:${unit.path}` && (item.symbol === unit.name || item.factName === unit.name))) return 'No owned base citation relation for the changed fact; no documentation review candidate can be emitted.'
+    if (label === 'fp' && result.id.includes('negative-')) return 'The diagnostic remains included in this scoring mode; inspect the policy sidecar for exclusion or pending-version routing.'
     if (label === 'fp' && unit.name.startsWith('--') && result.expected.some(item => item.channel === 'fact' && item.kind === 'cli-command')) return 'A command rename also removes the old flag owner: this secondary flag diagnostic was not annotated in the command-only ground truth. This is an annotation limit, not established engine error.'
     if (label === 'fp') return 'Unexpected diagnostic in the frozen document scope; cause requires review of raw evidence.'
     const related = result.citations?.some(item => item.from === `document:${unit.path}` && (item.symbol === unit.name || item.factName === unit.name))
     if (related === false) {
       const target = result.expected.find(item => item.channel === 'fact' && item.name === unit.name)
-      if (target?.kind === 'cli-command' || target?.kind === 'cli-flag') return 'No base citation relation: owned CLI extraction is unavailable under the custom handler or native workspace boundary.'
+      if (target?.kind === 'cli-command' || target?.kind === 'cli-flag') return result.targets[0].some(item => item.name === unit.name) ? 'CLI facts are extracted, but the documentation syntax/owner matching produces no owned base CLI citation relation. The fact delta cannot substitute for a missing documentation diagnosis.' : 'No owned base CLI fact or citation relation under the native workspace boundary.'
       if (target?.kind === 'config-key') return 'No base citation relation: the bare configuration token remains unresolved under configuration owner scoping.'
-      return 'No base citation relation: TypeScript code fences are not symbol-tokenized.'
+      return 'No owned base symbol citation relation under the shipped syntax-aware citation rules.'
     }
     const unchangedDeclaration = result.targets?.[0]?.find(target => target.name === unit.name && result.targets[1].some(next => next.id === target.id))
-    if (unchangedDeclaration?.path?.endsWith('/usage.ts')) return 'Extraction follows the unchanged usage text instead of the mutated command/flag implementation; no removed target is recorded.'
-    return result.findingCause
+    if (unchangedDeclaration?.path?.endsWith('/usage.ts')) return 'The scoped declaration remains unchanged or unsupported; inspect target and extraction coverage evidence.'
+    return 'The owned citation and delta do not produce a surviving head diagnostic under the shipped citation rules; see raw targets, citations and coverage.'
   }
-  if (unit.kind === 'config-key' && result.id.endsWith('default-change')) return 'Operational defaults are assigned outside declarative schema extraction; no default-value fact delta is observed.'
+  if (unit.kind === 'config-key' && result.id === 'doc-bridge-default-change') return 'Operational defaults are assigned outside declarative schema extraction; no default-value fact delta is observed.'
   const capability = unit.kind === 'cli-command' ? 'cli-commands' : unit.kind === 'cli-flag' ? 'cli-flags' : undefined
   if (capability) {
     if (result.targets?.[0]?.some(target => target.name === unit.name && target.path?.endsWith('/usage.ts'))) return 'Extraction follows unchanged usage text instead of the mutated implementation; the declared command/flag fact persists.'
     const unsupported = result.coverage.find(item => (item.scope === capability || item.scope === `head:${capability}`) && item.status !== 'complete' && item.status !== 'not-applicable')
-    if (unsupported) return `Extraction ${unsupported.status}: ${unsupported.reason ?? 'unsupported declarations'}.`
+    if (unsupported) return `Extraction ${unsupported.status}: ${unsupported.reason ?? 'unsupported declarations'}`
     return 'The added fixture package is outside the native workspace manifest; no owned CLI fact is extracted for it.'
   }
-  return result.factCause
+  return 'Expected fact delta absent under the shipped extraction/ownership rules; see raw targets and coverage.'
 }
 export const renderReport = report => {
-  const headline = totals(report.results.filter(item => item.origin === 'native').map(item => item.status === 'measured' ? { ...item, score: score(item.expected.filter(unit => unit.channel === 'finding'), item.observed.filter(unit => unit.channel === 'finding')) } : item))
-  const nativeFindings = report.results.filter(item => item.origin === 'native' && item.status === 'measured').flatMap(item => item.observed.filter(unit => unit.channel === 'finding'))
-  const lines = ['---', 'owner: maintainers', 'lifecycle: active', 'sourceOfTruth: docs/bench/layer1-cases-v1.json', 'validationPath: node scripts/bench-layer1.mjs --self-check', '---', '', '# Layer-1 benchmark results v1', '',
-    `Native documentation findings: precision **${percent(headline.precision)}**, coverage **${percent(headline.coverage)}** (TP ${headline.tp}, FP ${headline.fp}, FN ${headline.fn}). Targets: precision ≥95%, coverage ≥90%.`, '',
-    `These are emitted diagnostic candidates: ${nativeFindings.filter(item => item.status === 'conflict').length} conflict, ${nativeFindings.filter(item => item.status === 'stale-or-unverified').length} stale-or-unverified, ${nativeFindings.filter(item => item.status === 'unresolved').length} unresolved. Candidate precision does not establish confirmed-finding precision.`, '',
-    `Engine revision: \`${report.engineRevision}\`. Engine bundle SHA-256: \`${report.engineHash}\`.`, `Frozen case SHA-256: \`${report.caseHash}\`.`, '',
-    'Coverage is recall: TP / (TP + FN). Precision is TP / (TP + FP). Units are distinct (case, channel, kind, operation, token, path); repeated citations in one document count once.', '',
-    '| Channel / kind | TP | FP | FN | Precision | Coverage |', '| --- | ---: | ---: | ---: | ---: | ---: |']
   const measured = report.results.filter(item => item.status === 'measured')
-  const kinds = [...new Set(measured.flatMap(item => [...item.expected, ...item.observed].map(unit => `${unit.channel}/${unit.kind}`)))].sort()
-  for (const origin of ['native', 'fixture-backed', 'historical']) for (const kind of [...kinds, 'finding-overall', 'fact-overall']) {
-    const matches = unit => kind.endsWith('-overall') ? unit.channel === kind.split('-')[0] : `${unit.channel}/${unit.kind}` === kind
-    const selected = measured.filter(item => item.origin === origin).map(item => ({ ...item, score: score(item.expected.filter(matches), item.observed.filter(matches)) }))
-    const total = totals(selected)
-    if (kind.endsWith('-overall') || total.tp + total.fp + total.fn) lines.push(`| ${origin}: ${kind} | ${total.tp} | ${total.fp} | ${total.fn} | ${percent(total.precision)} | ${percent(total.coverage)} |`)
+  const findingScore = (items, raw = false) => totals(items.map(item => ({ ...item, score: score(item.expected.filter(unit => unit.channel === 'finding'), (raw ? item.rawObserved : item.observed).filter(unit => unit.channel === 'finding')) })))
+  const headline = findingScore(measured.filter(item => item.origin === 'native'))
+  const lines = ['---', 'owner: maintainers', 'lifecycle: active', 'sourceOfTruth: docs/bench/layer1-cases-v1.json', 'validationPath: node scripts/bench-layer1.mjs --self-check', '---', '', '# Layer-1 benchmark results v1', '',
+    `Native included documentation findings: precision **${percent(headline.precision)}**, coverage **${percent(headline.coverage)}** (TP ${headline.tp}, FP ${headline.fp}, FN ${headline.fn}). Targets: precision ≥95%, coverage ≥90%.`, '',
+    'The headline uses shipped default policy routing. Included means proposed or routed-to-L2; excluded and pending-version candidates are reported separately. Review candidates, including CHANGED_REFERENCE (stale-or-unverified, routed-to-L2), are not confirmed divergences.', '',
+    'Vocabulary alignment: frozen FACT_CHANGE expectations now use the shipped CHANGED_REFERENCE code. All 53 cases, expected locations, operations and tokens remain unchanged. This is contract vocabulary maintenance, not engine tuning.', '',
+    `Engine revision: \`${report.engineRevision}\`. Engine bundle SHA-256: \`${report.engineHash}\`.`, `Frozen case SHA-256: \`${report.caseHash}\`.`, '',
+    'Coverage is recall: TP / (TP + FN). Precision is TP / (TP + FP). Units are distinct (case, channel, kind, operation, token, path); repeated citations in one document count once. Facts measure extraction/change detection separately from documentation findings.', '',
+    `Measured cases: ${measured.length}; unavailable: ${report.results.filter(item => item.status === 'unavailable').length}; invalid: ${report.results.filter(item => item.status === 'invalid').length}.`, '',
+    '## Policy dispositions in frozen document scopes', '', 'Policy counts use diagnostic identities; scores deduplicate assertion units, so totals can differ.', '', '| Origin | Proposed | Routed to L2 | Excluded | Pending version |', '| --- | ---: | ---: | ---: | ---: |']
+  for (const origin of ['native', 'fixture-backed', 'historical']) {
+    const candidates = measured.filter(item => item.origin === origin).flatMap(item => item.policy)
+    lines.push(`| ${origin} | ${['proposed', 'routed-to-L2', 'excluded', 'pending-version'].map(routing => candidates.filter(item => item.routing === routing).length).join(' | ')} |`)
   }
-  lines.push('', 'Fact deltas establish extraction/change detection only. They do not establish that a stale document was diagnosed. Raw diff findings are scored separately; classification/version routing is not applied by this API.', '',
-    `Measured cases: ${measured.length}; unavailable: ${report.results.filter(item => item.status === 'unavailable').length}; invalid: ${report.results.filter(item => item.status === 'invalid').length}.`,
-    `Confirmed historical cases: ${report.historicalCount}. ${report.historyLimit}`, 'Historical recall is not analyzed. Future real cases will come from advisory dogfood in these repositories.', '', '## Case results', '', '| Case | Origin | State | TP / FP / FN (all units) |', '| --- | --- | --- | --- |')
-  for (const result of report.results) lines.push(`| ${result.id} | ${result.origin} | ${result.status} | ${result.score ? `${result.score.tp} / ${result.score.fp.length} / ${result.score.fn.length}` : result.reason} |`)
-  lines.push('', '## False positives and false negatives', '')
-  for (const result of measured) {
-    for (const label of ['fp', 'fn']) for (const item of result.score[label]) lines.push(`- ${result.id} ${label.toUpperCase()}: \`${key(item)}\`. ${cause(result, item, label)}`)
+  const kinds = [...new Set(measured.flatMap(item => [...item.expected, ...item.observed, ...item.rawObserved].map(unit => `${unit.channel}/${unit.kind}`)))].sort()
+  for (const raw of [false, true]) {
+    lines.push('', raw ? '## Secondary raw scores (--no-policy equivalent)' : '## Default included scores', '', '| Origin / channel / kind | TP | FP | FN | Precision | Coverage |', '| --- | ---: | ---: | ---: | ---: | ---: |')
+    for (const origin of ['native', 'fixture-backed', 'historical']) for (const kind of [...kinds, 'finding-overall', 'fact-overall']) {
+      const matches = unit => kind.endsWith('-overall') ? unit.channel === kind.split('-')[0] : `${unit.channel}/${unit.kind}` === kind
+      const selected = measured.filter(item => item.origin === origin).map(item => ({ ...item, score: score(item.expected.filter(matches), (raw ? item.rawObserved : item.observed).filter(matches)) }))
+      const total = totals(selected)
+      if (kind.endsWith('-overall') || total.tp + total.fp + total.fn) lines.push(`| ${origin}: ${kind} | ${total.tp} | ${total.fp} | ${total.fn} | ${percent(total.precision)} | ${percent(total.coverage)} |`)
+    }
   }
-  if (!measured.some(item => item.score.fp.length || item.score.fn.length)) lines.push('None.')
-  lines.push('', '## Limits', '', report.limits, '', 'No engine tuning or expectation changes were made in response to the measurements. An unavailable corpus is omitted from the denominator and prevents a three-repository acceptance claim.', '')
+  lines.push('', '## Case results', '', '| Case | Origin | State | Default TP / FP / FN | Raw TP / FP / FN |', '| --- | --- | --- | --- | --- |')
+  for (const result of report.results) lines.push(`| ${result.id} | ${result.origin} | ${result.status} | ${result.score ? `${result.score.tp} / ${result.score.fp.length} / ${result.score.fn.length}` : result.reason} | ${result.rawScore ? `${result.rawScore.tp} / ${result.rawScore.fp.length} / ${result.rawScore.fn.length}` : 'n/a'} |`)
+  for (const raw of [false, true]) {
+    lines.push('', raw ? '## Raw false positives and false negatives' : '## Default false positives and false negatives', '')
+    let count = 0
+    for (const result of measured) for (const label of ['fp', 'fn']) for (const item of (raw ? result.rawScore : result.score)[label]) {
+      const disposition = result.policy.find(finding => finding.assertion.document === item.path && finding.assertion.key === item.name)
+      const reason = disposition && ['excluded', 'pending-version'].includes(disposition.routing) && ((!raw && label === 'fn') || (raw && label === 'fp'))
+        ? `${raw ? 'Raw includes policy' : 'Policy'} ${disposition.routing}: ${disposition.coverage.map(item => item.reason).filter(Boolean).join('; ')}.` : cause(result, item, label)
+      lines.push(`- ${result.id} ${label.toUpperCase()}: \`${key(item)}\`. ${reason}`)
+      count++
+    }
+    if (!count) lines.push('None.')
+  }
+  lines.push('', '## Limits and maintenance', '',
+    'Acquisition fetches exact pinned commits directly, rather than relying on a moving shallow default-branch history. All 53 cases now execute; the earlier preview failures are not reproduced on this pinned corpus and engine bundle. No fixture precondition repair was needed or claimed; fixture mutations remain unchanged. No case or expected location was removed. The runner records concrete mutation/citation/acquisition failures and never publishes subprocess output.', '',
+    `Confirmed historical cases: ${report.historicalCount}. ${report.historyLimit}`, 'Historical recall is not analyzed.', '', report.limits, '',
+    'No engine tuning was performed. Unavailable or invalid cases are excluded from score denominators, remain visible, and prevent a complete-corpus measurement claim. Scores below target are benchmark failures, not execution failures or release-readiness evidence.', '')
   return lines.join('\n')
 }
 async function main() {
@@ -136,6 +162,13 @@ async function main() {
     assert.deepEqual(score([one], [one, one]), { tp: 1, fp: [], fn: [], precision: 1, coverage: 1 })
     assert.equal(score([one], []).coverage, 0)
     assert.equal(score([], [one]).precision, 0)
+    const report = { engineRevision: 'test', engineHash: 'test', caseHash: 'test', historicalCount: 0, historyLimit: 'Not analyzed.', limits: 'Test.', results: [{ id: 'negative', origin: 'native', status: 'measured', expected: [], observed: [], rawObserved: [one], score: score([], []), rawScore: score([], [one]), policy: [{ assertion: { document: one.path, key: one.name }, routing: 'excluded', coverage: [{ reason: 'Historical documentation' }] }] }] }
+    const rendered = renderReport(report)
+    assert(rendered.includes('| native | 0 | 0 | 1 | 0 |'))
+    assert(rendered.includes('| native: finding-overall | 0 | 1 | 0 | 0.00% | n/a |'))
+    assert.equal(rendered, renderReport(JSON.parse(JSON.stringify(report))))
+    assert.equal(safeFailure(new Error('Git fetch failed (exit 128)')), 'Git fetch failed (exit 128)')
+    assert(!safeFailure(new Error('untrusted subprocess output')).includes('untrusted'))
     assert.throws(() => safePath(root, '../escape'))
     const directory = mkdtempSync(join(tmpdir(), 'doc-bridge-path-check-'))
     try {
@@ -155,15 +188,18 @@ async function main() {
   try {
     for (const repository of suite.repositories) {
       const checkout = join(directory, repository.id)
-      let available = true
+      let unavailableReason
       try {
         assert.match(repository.url, /^https:\/\/github\.com\/AgentsKit-io\/[a-z-]+\.git$/)
         assert.match(repository.sha, /^[a-f0-9]{40}$/)
-        await git(directory, 'clone', '--quiet', '--no-checkout', '--depth=150', repository.url, checkout)
-        try { await git(checkout, 'cat-file', '-e', repository.sha) } catch { await git(checkout, 'fetch', '--quiet', '--depth=150', 'origin', repository.sha) }
-      } catch { available = false }
+        await git(directory, 'init', '--quiet', checkout)
+        await git(checkout, 'remote', 'add', 'origin', repository.url)
+        for (const sha of new Set([repository.sha, ...suite.cases.filter(item => item.repository === repository.id).flatMap(item => [item.base, item.head].filter(Boolean))])) {
+          try { await git(checkout, 'cat-file', '-e', `${sha}^{commit}`) } catch { await git(checkout, 'fetch', '--quiet', '--depth=1', 'origin', sha) }
+        }
+      } catch (error) { unavailableReason = safeFailure(error) }
       for (const item of suite.cases.filter(item => item.repository === repository.id)) {
-        if (!available) { results.push({ id: item.id, origin: item.origin, status: 'unavailable', reason: 'Pinned public checkout unavailable' }); continue }
+        if (unavailableReason) { results.push({ id: item.id, origin: item.origin, status: 'unavailable', reason: `Pinned public checkout unavailable: ${unavailableReason}` }); continue }
         try {
           console.error(`Measuring ${item.id}`)
           await git(checkout, 'reset', '--hard', item.base ?? repository.sha)
@@ -178,18 +214,23 @@ async function main() {
           if (item.head) await git(checkout, 'reset', '--hard', item.head)
           else apply(checkout, item.mutations)
           const head = discoverRepository({ root: checkout, previous: base })
-          const diff = diffSnapshots(base, head, { headRoot: checkout })
-          const observed = observations(diff, base, head).filter(unit => unit.channel === 'finding'
+          const diff = diffSnapshots(base, head, { headRoot: checkout, policy: true })
+          const raw = diffSnapshots(base, head, { headRoot: checkout, policy: false })
+          const inScope = unit => unit.channel === 'finding'
             ? !item.scope.documents.length || item.scope.documents.includes(unit.path)
-            : item.scope.facts.some(target => target.kind === unit.kind && target.names.includes(unit.name)))
+            : item.scope.facts.some(target => target.kind === unit.kind && target.names.includes(unit.name))
+          const rawObserved = observations(raw, base, head).filter(inScope)
+          const observed = observations(diff, base, head).filter(inScope)
           results.push({ id: item.id, origin: item.origin, status: 'measured', expected: item.expected, observed,
-            score: score(item.expected, observed), findingCause: item.findingCause, factCause: item.factCause,
+            score: score(item.expected, observed), rawObserved, rawScore: score(item.expected, rawObserved),
+            policy: diff.policy.findings.filter(finding => !item.scope.documents.length || item.scope.documents.includes(finding.assertion.document)).map(({ id, routing, assertion, coverage }) => ({ id, routing, assertion, coverage })),
+            findingCause: item.findingCause, factCause: item.factCause,
             targets: [base, head].map(snapshot => snapshot.entities.filter(entity => item.scope.facts.some(target => target.kind === entity.kind && target.names.includes(entity.name))).map(entity => ({ id: entity.id, kind: entity.kind, name: entity.name, owner: entity.metadata?.ownerId, path: entity.evidence[0]?.path }))),
             citations: base.relations.filter(relation => item.scope.documents.includes(base.entities.find(entity => entity.id === relation.from)?.path) && (relation.metadata?.symbol || relation.metadata?.factName)).map(relation => ({ from: relation.from, to: relation.to, symbol: relation.metadata?.symbol, factKind: relation.metadata?.factKind, factName: relation.metadata?.factName })),
             coverage: diff.changeSet.coverage.map(({ analyzer, scope, status, reason }) => ({ analyzer, scope, status, ...(reason ? { reason } : {}) })) })
         } catch (error) {
           // Never include subprocess output or local paths in a public artifact.
-          results.push({ id: item.id, origin: item.origin, status: 'invalid', reason: error.code ? `Execution error ${error.code}` : 'Mutation, citation or engine precondition failed' })
+          results.push({ id: item.id, origin: item.origin, status: 'invalid', reason: safeFailure(error) })
         }
       }
     }

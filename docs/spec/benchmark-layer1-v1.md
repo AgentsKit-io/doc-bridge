@@ -23,8 +23,9 @@ node bin/ak-docs.js index
 node scripts/bench-layer1.mjs --output /tmp/layer1-results.json --markdown docs/bench/layer1-results-v1.md
 ```
 
-Raw JSON must be outside the worktree. The runner shallow-clones the three public
-repository URLs, checks out exact 40-character SHAs, applies only declared edits
+Raw JSON must be outside the worktree. The runner initializes temporary
+repositories, fetches each exact pinned commit directly from the three public
+repository URLs, checks out 40-character SHAs, applies only declared edits
 inside task-owned temporary checkouts, and removes those checkouts in `finally`.
 No dependency installation or upstream code execution occurs. Git downloads are
 corpus acquisition; discovery/diff remain deterministic and network-free.
@@ -67,7 +68,7 @@ A unit is `(case, channel, kind, operation, token, relative path)`. Multiple
 citations/relations for that token in the same file count once. Line locations
 remain independently recorded ground truth and observed evidence; this version
 does not claim line-level recall. Frozen scopes select fact kinds/tokens and doc
-files. Every raw finding in a scoped doc file is scored, including unrelated
+files. Every included finding in a scoped doc file is scored, including unrelated
 tokens; out-of-scope documents and secondary fact kinds are not analyzed.
 An empty document scope means a repository-wide no-finding negative, so uncited
 mutations cannot hide an unexpected diagnostic.
@@ -76,16 +77,29 @@ Precision is `TP / (TP + FP)`; coverage means recall, `TP / (TP + FN)`.
 Empty denominators are `n/a`. Native and fixture-backed metrics are separate,
 with per-kind and overall counts and an entry for every FP/FN. Facts and
 documentation findings also have separate channels: an extracted signature or
-default delta is not a diagnosed stale document. `FACT_CHANGE` is only this
-benchmark's expectation label for a stale signature/default assertion; it does
-not add an engine diagnostic code. Raw diff currently emits reference diagnostics.
+default delta is not a diagnosed stale document. The frozen placeholder
+`FACT_CHANGE` is mapped to the shipped `CHANGED_REFERENCE` contract without
+changing any expected token, operation, path or citation line. These candidates
+have `stale-or-unverified` status and are routed to Layer 2; scoring them does
+not establish confirmed divergence precision. The suite hash changes to bind
+this documented vocabulary alignment.
 
-The raw API does not apply `routeFinding`, document classification or version
-eligibility. A raw finding on a policy-negative document counts as noise at this
-measured boundary, even though a separate policy stage could exclude it later.
-No policy success is inferred from raw diff, and no extraction delta substitutes
-for a missing diagnosis. Findings with uncertain status are counted as emitted
-candidates, not proof that a broken reference is confirmed.
+The primary score uses `diffSnapshots` with policy routing explicitly enabled,
+matching the shipped default. Only included diagnostics (proposed or routed to
+Layer 2) enter this score; excluded and pending-version dispositions are counted
+separately in the frozen document scope. Policy counts use diagnostic identities;
+score counts deduplicate assertion units, so those totals can differ.
+The same base/head snapshots and head
+text are also passed with `policy: false`, equivalent to CLI `--no-policy`, for
+secondary raw scores. Both modes report every FP/FN and cause. No policy success
+is inferred from raw diff and no extraction delta substitutes for diagnosis.
+
+Acquisition failures identify the failed Git operation without exposing its
+output. Mutation/citation failures retain their public relative path and exact
+precondition. Engine failures are investigated separately; the benchmark must
+not modify engine behavior to improve a score. Fixture setup/mutations may be
+repaired only to restore declared preconditions, with maintenance documented;
+expected locations and case membership remain frozen.
 
 This small purposive corpus does not estimate repository-wide prevalence,
 statistical confidence, semantic prose detection, rename proof, remediation
