@@ -557,3 +557,63 @@ describe('generic Markdown fact citations', () => {
     expect(result.ambiguousFactReferences[0]?.lines).toHaveLength(8)
   })
 })
+
+it('resolves only exact bounded fence identifiers with citation lines and ambiguity', () => {
+  const document = parseMarkdownDocument('guide.md', '# Guide\n```ts\nrun(); prerun(); shared(); settings.mode;\n```\n')
+  const result = analyzeMarkdownDocument(document, 'document:guide.md', {
+    documents: new Map(), modules: new Map(), packages: new Map(),
+    symbols: new Map([['run', ['module:run']], ['shared', ['module:a', 'module:b']]]),
+    facts: new Map([['settings.mode', [{kind: 'config-key', name: 'settings.mode', ownerId: 'module:settings'}]]]),
+  })
+  expect(result.relations.map(relation => relation.metadata?.symbol ?? relation.metadata?.factName).sort()).toEqual(['run', 'settings.mode'])
+  expect(result.relations.every(relation => relation.evidence[0]?.lineStart === 3)).toBe(true)
+  expect(result.ambiguousSymbolReferences[0]?.symbol).toBe('shared')
+})
+
+it('limits symbol fences to code languages and preserves inline citation metadata', () => {
+  const document = parseMarkdownDocument('guide.md', '`run`\n\n```ts\nrun();\n```\n```text\nskip();\n```\n```sh\nskip\n```\n```\nskip\n```\n')
+  const result = analyzeMarkdownDocument(document, 'document:guide.md', {documents: new Map(), modules: new Map(), packages: new Map(), symbols: new Map([['run', ['module:run']], ['skip', ['module:skip']]])})
+  expect(result.relations).toHaveLength(1)
+  expect(result.relations[0]?.metadata).toEqual({symbol: 'run'})
+  expect(result.relations[0]?.evidence.map(item => item.lineStart)).toEqual([1,4])
+})
+
+it('bounds fenced token work and keeps fact citations on their separate cap', () => {
+  const names = Array.from({length: 70}, (_, i) => `settings.key${i}`)
+  const document = parseMarkdownDocument('guide.md', '```json\n' + names.join(' ') + '\n' + 'unknown.path '.repeat(4100) + '\n```')
+  const result = analyzeMarkdownDocument(document, 'document:guide.md', {documents: new Map(), modules: new Map(), packages: new Map(), symbols: new Map(), facts: new Map(names.map(name => [name, [{kind: 'config-key', name, ownerId: 'module:settings'}]]))})
+  expect(document.fenceTokens).toHaveLength(4096)
+  expect(result.relations).toHaveLength(64)
+  expect(result.factReferencesTruncated).toBe(true)
+  expect(result.truncated).toBe(false)
+  expect(result.notes.some(note => note.scope === 'fence-tokens:guide.md')).toBe(true)
+  expect(result.relations.every(relation => relation.metadata?.citationContext === 'code-fence')).toBe(true)
+})
+
+it('preserves legacy inline evidence while deduplicating repeated fenced lines', () => {
+  const document = parseMarkdownDocument('guide.md', '`run` and `run`\n```ts\nrun(); run();\n```\n')
+  const result = analyzeMarkdownDocument(document, 'document:guide.md', {documents: new Map(), modules: new Map(), packages: new Map(), symbols: new Map([['run', ['module:run']]])})
+  expect(result.relations[0]?.evidence.map(item => item.lineStart)).toEqual([1, 1, 3])
+})
+
+
+it('uses syntax reference positions and never cites export collisions in keys or text', () => {
+  const code = [
+    'import { metadata as alias } from "package";',
+    'export { metadata };',
+    'metadata(); new Metadata(); const value = metadata; consume(metadata);',
+    'const object = { metadata: "metadata", metadata }; ctx.metadata;',
+    '// metadata()',
+    'const text = `metadata /docs/users`; const url = "/docs/users";',
+    'interface Shape { metadata?: string }; type T = Metadata; class C extends Metadata {}',
+    'const element = <Metadata href="/docs/users" />;',
+    'const { metadata } = require("package");',
+  ].join('\n')
+  const parsed = parseMarkdownDocument('guide.md', '```tsx\n' + code + '\n```\n```yaml\nmetadata:\n docs: /docs/users\n settings.mode: true\n```')
+  const symbols = new Map([['metadata', ['module:metadata']], ['Metadata', ['module:type']], ['docs', ['module:docs']]])
+  const result = analyzeMarkdownDocument(parsed, 'document:guide.md', {documents: new Map(), modules: new Map(), packages: new Map(), symbols,
+    facts: new Map([['settings.mode', [{kind: 'config-key', name: 'settings.mode', ownerId: 'module:config'}]]])})
+  expect(result.relations.map(r => r.metadata?.symbol ?? r.metadata?.factName).sort()).toEqual(['Metadata', 'metadata', 'settings.mode'])
+  expect(result.relations.find(r => r.metadata?.symbol === 'metadata')?.evidence.map(e => e.lineStart)).toEqual([2, 3, 4, 10])
+  expect(result.relations.find(r => r.metadata?.symbol === 'Metadata')?.evidence.map(e => e.lineStart)).toEqual([4, 8, 9])
+})

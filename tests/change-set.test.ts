@@ -224,3 +224,57 @@ describe('ChangeSetV1 real snapshot acceptance', () => {
     expect(contentHashForVersionedArtifact(base)).toBe(base.contentHash)
   }, 30_000)
 })
+
+it('verifies a removed fenced config key against real head bytes and recovers after doc correction', () => {
+  const { root } = fixture()
+  write(root, 'src/api.ts', `import { z } from 'zod'; export const ConfigSchema = z.object({output: z.object({format: z.string()})});`)
+  write(root, 'docs/api.md', '# API\n```ts\noutput.format;\n```\n')
+  const base = discoverRepository({ root })
+  expect(base.relations.some(relation => relation.metadata?.factName === 'output.format' && relation.metadata?.citationContext === 'code-fence')).toBe(true)
+  write(root, 'src/api.ts', `import { z } from 'zod'; export const ConfigSchema = z.object({output: z.object({style: z.string()})});`)
+  const result = scanDiff(root, base)
+  expect(result.changeSet.changes.some(change => change.kind === 'config-key' && change.op === 'removed' && change.before?.name === 'output.format')).toBe(true)
+  expect(result.findings).toMatchObject([{code: 'BROKEN_REFERENCE', status: 'conflict'}])
+  expect(result.findings[0]?.evidence).toContainEqual(expect.objectContaining({path: 'docs/api.md', lineStart: 3, context: 'Head citation', contentHash: expect.any(String)}))
+  write(root, 'docs/api.md', '# API\n```ts\noutput.style;\n```\n')
+  expect(scanDiff(root, base).findings).toEqual([])
+})
+
+it('verifies changed fenced signatures as review-required uncertainty', () => {
+  const { root } = fixture()
+  write(root, 'src/api.ts', 'export const first = (): number => 1;')
+  write(root, 'docs/api.md', '# API\n```ts\nfirst();\n```\n')
+  const base = discoverRepository({ root })
+  write(root, 'src/api.ts', 'export const first = (value: string): number => value.length;')
+  const result = scanDiff(root, base)
+  expect(result.findings).toMatchObject([{code: 'CHANGED_REFERENCE', status: 'stale-or-unverified'}])
+  expect(result.findings[0]?.evidence).toContainEqual(expect.objectContaining({path: 'docs/api.md', lineStart: 3, context: 'Head citation'}))
+  expect(result.policy.findings[0]?.routing).toBe('routed-to-L2')
+})
+
+it('retains fenced generic head citations for generated-region policy exclusions', () => {
+  const { root } = fixture()
+  write(root, 'src/api.ts', `import { z } from 'zod'; export const ConfigSchema = z.object({output: z.object({format: z.string()})});`)
+  write(root, 'docs/api.md', '# API\n```ts\noutput.format;\n```\n')
+  const base = discoverRepository({ root })
+  write(root, 'src/api.ts', `import { z } from 'zod'; export const ConfigSchema = z.object({output: z.object({style: z.string()})});`)
+  write(root, 'docs/api.md', '# API\n<!-- doc-bridge:generated hash=abc -->\n```ts\noutput.format;\n```\n<!-- /doc-bridge:generated -->\n')
+  const result = scanDiff(root, base)
+  expect(result.findings).toEqual([])
+  expect(result.policy.findings).toMatchObject([{status: 'conflict', routing: 'excluded'}])
+  expect(result.policy.counts.generator).toBe(1)
+})
+
+
+it('does not retain removed fence references when head code uses only keys or text', () => {
+  const { root } = fixture()
+  write(root, 'src/api.ts', 'export const metadata = () => 1;')
+  write(root, 'docs/api.md', '# API\n```ts\nmetadata();\n```\n')
+  const base = discoverRepository({ root })
+  write(root, 'src/api.ts', 'export const replacement = () => 1;')
+  expect(scanDiff(root, base).findings.some(f => f.code === 'BROKEN_REFERENCE')).toBe(true)
+  for (const code of ['const value = { metadata: true, metadata };', 'ctx.metadata();', 'const value = "metadata";', '// metadata()']) {
+    write(root, 'docs/api.md', '# API\n```ts\n' + code + '\n```\n')
+    expect(scanDiff(root, base).findings).toEqual([])
+  }
+})

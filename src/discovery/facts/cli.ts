@@ -7,7 +7,7 @@ import { surfaceFactEntityId, type SurfaceFact } from '../../storage/facts.js'
 import { sha256NormalizedV1 } from '../../index-builder/content-hash.js'
 import type { FactExtractor, FactExtractorInput } from './index.js'
 
-export const CLI_ANALYZER_VERSION = '1.0.0'
+export const CLI_ANALYZER_VERSION = '1.1.0'
 const MAX_FACTS = 4096
 const literal = (node: ts.Node | undefined): string | undefined => node && (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) ? node.text : undefined
 const record = (value: unknown): value is Record<string, unknown> => !!value && typeof value === 'object' && !Array.isArray(value)
@@ -23,6 +23,16 @@ export const extractCliFacts = (root: string, packages: readonly PackageInfo[], 
     if (!bins.length) {
       if (bin !== undefined) coverage.push(...['cli-commands', 'cli-flags'].map(scope => ({ analyzer: 'js-ts:cli', analyzerVersion: CLI_ANALYZER_VERSION, scope, status: 'not-analyzed' as const, reason: 'Package bin declaration has no statically recognized command roots.' })))
       continue
+    }
+    const configPath = ts.findConfigFile(pkg.absPath, io.exists)
+    const compilerOptions = configPath ? ts.readConfigFile(configPath, io.readText).config?.compilerOptions : undefined
+    const sourceTarget = (path: string): string | undefined => {
+      if (typeof compilerOptions?.outDir !== 'string' || typeof compilerOptions?.rootDir !== 'string') return undefined
+      const outputRoot = resolve(pkg.absPath, compilerOptions.outDir)
+      const tail = relative(outputRoot, path)
+      if (tail.startsWith('..')) return undefined
+      const source = resolve(pkg.absPath, compilerOptions.rootDir, tail.replace(/\.[cm]?js$/, '.ts'))
+      return modules.has(source) ? source : undefined
     }
     let partial = record(bin) && bins.length !== Object.keys(bin).length
     const manifestText = io.readText(pkg.manifestPath)
@@ -53,9 +63,15 @@ export const extractCliFacts = (root: string, packages: readonly PackageInfo[], 
           if (!specifier?.startsWith('.')) continue
           const target = ts.resolveModuleName(specifier, module.absPath, { allowJs: true, module: ts.ModuleKind.NodeNext, moduleResolution: ts.ModuleResolutionKind.NodeNext }, io.host).resolvedModule?.resolvedFileName
           if (target && modules.has(resolve(target))) pending.push(resolve(target))
-          else partial = true
+          else {
+            const mapped = sourceTarget(resolve(module.absPath, '..', specifier))
+            if (mapped) pending.push(mapped)
+            else partial = true
+          }
         }
       }
+      const implementation = new Set<string>()
+      const usageFacts = new Map<string, SurfaceFact>()
       let recognized = false
       for (const module of [...modules.values()].filter(module => module.packageId === pkg.id).sort((a, b) => a.path.localeCompare(b.path))) {
         if (/(?:^|\/)(?:tests?|__tests__|fixtures)(?:\/|$)|\.(?:test|spec)\./.test(module.path)) continue
@@ -122,6 +138,9 @@ export const extractCliFacts = (root: string, packages: readonly PackageInfo[], 
           const qualified = `${binding.command.name} ${name}`
           return { ...binding, command: add('cli-command', binding.command.id, qualified, { name: qualified, declaration }, evidence(node)) }
         }
+        const beforeUsage = new Map(facts)
+        facts.clear()
+        facts.set(rootCommand.id, rootCommand)
         for (const statement of source.statements) {
           if (!ts.isVariableStatement(statement) || !statement.modifiers?.some(modifier => modifier.kind === ts.SyntaxKind.ExportKeyword) || !ts.getJSDocTags(statement).some(tag => tag.tagName.text === 'docbridgeCliUsage')) continue
           for (const declaration of statement.declarationList.declarations) {
@@ -154,8 +173,77 @@ export const extractCliFacts = (root: string, packages: readonly PackageInfo[], 
             }
           }
         }
+        for (const [id, fact] of facts) if (id !== rootCommand.id) usageFacts.set(id, fact)
+        facts.clear()
+        for (const [id, fact] of beforeUsage) facts.set(id, fact)
         // Help explicitly names its bin; library declarations require literal entrypoint reachability.
         if (!reachable.has(resolve(module.absPath))) continue
+        const beforeImplementation = new Map(facts)
+        const rootBinding: Binding = { command: rootCommand, library: 'static' }
+        const flagName = (value: string | undefined): boolean => !!value && /^--?[A-Za-z][\w.-]*$/.test(value)
+        const argument = (node: ts.Node): boolean => /^(?:process\.)?argv(?:\b|\[)|^(?:arg|command|positional|positionals|flags)(?:\b|\[)/.test(node.getText(source))
+        const commandInput = (node: ts.Node): boolean => {
+          if (/^(?:positionals?|argv)\[0\]$/.test(node.getText(source))) return true
+          if (!ts.isIdentifier(node) || node.text !== 'command') return false
+          let scope: ts.Node = node
+          while (scope.parent && !ts.isFunctionLike(scope) && !ts.isSourceFile(scope)) scope = scope.parent
+          // ponytail: rescan the enclosing scope; cache bindings if large CLI files need it.
+          let proven = false
+          const inspect = (child: ts.Node): void => {
+            if (child !== scope && ts.isFunctionLike(child)) return
+            if (ts.isVariableDeclaration(child) && child.initializer && /^(?:parseArgs\(|(?:process\.)?argv\[)/.test(child.initializer.getText(source))) {
+              const names = ts.isIdentifier(child.name) ? [child.name.text] : ts.isObjectBindingPattern(child.name) ? child.name.elements.map(item => item.name.getText(source)) : []
+              if (names.includes('command')) proven = true
+            }
+            ts.forEachChild(child, inspect)
+          }
+          inspect(scope)
+          return proven
+        }
+        const observe = (node: ts.Node): void => {
+          if (ts.isBinaryExpression(node) && [ts.SyntaxKind.EqualsEqualsEqualsToken, ts.SyntaxKind.EqualsEqualsToken].includes(node.operatorToken.kind)) {
+            const value = literal(node.right), reverse = literal(node.left)
+            const name = value ?? reverse
+            const target = value === undefined ? node.right : node.left
+            if (name && argument(target)) {
+              if (flagName(name)) { flag(rootBinding, name!, node); recognized = true }
+              else if (/^[A-Za-z][\w.-]*$/.test(name) && commandInput(target)) { command(rootBinding, name, node); recognized = true }
+            }
+          }
+          if (ts.isSwitchStatement(node) && argument(node.expression) && (/^(?:process\.)?argv|^arg\b/.test(node.expression.getText(source)) || commandInput(node.expression))) for (const clause of node.caseBlock.clauses) {
+            if (!ts.isCaseClause(clause)) continue
+            const name = literal(clause.expression)
+            if (flagName(name)) { flag(rootBinding, name!, clause); recognized = true }
+            else if (name && /^[A-Za-z][\w.-]*$/.test(name)) { command(rootBinding, name, clause); recognized = true }
+          }
+          if (ts.isCallExpression(node)) {
+            if (ts.isPropertyAccessExpression(node.expression) && argument(node.expression.expression) && ['includes', 'has'].includes(node.expression.name.text)) {
+              const name = literal(node.arguments[0])
+              if (flagName(name)) { flag(rootBinding, name!, node); recognized = true }
+            }
+            if (ts.isIdentifier(node.expression) && node.expression.text === 'optionValues' && node.arguments[0] && argument(node.arguments[0])) {
+              const name = literal(node.arguments[1])
+              if (flagName(name)) { flag(rootBinding, `${name} <value>`, node); recognized = true }
+            }
+          }
+          if (ts.isVariableDeclaration(node) && /option|flag/i.test(node.name.getText(source)) && node.initializer) {
+            const table = (value: ts.Node): void => {
+              if (ts.isObjectLiteralExpression(value)) {
+                const props = properties(value)
+                const name = literal(props.get('flag')) ?? literal(props.get('name'))
+                if (name && /^(?:--?)?[A-Za-z][\w.-]*$/.test(name)) {
+                  const alias = literal(props.get('alias'))
+                  const declaration = flagName(name) ? name : `--${name}`
+                  flag(rootBinding, `${alias ? (flagName(alias) ? alias : `${alias.length === 1 ? '-' : '--'}${alias}`) + ', ' : ''}${declaration}`, value)
+                  recognized = true
+                } else for (const item of value.properties) if (ts.isPropertyAssignment(item)) table(item.initializer)
+              } else if (ts.isArrayLiteralExpression(value)) for (const item of value.elements) table(item)
+            }
+            table(node.initializer)
+          }
+          ts.forEachChild(node, observe)
+        }
+        observe(source)
         const uncertainContext = (node: ts.Node): void => {
           for (let parent = node.parent; parent; parent = parent.parent) {
             if (ts.isIfStatement(parent) || ts.isConditionalExpression(parent) || ts.isSwitchStatement(parent) || ts.isIterationStatement(parent, false) || (ts.isFunctionLike(parent) && !staticBuilders.has(parent))) partial = true
@@ -265,8 +353,18 @@ export const extractCliFacts = (root: string, packages: readonly PackageInfo[], 
           ts.forEachChild(node, inspectUnvisited)
         }
         inspectUnvisited(source)
+        for (const [id, fact] of facts) if (beforeImplementation.get(id) !== fact) implementation.add(id)
         // An entrypoint we cannot associate with static declarations is explicitly incomplete.
         if (resolve(pkg.absPath, entry) === resolve(module.absPath) && !imports.size) partial = true
+      }
+      if (implementation.size) {
+        const usageNames = new Set([...usageFacts.values()].map(fact => `${fact.kind}:${fact.name}`))
+        const implementationNames = new Set([...implementation].map(id => facts.get(id)!).filter(Boolean).map(fact => `${fact.kind}:${fact.name}`))
+        const divergent = [...new Set([...usageNames, ...implementationNames])].filter(name => usageNames.has(name) !== implementationNames.has(name)).sort()
+        if (usageFacts.size && divergent.length) coverage.push({ analyzer: 'js-ts:cli', analyzerVersion: CLI_ANALYZER_VERSION, scope: 'cli-usage-drift', status: 'partial', reason: `Usage text drift: ${divergent.slice(0, 64).join(', ')}`.slice(0, 1024), evidence: [manifestEvidence] })
+      } else for (const [id, fact] of usageFacts) {
+        if (facts.size >= MAX_FACTS) { partial = true; break }
+        facts.set(id, fact)
       }
       if (!recognized) partial = true
     }
@@ -276,4 +374,4 @@ export const extractCliFacts = (root: string, packages: readonly PackageInfo[], 
   return { facts: [...facts.values()].sort((a, b) => a.id.localeCompare(b.id)), coverage }
 }
 
-export const cliFactExtractor: FactExtractor = { id: 'js-ts:cli', version: CLI_ANALYZER_VERSION, kinds: ['cli-command', 'cli-flag'], inputScope: 'global', extract: ({ root, packages, modules, io, sourceFiles }) => extractCliFacts(root, packages, modules, io, sourceFiles) }
+export const cliFactExtractor: FactExtractor = { id: 'js-ts:cli', version: CLI_ANALYZER_VERSION, kinds: ['cli-command', 'cli-flag'], inputScope: 'global', inputExtensions: ['.json'], extract: ({ root, packages, modules, io, sourceFiles }) => extractCliFacts(root, packages, modules, io, sourceFiles) }

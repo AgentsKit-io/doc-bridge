@@ -4,6 +4,8 @@
 
 ### Patch Changes
 
+- Parse fenced JS/TS citations by syntax and restrict configuration fences to dotted config facts, excluding export collisions in keys, strings, comments and member properties.
+
 - Report changed signature/configuration/flag references for review, apply finding policy by default with a complete policy sidecar, and preserve branch-tracking behavior for same-repository docs with a raw opt-out.
 
 - Deduplicate removed-export advisories, preserve kind-specific conflict status and distinct citation evidence, summarize advisory coverage, and retain actionable Action failure reports with symlink-safe runner invocation.
@@ -11,6 +13,8 @@
 - Registry CLI failures wait for child execution to settle and release concurrency before rejecting, allowing immediate retries after deadlines or output overflow.
 
 ### Minor Changes
+
+- Resolve exact bounded code-fence citations and extract hand-rolled CLI declarations, using implementation facts over help text with visible usage drift. Verify surviving fence citations in removal and changed-reference findings, including generated-region policy exclusions.
 
 - Add observable caller limits, cancellation, bounded deterministic progress and transient run metrics for injected discovery, partitioned indexing and diff, plus async CLI duration/progress controls that prevent cancelled publication.
 - Add explicit committed/CI-built Action index sources, bounded exact-revision reference advisories and an opt-in deduplicated PR comment publisher with summary fallback, preserving independent blocking gate results.

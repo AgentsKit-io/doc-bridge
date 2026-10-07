@@ -13,7 +13,7 @@ line the claim was made on.
 | --- | --- | --- |
 | `links-to` | document → document | a relative link that resolves to a scanned document |
 | `mentions` | document → module or package | inline code or link text equal to a scanned path or a package name |
-| `mentions-symbol` | document → module | inline code equal to an exported name of exactly one module |
+| `mentions-symbol` | document → module | inline code or an exact fenced identifier equal to an exported name of exactly one module |
 | `covers` | document → anything | a `docbridge` declaration, unchanged |
 
 A symbol resolves to the module that **declares** it, never to a barrel that re-exports it. When
@@ -218,3 +218,25 @@ ranges; workspace/default-branch targets track unreleased work. Other schemes
 require caller-registered adapter normalization hooks; incompatible or multiple
 successful hooks stay unresolved/ambiguous. See
 [release eligibility](change-set-v1.md#release-stamping-and-eligibility).
+
+## Fenced citations
+
+Only fences tagged `ts`, `tsx`, `js`, `jsx`, `mjs`, `cjs`, `json`, `jsonc`,
+`yaml`, `yml` or `toml` contribute symbols/config keys, at most 4,096 citation
+tokens per document. Untagged, text, Markdown, diff and other fences are skipped. JS/TS examples use the TypeScript parser: import/export specifiers, calls, constructors,
+JSX tags, type references, and bare value identifiers in assignments/arguments qualify.
+Object keys, ordinary shorthand properties, member property names, strings, template
+text and comments never cite exports. Module import/destructuring specifiers qualify.
+Configuration fences contribute only dotted paths matching extracted configuration
+keys, never exports. Dotted JS/TS member expressions may cite configuration keys only.
+Substrings and
+fuzzy paths never create fence relations. Only extracted names resolve, with
+exactly one owner per kind. Dotted config keys retain package/fixture scoping.
+Shell fences (`sh`, `bash`, `zsh`, `console`, `shell`) contribute only CLI
+commands/flags, retaining known-bin qualification. Repeated citation lines use the existing
+eight-location bound and ambiguity metadata. Fence-only relations carry
+`metadata.citationContext: "code-fence"`; their symbol identity remains unchanged
+and retrieval excludes them from ranking signals. Existing inline relations
+retain their metadata and legacy inline evidence when a fence adds another
+evidence line. Same-line evidence deduplication applies only to fence citations. Non-symbol facts use the separate
+64-fact citation cap. Generated regions remain excluded.

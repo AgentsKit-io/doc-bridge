@@ -304,3 +304,21 @@ adds a policy sidecar with complete FindingV1 records and routing counts; the
 main findings array preserves its diagnostic shape. Advisory Markdown includes
 CHANGED_REFERENCE as review-required uncertainty and shows only counts for
 historical/generated/version exclusions, with full detail in the diff artifact.
+
+## Static CLI fact coverage
+
+CLI discovery follows package bin imports and, when `rootDir` and `outDir` are
+explicit in the package TypeScript configuration, maps compiled imports back to
+scanned source modules. Static library declarations remain supported. Reachable
+hand-rolled implementations contribute option tables named for options/flags
+(objects or arrays with literal `name`/`flag` and optional `alias`), argv
+`switch` cases, argv/flag-set `includes`/`has`, argv token equality, positional
+command or direct `argv[0]` equality and literal `optionValues(argv, '--flag')` calls. Dynamic
+registrations remain incomplete coverage rather than proof of absence.
+
+When implementation declarations exist, they supply facts instead of annotated
+`@docbridgeCliUsage` help. A `cli-usage-drift` partial coverage note names divergent
+commands and flags, bounded to 64 names. Help-only extraction remains partial.
+Fact IDs, snapshot/index envelopes and handoff schemas remain unchanged; analyzer
+versions invalidate prior extraction caches. JSON configuration inputs also
+invalidate warm CLI extraction when source mapping changes.
