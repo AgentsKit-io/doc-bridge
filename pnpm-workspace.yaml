@@ -15,6 +15,7 @@ overrides:
   dompurify: 3.4.16
   esbuild: ^0.28.2
   ip-address: 10.7.2
+  katex: 0.18.11
   'js-yaml@<4': 3.15.2
   'js-yaml@>=4 <5': 4.3.1
   motion: 13.3.0
