@@ -15,13 +15,12 @@ import { createLocalScanIO, type ScanIO } from './scan-io.js'
 import { GRAPH_ANALYZER_VERSION, areaSuggestionCoverage } from '../graph/build.js'
 import { deriveAreas, type AreaModule } from './areas.js'
 import { entityId } from './identity.js'
-import { reuseCoverage, type PreviousSnapshot, type PriorFile } from './incremental.js'
+import { reuseCoverage, type PreviousSnapshot } from './incremental.js'
 import { MARKDOWN_ANALYZER_VERSION } from './markdown.js'
 import { DEFAULT_MAX_FILES, safeWalkOptions } from './inputs.js'
 import {
   DiscoverySnapshotV1Schema,
   type DiscoverySnapshotV1,
-  type Evidence,
   type KnowledgeEntity,
   type KnowledgeRelation,
 } from '../schemas/knowledge.js'
@@ -174,7 +173,7 @@ export const createDiscoveryScan = (io: ScanIO) => {
   const { entities, relations, addEntity, addRelation } = extractionGraph()
 
   const source = jsTs.prepare({ root, opts, sourcePaths, packageResult, entities, relations, addEntity, addRelation })
-  const { compiler, ledger, modulesByPath, reusedModules, areaModules, symbolModules } = source
+  const { compiler, ledger, modulesByPath, areaModules } = source
 
   const { areas, areasByPath } = addAreas({ entities, relations, addEntity, addRelation }, areaModules, opts)
 

@@ -14,7 +14,7 @@ import { toPosix } from '../../lib/paths.js'
 import { resolutionFingerprint, type PriorFile } from '../incremental.js'
 import { MARKDOWN_ANALYZER_VERSION, analyzeMarkdownDocument, markdownPathCandidateIndex, declaredAudience, markdownContentHash, parseMarkdownDocument, type MarkdownDocumentV1, type AmbiguousSymbolReference, type MarkdownFact, type AmbiguousFactReference } from '../markdown.js'
 import { documentClassification } from '../inputs.js'
-import type { DiscoverySnapshotV1, Evidence, KnowledgeRelation } from '../../schemas/knowledge.js'
+import type { DiscoverySnapshotV1, Evidence } from '../../schemas/knowledge.js'
 const MAX_MARKDOWN_NOTES = 32
 const relativePath = (root: string, path: string): string => toPosix(relative(root, path)) || '.'
 const lineEvidence = (source: 'code' | 'configuration' | 'documentation', root: string, path: string, lineStart?: number, lineEnd?: number): Evidence => ({ source, path: relativePath(root, path), ...(lineStart !== undefined ? { lineStart } : {}), ...(lineEnd !== undefined ? { lineEnd } : {}) })

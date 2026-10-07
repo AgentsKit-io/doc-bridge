@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest'
-import { mkdtemp, mkdir, writeFile, readFile, readdir, rm, symlink, chmod } from 'node:fs/promises'
+import { mkdtemp, writeFile, readFile, readdir, rm, symlink, chmod } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { createLocalRepositoryRead, contentRef, rawByteHash } from '../src/storage/local.js'
