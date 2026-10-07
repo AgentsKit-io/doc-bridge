@@ -1,3 +1,5 @@
+import { executionContext } from '../execution/profile.js'
+import { runServiceCli } from './service.js'
 import { closeSync, existsSync, mkdirSync, openSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs'
 import { dirname, relative, resolve } from 'node:path'
 import { createInterface } from 'node:readline/promises'
@@ -1523,6 +1525,14 @@ const runStudyCommand = async (flags: ReadonlySet<string>, positional: readonly 
 }
 
 export const runCli = (argv: readonly string[]): number | undefined | Promise<number> => {
+  const profileIndex = argv.indexOf('--profile')
+  if (profileIndex >= 0) {
+    const profile = argv[profileIndex + 1]
+    if (profile === 'service') return runServiceCli(argv.filter((_, index) => index !== profileIndex && index !== profileIndex + 1))
+    if (profile !== 'local') { process.stderr.write('Unknown execution profile\n'); return 2 }
+    argv = argv.filter((_, index) => index !== profileIndex && index !== profileIndex + 1)
+  }
+  if (executionContext().profile === 'service') return runServiceCli(argv)
   const { command, flags, configPath, positional } = parseArgs(argv)
 
   if (command === 'help') {

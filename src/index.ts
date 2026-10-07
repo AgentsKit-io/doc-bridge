@@ -1089,3 +1089,11 @@ export { writeStoredWorkflowStep } from './workflow/engine.js'
 export { createJsTsPluginV2 } from './discovery/plugins/js-ts.js'
 /** Built-in bounded Markdown adapter for discovery v2. */
 export { createMarkdownPluginV2 } from './discovery/plugins/markdown.js'
+
+/** Caller-owned immutable service capability ceiling. */
+export { executionContext, withExecutionProfile, type ExecutionProfile, type ExecutionContext } from './execution/profile.js'
+/** Versioned service repository-config filter and path-only diagnostics. */
+export { serviceConfig, SERVICE_CONFIG_LEAVES } from './execution/config.js'
+
+/** Static configuration from exact-partition caller storage. */
+export { loadConfigWithRead } from './config/load-config.js'

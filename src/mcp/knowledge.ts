@@ -1,3 +1,5 @@
+import { serviceConfig } from '../execution/config.js'
+import { withExecutionProfile, isServiceProfile, executionContext, type ExecutionProfile } from '../execution/profile.js'
 import { applyBudget, type BudgetedSection } from '../budget/sections.js'
 import type { DocBridgeConfigV1 } from '../config/schema.js'
 import { handoffForEntity, resolveHandoffEntry } from '../query/handoff.js'
@@ -137,6 +139,7 @@ export type KnowledgeLookupResponse = {
 }
 
 export type KnowledgeLookupOptions = {
+  readonly profile?: ExecutionProfile
   readonly root?: string
   /** The latest reconciliation report, when a workflow run has produced one. */
   readonly report?: () => ReconciliationReportV1 | undefined
@@ -396,7 +399,8 @@ export const resolveLookupEntry = (projection: RetrievalIndexV1, request: Pick<K
  * the entity's own path and hash and those of the documents about it, each with the opening of
  * its body as an excerpt — the first thing a budget sheds.
  */
-export const knowledgeLookup = (index: DocBridgeIndexV1, config: DocBridgeConfigV1, request: KnowledgeLookupRequest, options: KnowledgeLookupOptions = {}): KnowledgeLookupResponse => {
+export const knowledgeLookup = (index: DocBridgeIndexV1, config: DocBridgeConfigV1, request: KnowledgeLookupRequest, options: KnowledgeLookupOptions = {}): KnowledgeLookupResponse => withExecutionProfile(isServiceProfile(index) || isServiceProfile(config) ? 'service' : options.profile, () => {
+  if (executionContext().profile === 'service') config = serviceConfig(config).config
   const projection = requireProjection(index, 'knowledge.lookup')
   const depth = Math.min(MAX_LOOKUP_DEPTH, Math.max(1, request.depth ?? 1))
   const target = resolveLookupEntry(projection, request)
@@ -460,7 +464,7 @@ export const knowledgeLookup = (index: DocBridgeIndexV1, config: DocBridgeConfig
   })
   const budgeted = applyBudget(response, sections, request.budgetTokens)
   return { ...budgeted.payload, budget: budgeted.budget }
-}
+})
 
 /*
  * ---------------------------------------------------------------------------------------------

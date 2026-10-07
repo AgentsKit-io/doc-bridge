@@ -1,4 +1,9 @@
-import { existsSync, readFileSync } from 'node:fs'
+import type { RepositoryReadV1 } from '../storage/contract.js'
+import { readBoundedText } from '../lib/bounded-text.js'
+import { executionContext, withExecutionProfile, denyServiceOperation, type ExecutionProfile } from '../execution/profile.js'
+import { serviceConfig } from '../execution/config.js'
+import { containedPath } from '../safety/repository.js'
+import { existsSync, readFileSync, realpathSync } from 'node:fs'
 import { basename, dirname, join, resolve } from 'node:path'
 
 import { parseStaticJsObject } from '../lib/static-js-literal.js'
@@ -17,6 +22,7 @@ const CONFIG_CANDIDATES = [
 ] as const
 
 export type LoadConfigOptions = {
+  readonly profile?: ExecutionProfile
   readonly cwd?: string
   readonly explicitPath?: string
 }
@@ -24,6 +30,7 @@ export type LoadConfigOptions = {
 export type LoadConfigResult = {
   readonly config: DocBridgeConfigV1
   readonly path: string
+  readonly diagnostics?: readonly string[]
 }
 
 export class ConfigNotFoundError extends Error {
@@ -91,12 +98,14 @@ const parseConfig = (input: unknown): DocBridgeConfigV1 => {
 }
 
 /** v0.1 — static JS/TS config, JSON config files, and package.json#docBridge. */
-export const loadConfig = (opts: LoadConfigOptions = {}): LoadConfigResult => {
-  const cwd = resolve(opts.cwd ?? process.cwd())
+export const loadCliConfig = (opts: LoadConfigOptions = {}): LoadConfigResult => withExecutionProfile(opts.profile, () => {
+  const requestedCwd = resolve(opts.cwd ?? process.cwd())
+  const cwd = executionContext().profile === 'service' ? realpathSync(requestedCwd) : requestedCwd
   const path = findConfigPath(cwd, opts.explicitPath)
   if (!path) throw new ConfigNotFoundError(cwd)
+  if (executionContext().profile === 'service' && !containedPath(cwd, path)) throw new Error('Service configuration path escapes caller read root')
 
-  const raw = readFileSync(path, 'utf8')
+  const raw = executionContext().profile === 'service' ? readBoundedText(path, { used: 0 }) : readFileSync(path, 'utf8')
   const ext = path.split('.').pop()?.toLowerCase()
   if (ext === 'yaml' || ext === 'yml') {
     throw new Error(`YAML config is not supported yet (${path}). Use doc-bridge.config.json for now.`)
@@ -108,9 +117,45 @@ export const loadConfig = (opts: LoadConfigOptions = {}): LoadConfigResult => {
       : ext === 'ts' || ext === 'mts' || ext === 'js' || ext === 'mjs'
         ? parseCodeConfig(raw, path)
       : parseJsonConfig(raw, path)
+  if (executionContext().profile === 'service') return { ...serviceConfig(parsed), path }
   const config = applyConfigDefaults(parseConfig(parsed))
   return { config, path }
-}
+})
+
+
+/** Legacy local configuration API; service callers use bounded injected reads. */
+export const loadConfig = (opts: LoadConfigOptions = {}): LoadConfigResult => withExecutionProfile(opts.profile, () => {
+  denyServiceOperation('legacy configuration read')
+  return loadCliConfig(opts)
+})
+
+/** Static config acquisition from a caller-owned exact repository partition. */
+export const loadConfigWithRead = async (read: RepositoryReadV1, options: { profile?: ExecutionProfile; explicitPath?: string; signal?: AbortSignal } = {}): Promise<LoadConfigResult> => withExecutionProfile(options.profile, async () => {
+  const signal = options.signal ?? new AbortController().signal
+  for (const path of options.explicitPath ? [options.explicitPath] : CONFIG_CANDIDATES) {
+    const meta = await read.stat({ partition: read.partition, signal, path })
+    if (meta.status === 'missing' && !options.explicitPath) continue
+    if (meta.status !== 'ok') throw new Error(`not-analyzed: configuration stat ${meta.code}`)
+    if (meta.value.kind !== 'file' || meta.value.bytes > 4 * 1024 * 1024) throw new Error('Configuration byte limit exceeded')
+    const result = await read.read({ partition: read.partition, signal, path })
+    if (result.status === 'missing' && !options.explicitPath) continue
+    if (result.status !== 'ok') throw new Error(`not-analyzed: configuration read ${result.code}`)
+    if (result.value.bytes.length > 4 * 1024 * 1024) throw new Error('Configuration byte limit exceeded')
+    try {
+      const raw = Buffer.from(result.value.bytes).toString('utf8')
+      const ext = path.split('.').pop()?.toLowerCase()
+      if (ext === 'yaml' || ext === 'yml') throw new Error('Unsupported configuration format')
+      const parsed = path === 'package.json' ? (parseJsonConfig(raw, path) as { docBridge?: unknown }).docBridge
+        : ['ts', 'mts', 'js', 'mjs'].includes(ext ?? '') ? parseCodeConfig(raw, path) : parseJsonConfig(raw, path)
+      if (path === 'package.json' && parsed === undefined) continue
+      return executionContext().profile === 'service' ? { ...serviceConfig(parsed), path } : { config: applyConfigDefaults(parseConfig(parsed)), path }
+    } catch (error) {
+      if (executionContext().profile === 'service') throw new Error('Invalid service configuration at ' + path)
+      throw error
+    }
+  }
+  throw new Error('No configuration in caller repository partition')
+})
 
 export const resolveProjectRoot = (start = process.cwd()): string => {
   let cur = resolve(start)

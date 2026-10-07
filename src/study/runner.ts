@@ -1,3 +1,4 @@
+import { denyServiceOperation } from '../execution/profile.js'
 import type { ChildProcess } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { mkdirSync, writeFileSync } from 'node:fs'
@@ -367,6 +368,7 @@ const runAttempt = (request: ControlledCommandRequest, sessionId: string): Promi
 })
 
 export const runControlledCommand = async (request: ControlledCommandRequest): Promise<ControlledStudyObservationV1> => {
+  denyServiceOperation('runControlledCommand')
   const sessionId = sha256NormalizedV1({ runId: request.plan.runId, execution: request.execution }).slice(0, 32)
   let attempt: ChildAttempt | undefined
   for (let index = 0; index < request.plan.budget.maxAttempts; index += 1) {
@@ -444,6 +446,7 @@ export const runControlledCommand = async (request: ControlledCommandRequest): P
 }
 
 export const persistControlledStudyLedger = (path: string, ledger: ControlledStudyObservationLedgerV1): string => {
+  denyServiceOperation('persistControlledStudyLedger')
   parseControlledStudyLedger(ledger)
   mkdirSync(dirname(resolve(path)), { recursive: true })
   writeFileSync(resolve(path), `${JSON.stringify(ledger, null, 2)}\n`, 'utf8')

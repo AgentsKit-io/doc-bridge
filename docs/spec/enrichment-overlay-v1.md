@@ -239,3 +239,13 @@ switching the Registry off restores the deterministic baseline exactly.
   runs only on request, and nothing reachable from the query path imports `src/agents`.
 - No agent approves anything — its own output, another agent's, or an adjudication's winner.
 - No read writes. A corrupt overlay is no overlay.
+
+## Caller service profile
+
+The caller-selected [service profile v1](service-profile-v1.md) restricts this
+surface before repository configuration is interpreted. Repository config admits
+only the enumerated leaves; ignored options retain path-only diagnostics and
+`not-analyzed` coverage. Agent execution, repository module imports, federation,
+watch and legacy writes are denied. Service library calls use injected storage;
+service CLI writes require `--artifact-root`. MCP mutating/agent operations and
+filesystem fallbacks are refused. Ordinary local calls remain unchanged.

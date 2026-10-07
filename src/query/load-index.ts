@@ -1,3 +1,6 @@
+import { restrictServiceRead } from '../execution/repository.js'
+import { serviceConfig } from '../execution/config.js'
+import { denyServiceOperation, withExecutionProfile, isServiceProfile } from '../execution/profile.js'
 import { readJsonArtifact } from '../index-builder/artifact-io.js'
 import { readRepositoryFiles, INDEX_READ_PATTERNS } from '../index-builder/repository-io.js'
 import { repositoryInputsFromFiles } from '../index-builder/project-corpus.js'
@@ -32,6 +35,7 @@ export const indexFilePath = (root: string, config: DocBridgeConfigV1): string =
   join(root, config.index?.outFile ?? '.doc-bridge/index.json')
 
 export const loadDocBridgeIndex = (root: string, config: DocBridgeConfigV1): DocBridgeIndexV1 => {
+  denyServiceOperation('legacy index read', config)
   const path = indexFilePath(root, config)
   if (!existsSync(path)) throw new IndexNotFoundError(path)
   const raw = JSON.parse(readFileSync(path, 'utf8')) as unknown
@@ -99,7 +103,9 @@ export const loadStoredDocBridgeIndex = async (io: ArtifactIOV1, request: Storag
 }
 
 /** Freshness is checked with verified bytes from the same exact partition. */
-export const loadFreshStoredDocBridgeIndex = async (io: ArtifactIOV1, reader: RepositoryReadV1, request: StorageRequest, config: DocBridgeConfigV1): Promise<StorageResult<{ index: DocBridgeIndexV1; byteHash: string }>> => {
+export const loadFreshStoredDocBridgeIndex = async (io: ArtifactIOV1, reader: RepositoryReadV1, request: StorageRequest, config: DocBridgeConfigV1): Promise<StorageResult<{ index: DocBridgeIndexV1; byteHash: string }>> => withExecutionProfile(isServiceProfile(config) ? 'service' : request.profile, async () => {
+  if (request.profile === 'service' || isServiceProfile(config)) { config = serviceConfig(config).config; reader = restrictServiceRead(reader, config) }
+  request = { partition: request.partition, signal: request.signal }
   const loaded = await loadStoredDocBridgeIndex(io, request)
   if (loaded.status !== 'ok') return loaded
   const index = loaded.value.index
@@ -109,4 +115,4 @@ export const loadFreshStoredDocBridgeIndex = async (io: ArtifactIOV1, reader: Re
   const inputs = repositoryInputsFromFiles(files, config, index.contentHashAlgo, contentRefs, byteSizes)
   const fresh = index.inputs.hash === inputs.hash && index.inputs.projectionVersion === inputs.projectionVersion && index.retrieval.lexiconVersion === SEARCH_LEXICON_VERSION && (!index.projection || (index.projection.lexiconVersion === SEARCH_LEXICON_VERSION && index.projection.graphMetricsVersion === GRAPH_ANALYZER_VERSION))
   return fresh ? loaded : { status: 'mismatch', code: 'CONTENT_MISMATCH' }
-}
+})

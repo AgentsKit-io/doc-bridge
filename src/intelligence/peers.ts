@@ -1,3 +1,4 @@
+import { denyServiceOperation } from '../execution/profile.js'
 export class PeerMissingError extends Error {
   constructor(
     readonly peer: string,
@@ -46,6 +47,7 @@ export const isPeerResolutionFailure = (error: unknown): boolean => {
 }
 
 export const importPeer = async <T>(name: string): Promise<T> => {
+  denyServiceOperation('importPeer')
   try {
     return (await import(name)) as T
   } catch (error) {

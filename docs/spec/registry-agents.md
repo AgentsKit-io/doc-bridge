@@ -76,3 +76,13 @@ The adapter accepts only a typed `AgentProposalV1` whose base snapshot and repor
 Local runners receive the frozen registry context as their first argument and may accept an optional `RegistryAgentExecutionOptions` second argument with an `AbortSignal`. The signal is execution-only: it is not part of the serialized context. Existing one-argument runners remain compatible. The adapter aborts at `intelligence.registry.timeoutMs`; runners should pass the signal to cancellable work such as `fetch`. A runner that ignores cancellation still causes a timeout response, while its concurrency slot remains occupied until that runner settles. CLI mode uses the same deadline and response budgets, sends `SIGKILL` to the child process tree on timeout or output overflow, and retains the slot until the child closes. CLI failures are reported only after execution settles and the slot is released, so awaiting a rejected CLI call permits an immediate retry. Local runners that ignore cancellation still retain their slot after the deadline response. Timeouts expose `AK_NET_TIMEOUT` while preserving the Registry timeout message.
 
 The adapter returns advisory evidence only. It does not apply documentation changes, mark findings resolved, or approve its own output. Convert an accepted suggestion into the existing human-gated fix-proposal flow, run post-apply verification, and treat the new source revision as a new evidence run. An alternate Registry agent is selected by changing `intelligence.registry.agentId` and installing matching metadata under `agentRoot`; the common adapter and evidence contract remain unchanged.
+
+## Caller service profile
+
+The caller-selected [service profile v1](service-profile-v1.md) restricts this
+surface before repository configuration is interpreted. Repository config admits
+only the enumerated leaves; ignored options retain path-only diagnostics and
+`not-analyzed` coverage. Agent execution, repository module imports, federation,
+watch and legacy writes are denied. Service library calls use injected storage;
+service CLI writes require `--artifact-root`. MCP mutating/agent operations and
+filesystem fallbacks are refused. Ordinary local calls remain unchanged.

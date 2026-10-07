@@ -1,3 +1,4 @@
+import { isServiceProfile } from '../execution/profile.js'
 /**
  * Which files a repository scan may see.
  *
@@ -146,6 +147,6 @@ const gitignoreFilter = (root: string): IgnoreFilter => {
 export const createIgnoreFilter = (root: string): IgnoreFilter => {
   const base = resolve(root)
   const canonicalRoot = canonical(root)
-  const visible = gitVisibleFiles(canonicalRoot)
+  const visible = isServiceProfile() ? undefined : gitVisibleFiles(canonicalRoot)
   return visible ? gitFilter(base, canonicalRoot, visible) : gitignoreFilter(base)
 }

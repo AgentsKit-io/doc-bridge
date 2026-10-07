@@ -1,3 +1,4 @@
+import { denyServiceOperation } from '../execution/profile.js'
 import { existsSync, watch } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 
@@ -35,6 +36,7 @@ const collectWatchRoots = (root: string, config: DocBridgeConfigV1, configPath?:
 }
 
 export const watchDocBridgeIndex = (opts: WatchIndexOptions): Promise<number> => {
+  denyServiceOperation('watchDocBridgeIndex', opts.config)
   const debounceMs = opts.debounceMs ?? 350
   let timer: ReturnType<typeof setTimeout> | undefined
   let running = false

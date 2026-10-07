@@ -1,3 +1,4 @@
+import { denyServiceOperation } from '../execution/profile.js'
 import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
@@ -148,6 +149,7 @@ export const loadFederatedChunks = async (
   config: DocBridgeConfigV1,
   options: FederatedRetrieverOptions = {},
 ): Promise<DocBridgeRetrievedChunk[]> => {
+  denyServiceOperation('loadFederatedChunks', config)
   const fetchText = options.fetchText ?? defaultFetchText
   const chunks: DocBridgeRetrievedChunk[] = []
   const warnings: string[] = []

@@ -1,3 +1,4 @@
+import { denyServiceOperation } from '../execution/profile.js'
 import type { ArtifactIOV1, StorageRequest } from '../storage/contract.js'
 import { readJsonArtifact, writeJsonArtifact } from '../index-builder/artifact-io.js'
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
@@ -53,6 +54,7 @@ export type EnrichmentCache = {
 
 /** A file-backed cache under the enrich directory. A read never writes; a corrupt entry is a miss. */
 export const createEnrichmentCache = (root: string): EnrichmentCache => {
+  denyServiceOperation('createEnrichmentCache')
   const dir = enrichmentCacheDir(root)
   const pathFor = (key: string): string => join(dir, `${key}.json`)
   return {
@@ -70,6 +72,7 @@ export const createEnrichmentCache = (root: string): EnrichmentCache => {
     },
     write: (input, proposals) => {
       const key = enrichmentCacheKey(input)
+      denyServiceOperation('cached local artifact write')
       mkdirSync(dir, { recursive: true })
       const entry: EnrichmentCacheEntry = { type: 'enrichment-cache-entry', key, ...input, proposals: [...proposals] }
       const path = pathFor(key)

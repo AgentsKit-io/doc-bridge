@@ -68,3 +68,13 @@ configuration, analyzer versions and meaningful coverage/limitations. Legacy `sh
 verification is unchanged. Unknown algorithms require a compatible doc-bridge version and explicit
 regeneration. See [incremental scan v1](../spec/incremental-scan-v1.md). Semantic equality does not
 rebind an approval to another revision; proposal and study seals retain their original projections.
+
+## Caller service profile
+
+The caller-selected [service profile v1](service-profile-v1.md) restricts this
+surface before repository configuration is interpreted. Repository config admits
+only the enumerated leaves; ignored options retain path-only diagnostics and
+`not-analyzed` coverage. Agent execution, repository module imports, federation,
+watch and legacy writes are denied. Service library calls use injected storage;
+service CLI writes require `--artifact-root`. MCP mutating/agent operations and
+filesystem fallbacks are refused. Ordinary local calls remain unchanged.

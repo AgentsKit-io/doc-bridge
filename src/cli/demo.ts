@@ -1,3 +1,4 @@
+import { denyServiceOperation } from '../execution/profile.js'
 import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
@@ -56,6 +57,7 @@ export const runDemo = (
   fixture: DemoFixture = 'example',
   options: { readonly copyFixture?: boolean } = {},
 ): DemoResult => {
+  denyServiceOperation('runDemo')
   const targetPackage = fixture === 'monorepo' ? 'auth' : 'example'
   const fixtureDir = fixturePath(fixture)
 

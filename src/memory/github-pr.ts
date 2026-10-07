@@ -1,3 +1,4 @@
+import { denyServiceOperation } from '../execution/profile.js'
 import { execFileSync, spawnSync } from 'node:child_process'
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -36,6 +37,7 @@ export const defaultPromotionDraftPath = (root: string): string =>
   join(root, '.doc-bridge', 'drafts', `memory-promotion-${slug()}.md`)
 
 export const writePromotionDraft = (root: string, draft: MemoryPromotionDraft, path?: string): string => {
+  denyServiceOperation('writePromotionDraft')
   const draftPath = path ?? defaultPromotionDraftPath(root)
   mkdirSync(join(root, '.doc-bridge', 'drafts'), { recursive: true })
   writeFileSync(draftPath, `${draft.body}\n`, 'utf8')
@@ -47,6 +49,7 @@ export const promoteMemoryToGithubPr = (
   draft: MemoryPromotionDraft,
   options: GithubPrOptions = {},
 ): GithubPrResult => {
+  denyServiceOperation('promoteMemoryToGithubPr')
   if (!draft.ok && !options.force) {
     return {
       ok: false,
