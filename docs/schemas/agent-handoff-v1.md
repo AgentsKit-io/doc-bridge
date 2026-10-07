@@ -50,3 +50,19 @@ Legacy `--agent` payloads may omit `schemaVersion`. Use `normalizeAgentHandoff()
 ```bash
 ak-docs validate-handoff ./handoff.json
 ```
+
+## Findings and negotiated handoff caveats
+
+Region fixes and settled human decisions follow [region remediation v1](../spec/region-remediation-v1.md),
+[FindingV1](../schemas/finding-v1.md), [RemediationV1](../schemas/remediation-v1.md) and
+[DecisionV1](../schemas/decision-v1.md). Existing whole-file fix commands remain V1;
+region creation/review is a deterministic library API. Enrichment retains settled Decision records
+through cache replay, without converting remediation rejection into finding rejection.
+
+`AgentHandoffV1` readers accept optional bounded `caveats` with `pendingFindings`,
+`analyzed` repository/revision identities and `coverage` limitations. New writers emit
+it only with explicit `includeCaveats: true` and caller-supplied validated caveats; unknown
+capability defaults to the legacy field set. Default index and MCP writers never embed
+caveats. New strict readers accept legacy payloads; old strict readers receive legacy
+output. The public reader preserves negotiated caveats. Limitations cannot establish
+semantic validation or invent an answer.

@@ -51,7 +51,7 @@ const zodIssues = (error: ZodError): readonly ParseIssue[] =>
 export const safeParseAgentHandoff = (input: unknown): ParseResult<AgentHandoffV1> => {
   const legacy = AgentHandoffLegacySchema.safeParse(input)
   if (!legacy.success) return { ok: false, issues: zodIssues(legacy.error) }
-  return { ok: true, value: normalizeAgentHandoff(legacy.data) }
+  return { ok: true, value: normalizeAgentHandoff(legacy.data, { includeCaveats: true }) }
 }
 
 export const parseAgentHandoff = (input: unknown): AgentHandoffV1 => {

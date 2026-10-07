@@ -1,3 +1,6 @@
+import { z } from 'zod'
+import { HandoffCaveatsSchema } from './agent-handoff.js'
+import { FindingV1Schema, RemediationV1Schema, DecisionV1Schema } from './findings.js'
 import { ChangeSetV1JsonSchema } from './change-set.js'
 export { ChangeSetV1JsonSchema } from './change-set.js'
 import { RETRIEVAL_MAX_ENTRIES } from './retrieval-index.js'
@@ -54,6 +57,7 @@ export const AgentHandoffV1JsonSchema = {
     humanDoc: { anyOf: [{ type: 'string', minLength: 1, maxLength: 512 }, { type: 'null' }] },
     playbookPatterns: { type: 'array', items: { type: 'string', format: 'uri' }, maxItems: 16 },
     notes: stringArray(16),
+    caveats: z.toJSONSchema(HandoffCaveatsSchema),
     related: {
       type: 'array',
       maxItems: 16,
@@ -189,7 +193,14 @@ export const DocBridgeIndexV1JsonSchema = {
   },
 } as const satisfies JsonSchema
 
+export const FindingV1JsonSchema = z.toJSONSchema(FindingV1Schema)
+export const RemediationV1JsonSchema = z.toJSONSchema(RemediationV1Schema)
+export const DecisionV1JsonSchema = z.toJSONSchema(DecisionV1Schema)
+
 export const DocBridgeJsonSchemas = {
+  findingV1: FindingV1JsonSchema,
+  remediationV1: RemediationV1JsonSchema,
+  decisionV1: DecisionV1JsonSchema,
   changeSetV1: ChangeSetV1JsonSchema,
   agentHandoffV1: AgentHandoffV1JsonSchema,
   docBridgeIndexV1: DocBridgeIndexV1JsonSchema,

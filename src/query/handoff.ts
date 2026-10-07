@@ -2,7 +2,7 @@ import { serviceConfig } from '../execution/config.js'
 import { withExecutionProfile, isServiceProfile, executionContext, type ExecutionProfile } from '../execution/profile.js'
 import type { DocBridgeConfigV1 } from '../config/schema.js'
 import { defaultChecksForTarget } from '../lib/package-manager.js'
-import { normalizeAgentHandoff, type AgentHandoffV1, type HandoffRelated } from '../schemas/agent-handoff.js'
+import { normalizeAgentHandoff, type AgentHandoffV1, type HandoffRelated, type HandoffCaveats } from '../schemas/agent-handoff.js'
 import type { DocBridgeIndexV1 } from '../schemas/doc-bridge-index.js'
 import type { RetrievalEntry, RetrievalIndexV1 } from '../schemas/retrieval-index.js'
 
@@ -17,6 +17,8 @@ import type { RetrievalEntry, RetrievalIndexV1 } from '../schemas/retrieval-inde
  */
 
 export type HandoffOptions = {
+  readonly includeCaveats?: boolean
+  readonly caveats?: HandoffCaveats
   readonly profile?: ExecutionProfile
   /** The project root, for the package-script fallback when nothing declares checks. */
   readonly root?: string
@@ -239,7 +241,7 @@ const targetType = (kind: RetrievalEntry['kind']): AgentHandoffV1['target']['typ
  * `related` names the areas this unit's code depends on and that depend on it, with the import
  * that proves each. `explain` says which relation produced each field.
  */
-export const handoffForEntity = (index: DocBridgeIndexV1, id: string, config: DocBridgeConfigV1, options: HandoffOptions = {}): AgentHandoffV1 => withExecutionProfile(isServiceProfile(index) || isServiceProfile(config) ? 'service' : options.profile, () => {
+const buildHandoffForEntity = (index: DocBridgeIndexV1, id: string, config: DocBridgeConfigV1, options: HandoffOptions = {}): AgentHandoffV1 => withExecutionProfile(isServiceProfile(index) || isServiceProfile(config) ? 'service' : options.profile, () => {
   if (executionContext().profile === 'service') config = serviceConfig(config).config
   const projection = index.projection
   if (!projection) return legacyHandoff(index, id, config)
@@ -328,3 +330,9 @@ export const handoffForEntity = (index: DocBridgeIndexV1, id: string, config: Do
     },
   })
 })
+
+/** Capability negotiation is explicit and never persisted into default index/MCP writers. */
+export const handoffForEntity = (index: DocBridgeIndexV1, id: string, config: DocBridgeConfigV1, options: HandoffOptions = {}): AgentHandoffV1 => {
+  const handoff = buildHandoffForEntity(index, id, config, options)
+  return normalizeAgentHandoff({ ...handoff, ...(options.includeCaveats === true && options.caveats ? { caveats: options.caveats } : {}) }, { includeCaveats: options.includeCaveats === true })
+}

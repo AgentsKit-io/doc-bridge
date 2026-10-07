@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { DecisionV1Schema } from './findings.js'
 
 import { sha256NormalizedV1 } from '../index-builder/content-hash.js'
 import { EvidenceSchema, ProjectIdentitySchema, type Evidence } from './knowledge.js'
@@ -268,6 +269,7 @@ export const RejectedEnrichmentSchema = z
     reason: z.enum(ENRICHMENT_REJECTION_REASONS),
     detail: z.string().max(1_024).optional(),
     origin: EnrichmentOriginSchema.optional(),
+    decision: DecisionV1Schema.optional(),
   })
   .strict()
 export type RejectedEnrichment = z.infer<typeof RejectedEnrichmentSchema>
