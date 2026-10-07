@@ -98,26 +98,24 @@ Example finding (anonymized)
 Compare revision snapshots deterministically: inspect symbol, CLI, configuration
 and signature changes, historical references and remaining head citations.
 Broken references require removal evidence; ambiguity and unsupported extraction
-stay explicit. Version eligibility is evaluated separately from findings.
+stay explicit. Changed references require review. Default policy routes findings
+separately from their evidence status; use `--no-policy` to inspect raw diagnostics.
 
 From a built checkout, this runnable comparison snapshots a temporary copy of
-the signature fixture before and after removing a cited export:
+the signature fixture before and after removing a cited export. Use an installed
+`ak-docs`, or replace it with `node /path/to/checkout/bin/ak-docs.js` from a built
+checkout. The Node step extracts the raw snapshot from the discovery response:
 
 ```bash
 set -e
 work=$(mktemp -d)
-DOC_BRIDGE_EXAMPLE="$work" node --input-type=module <<'JS'
-import { cpSync, readFileSync, writeFileSync } from 'node:fs'
-import { discoverRepository } from './dist/index.js'
-const work = process.env.DOC_BRIDGE_EXAMPLE
-const root = `${work}/repo`
-cpSync('tests/fixtures/signature-api', root, { recursive: true })
-writeFileSync(`${work}/base.json`, JSON.stringify(discoverRepository({ root })))
-const source = readFileSync(`${root}/api.ts`, 'utf8')
-writeFileSync(`${root}/api.ts`, source.split('\n').filter(line => !line.startsWith('export const describeThing')).join('\n'))
-writeFileSync(`${work}/head.json`, JSON.stringify(discoverRepository({ root })))
-JS
-node bin/ak-docs.js diff --base "$work/base.json" --head "$work/head.json" --root "$work/repo"
+cp -R tests/fixtures/signature-api "$work/repo"
+(cd "$work/repo" && ak-docs discover --json) > "$work/discovery.json"
+node -e 'const fs = require("node:fs"); const result = JSON.parse(fs.readFileSync(process.argv[1], "utf8")); fs.writeFileSync(process.argv[2], JSON.stringify(result.snapshot))' "$work/discovery.json" "$work/base.json"
+sed '/^export const describeThing/d' "$work/repo/api.ts" > "$work/api.ts"
+mv "$work/api.ts" "$work/repo/api.ts"
+ak-docs diff --base "$work/base.json" --root "$work/repo"
+ak-docs diff --base "$work/base.json" --root "$work/repo" --no-policy
 rm -rf "$work"
 ```
 

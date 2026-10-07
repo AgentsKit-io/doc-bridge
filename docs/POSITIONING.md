@@ -27,7 +27,7 @@ Source of truth for README, issues, RFCs, and external posts.
 | **Act** | Handoff JSON / MCP so agents edit the right place and run the right checks |
 | **Bridge** | Keep agent docs ↔ human docs linked and gate-validated |
 | **Learn** | Ingest Cursor/Claude-style memory → classify → promote drafts |
-| **Verify** | Prove documentation divergence deterministically: revision diffs, broken/ambiguous references with evidence on both sides, symbol/CLI/config/signature facts, version-aware eligibility and an advisory PR report |
+| **Verify** | Prove documentation divergence deterministically: revision diffs, broken/ambiguous/changed references with evidence on both sides, symbol/CLI/config/signature facts, version-aware eligibility and an advisory PR report |
 | **Explain** | Optional RAG + terminal chat (`@agentskit/rag` + `@agentskit/ink`) with `handoffFirst` |
 
 ## What we are not

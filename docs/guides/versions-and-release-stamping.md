@@ -9,13 +9,17 @@ Route caller-supplied release evidence with ecosystem-owned version comparisons.
 
 ## Minimal example
 
-From a built checkout, show the default eligibility on a package fixture:
+Release stamping and eligibility have no CLI commands, so this library-only
+example shows default eligibility on a copied package fixture from a built checkout:
 
 ```bash
-node --input-type=module <<'JS'
+set -e
+work=$(mktemp -d)
+cp -R tests/fixtures/signature-api "$work/repo"
+DOC_BRIDGE_EXAMPLE="$work/repo" node --input-type=module <<'JS'
 import assert from 'node:assert/strict'
 import { discoverRepository, diffSnapshots, changeSetEligibility } from './dist/index.js'
-const snapshot = discoverRepository({ root: 'tests/fixtures/signature-api' })
+const snapshot = discoverRepository({ root: process.env.DOC_BRIDGE_EXAMPLE })
 const delta = diffSnapshots(snapshot, snapshot).changeSet
 const result = changeSetEligibility(delta, {
   state: 'latest-released', source: 'implicit', evidence: [],
@@ -24,6 +28,7 @@ assert.equal(result.status, 'resolved')
 assert.equal(result.value, false)
 console.log('Unreleased delta is ineligible for latest-released documentation')
 JS
+rm -rf "$work"
 ```
 
 Declare independent package purls in frontmatter `docbridge.targets`, with an
@@ -42,7 +47,10 @@ releases or infers release from a branch/manifest. Duplicate stamps are
 idempotent; conflicting stamps require review. Ambiguous/unmatched mappings
 stay unresolved. Stamping changes semantic routing identity, never approval.
 The core does not assume every ecosystem uses semver. Eligibility is separate
-from findings; the Action advisory does not apply version exclusions.
+from a finding's evidence status. Default diff/advisory
+policy routes ineligible targets to `pending-version`; advisory Markdown shows
+counts and the diff policy sidecar retains complete records. `--no-policy`
+disables routing without changing evidence.
 
 See [release stamping and eligibility](../spec/change-set-v1.md#release-stamping-and-eligibility),
 [document targets](../spec/markdown-analyzer-v1.md#document-package-targets) and

@@ -9,11 +9,17 @@ Restrict engine capabilities for trusted hosted callers.
 
 ## Minimal example
 
+Use an installed `ak-docs`, or replace it with `node /path/to/checkout/bin/ak-docs.js` from a built checkout.
+
 The trusted caller chooses the service ceiling before loading repository config.
 From a built checkout, read a fixture without source execution:
 
 ```bash
-node bin/ak-docs.js discover --profile service --root tests/fixtures/sample-project --json
+set -e
+work=$(mktemp -d)
+cp -R tests/fixtures/sample-project "$work/repo"
+(cd "$work/repo" && ak-docs discover --profile service --json)
+rm -rf "$work"
 ```
 
 Ignored config keys are path-only diagnostics; unavailable analysis stays in

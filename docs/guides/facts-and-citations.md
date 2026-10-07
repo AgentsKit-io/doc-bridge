@@ -9,10 +9,16 @@ Cite observed CLI, configuration and syntactic API facts in Markdown.
 
 ## Minimal example
 
+Use an installed `ak-docs`, or replace it with `node /path/to/checkout/bin/ak-docs.js` from a built checkout.
+
 From a built checkout, discover the checked-in CLI fixture:
 
 ```bash
-node bin/ak-docs.js discover --root tests/fixtures/cli-commander --json
+set -e
+work=$(mktemp -d)
+cp -R tests/fixtures/cli-commander "$work/repo"
+(cd "$work/repo" && ak-docs discover --json)
+rm -rf "$work"
 ```
 
 Its README cites `doc-bridge report` and `--brief`. Commands require an exact

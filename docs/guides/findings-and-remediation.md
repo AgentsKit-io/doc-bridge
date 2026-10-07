@@ -9,21 +9,25 @@ Separate observed divergence, proposed correction and authenticated human decisi
 
 ## Minimal example
 
-Inspect fixture review impacts before proposing edits. From a built checkout:
+Inspect an unchanged copied fixture before proposing edits; its findings are empty.
+Use an installed `ak-docs`, or replace it with `node /path/to/checkout/bin/ak-docs.js` from a built checkout. The Node step unwraps the
+discovery response because the CLI has no raw-snapshot export:
 
 ```bash
-node --input-type=module <<'JS'
-import assert from 'node:assert/strict'
-import { discoverRepository, diffSnapshots } from './dist/index.js'
-const snapshot = discoverRepository({ root: 'tests/fixtures/signature-api' })
-const result = diffSnapshots(snapshot, snapshot, { headRoot: 'tests/fixtures/signature-api' })
-assert.equal(result.findings.length, 0)
-console.log('Unchanged fixture: no divergence findings or automatic corrections')
-JS
+set -e
+work=$(mktemp -d)
+cp -R tests/fixtures/signature-api "$work/repo"
+(cd "$work/repo" && ak-docs discover --json) > "$work/discovery.json"
+node -e 'const fs = require("node:fs"); const result = JSON.parse(fs.readFileSync(process.argv[1], "utf8")); fs.writeFileSync(process.argv[2], JSON.stringify(result.snapshot))' "$work/discovery.json" "$work/base.json"
+ak-docs diff --base "$work/base.json" --root "$work/repo"
+rm -rf "$work"
 ```
 
 A `FindingV1` records assertion identity, epistemic status, bounded evidence and
-coverage. Routing policy is separate. `findingFromChangeDiagnostic` converts
+coverage. Routing policy is separate from epistemic status and is applied by default in
+CLI diff/advisory output. The policy sidecar retains full records and counts;
+`--no-policy` exposes raw diagnostics. `CHANGED_REFERENCE` means review-required
+uncertainty, while `BROKEN_REFERENCE` requires proven removal. `findingFromChangeDiagnostic` converts
 deterministic diagnostics without inventing removal proof. A `RemediationV1`
 proposes bounded region edits; a `DecisionV1` records an authenticated rejection
 of a finding or one remediation. Rejecting the correction leaves the finding
