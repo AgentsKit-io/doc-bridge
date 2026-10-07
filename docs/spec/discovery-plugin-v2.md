@@ -74,8 +74,8 @@ fact kind, ID/name match the fact, and evidence remains top-level. Metadata is
 strictly `{ factCodecVersion: 1, fact: { kind, id, ownerId, name, valueHash } }`.
 `surfaceFactFromEntity` rejects malformed/unknown codec metadata and mismatched
 identity. This preserves the snapshot v1 shape while allowing persisted facts to
-round-trip without side channels. New kinds have intentional semantic significance
-when a later plugin emits them; no built-in extraction behavior changes here.
+round-trip without side channels. The codec itself does not enable extraction. Registered built-in extractors below
+declare the kinds whose facts they emit.
 
 `PackageFact` carries ID, purl, optional version, dependency purls/ranges/locked
 versions and manifest/lockfile evidence. Purl syntax has a bounded structural
@@ -191,3 +191,45 @@ registry's exact attribution allowlist. Facts are encoded before Markdown
 resolution, with their owning entities already present. A changed fact universe
 invalidates documentation relation reuse. An empty registry preserves the
 existing snapshot bytes, coverage and plugin capabilities.
+
+### Built-in CLI facts
+
+`js-ts:cli` version `1.0.0` emits `cli-command` and `cli-flag` facts. Package
+`bin` string/object entries establish command roots owned by the package. A
+subcommand is owned by its parent command and named with its complete bin-prefixed
+command path. Flags are owned by the command they configure. Each declared
+spelling, including a short alias, has its own flag fact. Its value hash covers
+`name`, sorted `aliases`, `takesValue`, and statically known required/default
+values; literal parseArgs `multiple` also participates. Changing the long alias
+removes/adds those spellings and changes any retained short alias's value hash.
+Command hashes cover their qualified name and literal declaration; roots also
+include the declared entrypoint. No codec/index/handoff shape changes.
+
+Supported AST patterns bind imported Commander `Command`/`program`, yargs or
+`yargs/yargs` factories, cac factories, and `node:util`/`util` `parseArgs`.
+Named imports may be locally aliased. Static `.command`, `.option`, and
+Commander `.requiredOption` chains retain command ownership; yargs supports
+literal option objects and inline builder callbacks. ParseArgs requires literal
+`options` objects with literal option names/types/short/default/multiple values.
+No repository code is executed. Arbitrary similarly named methods do not count.
+Unsupported methods, computed/spread options, nonliteral declarations/defaults,
+conditional/function-based registration, conflicting declarations, unrecognized
+entrypoints and output limits produce partial or not-analyzed capability coverage.
+Missing bin entries are not applicable; a missing manifest is not analyzed.
+Imported-library declarations require reachability from the literal bin entry
+through scanned static relative imports/re-exports. Missing build-output mappings
+and dynamic loading remain partial; entrypoint ownership is never guessed. Test/fixture modules are excluded from CLI declarations.
+At most 4096 facts are emitted, in stable ID order; excluded declarations and
+limits cannot prove removal.
+
+An exported string/no-substitution-template literal with explicit JSDoc
+`@docbridgeCliUsage` declares conservative help examples. Only lines beginning
+with an exact package bin and literal command words are recognized. Alternative
+command syntax is excluded; placeholder/value syntax stops the command path.
+Dash-prefixed flags on accepted lines belong to that command. An explicit
+`Global flags:` section belongs to bins named elsewhere in that literal.
+Implicit library-generated default help/version flags are outside the explicit
+static-declaration inventory; helper calls with unsupported registration semantics
+remain partial. Removal proof concerns previously emitted declaration identities.
+Help-only extraction always remains partial: help examples do not establish
+runtime completeness. This opt-in marker adds no configuration key.

@@ -90,6 +90,8 @@ export type MarkdownDocumentV1 = {
   readonly links: readonly MarkdownReference[]
   /** Inline code tokens outside generated regions. */
   readonly codeTokens: readonly MarkdownReference[]
+  /** Lexical CLI citations; shell tokens still require a known bin during resolution. */
+  readonly cliTokens: readonly MarkdownCliReference[]
   /** Raw frontmatter text and the line it starts on, for the declaration parser. */
   readonly frontmatterBlock?: { readonly value: string; readonly line: number }
 }
@@ -98,6 +100,25 @@ const processor = unified()
   .use(remarkParse)
   .use(remarkFrontmatter, ['yaml'])
   .use(remarkGfm)
+
+export type MarkdownCliReference = MarkdownReference & { readonly kind: 'cli-command' | 'cli-flag'; readonly bin?: string }
+
+/** Qualified command prefixes and dash-prefixed flags, without evaluating shell syntax. */
+export const cliCommandTokens = (value: string, line: number, shell = false): MarkdownCliReference[] => {
+  const words = value.trim().split(/\s+/)
+  if (!/^[A-Za-z][\w.-]*$/.test(words[0] ?? '')) return []
+  const result: MarkdownCliReference[] = []
+  for (let size = shell ? 1 : 2; size <= words.length; size++) {
+    if (!words.slice(0, size).every(word => /^[A-Za-z][\w.-]*$/.test(word))) break
+    result.push({ value: words.slice(0, size).join(' '), line, kind: 'cli-command', ...(shell ? { bin: words[0]! } : {}) })
+  }
+  return result
+}
+export const cliFlagTokens = (value: string, line: number, bin?: string): MarkdownCliReference[] =>
+  value.split(/\s+/).flatMap(word => {
+    const name = word.split('=')[0]!
+    return /^--?[A-Za-z][\w.-]*$/.test(name) ? [{ value: name, line, kind: 'cli-flag' as const, ...(bin ? { bin } : {}) }] : []
+  })
 
 type Positioned = { readonly position?: { readonly start: { readonly line: number } } | undefined }
 
@@ -208,6 +229,7 @@ export const parseMarkdownDocument = (path: string, content: string): MarkdownDo
   const headings: MarkdownHeading[] = []
   const links: MarkdownReference[] = []
   const codeTokens: MarkdownReference[] = []
+  const cliTokens: MarkdownCliReference[] = []
   let title: string | undefined
   let summary: string | undefined
 
@@ -238,9 +260,21 @@ export const parseMarkdownDocument = (path: string, content: string): MarkdownDo
       return
     }
 
+    if (node.type === 'code' && ['sh', 'bash', 'shell', 'zsh', 'console'].includes(node.lang ?? '')) {
+      for (const [offset, text] of node.value.split(/\r?\n/).entries()) {
+        const shellLine = line + offset + 1
+        if (withinGenerated(shellLine, regions)) continue
+        const bin = text.trim().split(/\s+/)[0]!
+        cliTokens.push(...cliCommandTokens(text, shellLine, true), ...cliFlagTokens(text, shellLine, bin))
+      }
+    }
+
     if (node.type === 'inlineCode' && !withinGenerated(line, regions)) {
       const value = node.value.trim()
-      if (value) codeTokens.push({ value, line })
+      if (value) {
+        codeTokens.push({ value, line })
+        cliTokens.push(...cliCommandTokens(value, line), ...cliFlagTokens(value, line))
+      }
     }
   })
 
@@ -259,7 +293,7 @@ export const parseMarkdownDocument = (path: string, content: string): MarkdownDo
     generatedRegions: regions,
     contentHash: markdownContentHash(normalized),
     links,
-    codeTokens,
+    codeTokens, cliTokens,
     ...(frontmatterNode
       ? { frontmatterBlock: { value: frontmatterNode.value, line: lineOf(frontmatterNode) } }
       : {}),
@@ -370,6 +404,7 @@ export const analyzeMarkdownDocument = (
   documentId: string,
   resolution: MarkdownResolution,
 ): MarkdownAnalysis => {
+  const cliBins = new Set([...(resolution.facts?.values() ?? [])].flatMap(facts => facts.filter(fact => fact.kind === 'cli-command').map(fact => fact.name.split(' ')[0]!)))
   const cap = resolution.relationCap ?? MARKDOWN_RELATION_CAP
   const relations = new Map<string, KnowledgeRelation>()
   const notes: MarkdownNote[] = []
@@ -441,6 +476,10 @@ export const analyzeMarkdownDocument = (
   }
 
   for (const token of document.codeTokens) resolveToken(token.value, token.line)
+  for (const token of document.cliTokens) {
+    if (token.bin && !cliBins.has(token.bin)) continue
+    resolveToken(token.value, token.line, token.kind)
+  }
 
   /**
    * Resolve exact paths, codec facts, legacy packages/exports, then fuzzy paths.
@@ -448,11 +487,11 @@ export const analyzeMarkdownDocument = (
    * A legacy symbol resolves only when exactly one module exports it, because sending an
    * agent to one of two possible definitions is worse than sending it nowhere.
    */
-  function resolveToken(raw: string, line: number): void {
+  function resolveToken(raw: string, line: number, cliKind?: 'cli-command' | 'cli-flag'): void {
     const value = raw.trim()
     if (!value || value.length > 256) return
 
-    if (pathShaped(value) || areas.has(value)) {
+    if (!cliKind && (pathShaped(value) || areas.has(value))) {
       const direct = value.replace(/^\.\//, '')
       if (resolution.documents.has(direct) || resolution.modules.has(direct) || areas.has(direct)) {
         resolvePath(direct, line, 'mentions')
@@ -460,7 +499,8 @@ export const analyzeMarkdownDocument = (
       }
     }
 
-    const facts = resolution.facts?.get(value)
+    const candidates = resolution.facts?.get(value)
+    const facts = candidates?.filter(fact => cliKind ? fact.kind === cliKind : fact.kind !== 'cli-command' && fact.kind !== 'cli-flag')
     if (facts?.length) {
       for (const kind of [...new Set(facts.map(fact => fact.kind))].sort()) {
         const candidates = facts.filter(fact => fact.kind === kind)
@@ -477,6 +517,7 @@ export const analyzeMarkdownDocument = (
       return
     }
 
+    if (cliKind || candidates?.some(fact => fact.kind === 'cli-command' ? value.includes(' ') : fact.kind === 'cli-flag' && /^--?[A-Za-z][\w.-]*$/.test(value))) return
     const packageEntity = resolution.packages.get(value)
     if (packageEntity) {
       add('mentions', packageEntity, line)

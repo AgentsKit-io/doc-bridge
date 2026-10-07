@@ -91,7 +91,7 @@ describe('generic fact diff through persisted exact-partition snapshots', () => 
 
   it('resolves removed commands, config keys, signatures and packages through owner/name citations', async () => {
     const baseRoot = await fixture('base'), headRoot = await fixture('head')
-    const text = '# Guide\n\nUse `inspect`, `output`, `Keep`, and `pkg:generic/doc-bridge`.\n'
+    const text = '# Guide\n\nUse `output`, `Keep`, and `pkg:generic/doc-bridge`.\n\n```sh\ninspect\n```\n'
     await writeFile(join(baseRoot, 'docs/guide.md'), text)
     await writeFile(join(headRoot, 'docs/guide.md'), text)
     await writeFile(join(headRoot, 'src/main.toy'), 'symbol Keep\n')

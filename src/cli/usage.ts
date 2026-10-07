@@ -1,4 +1,5 @@
 /**
+ * @docbridgeCliUsage
  * The CLI's usage text, in its own module.
  *
  * `ak-docs parity` checks that a command this repository documents in public is a command the CLI

@@ -123,8 +123,29 @@ additional entries set `metadata.ambiguousFactReferencesTruncated: true`.
 A partial coverage note also records ambiguity. Snapshot, index and handoff
 schemas remain compatible through their existing open metadata records.
 
-The analyzer version remains 1.1.0: existing JS/TS output has no codec-backed
-facts, and its relations, metadata, coverage and analyzer versions are unchanged.
+The base Markdown analyzer version remains 1.1.0. CLI extraction has its own
+component version; non-CLI resolution behavior is unchanged.
 The v2 plugin parses documents afresh, so fact-universe changes cannot replay
 stale generic references. Synchronous legacy discovery retains its existing
 resolution fingerprint and behavior.
+
+### Qualified CLI citations
+
+CLI commands require an exact bin-prefixed command path in inline code, such as
+`doc-bridge report`; an unqualified common word such as `report` is not a CLI
+citation. Command prefixes are matched exactly against codec facts. In shell
+fences (`sh`, `bash`, `shell`, `zsh`, `console`), the first word of a line must
+be an exact known bin; root commands may also be cited there. Shell expressions,
+prompts, scripts for unknown executables and ordinary prose do not qualify.
+Only whitespace-delimited dash-prefixed flag tokens are candidates; `--flag=value`
+is normalized to `--flag`. Short aliases resolve through their own facts.
+Ambiguous owners retain the existing bounded ambiguity behavior.
+
+CLI lexical tokens are kept separately from ordinary inline-code tokens, so
+shell examples do not introduce symbol/config/path mentions. Generated regions,
+the 64-relation cap and eight citation locations per relation still apply.
+CLI relations are added after existing path/symbol/config relations, so the new
+capability cannot displace their bounded evidence.
+Historical CLI removal findings verify these same tokens; shell tokens must
+retain the removed fact's bin context. Help-only partial source coverage yields
+stale-or-unverified removal candidates rather than proven conflicts.

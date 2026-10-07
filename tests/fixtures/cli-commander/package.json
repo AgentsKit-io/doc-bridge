@@ -1,0 +1,1 @@
+{"name":"doc-bridge-cli-fixture","type":"module","bin":{"doc-bridge":"src/cli.ts"}}

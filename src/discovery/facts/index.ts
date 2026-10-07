@@ -1,3 +1,4 @@
+import { cliFactExtractor } from './cli.js'
 import * as ts from 'typescript'
 import { scriptKind } from '../inputs.js'
 import type { ScanIO } from '../scan-io.js'
@@ -23,7 +24,7 @@ export interface FactExtractor {
   readonly inputScope?: 'global'
   extract(input: FactExtractorInput): { facts: readonly SurfaceFact[]; coverage: DiscoverySnapshotV1['coverage'] }
 }
-export const FACT_EXTRACTORS: readonly FactExtractor[] = []
+export const FACT_EXTRACTORS: readonly FactExtractor[] = [cliFactExtractor]
 
 export const factAnalyzerVersions = (): Readonly<Record<string, string>> => Object.fromEntries(FACT_EXTRACTORS.map(extractor => [extractor.id, extractor.version]))
 

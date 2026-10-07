@@ -175,7 +175,10 @@ const genericFindings = (base: DiscoverySnapshotV1, head: DiscoverySnapshotV1, c
     const text = texts.get(doc.id)
     if (!documents.has(doc.id)) documents.set(doc.id, text === undefined ? undefined : parseMarkdownDocument(doc.path, text))
     const parsed = documents.get(doc.id)
-    const tokens = parsed?.codeTokens.filter(token => token.value === fact.name) ?? []
+    const cli = fact.kind === 'cli-command' || fact.kind === 'cli-flag'
+    const cliOwner = fact.kind === 'cli-command' ? fact.name : oldFacts.find(item => item.id === fact.ownerId)?.name
+    const citations = cli ? parsed?.cliTokens.filter(token => token.kind === fact.kind && (!token.bin || token.bin === cliOwner?.split(' ')[0])) : parsed?.codeTokens
+    const tokens = citations?.filter(token => token.value === fact.name) ?? []
     if (parsed && !tokens.length) continue
     const code = ambiguous ? 'AMBIGUOUS_REFERENCE' : 'BROKEN_REFERENCE'
     const status = ambiguous ? 'unresolved' : parsed && extractionComplete(base, head, fact.kind, fact.evidence) ? 'conflict' : 'stale-or-unverified'

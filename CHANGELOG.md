@@ -8,6 +8,9 @@
 
 ### Minor Changes
 
+- Preserve incremental zero-parse reuse and stable citation resolution when static fact extractors are registered, including serialized unchanged snapshots and fact ambiguity coverage.
+- Keep generic fact citations in discovery and change-set evidence while excluding them from retrieval graph signals and query scores.
+- Extract deterministic CLI command and flag facts from package bins, static library declarations and explicitly marked help text. Resolve qualified command and dash-prefixed flag citations, including shell examples, and verify historical CLI references in change sets.
 - Add public root entrypoints for reader-backed exact-partition index building, freshness loading and artifact persistence without changing index/handoff payloads or synchronous local compatibility. Missing or mismatched bodies carry exact repository/revision/path limitations. Local CLI diff uses frozen head citation reads.
 - Compare codec-backed surface and package facts with value hashes, extraction-aware generic citation findings and bounded injected head reads. Resolve generic citations with the built-in Markdown plugin and bounded owner ambiguity. Prove the language-neutral persisted flow with a test-only toy source adapter.
 
