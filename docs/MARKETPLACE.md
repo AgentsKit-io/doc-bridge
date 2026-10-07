@@ -26,6 +26,9 @@ jobs:
           config-path: doc-bridge.config.json
 ```
 
+The doc-bridge repository itself generates an ignored index before its Action
+self-smoke; this does not change the committed-index contract for consumers.
+
 If the index is stale, run `ak-docs index`, review the generated diff, and commit it. The Action's default package version matches its immutable release tag.
 
 ## Release-owner checklist

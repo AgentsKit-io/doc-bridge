@@ -32,7 +32,7 @@ if (staleSourceHashes) throw new Error('The README Standard gate still fails aft
 
 const ciRunsReadmeGateOnPullRequest = /on:\s*\n\s+pull_request:/.test(ci) && ci.includes('pnpm check:readme-standard')
 if (!ciRunsReadmeGateOnPullRequest) throw new Error('CI evidence does not prove the README gate runs on pull requests.')
-const dogfoodBeforeAction = ci.indexOf('Dogfood gate (doc-bridge on itself)') < ci.indexOf('Run the public composite Action contract')
+const dogfoodBeforeAction = ci.indexOf('Dogfood gate and documentation conformance') < ci.indexOf('Run the public composite Action contract')
 
 const duplicateDemo = readme.includes('## 60-second proof') && read('docs/getting-started.md').includes('60-second demo (zero setup)')
 if (duplicateDemo) throw new Error('The legacy onboarding duplication is still present.')

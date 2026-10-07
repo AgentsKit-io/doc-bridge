@@ -79,7 +79,7 @@
     "prepack": "npm run build",
     "docs:dev": "cd apps/docs && next dev",
     "docs:artifacts": "node scripts/build-docs-artifacts.mjs",
-    "docs:build": "pnpm build && node bin/ak-docs.js index && pnpm docs:artifacts && cd apps/docs && next build",
+    "docs:build": "pnpm build && pnpm docs:artifacts && cd apps/docs && next build",
     "docs:typecheck": "cd apps/docs && fumadocs-mdx && tsc --noEmit",
     "docs:freshness": "node scripts/verify-generated-docs.mjs",
     "docs:semantic-review": "node scripts/run-registry-semantic-review.mjs",
@@ -94,7 +94,7 @@
     "check:marketplace": "node scripts/check-marketplace-contract.mjs",
     "test:docs-artifacts": "node --test scripts/aliases.test.mjs scripts/docs-artifacts-contract.test.mjs",
     "check:readme-standard": "node scripts/check-readme-standard.mjs",
-    "check:docs": "pnpm check:readme-standard && node bin/ak-docs.js gate run && node bin/ak-docs.js conformance run documentation-standard-v1 --text && pnpm docs:typecheck && pnpm docs:build && pnpm test:docs-artifacts",
+    "check:docs": "node bin/ak-docs.js index && pnpm check:readme-standard && node bin/ak-docs.js gate run && node bin/ak-docs.js conformance run documentation-standard-v1 --text && pnpm docs:typecheck && pnpm docs:build && pnpm test:docs-artifacts",
     "cf:headers": "node scripts/cloudflare-headers.mjs",
     "cf:deploy": "pnpm docs:build && pnpm cf:headers && npx -y wrangler@4 deploy"
   },

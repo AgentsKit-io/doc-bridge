@@ -7,6 +7,11 @@ description: Fail stale documentation context in pull requests with Doc Bridge g
 
 Gates keep incomplete or stale documentation context from reaching coding agents.
 
+These recipes describe consumer repositories. In the doc-bridge repository itself,
+`.doc-bridge/index.json` is ignored: generate it locally or in CI and never commit
+it. Its CI checks two builds for determinism, reproducibility, and documentation
+conformance rather than committed-index freshness.
+
 ## Local gate
 
 ```bash
