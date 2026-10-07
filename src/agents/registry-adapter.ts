@@ -286,7 +286,7 @@ export const createRegistryAgentAdapter = (root: string, config: DocBridgeConfig
       return proposals
     },
     run: async (snapshot, report, evidence = report.diagnostics.flatMap((diagnostic) => diagnostic.evidence).slice(0, 64), documentation) => {
-      const cacheKey = sha256NormalizedV1({ snapshotHash: snapshot.contentHash, reportHash: report.contentHash, documentationAuditHash: documentation?.contentHash ?? null, agentId: metadata.id, agentVersion: metadata.version, cli: settings.cli ?? null, maxInputBytes, evidence })
+      const cacheKey = sha256NormalizedV1({ snapshotHash: snapshot.contentHash, snapshotHashAlgo: snapshot.contentHashAlgo, sourceRevision: snapshot.sourceRevision, sourceRevisionKind: snapshot.sourceRevisionKind, reportHash: report.contentHash, documentationAuditHash: documentation?.contentHash ?? null, agentId: metadata.id, agentVersion: metadata.version, cli: settings.cli ?? null, maxInputBytes, evidence })
       if (settings.deterministic && deterministicCache.has(cacheKey)) return deterministicCache.get(cacheKey) as AgentProposalV1
       const context = deepFreeze({
         snapshot: redactValue(snapshot),
@@ -311,6 +311,7 @@ export const createRegistryAgentAdapter = (root: string, config: DocBridgeConfig
       const raw = await transport(context)
       const proposal = AgentProposalV1Schema.parse(raw)
       if (proposal.contentHash !== contentHashForArtifactV1(proposal)) throw new Error('Registry agent proposal contentHash does not match its canonical contents.')
+      if (proposal.sourceRevision !== snapshot.sourceRevision || proposal.sourceRevisionKind !== snapshot.sourceRevisionKind) throw new Error('Registry agent proposal revision does not match the supplied snapshot; regenerate the proposal.')
       if (proposal.baseSnapshotHash !== snapshot.contentHash || proposal.baseReportHash !== report.contentHash) throw new Error('Registry agent proposal is not based on the supplied snapshot/report hashes.')
       if (documentation && proposal.baseDocumentationAuditHash !== documentation.contentHash) throw new Error('Registry agent proposal is not based on the supplied documentation audit hash.')
       if (proposal.origin.kind !== 'registry-agent' || proposal.origin.id !== metadata.id || proposal.origin.version !== metadata.version) throw new Error(`Registry agent proposal origin must be ${metadata.id}@${metadata.version}.`)

@@ -167,3 +167,23 @@ pnpm docs:internal:query …   # private dogfood wrapper → ak-docs query …
 
 - [config-v1.md](./config-v1.md)
 - [POSITIONING.md](../POSITIONING.md)
+
+## Snapshot diff
+
+```bash
+ak-docs diff --base snapshot.json [--head snapshot.json] [--root directory] [--output diff.json] [--json]
+```
+
+`--base` is required and both snapshot inputs are validated, including their
+versioned hashes. Snapshot files contain the raw discovery artifact, not the
+`discover` command's enclosing response. Without `--head`, discovery scans
+`--root` or the current project using its configuration and safe defaults when
+no configuration exists. With `--head`, `--root` explicitly supplies the matching
+head checkout for citation verification; omitting it produces snapshot-only
+`stale-or-unverified` removal findings. Head text must match its snapshot hash.
+
+Output is deterministic JSON containing `changeSet`, `impact` and `findings`.
+`--output` writes the same bytes printed on stdout. This command defaults to JSON;
+`--json` is accepted explicitly. Success exits 0, including advisory findings;
+missing inputs, invalid hashes, different project identities and I/O errors exit 2.
+See [ChangeSetV1](change-set-v1.md) for extraction limits and finding evidence.

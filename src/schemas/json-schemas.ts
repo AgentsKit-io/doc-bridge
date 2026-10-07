@@ -1,3 +1,5 @@
+import { ChangeSetV1JsonSchema } from './change-set.js'
+export { ChangeSetV1JsonSchema } from './change-set.js'
 import { RETRIEVAL_MAX_ENTRIES } from './retrieval-index.js'
 
 type JsonSchema = {
@@ -188,6 +190,7 @@ export const DocBridgeIndexV1JsonSchema = {
 } as const satisfies JsonSchema
 
 export const DocBridgeJsonSchemas = {
+  changeSetV1: ChangeSetV1JsonSchema,
   agentHandoffV1: AgentHandoffV1JsonSchema,
   docBridgeIndexV1: DocBridgeIndexV1JsonSchema,
   memoryCandidateV1: MemoryCandidateV1JsonSchema,

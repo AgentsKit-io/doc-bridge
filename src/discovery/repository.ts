@@ -7,7 +7,7 @@ import type { DocBridgeConfigV1 } from '../config/schema.js'
 import { expandWorkspaceGlobs } from '../lib/glob-expand.js'
 import { detectPackageManager } from '../lib/package-manager.js'
 import { toPosix } from '../lib/paths.js'
-import { contentHashForArtifactV1, sha256NormalizedV1 } from '../index-builder/content-hash.js'
+import { contentHashForVersionedArtifact, SEMANTIC_HASH_ALGORITHM, sha256NormalizedV1 } from '../index-builder/content-hash.js'
 import { safeWalkFiles } from '../safety/repository.js'
 import { GRAPH_ANALYZER_VERSION, areaSuggestionCoverage } from '../graph/build.js'
 import { deriveAreas, type AreaModule } from './areas.js'
@@ -34,6 +34,7 @@ import {
   markdownContentHash,
   parseMarkdownDocument,
   type MarkdownDocumentV1,
+  type AmbiguousSymbolReference,
 } from './markdown.js'
 import {
   CONFIG_EXTENSIONS,
@@ -464,8 +465,8 @@ const hasPackageManagerMetadata = (root: string, rootManifest: JsonRecord | unde
       existsSync(join(root, 'package-lock.json')),
   )
 
-const PIPELINE_VERSION = '1.5.0'
-const ANALYZER_VERSIONS: Readonly<Record<string, string>> = { repository: '1.3.0', 'js-ts': '1.3.5', markdown: MARKDOWN_ANALYZER_VERSION, graph: GRAPH_ANALYZER_VERSION }
+export const PIPELINE_VERSION = '1.5.0'
+export const ANALYZER_VERSIONS: Readonly<Record<string, string>> = { repository: '1.3.0', 'js-ts': '1.3.5', markdown: MARKDOWN_ANALYZER_VERSION, graph: GRAPH_ANALYZER_VERSION }
 const configurationHashOf = (config: DocBridgeConfigV1 | undefined): string => sha256NormalizedV1(config ?? {})
 
 const artifact = (root: string, config: DocBridgeConfigV1 | undefined, files: readonly string[], entities: readonly KnowledgeEntity[], relations: readonly KnowledgeRelation[], coverage: DiscoverySnapshotV1['coverage']): DiscoverySnapshotV1 => {
@@ -474,7 +475,7 @@ const artifact = (root: string, config: DocBridgeConfigV1 | undefined, files: re
     type: 'discovery-snapshot' as const,
     schemaVersion: 1 as const,
     contentHash: EMPTY_HASH,
-    contentHashAlgo: 'sha256-normalized-v1' as const,
+    contentHashAlgo: SEMANTIC_HASH_ALGORITHM,
     project: { name: (entities.find((entity) => entity.kind === 'package' && entity.path === '.')?.name ?? basename(root)), root: '.' },
     sourceRevision: revision.value,
     sourceRevisionKind: revision.kind,
@@ -485,7 +486,7 @@ const artifact = (root: string, config: DocBridgeConfigV1 | undefined, files: re
     relations: [...relations].sort((a, b) => a.id.localeCompare(b.id)),
     coverage: coverage.map((entry) => ({ ...entry, analyzerVersion: entry.analyzerVersion ?? (ANALYZER_VERSIONS[entry.analyzer] ?? '1.0.0') })),
   }
-  return DiscoverySnapshotV1Schema.parse({ ...base, contentHash: contentHashForArtifactV1(base) })
+  return DiscoverySnapshotV1Schema.parse({ ...base, contentHash: contentHashForVersionedArtifact(base) })
 }
 
 export const discoverRepository = (opts: DiscoveryOptions = {}): DiscoverySnapshotV1 => {
@@ -850,10 +851,14 @@ export const discoverRepository = (opts: DiscoveryOptions = {}): DiscoverySnapsh
   type MarkdownNote = { readonly scope: string; readonly reason: string; readonly evidence: readonly Evidence[] }
   const notesByDocument = new Map<string, readonly MarkdownNote[]>()
   const truncatedDocuments = new Set<string>()
+  const ambiguitiesByDocument = new Map<string, readonly AmbiguousSymbolReference[]>()
+  const truncatedAmbiguities = new Set<string>()
   for (const document of markdownDocuments) {
     const analysis = analyzeMarkdownDocument(document, entityId('document', document.path), markdownResolution)
     for (const relation of analysis.relations) addRelation(relation)
     notesByDocument.set(document.path, analysis.notes)
+    ambiguitiesByDocument.set(document.path, analysis.ambiguousSymbolReferences)
+    if (analysis.ambiguousSymbolReferencesTruncated) truncatedAmbiguities.add(document.path)
     if (analysis.truncated) truncatedDocuments.add(document.path)
   }
 
@@ -898,6 +903,8 @@ export const discoverRepository = (opts: DiscoveryOptions = {}): DiscoverySnapsh
         ...(parsed && Object.keys(parsed.frontmatter).length ? { frontmatter: parsed.frontmatter } : {}),
         ...(parsed?.generatedRegions.length ? { generatedRegions: parsed.generatedRegions } : {}),
         ...(truncatedDocuments.has(path) ? { evidenceTruncated: true } : {}),
+        ...(ambiguitiesByDocument.get(path)?.length ? { ambiguousSymbolReferences: ambiguitiesByDocument.get(path) } : {}),
+        ...(truncatedAmbiguities.has(path) ? { ambiguousSymbolReferencesTruncated: true } : {}),
       },
     })
   }

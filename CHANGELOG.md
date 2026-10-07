@@ -8,6 +8,14 @@
 
 ### Minor Changes
 
+- Add deterministic `ChangeSetV1` and `ak-docs diff`, with historical documentation impact, proven-removal and ambiguity findings, and explicit unsupported extraction coverage. Change digests now include documentation citing removed targets.
+- Retain symbol-level documentation references and structured ambiguity metadata without inflating retrieval connection counts.
+- Version semantic snapshot, derived report, retrieval and index hashes as `sha256-semantic-v1`;
+  revision/time and reuse-run statistics remain provenance. Legacy and study hash projections stay
+  unchanged. Upgrade readers before explicit `ak-docs index` regeneration: old strict readers reject
+  the new algorithm with a schema error. Regeneration reports drift in the legacy index being replaced before writing;
+  gates continue to verify freshness under the stored algorithm.
+- Retain symbol-level documentation references and structured ambiguity metadata without inflating retrieval connection counts.
 - Registry agent runners receive an optional cancellation signal separately from their frozen context. Local and CLI deadlines now use `@agentskit/net`; CLI timeout and response overflow switch process-tree termination from `SIGTERM` to `SIGKILL`, while concurrency remains reserved until execution settles.
 
 ## 1.13.0

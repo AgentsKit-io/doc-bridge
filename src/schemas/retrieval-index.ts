@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { VersionedHashAlgorithmSchema } from '../index-builder/content-hash.js'
 
 import { ProvenanceSchema } from './knowledge.js'
 
@@ -135,7 +136,7 @@ export const RetrievalIndexV1Schema = z
     type: z.literal('retrieval-index'),
     schemaVersion: z.literal(RETRIEVAL_INDEX_SCHEMA_VERSION),
     contentHash: hash,
-    contentHashAlgo: z.literal('sha256-normalized-v1'),
+    contentHashAlgo: VersionedHashAlgorithmSchema,
     /**
      * Which snapshot this was projected from. Provenance, not a seal input: it carries the
      * snapshot's `sourceRevision`, and the projection is a function of what the snapshot observed

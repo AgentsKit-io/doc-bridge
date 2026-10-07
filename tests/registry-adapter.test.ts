@@ -52,6 +52,25 @@ const documentationAudit = (snapshot: ReturnType<typeof fixture>['snapshot'], re
 })
 
 describe('AgentsKit Registry adapter', () => {
+  it('does not replay an exact proposal across revisions with equal semantic hashes', async () => {
+    const root = agentRoot()
+    const { snapshot, report } = fixture()
+    let calls = 0
+    const adapter = createRegistryAgentAdapter(root, config(true, { deterministic: true }), () => {
+      calls += 1
+      return validProposal(snapshot, report)
+    })
+    try {
+      await adapter.run(snapshot, report)
+      await adapter.run(snapshot, report)
+      expect(calls).toBe(1)
+      await expect(adapter.run({ ...snapshot, sourceRevision: 'revision-2' }, report)).rejects.toThrow('revision does not match')
+      expect(calls).toBe(2)
+    } finally {
+      rmSync(root, { recursive: true, force: true })
+    }
+  })
+
   it('requires an installed source-owned Registry agent and returns typed proposals', async () => {
     const root = mkdtempSync(join(tmpdir(), 'doc-bridge-agent-'))
     const agentPath = join(root, 'agents', DEFAULT_REGISTRY_AGENT_ID)

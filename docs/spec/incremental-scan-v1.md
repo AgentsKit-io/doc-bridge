@@ -69,6 +69,12 @@ source of wrong answers.
 A cache that is only usually right is worse than no cache. Reuse either produces the snapshot a
 cold scan would produce, or it does not happen.
 
+Markdown analyzer version 1.1.0 invalidates older aggregated symbol-reference snapshots.
+Replayed symbol relations retain their symbol-discriminated IDs, metadata and bounded evidence.
+Reused document metadata retains structured ambiguous-symbol references and their truncation flag.
+Changing the exported-symbol ownership fingerprint reparses document references, so removing one
+export drops only its relation even when its owning module remains.
+
 A reused entity also replays the per-file `coverage` its analyzer produced, because the aggregate
 entries are derived from those rather than stored. An aggregate that cannot be rebuilt from what
 the snapshot carries is an aggregate a fast scan gets wrong: a fact that lives only in a local
@@ -93,10 +99,27 @@ cache from a broken scan. One `coverage` entry reports it:
 `status` is `complete` when everything reusable was reused, `partial` when reuse was refused — the
 reason then names what changed — and `not-applicable` when there was no previous snapshot to reuse.
 
-This entry is the one part of a snapshot that describes the *run* rather than the repository. The
-entities, the relations and every other coverage entry are byte-identical to a cold scan's, which
-is what the tests assert; the snapshot's own `contentHash` covers this entry too, so a warm scan
-and a cold scan of the same tree hash differently. That is why the CLI does not yet pass a previous
-snapshot: the artifacts it writes are compared across runs, and the caching layer has to decide
-what a report keys on before a fast scan starts feeding it. `contentHash` and `sourceRevision`
-semantics are otherwise untouched.
+This entry describes run provenance and stays serialized in `coverage`. New snapshots declare
+`contentHashAlgo: sha256-semantic-v1`; their semantic projection excludes only repository
+`reused-entities` coverage, `sourceRevision`, `sourceRevisionKind` and `generatedAt`.
+Repository identity, canonical entities/relations and their evidence, effective configuration,
+pipeline/analyzer versions and all meaningful coverage/limitations remain in the hash. Entities,
+relations and coverage are canonically ordered for hashing. Equal trees at different revisions,
+and cold/warm scans, therefore have equal semantic hashes while retaining distinct provenance.
+A content, configuration, analyzer-version or meaningful coverage change invalidates identity.
+
+Legacy `sha256-normalized-v1` snapshots retain their original verifier: remove `contentHash`,
+then hash the remaining canonical JSON, including revision and reuse coverage. Readers select the
+verifier by the declared algorithm and reject unsupported algorithms with a compatible-version and
+explicit-regeneration diagnostic. Unlike algorithms are never equal identities. Declaration
+resealing, reconciliation and documentation audit inherit the snapshot algorithm.
+
+File/evidence hashes, workflow-run seals and revision-based workflow reuse, fix affected-file hashes,
+proposal seals and approval bindings remain unchanged. Semantic equality cannot rebind approval
+across revisions; registry proposal caches include the exact revision and snapshot algorithm.
+Existing study artifact hash projections are unchanged.
+
+Before explicit index regeneration migrates a legacy algorithm, the builder reads and verifies
+the on-disk index being replaced and warns about legacy drift before writing. The warning concerns
+that artifact; in a clean checkout it equals the committed index. CI's `gate run index-freshness`
+still verifies the committed state under its stored algorithm and fails closed on drift.

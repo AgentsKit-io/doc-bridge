@@ -3,7 +3,7 @@ import { basename, extname } from 'node:path'
 import type { DocBridgeConfigV1 } from '../config/schema.js'
 import { GRAPH_ANALYZER_VERSION, canonicality } from '../graph/build.js'
 import { indexConfigurationHash } from '../index-builder/project-corpus.js'
-import { sha256NormalizedV1 } from '../index-builder/content-hash.js'
+import { contentHashForVersionedArtifact, LEGACY_HASH_ALGORITHM, SEMANTIC_HASH_ALGORITHM, sha256NormalizedV1 } from '../index-builder/content-hash.js'
 import { extractSearchBody } from '../lib/markdown.js'
 import { SEARCH_LEXICON_VERSION } from '../query/text.js'
 import type { KnowledgeEntry } from '../schemas/doc-bridge-index.js'
@@ -140,7 +140,7 @@ export type RetrievalOverlayInput = {
 }
 
 export type ProjectRetrievalOptions = {
-  readonly snapshot: Pick<DiscoverySnapshotV1, 'contentHash' | 'entities' | 'relations' | 'pipelineVersion' | 'analyzerVersions'>
+  readonly snapshot: Pick<DiscoverySnapshotV1, 'contentHash' | 'entities' | 'relations' | 'pipelineVersion' | 'analyzerVersions'> & Partial<Pick<DiscoverySnapshotV1, 'contentHashAlgo'>>
   readonly config: DocBridgeConfigV1 | undefined
   readonly routes?: RetrievalRoutes
   readonly curated?: readonly CuratedDocument[]
@@ -207,7 +207,12 @@ const derivedHash = (value: unknown): string => sha256NormalizedV1(value)
  * its content hash — is a function of its inputs and not of the order the snapshot arrived in.
  */
 export const projectRetrievalIndex = (options: ProjectRetrievalOptions): RetrievalIndexV1 => {
-  const { snapshot, config } = options
+  const { config } = options
+  const snapshot = options.snapshot.contentHashAlgo === SEMANTIC_HASH_ALGORITHM ? {
+    ...options.snapshot,
+    entities: [...options.snapshot.entities].sort((a, b) => a.id.localeCompare(b.id)),
+    relations: [...options.snapshot.relations].sort((a, b) => a.id.localeCompare(b.id)),
+  } : options.snapshot
   const routes = options.routes ?? {}
   const overlayHash = options.overlay?.hash ?? EMPTY_OVERLAY_HASH
   const overlay = options.overlay
@@ -447,9 +452,9 @@ export const projectRetrievalIndex = (options: ProjectRetrievalOptions): Retriev
         ...(agentSignal ? { agentSignal: Math.min(1, Math.max(0, Math.round(agentSignal * 1_000) / 1_000)) } : {}),
         graph: {
           pagerank: pagerank.get(draft.id) ?? 0,
-          inboundLinks: into.filter((edge) => edge.kind === 'links-to' || edge.kind === 'covers' || edge.kind === 'mentions' || edge.kind === 'mentions-symbol').length,
+          inboundLinks: new Set(into.filter((edge) => edge.kind === 'links-to' || edge.kind === 'covers' || edge.kind === 'mentions' || edge.kind === 'mentions-symbol').map((edge) => edge.id)).size,
           coveredBy: into.filter((edge) => edge.kind === 'covers').map((edge) => edge.id),
-          mentionedBy: into.filter((edge) => edge.kind === 'mentions' || edge.kind === 'mentions-symbol').map((edge) => edge.id),
+          mentionedBy: [...new Set(into.filter((edge) => edge.kind === 'mentions' || edge.kind === 'mentions-symbol').map((edge) => edge.id))],
           ...(areaId ? { areaId } : {}),
           ...(packageId ? { packageId } : {}),
           inbound: into,
@@ -467,7 +472,7 @@ export const projectRetrievalIndex = (options: ProjectRetrievalOptions): Retriev
     type: 'retrieval-index' as const,
     schemaVersion: 1 as const,
     contentHash: '0'.repeat(64),
-    contentHashAlgo: 'sha256-normalized-v1' as const,
+    contentHashAlgo: snapshot.contentHashAlgo ?? LEGACY_HASH_ALGORITHM,
     snapshotHash: snapshot.contentHash,
     overlayHash,
     configurationHash: indexConfigurationHash(config),
@@ -490,7 +495,9 @@ export const projectRetrievalIndex = (options: ProjectRetrievalOptions): Retriev
    * from — but the seal uses the observation, so the same repository projects to the same hash
    * whatever revision it was scanned at.
    */
-  const contentHash = sha256NormalizedV1({
+  const contentHash = base.contentHashAlgo !== LEGACY_HASH_ALGORITHM
+    ? contentHashForVersionedArtifact({ ...base, projectionVersion: RETRIEVAL_PROJECTION_VERSION, observationHash: snapshotObservationHash(snapshot) })
+    : sha256NormalizedV1({
     projectionVersion: RETRIEVAL_PROJECTION_VERSION,
     observationHash: snapshotObservationHash(snapshot),
     overlayHash: base.overlayHash,

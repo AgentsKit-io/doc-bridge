@@ -392,7 +392,7 @@ export const runDoctor = (root: string, config: DocBridgeConfigV1): DoctorReport
 
   try {
     index = loadDocBridgeIndex(root, config)
-    const next = buildDocBridgeIndex({ root, config, write: false, snapshot }).index.contentHash
+    const next = buildDocBridgeIndex({ root, config, write: false, snapshot, hashAlgorithm: index.contentHashAlgo }).index.contentHash
     freshnessOk = index.contentHash === next
     freshnessMessage = freshnessOk ? 'Index is fresh' : 'Index is stale. Run: ak-docs index'
   } catch (error) {

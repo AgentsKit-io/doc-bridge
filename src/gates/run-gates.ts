@@ -1,3 +1,4 @@
+import { LEGACY_HASH_ALGORITHM, sameHashIdentity } from '../index-builder/content-hash.js'
 import { readFileSync } from 'node:fs'
 import { splitFrontmatter } from '@agentskit/cross-platform'
 
@@ -68,8 +69,7 @@ export const runGate = (
     try {
       index = loadDocBridgeIndex(root, config)
     } catch (error) {
-      if (error instanceof IndexNotFoundError) return { id, ok: false, message: error.message }
-      throw error
+      return { id, ok: false, message: error instanceof Error ? error.message : String(error) }
     }
     const result = checkIndexReproducibility(
       root,
@@ -101,28 +101,28 @@ export const runGate = (
 
   if (id !== 'index-freshness') throw new Error(`Unsupported gate "${id}"`)
 
-  let current: string
+  let current: import('../schemas/doc-bridge-index.js').DocBridgeIndexV1
   try {
-    current = loadDocBridgeIndex(root, config).contentHash
+    current = loadDocBridgeIndex(root, config)
   } catch (error) {
     if (error instanceof IndexNotFoundError) {
       return { id, ok: false, message: error.message }
     }
-    throw error
+    return { id, ok: false, message: error instanceof Error ? error.message : String(error) }
   }
 
-  const next = buildDocBridgeIndex({ root, config, write: false }).index.contentHash
-  if (current !== next) {
+  const next = buildDocBridgeIndex({ root, config, write: false, hashAlgorithm: current.contentHashAlgo }).index
+  if (!sameHashIdentity(current, next)) {
     return {
       id,
       ok: false,
-      message: 'Index is stale. Run: ak-docs index',
-      expected: next,
-      actual: current,
+      message: `Index is stale under ${current.contentHashAlgo}. Run: ak-docs index${current.contentHashAlgo === LEGACY_HASH_ALGORITHM ? ' to migrate to sha256-semantic-v1.' : ''}`,
+      expected: next.contentHash,
+      actual: current.contentHash,
     }
   }
 
-  return { id, ok: true, message: 'Index is fresh', expected: next, actual: current }
+  return { id, ok: true, message: current.contentHashAlgo === LEGACY_HASH_ALGORITHM ? 'Index is fresh under sha256-normalized-v1; explicitly regenerate with ak-docs index to migrate to sha256-semantic-v1 (requires new readers).' : 'Index is fresh', expected: next.contentHash, actual: current.contentHash }
 }
 
 const runHumanGuideLinksGate = (root: string, config: DocBridgeConfigV1): GateResult => {

@@ -1,4 +1,4 @@
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 
 import type { DocBridgeConfigV1 } from '../config/schema.js'
@@ -6,13 +6,13 @@ import { applyDocumentationDeclarations } from '../discovery/documentation.js'
 import { discoverRepository } from '../discovery/repository.js'
 import { readBoundedText, type TextReadBudget } from '../lib/bounded-text.js'
 import { toPosix } from '../lib/paths.js'
-import type { DocBridgeIndexV1, KnowledgeEntry } from '../schemas/doc-bridge-index.js'
+import { DocBridgeIndexV1Schema, type DocBridgeIndexV1, type KnowledgeEntry } from '../schemas/doc-bridge-index.js'
 import { RETRIEVAL_MAX_ENTRIES } from '../schemas/retrieval-index.js'
 import type { DiscoverySnapshotV1 } from '../schemas/knowledge.js'
 import type { RetrievalIndexV1 } from '../schemas/retrieval-index.js'
 import { buildLookup, collectPackages } from './build-handoffs.js'
 import { renderCapabilitiesJson } from './capabilities.js'
-import { sha256NormalizedV1 } from './content-hash.js'
+import { contentHashForIndex, contentHashForVersionedArtifact, SEMANTIC_HASH_ALGORITHM, LEGACY_HASH_ALGORITHM, type HashAlgorithm } from './content-hash.js'
 import { renderLlmsTxt } from './llms-txt.js'
 import { scanHumanDocs } from './human-adapters/index.js'
 import { discoverNxProjects } from './plugins/nx.js'
@@ -29,6 +29,8 @@ export type BuildIndexOptions = {
   readonly root?: string
   readonly config: DocBridgeConfigV1
   readonly write?: boolean
+  /** Rebuild using the stored algorithm; ordinary regeneration selects the current algorithm. */
+  readonly hashAlgorithm?: HashAlgorithm
   /**
    * A snapshot to project instead of scanning. The build scans when none is given; a caller that
    * already holds the snapshot — a workflow stage, a test — passes it so the index and the
@@ -79,8 +81,11 @@ const projectFromSnapshot = (
   lookup: ReturnType<typeof buildLookup>['lookup'],
   curated: readonly KnowledgeEntry[],
   requested: BuildIndexOptions['overlay'],
+  hashAlgorithm: HashAlgorithm,
 ): { readonly projection: RetrievalIndexV1 } => {
-  const observed = given ?? discoverRepository({ root, config })
+  const scanned = given ?? discoverRepository({ root, config })
+  const selected = { ...scanned, contentHashAlgo: hashAlgorithm }
+  const observed = { ...selected, contentHash: contentHashForVersionedArtifact(selected) }
   const budget: TextReadBudget = { used: 0 }
   const contents = new Map<string, string>()
   for (const entity of observed.entities) {
@@ -137,6 +142,17 @@ export const buildDocBridgeIndex = (opts: BuildIndexOptions): BuildIndexResult =
   const outFile = config.index?.outFile ?? '.doc-bridge/index.json'
   const indexPath = join(root, outFile)
 
+  if (write && (opts.hashAlgorithm ?? SEMANTIC_HASH_ALGORITHM) !== LEGACY_HASH_ALGORITHM) {
+    if (existsSync(indexPath)) {
+      const prior = DocBridgeIndexV1Schema.parse(JSON.parse(readFileSync(indexPath, 'utf8')))
+      if (prior.contentHashAlgo === LEGACY_HASH_ALGORITHM) {
+        const expected = buildDocBridgeIndex({ ...opts, write: false, hashAlgorithm: prior.contentHashAlgo }).index
+        const drift = prior.contentHash !== contentHashForIndex(prior) || prior.contentHash !== expected.contentHash
+        console.warn(`Replaced index ${drift ? 'drift detected' : 'verified'} under ${prior.contentHashAlgo}; explicit regeneration migrates to ${SEMANTIC_HASH_ALGORITHM}. New readers are required.`)
+      }
+    }
+  }
+
   const corpus = scanAgentCorpus(root, config)
   const curated = corpus.map(({ absPath: _a, relPath: _r, frontmatter: _f, ...entry }) => entry)
   const retrieval = {
@@ -169,9 +185,9 @@ export const buildDocBridgeIndex = (opts: BuildIndexOptions): BuildIndexResult =
    * the snapshot: the index has no scanner of its own, so a record retrieval can find is an entity
    * discovery observed, with the same id and the same content hash.
    */
-  const projected = config.retrieval?.corpus?.enabled === false ? undefined : projectFromSnapshot(root, config, opts.snapshot, lookup, curated, opts.overlay)
+  const projected = config.retrieval?.corpus?.enabled === false ? undefined : projectFromSnapshot(root, config, opts.snapshot, lookup, curated, opts.overlay, opts.hashAlgorithm ?? SEMANTIC_HASH_ALGORITHM)
   const projection = projected?.projection
-  const inputs = projected ? repositoryInputs(root, config) : undefined
+  const inputs = projected ? repositoryInputs(root, config, opts.hashAlgorithm ?? SEMANTIC_HASH_ALGORITHM) : undefined
   const curatedPaths = new Set(curated.map((entry) => entry.path))
   /*
    * `knowledge[]` keeps every reader that predates the projection working: the curated sidecars
@@ -187,22 +203,11 @@ export const buildDocBridgeIndex = (opts: BuildIndexOptions): BuildIndexResult =
       ]
     : curated
 
-  const hashPayload = {
-    schemaVersion: 1,
-    knowledge,
-    handoffs,
-    lookup,
-    retrieval,
-    ...(inputs ? { inputs } : {}),
-    ...(projection ? { projection: projection.contentHash } : {}),
-  }
-
-  const contentHash = sha256NormalizedV1(hashPayload)
   const index: DocBridgeIndexV1 = {
     schemaVersion: 1,
-    contentHash,
-    contentHashAlgo: 'sha256-normalized-v1',
-    generatedAt: existingGeneratedAt(indexPath, contentHash) ?? new Date().toISOString(),
+    contentHash: '0'.repeat(64),
+    contentHashAlgo: opts.hashAlgorithm ?? SEMANTIC_HASH_ALGORITHM,
+    generatedAt: new Date().toISOString(),
     project: { name: projectName(root, config), root: '.' },
     knowledge,
     handoffs,
@@ -211,6 +216,9 @@ export const buildDocBridgeIndex = (opts: BuildIndexOptions): BuildIndexResult =
     retrieval,
     ...(projection ? { projection } : {}),
   }
+
+  index.contentHash = contentHashForIndex(index)
+  index.generatedAt = existingGeneratedAt(indexPath, index.contentHash) ?? index.generatedAt
 
   /*
    * An artifact its own parser refuses is not an artifact. The bound on `knowledge[]` used to be

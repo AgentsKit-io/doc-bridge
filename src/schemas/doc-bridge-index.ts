@@ -1,11 +1,12 @@
 import { z } from 'zod'
+import { VersionedHashAlgorithmSchema } from '../index-builder/content-hash.js'
 
 import { AgentHandoffLegacySchema } from './agent-handoff.js'
 import { RETRIEVAL_MAX_ENTRIES, RetrievalIndexV1Schema } from './retrieval-index.js'
 
 export const INDEX_SCHEMA_VERSION = 1 as const
 
-export const ContentHashAlgoSchema = z.literal('sha256-normalized-v1')
+export const ContentHashAlgoSchema = VersionedHashAlgorithmSchema
 
 export const EcosystemPropertySchema = z
   .object({

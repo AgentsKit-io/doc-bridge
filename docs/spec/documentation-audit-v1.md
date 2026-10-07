@@ -59,3 +59,12 @@ Each document receives an assessment instead of one opaque quality score. The ma
 - maintainability: owner, lifecycle, source-of-truth, and validation-path metadata are directly measurable.
 
 Example presence and example correctness are separate. The audit reports `example.present`; `example.validation` remains `not-analyzed` unless a real validation flow supplies evidence. Similar prose, unnecessary content, and document/document semantic contradictions are intentionally deferred to the Registry-agent and human-adjudication path.
+
+## Hash algorithm migration
+
+The report inherits its snapshot's declared hash algorithm. `sha256-semantic-v1` excludes
+revision kind/value, generated timestamps and reuse-run coverage while preserving evidence,
+configuration, analyzer versions and meaningful coverage/limitations. Legacy `sha256-normalized-v1`
+verification is unchanged. Unknown algorithms require a compatible doc-bridge version and explicit
+regeneration. See [incremental scan v1](../spec/incremental-scan-v1.md). Semantic equality does not
+rebind an approval to another revision; proposal and study seals retain their original projections.

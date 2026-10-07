@@ -1,3 +1,4 @@
+import { contentHashForIndex, sameHashIdentity } from '../index-builder/content-hash.js'
 import { existsSync, readFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 
@@ -30,7 +31,14 @@ export const loadDocBridgeIndex = (root: string, config: DocBridgeConfigV1): Doc
   const path = indexFilePath(root, config)
   if (!existsSync(path)) throw new IndexNotFoundError(path)
   const raw = JSON.parse(readFileSync(path, 'utf8')) as unknown
-  return parseDocBridgeIndex(raw)
+  const index = parseDocBridgeIndex(raw)
+  if (index.projection && index.projection.contentHashAlgo !== index.contentHashAlgo) {
+    throw new Error('Index and retrieval projection hash algorithms differ. Explicitly regenerate with ak-docs index.')
+  }
+  if (index.contentHash !== contentHashForIndex(index)) {
+    throw new Error('Invalid index content hash under ' + index.contentHashAlgo + '. Run: ak-docs index')
+  }
+  return index
 }
 
 /**
@@ -49,7 +57,7 @@ export const loadFreshDocBridgeIndex = (root: string, config: DocBridgeConfigV1)
   const index = loadDocBridgeIndex(root, config)
 
   if (index.inputs && index.retrieval) {
-    const inputs = repositoryInputs(root, config)
+    const inputs = repositoryInputs(root, config, index.contentHashAlgo)
     /*
      * The projection is a function of the snapshot, the overlay and the configuration under a
      * given lexicon and graph-metrics version; a change to either version changes ranking without
@@ -67,8 +75,8 @@ export const loadFreshDocBridgeIndex = (root: string, config: DocBridgeConfigV1)
     return index
   }
 
-  const expected = buildDocBridgeIndex({ root, config, write: false }).index
-  if (index.contentHash !== expected.contentHash) {
+  const expected = buildDocBridgeIndex({ root, config, write: false, hashAlgorithm: index.contentHashAlgo }).index
+  if (!sameHashIdentity(index, expected)) {
     throw new IndexStaleError(indexFilePath(root, config), index.contentHash, expected.contentHash)
   }
   return index

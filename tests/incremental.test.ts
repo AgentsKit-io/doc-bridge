@@ -17,7 +17,7 @@ import {
 } from '../src/discovery/incremental.js'
 import { markdownContentHash } from '../src/discovery/markdown.js'
 import { discoverRepository } from '../src/discovery/repository.js'
-import { contentHashForArtifactV1 } from '../src/index-builder/content-hash.js'
+import { contentHashForVersionedArtifact } from '../src/index-builder/content-hash.js'
 import { toPosix } from '../src/lib/paths.js'
 import type { DiscoverySnapshotV1, KnowledgeEntity } from '../src/schemas/knowledge.js'
 
@@ -130,15 +130,16 @@ describe('per-entity content hashes', () => {
     expect(markdownContentHash('﻿# Overview\n')).toBe(markdownContentHash('# Overview\n'))
   })
 
-  it('keeps snapshot contentHash and sourceRevision semantics', () => {
+  it('separates snapshot semantic identity from reuse provenance', () => {
     const root = fixture()
     const cold = discoverRepository({ root })
     const reused = discoverRepository({ root, previous: cold })
 
     for (const snapshot of [cold, reused]) {
       const { contentHash, ...rest } = snapshot
-      expect(contentHash).toBe(contentHashForArtifactV1({ ...rest, contentHash }))
+      expect(contentHash).toBe(contentHashForVersionedArtifact({ ...rest, contentHash }))
     }
+    expect(reused.contentHash).toBe(cold.contentHash)
     expect(reused.sourceRevision).toBe(cold.sourceRevision)
     expect(reused.sourceRevisionKind).toBe(cold.sourceRevisionKind)
   })

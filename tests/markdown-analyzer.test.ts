@@ -93,7 +93,7 @@ describe('markdown analyzer', () => {
     const markdown = snapshot.relations.filter((relation) => ['links-to', 'mentions', 'mentions-symbol'].includes(relation.kind))
 
     expect(relationIds(markdown)).toEqual([
-      'relation:document:docs/guide.md:mentions-symbol:module:src/reconcile.ts',
+      'relation:document:docs/guide.md:mentions-symbol:module:src/reconcile.ts:reconcileKnowledge',
       'relation:document:docs/guide.md:mentions:package:fixture',
       'relation:document:docs/overview.md:links-to:document:docs/guide.md',
       'relation:document:docs/overview.md:links-to:document:docs/reconcile.md',
@@ -123,8 +123,45 @@ describe('markdown analyzer', () => {
     expect(fromDocuments.some((relation) => relation.to === 'module:src/mirror.ts')).toBe(false)
     const note = snapshot.coverage.find((entry) => entry.scope.startsWith('mentions-symbol:docs/guide.md:shared'))
     expect(note).toMatchObject({ analyzer: 'markdown', status: 'partial' })
+    expect(snapshot.entities.find((entry) => entry.id === 'document:docs/guide.md')?.metadata?.ambiguousSymbolReferences).toEqual([{ symbol: 'shared', candidateModuleIds: ['module:src/mirror.ts', 'module:src/search.ts'], candidateCount: 2, lines: [3] }])
     expect(note?.reason).toContain('exported by 2 modules')
     expect(note?.evidence?.[0]).toMatchObject({ path: 'docs/guide.md', lineStart: 3 })
+  })
+
+  it('retains each cited symbol, accumulates citations, and removes only the missing export in warm and cold scans', () => {
+    const root = fixture()
+    write(root, 'src/symbols.ts', 'export const first = 1\nexport const second = 2\n')
+    write(root, 'docs/symbols.md', '# Symbols\n`first` and `second`\n`first`\n`missing` and `shared`\n')
+    const cold = discoverRepository({ root })
+    const warm = discoverRepository({ root, previous: cold })
+    expect(warm.relations).toEqual(cold.relations)
+    expect(warm.entities).toEqual(cold.entities)
+    const references = cold.relations.filter((relation) => relation.from === 'document:docs/symbols.md')
+    expect(references).toHaveLength(2)
+    expect(new Set(references.map((relation) => relation.id)).size).toBe(2)
+    expect(references.map((relation) => relation.metadata?.symbol)).toEqual(['first', 'second'])
+    expect(references[0]?.evidence.map((item) => item.lineStart)).toEqual([2, 3])
+    expect(references[0]?.to).toBe('module:src/symbols.ts')
+    const surviving = references[1]
+    write(root, 'src/symbols.ts', 'export const second = 2\n')
+    const removed = discoverRepository({ root, previous: warm })
+    const removedCold = discoverRepository({ root })
+    expect(removed.relations).toEqual(removedCold.relations)
+    expect(removed.entities).toEqual(removedCold.entities)
+    expect(removed.relations.filter((relation) => relation.from === 'document:docs/symbols.md')).toEqual([surviving])
+    expect(removed.coverage.filter((entry) => entry.analyzer === 'markdown')).toEqual(removedCold.coverage.filter((entry) => entry.analyzer === 'markdown'))
+  })
+
+  it('bounds structured ambiguity without losing the total candidate count', () => {
+    const symbols = new Map(Array.from({ length: 65 }, (_, index) => [`Symbol${index}`, Array.from({ length: 40 }, (_, owner) => `module:src/owner-${owner}.ts`)]))
+    const parsed = parseMarkdownDocument('docs/ambiguous.md', [...symbols.keys()].map((symbol) => `\`${symbol}\``).join('\n'))
+    const result = analyzeMarkdownDocument(parsed, 'document:docs/ambiguous.md', { documents: new Map(), modules: new Map(), packages: new Map(), symbols })
+    expect(result.relations).toEqual([])
+    expect(result.ambiguousSymbolReferences).toHaveLength(64)
+    expect(result.ambiguousSymbolReferencesTruncated).toBe(true)
+    expect(result.ambiguousSymbolReferences[0]).toMatchObject({ candidateCount: 40 })
+    expect(result.ambiguousSymbolReferences[0]?.candidateModuleIds).toHaveLength(32)
+    expect(result.ambiguousSymbolReferences[0]?.candidateModuleIds).toEqual([...symbols.values()][0]?.slice().sort().slice(0, 32))
   })
 
   it('reads the document itself: title, headings, summary, word count and a content hash', () => {

@@ -1,7 +1,7 @@
 import { parseDocument, type Node as YamlNode } from 'yaml'
 import { z } from 'zod'
 
-import { contentHashForArtifactV1 } from '../index-builder/content-hash.js'
+import { contentHashForVersionedArtifact } from '../index-builder/content-hash.js'
 import {
   DiscoverySnapshotV1Schema,
   type DiscoverySnapshotV1,
@@ -587,7 +587,7 @@ export const applyDocumentationDeclarations = (
 
   const base = { ...snapshot, contentHash: '0'.repeat(64), entities: [...entities.values()], relations: [...relations.values()] }
   return {
-    snapshot: DiscoverySnapshotV1Schema.parse({ ...base, contentHash: contentHashForArtifactV1(base) }),
+    snapshot: DiscoverySnapshotV1Schema.parse({ ...base, contentHash: contentHashForVersionedArtifact(base) }),
     diagnostics,
   }
 }

@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { VersionedHashAlgorithmSchema } from '../index-builder/content-hash.js'
 
 export const KNOWLEDGE_SCHEMA_VERSION = 1 as const
 export const KNOWLEDGE_CONTENT_HASH_ALGO = 'sha256-normalized-v1' as const
@@ -116,6 +117,7 @@ export const DiscoverySnapshotV1Schema = z
   .object({
     type: z.literal('discovery-snapshot'),
     ...ArtifactMetadata,
+    contentHashAlgo: VersionedHashAlgorithmSchema,
     entities: z.array(EntitySchema).max(50_000),
     relations: z.array(RelationSchema).max(100_000),
     coverage: z.array(CoverageSchema).max(1_000),
@@ -159,6 +161,7 @@ export const ReconciliationReportV1Schema = z
   .object({
     type: z.literal('reconciliation-report'),
     ...ArtifactMetadata,
+    contentHashAlgo: VersionedHashAlgorithmSchema,
     snapshotHash: hash,
     diagnostics: z.array(DiagnosticSchema).max(100_000),
     summary: z

@@ -4,7 +4,7 @@ import { toPosix } from '@agentskit/cross-platform'
 import { minimatch } from 'minimatch'
 
 import type { DocumentationAuditConfig } from '../config/schema.js'
-import { contentHashForArtifactV1, sha256NormalizedV1 } from '../index-builder/content-hash.js'
+import { contentHashForVersionedArtifact, VersionedHashAlgorithmSchema, sha256NormalizedV1 } from '../index-builder/content-hash.js'
 import { frontmatterString, parseFrontmatter } from '../lib/markdown.js'
 import type { DocumentationDiagnostic } from '../discovery/documentation.js'
 import { generatedRegionsOf } from '../render/data.js'
@@ -86,7 +86,7 @@ export const DocumentationAuditReportV1Schema = z.object({
   type: z.literal('documentation-audit-report'),
   schemaVersion: z.literal(DOCUMENTATION_AUDIT_SCHEMA_VERSION),
   contentHash: z.string().regex(/^[a-f0-9]{64}$/),
-  contentHashAlgo: z.literal('sha256-normalized-v1'),
+  contentHashAlgo: VersionedHashAlgorithmSchema,
   project: z.object({ name: z.string().min(1).max(128), root: z.string().max(512).optional() }).strict(),
   sourceRevision: z.string().min(1).max(128),
   sourceRevisionKind: z.enum(['git', 'content']),
@@ -446,7 +446,7 @@ export const auditDocumentation = (options: DocumentationAuditOptions): Document
     type: 'documentation-audit-report' as const,
     schemaVersion: DOCUMENTATION_AUDIT_SCHEMA_VERSION,
     contentHash: '0'.repeat(64),
-    contentHashAlgo: 'sha256-normalized-v1' as const,
+    contentHashAlgo: options.snapshot.contentHashAlgo,
     project: options.snapshot.project,
     sourceRevision: options.snapshot.sourceRevision,
     sourceRevisionKind: options.snapshot.sourceRevisionKind,
@@ -502,7 +502,7 @@ export const auditDocumentation = (options: DocumentationAuditOptions): Document
       'Agent proposals are advisory and require human approval before any edit.',
     ],
   }
-  return DocumentationAuditReportV1Schema.parse({ ...base, contentHash: contentHashForArtifactV1(base) })
+  return DocumentationAuditReportV1Schema.parse({ ...base, contentHash: contentHashForVersionedArtifact(base) })
 }
 
 export const formatDocumentationAuditText = (report: DocumentationAuditReportV1): readonly string[] => [

@@ -1,3 +1,4 @@
+import { changeImpact, snapshotChanges } from '../diff/change-set.js'
 import type { DocBridgeConfigV1 } from '../config/schema.js'
 import { FILE_BACKED_KINDS } from '../discovery/incremental.js'
 import { handoffForEntity } from '../query/handoff.js'
@@ -231,13 +232,11 @@ const fileBacked = (snapshot: SnapshotForDigest): Map<string, FileBacked> => {
   const result = new Map<string, FileBacked>()
   for (const entity of snapshot.entities) {
     if (!(FILE_BACKED_KINDS as readonly string[]).includes(entity.kind) || !entity.path) continue
-    const hash = entity.evidence[0]?.contentHash
+    const hash = entity.evidence.find((item) => item.contentHash)?.contentHash
     if (hash) result.set(entity.id, { id: entity.id, kind: entity.kind, path: entity.path, hash })
   }
   return result
 }
-
-const DOCUMENT_RELATIONS = new Set(['covers', 'mentions', 'mentions-symbol', 'links-to'])
 
 export const changeDigestView = (previous: SnapshotForDigest, current: SnapshotForDigest): ChangeDigestView => {
   const before = fileBacked(previous)
@@ -245,32 +244,15 @@ export const changeDigestView = (previous: SnapshotForDigest, current: SnapshotF
   const sortIds = (ids: Iterable<string>, of: Map<string, FileBacked>): string[] =>
     [...ids].sort((a, b) => (of.get(a) as FileBacked).path.localeCompare((of.get(b) as FileBacked).path) || a.localeCompare(b))
 
-  const changed = sortIds([...after.keys()].filter((id) => before.has(id) && (before.get(id) as FileBacked).hash !== (after.get(id) as FileBacked).hash), after)
+  const changes = snapshotChanges(previous, current)
+  const changed = sortIds(changes.filter((change) => change.kind !== 'symbol' && change.op === 'changed').map((change) => change.after!.id), after)
     .map((id) => ({ id, kind: (after.get(id) as FileBacked).kind, path: (after.get(id) as FileBacked).path, previousHash: shortHash((before.get(id) as FileBacked).hash), currentHash: shortHash((after.get(id) as FileBacked).hash) }))
-  const added = sortIds([...after.keys()].filter((id) => !before.has(id)), after)
+  const added = sortIds(changes.filter((change) => change.kind !== 'symbol' && change.op === 'added').map((change) => change.after!.id), after)
     .map((id) => ({ id, kind: (after.get(id) as FileBacked).kind, path: (after.get(id) as FileBacked).path, currentHash: shortHash((after.get(id) as FileBacked).hash) }))
-  const removed = sortIds([...before.keys()].filter((id) => !after.has(id)), before)
+  const removed = sortIds(changes.filter((change) => change.kind !== 'symbol' && change.op === 'removed').map((change) => change.before!.id), before)
     .map((id) => ({ id, kind: (before.get(id) as FileBacked).kind, path: (before.get(id) as FileBacked).path, previousHash: shortHash((before.get(id) as FileBacked).hash) }))
 
-  /*
-   * "Which documentation should this change have touched": every document that covers, mentions
-   * or links to something that moved — and did not move itself. A document that changed alongside
-   * its subject is in `changed`, not here.
-   */
-  const moved = new Set([...changed, ...added].map((entity) => entity.id))
-  const reasons = new Map<string, Set<string>>()
-  for (const relation of current.relations) {
-    if (!DOCUMENT_RELATIONS.has(relation.kind) || !moved.has(relation.to) || moved.has(relation.from)) continue
-    const document = after.get(relation.from)
-    if (!document || document.kind !== 'document') continue
-    const target = after.get(relation.to)
-    const because = reasons.get(document.path) ?? new Set<string>()
-    because.add(`${relation.kind} \`${target?.path ?? relation.to}\``)
-    reasons.set(document.path, because)
-  }
-  const documentsToReview = [...reasons.entries()]
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([path, because]) => ({ path, because: [...because].sort().join('; ') }))
+  const { documentsToReview } = changeImpact(previous, current, changes)
 
   return {
     summary: `${changed.length} changed, ${added.length} added, ${removed.length} removed of ${after.size} file-backed entities (previous revision ${previous.sourceRevision.slice(0, SHORT_HASH)}, current ${current.sourceRevision.slice(0, SHORT_HASH)})`,

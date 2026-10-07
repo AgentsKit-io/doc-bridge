@@ -100,7 +100,9 @@ a hash — an external package, an area — has nothing to move and is not liste
 
 "Documentation to review" answers which documents this change should have touched: every document
 that covers, mentions, links to or references a symbol of something that moved, and did not move
-itself. A document that changed alongside its subject is in *changed*, not there.
+itself. Both snapshots' relations are consulted, including historical references to removed
+targets. A document that changed alongside its subject is in *changed*, not there. The
+delta and impact functions are shared with [ChangeSetV1](change-set-v1.md).
 
 The previous snapshot is the one `--data` names, otherwise the last `ak-docs scan` (the
 workflow's `normalize` output under `.doc-bridge/workflow`). The current one is a cold scan of the

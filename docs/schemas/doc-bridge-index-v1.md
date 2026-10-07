@@ -114,12 +114,33 @@ verify freshness by re-hashing those inputs rather than rebuilding the index, wh
 a search cheap on a large repository. `retrieval.lexiconVersion` is checked too, because a changed
 stopword list changes ranking without changing a single file.
 
-An index written before `inputs` existed is still validated, by the full rebuild-and-compare it
-always used.
+The semantic input fingerprint additionally binds the declared algorithm, pipeline/analyzer versions
+and effective configuration. Legacy fingerprints keep their original narrower configuration projection.
+Every loaded index first verifies its seal using its declared algorithm. An index written before
+`inputs` existed uses a full rebuild under that same algorithm. Freshness gates also rebuild under
+the stored algorithm; a valid legacy index receives an explicit migration diagnostic. Unlike
+algorithms are never compared as equal.
+
+Before migration writes, explicit `ak-docs index` reads the committed legacy artifact, verifies its
+legacy seal and compares it with a legacy rebuild of the current tree. It prints a warning naming
+any drift and the algorithm migration before writing. This explicit regeneration proceeds;
+`gate run` stays read-only and fails on stale or invalid artifacts. Reproducibility continues to
+check committed path inputs for either supported algorithm; this check does not approve migration.
 
 ## Content Hash
 
-`contentHashAlgo` is `sha256-normalized-v1`.
+New explicit index regeneration writes `contentHashAlgo: sha256-semantic-v1`.
+New readers accept both `sha256-normalized-v1` and `sha256-semantic-v1`; unknown algorithms
+fail with a diagnostic to install a compatible doc-bridge and explicitly regenerate.
+The v1 field shape is retained, including embedded legacy handoffs. Old strict readers reject
+the new algorithm with a schema error: upgrade readers before explicitly regenerating.
+
+For `sha256-semantic-v1`, hash the entire index except `contentHash` and `generatedAt`, including
+its algorithm, project identity, full retrieval projection and repository input fingerprint.
+The projection includes a semantic snapshot identity; revisions and reuse statistics do not reach
+this seal. Index array ordering remains the writer's deterministic reading order.
+
+For legacy `sha256-normalized-v1`, the original specialized projection remains unchanged.
 
 The hash input is deterministic JSON containing only:
 
@@ -129,6 +150,7 @@ The hash input is deterministic JSON containing only:
 - `lookup`
 - `retrieval`
 - `inputs` (when the corpus projection is enabled)
+- `projection.contentHash` (when present)
 
 `generatedAt` is not part of the hash input. When the hash is unchanged, `ak-docs index` preserves the existing `generatedAt` so regenerated `index.json` bytes stay stable.
 
