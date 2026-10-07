@@ -94,9 +94,11 @@ report in the summary and annotations. Reference findings do not fail gates unle
 `fail-on-findings: 'true'` is explicitly selected. Successful comment delivery never
 clears a failed blocking gate.
 
-Use `pull_request`, SHA-pinned trusted Action code and `fetch-depth: 0` with
+Use `pull_request`, SHA-pinned trusted Action code, checkout at the declared head, and `fetch-depth: 0` with
 `persist-credentials: false` so checkout supplies exact base/head objects. Analysis
-makes no additional fetch. Configure a repository/PR concurrency group with
+makes no additional fetch. The gate stage preserves prepared ignored conformance
+exports only in a clean workspace matching that exact revision; other revisions use
+an isolated capture, and missing evidence remains blocking. Configure a repository/PR concurrency group with
 `cancel-in-progress: false` for all publishers. Do not run untrusted head code under
 `pull_request_target`, and keep write tokens out of analysis environments.
 

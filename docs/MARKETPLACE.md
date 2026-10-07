@@ -59,6 +59,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
           persist-credentials: false
       - uses: AgentsKit-io/doc-bridge@ee756a13c006c597445c31e2643c1e8cece715d7 # v1.7.45
         with:
@@ -95,7 +96,7 @@ commit it. Choosing `ci-built` does not repair or clear committed drift.
 
 ## Advisory and event safety
 
-The analysis captures exact Git objects into temporary worktrees, materializing
+The advisory analysis captures exact Git objects into temporary worktrees, materializing
 blobs without checkout filters, hooks, submodules or head scripts. Symlinks and
 submodules are rejected rather than followed. No additional fetch or network call
 is made by analysis; `actions/checkout` must supply both objects. Missing objects,
@@ -103,6 +104,10 @@ limits and unsupported analysis are reported as unavailable, never as zero findi
 Snapshots and the advisory variant of `ak-docs diff` use bounded service reads;
 agent, network and repository-module options are ignored with visible coverage.
 Blocking gates retain deterministic static-config behavior under the trusted engine.
+When the existing workspace is clean at the exact declared revision, the gate stage
+uses it so CI-prepared ignored conformance artifacts remain available; otherwise it
+uses an isolated exact-revision capture. Missing artifacts are never silently repaired.
+Match checkout to `head-revision` when preparing ignored exports such as `llms.txt`.
 
 The Markdown lists `BROKEN_REFERENCE` and `AMBIGUOUS_REFERENCE`, epistemic status,
 bounded documentation locations, exact revisions and partial/missing coverage.

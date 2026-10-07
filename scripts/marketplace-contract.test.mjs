@@ -77,7 +77,7 @@ test('installation defaults to a pinned engine; checkout is explicit, self-CI-on
   } finally { rmSync(directory, { recursive: true, force: true }) }
 })
 
-test('real index modes preserve committed bytes and independent drift policy', async () => fixture(async ({ repo, env }) => {
+test('real index modes preserve committed bytes and independent drift policy', async () => fixture(async ({ repo, base, env }) => {
   assert.equal(await analyzeIndex(env), 1, 'missing committed index fails default mode')
   env.DOC_BRIDGE_INDEX_SOURCE = 'ci-built'
   assert.equal(await analyzeIndex(env), 0, 'missing committed index allowed explicitly')
@@ -98,6 +98,36 @@ test('real index modes preserve committed bytes and independent drift policy', a
   report = JSON.parse(readFileSync(reportPath(env), 'utf8')); assert.equal(report.committed.ok, false)
   assert.equal(readFileSync(join(repo, '.doc-bridge/index.json'), 'utf8'), original)
   assert.equal(await git(repo, 'status', '--porcelain'), '')
+  env.DOC_BRIDGE_HEAD_REVISION = base; delete env.DOC_BRIDGE_GATE_ID
+  assert.equal(await analyzeIndex(env), 0, 'a different exact revision uses the isolated capture')
+  assert.equal(JSON.parse(readFileSync(reportPath(env), 'utf8')).sourceRevision, base)
+  put(repo, 'dirty.md', '# Uncommitted data\n')
+  assert.equal(await analyzeIndex(env), 0, 'uncommitted workspace data never joins the requested capture')
+}))
+
+test('exact workspace preserves CI-prepared ignored conformance exports without repairing a missing export', async () => fixture(async ({ repo, env }) => {
+  const config = JSON.parse(readFileSync(join(repo, 'doc-bridge.config.json'), 'utf8'))
+  config.index.llmsTxt.enabled = true
+  config.gates.include = ['documentation-standard-v1']
+  config.conformance = { documentationStandardV1: { rawSources: ['docs/guide.md'] } }
+  put(repo, 'doc-bridge.config.json', JSON.stringify(config)); put(repo, '.gitignore', 'llms.txt\n')
+  await commit(repo)
+  await command(process.execPath, [cli, 'index'], { cwd: repo })
+  env.DOC_BRIDGE_HEAD_REVISION = await commit(repo)
+  const prepared = readFileSync(join(repo, 'llms.txt'), 'utf8')
+  for (const source of ['committed', 'ci-built']) {
+    env.DOC_BRIDGE_INDEX_SOURCE = source
+    assert.equal(await analyzeIndex(env), 1, 'other intentionally unconfigured conformance rules still block')
+    const report = JSON.parse(readFileSync(reportPath(env), 'utf8'))
+    const llms = report.results.find(item => item.id === 'documentation-standard-v1').details.results.find(item => item.id === 'llms-and-raw-source')
+    assert.equal(llms.ok, true, 'prepared exact-revision export remains available to the real conformance rule')
+    assert.equal(readFileSync(join(repo, 'llms.txt'), 'utf8'), prepared)
+  }
+  rmSync(join(repo, 'llms.txt'))
+  assert.equal(await analyzeIndex(env), 1)
+  const report = JSON.parse(readFileSync(reportPath(env), 'utf8'))
+  assert.equal(report.results.find(item => item.id === 'documentation-standard-v1').details.results.find(item => item.id === 'llms-and-raw-source').ok, false)
+  assert.ok(!existsSync(join(repo, 'llms.txt')), 'missing conformance evidence is never silently generated')
 }))
 
 test('CLI index preserves nested config roots and rejects dirty/revision/artifact escapes', async () => fixture(async ({ repo, env, directory }) => {

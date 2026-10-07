@@ -11,9 +11,19 @@ const boolean = value => { if (!['true', 'false'].includes(value ?? 'false')) th
 const output = (name, value, env) => { if (env.GITHUB_OUTPUT) appendFileSync(env.GITHUB_OUTPUT, `${name}=${String(value).replace(/[\r\n]/gu, '')}\n`) }
 // Resolve the existing process helpers from the trusted engine installation, not the PR.
 const helpers = async cli => import(createRequire(resolve(cli)).resolve('@agentskit/cross-platform'))
+const filtersFor = async (root, cli) => {
+  const { runCommand } = await helpers(cli)
+  const configured = await runCommand('git', ['config', '--null', '--name-only', '--get-regexp', '^filter\\..*\\.(clean|smudge|process|required)$'], { cwd: root, maxOutputBytes: 65536, timeoutMs: 60000 })
+  if (![0, 1].includes(configured.code) || configured.truncated) throw new Error('Git filter inventory unavailable')
+  const filters = [...new Set(configured.stdout.split('\0').filter(Boolean))]
+  if (filters.length > 128) throw new Error('Git filter inventory exceeds budget')
+  return filters
+}
 const git = async (root, args, cli) => {
   const { runCommand } = await helpers(cli)
-  const result = await runCommand('git', ['-c', 'core.hooksPath=', '-c', 'core.fsmonitor=false', ...args], { cwd: root, timeoutMs: 60000, maxOutputBytes: 64 * 1024 * 1024 })
+  const filters = args[0] === 'status' ? await filtersFor(root, cli) : []
+  const disabled = filters.flatMap(key => ['-c', `${key}=${key.endsWith('.required') ? 'false' : ''}`])
+  const result = await runCommand('git', ['-c', 'core.hooksPath=', '-c', 'core.fsmonitor=false', ...disabled, ...args], { cwd: root, timeoutMs: 60000, maxOutputBytes: 64 * 1024 * 1024 })
   if (result.code !== 0 || result.truncated) throw new Error('Git capture unavailable')
   return result.stdout
 }
@@ -69,10 +79,7 @@ export const withRevision = async (root, revision, run, cli = resolve(import.met
 const engine = async (env, args) => {
   const { runCommand } = await helpers(env.DOC_BRIDGE_CLI_PATH)
   // Even Git status can invoke a configured clean/process filter. Neutralize every filter.
-  const configured = await runCommand('git', ['config', '--null', '--name-only', '--get-regexp', '^filter\\..*\\.(clean|smudge|process|required)$'], { cwd: env.GITHUB_WORKSPACE, maxOutputBytes: 65536, timeoutMs: 60000 })
-  if (![0, 1].includes(configured.code) || configured.truncated) throw new Error('Git filter inventory unavailable')
-  const filters = [...new Set(configured.stdout.split('\0').filter(Boolean))]
-  if (filters.length > 128) throw new Error('Git filter inventory exceeds budget')
+  const filters = await filtersFor(env.GITHUB_WORKSPACE, env.DOC_BRIDGE_CLI_PATH)
   const childEnv = { ...Object.fromEntries(Object.entries(env).filter(([key]) => !/(?:TOKEN|SECRET|PASSWORD|CREDENTIAL|AUTH|^GIT_CONFIG)/iu.test(key))), GIT_CONFIG_COUNT: String(filters.length + 2), GIT_CONFIG_KEY_0: 'core.fsmonitor', GIT_CONFIG_VALUE_0: 'false', GIT_CONFIG_KEY_1: 'core.hooksPath', GIT_CONFIG_VALUE_1: '' }
   for (const [index, key] of filters.entries()) { childEnv[`GIT_CONFIG_KEY_${index + 2}`] = key; childEnv[`GIT_CONFIG_VALUE_${index + 2}`] = key.endsWith('.required') ? 'false' : '' }
   const result = await runCommand(process.execPath, [resolve(env.DOC_BRIDGE_CLI_PATH), ...args], {
@@ -93,7 +100,13 @@ export const analyzeIndex = async env => {
   const report = join(directory, 'index-report.json')
   output('report', report, env); output('source', source, env); output('revision', head, env)
   try {
-    await withRevision(env.GITHUB_WORKSPACE, head, root => engine(env, ['action', 'index', '--root', root, '--revision', head, '--index-source', source, '--output', join(directory, 'index.json'), '--report', report, ...configArgs(env), ...(env.DOC_BRIDGE_GATE_ID ? ['--gate', env.DOC_BRIDGE_GATE_ID] : [])]), env.DOC_BRIDGE_CLI_PATH)
+    const analyze = root => engine(env, ['action', 'index', '--root', root, '--revision', head, '--index-source', source, '--output', join(directory, 'index.json'), '--report', report, ...configArgs(env), ...(env.DOC_BRIDGE_GATE_ID ? ['--gate', env.DOC_BRIDGE_GATE_ID] : [])])
+    const workspace = realpathSync(env.GITHUB_WORKSPACE)
+    const matches = (await git(workspace, ['rev-parse', 'HEAD'], env.DOC_BRIDGE_CLI_PATH)).trim() === head
+    const clean = matches && !(await git(workspace, ['status', '--porcelain', '--untracked-files=all'], env.DOC_BRIDGE_CLI_PATH)).trim()
+    // Preserve CI-prepared ignored conformance artifacts only in the verified exact checkout.
+    if (clean) await analyze(workspace)
+    else await withRevision(workspace, head, analyze, env.DOC_BRIDGE_CLI_PATH)
     if (env.GITHUB_STEP_SUMMARY) appendFileSync(env.GITHUB_STEP_SUMMARY, `### Doc Bridge blocking gates\n\nIndex source: ${source}; revision: ${head}.\n\n${summaryCode(readFileSync(report, 'utf8'))}\n`)
     return 0
   } catch {
