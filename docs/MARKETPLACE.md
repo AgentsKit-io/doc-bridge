@@ -109,11 +109,15 @@ uses it so CI-prepared ignored conformance artifacts remain available; otherwise
 uses an isolated exact-revision capture. Missing artifacts are never silently repaired.
 Match checkout to `head-revision` when preparing ignored exports such as `llms.txt`.
 
-The Markdown lists `BROKEN_REFERENCE` and `AMBIGUOUS_REFERENCE`, epistemic status,
+The Markdown lists `BROKEN_REFERENCE`, `AMBIGUOUS_REFERENCE` and
+`CHANGED_REFERENCE`, epistemic status,
 bounded documentation locations, exact revisions and partial/missing coverage.
-The current advisory shows all deterministic findings, including historical and
-generated documentation. Policy routing/version exclusions are explicitly
-**not analyzed** here; it proposes no patches or acceptance decisions.
+The advisory applies policy by default: included broken, ambiguous and changed
+references are listed; historical/generated/version exclusions are summarized as
+counts with complete evidence in the diff artifact. Changed values require review,
+never automatic edits. Same-repository implicit targets track the analyzed branch;
+consumer/explicit version targets retain eligibility. It proposes no patches or
+acceptance decisions. `ak-docs diff --no-policy` restores raw debugging output.
 
 | Event/token | Analysis | Comment |
 | --- | --- | --- |

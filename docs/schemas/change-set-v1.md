@@ -53,7 +53,7 @@ remain in identity. Coverage from both snapshots is retained with `base:` and
 bounded identity helper with a collision-resistant hash suffix. Evidence hashes
 remain part of identity. `parseChangeSet` validates shape and semantic hash.
 
-The diff envelope contains `changeSet`, `impact`, and `findings`. Findings reuse
+The diff envelope contains `changeSet`, `impact`, `findings`, and `policy`. Findings reuse
 `DiagnosticSchema` and remain outside ChangeSet identity: live text verification
 can change certainty without changing the snapshot delta. Findings retain both
 citation and target evidence and identify their relation and entities. See the
@@ -65,3 +65,10 @@ and package purl (512). Release state and mapping participate in the semantic
 hash. Stamping retains the event evidence in bounded `release-event` coverage;
 the matched revision remains `headRevision`. The index and handoff envelopes
 are unchanged. See [release routing](../spec/change-set-v1.md#release-stamping-and-eligibility).
+
+The unreleased diff envelope adds a `policy` sidecar with `enabled`, complete
+FindingV1 `findings`, and counts for proposed/excluded/routed-to-L2/pending-version
+plus generator references (an excluded subset). Main findings remain strict
+KnowledgeDiagnostic records and omit excluded/pending records by default.
+CHANGED_REFERENCE hashes its locator, target and before/after value-hash pair
+and remains stale-or-unverified. `--no-policy` restores the raw main list.

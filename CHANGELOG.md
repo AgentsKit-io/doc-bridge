@@ -4,6 +4,8 @@
 
 ### Patch Changes
 
+- Report changed signature/configuration/flag references for review, apply finding policy by default with a complete policy sidecar, and preserve branch-tracking behavior for same-repository docs with a raw opt-out.
+
 - Deduplicate removed-export advisories, preserve kind-specific conflict status and distinct citation evidence, summarize advisory coverage, and retain actionable Action failure reports with symlink-safe runner invocation.
 
 - Registry CLI failures wait for child execution to settle and release concurrency before rejecting, allowing immediate retries after deadlines or output overflow.

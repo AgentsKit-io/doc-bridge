@@ -253,10 +253,10 @@ repository-selected modules, scripts, agents, providers or hooks. `diff --adviso
 uses the same ChangeSet/reference engine as `diff`, with bounded service head reads.
 It writes a bounded binding envelope, adjacent Markdown (`.md`) and full diff
 (`.diff.json`). The envelope binds repository, PR, exact base/head hashes and source
-mode, with a stable hidden marker. Escaped Markdown lists deterministic broken and
-ambiguous references, evidence/status and incomplete coverage. Historical/generated
-findings remain visible; policy routing and version exclusions are not analyzed by
-this command. Nothing proposes edits or approves findings.
+mode, with a stable hidden marker. Escaped Markdown lists included broken, ambiguous
+and changed references, evidence/status and summarized coverage. Default policy
+summarizes historical/generated/version exclusions as counts; complete records
+remain in the diff artifact. Nothing proposes edits or approves findings.
 
 `--summary <file>` appends that same advisory Markdown to a caller-provided summary.
 `--fail-on-findings` returns 1 for reference findings; otherwise findings return 0.
@@ -297,3 +297,10 @@ summarizes deduplicated coverage counts and at most five change-relevant gaps;
 expected service denials appear once as the service profile notice. Full coverage
 remains in the adjacent diff artifact, and citation locations distinguish base
 from head.
+
+`ak-docs diff` and `diff --advisory` apply finding policy by default.
+`--no-policy` restores raw findings, including excluded/pending records. JSON
+adds a policy sidecar with complete FindingV1 records and routing counts; the
+main findings array preserves its diagnostic shape. Advisory Markdown includes
+CHANGED_REFERENCE as review-required uncertainty and shows only counts for
+historical/generated/version exclusions, with full detail in the diff artifact.

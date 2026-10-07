@@ -1611,11 +1611,11 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
         const budget = { used: 0 }
         const inventory = Object.fromEntries(listing.files.map(path => [toPosix(relative(root, path)), contentRef(Buffer.from(readBoundedText(path, budget, { maxFileBytes: limits.maxFileBytes, maxCorpusBytes: limits.maxBytes })))]))
         const read = await createLocalRepositoryRead({ root, partition: { repositoryId: head.project.name, revision: head.sourceRevision }, limits, inventory, excludes: safeWalkOptions(config).exclude ?? [] })
-        const observed = await diffSnapshotsWithRead(base, head, read)
+        const observed = await diffSnapshotsWithRead(base, head, read, { policy: !argv.includes('--no-policy') })
         const { metrics: _metrics, status, ...artifact } = observed
         if (status) { writeJson({ ...artifact, status }); return 2 }
         result = artifact
-      } else result = diffSnapshots(base, head)
+      } else result = diffSnapshots(base, head, { policy: !argv.includes('--no-policy') })
       const bytes = `${JSON.stringify(result, null, 2)}\n`
       const output = optionValues(argv, '--output')[0]
       if (output) {

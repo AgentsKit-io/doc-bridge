@@ -114,8 +114,8 @@ Generic citations target the fact's owner in `relation.to`. Symbols use
 `metadata.symbol`; other kinds use `metadata.factKind` and `metadata.factName`.
 Package citations use kind `package`, the package ID as owner and its purl as name.
 The diff resolves kind/name against codec facts rather than language syntax.
-Verified head inline-code tokens outside generated regions establish current
-citations. Competing head owners of the same kind/name produce
+Verified head inline-code tokens establish current citations; surviving generated
+citations are retained for generator policy routing without changing discovery graphs. Competing head owners of the same kind/name produce
 `AMBIGUOUS_REFERENCE`; missing names without a removal delta do not prove breaks.
 A changed document is still checked for residual citations. The generic locator
 uses fact kind/name in place of the symbol, retaining the existing owner target
@@ -167,7 +167,7 @@ The caller selects the adapter for the target's ecosystem.
 
 | Target | Unreleased delta | Released delta |
 | --- | --- | --- |
-| latest-released (no declaration) | false | true |
+| latest-released (cross-package consumer default) | false | true |
 | default-branch or workspace range | true for matching package | false |
 | resolved range | false | adapter comparison for matching stamped purl |
 | unresolved | unresolved | unresolved |
@@ -186,9 +186,9 @@ catalog or infer which supplied event is newest.
 Document `metadata.targets` holds at most 32 independent bounded target records
 (see [Markdown targets](markdown-analyzer-v1.md#document-package-targets)).
 Eligibility is evaluated per target; consumers retain independent outcomes for
-multiple purls. Findings, finding IDs and strict diff envelope fields are
-unchanged. Version eligibility does not erase deterministic findings or approve
-remediation. This contract implements the version-routing decisions in
+multiple purls. Version eligibility preserves finding identities and retains all
+deterministic evidence in the policy sidecar; excluded/pending findings leave the
+default main list. Version eligibility never approves remediation. This contract implements the version-routing decisions in
 [ADR 0010](../adr/0010-versioned-change-set-and-semantic-identity.md).
 
 ## Removal advisory quality
@@ -199,3 +199,35 @@ is checked for the cited kind; unrelated partial signature coverage cannot
 downgrade a proven symbol removal. Same-kind incomplete extraction and unverified
 snapshot-only head citations remain `stale-or-unverified`. Identical evidence
 entries are deduplicated while base and head contexts remain distinct.
+
+## Changed references and default policy
+
+A citation of a changed signature, configuration-key value, CLI flag value or
+symbol with a changed signature produces `CHANGED_REFERENCE`. Its status is
+always `stale-or-unverified`: a changed implementation value does not prove
+that prose contradicts it. IDs retain the assertion/target projection and add
+the before/after value-hash pair; citation movement, file hashes and revisions
+do not change identity. Base/head target evidence contexts expose those hashes,
+which are also structured in the corresponding ChangeSet identities. Current
+codecs expose hashes only, so summaries are emitted only when a codec actually
+provides them. Changed references require review/Layer 2, never automatic edits.
+
+The diff envelope retains `findings` as KnowledgeDiagnostic objects and adds
+`policy: {enabled, findings, counts}`. The sidecar retains full FindingV1 records
+for every deterministic diagnostic, preserving its ID. Counts include each
+routing status and `generator` (a subset of excluded findings). Policy is on
+by default: historical/archived, ADR and CHANGELOG references are excluded;
+nearby migration context routes to Layer 2; generated citations are excluded
+and name their generator; explicit/consumer version targets can be pending.
+Excluded and pending findings leave the main list, with full details in policy.
+Policy never changes epistemic status. `policy: false` or CLI `--no-policy`
+restores the raw main list; changed references still require interpretation.
+
+Same-repository documentation without an explicit frontmatter target or resolved
+dependency target on another package describes the code at the analyzed revision, so
+routing treats it as branch-tracking and includes unreleased deltas. Existing
+implicit latest-released metadata is retained for payload compatibility; it
+does not make same-repository findings pending. Explicit targets and resolved
+dependency targets on other packages retain adapter-owned version eligibility.
+Unreadable head context is explicit partial policy coverage; snapshot metadata
+can still establish historical classification and version targets.
