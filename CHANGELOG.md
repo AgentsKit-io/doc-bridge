@@ -4,6 +4,8 @@
 
 ### Patch Changes
 
+- Pin ecosystem snapshot verification to an immutable upstream commit, add explicit sync automation, and retain upstream freshness checks for releases.
+
 - Resolve unique configuration example leaves only with schema-owner context, and include statically linked operational defaults in configuration value hashes.
 
 - Preserve declaring-owner resolution through re-exports during historical citation checks, and normalize known-bin and indexed-package runner invocations with command-scoped flag citations.

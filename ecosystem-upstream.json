@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "repository": "AgentsKit-io/agentskit",
-  "ref": "main",
+  "ref": "88c8bc7b7e29f974325f28093d19e95d51fc5722",
   "files": {
     "ecosystem.json": "7b1a98dd8165419af2cd36b4995d0b01781f50aacc06a509d24b5b67c1d25fdb",
     "ecosystem-claims.json": "b1bd9e5d400e620e9fa5c1927aa2a234b6ef75e47b0d758a734d623e4f2591a1"

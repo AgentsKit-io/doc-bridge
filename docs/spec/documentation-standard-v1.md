@@ -114,7 +114,10 @@ false`) does not have to be kept as a placeholder record. The deprecated `proper
 optional; when present, each entry must name a distinct `products[]` record and repeat its
 name, domain, URL, repository, tagline, kind, accent, and machine surfaces exactly.
 Doc Bridge also records the upstream ref and SHA-256 digests in `ecosystem-upstream.json`;
-`pnpm check:ecosystem-upstream` compares the local snapshots with AgentsKit `main` in CI.
+`pnpm check:ecosystem-upstream` requires a full 40-character commit SHA and compares local
+snapshots with that immutable commit in PR/push CI. `pnpm sync:ecosystem-upstream` resolves
+AgentsKit `main` once, copies both canonical files byte-exact and records that commit and
+its digests. Releases use `--against-upstream-head` to reject stale snapshots.
 This network parity check is deliberately separate from the runtime conformance profile, which
 remains deterministic and offline.
 

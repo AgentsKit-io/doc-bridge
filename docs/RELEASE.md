@@ -11,7 +11,7 @@ description: Reproducible package, documentation, and registry checks for a Doc 
 pnpm install
 pnpm audit --audit-level low
 pnpm typecheck
-pnpm check:ecosystem-upstream
+pnpm check:ecosystem-upstream --against-upstream-head
 pnpm test
 pnpm coverage
 pnpm build
