@@ -140,9 +140,11 @@ describe('opt-in vault Markdown', () => {
     expect(snapshot.analyzerVersions.obsidian).toBe(plugin.manifest.version)
   })
 
-  it('leaves this repository snapshot and index byte-identical when the plugin is absent', () => {
-    const root = process.cwd()
-    const repositoryConfig = applyConfigDefaults(DocBridgeConfigV1Schema.parse(JSON.parse(readFileSync(join(root, 'doc-bridge.config.json'), 'utf8'))))
+  it('leaves a representative snapshot and index byte-identical when the plugin is absent', () => {
+    // CI's Build deterministic repository index step indexes the whole repository twice and compares bytes with cmp.
+    const root = fixture()
+    write(root, 'vault/links.md', '# Links\n[Target](target.md) [External](https://example.org)\n')
+    const repositoryConfig = config('plain-markdown')
     expect(obsidian.obsidianCorpora(repositoryConfig)).toEqual([])
     const originalSnapshot = JSON.stringify(discoverRepository({ root, config: repositoryConfig }))
     const originalIndex = buildDocBridgeIndex({ root, config: repositoryConfig, write: false }).index
@@ -152,5 +154,5 @@ describe('opt-in vault Markdown', () => {
     expect(JSON.stringify(snapshot)).toBe(originalSnapshot)
     expect(JSON.stringify({ ...index, generatedAt: '' })).toBe(JSON.stringify({ ...originalIndex, generatedAt: '' }))
     expect(parser).not.toHaveBeenCalled()
-  }, 120_000)
+  })
 })
