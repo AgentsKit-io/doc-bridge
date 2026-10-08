@@ -4,6 +4,7 @@ import { restrictServiceRead } from '../execution/repository.js'
 import { redactValue } from '../safety/repository.js'
 import { denyServiceOperation, withExecutionProfile, executionContext, isServiceProfile, bindServiceCapability, serviceCoverage, type ExecutionProfile } from '../execution/profile.js'
 import { serviceConfig } from '../execution/config.js'
+import { boundCoverage } from './coverage.js'
 import { FACT_EXTRACTORS, factAnalyzerVersions, runFactExtractors } from './facts/index.js'
 import { execFileSync } from 'node:child_process'
 import { basename, relative, resolve } from 'node:path'
@@ -97,7 +98,7 @@ const artifact = (root: string, config: DocBridgeConfigV1 | undefined, files: re
     analyzerVersions: obsidianCorpora(config).length ? { ...ANALYZER_VERSIONS, obsidian: OBSIDIAN_ANALYZER_VERSION } : ANALYZER_VERSIONS,
     entities: [...entities].sort((a, b) => a.id.localeCompare(b.id)),
     relations: [...relations].sort((a, b) => a.id.localeCompare(b.id)),
-    coverage: coverage.map((entry) => ({ ...entry, analyzerVersion: entry.analyzerVersion ?? (ANALYZER_VERSIONS[entry.analyzer] ?? '1.0.0') })),
+    coverage: boundCoverage(coverage.map((entry) => ({ ...entry, analyzerVersion: entry.analyzerVersion ?? (ANALYZER_VERSIONS[entry.analyzer] ?? '1.0.0') }))),
   }
   return DiscoverySnapshotV1Schema.parse({ ...base, contentHash: contentHashForVersionedArtifact(base) })
 }
@@ -283,7 +284,7 @@ export const discoverRepositoryWithRead = async (read: RepositoryReadV1, opts: D
     })
     const bound = (snapshot: DiscoverySnapshotV1): DiscoveryReadResult => {
       if (filtered) {
-        const value = DiscoverySnapshotV1Schema.parse(redactValue({ ...snapshot, coverage: [...snapshot.coverage, ...serviceCoverage([...filtered.diagnostics, ...(filtered.config.safety?.exclude ?? []).map(path => `safety.exclude: ${path}`), ...(filtered.config.audit?.documentation?.generatedPaths ?? []).map(path => `audit.documentation.generatedPaths: ${path}`), ...(filtered.config.audit?.documentation?.exclude ?? []).map(path => `audit.documentation.exclude: ${path}`)])] }))
+        const value = DiscoverySnapshotV1Schema.parse(redactValue({ ...snapshot, coverage: boundCoverage([...snapshot.coverage, ...serviceCoverage([...filtered.diagnostics, ...(filtered.config.safety?.exclude ?? []).map(path => `safety.exclude: ${path}`), ...(filtered.config.audit?.documentation?.generatedPaths ?? []).map(path => `audit.documentation.generatedPaths: ${path}`), ...(filtered.config.audit?.documentation?.exclude ?? []).map(path => `audit.documentation.exclude: ${path}`)])]) }))
         snapshot = bindServiceCapability(DiscoverySnapshotV1Schema.parse({ ...value, contentHash: contentHashForVersionedArtifact(value) }))
       }
       operation.check()

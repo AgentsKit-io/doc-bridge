@@ -4,6 +4,8 @@
 
 ### Patch Changes
 
+- Bound large-repository discovery coverage with deterministic counted summaries, capped evidence samples and explicit truncation, preserving small snapshot bytes and rescanning sampled snapshots for complete per-file diagnostics.
+
 - Add reviewed public historical Layer-1 benchmark cases and a v2 workspace fixture suite, retaining frozen v1 inputs and separating raw-policy gold.
 
 - Bound ignored service configuration diagnostics, generate declared ignored exports in isolated CI-built captures, and report actionable gate/rule and redacted advisory errors without clearing committed-index drift.
