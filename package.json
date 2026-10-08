@@ -128,7 +128,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@agentskit/cross-platform": "^0.1.0",
+    "@agentskit/cross-platform": "^0.2.1",
     "@agentskit/harness": "0.22.3",
     "@agentskit/net": "^0.2.0",
     "github-slugger": "^2.0.0",
