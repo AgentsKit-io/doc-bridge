@@ -47,8 +47,9 @@ grant future fields:
 
 Disallowed keys produce diagnostics naming their path, without values. An
 ignored container and its descendants are reported at their paths. Each path is
-bounded to 512 characters; more than 128 ignored keys fail closed with an
-explicit diagnostic-budget error. Malformed permitted values fail
+bounded to 512 characters; diagnostic collection retains at most 127 ignored
+paths followed by `diagnostics.truncated` when more paths exist. Truncation does
+not admit disallowed configuration or skip validation of permitted leaves. Malformed permitted values fail
 validation. Absolute paths, parent traversal, backslashes and drive/URI prefixes
 in permitted paths and globs are rejected. Contained storage remains the read
 authority, including symlink and exact-revision checks. Acquisition limits take

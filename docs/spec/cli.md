@@ -243,9 +243,16 @@ and in-checkout artifact destinations are rejected. `action index` runs existing
 static-config gates; `--gate <id>` selects a blocking gate. In `ci-built` mode it
 checks any existing committed drift before an in-memory build, writes and reloads
 an isolated artifact, compares a repeated hash and writes a provenance sidecar.
+Before gates, the trusted engine renders enabled Git-ignored llms and capabilities
+exports for that exact revision; tracked exports are not repaired. The Action
+runner always isolates CI-built captures, so caller checkout files remain unchanged.
+Direct CLI callers must supply their own clean disposable checkout when generating
+ignored exports. Committed mode does not generate missing exports.
 Drift blocks only under the configured freshness policy and remains visible under
 other policies. Missing committed indexes are permitted only in explicit CI-built
-mode. The repeated artifact hash check does not prove semantic correctness.
+mode. Gate annotations and job summaries include bounded failing gate/rule reasons;
+advisory-unavailable notices include redacted bounded engine diagnostics. The
+repeated artifact hash check does not prove semantic correctness.
 
 `action snapshot` applies the service capability ceiling, captures bounded reads
 and binds the snapshot's source revision to the declared Git hash. It never executes

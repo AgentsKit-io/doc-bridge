@@ -34,7 +34,10 @@ the selected source and exact analyzed head revision.
 `ci-built` allows an absent committed index. It builds with `write: false`, writes
 the result outside the checkout, reloads it and compares its hash with a repeated
 build. A separate provenance sidecar binds the generated artifact to the exact
-revision. It never writes over the committed index or generates checkout exports.
+revision. In an isolated exact-revision capture, the trusted engine also generates
+enabled Git-ignored `llms.txt` and capabilities exports before gates. Tracked
+exports still require existing current evidence. It never writes over the committed
+index or modifies the caller checkout.
 If a committed index exists, its drift is checked first and reported independently;
 when `index-freshness` is selected, that drift still blocks the job. A repeat build
 proves reproducibility for the captured inputs, not semantic documentation accuracy.
@@ -104,10 +107,14 @@ limits and unsupported analysis are reported as unavailable, never as zero findi
 Snapshots and the advisory variant of `ak-docs diff` use bounded service reads;
 agent, network and repository-module options are ignored with visible coverage.
 Blocking gates retain deterministic static-config behavior under the trusted engine.
-When the existing workspace is clean at the exact declared revision, the gate stage
-uses it so CI-prepared ignored conformance artifacts remain available; otherwise it
-uses an isolated exact-revision capture. Missing artifacts are never silently repaired.
-Match checkout to `head-revision` when preparing ignored exports such as `llms.txt`.
+CI-built gates always use an isolated exact-revision capture and generate enabled
+ignored exports with the trusted engine; no repository scripts are executed.
+Committed mode uses a clean exact workspace to retain caller-prepared ignored
+conformance artifacts, otherwise an isolated capture. Committed mode never repairs
+missing exports. Match checkout to `head-revision` when preparing those artifacts.
+Failures name the gate and up to five required failing rules with bounded reasons
+in the annotation and summary. Advisory-unavailable notices include the bounded,
+redacted engine error, independently of blocking results.
 
 The Markdown lists `BROKEN_REFERENCE`, `AMBIGUOUS_REFERENCE` and
 `CHANGED_REFERENCE`, epistemic status,

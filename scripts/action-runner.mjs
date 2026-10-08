@@ -2,7 +2,7 @@ import { createRequire } from 'node:module'
 import { appendFileSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 
 const shaPattern = /^[0-9a-f]{40}(?:[0-9a-f]{24})?$/u
 const sourceMode = value => { if (!['committed', 'ci-built'].includes(value)) throw new Error('Invalid index-source'); return value }
@@ -76,6 +76,11 @@ export const withRevision = async (root, revision, run, cli = resolve(import.met
     finally { rmSync(directory, { recursive: true, force: true }) }
   }
 }
+export const gateFailureReason = report => report.results?.filter(item => item.ok === false).slice(0, 5).map(item => {
+  const rules = item.details?.results?.filter(rule => rule.ok === false && rule.level === 'required').slice(0, 5).map(rule => `${String(rule.id).slice(0, 80)}: ${String(rule.message).slice(0, 160)}`)
+  return `${String(item.id).slice(0, 80)}: ${rules?.length ? rules.join('; ') : String(item.message).slice(0, 300)}`
+}).join('; ').slice(0, 1000)
+
 const engine = async (env, args) => {
   const { runCommand } = await helpers(env.DOC_BRIDGE_CLI_PATH)
   // Even Git status can invoke a configured clean/process filter. Neutralize every filter.
@@ -89,18 +94,17 @@ const engine = async (env, args) => {
   })
   if (result.code !== 0 || result.truncated) {
     let cause = result.timedOut ? 'engine analysis time limit exceeded' : result.truncated ? 'engine output limit exceeded' : `${args[0] === 'action' ? args[1] : args[0]} evidence unavailable (engine exit ${result.code})`
-    if (/No doc-bridge config found/u.test(result.stderr ?? '')) cause = 'No doc-bridge config found — run ak-docs init or pass config-path'
-    else if (args[0] === 'action' && args[1] === 'index' && args.includes('--report')) {
+    // Reuse the trusted engine's redaction before any bounded child diagnostic leaves analysis.
+    const { redactSecrets } = await import(pathToFileURL(resolve(dirname(realpathSync(env.DOC_BRIDGE_CLI_PATH)), '../dist/index.js')).href)
+    const diagnostic = redactSecrets(result.stderr ?? '').replace(/[\x00-\x1f\x7f]/gu, ' ').trim().slice(0, 1000)
+    if (diagnostic) cause += `: ${diagnostic}`
+    if (args[0] === 'action' && args[1] === 'index' && args.includes('--report')) {
       const path = args[args.indexOf('--report') + 1]
       if (statSafe(path)) {
         const report = JSON.parse(readFileSync(path, 'utf8'))
-        const failed = report.results?.filter(item => item.ok === false).map(item => item.id).slice(0, 5)
-        if (failed?.length) cause = `Blocking gates failed: ${failed.join(', ')}`
+        const failed = gateFailureReason(report)
+        if (failed) cause = `Blocking gates failed: ${redactSecrets(failed)}`
       }
-    } else {
-      // Only known diagnostics leave the child-output boundary; never log arbitrary PR text.
-      const known = ['HEAD_PARTITION_MISMATCH', 'INCOMPATIBLE_RESOURCE_LIMITS', 'Analysis requires a clean checkout', 'Revision exceeds', 'exceeds byte budget', 'exceeds time budget', 'Advisory Markdown exceeds', 'Artifact destination must be outside', 'Service configuration path escapes', 'Invalid permitted service configuration']
-      cause = /(?:Repository scan exceeded the \d+ (?:ms time|MiB memory|file|byte) limit|Documentation (?:file|corpus) exceeds the \d+ byte (?:limit|read budget))/u.exec(result.stderr ?? '')?.[0] ?? known.find(message => (result.stderr ?? '').includes(message)) ?? cause
     }
     throw new Error(cause)
   }
@@ -121,7 +125,7 @@ export const analyzeIndex = async env => {
     const matches = (await git(workspace, ['rev-parse', 'HEAD'], env.DOC_BRIDGE_CLI_PATH)).trim() === head
     const clean = matches && !(await git(workspace, ['status', '--porcelain', '--untracked-files=all'], env.DOC_BRIDGE_CLI_PATH)).trim()
     // Preserve CI-prepared ignored conformance artifacts only in the verified exact checkout.
-    if (clean) await analyze(workspace)
+    if (clean && source === 'committed') await analyze(workspace)
     else await withRevision(workspace, head, analyze, env.DOC_BRIDGE_CLI_PATH)
     if (env.GITHUB_STEP_SUMMARY) appendFileSync(env.GITHUB_STEP_SUMMARY, `### Doc Bridge blocking gates\n\nIndex source: ${source}; revision: ${head}.\n\n${summaryCode(readFileSync(report, 'utf8'))}\n`)
     return 0
@@ -129,7 +133,7 @@ export const analyzeIndex = async env => {
     const cause = error instanceof Error ? error.message.slice(0, 1000) : 'Blocking validation failed'
     if (!statSafe(report)) writeFileSync(report, JSON.stringify({ ok: false, error: cause }, null, 2))
     console.log(`::error title=Doc Bridge gates::${cause.replaceAll('%', '%25').replaceAll('\r', '%0D').replaceAll('\n', '%0A')}; see index-report output (advisory delivery does not clear this result)`)
-    if (env.GITHUB_STEP_SUMMARY) appendFileSync(env.GITHUB_STEP_SUMMARY, `### Doc Bridge blocking gates failed\n\nIndex source: ${source}; revision: ${head}.\n\n${statSafe(report) ? summaryCode(readFileSync(report, 'utf8')) : 'Analysis did not produce a report; check exact revision/configuration availability.'}\n`)
+    if (env.GITHUB_STEP_SUMMARY) appendFileSync(env.GITHUB_STEP_SUMMARY, `### Doc Bridge blocking gates failed\n\nIndex source: ${source}; revision: ${head}.\n\n${summaryCode(cause)}\n\n${statSafe(report) ? summaryCode(readFileSync(report, 'utf8')) : 'Analysis did not produce a report; check exact revision/configuration availability.'}\n`)
     return 1
   }
 }

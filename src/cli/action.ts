@@ -7,6 +7,8 @@ import { discoverRepositoryWithRead } from '../discovery/repository.js'
 import { markdownManifest } from '../discovery/plugins/markdown.js'
 import { diffSnapshotsWithRead } from '../diff/change-set.js'
 import { buildDocBridgeIndex } from '../index-builder/build-index.js'
+import { renderCapabilitiesJson } from '../index-builder/capabilities.js'
+import { renderLlmsTxt } from '../index-builder/llms-txt.js'
 import { sameHashIdentity } from '../index-builder/content-hash.js'
 import { runGate, runGates, resolveGateIds, type GateId } from '../gates/run-gates.js'
 import { denyServiceOperation, withExecutionProfile } from '../execution/profile.js'
@@ -40,7 +42,7 @@ const git = async (root: string, args: string[]) => {
   if (filters.length > 128) throw new Error('Git filter inventory exceeds budget')
   const disabled = filters.flatMap(key => ['-c', `${key}=${key.endsWith('.required') ? 'false' : ''}`])
   const result = await runCommand('git', ['-c', 'core.fsmonitor=false', '-c', 'core.hooksPath=', ...disabled, ...args], { cwd: root, maxOutputBytes: 4 * 1024 * 1024, timeoutMs: 60000 })
-  if (result.code !== 0 || result.truncated) throw new Error('Git provenance unavailable')
+  if ((result.code !== 0 && !(args[0] === 'check-ignore' && result.code === 1)) || result.truncated) throw new Error('Git provenance unavailable')
   return result.stdout.trim()
 }
 const exactHead = async (root: string, sha: string) => {
@@ -89,13 +91,31 @@ export const runActionCli = async (argv: readonly string[]): Promise<number> => 
         const output = outside(root, required(argv, '--output'))
         const first = buildDocBridgeIndex({ root: gateRoot, config, write: false }).index
         save(output, json(first))
+        const llmsPath = config.index?.llmsTxt?.outFile ?? 'llms.txt'
+        // Only declared ignored exports are generated; tracked evidence is never repaired.
+        const exports = [
+          { enabled: config.index?.llmsTxt?.enabled !== false, path: llmsPath, render: () => renderLlmsTxt(config, first.knowledge, first.project?.name ?? 'project', { root: gateRoot }) },
+          { enabled: config.index?.capabilities?.enabled !== false, path: config.index?.capabilities?.outFile ?? '.doc-bridge/capabilities.json', render: () => renderCapabilitiesJson(config, first, { index: toPosix(config.index?.outFile ?? '.doc-bridge/index.json'), ...(config.index?.llmsTxt?.enabled !== false ? { llmsTxt: toPosix(llmsPath) } : {}) }) },
+        ]
+        for (const artifact of exports) {
+          if (!artifact.enabled) continue
+          const target = containedPath(gateRoot, artifact.path)
+          if (!target) throw new Error('Generated export path escapes the checkout')
+          let ancestor = target
+          while (!existsSync(ancestor)) ancestor = dirname(ancestor)
+          if (!containedPath(gateRoot, ancestor)) throw new Error('Generated export path escapes the checkout')
+          if (await git(gateRoot, ['check-ignore', '--', artifact.path])) {
+            if (target === committedPath) throw new Error('Generated export must not overwrite the committed index')
+            save(target, artifact.render())
+          }
+        }
         const second = buildDocBridgeIndex({ root: gateRoot, config, write: false }).index
         await exactHead(root, sha)
         const persisted = parseDocBridgeIndex(JSON.parse(readFileSync(output, 'utf8')))
         const reproducible = sameHashIdentity(first, persisted) && sameHashIdentity(persisted, second)
         generated = { path: output, contentHash: first.contentHash, reproducible }
         const results = ids.map(id => id === 'index-freshness' || id === 'index-reproducible'
-          ? { id, ok: reproducible && (id !== 'index-freshness' || committed?.ok !== false), message: id === 'index-freshness' && committed?.ok === false ? 'Committed index drift remains blocking; CI output does not repair it' : 'CI-built index repeat hash and exact-revision provenance checked' }
+          ? { id, ok: reproducible && (id !== 'index-freshness' || committed?.ok !== false), message: id === 'index-freshness' && committed?.ok === false ? `Committed index drift remains blocking; run ak-docs index, review and commit the regenerated index. CI output does not repair it. ${committed.message}` : 'CI-built index repeat hash and exact-revision provenance checked' }
           : runGate(gateRoot, config, id))
         gates = { ok: reproducible && results.every(result => result.ok), results }
         save(`${output}.provenance.json`, json({ schemaVersion: 1, source, sourceRevision: sha, generated }))
