@@ -17,7 +17,7 @@ jobs:
           fetch-depth: 0
           ref: ${{ github.event.pull_request.head.sha }}
           persist-credentials: false
-      - uses: AgentsKit-io/doc-bridge@5f15d2a5174acb996b9c423c0e3fb4abaad3c9de # 1.14.0-next.1
+      - uses: AgentsKit-io/doc-bridge@d1b496fb3f0d868f410a153acf77596f3b353065 # 1.14.0-next.2
         with:
           config-path: doc-bridge.config.json
           index-source: ci-built
