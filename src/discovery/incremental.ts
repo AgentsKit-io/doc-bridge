@@ -1,4 +1,5 @@
 import { surfaceFactFromEntity, packageFactFromEntity } from '../storage/facts.js'
+import { hasAggregatedCoverage } from './coverage.js'
 import { sha256NormalizedV1 } from '../index-builder/content-hash.js'
 import type { DiscoverySnapshotV1, Coverage, KnowledgeEntity, KnowledgeRelation } from '../schemas/knowledge.js'
 
@@ -55,6 +56,7 @@ export const reuseRefusal = (
   previous: PreviousSnapshot,
   current: Pick<DiscoverySnapshotV1, 'pipelineVersion' | 'analyzerVersions' | 'configurationHash'>,
 ): string | undefined => {
+  if (hasAggregatedCoverage(previous.coverage)) return 'the previous snapshot has sampled coverage, so per-file coverage must be regenerated'
   if (!previous.pipelineVersion || !previous.analyzerVersions || !previous.configurationHash) {
     return 'the previous snapshot does not declare the pipeline, analyzers and configuration it was produced by'
   }

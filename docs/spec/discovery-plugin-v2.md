@@ -9,6 +9,11 @@ validationPath: pnpm vitest run tests/discovery-plugin-v2.test.ts tests/analyzer
 
 # Discovery plugin contract v2
 
+Final repository snapshots apply [bounded coverage aggregation](../schemas/discovery-coverage-v1.md)
+after merging analyzer output. At most 1,000 coverage entries are serialized; small
+snapshots retain their original coverage bytes and ordering. Aggregation is deterministic,
+offline and does not imply that sampled or omitted details were analyzed completely.
+
 The opt-in [vault Markdown stage](obsidian-markdown-v1.md) uses this contract,
 selected by `corpus.human.plugin: 'obsidian'`. It owns documents together with
 ordinary Markdown extraction, avoiding duplicate document owners.

@@ -27,6 +27,10 @@ file that only gained one parses to the same tree, and should not invalidate any
 
 ## Reuse
 
+Snapshots with [aggregated coverage](../schemas/discovery-coverage-v1.md) cannot replay
+complete per-file diagnostics from their samples. Discovery refuses incremental reuse
+and regenerates them from source, retaining semantic equality with a cold scan.
+
 ```ts
 const cold = discoverRepository({ root, config })
 const fast = discoverRepository({ root, config, previous: cold })
