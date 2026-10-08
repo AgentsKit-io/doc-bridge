@@ -112,6 +112,42 @@ it('does not retain a broken shell flag finding after changing to an unrelated e
   expect(diffSnapshots(base, discoverRepository({ root }), { headRoot: root }).findings.some(finding => finding.code === 'BROKEN_REFERENCE')).toBe(false)
 })
 
+it.each([
+  'doc-bridge run', 'ak-docs run', 'npx doc-bridge run', 'npx -y ak-docs run',
+  'npx --yes doc-bridge run', 'pnpm doc-bridge run', 'pnpm dlx ak-docs run',
+  'pnpm exec doc-bridge run', 'yarn ak-docs run', 'yarn dlx doc-bridge run', 'bunx ak-docs run',
+])('matches the declared bin invocation %s and revalidates its removed flag', (invocation) => {
+  const source = `import { Command } from 'commander'; const cli = new Command(); cli.command('run').option('--fast');`
+  const root = fixture(source)
+  writeFileSync(join(root, 'package.json'), JSON.stringify({ name: '@agentskit/doc-bridge', bin: { 'doc-bridge': 'src/cli.ts', 'ak-docs': 'src/cli.ts' } }))
+  writeFileSync(join(root, 'README.md'), `# Guide\n\n\`run\` fast\n\n\`other run --fast\`\n\n\`npx unknown run --fast\`\n\n\`${invocation} --fast\`\n\n\`\`\`sh\n${invocation} --fast=true\nother run --fast\nnpx unknown run --fast\n\`\`\`\n`)
+  const base = discoverRepository({ root })
+  const flag = base.relations.filter(relation => relation.metadata?.factName === '--fast')
+  expect(flag).toHaveLength(1)
+  expect(flag[0]?.evidence.map(item => item.lineStart)).toEqual([9, 12])
+  const bin = invocation.includes('ak-docs') ? 'ak-docs' : 'doc-bridge'
+  expect(base.relations.filter(relation => relation.metadata?.factName === `${bin} run`)).toHaveLength(1)
+  writeFileSync(join(root, 'src/cli.ts'), source.replace('--fast', '--compact'))
+  const result = diffSnapshots(base, discoverRepository({ root }), { headRoot: root })
+  expect(result.findings).toHaveLength(1)
+  expect(result.findings[0]).toMatchObject({ code: 'BROKEN_REFERENCE', status: 'conflict', relationIds: [flag[0]!.id] })
+  writeFileSync(join(root, 'README.md'), '# Guide\n\n`other run --fast`\n\n```sh\nother run --fast\n```\n')
+  expect(diffSnapshots(base, discoverRepository({ root }), { headRoot: root }).findings).toEqual([])
+})
+
+it('does not make a qualified flag ambiguous when another bin gains that flag', () => {
+  const source = `import { Command } from 'commander'; const cli = new Command(); cli.command('run').option('--fast');`
+  const root = fixture(source)
+  writeFileSync(join(root, 'package.json'), JSON.stringify({ name: 'doc-bridge-fixture', bin: { 'doc-bridge': 'src/cli.ts', 'ak-docs': 'src/other.ts' } }))
+  writeFileSync(join(root, 'src/other.ts'), source.replace('--fast', '--compact'))
+  writeFileSync(join(root, 'README.md'), '# Guide\n\n`doc-bridge run --fast`\n')
+  const base = discoverRepository({ root })
+  writeFileSync(join(root, 'src/other.ts'), source)
+  const head = discoverRepository({ root })
+  expect(head.relations.filter(relation => relation.metadata?.factName === '--fast')).toHaveLength(1)
+  expect(diffSnapshots(base, head, { headRoot: root }).findings).toEqual([])
+})
+
 
 it('keeps statically known array defaults, dotted flags and multiple aliases in identity', () => {
   const root = fixture(`import yargs from 'yargs'; yargs().option('db.host', {alias: ['d', 'host'], type: 'string', default: ['local']});`)
@@ -196,4 +232,37 @@ it('compares separate usage modules against prior implementation declarations', 
 it('extracts direct first-argv command dispatch', () => {
   const result = facts(fixture(`export function run(argv: string[]) { if (argv[0] === 'report') return 0; }`))
   expect(result.some(fact => fact.name === 'doc-bridge report')).toBe(true)
+})
+
+
+it.each([
+  ['npx -y @agentskit/doc-bridge-fixture@1.0.0', { 'doc-bridge': 'src/cli.ts' }, true],
+  ['npx --yes @agentskit/doc-bridge-fixture', 'src/cli.ts', true],
+  ['pnpm dlx @agentskit/doc-bridge-fixture', { 'doc-bridge': 'src/cli.ts' }, true],
+  ['pnpm exec @agentskit/doc-bridge-fixture@next', { 'doc-bridge': 'src/cli.ts' }, true],
+  ['yarn dlx @agentskit/doc-bridge-fixture', { 'doc-bridge': 'src/cli.ts' }, true],
+  ['bunx @agentskit/doc-bridge-fixture', { 'doc-bridge-fixture': 'src/cli.ts', other: 'src/cli.ts' }, true],
+  ['npx @agentskit/doc-bridge-fixture', { 'doc-bridge': 'src/cli.ts', other: 'src/other.ts' }, false],
+  ['npx @agentskit/doc-bridge-fixture', { 'doc-bridge': 'src/cli.ts', other: './src/cli.ts' }, true],
+  ['npx @agentskit/doc-bridge-fixture', { other: './src/cli.ts', 'doc-bridge': 'src/cli.ts' }, true],
+  ['npx @agentskit/doc-bridge-fixture', { other: 'src/other.ts', 'doc-bridge-fixture': 'src/cli.ts' }, true],
+  ['npx @agentskit/doc-bridge-fixture', { 'doc-bridge': 'src/cli.ts', invalid: 42 }, false],
+  ['npx doc-bridge-fixture', { 'doc-bridge': 'src/cli.ts' }, false],
+  ['npx @agentskit/unknown', { 'doc-bridge': 'src/cli.ts' }, false],
+  ['pnpm @agentskit/doc-bridge-fixture', { 'doc-bridge': 'src/cli.ts' }, false],
+  ['yarn @agentskit/doc-bridge-fixture', { 'doc-bridge': 'src/cli.ts' }, false],
+  ['@agentskit/doc-bridge-fixture', { 'doc-bridge': 'src/cli.ts' }, false],
+])('resolves indexed package runners precisely: %s', (invocation, bin, matched) => {
+  const source = `import { Command } from 'commander'; const cli = new Command(); cli.command('run').option('--fast');`
+  const root = fixture(source)
+  writeFileSync(join(root, 'package.json'), JSON.stringify({ name: '@agentskit/doc-bridge-fixture', bin }))
+  writeFileSync(join(root, 'src/other.ts'), source)
+  writeFileSync(join(root, 'README.md'), `# Guide\n\n\`${invocation} run --fast\`\n`)
+  const base = discoverRepository({ root })
+  expect(base.relations.filter(relation => relation.metadata?.factName === '--fast')).toHaveLength(matched ? 1 : 0)
+  const commands = base.relations.filter(relation => relation.metadata?.factKind === 'cli-command' && relation.metadata.factName?.endsWith(' run'))
+  expect(commands).toHaveLength(matched ? 1 : 0)
+  if (matched && typeof bin === 'object' && 'doc-bridge' in bin) expect(commands[0]?.metadata?.factName).toBe('doc-bridge run')
+  writeFileSync(join(root, 'src/cli.ts'), source.replace('--fast', '--compact'))
+  expect(diffSnapshots(base, discoverRepository({ root }), { headRoot: root }).findings.some(finding => finding.code === 'BROKEN_REFERENCE')).toBe(matched)
 })

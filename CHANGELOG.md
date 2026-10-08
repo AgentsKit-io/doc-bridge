@@ -4,6 +4,8 @@
 
 ### Patch Changes
 
+- Preserve declaring-owner resolution through re-exports during historical citation checks, and normalize known-bin and indexed-package runner invocations with command-scoped flag citations.
+
 - Parse fenced JS/TS citations by syntax and restrict configuration fences to dotted config facts, excluding export collisions in keys, strings, comments and member properties.
 
 - Report changed signature/configuration/flag references for review, apply finding policy by default with a complete policy sidecar, and preserve branch-tracking behavior for same-repository docs with a raw opt-out.

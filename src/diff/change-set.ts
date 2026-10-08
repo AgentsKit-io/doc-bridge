@@ -8,8 +8,8 @@ import { StorageFault } from '../storage/local.js'
 import { withExecutionProfile, type ExecutionProfile } from '../execution/profile.js'
 import { parseDocumentationDeclarations } from '../discovery/documentation.js'
 import { entityId } from '../discovery/identity.js'
-import { exportsOf, FILE_BACKED_KINDS } from '../discovery/incremental.js'
-import { analyzeMarkdownDocument, configKeyCitationIndex, markdownPathCandidateIndex, parseMarkdownDocument, type MarkdownResolution } from '../discovery/markdown.js'
+import { declaredExportsOf, exportsOf, FILE_BACKED_KINDS } from '../discovery/incremental.js'
+import { analyzeMarkdownDocument, cliCitationTokens, configKeyCitationIndex, markdownPathCandidateIndex, parseMarkdownDocument, type MarkdownResolution } from '../discovery/markdown.js'
 import { canonicalJsonV1, contentHashForVersionedArtifact, sha256NormalizedV1 } from '../index-builder/content-hash.js'
 import { containedProjectPath } from '../lib/paths.js'
 import { ChangeSetV1Schema, type Change, type ChangeSetV1 } from '../schemas/change-set.js'
@@ -114,8 +114,19 @@ export const parseChangeSet = (input: unknown): ChangeSetV1 => {
 const resolutionFor = (base: SnapshotForChanges): MarkdownResolution => {
   const paths = (kind: string) => new Map(base.entities.filter((entity) => entity.kind === kind && entity.path).map((entity) => [entity.path!, entity.id]))
   const symbols = new Map<string, string[]>()
-  for (const module of base.entities.filter((entity) => entity.kind === 'module')) for (const symbol of exportsOf(module)) symbols.set(symbol, [...(symbols.get(symbol) ?? []), module.id])
-  const resolution = { documents: paths('document'), modules: paths('module'), areas: paths('area'), packages: new Map(base.entities.filter((entity) => entity.kind === 'package').map((entity) => [entity.name, entity.id])), symbols }
+  const forwarding = new Map<string, string[]>()
+  for (const module of base.entities.filter((entity) => entity.kind === 'module')) {
+    const declared = new Set(declaredExportsOf(module))
+    for (const symbol of exportsOf(module)) {
+      if (symbol === '*' || symbol === 'default') continue
+      const owners = declared.has(symbol) ? symbols : forwarding
+      owners.set(symbol, [...(owners.get(symbol) ?? []), module.id])
+    }
+  }
+  for (const [symbol, owners] of forwarding) if (!symbols.has(symbol)) symbols.set(symbol, owners)
+  const facts = new Map<string, SurfaceFact[]>()
+  for (const fact of factsOf(base)) facts.set(fact.name, [...(facts.get(fact.name) ?? []), fact])
+  const resolution = { documents: paths('document'), modules: paths('module'), areas: paths('area'), packages: new Map(base.entities.filter((entity) => entity.kind === 'package').map((entity) => [entity.name, entity.id])), symbols, facts, cliPackages: base.entities.filter(entity => entity.kind === 'package').map(entity => ({ name: entity.name, bin: entity.metadata?.cliBin })) }
   return { ...resolution, pathIndex: markdownPathCandidateIndex(resolution) }
 }
 
@@ -175,6 +186,7 @@ const configKeyOwnerCandidates = (snapshot: DiscoverySnapshotV1, documentPath: s
 const genericFindings = (base: DiscoverySnapshotV1, head: DiscoverySnapshotV1, changes: readonly Change[], texts: VerifiedDocuments) => {
   const oldFacts = referenceFacts(base)
   if (!oldFacts.length) return []
+  const cliResolution = resolutionFor(base)
   const byId = new Map(oldFacts.map(fact => [fact.id, fact]))
   const newFacts = referenceFacts(head)
   const documents = new Map<string, ReturnType<typeof parseMarkdownDocument> | undefined>()
@@ -200,15 +212,16 @@ const genericFindings = (base: DiscoverySnapshotV1, head: DiscoverySnapshotV1, c
     if (fact.kind === 'signature' && removedExports.has(canonicalJsonV1([fact.ownerId, fact.name])) && symbolAssertions.has(canonicalJsonV1([doc.id, fact.ownerId, fact.name]))) continue
     const candidates = fact.kind === 'config-key' ? configKeyOwnerCandidates(head, doc.path, fact.name, newFacts) : [...new Set(newFacts.filter(item => item.kind === fact.kind && item.name === fact.name).map(item => item.ownerId))].sort()
     const baseCandidates = new Set(fact.kind === 'config-key' ? configKeyOwnerCandidates(base, doc.path, fact.name, oldFacts) : oldFacts.filter(item => item.kind === fact.kind && item.name === fact.name).map(item => item.ownerId))
-    const ambiguous = baseCandidates.size === 1 && candidates.length > 1
+    const ambiguous = fact.kind === 'cli-flag'
+      ? !removed.has(fact.id) && Array.isArray(doc.metadata?.ambiguousFactReferences) && doc.metadata.ambiguousFactReferences.some(item => item?.factKind === fact.kind && item.factName === fact.name && Array.isArray(item.candidateOwnerIds) && item.candidateOwnerIds.includes(fact.ownerId))
+      : baseCandidates.size === 1 && candidates.length > 1
     const valueChange = changed.get(fact.id)
     if (!removed.has(fact.id) && !ambiguous && !valueChange) continue
     const text = texts.get(doc.id)
     if (!documents.has(doc.id)) documents.set(doc.id, text === undefined ? undefined : referenceDocument(doc.path, text))
     const parsed = documents.get(doc.id)
     const cli = fact.kind === 'cli-command' || fact.kind === 'cli-flag'
-    const cliOwner = fact.kind === 'cli-command' ? fact.name : oldFacts.find(item => item.id === fact.ownerId)?.name
-    const citations = cli ? parsed?.cliTokens.filter(token => token.kind === fact.kind && (!token.bin || token.bin === cliOwner?.split(' ')[0])) : parsed && [...parsed.codeTokens, ...(parsed.fenceTokens ?? []).filter(token => !token.configOnly || fact.kind === 'config-key')]
+    const citations = cli ? parsed && cliCitationTokens(parsed.cliTokens, cliResolution).filter(token => token.kind === fact.kind && (!token.ownerIds || token.ownerIds.includes(fact.ownerId))) : parsed && [...parsed.codeTokens, ...(parsed.fenceTokens ?? []).filter(token => !token.configOnly || fact.kind === 'config-key')]
     const tokens = citations?.filter(token => token.value === fact.name) ?? []
     if (parsed && !tokens.length) continue
     const code = ambiguous ? 'AMBIGUOUS_REFERENCE' : valueChange ? 'CHANGED_REFERENCE' : 'BROKEN_REFERENCE'
@@ -329,7 +342,7 @@ const diffWithDocuments = (base: DiscoverySnapshotV1, head: DiscoverySnapshotV1,
     const factName = symbol ?? relation.metadata?.factName
     if (typeof factName === 'string' && (factKind === 'package' ? factIds.has(relation.to) : SurfaceFactKindSchema.safeParse(factKind).success && factIds.has(surfaceFactEntityId(factKind as SurfaceFact['kind'], relation.to, factName)))) continue
     const removed = removals.get(symbol ? entityId('symbol', `${relation.to}:${symbol}`) : relation.to)
-    const ambiguous = symbol && resolution.symbols.get(symbol)?.length === 1 && Array.isArray(doc.metadata?.ambiguousSymbolReferences)
+    const ambiguous = !removed && symbol && resolution.symbols.get(symbol)?.length === 1 && Array.isArray(doc.metadata?.ambiguousSymbolReferences)
       ? doc.metadata.ambiguousSymbolReferences.find((item) => item && typeof item === 'object' && item.symbol === symbol) : undefined
     if (!removed && !ambiguous) continue
     if (!citations.has(doc.id)) citations.set(doc.id, options.headRoot ? citationsInHead(doc, base, options.headRoot, resolution) : texts.has(doc.id) ? citationsFromText(doc, base, texts.get(doc.id)!, resolution) : undefined)

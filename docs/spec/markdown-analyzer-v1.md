@@ -142,22 +142,38 @@ the fact universe into its resolution fingerprint before reusing document relati
 
 ### Qualified CLI citations
 
-CLI commands require an exact bin-prefixed command path in inline code, such as
+CLI commands require an exact declared-bin-prefixed command path in inline code, such as
 `doc-bridge report`; an unqualified common word such as `report` is not a CLI
 citation. Command prefixes are matched exactly against codec facts. In shell
 fences (`sh`, `bash`, `shell`, `zsh`, `console`), the first word of a line must
-be an exact known bin; root commands may also be cited there. Shell expressions,
+be an exact known bin; root commands may also be cited there. Every declared
+bin alias qualifies independently. Package-runner prefixes accept `npx`
+(optionally `-y` or `--yes`), `pnpm` (optionally `dlx` or `exec`), `yarn`
+(optionally `dlx`) and `bunx`, followed by a known bin or indexed package name.
+Package versions are stripped. When all normalized entry paths identify one executable, a package maps to
+one canonical alias: its unscoped package name if present, otherwise the
+lexicographically first alias. Declaration key order does not affect resolution; with distinct entry paths,
+only the bin matching its unscoped package name qualifies. Indexed package
+metadata retains the manifest `cliBin` declaration for historical revalidation.
+Direct bin citations remain exact for every alias; package invocations produce
+one executable citation rather than duplicate alias findings. Package-name
+mapping requires `npx`, `pnpm dlx`/`exec`, `yarn dlx`, or `bunx`. Unresolved
+package mappings produce no citation or finding. Shell expressions,
 prompts, scripts for unknown executables and ordinary prose do not qualify.
 Only whitespace-delimited dash-prefixed flag tokens are candidates; `--flag=value`
 is normalized to `--flag`. Short aliases resolve through their own facts.
-Ambiguous owners retain the existing bounded ambiguity behavior.
+Flags following a matched invocation resolve only against that command's
+prefix owners, including its root command. Inline root-bin invocations with
+flags also qualify. Standalone inline dash-prefixed flags retain exact fact
+resolution. Competing owners within the matched context retain bounded ambiguity;
+an unrelated bin gaining the same flag does not make a qualified citation ambiguous.
 
 CLI lexical tokens are kept separately from ordinary inline-code tokens, so
 shell examples do not introduce symbol/config/path mentions. Generated regions,
 the 64-relation cap and eight citation locations per relation still apply.
 CLI relations use the independent fact cap, preserving bounded legacy evidence.
-Historical CLI removal findings verify these same tokens; shell tokens must
-retain the removed fact's bin context. Help-only partial source coverage yields
+Historical CLI removal findings verify these same normalized tokens and command
+owner context. Help-only partial source coverage yields
 stale-or-unverified removal candidates rather than proven conflicts.
 ## Syntactic signature citations
 

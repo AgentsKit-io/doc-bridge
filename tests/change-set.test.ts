@@ -24,6 +24,34 @@ const fixture = () => {
 const scanDiff = (root: string, base: ReturnType<typeof discoverRepository>) => diffSnapshots(base, discoverRepository({ root }), { headRoot: root })
 
 describe('ChangeSetV1 real snapshot acceptance', () => {
+  it.each(['declaration removed', 'export removed'])('revalidates a declaring owner through two re-exports when %s', (change) => {
+    const { root } = fixture()
+    write(root, 'src/index.ts', "export { first } from './api.js'\n")
+    write(root, 'src/public.ts', "export { first } from './index.js'\n")
+    write(root, 'docs/api.md', '# API\n\nUse `first`.\n')
+    const base = discoverRepository({ root })
+    expect(base.relations.filter(relation => relation.metadata?.symbol === 'first')).toMatchObject([
+      { to: 'module:src/api.ts' },
+    ])
+    write(root, 'src/api.ts', (change === 'export removed' ? 'const first = 1\n' : '') + 'export const second = 2\n')
+    const result = scanDiff(root, base)
+    expect(result.findings).toHaveLength(1)
+    expect(result.findings[0]).toMatchObject({ code: 'BROKEN_REFERENCE', status: 'conflict', entityIds: ['document:docs/api.md', 'module:src/api.ts'] })
+    expect(result.findings[0]?.evidence).toContainEqual(expect.objectContaining({ path: 'docs/api.md', lineStart: 3, context: 'Head citation' }))
+    write(root, 'docs/api.md', '# API\n\nUse `second`.\n')
+    expect(scanDiff(root, base).findings).toEqual([])
+  })
+
+  it('retains the forwarding-owner fallback and detects removal from that public surface', () => {
+    const { root } = fixture()
+    write(root, 'src/api.ts', "export { first, second } from 'doc-bridge-external'\n")
+    write(root, 'docs/api.md', '# API\n\nUse `first`.\n')
+    const base = discoverRepository({ root })
+    expect(base.relations.filter(relation => relation.metadata?.symbol === 'first')).toMatchObject([{ to: 'module:src/api.ts' }])
+    write(root, 'src/api.ts', "export { second } from 'doc-bridge-external'\n")
+    expect(scanDiff(root, base).findings).toMatchObject([{ code: 'BROKEN_REFERENCE', status: 'conflict' }])
+  })
+
   it('T2-A1 / A10 finds prior citations to removed modules and feeds the digest', () => {
     const { root, base } = fixture()
     // A module citation on its own proves the file removal independently of exported symbols.

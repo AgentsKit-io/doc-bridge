@@ -136,6 +136,7 @@ export const createMarkdownExtraction = (io: ScanIO, adapters: readonly Discover
     // Areas exist now, so a document naming a directory resolves to the unit, not to nothing.
     areas: areasByPath,
     packages: packageNames,
+    cliPackages: packageResult.packages.map(pkg => ({ name: pkg.name ?? '', bin: pkg.manifest.bin })),
     symbols: symbolModules,
     ...(facts ? { facts } : {}),
     // One index for the whole run: the analyzer used to rebuild this per document.
