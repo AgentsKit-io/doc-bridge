@@ -74,6 +74,8 @@ be stopped in-process; isolate untrusted code in the caller.
 ## Surface and package codec v1
 
 `SurfaceFact` carries kind, ID, owner ID, name, value hash and bounded evidence.
+Signature facts may retain a bounded optional callable `signature` proof as
+defined in [signature facts v1](signature-facts-v1.md); other adapters can omit it.
 Kinds are symbol, cli-command, cli-flag, config-key and signature. IDs use the
 existing `entityId` helper via `surfaceFactEntityId(kind, ownerId, name)`; no
 repository/revision prefix changes the graph identity.

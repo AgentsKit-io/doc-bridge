@@ -258,7 +258,9 @@ cited descendants before their containing keys. A containing citation is omitted
 when cited descendants explain all changed leaf paths. Otherwise it remains a
 lower-priority candidate (`priority: low`) with up to 64 sorted
 `changedDescendantPaths` and bounded `Changed descendant: <path>` evidence.
-Added and removed descendants participate in that evidence. Dot boundaries and
+Only removed or modified descendants participate in that evidence. Purely
+additive child keys do not contradict a containing citation, which does not
+assert an exhaustive key list; changes to directly cited leaves still participate. Dot boundaries and
 owner identity are required; a textual name prefix alone is not containment.
 Other current surface facts have no declared containment relation: signatures,
 symbols, packages and CLI facts retain their existing attribution. File/module
@@ -282,3 +284,11 @@ groups and their counts separately. `--fail-on-findings` counts pending referenc
 findings only. These optional fields are part of the 2.0 producer contract:
 new readers accept legacy records, while old strict readers must upgrade before
 consuming marked records. DocBridgeIndexV1 and AgentHandoffV1 shapes are unchanged.
+
+## Provable signature compatibility
+
+A changed signature may carry `compatibility: compatible`, as specified in
+[signature facts v1](signature-facts-v1.md). It remains a changed fact, but does
+not produce `CHANGED_REFERENCE` for either its signature or symbol citation.
+Absent compatibility means unproven, not necessarily incompatible. Unsupported
+proofs retain review candidates. Index and handoff envelopes are unchanged.

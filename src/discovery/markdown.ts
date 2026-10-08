@@ -31,7 +31,7 @@ import { surfaceFactEntityId } from '../storage/facts.js'
  * is inferred from a near-match unless the near-match is unambiguous.
  */
 
-export const MARKDOWN_ANALYZER_VERSION = '1.5.0'
+export const MARKDOWN_ANALYZER_VERSION = '1.6.0'
 
 /** Headings deeper than this are structure, not subject matter. */
 const MAX_HEADING_DEPTH = 3
@@ -41,7 +41,7 @@ const MAX_TITLE_LENGTH = 256
 
 /** A document with more relations than this is an index page; the tail adds noise, not knowledge. */
 export const MARKDOWN_RELATION_CAP = 64
-export const MARKDOWN_FACT_RELATION_CAP = 64
+export const MARKDOWN_FACT_RELATION_CAP = 256
 
 /**
  * A region a generator owns. The analyzer skips it when collecting mentions, so Doc Bridge does
@@ -653,11 +653,9 @@ export const analyzeMarkdownDocument = (
   let truncated = false
   let factsTruncated = false
   let legacyCount = 0
-  let factCount = 0
   const reserveRelation = (fact: MarkdownFact | undefined): boolean => {
     if (fact) {
-      if (factCount >= MARKDOWN_FACT_RELATION_CAP) { factsTruncated = true; return false }
-      factCount++
+      return true
     } else {
       if (legacyCount >= cap) { truncated = true; return false }
       legacyCount++
@@ -809,6 +807,13 @@ export const analyzeMarkdownDocument = (
     }
 
     if (!exactOnly && pathShaped(value)) resolvePath(value.replace(/^\.\//, ''), line, 'mentions')
+  }
+
+  const factRelations = [...relations.values()].filter(relation => typeof relation.metadata?.factKind === 'string')
+    .sort((a, b) => String(b.metadata?.factName).split('.').length - String(a.metadata?.factName).split('.').length || a.id.localeCompare(b.id))
+  if (factRelations.length > MARKDOWN_FACT_RELATION_CAP) {
+    factsTruncated = true
+    for (const relation of factRelations.slice(MARKDOWN_FACT_RELATION_CAP)) relations.delete(relation.id)
   }
 
   for (const [token, evidence] of [...ambiguous.entries()].sort(([a], [b]) => a.localeCompare(b))) {

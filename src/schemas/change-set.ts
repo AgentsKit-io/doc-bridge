@@ -12,12 +12,14 @@ export const ChangeIdentitySchema = z.object({
 const ChangeShape = z.object({
   kind: ChangeKindSchema,
   op: z.enum(['added', 'removed', 'renamed', 'changed']),
+  compatibility: z.literal('compatible').optional(),
   before: ChangeIdentitySchema.optional(),
   after: ChangeIdentitySchema.optional(),
 }).strict()
 export const ChangeSchema = ChangeShape.superRefine((change, context) => {
   const valid = change.op === 'added' ? !change.before && !!change.after
     : change.op === 'removed' ? !!change.before && !change.after : !!change.before && !!change.after
+  if (change.compatibility && (change.kind !== 'signature' || change.op !== 'changed')) context.addIssue({ code: 'custom', message: 'Compatibility requires a changed signature.' })
   if (!valid) context.addIssue({ code: 'custom', message: 'Operation requires the applicable before/after identities.' })
 })
 const AnalysisIdentitySchema = z.object({

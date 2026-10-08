@@ -4,7 +4,18 @@ import { entityId } from '../discovery/identity.js'
 import { StorageHashSchema } from './contract.js'
 
 export const SurfaceFactKindSchema = z.enum(['symbol', 'cli-command', 'cli-flag', 'config-key', 'signature'])
-export const SurfaceFactSchema = z.object({ kind: SurfaceFactKindSchema, id: z.string().min(1).max(256), ownerId: z.string().min(1).max(256), name: z.string().min(1).max(256), valueHash: StorageHashSchema, evidence: z.array(EvidenceSchema).min(1).max(64) }).strict()
+const TypeTokensSchema = z.array(z.string()).max(4096)
+export const CallableSignatureSchema = z.object({
+  parameters: z.array(z.object({ name: TypeTokensSchema, optional: z.boolean(), rest: z.boolean(), default: z.boolean(), type: TypeTokensSchema.nullable() }).strict()).max(256),
+  typeParameters: z.array(TypeTokensSchema).max(64),
+  returnType: TypeTokensSchema.nullable(),
+}).strict()
+export const SignatureProofSchema = z.object({
+  codec: z.literal('typescript-callable-v1'),
+  overloads: z.array(CallableSignatureSchema).min(1).max(64),
+  types: z.record(z.string(), z.string()),
+}).strict().refine(value => Buffer.byteLength(JSON.stringify(value)) <= 16_384, 'Signature proof exceeds 16 KiB.')
+export const SurfaceFactSchema = z.object({ kind: SurfaceFactKindSchema, id: z.string().min(1).max(256), ownerId: z.string().min(1).max(256), name: z.string().min(1).max(256), valueHash: StorageHashSchema, signature: SignatureProofSchema.optional(), ownValueHash: StorageHashSchema.optional(), evidence: z.array(EvidenceSchema).min(1).max(64) }).strict()
 export type SurfaceFact = Readonly<z.infer<typeof SurfaceFactSchema>>
 const PurlSchema = z.string().min(5).max(512).regex(/^pkg:[a-z][a-z0-9.+-]*\/[^\s]+$/)
 export const PackageFactSchema = z.object({ id: z.string().min(1).max(256), purl: PurlSchema, version: z.string().min(1).max(256).optional(), dependencies: z.array(z.object({ purl: PurlSchema, range: z.string().min(1).max(512), lockedVersion: z.string().min(1).max(256).optional() }).strict()).max(10_000), evidence: z.array(EvidenceSchema).min(1).max(64) }).strict()

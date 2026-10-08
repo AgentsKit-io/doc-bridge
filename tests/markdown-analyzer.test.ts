@@ -579,11 +579,11 @@ it('limits symbol fences to code languages and preserves inline citation metadat
 })
 
 it('bounds fenced token work and keeps fact citations on their separate cap', () => {
-  const names = Array.from({length: 70}, (_, i) => `settings.key${i}`)
+  const names = Array.from({length: 270}, (_, i) => `settings.key${i}`)
   const document = parseMarkdownDocument('guide.md', '```json\n' + names.join(' ') + '\n' + 'unknown.path '.repeat(4100) + '\n```')
   const result = analyzeMarkdownDocument(document, 'document:guide.md', {documents: new Map(), modules: new Map(), packages: new Map(), symbols: new Map(), facts: new Map(names.map(name => [name, [{kind: 'config-key', name, ownerId: 'module:settings'}]]))})
   expect(document.fenceTokens).toHaveLength(4096)
-  expect(result.relations).toHaveLength(64)
+  expect(result.relations).toHaveLength(256)
   expect(result.factReferencesTruncated).toBe(true)
   expect(result.truncated).toBe(false)
   expect(result.notes.some(note => note.scope === 'fence-tokens:guide.md')).toBe(true)
@@ -616,4 +616,17 @@ it('uses syntax reference positions and never cites export collisions in keys or
   expect(result.relations.map(r => r.metadata?.symbol ?? r.metadata?.factName).sort()).toEqual(['Metadata', 'metadata', 'settings.mode'])
   expect(result.relations.find(r => r.metadata?.symbol === 'metadata')?.evidence.map(e => e.lineStart)).toEqual([2, 3, 4, 10])
   expect(result.relations.find(r => r.metadata?.symbol === 'Metadata')?.evidence.map(e => e.lineStart)).toEqual([4, 8, 9])
+})
+
+it('keeps specific fact citations ahead of parent citations regardless of source order', () => {
+  const parents = Array.from({length: 256}, (_, i) => `settings.parent${i}`)
+  const name = 'settings.parent0.child.leaf'
+  const resolution = {documents: new Map(), modules: new Map(), packages: new Map(), symbols: new Map(), facts: new Map([...parents, name].map(name => [name, [{kind: 'config-key' as const, name, ownerId: 'module:settings'}]]))}
+  for (const names of [[...parents, name], [name, ...parents]]) {
+    const result = analyzeMarkdownDocument(parseMarkdownDocument('guide.md', names.map(name => `\`${name}\``).join(' ')), 'document:guide.md', resolution)
+    expect(result.relations).toHaveLength(256)
+    expect(result.relations.some(relation => relation.metadata?.factName === name)).toBe(true)
+    expect(result.factReferencesTruncated).toBe(true)
+    expect(result.notes.some(note => note.scope === 'fact-relations:guide.md')).toBe(true)
+  }
 })

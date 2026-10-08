@@ -312,19 +312,19 @@ describe('static configuration facts', () => {
     expect(analyzeMarkdownDocument(parseMarkdownDocument('tests/fixtures/other/README.md','`output.format`'), 'document:tests/fixtures/other/README.md',resolution).relations).toEqual([])
   })
   it('caps fact citations separately without displacing legacy relations', () => {
-    const facts = new Map(Array.from({length:65},(_,index)=>[`output.key${index}`,[{kind:'config-key',name:`output.key${index}`,ownerId:'module:config.ts'}]]))
+    const facts = new Map(Array.from({length:257},(_,index)=>[`output.key${index}`,[{kind:'config-key',name:`output.key${index}`,ownerId:'module:config.ts'}]]))
     const modules = new Map(Array.from({length:65},(_,index)=>[`src/file${index}.ts`,`module:src/file${index}.ts`]))
     const document = parseMarkdownDocument('README.md',[...facts.keys(),...modules.keys()].map(token=>`\`${token}\``).join(' '))
     const resolution = {documents:new Map(),modules,packages:new Map(),symbols:new Map()}
     const base = analyzeMarkdownDocument(document,'document:README.md',resolution)
     const head = analyzeMarkdownDocument(document,'document:README.md',{...resolution,facts})
     expect(head.relations.filter(relation=>!relation.metadata?.factKind)).toEqual(base.relations)
-    expect(head.relations.filter(relation=>relation.metadata?.factKind)).toHaveLength(64)
+    expect(head.relations.filter(relation=>relation.metadata?.factKind)).toHaveLength(256)
     expect(head.notes.map(note=>note.scope)).toEqual(expect.arrayContaining(['relations:README.md','fact-relations:README.md']))
   })
   it('records fact-cap truncation without marking legacy evidence truncated', () => {
     const root = fixture()
-    const names = Array.from({length:65},(_,index)=>`key${index}`)
+    const names = Array.from({length:257},(_,index)=>`key${index}`)
     writeFileSync(join(root,'storage.config-schema.json'),JSON.stringify({title:'StorageConfig',type:'object',properties:{output:{type:'object',properties:Object.fromEntries(names.map(name=>[name,{type:'string'}]))}}}))
     writeFileSync(join(root,'README.md'),names.map(name=>`\`output.${name}\``).join(' '))
     const snapshot = discoverRepository({root})
