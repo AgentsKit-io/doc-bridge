@@ -75,8 +75,8 @@ See [config-v1](./spec/config-v1.md) and [examples](./examples.md).
 |---------|-------------|---------|
 | CLI | You want to inspect or debug the bridge yourself | `ak-docs query package <id> --agent` |
 | MCP | You want coding agents to resolve handoffs before editing | `ak-docs mcp install --cursor` |
-| CI | You want stale indexes and explicitly configured documentation gates to fail PRs | `ak-docs gate run` (the PR action checks the committed index) |
-| Adapters | You already have Fumadocs, Docusaurus, or markdown docs | configure `corpus.human` |
+| CI | You want stale indexes and explicitly configured documentation gates to fail PRs | `ak-docs gate run` (the PR action can build the index in CI with `index-source: ci-built`, or check a committed one) |
+| Adapters | You already have Fumadocs, Docusaurus, Markdown docs, or an Obsidian-style vault | configure `corpus.human` (the `obsidian` plugin is opt-in) |
 | Memory pipeline | You want agent notes turned into reviewable docs | `ak-docs memory promote --pr --dry-run` |
 | Optional RAG/chat | You want a terminal assistant grounded in the same index | `ak-docs rag ingest && ak-docs chat` |
 
