@@ -6,7 +6,7 @@ import remarkParse from 'remark-parse'
 import { unified } from 'unified'
 import ts from 'typescript'
 import { visit } from 'unist-util-visit'
-import { parse as parseYaml } from 'yaml'
+import { parse as parseYaml, parseDocument as parseYamlDocument, isMap, isScalar } from 'yaml'
 import type { Root, RootContent } from 'mdast'
 
 import { sha256NormalizedV1 } from '../index-builder/content-hash.js'
@@ -31,7 +31,7 @@ import { surfaceFactEntityId } from '../storage/facts.js'
  * is inferred from a near-match unless the near-match is unambiguous.
  */
 
-export const MARKDOWN_ANALYZER_VERSION = '1.4.2'
+export const MARKDOWN_ANALYZER_VERSION = '1.4.3'
 
 /** Headings deeper than this are structure, not subject matter. */
 const MAX_HEADING_DEPTH = 3
@@ -64,6 +64,9 @@ export type MarkdownReference = {
   /** Link text, when the reference came from a link. */
   readonly text?: string
   readonly line: number
+  readonly configExample?: boolean
+  readonly configPath?: string
+  readonly configRoots?: readonly string[]
 }
 
 export type MarkdownGeneratedRegion = {
@@ -103,12 +106,68 @@ export type MarkdownDocumentV1 = {
   readonly frontmatterBlock?: { readonly value: string; readonly line: number }
 }
 
+/** Preserve object paths so unrelated artifacts cannot borrow a config leaf's name. */
+function objectConfigReferences(source: ts.SourceFile): (MarkdownReference & { configOnly?: boolean })[] {
+  const references: (MarkdownReference & { configOnly?: boolean })[] = []
+  const name = (node: ts.PropertyName) => ts.isIdentifier(node) || ts.isStringLiteral(node) ? node.text : undefined
+  const collect = (object: ts.ObjectLiteralExpression, prefix: string, roots: string[], depth = 0): void => {
+    if (depth > 32) return
+    for (const property of object.properties) {
+      if (!ts.isPropertyAssignment(property)) continue
+      const key = name(property.name)
+      if (!key) continue
+      const path = prefix ? `${prefix}.${key}` : key
+      references.push({value:key,line:source.getLineAndCharacterOfPosition(property.name.getStart(source)).line,configOnly:true,configExample:true,configPath:path,configRoots:roots})
+      if (ts.isObjectLiteralExpression(property.initializer)) collect(property.initializer,path,roots,depth+1)
+    }
+  }
+  const walk = (node: ts.Node): void => {
+    if (ts.isArrayLiteralExpression(node)) return
+    if (ts.isObjectLiteralExpression(node)) {
+      // Unknown spreads/computed/shorthand keys cannot establish a config example.
+      const roots = node.properties.map(property => ts.isPropertyAssignment(property) ? name(property.name) : undefined)
+      if (roots.every((key): key is string => key !== undefined)) collect(node,'',roots)
+      return
+    }
+    ts.forEachChild(node,walk)
+  }
+  walk(source)
+  return references
+}
+
 /** Parse code examples without treating keys, strings or member names as API references. */
 function fenceReferences(value: string, language: string): (MarkdownReference & { configOnly?: boolean })[] {
   if (['json', 'jsonc', 'yaml', 'yml', 'toml'].includes(language)) {
-    return value.split(/\r?\n/).flatMap((text, line) =>
+    const references: (MarkdownReference & { configOnly?: boolean })[] = value.split(/\r?\n/).flatMap((text, line) =>
       [...text.matchAll(/(?<![\w$.-])[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)+(?![\w$.-])/g)]
         .map(match => ({ value: match[0], line, configOnly: true })))
+    if (language === 'json' || language === 'jsonc') {
+      const source = ts.parseJsonText('config.json', value)
+      if (!(source as ts.SourceFile & { parseDiagnostics?: readonly ts.Diagnostic[] }).parseDiagnostics?.length) references.push(...objectConfigReferences(source))
+    } else if (language === 'yaml' || language === 'yml') {
+      const parsed = parseYamlDocument(value)
+      if (!parsed.errors.length && isMap(parsed.contents)) {
+        const roots = parsed.contents.items.map(item => String(isScalar(item.key) ? item.key.value : ''))
+        const walk = (node: unknown, prefix = '', depth = 0): void => {
+          if (!isMap(node) || depth > 32) return
+          for (const item of node.items) {
+            if (!isScalar(item.key) || typeof item.key.value !== 'string' || !item.key.range) continue
+            const key = item.key.value, path = prefix ? `${prefix}.${key}` : key
+            references.push({value:key, line:value.slice(0,item.key.range[0]).split(/\r?\n/).length-1, configOnly:true, configExample:true, configPath:path, configRoots:roots})
+            walk(item.value, path, depth+1)
+          }
+        }
+        walk(parsed.contents)
+      }
+    } else {
+      // ponytail: flat TOML assignments only; table/array syntax needs a TOML parser.
+      const keys = value.split(/\r?\n/).flatMap((text,line) => {
+        const match = /^\s*(?:"([A-Za-z_$][\w$]*)"|'([A-Za-z_$][\w$]*)'|([A-Za-z_$][\w$]*))\s*=/.exec(text)
+        return match ? [{value:(match[1]??match[2]??match[3])!,line}] : []
+      })
+      if (!/^\s*\[/m.test(value)) references.push(...keys.map(key => ({...key,configOnly:true,configExample:true,configPath:key.value,configRoots:keys.map(key=>key.value)})))
+    }
+    return references
   }
   if (!['ts', 'tsx', 'js', 'jsx', 'mjs', 'cjs'].includes(language)) return []
   const source = ts.createSourceFile('fence.' + language, value, ts.ScriptTarget.Latest, true,
@@ -148,6 +207,7 @@ function fenceReferences(value: string, language: string): (MarkdownReference & 
     ts.forEachChild(node, walk)
   }
   walk(source)
+  references.push(...objectConfigReferences(source))
   return references
 }
 
@@ -336,7 +396,7 @@ export const parseMarkdownDocument = (path: string, content: string): MarkdownDo
   let title: string | undefined
   let summary: string | undefined
 
-  visit(tree, (node) => {
+  visit(tree, (node, _index, parent) => {
     if (node.type === 'yaml') return
     const line = lineOf(node as { position?: { start: { line: number } } })
 
@@ -384,7 +444,7 @@ export const parseMarkdownDocument = (path: string, content: string): MarkdownDo
     if (node.type === 'inlineCode' && !withinGenerated(line, regions)) {
       const value = node.value.trim()
       if (value) {
-        codeTokens.push({ value, line })
+        codeTokens.push({ value, line, ...(/\bconfig(?:uration)?\s+example\s*:?\s*$/i.test(parent ? parent.children.slice(0, _index ?? 0).map(child => mdastToString(child)).join('') : '') ? { configExample: true } : {}) })
         cliTokens.push(...cliCommandTokens(value, line), ...cliFlagTokens(value, line))
       }
     }
@@ -466,22 +526,43 @@ export type AmbiguousSymbolReference = {
 
 export type MarkdownFact = { readonly kind: string; readonly name: string; readonly ownerId: string; readonly evidence?: readonly Evidence[] }
 
-/** Config citations require dotted names and the same fixture/package boundary. */
-export const configKeyCitationIndex = (facts: ReadonlyMap<string, readonly MarkdownFact[]> | undefined, documentPath: string, packages: MarkdownResolution['packagePaths']): ReadonlyMap<string, readonly MarkdownFact[]> => {
+export const configCitationKey = (token: MarkdownReference): string => token.value.includes('.') ? token.value : JSON.stringify([token.value, token.line, token.configPath, token.configRoots])
+
+/** Bare keys require example syntax and an independently cited schema owner. */
+export const configKeyCitationIndex = (facts: ReadonlyMap<string, readonly MarkdownFact[]> | undefined, documentPath: string, packages: MarkdownResolution['packagePaths'], document?: MarkdownDocumentV1, symbols?: MarkdownResolution['symbols']): ReadonlyMap<string, readonly MarkdownFact[]> => {
   const index = new Map<string, MarkdownFact[]>()
   const fixture = (path: string) => { const match = /(?:^|\/)(?:tests?|__tests__)\/fixtures\/[^/]+/.exec(path); return match ? path.slice(0, match.index + match[0].length) : '' }
   const orderedPackages = [...(packages ?? [])].sort((a, b) => b.path.length - a.path.length)
   const packageId = (path: string) => orderedPackages.find(pkg => pkg.path === '.' || path.startsWith(`${pkg.path}/`))?.id
   const documentFixture = fixture(documentPath), documentPackage = packageId(documentPath)
   for (const fact of facts?.values() ?? []) for (const item of fact) {
-    if (item.kind !== 'config-key' || !item.name.includes('.')) continue
+    if (item.kind !== 'config-key') continue
     const paths = item.evidence?.map(proof => proof.path) ?? [item.ownerId.replace(/^module:/, '')]
     if (!paths.some(path => fixture(path) === documentFixture && packageId(path) === documentPackage)) continue
     const matches = index.get(item.name) ?? []
     if (!matches.some(match => match.ownerId === item.ownerId)) matches.push(item)
     index.set(item.name, matches)
   }
-  return index
+  if (!document) return index
+  const tokens = [...document.codeTokens, ...(document.fenceTokens ?? [])]
+  const anchors = new Set<string>()
+  for (const token of tokens.filter(token => token.value.includes('.'))) for (const fact of index.get(token.value) ?? []) anchors.add(fact.ownerId)
+  for (const matches of index.values()) for (const fact of matches) {
+    const paths = [fact.ownerId.replace(/^module:/, ''), ...(fact.evidence?.map(item => item.path) ?? [])]
+    if (document.codeTokens.some(token => paths.includes(token.value) || symbols?.get(token.value)?.includes(fact.ownerId)) ||
+      document.links.some(link => paths.includes(resolveRelative(document.path, link.value) ?? ''))) anchors.add(fact.ownerId)
+  }
+  const result = new Map([...index].filter(([name]) => name.includes('.')))
+  for (const token of tokens.filter(token => token.configExample && !token.value.includes('.'))) {
+    const ownerFacts = [...index.values()].flat()
+    const matches = ownerFacts.filter(fact => anchors.has(fact.ownerId) && fact.name.split('.').at(-1) === token.value &&
+      !ownerFacts.some(child => child.ownerId === fact.ownerId && child.name.startsWith(`${fact.name}.`)) &&
+      (!token.configRoots || token.configRoots.every(key => index.get(key)?.some(root => root.ownerId === fact.ownerId)) || token.configRoots.length === 1 && token.configPath === token.value) &&
+      (!token.configPath?.includes('.') || token.configPath === fact.name))
+    const unique = matches.filter(fact => ownerFacts.filter(other => other.ownerId === fact.ownerId && other.name.split('.').at(-1) === token.value).length === 1)
+    if (unique.length) result.set(configCitationKey(token), unique)
+  }
+  return result
 }
 
 export type AmbiguousFactReference = {
@@ -538,7 +619,7 @@ export const analyzeMarkdownDocument = (
   resolution: MarkdownResolution,
 ): MarkdownAnalysis => {
   const cap = resolution.relationCap ?? MARKDOWN_RELATION_CAP
-  const configKeys = configKeyCitationIndex(resolution.facts, document.path, resolution.packagePaths)
+  const configKeys = configKeyCitationIndex(resolution.facts, document.path, resolution.packagePaths, document, resolution.symbols)
   const relations = new Map<string, KnowledgeRelation>()
   const notes: MarkdownNote[] = []
   const ambiguous = new Map<string, Evidence[]>()
@@ -618,7 +699,7 @@ export const analyzeMarkdownDocument = (
     if (link.text) resolveToken(link.text, link.line)
   }
 
-  for (const token of document.codeTokens) resolveToken(token.value, token.line)
+  for (const token of document.codeTokens) resolveToken(token.value, token.line, undefined, false, undefined, token)
   for (const token of cliCitationTokens(document.cliTokens, resolution)) {
     resolveToken(token.value, token.line, token.kind, false, token.ownerIds)
   }
@@ -626,7 +707,7 @@ export const analyzeMarkdownDocument = (
   for (const token of document.fenceTokens ?? []) {
     const candidates = resolution.facts?.get(token.value)
     if (token.configOnly) {
-      if (configKeys.has(token.value)) resolveToken(token.value, token.line, 'config-key', true)
+      if (configKeys.has(configCitationKey(token))) resolveToken(token.value, token.line, 'config-key', true, undefined, token)
     } else if (resolution.symbols.has(token.value) || candidates?.some(fact => fact.kind !== 'cli-command' && fact.kind !== 'cli-flag')) resolveToken(token.value, token.line, undefined, true)
   }
 
@@ -647,7 +728,7 @@ export const analyzeMarkdownDocument = (
    * A legacy symbol resolves only when exactly one module exports it, because sending an
    * agent to one of two possible definitions is worse than sending it nowhere.
    */
-  function resolveToken(raw: string, line: number, cliKind?: 'cli-command' | 'cli-flag' | 'config-key', exactOnly = false, ownerIds?: readonly string[]): void {
+  function resolveToken(raw: string, line: number, cliKind?: 'cli-command' | 'cli-flag' | 'config-key', exactOnly = false, ownerIds?: readonly string[], configReference?: MarkdownReference): void {
     const value = raw.trim()
     if (!value || value.length > 256) return
 
@@ -661,7 +742,7 @@ export const analyzeMarkdownDocument = (
 
     const signatureSymbol = !cliKind && resolveSignatureSymbol(value, line, exactOnly)
     const candidates = resolution.facts?.get(value)?.filter(fact => !ownerIds || ownerIds.includes(fact.ownerId))
-    const facts = [...(candidates ?? []).filter(fact => fact.kind !== 'config-key'), ...(cliKind && cliKind !== 'config-key' ? [] : configKeys.get(value) ?? [])].filter(fact => (cliKind ? fact.kind === cliKind : fact.kind !== 'cli-command' && fact.kind !== 'cli-flag') && (fact.kind !== 'signature' || (!resolution.symbols.has(value) && !resolution.symbols.has(value.split('.')[0]!))))
+    const facts = [...(candidates ?? []).filter(fact => fact.kind !== 'config-key'), ...(cliKind && cliKind !== 'config-key' ? [] : (value.includes('.') || configReference?.configExample ? configKeys.get(configCitationKey(configReference ?? {value,line})) : undefined) ?? [])].filter(fact => (cliKind ? fact.kind === cliKind : fact.kind !== 'cli-command' && fact.kind !== 'cli-flag') && (fact.kind !== 'signature' || (!resolution.symbols.has(value) && !resolution.symbols.has(value.split('.')[0]!))))
     if (facts?.length) {
       for (const kind of [...new Set(facts.map(fact => fact.kind))].sort()) {
         const candidates = facts.filter(fact => fact.kind === kind)

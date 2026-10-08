@@ -4,6 +4,8 @@
 
 ### Patch Changes
 
+- Resolve unique configuration example leaves only with schema-owner context, and include statically linked operational defaults in configuration value hashes.
+
 - Preserve declaring-owner resolution through re-exports during historical citation checks, and normalize known-bin and indexed-package runner invocations with command-scoped flag citations.
 
 - Parse fenced JS/TS citations by syntax and restrict configuration fences to dotted config facts, excluding export collisions in keys, strings, comments and member properties.
