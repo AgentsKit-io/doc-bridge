@@ -34,7 +34,12 @@ and an exact engine version. `index-source: committed` remains the default:
 missing/stale committed indexes fail. `ci-built` builds an isolated index when
 absent, but cannot clear detected committed drift. Opt into `advisory: 'true'`
 for the bounded report and separately `comment: 'true'` to create/update one
-engine-owned comment. Blocking gate outcomes remain independent.
+engine-owned comment. Blocking gate outcomes remain independent. CI-built generates
+enabled Git-ignored exports, including `llms.txt`, with the trusted engine inside
+the isolated exact-head capture before conformance checks. Committed mode requires
+existing current exports. Tracked exports and a stale committed index are never
+repaired by CI-built: run `ak-docs index`, review and commit regeneration when
+committed freshness blocks.
 
 ## Limits and permissions
 
@@ -56,10 +61,11 @@ restores raw findings. Deduplicated coverage is collapsed into counts and at mos
 five change-relevant gaps, with expected service denials shown once.
 
 Index failures expose a bounded cause in logs and the job summary, including
-missing/invalid configuration. The `index-report` output retains the failure
+missing/invalid configuration, the failing gate and required rule identifiers and
+their short reasons (at most five gates and five rules per gate; 1,000 characters). The `index-report` output retains the failure
 report outside the checkout until job cleanup; artifact upload is opt-in.
 Advisory unavailability identifies the base/head object or diff evidence stage
-and its missing evidence or limit. These reports do not propose patches or accept
+and its bounded, redacted engine error, missing evidence or limit. These reports do not propose patches or accept
 changes. The local example
 proves producer execution only; real token permissions, comment delivery and
 concurrency require live PR verification. Follow artifact retention and cleanup

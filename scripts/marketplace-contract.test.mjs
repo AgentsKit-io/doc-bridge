@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { test } from 'node:test'
 import { parse } from 'yaml'
-import { analyzeAdvisory, analyzeIndex, publishAdvisory, validateAdvisory, withRevision } from './action-runner.mjs'
+import { analyzeAdvisory, analyzeIndex, gateFailureReason, publishAdvisory, validateAdvisory, withRevision } from './action-runner.mjs'
 
 const root = resolve(import.meta.dirname, '..')
 const actionText = readFileSync(resolve(root, 'action.yml'), 'utf8')
@@ -94,6 +94,7 @@ test('real index modes preserve committed bytes and independent drift policy', a
   env.DOC_BRIDGE_INDEX_SOURCE = 'ci-built'; assert.equal(await analyzeIndex(env), 1, 'CI-built does not clear stale committed gate')
   report = JSON.parse(readFileSync(reportPath(env), 'utf8'))
   assert.equal(report.committed.ok, false); assert.equal(report.generated.reproducible, true); assert.equal(report.ok, false)
+  assert.match(report.results.find(item => item.id === 'index-freshness').message, /run ak-docs index, review and commit/u)
   env.DOC_BRIDGE_GATE_ID = 'okf-type'; assert.equal(await analyzeIndex(env), 0, 'caller policy can select another gate while drift remains reported')
   report = JSON.parse(readFileSync(reportPath(env), 'utf8')); assert.equal(report.committed.ok, false)
   assert.equal(readFileSync(join(repo, '.doc-bridge/index.json'), 'utf8'), original)
@@ -105,7 +106,7 @@ test('real index modes preserve committed bytes and independent drift policy', a
   assert.equal(await analyzeIndex(env), 0, 'uncommitted workspace data never joins the requested capture')
 }))
 
-test('exact workspace preserves CI-prepared ignored conformance exports without repairing a missing export', async () => fixture(async ({ repo, env }) => {
+test('CI-built generates ignored conformance exports in isolation; committed mode requires prepared evidence', async () => fixture(async ({ repo, env }) => {
   const config = JSON.parse(readFileSync(join(repo, 'doc-bridge.config.json'), 'utf8'))
   config.index.llmsTxt.enabled = true
   config.gates.include = ['documentation-standard-v1']
@@ -126,8 +127,12 @@ test('exact workspace preserves CI-prepared ignored conformance exports without 
   rmSync(join(repo, 'llms.txt'))
   assert.equal(await analyzeIndex(env), 1)
   const report = JSON.parse(readFileSync(reportPath(env), 'utf8'))
-  assert.equal(report.results.find(item => item.id === 'documentation-standard-v1').details.results.find(item => item.id === 'llms-and-raw-source').ok, false)
-  assert.ok(!existsSync(join(repo, 'llms.txt')), 'missing conformance evidence is never silently generated')
+  assert.equal(report.results.find(item => item.id === 'documentation-standard-v1').details.results.find(item => item.id === 'llms-and-raw-source').ok, true)
+  env.DOC_BRIDGE_INDEX_SOURCE = 'committed'
+  assert.equal(await analyzeIndex(env), 1)
+  assert.equal(JSON.parse(readFileSync(reportPath(env), 'utf8')).results.find(item => item.id === 'documentation-standard-v1').details.results.find(item => item.id === 'llms-and-raw-source').ok, false)
+  assert.ok(!existsSync(join(repo, 'llms.txt')), 'CI-built export stays in the isolated capture')
+  assert.match(readFileSync(env.GITHUB_STEP_SUMMARY, 'utf8'), /llms-and-raw-source: llms.txt must be enabled/u)
 }))
 
 test('CLI index preserves nested config roots and rejects dirty/revision/artifact escapes', async () => fixture(async ({ repo, env, directory }) => {
@@ -257,7 +262,7 @@ test('missing config produces a persistent index report and a useful bounded cau
   assert.match(report.error, /No doc-bridge config found/u)
   assert.match(readFileSync(env.GITHUB_STEP_SUMMARY, 'utf8'), /No doc-bridge config found/u)
   assert.equal(await analyzeAdvisory(env), 0)
-  assert.match(readFileSync(env.GITHUB_STEP_SUMMARY, 'utf8'), /Advisory unavailable \(base object [0-9a-f]+\): No doc-bridge config found/u)
+  assert.match(readFileSync(env.GITHUB_STEP_SUMMARY, 'utf8'), /Advisory unavailable \(base object [0-9a-f]+\): .*No doc-bridge config found/u)
 }))
 
 test('removed function and flag produce two conflicts and a collapsed coverage Markdown snapshot', async () => fixture(async ({ repo, env }) => {
@@ -295,7 +300,7 @@ test('advisory unavailability names the exhausted capture limit', async () => fi
   put(repo, 'doc-bridge.config.json', JSON.stringify(config))
   env.DOC_BRIDGE_BASE_REVISION = env.DOC_BRIDGE_HEAD_REVISION = await commit(repo)
   assert.equal(await analyzeAdvisory(env), 0)
-  assert.match(readFileSync(env.GITHUB_STEP_SUMMARY, 'utf8'), /Advisory unavailable \(base object [0-9a-f]+\): Repository scan exceeded the 1 file limit/u)
+  assert.match(readFileSync(env.GITHUB_STEP_SUMMARY, 'utf8'), /Advisory unavailable \(base object [0-9a-f]+\): .*Repository scan exceeded the 1 file limit/u)
 }))
 
 test('real Action Markdown lists changed references and summarizes default policy with a raw CLI opt-out', async () => fixture(async ({ directory, repo, env }) => {
@@ -323,4 +328,78 @@ test('real Action Markdown lists changed references and summarizes default polic
   await command(process.execPath, [cli, 'diff', '--advisory', '--base', resolve(path, '../base.json'), '--head', resolve(path, '../head.json'), '--root', repo, '--repository', env.GITHUB_REPOSITORY, '--pr', env.DOC_BRIDGE_PR_NUMBER, '--index-source', env.DOC_BRIDGE_INDEX_SOURCE, '--output', rawPath, '--no-policy'])
   assert.equal(JSON.parse(readFileSync(rawPath, 'utf8')).findingCount, 5)
   assert.equal(JSON.parse(readFileSync(`${rawPath}.diff.json`, 'utf8')).policy.enabled, false)
+}))
+
+
+test('gate reasons identify required failing rules and remain bounded', () => {
+  const reason = gateFailureReason({ results: [{ id: 'documentation-standard-v1', ok: false, details: { results: [{ id: 'llms-and-raw-source', level: 'required', ok: false, message: 'Export missing' }, { id: 'optional', level: 'recommended', ok: false, message: 'Optional' }] } }] })
+  assert.equal(reason, 'documentation-standard-v1: llms-and-raw-source: Export missing')
+  assert.ok(gateFailureReason({ results: Array.from({ length: 20 }, () => ({ id: 'gate', ok: false, message: 'x'.repeat(10000) })) }).length <= 1000)
+})
+
+test('large ignored routing configurations permit exact base/head advisory analysis', async () => fixture(async ({ repo, env }) => {
+  const config = JSON.parse(readFileSync(join(repo, 'doc-bridge.config.json'), 'utf8'))
+  config.routing = { options: { ownership: Object.fromEntries(Array.from({ length: 200 }, (_, i) => ['area' + i, { path: 'src/api.ts', purpose: 'Ignored routing entry' }])) } }
+  put(repo, 'doc-bridge.config.json', JSON.stringify(config))
+  env.DOC_BRIDGE_BASE_REVISION = await commit(repo)
+  put(repo, 'src/api.ts', 'export const shared = 2;\n')
+  env.DOC_BRIDGE_HEAD_REVISION = await commit(repo)
+  assert.equal(await analyzeAdvisory(env), 0)
+  const artifact = JSON.parse(readFileSync(reportPath(env), 'utf8'))
+  assert.ok(artifact.findingCount > 0)
+  assert.equal(artifact.base, env.DOC_BRIDGE_BASE_REVISION)
+  assert.equal(artifact.head, env.DOC_BRIDGE_HEAD_REVISION)
+}))
+
+
+test('clean detached CI-built checkout passes configured conformance with ignored llms export', async () => fixture(async ({ repo, env }) => {
+  const config = JSON.parse(readFileSync(join(repo, 'doc-bridge.config.json'), 'utf8'))
+  config.index.llmsTxt.enabled = true
+  config.index.capabilities.enabled = true
+  config.gates.include = ['documentation-standard-v1']
+  config.corpus.human = { plugin: 'plain-markdown', options: { root: 'human-docs', urlPrefix: '/docs' } }
+  config.routing = { options: { ownership: { api: { path: 'src', agentDoc: 'docs/api.md', humanDoc: '/docs/api', checks: ['pnpm test'] } } } }
+  config.conformance = { documentationStandardV1: {
+    rawSources: ['README.md'], contributionPaths: ['CONTRIBUTING.md'],
+    metadata: [{ path: 'human-docs/index.html', contains: ['<title>'] }],
+    links: [{ url: 'https://www.agentskit.io', paths: ['README.md'] }],
+    ecosystemContract: { manifest: 'ecosystem.json', claims: 'ecosystem-claims.json', productId: 'doc-bridge' },
+    quickstarts: [{ id: 'demo', doc: 'README.md', test: 'tests/demo.test.ts', command: 'pnpm test', testContains: ['runs demo'] }],
+    visuals: ['human-docs/overview.svg'],
+  } }
+  put(repo, 'docs/api.md', '---\npackage: api\neditRoot: src\nhumanDoc: /docs/api\n---\n\n# API\n')
+  put(repo, 'human-docs/api.md', '---\npackage: api\n---\n\n# API guide\n')
+  put(repo, 'human-docs/index.html', '<title>Doc Bridge</title>')
+  put(repo, 'human-docs/overview.svg', '<svg xmlns="http://www.w3.org/2000/svg"/>')
+  put(repo, 'README.md', '# Doc Bridge\n\nhttps://www.agentskit.io\n')
+  put(repo, 'CONTRIBUTING.md', '# Contributing\n\nRun pnpm test.\n')
+  put(repo, 'tests/demo.test.ts', "it('runs demo', () => {})\n")
+  for (const path of ['ecosystem.json', 'ecosystem-claims.json']) put(repo, path, readFileSync(join(root, path)))
+  put(repo, '.gitignore', 'llms.txt\n.doc-bridge/\n')
+  put(repo, 'doc-bridge.config.json', JSON.stringify(config))
+  env.DOC_BRIDGE_HEAD_REVISION = await commit(repo)
+  await git(repo, 'checkout', '--detach', env.DOC_BRIDGE_HEAD_REVISION)
+  env.DOC_BRIDGE_INDEX_SOURCE = 'ci-built'
+  assert.equal(await analyzeIndex(env), 0)
+  assert.equal(JSON.parse(readFileSync(reportPath(env), 'utf8')).ok, true)
+  assert.ok(!existsSync(join(repo, 'llms.txt')))
+  assert.ok(!existsSync(join(repo, '.doc-bridge/capabilities.json')))
+  env.DOC_BRIDGE_INDEX_SOURCE = 'committed'
+  assert.equal(await analyzeIndex(env), 1)
+}))
+
+
+test('unavailable advisory logs bounded engine diagnostics without secret values or command injection', async () => fixture(async ({ directory, env }) => {
+  const engine = join(directory, 'trusted-engine')
+  put(engine, 'bin/ak-docs.js', 'process.stderr.write("Synthetic engine failure password=synthetic-secret-value\\n::error::untrusted\\n" + "x".repeat(2000)); process.exitCode = 2;\n')
+  symlinkSync(join(root, 'dist'), join(engine, 'dist'), 'dir')
+  symlinkSync(join(root, 'node_modules'), join(engine, 'node_modules'), 'dir')
+  env.DOC_BRIDGE_CLI_PATH = join(engine, 'bin/ak-docs.js')
+  const result = await runCommand(process.execPath, [join(root, 'scripts/action-runner.mjs'), 'advisory'], { env })
+  assert.equal(result.code, 0)
+  assert.match(result.stdout, /Synthetic engine failure.*REDACTED/u)
+  assert.ok(!result.stdout.includes('synthetic-secret-value'))
+  assert.ok(!result.stdout.includes('\n::error::'))
+  assert.ok(result.stdout.length < 1400)
+  assert.ok(!readFileSync(env.GITHUB_STEP_SUMMARY, 'utf8').includes('synthetic-secret-value'))
 }))

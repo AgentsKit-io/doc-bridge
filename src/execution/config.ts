@@ -16,7 +16,10 @@ export const serviceConfig = (input: unknown): { config: DocBridgeConfigV1; diag
   if (input && typeof input === 'object' && cache.has(input)) return cache.get(input)!
   const ignored: string[] = []
   const ignore = (value: unknown, path: string): void => {
-    if (ignored.length >= 128) throw new Error('Service configuration exceeds the 128 ignored-key diagnostic budget')
+    if (ignored.length >= 127) {
+      if (ignored.length === 127) ignored.push('diagnostics.truncated')
+      return
+    }
     ignored.push(path.slice(0, 512))
     if (Array.isArray(value)) value.forEach((item, index) => ignore(item, `${path}[${index}]`))
     else if (value && typeof value === 'object') Object.keys(value).sort().forEach(key => ignore((value as Record<string, unknown>)[key], `${path}.${key}`))

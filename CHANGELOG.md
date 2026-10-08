@@ -4,6 +4,8 @@
 
 ### Patch Changes
 
+- Bound ignored service configuration diagnostics, generate declared ignored exports in isolated CI-built captures, and report actionable gate/rule and redacted advisory errors without clearing committed-index drift.
+
 - Pin ecosystem snapshot verification to an immutable upstream commit, add explicit sync automation, and retain upstream freshness checks for releases.
 
 - Resolve unique configuration example leaves only with schema-owner context, and include statically linked operational defaults in configuration value hashes.
