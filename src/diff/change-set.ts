@@ -1,3 +1,4 @@
+import { declaredImportedHeritage, importedSignatureTypes } from '../discovery/facts/signature-context.js'
 import { compatibleSignature } from '../discovery/facts/signature-compatibility.js'
 import { resolveDocumentTargets } from '../discovery/document-targets.js'
 import { classifyDocument } from '../findings/classification.js'
@@ -29,6 +30,16 @@ const hashOf = (entity: KnowledgeEntity) => entity.evidence.find((item) => item.
 const uniqueEvidence = (items: Evidence[]): Evidence[] => [...new Map(items.map(item => [canonicalJsonV1(item), item])).values()]
 const identity = (entity: KnowledgeEntity) => ({ id: entity.id, name: entity.name, evidence: entity.evidence })
 
+const compatibleImportedSignature = (old: SurfaceFact, next: SurfaceFact, base: SnapshotForChanges, head: SnapshotForChanges): boolean => {
+  const retained = (snapshot: SnapshotForChanges, fact: SurfaceFact) => snapshot.entities.some(entity => entity.id === fact.ownerId && entity.metadata && Object.hasOwn(entity.metadata, 'signatureContext'))
+  if (!retained(base, old) && !retained(head, next)) return compatibleSignature(old, next)
+  const before = importedSignatureTypes(old, base.entities), after = importedSignatureTypes(next, head.entities)
+  return !!before && !!after && !!old.signature && !!next.signature && compatibleSignature(
+    { ...old, signature: { ...old.signature, types: before } },
+    { ...next, signature: { ...next.signature, types: after } },
+  )
+}
+
 /** File deltas and per-owner export identities share the existing discovery IDs and evidence. */
 export const snapshotChanges = (base: SnapshotForChanges, head: SnapshotForChanges): Change[] => {
   const entities = (snapshot: SnapshotForChanges) => new Map(snapshot.entities
@@ -47,12 +58,17 @@ export const snapshotChanges = (base: SnapshotForChanges, head: SnapshotForChang
     const old = oldFacts.get(id) ?? oldPackages.get(id)
     const next = newFacts.get(id) ?? newPackages.get(id)
     const asIdentity = (fact: SurfaceFact | ReturnType<typeof packageFactFromEntity>) => 'kind' in fact ? factIdentity(fact) : packageIdentity(fact)
-    if (!old || !next || asIdentity(old).valueHash !== asIdentity(next).valueHash) changes.push({
-      kind: (newFacts.get(id) ?? oldFacts.get(id))?.kind ?? 'package',
-      op: !old ? 'added' : !next ? 'removed' : 'changed',
-      ...(old && next && 'kind' in old && 'kind' in next && old.kind === 'signature' && compatibleSignature(old, next) ? { compatibility: 'compatible' as const } : {}),
-      ...(old ? { before: asIdentity(old) } : {}), ...(next ? { after: asIdentity(next) } : {}),
-    })
+    if (!old || !next || asIdentity(old).valueHash !== asIdentity(next).valueHash) {
+      const callable = old && next && 'kind' in old && 'kind' in next && old.kind === 'signature' ? { old, next } : undefined
+      const checked = callable && compatibleImportedSignature(callable.old, callable.next, base, head)
+      const heritage = !checked && callable && declaredImportedHeritage(callable.old, callable.next, base.entities, head.entities)
+      changes.push({
+        kind: (newFacts.get(id) ?? oldFacts.get(id))?.kind ?? 'package',
+        op: !old ? 'added' : !next ? 'removed' : 'changed',
+        ...(checked || heritage ? { compatibility: 'compatible' as const } : {}),
+        ...(old ? { before: asIdentity(old) } : {}), ...(next ? { after: { ...asIdentity(next), ...(heritage ? { evidence: next.evidence.map(evidence => ({ ...evidence, context: 'heritage proof (assumes head compiles)' })) } : {}) } } : {}),
+      })
+    }
   }
   for (const id of new Set([...before.keys(), ...after.keys()])) {
     const old = before.get(id)

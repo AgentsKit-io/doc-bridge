@@ -13,7 +13,7 @@ The headline uses shipped default policy routing. Included means proposed or rou
 
 V2 retains v1 native cases and repairs authored fixture ownership, configuration anchors and raw policy gold. Historical cases compare unmodified public first-parent revisions; their reasoning is recorded in the case file.
 
-Engine revision: `cfa03a40db1c59b1e068140e21eb90ca0909ca57`. Engine bundle SHA-256: `486e7019e15901c095b56f0bd6fa38682566bd9776c5b05da5f6b7afbf18dae6`.
+Base revision (working-tree bundle below): `150eccb473c785bab802735761d79a49428af2bc`. Engine bundle SHA-256: `0349d3e286b7d8da974938bd734b0fe67dc7e3b2ec8493cf138244b132c6df8f`.
 Case SHA-256: `16c390d9122be1b36dc0891213949021d51cc662acfe78e294fa0b44a7e61fc9`.
 Harness SHA-256: `06c98e1a2f3bd7c2e3d47f4afa8620bfb23a3ce9336dde653ea0b9d6eaf3a6fa`.
 
@@ -123,7 +123,7 @@ Policy counts use diagnostic identities; scores deduplicate assertion units, so 
 | doc-bridge-fixture-negative-historical | fixture-backed | measured | 0 / 0 / 0 | 1 / 0 / 0 |
 | doc-bridge-fixture-negative-pinned-version | fixture-backed | measured | 0 / 0 / 0 | 1 / 0 / 0 |
 | history-doc-bridge-35f22939-normalizeagenthandoff | historical | measured | 1 / 0 / 0 | 1 / 0 / 0 |
-| history-doc-bridge-4a5fa2f2-createmarkdownpluginv2 | historical | measured | 1 / 0 / 0 | 1 / 0 / 0 |
+| history-doc-bridge-4a5fa2f2-createmarkdownpluginv2 | historical | measured | 1 / 1 / 0 | 1 / 1 / 0 |
 | history-doc-bridge-14337aea-diffsnapshots | historical | measured | 1 / 0 / 0 | 1 / 0 / 0 |
 | history-doc-bridge-ab68bd6d-corpus-agent-include | historical | measured | 4 / 0 / 0 | 4 / 0 / 0 |
 | history-doc-bridge-1695826b-surfaces-mcp-tools | historical | measured | 2 / 0 / 0 | 2 / 0 / 0 |
@@ -146,7 +146,7 @@ Policy counts use diagnostic identities; scores deduplicate assertion units, so 
 | chat-fixture-negative-changelog | fixture-backed | measured | 0 / 0 / 0 | 1 / 0 / 0 |
 | chat-fixture-negative-historical | fixture-backed | measured | 0 / 0 / 0 | 1 / 0 / 0 |
 | chat-fixture-negative-pinned-version | fixture-backed | measured | 0 / 0 / 0 | 1 / 0 / 0 |
-| history-chat-5e47de83-createaskadapter | historical | measured | 1 / 1 / 0 | 1 / 1 / 0 |
+| history-chat-5e47de83-createaskadapter | historical | measured | 1 / 0 / 0 | 1 / 0 / 0 |
 | history-chat-68f5bf7e-withabort | historical | measured | 1 / 0 / 0 | 1 / 0 / 0 |
 | playbook-uncited-rename | native | measured | 2 / 0 / 0 | 2 / 0 / 0 |
 | playbook-flag-rename | native | measured | 4 / 0 / 0 | 4 / 0 / 0 |
@@ -180,15 +180,15 @@ Policy counts use diagnostic identities; scores deduplicate assertion units, so 
 
 ## Default false positives and false negatives
 
+- history-doc-bridge-4a5fa2f2-createmarkdownpluginv2 FP: `["finding","CHANGED_REFERENCE","","createMarkdownPluginV2","docs/spec/discovery-plugin-v2.md"]`. Unexpected diagnostic in the frozen document scope; cause requires review of raw evidence.
 - history-doc-bridge-9a775a55-reconciliation-scope FP: `["finding","CHANGED_REFERENCE","","reconciliation.scope","docs/spec/config-v1.md"]`. Unexpected diagnostic in the frozen document scope; cause requires review of raw evidence.
 - history-doc-bridge-9a775a55-reconciliation-scope FP: `["finding","CHANGED_REFERENCE","","surfaces.mcp.tools","docs/spec/config-v1.md"]`. Unexpected diagnostic in the frozen document scope; cause requires review of raw evidence.
-- history-chat-5e47de83-createaskadapter FP: `["finding","CHANGED_REFERENCE","","createAskAdapter","packages/chat/README.md"]`. Unexpected diagnostic in the frozen document scope; cause requires review of raw evidence.
 
 ## Raw false positives and false negatives
 
+- history-doc-bridge-4a5fa2f2-createmarkdownpluginv2 FP: `["finding","CHANGED_REFERENCE","","createMarkdownPluginV2","docs/spec/discovery-plugin-v2.md"]`. Unexpected diagnostic in the frozen document scope; cause requires review of raw evidence.
 - history-doc-bridge-9a775a55-reconciliation-scope FP: `["finding","CHANGED_REFERENCE","","reconciliation.scope","docs/spec/config-v1.md"]`. Unexpected diagnostic in the frozen document scope; cause requires review of raw evidence.
 - history-doc-bridge-9a775a55-reconciliation-scope FP: `["finding","CHANGED_REFERENCE","","surfaces.mcp.tools","docs/spec/config-v1.md"]`. Unexpected diagnostic in the frozen document scope; cause requires review of raw evidence.
-- history-chat-5e47de83-createaskadapter FP: `["finding","CHANGED_REFERENCE","","createAskAdapter","packages/chat/README.md"]`. Unexpected diagnostic in the frozen document scope; cause requires review of raw evidence.
 
 ## Limits and maintenance
 
@@ -203,83 +203,43 @@ Raw policy-excluded findings have explicit gold and are not mislabeled as engine
 
 Unavailable or invalid cases are excluded from score denominators, remain visible, and prevent a complete-corpus measurement claim. Scores below target are benchmark failures, not execution failures or release-readiness evidence.
 
-## Compatibility and citation-cap review
+## Compatibility review
 
-Historical CHANGED_REFERENCE precision improves from 37.50% to **57.14%**
-(4 TP, 3 FP); coverage improves from 75.00% to **100.00%** (zero FN).
-Native included findings improve from 14 TP / 0 FP / 1 FN to 15 TP / 0 FP /
-0 FN. Fixture included findings remain 26 TP / 0 FP / 0 FN; fact extraction
-scores do not regress. Neither frozen case file nor its gold was modified.
+The factory returning a directly extending imported interface now suppresses its
+changed-reference candidate with evidence labeled `heritage proof (assumes head
+compiles)`. Its base is external; this is a narrow declaration-only conditional
+proof, not validation of external members or the historical head build. Other
+external shapes remain unproven.
 
-Every remaining historical mismatch is still counted:
+The historical sample still has three changed-reference FPs and no FNs:
 
-- `history-doc-bridge-9a775a55-reconciliation-scope`,
-  `reconciliation.scope` FP: the head specification's union at line 424 correctly
-  adds `area`, matching the schema. The recovered specific citation detects a
-  changed value and marks its region `updated-in-this-change`; region change
-  does not prove semantic reconciliation, so this review candidate remains.
-- The same case's `surfaces.mcp.tools` FP: the commit independently adds
-  `knowledge.search` and `knowledge.lookup` to the schema/defaults. The recovered
-  tools citation is at line 656, and the unchanged `McpToolId` union below it
-  omits these IDs. The frozen negative case annotates the reconciliation update,
-  while scoring all findings in the document and supplies no tools positive
-  gold. This concurrent candidate remains an FP in the published denominator;
-  the gold is not rewritten or narrowed to remove it.
-- `history-chat-5e47de83-createaskadapter`, `createAskAdapter` FP: the return
-  changes to a local extending interface, but its base and request context are
-  imported. The bounded module-local proof cannot resolve those declarations;
-  the checker therefore cannot prove assignability and retains the candidate.
-  Its changed README region is separately marked `updated-in-this-change`.
+- The optional/defaulted adapter-list addition in `createMarkdownPluginV2` has an
+  unchanged return whose imported dependency closure contains unsupported external
+  types/type queries. Modern snapshot resolution retains the candidate conservatively.
+- `reconciliation.scope` is updated in the same change; the engine records the
+  changed document region but does not semantically reconcile it.
+- `surfaces.mcp.tools` has a stale union in that same document outside the updated
+  region. The frozen negative assertion covers reconciliation rather than this
+  concurrent tools candidate, which remains an FP in that denominator.
 
-There are no historical FNs. The cap recovers the previously omitted
-`surfaces.mcp.tools` positive. The native `surfaces.cli.bin` miss is also
-recovered: the old base graph lacks that fact citation after retaining 64 fact
-relations, while the new base graph retains the exact owned citation.
-Optional/defaulted parameters and purely additive child keys no longer produce
-those prior false positives. Unsupported compatibility is conservative coverage,
-not proof of a break or semantic divergence. These purposive samples do not
-establish release readiness or historical prevalence.
+The target factory FP is removed, while the conservative adapter-list FP is added;
+aggregate historical precision is unchanged. Frozen case/gold inputs are not
+rewritten. These purposive samples do not establish release readiness or historical
+prevalence. Dependency-only changes with unchanged callable hashes are not checked.
 
 ## Measured cost
 
-Measurements use the same fixed source corpora before and after, three serial
-runs, medians, and compact JSON byte counts. Timings include normal local noise.
-On doc-bridge, full index size remains 1,536,551 bytes; median indexing time is
-4.05s before and 3.83s after. Retained callable proofs are bounded to 16 KiB per
-fact and no checker runs at index time.
+Fixed source corpora, three serial full discoveries/index builds and nine changed-callable diffs per engine. Values below are medians; diff includes the real full snapshot/document flow, not an isolated checker timer. The mutation adds an optional boolean parameter to a real callable. No checker runs during indexing. Timings include local load noise.
 
-Full monorepo indexing is blocked in both engines by the existing discovery
-coverage ceiling (2023 entries against a 1000-entry bound). It is not reported
-as a passing index measurement. Separate extraction measures 886 documents:
-citations increase 3978 to 3989, bytes 3,274,483 to 3,281,988, and fact-cap
-truncated documents decrease one to zero. Retained fact bytes increase
-4,440,787 to 5,066,448. Median citation-only time is 7.08s before and 7.81s after;
-median discovery time is 8.98s before and 9.34s after. The isolated extraction
-measurement bypasses the envelope parser only to observe these costs behind the
-known ceiling; it is not schema/gate/conformance evidence. No full-monorepo
-index time or size claim is made.
+| Corpus | Full index bytes before / after | Snapshot bytes before / after | Index ms before / after | Diff ms before / after | Retained context bytes / maximum module |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| doc-bridge | 1,536,551 / 1,536,551 | 4,607,803 / 4,907,255 | 3514.4 / 3675.2 | 3598.6 / 3653.4 | 284,696 / 31,772 |
+| AgentsKit monorepo | 5,629,619 / 5,629,619 | 15,957,388 / 16,622,505 | 12613.8 / 14388.9 | 4089.7 / 4493.2 | 601,772 / 5,489 |
+
+Corpus revisions: doc-bridge `cfa03a40db1c59b1e068140e21eb90ca0909ca57`, AgentsKit monorepo `7e9f42fb6582b93c0f3bc239f9eb3f5dbba14e9f`.
+
+Full monorepo indexing succeeds in both engines. Index sizes are unchanged; retained syntax increases snapshot size. All three snapshots per corpus have identical semantic hashes. The monorepo mutation remains unproven under modern context checking because its imported closure is unsupported; this cost sample does not establish compatibility coverage across the whole repository.
 
 ## Fresh frozen v1 comparison
 
-The v1 cases, protocol and published v1 results remain unchanged. The fresh run
-executes all 53 cases, with zero unavailable or invalid cases, against the engine
-bundle recorded above. Included and raw case scores differ from the baseline
-only for `doc-bridge-default-change`: the missing owned `surfaces.cli.bin`
-citation is recovered by the higher, specificity-ranked cap (1 TP / 0 FP / 1 FN
-becomes 2 TP / 0 FP / 0 FN in each mode).
-
-Every score change versus the published v1 report follows from that one recovery:
-
-| V1 metric (included and raw) | Published | Current |
-| --- | --- | --- |
-| Native CHANGED_REFERENCE | 3 TP / 0 FP / 1 FN; 100% precision, 75% coverage | 4 TP / 0 FP / 0 FN; 100% precision, 100% coverage |
-| Native finding overall | 14 TP / 0 FP / 1 FN; 100% precision, 93.33% coverage | 15 TP / 0 FP / 0 FN; 100% precision, 100% coverage |
-| Native routed-to-L2 candidates | 3 | 4 |
-
-Native facts remain 19 TP / 0 FP / 0 FN. Included v1 fixture facts remain
-35 TP / 0 FP / 4 FN (100% precision, 89.74% coverage); included fixture findings
-remain 13 TP / 2 FP / 8 FN (86.67% precision, 61.90% coverage).
-All other per-case/per-kind included and raw scores are unchanged. This preserves
-the frozen fixture limits and annotation FPs rather than repairing v1 gold to
-improve the score. V1 case SHA-256 remains
-`0264264d3b390b8dc0cbf48b1d721ea336abcf26c51e9dab1bead42543e5ff0f`.
+The v1 cases, protocol, gold and published results remain unchanged. All 53 cases are measured, with zero unavailable or invalid cases. Every included and raw per-case score matches the prior compatible-signature engine. Case SHA-256: `0264264d3b390b8dc0cbf48b1d721ea336abcf26c51e9dab1bead42543e5ff0f`. The v2 native and fixture scores likewise match that baseline.

@@ -88,7 +88,7 @@ describe('repository discovery', () => {
     ]))
     expect(first.relations).toContainEqual(expect.objectContaining({ from: 'module:packages/app/src/dynamic.ts', to: 'module:packages/app/src/helper.ts', kind: 'imports', metadata: { detection: 'dynamic-literal' } }))
     expect(first.coverage.some((entry) => entry.scope === 'runtime-wiring')).toBe(true)
-    expect(first.entities.find((entity) => entity.id === 'module:packages/app/src/dynamic.ts')?.metadata).toEqual({ exports: ['loaded', 'loadedViaBinding', 'loadedViaExpression', 'requiredViaExpression', 'value'], test: false })
+    expect(first.entities.find((entity) => entity.id === 'module:packages/app/src/dynamic.ts')?.metadata).toEqual({ exports: ['loaded', 'loadedViaBinding', 'loadedViaExpression', 'requiredViaExpression', 'value'], test: false, signatureContext: '' })
     expect(first.relations.filter((relation) => relation.from === 'module:packages/app/src/dynamic.ts' && relation.to === 'module:packages/app/src/helper.ts' && relation.kind === 'imports')).toHaveLength(1)
     expect(first.relations.find((relation) => relation.from === 'module:packages/app/src/dynamic.ts' && relation.to === 'module:packages/app/src/helper.ts' && relation.kind === 'imports')?.evidence).toHaveLength(4)
 
@@ -140,7 +140,7 @@ describe('repository discovery', () => {
     const exports = snapshot.entities.find((entity) => entity.id === 'module:packages/edge/src/exports.ts')?.metadata
     const scopes = snapshot.coverage.map((entry) => entry.scope)
 
-    expect(exports).toEqual({ exports: ['EdgeClass', 'EdgeEnum', 'EdgeInterface', 'EdgeNamespace', 'EdgeType', 'default', 'edgeFunction', 'first', 'second'], test: false })
+    expect(exports).toEqual({ exports: ['EdgeClass', 'EdgeEnum', 'EdgeInterface', 'EdgeNamespace', 'EdgeType', 'default', 'edgeFunction', 'first', 'second'], test: false, signatureContext: null })
     expect(snapshot.entities.map((entity) => entity.id)).toContain('external:unlisted-runtime')
     expect(snapshot.relations).toContainEqual(expect.objectContaining({ from: 'module:packages/edge/src/imports.ts', to: 'module:packages/edge/src/dir/index.ts', kind: 'imports' }))
     expect(snapshot.relations).toContainEqual(expect.objectContaining({ from: 'module:packages/edge/src/imports.ts', to: 'package:@fixture/edge', kind: 'imports' }))

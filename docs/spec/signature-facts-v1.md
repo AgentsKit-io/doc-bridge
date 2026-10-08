@@ -66,7 +66,7 @@ finding flow and completeness rules; incomplete extraction cannot prove a break.
 Callable facts optionally retain `signature`, with codec `typescript-callable-v1`, containing the canonical overload
 projections and reachable module-local interface/type declarations (`types`).
 The entire proof is bounded to 16 KiB; unsupported or oversized proofs are omitted.
-Bodies, imports and inferred types are never retained or executed. Legacy facts
+Callable proof records do not retain bodies, imports or inferred types. Module context is retained separately as described below; repository code is never executed. Legacy facts
 without a proof remain readable and cannot establish compatibility.
 
 A changed callable is marked `compatibility: compatible` in its ChangeSet when
@@ -78,10 +78,61 @@ overloads must remain an identical prefix; appended overloads are compatible whe
 Literal-specialized additions require a return assignable to every prior return,
 because TypeScript can prioritize them even when appended.
 Reordered or shadowing overloads, changed generics/rest parameters, missing types,
-`any`-dependent proofs, unresolved imports and compiler diagnostics cannot prove
+`any`-dependent proofs, unresolved required imports and compiler diagnostics cannot prove
 compatibility. The checker reads only retained declarations and installed
-compiler libraries, never repository files or network resources.
+compiler libraries, never live repository files or network resources. Bounded local imported context is described below.
 
 These changes remain in the ChangeSet and participate in its semantic hash,
 but produce no `CHANGED_REFERENCE`. Other unproven signature changes remain
 review candidates. Aggregate class/type/member compatibility is not inferred.
+
+## Local imported context
+
+The JS/TS discovery adapter version `1.5.0` additionally retains module metadata
+`signatureContext`: printed import/export declarations and interface/type-alias
+syntax and unsupported-type-name sentinels, with comments removed and no function or class bodies. Class, enum and import-equals sentinels only reject unsupported references; they never supply a type. Namespace/ambient-module context is unavailable. An empty context is an empty string; unavailable or larger than 64 KiB context is null. Package metadata `signatureEntryPoints` retains explicit
+manifest exports (types/import/default precedence), or types/typings/main when
+exports is absent, bounded to 64 KiB and eight nested condition levels. No checker or cross-module type traversal
+runs during indexing. This metadata participates in snapshot semantic identity;
+legacy snapshots remain readable and missing context cannot establish an imported proof.
+
+A changed callable with retained module context traverses its own
+snapshot's retained declarations. Relative source imports and explicit local
+workspace entrypoints can resolve named type imports, aliases and named or
+wildcard re-exports with an explicit module specifier. Only reachable type declarations enter the compiler proof;
+unused imports do not require resolution. Resolution must find one source
+module and one export. A removed or unresolved dependency is never replaced by
+head context when proving the base. External package types, default/namespace
+imports, classes, declaration merging, ambiguous exports and unsupported
+entrypoint conditions/patterns remain unproven when needed by the proof.
+
+Per snapshot side, traversal is bounded to depth 8, 32 modules and 256 KiB of
+retained context; the expanded proof is also bounded to 256 KiB. Cycles terminate
+through visited declarations; compiler diagnostics still reject invalid cycles.
+Over-budget or missing context retains the review finding. This is deliberately
+incomplete compatibility evidence, not acceptance or a repository-wide type check.
+
+### Conditional direct heritage of an opaque external base
+
+A narrow declaration-only fallback recognizes a single nongeneric callable whose
+parameters have explicit types and are exactly unchanged, with old return `B` and new return `X`, where
+`X` is a locally declared nongeneric `interface X extends B`. There must be one
+direct base without type arguments; the named import of `B` has the same local
+name, exported name and module specifier on both sides, and existing import
+bindings and retained local parameter type declarations are unchanged. This
+fallback applies only to an opaque external package, not a failed local proof.
+Generics, intersections, indirect inheritance and changed import bindings remain
+unproven.
+
+The ChangeSet marks this declaration relationship compatible and labels head
+code evidence exactly **`heritage proof (assumes head compiles)`**. This is
+conditional evidence: it assumes the head TypeScript declaration is valid, and
+does not resolve or claim compatibility of any external member types. The
+engine does not run a full repository type check or establish that assumption.
+Consumers requiring fully checked compatibility must distinguish this evidence
+label from the bounded compiler proof. The change and label participate in
+semantic identity; the existing ChangeSet evidence shape is reused.
+
+Traversal does not rehash callables or initiate compatibility analysis for a dependency-only change without a changed callable hash.
+
+The retained context implementation lives in [signature-context.ts](../../src/discovery/facts/signature-context.ts); the bounded compiler proof lives in [signature-compatibility.ts](../../src/discovery/facts/signature-compatibility.ts). Generated proof names reserve decoded TypeScript identifiers, including escaped names, and owner-module cycles use the same virtual namespace graph as dependencies.

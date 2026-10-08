@@ -29,6 +29,8 @@
 
 ### Minor Changes
 
+- Prove changed callable compatibility across bounded relative and local workspace imports using retained historical syntax; unresolved external types remain review candidates.
+
 - Classify provably compatible callable changes, suppress additive-only configuration parent findings, and prioritize specific fact citations with a 256-reference cap.
 
 - Attribute nested configuration changes to specific citations and separate same-change citation updates from pending review findings.
