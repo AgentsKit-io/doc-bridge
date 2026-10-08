@@ -65,6 +65,23 @@
 
 - Precompute semantic hash ordering keys once per entry and bound syntax-tree retention for index-only scans and reuse parsed trees in discovery, reducing index-build cost without changing artifact bytes or hash identity.
 
+## 1.14.0-next.1
+
+### Minor Changes
+
+- 76ee641: Resolve exact bounded fenced-code citations and common hand-rolled CLI declarations. Prefer implementation facts over annotated help and report divergent flags and commands as usage drift coverage.
+  
+  Verify surviving fenced citations in removal and changed-reference findings against real head documents, preserving generated-region policy exclusions.
+
+### Patch Changes
+
+- 515a074: Report cited fact value changes as review-required findings and apply existing finding policy by default, retaining diagnostic payloads and complete policy evidence with a raw debugging opt-out.
+- 515a074: Deduplicate removed-export advisories, preserve kind-specific removal evidence and summarize coverage. Report actionable Action failures with retained index reports and support symlinked runner invocation.
+- ca5a6a3: Preserve declaring-owner resolution through re-exports when revalidating historical citations. Normalize known-bin and indexed-package runner invocations and keep flag citations scoped to their matched command owners.
+- 5b70e2e: Resolve context-bound configuration citations and statically linked operational defaults without changing public index or handoff envelopes.
+- 76ee641: Exclude lexical export collisions from fenced code citations using syntax reference positions.
+- 1d848e4: Maintain the Layer-1 benchmark against shipped default policy routing and changed-reference vocabulary, with separate raw scores and exact pinned corpus acquisition. Collect memory between cases and reject empty or resource-limited acquisition before scoring.
+
 ## 1.14.0-next.0
 
 ### Minor Changes
