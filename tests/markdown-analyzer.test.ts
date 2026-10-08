@@ -525,7 +525,7 @@ describe('generic Markdown fact citations', () => {
     expect(result.relations).toHaveLength(5)
     for (const [name, candidates] of facts) {
       const fact = candidates[0]!
-      expect(result.relations).toContainEqual(expect.objectContaining({ to: fact.ownerId, kind: 'mentions-symbol', metadata: { factKind: fact.kind, factName: name } }))
+      expect(result.relations).toContainEqual(expect.objectContaining({ to: fact.ownerId, kind: 'mentions-symbol', metadata: expect.objectContaining({ factKind: fact.kind, factName: name }) }))
     }
     expect(result.relations.find(item => item.metadata?.factName === '--quiet')?.evidence).toHaveLength(8)
   })
@@ -542,7 +542,7 @@ describe('generic Markdown fact citations', () => {
       ...resolution, modules: new Map([['cache.enabled', 'module:legacy-path']]), packages: new Map([['--quiet', 'package:legacy']]), symbols: new Map([['doc-bridge run', ['module:legacy-export']]]),
     })
     expect(result.relations.map(item => item.to).sort()).toEqual(['cli-command:run', 'module:cli', 'module:legacy-path'])
-    expect(result.relations.find(item => item.to === 'module:cli')?.metadata).toEqual({ factKind: 'cli-command', factName: 'doc-bridge run' })
+    expect(result.relations.find(item => item.to === 'module:cli')?.metadata).toMatchObject({ factKind: 'cli-command', factName: 'doc-bridge run' })
     const ambiguous = analyzeMarkdownDocument(parseMarkdownDocument('guide.md', '`doc-bridge run`'), 'document:guide.md', { ...resolution, symbols: new Map([['doc-bridge run', ['module:a', 'module:b']]]) })
     expect(ambiguous.relations).toHaveLength(1)
     expect(ambiguous.ambiguousSymbolReferences).toHaveLength(0)
@@ -574,7 +574,7 @@ it('limits symbol fences to code languages and preserves inline citation metadat
   const document = parseMarkdownDocument('guide.md', '`run`\n\n```ts\nrun();\n```\n```text\nskip();\n```\n```sh\nskip\n```\n```\nskip\n```\n')
   const result = analyzeMarkdownDocument(document, 'document:guide.md', {documents: new Map(), modules: new Map(), packages: new Map(), symbols: new Map([['run', ['module:run']], ['skip', ['module:skip']]])})
   expect(result.relations).toHaveLength(1)
-  expect(result.relations[0]?.metadata).toEqual({symbol: 'run'})
+  expect(result.relations[0]?.metadata).toMatchObject({symbol: 'run'})
   expect(result.relations[0]?.evidence.map(item => item.lineStart)).toEqual([1,4])
 })
 

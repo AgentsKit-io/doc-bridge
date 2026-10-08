@@ -41,3 +41,15 @@ ADR/CHANGELOG references are historical; migration markers near citation
 locations require interpretation. Same-repository implicit targets track the
 analyzed branch; explicit or resolved another-package dependency targets keep version
 eligibility. Generator references remain excluded and identify their generator.
+
+## Optional review metadata (2.0)
+
+`documentationUpdate` accepts only `updated-in-this-change`; absence means the
+citation has no proven same-change region update. It does not resolve a finding.
+`priority` optionally accepts `low` for containing-key fallback findings, with
+`changedDescendantPaths` (at most 64 nonempty paths, each at most 512 characters).
+The same optional fields exist on diff diagnostics. See
+[attribution and region evidence](../spec/change-set-v1.md#nested-configuration-attribution-and-same-change-updates).
+Legacy payloads remain accepted by new readers; older strict readers must upgrade
+for new optional fields. The full findings list retains updated candidates while
+separate pending and updated groups support review counts.

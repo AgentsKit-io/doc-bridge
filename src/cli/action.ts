@@ -165,11 +165,17 @@ export const runAdvisoryDiff = async (argv: readonly string[]): Promise<number> 
     const marker = `<!-- doc-bridge:advisory:v1:${repository}:${pr} -->`
     const binding = `<!-- doc-bridge:revisions:${base.sourceRevision}:${head.sourceRevision}:${source} -->`
     const lines = [marker, binding, '## Doc Bridge advisory (Layer 1)', '', `Repository: ${repository}; PR: ${pr}.`, `Base: ${base.sourceRevision}; head: ${head.sourceRevision}; index source: ${source}.`, '', 'Advisory only. Blocking gates are reported independently; interpretation and acceptance remain human-owned.', '', `Findings: ${findings.length}.`]
-    for (const finding of findings.slice(0, 30)) {
-      const locations = [...new Set(finding.evidence.filter(item => item.source === 'documentation').map(item => `${item.context ?? 'Citation'}: ${item.path}${item.lineStart ? `:${item.lineStart}` : ''}`))].slice(0, 3)
-      lines.push(`- **${finding.code}** (${finding.status}): ${escape(finding.message)} Evidence: ${locations.map(location => escape(location, 150)).join(', ')}.`)
+    const pending = findings.filter(finding => !finding.documentationUpdate)
+    const updated = findings.filter(finding => finding.documentationUpdate)
+    lines.push(`Pending: ${pending.length}; updated-in-this-change: ${updated.length}.`)
+    for (const [label, group] of [['Pending', pending], ['Updated in this change — confirm the update', updated]] as const) {
+      lines.push('', `### ${label}`, '')
+      for (const finding of group.slice(0, 30)) {
+        const locations = [...new Set(finding.evidence.filter(item => item.source === 'documentation').map(item => `${item.context ?? 'Citation'}: ${item.path}${item.lineStart ? `:${item.lineStart}` : ''}`))].slice(0, 3)
+        lines.push(`- **${finding.code}** (${finding.status}${finding.priority ? '; low priority' : ''}): ${escape(finding.message)} Evidence: ${locations.map(location => escape(location, 150)).join(', ')}.`)
+      }
+      if (group.length > 30) lines.push(`- ${group.length - 30} additional findings in the diff artifact.`)
     }
-    if (findings.length > 30) lines.push(`- ${findings.length - 30} additional findings in the diff artifact.`)
     const gaps = [...new Map(diff.changeSet.coverage.filter(item => item.status !== 'complete' && item.status !== 'not-applicable' && !item.analyzer.endsWith('service-profile')).map(item => [JSON.stringify({ ...item, analyzer: item.analyzer.replace(/^(base|head):/u, '') }), item])).values()]
     const coverageCounts = [...new Set(gaps.map(item => item.status))].sort().map(status => `${status}: ${gaps.filter(item => item.status === status).length}`)
     lines.push('', `Coverage gaps / policy exclusions: ${coverageCounts.join('; ') || 'none'}.`, 'Analysis ran under the service profile; full coverage detail is in the diff artifact.')
@@ -181,12 +187,12 @@ export const runAdvisoryDiff = async (argv: readonly string[]): Promise<number> 
     const markdown = lines.join('\n')
     if (Buffer.byteLength(markdown) > 60000) throw new Error('Advisory Markdown exceeds the comment budget')
     const output = outside(root, required(argv, '--output'))
-    save(output, json({ schemaVersion: 1, repository, pr, base: base.sourceRevision, head: head.sourceRevision, source, marker, markdown, findingCount: findings.length }))
+    save(output, json({ schemaVersion: 1, repository, pr, base: base.sourceRevision, head: head.sourceRevision, source, marker, markdown, findingCount: findings.length, pendingCount: pending.length, updatedInThisChangeCount: updated.length, groups: { pending, updatedInThisChange: updated } }))
     save(`${output}.diff.json`, json(diff))
     save(`${output}.md`, markdown)
     const summary = value(argv, '--summary')
     if (summary) appendFileSync(summary, markdown)
     process.stdout.write(markdown)
-    return argv.includes('--fail-on-findings') && findings.length > 0 ? 1 : 0
+    return argv.includes('--fail-on-findings') && pending.length > 0 ? 1 : 0
   } catch (error) { process.stderr.write(`${error instanceof Error ? error.message : 'Advisory diff failed'}\n`); return 2 }
 }

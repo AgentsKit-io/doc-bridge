@@ -26,7 +26,7 @@ inputs:
     required: false
     default: 'false'
   fail-on-findings:
-    description: Explicitly fail for advisory reference findings, independently of blocking gates
+    description: Explicitly fail for pending advisory reference findings, independently of blocking gates
     required: false
     default: 'false'
   base-revision:

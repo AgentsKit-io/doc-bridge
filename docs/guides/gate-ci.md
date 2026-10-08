@@ -113,3 +113,7 @@ source worktrees and runtime installs are removed. Local fixture and publisher
 contract tests cannot prove live permissions, fork behavior, retries or comment
 concurrency. See the [Marketplace verification matrix](../MARKETPLACE.md#verification-boundary)
 for the required real PR evidence before release acceptance.
+
+Advisory findings with verified citation-region edits in the same change are
+grouped as `updated-in-this-change` for confirmation, including incomplete edits.
+They remain visible but do not count as pending for `fail-on-findings`.

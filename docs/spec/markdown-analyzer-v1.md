@@ -261,3 +261,27 @@ and retrieval excludes them from ranking signals. Existing inline relations
 retain their metadata and legacy inline evidence when a fence adds another
 evidence line. Same-line evidence deduplication applies only to fence citations. Non-symbol facts use the separate
 64-fact citation cap. Generated regions remain excluded.
+
+## Citation region evidence
+
+Observed Markdown relations optionally include `metadata.citationRegions`, with
+one `{line, hash}` entry per retained citation (at most eight). Hashes bind the
+containing paragraph, heading, table row or fenced block's source slice using
+`sha256NormalizedV1`. Parsing records at most 4096 regions; missing region evidence
+cannot prove a same-change update. Explicit nested example paths disambiguate
+repeated leaf names within the same configuration owner; bare leaves still need
+unique ownership and independent schema context. Analyzer version changes
+invalidate reuse when these semantics change.
+
+TypeScript property signatures are configuration citations only under a heading
+containing exactly one inline-code configuration path. The first interface or
+type-literal declaration in a fence supplies nested property paths under that
+section. Each full path must resolve to a same-package/fixture configuration
+fact; ordinary type signatures without that explicit heading remain excluded.
+This supports declarative schema documentation without treating arbitrary object
+properties as configuration citations.
+
+For these scoped declarative blocks, multiline JSDoc uses explicit closing
+lines as comment boundaries, so illustrative glob text containing a terminator
+sequence does not swallow later property signatures. Line coordinates remain
+bound to the original fence text.

@@ -149,6 +149,77 @@ describe('static configuration facts', () => {
     expect(result.relations.map(relation=>relation.metadata?.factName).sort()).toEqual(['output.enabled','output.format'])
     expect(result.relations.find(relation=>relation.metadata?.factName==='output.format')?.evidence).toHaveLength(1)
   })
+  it('attributes nested changes to explicit paths even with duplicate leaves, and keeps uncovered parent evidence', () => {
+    const root = fixture()
+    const schema = "import { z } from 'zod'; export const ConfigSchema = z.object({settings:z.object({output:z.object({format:z.string().default('json')})}), other:z.object({format:z.string()})});"
+    writeFileSync(join(root, 'config.ts'), schema)
+    writeFileSync(join(root, 'README.md'), '# Configuration\n\nSee `config.ts`; configure `settings.output.format` and `settings.output`.\n```json\n{"settings":{"output":{"format":"json"}}}\n```\n')
+    const base = discoverRepository({root})
+    expect(base.relations.some(item => item.metadata?.factName === 'settings.output.format')).toBe(true)
+    writeFileSync(join(root, 'config.ts'), schema.replace("default('json')", "default('text')"))
+    const result = diffSnapshots(base, discoverRepository({root}), {headRoot:root})
+    expect(result.policy.findings.map(item => item.assertion.key)).toEqual(['settings.output.format'])
+    writeFileSync(join(root, 'README.md'), '# Configuration\n\nSee `config.ts`; configure `settings.output`.\n')
+    writeFileSync(join(root, 'config.ts'), schema)
+    const parentBase = discoverRepository({root})
+    writeFileSync(join(root, 'config.ts'), schema.replace("default('json')", "default('text')"))
+    const parent = diffSnapshots(parentBase, discoverRepository({root}), {headRoot:root})
+    expect(parent.policy.findings).toMatchObject([{assertion:{key:'settings.output'}, priority:'low', changedDescendantPaths:['settings.output.format']}])
+    expect(parent.findings[0]?.evidence.some(item => item.context === 'Changed descendant: settings.output.format')).toBe(true)
+  })
+  it('does not suppress parent ambiguity when its value also changes', () => {
+    const root = fixture()
+    const schema = "import { z } from 'zod'; export const ConfigSchema = z.object({settings:z.object({output:z.object({format:z.string().default('json')})})});"
+    writeFileSync(join(root, 'config.ts'), schema)
+    writeFileSync(join(root, 'README.md'), '# Configuration\n\nUse `settings.output` and `settings.output.format`.\n')
+    const base = discoverRepository({root})
+    writeFileSync(join(root, 'config.ts'), schema.replace("default('json')", "default('text')"))
+    writeFileSync(join(root, 'other.config-schema.ts'), schema)
+    const result = diffSnapshots(base, discoverRepository({root}), {headRoot:root})
+    expect(result.policy.findings).toContainEqual(expect.objectContaining({category:'ambiguous-reference', assertion:{document:'README.md',key:'settings.output'}}))
+  })
+  it('resolves property signatures only beneath explicit configuration section headings', () => {
+    const root = fixture()
+    const schema = readFileSync(join(root, 'config.ts'), 'utf8')
+    const doc = '# Configuration\n\n## `output`\n\n```ts\ntype OutputConfig = {\n  /**\n   * Default: **/*.json\n   */\n  format?: string\n}\n```\n'
+    writeFileSync(join(root, 'README.md'), doc)
+    const base = discoverRepository({root})
+    expect(base.relations.filter(item => item.metadata?.factName === 'output.format')).toHaveLength(1)
+    writeFileSync(join(root, 'config.ts'), schema.replace(".default('json')", ".default('text')"))
+    const result = diffSnapshots(base, discoverRepository({root}), {headRoot:root})
+    expect(result.policy.findings.map(item => item.assertion.key)).toEqual(['output.format'])
+    writeFileSync(join(root, 'README.md'), doc.replace('## `output`', '## Output'))
+    expect(discoverRepository({root}).relations.some(item => item.metadata?.factName === 'output.format')).toBe(false)
+    writeFileSync(join(root, 'README.md'), doc.replace('## `output`', '## `unrelated`'))
+    expect(discoverRepository({root}).relations.some(item => item.metadata?.factName === 'output.format')).toBe(false)
+  })
+  it('marks adequate and incomplete citation-region updates without resolving either, and ignores unrelated edits and relocation', () => {
+    const root = fixture()
+    const schema = readFileSync(join(root, 'config.ts'), 'utf8')
+    const doc = '# Configuration\n\nChoose `output.format` (default json).\n\nOther text.\n'
+    writeFileSync(join(root, 'README.md'), doc)
+    const base = discoverRepository({root})
+    writeFileSync(join(root, 'config.ts'), schema.replace(".default('json')", ".default('text')"))
+    for (const updated of [doc.replace('default json', 'default text'), doc.replace('default json', 'default json, reviewed')]) {
+      writeFileSync(join(root, 'README.md'), updated)
+      const result = diffSnapshots(base, discoverRepository({root}), {headRoot:root})
+      expect(result.groups.pending).toHaveLength(0)
+      expect(result.groups.updatedInThisChange).toMatchObject([{documentationUpdate:'updated-in-this-change', status:'stale-or-unverified'}])
+      expect(result.policy.findings[0]?.documentationUpdate).toBe('updated-in-this-change')
+    }
+    for (const updated of [doc.replace('Other text.', 'Unrelated update.'), '\n\n' + doc]) {
+      writeFileSync(join(root, 'README.md'), updated)
+      const result = diffSnapshots(base, discoverRepository({root}), {headRoot:root})
+      expect(result.groups.pending).toHaveLength(1)
+      expect(result.groups.updatedInThisChange).toHaveLength(0)
+    }
+    for (const relation of base.relations) if (relation.metadata) delete relation.metadata.citationRegions
+    writeFileSync(join(root, 'README.md'), doc.replace('default json', 'default text'))
+    const legacy = diffSnapshots(base, discoverRepository({root}), {headRoot:root})
+    expect(legacy.groups.pending).toHaveLength(1)
+    expect(legacy.groups.updatedInThisChange).toHaveLength(0)
+
+  })
   it('detects a removed dotted key and changed default through real snapshots and head text', () => {
     const root = fixture()
     const base = discoverRepository({root})
