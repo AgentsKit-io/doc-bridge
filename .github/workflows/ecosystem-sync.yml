@@ -1,0 +1,50 @@
+name: Sync ecosystem snapshot
+
+on:
+  schedule:
+    - cron: '17 6 * * *'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: ecosystem-upstream-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          package-manager-cache: false
+      - run: node scripts/check-ecosystem-upstream.mjs --sync
+      - run: node scripts/check-ecosystem-upstream.mjs
+      - name: Open or update the snapshot PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if git diff --quiet -- ecosystem.json ecosystem-claims.json ecosystem-upstream.json; then
+            exit 0
+          fi
+          gh auth setup-git
+          branch=automation/ecosystem-upstream
+          if git ls-remote --exit-code --heads origin "$branch" >/dev/null; then
+            git fetch origin "$branch:refs/remotes/origin/$branch"
+          fi
+          git checkout -b "$branch"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add ecosystem.json ecosystem-claims.json ecosystem-upstream.json
+          git commit -m 'chore: sync ecosystem upstream snapshot'
+          git push --force-with-lease origin "$branch"
+          if [ "$(gh pr list --head "$branch" --base main --state open --json number --jq 'length')" = 0 ]; then
+            gh pr create --head "$branch" --base main --title 'chore: sync ecosystem upstream snapshot' --body 'Refresh both canonical ecosystem files and their immutable commit pin. Verified byte parity against the pinned upstream commit. A maintainer must close and reopen this PR after each update to trigger CI because GITHUB_TOKEN does not trigger PR workflows.'
+          fi

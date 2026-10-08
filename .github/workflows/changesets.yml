@@ -52,6 +52,7 @@ jobs:
       # release gate unsatisfiable rather than safe. Dependabot still reports them.
       - run: pnpm audit --prod --audit-level low
       - run: pnpm typecheck
+      - run: pnpm check:ecosystem-upstream --against-upstream-head
       - run: pnpm test
       - run: pnpm build
       # changesets/action 2.x renamed every script and pull-request input; the 1.x names now fail

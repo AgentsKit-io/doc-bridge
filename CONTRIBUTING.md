@@ -25,6 +25,20 @@ queries. This repository generates `.doc-bridge/index.json` locally and in CI;
 never commit it. CI compares two builds for determinism and checks reproducibility
 and documentation conformance. Consumer repositories may still commit their index.
 
+## Ecosystem snapshot
+
+`pnpm check:ecosystem-upstream` verifies the canonical files against the recorded immutable
+upstream commit, so later upstream merges do not break open PRs. Run
+`pnpm sync:ecosystem-upstream` to copy both files from the current upstream main and update
+the commit pin and SHA-256 digests. `pnpm test:ecosystem-upstream` tests pinned, sync and
+tracking behavior without network access. Release verification uses
+`pnpm check:ecosystem-upstream --against-upstream-head` and rejects stale claims.
+
+The daily/manual ecosystem sync workflow maintains one PR on
+`automation/ecosystem-upstream`. PRs created or updated using `GITHUB_TOKEN` do not trigger
+PR workflows; a maintainer must close and reopen the PR after each update to run CI before
+merging. Enable repository Actions permission to create pull requests for this workflow.
+
 ## Development rules
 
 - Keep Layer 0 deterministic: no LLM/API key required for `init`, `index`, `query`, `list`, gates, or MCP handoff tools.

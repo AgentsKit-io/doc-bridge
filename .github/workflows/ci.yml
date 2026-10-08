@@ -31,6 +31,7 @@ jobs:
       - run: pnpm check:no-legacy-chat-imports
       - run: pnpm check:cross-platform
       - run: pnpm typecheck
+      # Verify the immutable snapshot; upstream main activity cannot invalidate a PR.
       - run: pnpm check:ecosystem-upstream
       - run: pnpm check:marketplace
       - run: pnpm test:marketplace

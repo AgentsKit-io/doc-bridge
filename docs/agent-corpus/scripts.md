@@ -21,7 +21,8 @@ suite because they reach outside the process: a packed tarball, a built docsite,
 already ships `dist` and it no-ops. `sync-version.mjs` propagates one version across `package.json`,
 `action.yml`, and the plugin, MCP and manifest files, so the published surfaces cannot disagree about
 which release they are. `check-ecosystem-upstream.mjs` compares `ecosystem.json` and
-`ecosystem-claims.json` against their upstream digests, failing when this repository has drifted from
+`ecosystem-claims.json` against their pinned upstream commit and digests; `--sync` refreshes both files and the pin,
+and `--against-upstream-head` checks release freshness against main, failing when this repository has drifted from
 the contract it claims to implement.
 
 The `smoke-*.mjs` scripts exercise what is actually shipped — the packed tarball, the docsite builds,
