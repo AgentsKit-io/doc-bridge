@@ -84,6 +84,12 @@ verified citation that still names the removed target produces status `conflict`
 A citation dropped in the head text produces no finding, even if the document
 changed in the same delta. Residual citations still produce findings.
 
+Historical symbol resolution uses the same declaring-owner preference as discovery:
+re-exporting modules do not compete with the module declaring the cited name.
+Forwarding owners are considered only when no declaration was recorded. Removing
+the declaration or its exported name still proves removal through the snapshot
+delta, even when forwarding modules remain.
+
 Without a head root, or if the text is unreadable, exceeds the 1 MB verification
 limit, has drifted from the head snapshot, or parsing is truncated, removal
 candidates have status `stale-or-unverified`. Partial source/workspace discovery

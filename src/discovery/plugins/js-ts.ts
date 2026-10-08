@@ -420,6 +420,7 @@ const dependencyEntries = (manifest: JsonRecord): readonly { readonly name: stri
       kind: 'package',
       name: pkg.name ?? pkg.path,
       path: pkg.path,
+      ...(pkg.manifest.bin !== undefined ? { metadata: { cliBin: pkg.manifest.bin } } : {}),
       provenance: 'observed',
       evidence: [
         {

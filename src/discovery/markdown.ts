@@ -1,3 +1,4 @@
+import { posix } from 'node:path'
 import { toString as mdastToString } from 'mdast-util-to-string'
 import remarkFrontmatter from 'remark-frontmatter'
 import remarkGfm from 'remark-gfm'
@@ -13,6 +14,7 @@ import { createFuzzyCandidateIndex, resolveFuzzyReference, type FuzzyCandidateIn
 import { toPosix } from '../lib/paths.js'
 import type { Evidence, KnowledgeRelation } from '../schemas/knowledge.js'
 import { relationId } from './identity.js'
+import { surfaceFactEntityId } from '../storage/facts.js'
 
 /**
  * The Markdown analyzer.
@@ -29,7 +31,7 @@ import { relationId } from './identity.js'
  * is inferred from a near-match unless the near-match is unambiguous.
  */
 
-export const MARKDOWN_ANALYZER_VERSION = '1.4.1'
+export const MARKDOWN_ANALYZER_VERSION = '1.4.2'
 
 /** Headings deeper than this are structure, not subject matter. */
 const MAX_HEADING_DEPTH = 3
@@ -154,27 +156,70 @@ const processor = unified()
   .use(remarkFrontmatter, ['yaml'])
   .use(remarkGfm)
 
-export type MarkdownCliReference = MarkdownReference & { readonly kind: 'cli-command' | 'cli-flag'; readonly bin?: string }
+export type MarkdownCliReference = MarkdownReference & { readonly kind: 'cli-command' | 'cli-flag'; readonly bin?: string; readonly runner?: boolean; readonly packageRunner?: boolean; readonly command?: string; readonly ownerIds?: readonly string[] }
+
+const cliWords = (value: string) => {
+  const words = value.trim().split(/\s+/)
+  const runner = ['npx', 'pnpm', 'yarn', 'bunx'].includes(words[0] ?? '')
+  const executable = runner ? words.shift() : undefined
+  const packageRunner = executable === 'npx' || executable === 'bunx' || executable === 'pnpm' && ['dlx', 'exec'].includes(words[0] ?? '') || executable === 'yarn' && words[0] === 'dlx'
+  if (executable === 'npx' && ['-y', '--yes'].includes(words[0] ?? '') || executable === 'pnpm' && ['dlx', 'exec'].includes(words[0] ?? '') || executable === 'yarn' && words[0] === 'dlx') words.shift()
+  return { words, runner, packageRunner }
+}
 
 /** Qualified command prefixes and dash-prefixed flags, without evaluating shell syntax. */
 export const cliCommandTokens = (value: string, line: number, shell = false): MarkdownCliReference[] => {
-  const words = value.trim().split(/\s+/)
-  if (!/^[A-Za-z][\w.-]*$/.test(words[0] ?? '')) return []
+  const { words, runner, packageRunner } = cliWords(value)
+  if (!/^(?:@[\w.-]+\/)?[A-Za-z][\w.-]*(?:@[^\s@]+)?$/.test(words[0] ?? '')) return []
   const result: MarkdownCliReference[] = []
   const prefix: string[] = []
   for (const word of words) {
-    if (!/^[A-Za-z][\w.-]*$/.test(word)) break
+    if (prefix.length && !/^[A-Za-z][\w.-]*$/.test(word)) break
     prefix.push(word)
     // A bare word is only a command when it is the first word of a shell line.
-    if (prefix.length >= (shell ? 1 : 2)) result.push({ value: prefix.join(' '), line, kind: 'cli-command', ...(shell ? { bin: words[0]! } : {}) })
+    if (prefix.length >= (shell || runner || words[1]?.startsWith('-') ? 1 : 2)) result.push({ value: prefix.join(' '), line, kind: 'cli-command', bin: words[0]!, ...(runner ? { runner, packageRunner } : {}) })
   }
   return result
 }
-export const cliFlagTokens = (value: string, line: number, bin?: string): MarkdownCliReference[] =>
-  value.split(/\s+/).flatMap(word => {
+export const cliFlagTokens = (value: string, line: number, bin?: string): MarkdownCliReference[] => {
+  const { words, runner, packageRunner } = cliWords(value)
+  const command = cliCommandTokens(value, line, true).at(-1)?.value
+  const context = command ? { bin: words[0]!, command, ...(runner ? { runner, packageRunner } : {}) } : bin ? { bin } : {}
+  return words.flatMap(word => {
     const name = word.split('=')[0]!
-    return /^--?[A-Za-z][\w.-]*$/.test(name) ? [{ value: name, line, kind: 'cli-flag' as const, ...(bin ? { bin } : {}) }] : []
+    return /^--?[A-Za-z][\w.-]*$/.test(name) ? [{ value: name, line, kind: 'cli-flag' as const, ...context }] : []
   })
+}
+
+/** Resolve invocation context once for discovery and historical citation verification. */
+export const cliCitationTokens = (tokens: readonly MarkdownCliReference[], resolution: MarkdownResolution): MarkdownCliReference[] => {
+  const commands = [...(resolution.facts?.values() ?? [])].flat().filter(fact => fact.kind === 'cli-command')
+  const bins = new Set(commands.map(fact => fact.name.split(' ')[0]!))
+  return tokens.flatMap(token => {
+    if (!token.bin) return [token]
+    if (token.packageRunner) {
+      const name = token.bin.replace(/@[^@/]+$/, '')
+      const packages = resolution.cliPackages?.filter(pkg => pkg.name === name) ?? []
+      if (packages.length) {
+        if (packages.length !== 1) return []
+        const declaration = packages[0]!.bin
+        const entries = typeof declaration === 'string' ? [[name.split('/').pop()!, declaration]] : declaration && typeof declaration === 'object' && !Array.isArray(declaration) ? Object.entries(declaration) : []
+        if (!entries.length || entries.some(([alias, entry]) => !/^[\w][\w.-]*$/.test(alias!) || typeof entry !== 'string')) return []
+        const sameExecutable = new Set(entries.map(([, entry]) => posix.normalize(entry as string))).size === 1
+        const aliases = sameExecutable ? entries.map(([alias]) => alias!) : entries.filter(([alias]) => alias === name.split('/').pop()).map(([alias]) => alias!)
+        const canonical = aliases.find(alias => alias === name.split('/').pop()) ?? aliases.sort()[0]
+        return (canonical ? [canonical] : []).flatMap(bin => cliCitationTokens([{ ...token, packageRunner: false, bin, value: token.kind === 'cli-command' ? token.value.replace(token.bin!, bin) : token.value, ...(token.command ? { command: token.command.replace(token.bin!, bin) } : {}) }], resolution))
+      }
+    }
+    if (!token.bin || !bins.has(token.bin)) return []
+    if (token.kind === 'cli-command') return [token]
+    const words = token.command?.split(' ') ?? [token.bin]
+    const owners = new Set(words.map((_, index) => words.slice(0, index + 1).join(' ')).flatMap(name =>
+      (resolution.facts?.get(name) ?? []).filter(fact => fact.kind === 'cli-command').map(fact => surfaceFactEntityId('cli-command', fact.ownerId, fact.name))))
+    const ownerIds = [...new Set((resolution.facts?.get(token.value) ?? []).filter(fact => fact.kind === 'cli-flag' && owners.has(fact.ownerId)).map(fact => fact.ownerId))]
+    return ownerIds.length ? [{ ...token, ownerIds }] : []
+  })
+}
 
 type Positioned = { readonly position?: { readonly start: { readonly line: number } } | undefined }
 
@@ -378,6 +423,7 @@ export type MarkdownResolution = {
   readonly areas?: ReadonlyMap<string, string>
   /** Package name, and short name, to entity id. */
   readonly packages: ReadonlyMap<string, string>
+  readonly cliPackages?: readonly { readonly name: string; readonly bin: unknown }[]
   /** Exported symbol to the entity ids of every module exporting it. */
   readonly symbols: ReadonlyMap<string, readonly string[]>
   readonly facts?: ReadonlyMap<string, readonly MarkdownFact[]>
@@ -491,7 +537,6 @@ export const analyzeMarkdownDocument = (
   documentId: string,
   resolution: MarkdownResolution,
 ): MarkdownAnalysis => {
-  const cliBins = new Set([...(resolution.facts?.values() ?? [])].flatMap(facts => facts.filter(fact => fact.kind === 'cli-command').map(fact => fact.name.split(' ')[0]!)))
   const cap = resolution.relationCap ?? MARKDOWN_RELATION_CAP
   const configKeys = configKeyCitationIndex(resolution.facts, document.path, resolution.packagePaths)
   const relations = new Map<string, KnowledgeRelation>()
@@ -574,9 +619,8 @@ export const analyzeMarkdownDocument = (
   }
 
   for (const token of document.codeTokens) resolveToken(token.value, token.line)
-  for (const token of document.cliTokens) {
-    if (token.bin && !cliBins.has(token.bin)) continue
-    resolveToken(token.value, token.line, token.kind)
+  for (const token of cliCitationTokens(document.cliTokens, resolution)) {
+    resolveToken(token.value, token.line, token.kind, false, token.ownerIds)
   }
 
   for (const token of document.fenceTokens ?? []) {
@@ -603,7 +647,7 @@ export const analyzeMarkdownDocument = (
    * A legacy symbol resolves only when exactly one module exports it, because sending an
    * agent to one of two possible definitions is worse than sending it nowhere.
    */
-  function resolveToken(raw: string, line: number, cliKind?: 'cli-command' | 'cli-flag' | 'config-key', exactOnly = false): void {
+  function resolveToken(raw: string, line: number, cliKind?: 'cli-command' | 'cli-flag' | 'config-key', exactOnly = false, ownerIds?: readonly string[]): void {
     const value = raw.trim()
     if (!value || value.length > 256) return
 
@@ -616,7 +660,7 @@ export const analyzeMarkdownDocument = (
     }
 
     const signatureSymbol = !cliKind && resolveSignatureSymbol(value, line, exactOnly)
-    const candidates = resolution.facts?.get(value)
+    const candidates = resolution.facts?.get(value)?.filter(fact => !ownerIds || ownerIds.includes(fact.ownerId))
     const facts = [...(candidates ?? []).filter(fact => fact.kind !== 'config-key'), ...(cliKind && cliKind !== 'config-key' ? [] : configKeys.get(value) ?? [])].filter(fact => (cliKind ? fact.kind === cliKind : fact.kind !== 'cli-command' && fact.kind !== 'cli-flag') && (fact.kind !== 'signature' || (!resolution.symbols.has(value) && !resolution.symbols.has(value.split('.')[0]!))))
     if (facts?.length) {
       for (const kind of [...new Set(facts.map(fact => fact.kind))].sort()) {
