@@ -6044,6 +6044,218 @@
           "headCitationLines": []
         }
       }
+    },
+    {
+      "id": "doc-bridge-fixture-same-change-adequate",
+      "repository": "doc-bridge",
+      "origin": "fixture-backed",
+      "mutations": [
+        {
+          "path": "packages/layer1-benchmark/src/config-schema.ts",
+          "from": ".default(10)",
+          "to": ".default(20)",
+          "count": 1
+        },
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "from": "{\"benchLimit\": 10}",
+          "to": "{\"benchLimit\": 20}",
+          "count": 1
+        }
+      ],
+      "scope": {
+        "facts": [
+          {
+            "kind": "config-key",
+            "names": [
+              "benchLimit",
+              "benchmarkbenchLimit"
+            ]
+          }
+        ],
+        "documents": [
+          "packages/layer1-benchmark/docs/api.md"
+        ]
+      },
+      "expected": [
+        {
+          "channel": "fact",
+          "kind": "config-key",
+          "op": "changed",
+          "name": "benchLimit",
+          "path": "packages/layer1-benchmark/src/config-schema.ts"
+        },
+        {
+          "channel": "finding",
+          "kind": "CHANGED_REFERENCE",
+          "name": "benchLimit",
+          "path": "packages/layer1-benchmark/docs/api.md"
+        }
+      ],
+      "citations": [
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "token": "benchLimit",
+          "lines": [
+            6
+          ]
+        }
+      ],
+      "factCause": "Unsupported/incomplete native extraction or different owner projection; inspect raw coverage. No extractor tuning was performed.",
+      "findingCause": "Raw diff diagnoses removed/ambiguous references only; changed values/signatures lack divergence diagnostics, or citation ownership/extraction is unresolved. Raw diff does not apply policy exclusions.",
+      "setup": [
+        {
+          "path": "pnpm-workspace.yaml",
+          "from": "packages:\n  - .\n",
+          "to": "packages:\n  - .\n  - packages/layer1-benchmark\n",
+          "count": 1
+        },
+        {
+          "path": "packages/layer1-benchmark/package.json",
+          "content": "{\"name\": \"@agentskit/layer1-benchmark-fixture\", \"version\": \"1.0.0\", \"bin\": {\"ak-bench-fixture\": \"src/cli.ts\"}}\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/api.ts",
+          "content": "export function benchCited(value: string): string { return value }\nexport function benchUncited(value: string): string { return value }\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/config-schema.ts",
+          "content": "import { z } from 'zod'\nexport const BenchmarkConfigSchema = z.object({ benchLimit: z.number().default(10) })\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/cli.ts",
+          "content": "import { Command } from 'commander'\nconst cli = new Command()\ncli.command('inspect').option('--bench-strict')\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "content": "# Benchmark API\n\nCall `benchCited` with a string.\nDefault configuration for `BenchmarkConfigSchema`:\n```json\n{\"benchLimit\": 10}\n```\nRun `ak-bench-fixture inspect --bench-strict`.\n"
+        }
+      ],
+      "rawExpected": [
+        {
+          "channel": "fact",
+          "kind": "config-key",
+          "op": "changed",
+          "name": "benchLimit",
+          "path": "packages/layer1-benchmark/src/config-schema.ts"
+        },
+        {
+          "channel": "finding",
+          "kind": "CHANGED_REFERENCE",
+          "name": "benchLimit",
+          "path": "packages/layer1-benchmark/docs/api.md"
+        }
+      ],
+      "review": {
+        "reasoning": "The citing configuration block changes alongside its default; the adequate update remains a visible review candidate, separately grouped from pending findings. Text changes do not establish semantic correctness."
+      },
+      "expectedDocumentationUpdate": "updated-in-this-change"
+    },
+    {
+      "id": "doc-bridge-fixture-same-change-incomplete",
+      "repository": "doc-bridge",
+      "origin": "fixture-backed",
+      "mutations": [
+        {
+          "path": "packages/layer1-benchmark/src/config-schema.ts",
+          "from": ".default(10)",
+          "to": ".default(20)",
+          "count": 1
+        },
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "from": "{\"benchLimit\": 10}",
+          "to": "{\"benchLimit\": 10.0}",
+          "count": 1
+        }
+      ],
+      "scope": {
+        "facts": [
+          {
+            "kind": "config-key",
+            "names": [
+              "benchLimit",
+              "benchmarkbenchLimit"
+            ]
+          }
+        ],
+        "documents": [
+          "packages/layer1-benchmark/docs/api.md"
+        ]
+      },
+      "expected": [
+        {
+          "channel": "fact",
+          "kind": "config-key",
+          "op": "changed",
+          "name": "benchLimit",
+          "path": "packages/layer1-benchmark/src/config-schema.ts"
+        },
+        {
+          "channel": "finding",
+          "kind": "CHANGED_REFERENCE",
+          "name": "benchLimit",
+          "path": "packages/layer1-benchmark/docs/api.md"
+        }
+      ],
+      "citations": [
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "token": "benchLimit",
+          "lines": [
+            6
+          ]
+        }
+      ],
+      "factCause": "Unsupported/incomplete native extraction or different owner projection; inspect raw coverage. No extractor tuning was performed.",
+      "findingCause": "Raw diff diagnoses removed/ambiguous references only; changed values/signatures lack divergence diagnostics, or citation ownership/extraction is unresolved. Raw diff does not apply policy exclusions.",
+      "setup": [
+        {
+          "path": "pnpm-workspace.yaml",
+          "from": "packages:\n  - .\n",
+          "to": "packages:\n  - .\n  - packages/layer1-benchmark\n",
+          "count": 1
+        },
+        {
+          "path": "packages/layer1-benchmark/package.json",
+          "content": "{\"name\": \"@agentskit/layer1-benchmark-fixture\", \"version\": \"1.0.0\", \"bin\": {\"ak-bench-fixture\": \"src/cli.ts\"}}\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/api.ts",
+          "content": "export function benchCited(value: string): string { return value }\nexport function benchUncited(value: string): string { return value }\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/config-schema.ts",
+          "content": "import { z } from 'zod'\nexport const BenchmarkConfigSchema = z.object({ benchLimit: z.number().default(10) })\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/src/cli.ts",
+          "content": "import { Command } from 'commander'\nconst cli = new Command()\ncli.command('inspect').option('--bench-strict')\n"
+        },
+        {
+          "path": "packages/layer1-benchmark/docs/api.md",
+          "content": "# Benchmark API\n\nCall `benchCited` with a string.\nDefault configuration for `BenchmarkConfigSchema`:\n```json\n{\"benchLimit\": 10}\n```\nRun `ak-bench-fixture inspect --bench-strict`.\n"
+        }
+      ],
+      "rawExpected": [
+        {
+          "channel": "fact",
+          "kind": "config-key",
+          "op": "changed",
+          "name": "benchLimit",
+          "path": "packages/layer1-benchmark/src/config-schema.ts"
+        },
+        {
+          "channel": "finding",
+          "kind": "CHANGED_REFERENCE",
+          "name": "benchLimit",
+          "path": "packages/layer1-benchmark/docs/api.md"
+        }
+      ],
+      "review": {
+        "reasoning": "Only the numeric spelling changes in the citing configuration block while its documented default remains 10 after the code default becomes 20. The incomplete edit remains a visible review candidate, separately grouped from pending findings; text changes do not establish semantic correctness."
+      },
+      "expectedDocumentationUpdate": "updated-in-this-change"
     }
   ],
   "suiteVersion": 2

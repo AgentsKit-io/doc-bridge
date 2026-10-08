@@ -152,6 +152,9 @@ export const DiagnosticSchema = z
     evidence: z.array(EvidenceSchema).max(64),
     entityIds: z.array(boundedString(256)).max(64).optional(),
     relationIds: z.array(boundedString(256)).max(64).optional(),
+    documentationUpdate: z.literal('updated-in-this-change').optional(),
+    priority: z.literal('low').optional(),
+    changedDescendantPaths: z.array(z.string().min(1).max(512)).max(64).optional(),
     remediation: z.string().max(2_048).optional(),
   })
   .strict()

@@ -160,8 +160,9 @@ export const analyzeAdvisory = async env => {
     }, env.DOC_BRIDGE_CLI_PATH)
     const artifact = validateAdvisory(JSON.parse(readFileSync(report, 'utf8')), env)
     if (env.GITHUB_STEP_SUMMARY) appendFileSync(env.GITHUB_STEP_SUMMARY, artifact.markdown)
-    console.log(annotation(`Advisory findings: ${artifact.findingCount}. The full report is in the job summary.`))
-    if (boolean(env.DOC_BRIDGE_FAIL_ON_FINDINGS) && artifact.findingCount > 0) exit = 1
+    const pending = artifact.pendingCount ?? artifact.findingCount
+    console.log(annotation(`Advisory pending findings: ${pending}; updated-in-this-change: ${artifact.updatedInThisChangeCount ?? 0}. The full report is in the job summary.`))
+    if (boolean(env.DOC_BRIDGE_FAIL_ON_FINDINGS) && pending > 0) exit = 1
     output('status', 'analyzed', env)
   } catch (error) {
     output('status', 'unavailable', env)
@@ -179,6 +180,7 @@ export const validateAdvisory = (data, env) => {
   const marker = `<!-- doc-bridge:advisory:v1:${repository}:${pr} -->`
   const binding = `<!-- doc-bridge:revisions:${base}:${head}:${source} -->`
   if (!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/u.test(repository ?? '') || repository.length > 256 || !Number.isSafeInteger(pr) || pr < 1 || data?.schemaVersion !== 1 || data.repository !== repository || data.pr !== pr || data.base !== base || data.head !== head || data.source !== source || data.marker !== marker || typeof data.markdown !== 'string' || Buffer.byteLength(data.markdown) > 60000 || !data.markdown.startsWith(`${marker}\n${binding}\n`) || !Number.isSafeInteger(data.findingCount) || data.findingCount < 0) throw new Error('Advisory artifact binding/size invalid')
+  if ((data.pendingCount !== undefined || data.updatedInThisChangeCount !== undefined) && (!Number.isSafeInteger(data.pendingCount) || data.pendingCount < 0 || !Number.isSafeInteger(data.updatedInThisChangeCount) || data.updatedInThisChangeCount < 0 || data.pendingCount + data.updatedInThisChangeCount !== data.findingCount)) throw new Error('Advisory review counts invalid')
   // Publisher accepts generated Markdown only, never raw HTML, mentions or workflow commands.
   const content = data.markdown.slice(marker.length + binding.length + 2)
   if (/<|>|@[A-Za-z0-9]|::(?:error|warning|notice|add-mask|set-output)/iu.test(content)) throw new Error('Unsafe advisory content')

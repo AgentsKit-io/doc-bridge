@@ -303,6 +303,30 @@ test('advisory unavailability names the exhausted capture limit', async () => fi
   assert.match(readFileSync(env.GITHUB_STEP_SUMMARY, 'utf8'), /Advisory unavailable \(base object [0-9a-f]+\): .*Repository scan exceeded the 1 file limit/u)
 }))
 
+test('real Action separates edited citations from pending findings without accepting the update', async () => fixture(async ({ directory, repo, env }) => {
+  rmSync(join(repo, 'docs/guide@team.md'))
+  put(repo, 'src/api.ts', 'export function changed(value: string): void {}\n')
+  put(repo, 'docs/guide.md', '# Guide\n\nCall `changed` with a string.\n')
+  env.DOC_BRIDGE_BASE_REVISION = await commit(repo)
+  put(repo, 'src/api.ts', 'export function changed(value: string, enabled: boolean): void {}\n')
+  put(repo, 'docs/guide.md', '# Guide\n\nCall `changed` with a string and enabled flag.\n')
+  env.DOC_BRIDGE_HEAD_REVISION = await commit(repo)
+  env.DOC_BRIDGE_FAIL_ON_FINDINGS = 'true'
+  assert.equal(await analyzeAdvisory(env), 0)
+  const path = reportPath(env)
+  const data = JSON.parse(readFileSync(path, 'utf8'))
+  assert.equal(data.findingCount, 1)
+  assert.equal(data.pendingCount, 0)
+  assert.throws(() => validateAdvisory({ ...data, pendingCount: -1 }, env), /review counts invalid/u)
+  assert.throws(() => validateAdvisory({ ...data, updatedInThisChangeCount: 0 }, env), /review counts invalid/u)
+  assert.equal(data.updatedInThisChangeCount, 1)
+  assert.equal(data.groups.updatedInThisChange[0].status, 'stale-or-unverified')
+  assert.match(data.markdown, /### Pending[\s\S]*### Updated in this change/u)
+  assert.match(readFileSync(env.GITHUB_STEP_SUMMARY, 'utf8'), /Pending: 0; updated-in-this-change: 1/u)
+  const output = join(directory, 'updated-advisory.json')
+  await command(process.execPath, [cli, 'diff', '--advisory', '--base', resolve(path, '../base.json'), '--head', resolve(path, '../head.json'), '--root', repo, '--repository', env.GITHUB_REPOSITORY, '--pr', env.DOC_BRIDGE_PR_NUMBER, '--output', output, '--fail-on-findings'])
+}))
+
 test('real Action Markdown lists changed references and summarizes default policy with a raw CLI opt-out', async () => fixture(async ({ directory, repo, env }) => {
   rmSync(join(repo, 'docs/guide@team.md'))
   put(repo, 'src/api.ts', 'export function removed(): void {}\nexport function changed(value: string): void {}\n')

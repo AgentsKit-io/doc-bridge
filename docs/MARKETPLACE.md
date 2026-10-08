@@ -18,7 +18,7 @@ artifact. Blocking gates and advisory delivery have independent results.
 | `gate` | configured gates | Caller-selected blocking gate; selecting a different gate does not hide reported index drift. |
 | `advisory` | `false` | Opt into exact base/head Layer-1 analysis. |
 | `comment` | `false` | Separate opt-in publisher; otherwise retain summary and annotations. |
-| `fail-on-findings` | `false` | Explicitly block on advisory reference findings; delivery failure never clears or changes gates. |
+| `fail-on-findings` | `false` | Explicitly block on pending advisory reference findings; delivery failure never clears or changes gates. |
 | `base-revision` | PR base SHA | Exact commit already present locally; no branch names or implicit fetch. |
 | `head-revision` | PR head SHA, otherwise event SHA | Exact commit already present locally. |
 | `pr-number` | event PR number | Repository/PR/revision binding for the advisory. |
@@ -184,3 +184,7 @@ results. These live GitHub flows remain **unverified** by local contract tests.
 - [Gate and CI guide](./guides/gate-ci.md)
 - [Getting started](./getting-started.md)
 - [CLI](./spec/cli.md)
+
+Citation regions edited in the same change remain visible as
+`updated-in-this-change`, grouped separately in comments, summaries and JSON.
+They require confirmation and do not count as pending for `fail-on-findings`.

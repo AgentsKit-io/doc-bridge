@@ -10,6 +10,9 @@ export const FindingV1Schema = z.object({
   confidence: z.number().min(0).max(1), severity: z.lazy(() => DiagnosticSeveritySchema),
   entities: z.array(text(256)).max(64), evidence: z.array(z.lazy(() => EvidenceSchema)).min(1).max(64),
   routing: z.enum(['proposed', 'excluded', 'routed-to-L2', 'pending-version']),
+  documentationUpdate: z.literal('updated-in-this-change').optional(),
+  priority: z.literal('low').optional(),
+  changedDescendantPaths: z.array(z.string().min(1).max(512)).max(64).optional(),
   generator: text(512).optional(), coverage: z.array(z.lazy(() => CoverageSchema)).max(32),
   provenance: z.object({ repository: text(512), revision: text(128), configurationHash: hash }).strict(),
 }).strict()

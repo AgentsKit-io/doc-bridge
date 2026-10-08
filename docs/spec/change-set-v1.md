@@ -250,3 +250,35 @@ uncertainty. Correcting the head document to remove the old citation suppresses
 that reference finding. Head citations moved into generated regions remain
 visible to finding policy and are excluded with their generator; discovery still
 skips generated regions. These changes add no snapshot/index/handoff fields.
+
+## Nested configuration attribution and same-change updates
+
+For each document and configuration owner, changed nested keys are attributed to
+cited descendants before their containing keys. A containing citation is omitted
+when cited descendants explain all changed leaf paths. Otherwise it remains a
+lower-priority candidate (`priority: low`) with up to 64 sorted
+`changedDescendantPaths` and bounded `Changed descendant: <path>` evidence.
+Added and removed descendants participate in that evidence. Dot boundaries and
+owner identity are required; a textual name prefix alone is not containment.
+Other current surface facts have no declared containment relation: signatures,
+symbols, packages and CLI facts retain their existing attribution. File/module
+impact is separate from fact-value attribution.
+
+Diagnostics and FindingV1 records optionally carry
+`documentationUpdate: updated-in-this-change`. This requires verified head text
+and differing base/head citation-region hashes. A region is the containing
+Markdown paragraph, heading, table row or fenced block, hashed from its exact
+parsed source slice with `sha256NormalizedV1`; line movement and unrelated edits
+do not mark a citation updated. Multiple citation regions require complete bounded hashes and at least one
+head region hash absent from the base set; dropping a duplicate citation alone
+does not mark the surviving region updated. Bounded region metadata is optional on relations; legacy snapshots or
+unavailable/truncated evidence remain pending. This marker proves only editing,
+not an adequate correction: both adequate and incomplete updates remain visible
+with the original epistemic status and independent routing.
+
+The diff adds `groups: {pending, updatedInThisChange}` for included diagnostics;
+`findings` retains both groups. Action comments, summaries and JSON expose the
+groups and their counts separately. `--fail-on-findings` counts pending reference
+findings only. These optional fields are part of the 2.0 producer contract:
+new readers accept legacy records, while old strict readers must upgrade before
+consuming marked records. DocBridgeIndexV1 and AgentHandoffV1 shapes are unchanged.

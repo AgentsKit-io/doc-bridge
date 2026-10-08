@@ -193,6 +193,7 @@ const genericFindings = (base: DiscoverySnapshotV1, head: DiscoverySnapshotV1, c
   const byId = new Map(oldFacts.map(fact => [fact.id, fact]))
   const newFacts = referenceFacts(head)
   const documents = new Map<string, ReturnType<typeof parseMarkdownDocument> | undefined>()
+  const currentRelations = new Map<string, KnowledgeRelation[] | undefined>()
   const after = new Map(head.entities.map(entity => [entity.id, entity]))
   const before = new Map(base.entities.map(entity => [entity.id, entity]))
   const changed = new Map(changes.filter(change => change.op === 'changed' && SurfaceFactKindSchema.safeParse(change.kind).success && change.before?.valueHash && change.after?.valueHash && change.before.valueHash !== change.after.valueHash).map(change => [change.before!.id, change]))
@@ -223,6 +224,21 @@ const genericFindings = (base: DiscoverySnapshotV1, head: DiscoverySnapshotV1, c
       : baseCandidates.size === 1 && candidates.length > 1
     const valueChange = changed.get(fact.id)
     if (!removed.has(fact.id) && !ambiguous && !valueChange) continue
+    let changedDescendantPaths: string[] = []
+    if (valueChange && !ambiguous && fact.kind === 'config-key') {
+      const descendants = changes.filter(change => change.kind === 'config-key' &&
+        (change.before ?? change.after)?.ownerId === fact.ownerId &&
+        (change.before ?? change.after)!.name!.startsWith(`${fact.name}.`))
+      const leaves = descendants.filter(change => !descendants.some(child =>
+        (child.before ?? child.after)!.name!.startsWith(`${(change.before ?? change.after)!.name}.`)))
+      if (!currentRelations.has(doc.id)) currentRelations.set(doc.id, text === undefined ? undefined : citationsFromText(doc, base, text, cliResolution))
+      const cited = (currentRelations.get(doc.id) ?? base.relations).filter(item => item.from === doc.id && item.to === fact.ownerId &&
+        item.metadata?.factKind === 'config-key' && item.metadata?.confidence !== 'fuzzy' && base.relations.some(prior => prior.id === item.id))
+      changedDescendantPaths = leaves.map(change => (change.before ?? change.after)!.name!).filter(path =>
+        !cited.some(item => item.metadata!.factName !== fact.name &&
+          (item.metadata!.factName === path || path.startsWith(`${item.metadata!.factName}.`)))).sort()
+      if (leaves.length && !changedDescendantPaths.length) continue
+    }
     const cli = fact.kind === 'cli-command' || fact.kind === 'cli-flag'
     const citations = cli ? parsed && cliCitationTokens(parsed.cliTokens, cliResolution).filter(token => token.kind === fact.kind && (!token.ownerIds || token.ownerIds.includes(fact.ownerId))) : parsed && [...parsed.codeTokens, ...(parsed.fenceTokens ?? []).filter(token => !token.configOnly || fact.kind === 'config-key')]
     const configMatches = parsed && fact.kind === 'config-key' ? configKeyCitationIndex(cliResolution.facts, doc.path, cliResolution.packagePaths, parsed, cliResolution.symbols) : undefined
@@ -233,6 +249,8 @@ const genericFindings = (base: DiscoverySnapshotV1, head: DiscoverySnapshotV1, c
     const code = ambiguous ? 'AMBIGUOUS_REFERENCE' : valueChange ? 'CHANGED_REFERENCE' : 'BROKEN_REFERENCE'
     const status = ambiguous ? 'unresolved' : !valueChange && parsed && extractionComplete(base, head, fact.kind, fact.evidence) ? 'conflict' : 'stale-or-unverified'
     const evidence: Evidence[] = uniqueEvidence([
+      ...changedDescendantPaths.flatMap(path => changes.filter(change => change.kind === 'config-key' && (change.before ?? change.after)?.ownerId === fact.ownerId && (change.before ?? change.after)?.name === path)
+        .flatMap(change => [...(change.before?.evidence ?? []), ...(change.after?.evidence ?? [])].map(item => ({ ...item, context: `Changed descendant: ${path}` })))),
       ...relation.evidence.map(item => ({ ...item, context: 'Base citation' })),
       ...tokens.slice(0, 8).map(token => ({ source: 'documentation' as const, path: doc.path!, lineStart: token.line, lineEnd: token.line, contentHash: parsed!.contentHash, context: 'Head citation' })),
       ...fact.evidence.map(item => ({ ...item, context: valueChange ? `Base target valueHash: ${valueChange.before!.valueHash}` : 'Base target removed or no longer uniquely resolved' })),
@@ -244,7 +262,7 @@ const genericFindings = (base: DiscoverySnapshotV1, head: DiscoverySnapshotV1, c
       ...(symbol ? { symbol } : { factKind: fact.kind, factName: fact.name }),
       ...(ambiguous ? { candidateModuleIds: candidates } : valueChange ? { changedTargetId: fact.id, beforeValueHash: valueChange.before!.valueHash, afterValueHash: valueChange.after!.valueHash } : { removedTargetId: fact.id }),
     }))
-    findings.set(ambiguous ? id : canonicalJsonV1({ document: doc.id, name: fact.name, removedTargetId: fact.id }), DiagnosticSchema.parse({ id, code, status, severity: 'warn', message: valueChange ? `${doc.path} cites ${fact.name}, whose ${fact.kind} value changed (${valueChange.before!.valueHash} to ${valueChange.after!.valueHash}); review is required.` : `${doc.path} cites ${fact.name}, which ${ambiguous ? 'is no longer uniquely resolved' : 'is recorded as removed in the snapshot delta'}.`, evidence, entityIds: [doc.id, before.get(fact.ownerId)!.id], relationIds: [relation.id] }))
+    findings.set(ambiguous ? id : canonicalJsonV1({ document: doc.id, name: fact.name, removedTargetId: fact.id }), DiagnosticSchema.parse({ id, code, status, ...(changedDescendantPaths.length ? { priority: 'low', changedDescendantPaths: changedDescendantPaths.slice(0, 64) } : {}), severity: 'warn', message: valueChange ? `${doc.path} cites ${fact.name}, whose ${fact.kind} value changed (${valueChange.before!.valueHash} to ${valueChange.after!.valueHash}); review is required.` : `${doc.path} cites ${fact.name}, which ${ambiguous ? 'is no longer uniquely resolved' : 'is recorded as removed in the snapshot delta'}.`, evidence, entityIds: [doc.id, before.get(fact.ownerId)!.id], relationIds: [relation.id] }))
   }
   return [...findings.values()]
 }
@@ -372,6 +390,19 @@ const diffWithDocuments = (base: DiscoverySnapshotV1, head: DiscoverySnapshotV1,
   const packageOwners = head.entities.filter(entity => entity.kind === 'package' && entity.path && entity.metadata?.factCodecVersion === 1).sort((a, b) => b.path!.length - a.path!.length || a.id.localeCompare(b.id))
   const ownerPurls = new Map<string, string | undefined>()
   const raw = [...findings.values(), ...genericFindings(base, head, changes, texts)].sort((a, b) => a.id.localeCompare(b.id))
+  for (const diagnostic of raw) {
+    const relation = relationsById.get(diagnostic.relationIds![0]!)!
+    const doc = after.get(relation.from)!
+    const content = texts.get(doc.id)
+    if (content === undefined || hashOf(before.get(doc.id)!) === hashOf(doc)) continue
+    if (!citations.has(doc.id)) citations.set(doc.id, citationsFromText(doc, base, content, resolution))
+    const citation = citations.get(doc.id)?.find(item => item.to === relation.to && item.kind === relation.kind &&
+      item.metadata?.symbol === relation.metadata?.symbol && item.metadata?.factName === relation.metadata?.factName && item.metadata?.factKind === relation.metadata?.factKind)
+    const hashes = (item: KnowledgeRelation) => Array.isArray(item.metadata?.citationRegions)
+      ? item.metadata.citationRegions.map(region => region?.hash).filter((hash): hash is string => typeof hash === 'string').sort() : []
+    const oldHashes = hashes(relation), newHashes = citation ? hashes(citation) : []
+    if (oldHashes.length === relation.evidence.length && newHashes.length === citation?.evidence.length && oldHashes.length && newHashes.length && newHashes.some(hash => !oldHashes.includes(hash))) diagnostic.documentationUpdate = 'updated-in-this-change'
+  }
   const policyFindings = raw.map(diagnostic => {
     const doc = after.get(diagnostic.entityIds![0]!)!
     const relation = relationsById.get(diagnostic.relationIds![0]!)!
@@ -417,6 +448,8 @@ const diffWithDocuments = (base: DiscoverySnapshotV1, head: DiscoverySnapshotV1,
   const counts = { proposed: 0, excluded: 0, 'routed-to-L2': 0, 'pending-version': 0, generator: 0 }
   for (const finding of policyFindings) { counts[finding.routing]++; if (finding.generator) counts.generator++ }
   const included = new Set(policyFindings.filter(finding => options.policy === false || !['excluded', 'pending-version'].includes(finding.routing)).map(finding => finding.id))
-  return { changeSet, impact: changeImpact(base, head, changes), findings: raw.filter(finding => included.has(finding.id)), policy: { enabled: options.policy !== false, findings: policyFindings, counts } }
+  const visible = raw.filter(finding => included.has(finding.id))
+  const groups = { pending: visible.filter(finding => !finding.documentationUpdate), updatedInThisChange: visible.filter(finding => finding.documentationUpdate) }
+  return { changeSet, impact: changeImpact(base, head, changes), findings: visible, groups, policy: { enabled: options.policy !== false, findings: policyFindings, counts } }
 
 }

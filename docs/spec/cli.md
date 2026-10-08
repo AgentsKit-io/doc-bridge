@@ -266,7 +266,10 @@ summarizes historical/generated/version exclusions as counts; complete records
 remain in the diff artifact. Nothing proposes edits or approves findings.
 
 `--summary <file>` appends that same advisory Markdown to a caller-provided summary.
-`--fail-on-findings` returns 1 for reference findings; otherwise findings return 0.
+Pending and `updated-in-this-change` findings are grouped separately in comments,
+summaries and JSON (`groups`, `pendingCount`, `updatedInThisChangeCount`);
+`findingCount` remains the total visible count. An edited region still needs review.
+`--fail-on-findings` returns 1 for pending reference findings; otherwise findings return 0.
 Invalid inputs, unavailable reads or invalid artifacts return 2. Action-level
 analysis unavailability is separately reported with an explanation and does not
 change blocking results; publisher errors also fall back without changing gates.

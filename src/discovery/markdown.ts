@@ -31,7 +31,7 @@ import { surfaceFactEntityId } from '../storage/facts.js'
  * is inferred from a near-match unless the near-match is unambiguous.
  */
 
-export const MARKDOWN_ANALYZER_VERSION = '1.4.3'
+export const MARKDOWN_ANALYZER_VERSION = '1.5.0'
 
 /** Headings deeper than this are structure, not subject matter. */
 const MAX_HEADING_DEPTH = 3
@@ -93,6 +93,7 @@ export type MarkdownDocumentV1 = {
   readonly frontmatter: MarkdownFrontmatter
   readonly generatedRegions: readonly MarkdownGeneratedRegion[]
   readonly contentHash: string
+  readonly citationRegions?: readonly { lineStart: number; lineEnd: number; hash: string }[]
   /** Links outside generated regions. */
   readonly links: readonly MarkdownReference[]
   /** Inline code tokens outside generated regions. */
@@ -136,7 +137,7 @@ function objectConfigReferences(source: ts.SourceFile): (MarkdownReference & { c
 }
 
 /** Parse code examples without treating keys, strings or member names as API references. */
-function fenceReferences(value: string, language: string): (MarkdownReference & { configOnly?: boolean })[] {
+function fenceReferences(value: string, language: string, configSection?: string): (MarkdownReference & { configOnly?: boolean })[] {
   if (['json', 'jsonc', 'yaml', 'yml', 'toml'].includes(language)) {
     const references: (MarkdownReference & { configOnly?: boolean })[] = value.split(/\r?\n/).flatMap((text, line) =>
       [...text.matchAll(/(?<![\w$.-])[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)+(?![\w$.-])/g)]
@@ -208,6 +209,22 @@ function fenceReferences(value: string, language: string): (MarkdownReference & 
   }
   walk(source)
   references.push(...objectConfigReferences(source))
+  if (configSection) {
+    // Illustrative JSDoc may contain glob text with */ inside it; closing lines still bound the comment.
+    const signatureSource = ts.createSourceFile('section.ts', value.replace(/^[ \t]*\/\*\*[ \t]*\r?\n[\s\S]*?^[ \t]*\*\//gm, comment => comment.replace(/[^\r\n]/g, ' ')), ts.ScriptTarget.Latest, true)
+    const declaration = signatureSource.statements.find(node => ts.isInterfaceDeclaration(node) || ts.isTypeAliasDeclaration(node) && ts.isTypeLiteralNode(node.type))
+    const members = declaration && (ts.isInterfaceDeclaration(declaration) ? declaration.members : ts.isTypeAliasDeclaration(declaration) && ts.isTypeLiteralNode(declaration.type) ? declaration.type.members : undefined)
+    const collect = (members: ts.NodeArray<ts.TypeElement>, prefix: string, depth = 0): void => {
+      if (depth > 32) return
+      for (const member of members) {
+        if (!ts.isPropertySignature(member) || !member.type || !member.name || !(ts.isIdentifier(member.name) || ts.isStringLiteral(member.name))) continue
+        const path = `${prefix}.${member.name.text}`
+        references.push({ value: path, line: signatureSource.getLineAndCharacterOfPosition(member.name.getStart(signatureSource)).line, configOnly: true })
+        if (ts.isTypeLiteralNode(member.type)) collect(member.type.members, path, depth + 1)
+      }
+    }
+    if (members) collect(members, configSection)
+  }
   return references
 }
 
@@ -383,6 +400,12 @@ export const parseMarkdownDocument = (path: string, content: string): MarkdownDo
   const normalized = content.replace(/^\uFEFF/, '')
   const tree = processor.parse(normalized) as Root
   const totalLines = normalized.split(/\r?\n/).length
+  const citationRegions: { lineStart: number; lineEnd: number; hash: string }[] = []
+  visit(tree, node => {
+    if (!['paragraph', 'code', 'heading', 'tableRow'].includes(node.type) || !node.position || citationRegions.length >= 4096) return
+    const { start, end } = node.position
+    citationRegions.push({ lineStart: start.line, lineEnd: end.line, hash: sha256NormalizedV1(normalized.slice(start.offset, end.offset)) })
+  })
 
   const frontmatterNode = tree.children.find((child): child is RootContent & { type: 'yaml'; value: string } => child.type === 'yaml')
   const regions = generatedRegions(tree, totalLines)
@@ -395,12 +418,15 @@ export const parseMarkdownDocument = (path: string, content: string): MarkdownDo
   const cliTokens: MarkdownCliReference[] = []
   let title: string | undefined
   let summary: string | undefined
+  let configSection: string | undefined
 
   visit(tree, (node, _index, parent) => {
     if (node.type === 'yaml') return
     const line = lineOf(node as { position?: { start: { line: number } } })
 
     if (node.type === 'heading') {
+      const section = node.children.filter(child => child.type === 'inlineCode')
+      configSection = section.length === 1 && section[0]?.type === 'inlineCode' && /^[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*$/.test(section[0].value) ? section[0].value : undefined
       const text = mdastToString(node).trim()
       if (!text) return
       if (!title && node.depth === 1) title = text.slice(0, MAX_TITLE_LENGTH)
@@ -424,7 +450,7 @@ export const parseMarkdownDocument = (path: string, content: string): MarkdownDo
     }
 
     if (node.type === 'code') {
-      for (const token of fenceReferences(node.value, node.lang ?? '')) {
+      for (const token of fenceReferences(node.value, node.lang ?? '', configSection)) {
         const citationLine = line + token.line + 1
         if (withinGenerated(citationLine, regions)) continue
         if (fenceTokens.length >= 4096) { fenceTokensTruncated = true; break }
@@ -463,7 +489,7 @@ export const parseMarkdownDocument = (path: string, content: string): MarkdownDo
     wordCount,
     frontmatter,
     generatedRegions: regions,
-    contentHash: markdownContentHash(normalized),
+    contentHash: markdownContentHash(normalized), citationRegions,
     links,
     codeTokens, cliTokens, fenceTokens, fenceTokensTruncated,
     ...(frontmatterNode
@@ -559,7 +585,7 @@ export const configKeyCitationIndex = (facts: ReadonlyMap<string, readonly Markd
       !ownerFacts.some(child => child.ownerId === fact.ownerId && child.name.startsWith(`${fact.name}.`)) &&
       (!token.configRoots || token.configRoots.every(key => index.get(key)?.some(root => root.ownerId === fact.ownerId)) || token.configRoots.length === 1 && token.configPath === token.value) &&
       (!token.configPath?.includes('.') || token.configPath === fact.name))
-    const unique = matches.filter(fact => ownerFacts.filter(other => other.ownerId === fact.ownerId && other.name.split('.').at(-1) === token.value).length === 1)
+    const unique = matches.filter(fact => ownerFacts.filter(other => other.ownerId === fact.ownerId && other.name.split('.').at(-1) === token.value && (!token.configPath?.includes('.') || other.name === token.configPath)).length === 1)
     if (unique.length) result.set(configCitationKey(token), unique)
   }
   return result
@@ -642,11 +668,13 @@ export const analyzeMarkdownDocument = (
   const add = (kind: string, to: string, line: number, confidence?: 'fuzzy', symbol?: string, fact?: MarkdownFact, codeFence = false): void => {
     if (to === documentId) return
     const id = relationId(documentId, kind, to, fact ? `${fact.kind}:${fact.name}` : symbol)
+    const region = document.citationRegions?.find(item => item.lineStart <= line && item.lineEnd >= line)
+    const citationRegion = region ? { line, hash: region.hash } : undefined
     const existing = relations.get(id)
     if (existing) {
       // One relation, every place the document says it — evidence accumulates, the edge does not.
       if (existing.evidence.length < 8 && (!codeFence || !existing.evidence.some(item => item.lineStart === line))) {
-        relations.set(id, { ...existing, evidence: [...existing.evidence, documentEvidence(document.path, line)] })
+        relations.set(id, { ...existing, evidence: [...existing.evidence, documentEvidence(document.path, line)], ...(citationRegion ? { metadata: { ...existing.metadata, citationRegions: [...(Array.isArray(existing.metadata?.citationRegions) ? existing.metadata.citationRegions : []), citationRegion] } } : {}) })
       }
       return
     }
@@ -658,7 +686,7 @@ export const analyzeMarkdownDocument = (
       to,
       provenance: 'observed',
       evidence: [documentEvidence(document.path, line)],
-      ...((fact || symbol || confidence || codeFence) ? { metadata: { ...(fact ? { factKind: fact.kind, factName: fact.name } : symbol ? { symbol } : confidence ? { confidence } : {}), ...(codeFence ? { citationContext: 'code-fence' } : {}) } } : {}),
+      ...((fact || symbol || confidence || codeFence || citationRegion) ? { metadata: { ...(citationRegion ? { citationRegions: [citationRegion] } : {}), ...(fact ? { factKind: fact.kind, factName: fact.name } : symbol ? { symbol } : confidence ? { confidence } : {}), ...(codeFence ? { citationContext: 'code-fence' } : {}) } } : {}),
     })
   }
 
