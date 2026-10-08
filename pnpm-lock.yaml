@@ -31,8 +31,8 @@ importers:
         specifier: '>=0.12.0 <1'
         version: 0.13.3
       '@agentskit/cross-platform':
-        specifier: ^0.1.0
-        version: 0.1.2
+        specifier: ^0.2.1
+        version: 0.2.1
       '@agentskit/harness':
         specifier: 0.22.3
         version: 0.22.3(@types/react@19.3.0)
@@ -41,7 +41,7 @@ importers:
         version: 0.11.0
       '@agentskit/net':
         specifier: ^0.2.0
-        version: 0.2.0
+        version: 0.2.2
       '@agentskit/rag':
         specifier: '>=0.3.0 <1'
         version: 0.4.2
@@ -65,7 +65,7 @@ importers:
         version: 2.1.0(graphology-types@0.24.8)
       ignore:
         specifier: ^7.0.6
-        version: 7.0.10
+        version: 7.0.12
       knap:
         specifier: ~0.6.0
         version: 0.6.0
@@ -264,8 +264,11 @@ packages:
   '@agentskit/core@1.13.0':
     resolution: {integrity: sha512-KgBCpF8232hfGm5ZIzAIEVtjQdLAroGNS2Sd091S0oDr5ouDXvqwk66tVHyVOqezFTulcAyiMKvDVw4Vg89yBA==}
 
-  '@agentskit/cross-platform@0.1.2':
-    resolution: {integrity: sha512-WDj6b8kmJdDPdSSkhQvyfmiYE72ioP4OyaD/L19muK1RH01YkK/woiPggXZmCmqSVQFoSBdHR7awYnQno/YOnw==}
+  '@agentskit/core@1.14.1':
+    resolution: {integrity: sha512-7+zyB5+azISWTCXWIWTs3pQVE9LiKUNQf8GfMV+TWSDSKDkkf7c3xlBCsVFs5QBqUVGBH72TERY+iL2JlqiAdg==}
+
+  '@agentskit/cross-platform@0.2.1':
+    resolution: {integrity: sha512-RXbvF8hgA1X4dMkdkhx1vRy0L4JIx9eST5BZEu+ErGpTaqcAkX4y8eH0QuEmy9CR66yxFc655s0XxAOqdADw4A==}
     engines: {node: '>=20.19'}
     hasBin: true
 
@@ -285,8 +288,8 @@ packages:
   '@agentskit/memory@0.11.0':
     resolution: {integrity: sha512-sTAVVmaHIKLUYH3nFfbjmWwm3zfQ1Ljy1ct4mVhOlrvqfequ+sekrA+dzStX4PrQEtGob3MEy3qZlwwA+oxsqw==}
 
-  '@agentskit/net@0.2.0':
-    resolution: {integrity: sha512-GKagBMg+fUY5QEKTy7wmXVqVjV1xn1J1iuEzDoaU6cJwzupZDHbXdZhFq8YXuuknofPwLyNounPfJ4YNy+4Eug==}
+  '@agentskit/net@0.2.2':
+    resolution: {integrity: sha512-jse659/Z3+iqlz8PN8xzK3zzknBQ7/3b9/C4kcPX0eq6sYdH+QKIxug7cFKxm1meB2kPNmiECClsqhVYwkknvA==}
     engines: {node: '>=20.19'}
 
   '@agentskit/rag@0.4.2':
@@ -3180,8 +3183,8 @@ packages:
     resolution: {integrity: sha512-4fCk79wshMdzMp2rH06qWrJE4iolqLhCUH+OiuIgU++RB0+94NlDL81atO7GX55uUKueo0txHNtvEyI6D7WdMw==}
     engines: {node: '>=0.10.0'}
 
-  ignore@7.0.10:
-    resolution: {integrity: sha512-HpbUakT7xp5miBUywCHf36ZEuAJNklBJDDsGpUIjMzOSmM8ELSfA9Sa/QDPeNeqeoN31u+UTCkL4klCOVvRm4Q==}
+  ignore@7.0.12:
+    resolution: {integrity: sha512-/8UvqAPU9DGTI9k4mxtf49U37Isfwr8Uts96+SBHIkFxPJnHS0Ew4f00sM4Scd8V8EjM0jUNtVDdv1kPdt35lg==}
     engines: {node: '>= 4'}
 
   image-ssim@0.2.0:
@@ -5071,9 +5074,11 @@ snapshots:
 
   '@agentskit/core@1.13.0': {}
 
-  '@agentskit/cross-platform@0.1.2':
+  '@agentskit/core@1.14.1': {}
+
+  '@agentskit/cross-platform@0.2.1':
     dependencies:
-      '@agentskit/core': 1.13.0
+      '@agentskit/core': 1.14.1
       cross-spawn: 7.0.6
       graceful-fs: 4.2.11
       pathe: 2.0.3
@@ -5115,9 +5120,9 @@ snapshots:
     dependencies:
       '@agentskit/core': 1.12.3
 
-  '@agentskit/net@0.2.0':
+  '@agentskit/net@0.2.2':
     dependencies:
-      '@agentskit/core': 1.13.0
+      '@agentskit/core': 1.14.1
       eventsource-parser: 4.1.1
       ipaddr.js: 2.5.0
 
@@ -5151,7 +5156,7 @@ snapshots:
       commander: 13.1.0
       fflate: 0.8.3
       galactus: 1.0.0(supports-color@7.2.0)
-      ignore: 7.0.10
+      ignore: 7.0.12
       node-forge: 1.4.0
       pretty-bytes: 5.6.0
       zod: 3.25.76
@@ -8005,7 +8010,7 @@ snapshots:
     dependencies:
       safer-buffer: 2.1.2
 
-  ignore@7.0.10: {}
+  ignore@7.0.12: {}
 
   image-ssim@0.2.0: {}
 
