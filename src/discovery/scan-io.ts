@@ -6,6 +6,7 @@ import { createScanMap } from './preload.js'
 import { readBoundedText } from '../lib/bounded-text.js'
 import { jsTsManifest } from './plugins/js-ts.js'
 import { safeWalkOptions } from './inputs.js'
+import { obsidianCorpora } from './obsidian.js'
 
 export type ScanIO = {
   readonly readText: (path: string) => string
@@ -16,6 +17,8 @@ export type ScanIO = {
   readonly host: ts.ParseConfigHost & ts.ModuleResolutionHost
   readonly visibilityPolicyHash?: string
   readonly revision?: { readonly value: string; readonly kind: 'git' | 'content' }
+  readonly excludedDocumentation?: readonly string[]
+  readonly excludedDocumentationOmitted?: number
 }
 
 /** Compatibility acquisition is synchronous; extraction and TS hosts share the injected map. */
@@ -23,7 +26,7 @@ export const createLocalScanIO = (root: string, opts: DiscoveryOptions): ScanIO 
   const ceilings = jsTsManifest.resourceLimits
   const maxBytes = Math.min(opts.maxBytes ?? opts.config?.safety?.maxBytes ?? ceilings.maxBytes, ceilings.maxBytes)
   const options = { ...safeWalkOptions(opts.config, { maxFiles: Math.min(ceilings.maxFiles, Math.max(10_000, (opts.maxFiles ?? opts.config?.safety?.maxFiles ?? 10_000) * 3)), maxBytes }), maxTimeMs: Math.min(opts.config?.safety?.maxTimeMs ?? ceilings.maxTimeMs, ceilings.maxTimeMs), maxMemoryMb: Math.min(opts.config?.safety?.maxMemoryMb ?? ceilings.maxMemoryMb, ceilings.maxMemoryMb) }
-  const listing = safeWalkFiles(root, options)
+  const listing = safeWalkFiles(root, { ...options, ...(obsidianCorpora(opts.config).length ? { collectExcludedDocumentation: true } : {}) })
   const files = new Map<string, { text: string; bytes: number }>()
   const directories = new Set([resolve(root)])
   const budget = { used: 0 }
@@ -44,7 +47,7 @@ export const createLocalScanIO = (root: string, opts: DiscoveryOptions): ScanIO 
   }
   const map = createScanMap(root, files, directories, { value: '', kind: 'content' }, !listing.incomplete, listing.reason)
   const { revision: _revision, ...view } = map
-  return { ...view, walk(extensions, limits) {
+  return { ...view, ...(listing.excludedDocumentation ? { excludedDocumentation: listing.excludedDocumentation, excludedDocumentationOmitted: listing.excludedDocumentationOmitted } : {}), walk(extensions, limits) {
     const selected = view.walk(extensions, limits)
     const omitted = [...limited].some(path => extensions.includes(extname(path)))
     const incomplete = selected.incomplete || listing.incomplete || omitted

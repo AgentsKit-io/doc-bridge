@@ -154,6 +154,7 @@ type HumanCorpusConfig = {
 
 type HumanCorpusPluginId =
   | 'plain-markdown'    // docs/**/*.md, frontmatter `package`/`module`/`id`
+  | 'obsidian'          // opt-in vault wikilinks, embeds, aliases and tags
   | 'fumadocs'          // markdown scan with index routes, (group) slugs, pages allowlists
   | 'docusaurus'        // markdown scan with id/slug frontmatter + static sidebars.js
   | 'mkdocs'            // planned
@@ -184,6 +185,10 @@ as the join key. `urlPrefix` takes precedence over `contentDirBasePath`. Point
 executes `next.config.*`, `_meta.*`, themes, or other project code. This
 adapter targets Nextra's content-directory convention; app-router `page.mdx`
 trees are not inferred by this plugin.
+
+The opt-in `obsidian` plugin uses the `plain-markdown` root/include/exclude/URL
+options and adds vault links, aliases and tags. See
+[Obsidian Markdown v1](obsidian-markdown-v1.md) for resolution and diagnostics.
 
 ### Bridge to agent docs
 

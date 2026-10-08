@@ -20,12 +20,15 @@ export type SafeWalkOptions = {
    * addition to `exclude`, so build output never reaches the index. Defaults to true.
    */
   readonly respectIgnore?: boolean
+  readonly collectExcludedDocumentation?: boolean
 }
 
 export type SafeWalkResult = {
   readonly files: readonly string[]
   readonly incomplete: boolean
   readonly reason?: string
+  readonly excludedDocumentation?: readonly string[]
+  readonly excludedDocumentationOmitted?: number
 }
 
 export const containedPath = (root: string, candidate: string): string | undefined => {
@@ -47,6 +50,8 @@ export const safeWalkFiles = (root: string, options: SafeWalkOptions = {}): Safe
   const extensions = options.extensions ?? []
   const excludes = options.exclude ?? DEFAULT_SAFETY_EXCLUDES
   const files: string[] = []
+  const excludedDocumentation: string[] = []
+  let excludedDocumentationOmitted = 0
   let bytes = 0
   let reason: string | undefined
   const started = Date.now()
@@ -61,7 +66,17 @@ export const safeWalkFiles = (root: string, options: SafeWalkOptions = {}): Safe
     for (const name of entries.sort()) {
       const absolute = resolve(directory, name)
       const relativePath = toPosix(relative(projectRoot, absolute))
-      if (matchesExclude(relativePath) || name === '.git') continue
+      if (matchesExclude(relativePath) || name === '.git') {
+        if (options.collectExcludedDocumentation) {
+          let excludedPath: string | undefined
+          if (/\.mdx?$/.test(name)) excludedPath = relativePath
+          else if (/secret|credential/.test(name)) {
+            try { if (lstatSync(absolute).isDirectory()) excludedPath = `${relativePath}/` } catch { /* Unreadable excluded paths stay excluded. */ }
+          }
+          if (excludedPath) { if (excludedDocumentation.length < 32) excludedDocumentation.push(excludedPath); else excludedDocumentationOmitted++ }
+        }
+        continue
+      }
       let stats
       try { stats = lstatSync(absolute) } catch { continue }
       if (stats.isSymbolicLink()) continue
@@ -75,7 +90,7 @@ export const safeWalkFiles = (root: string, options: SafeWalkOptions = {}): Safe
     }
   }
   visit(projectRoot)
-  return { files: files.sort(), incomplete: reason !== undefined, ...(reason ? { reason } : {}) }
+  return { files: files.sort(), incomplete: reason !== undefined, ...(reason ? { reason } : {}), ...(options.collectExcludedDocumentation ? { excludedDocumentation, excludedDocumentationOmitted } : {}) }
 }
 
 /**

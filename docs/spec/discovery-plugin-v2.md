@@ -9,6 +9,10 @@ validationPath: pnpm vitest run tests/discovery-plugin-v2.test.ts tests/analyzer
 
 # Discovery plugin contract v2
 
+The opt-in [vault Markdown stage](obsidian-markdown-v1.md) uses this contract,
+selected by `corpus.human.plugin: 'obsidian'`. It owns documents together with
+ordinary Markdown extraction, avoiding duplicate document owners.
+
 V2 is additive alongside [analyzer v1](analyzer-plugin-v1.md); v1 strict field
 sets, exports and registry behavior are unchanged. No repository discovery,
 indexing, query or diff migration is included. Caller-registered plugins are
