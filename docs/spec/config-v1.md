@@ -1084,3 +1084,14 @@ explicit coverage, even if the head configuration requests them. Advisory source
 capture cannot opt out of this ceiling. Policy routing/version exclusions remain
 not analyzed in this advisory; this limitation does not silently imply validation.
 See [Marketplace](../MARKETPLACE.md) for permissions and the self-CI exception.
+
+## Vault export
+
+`vault.output` selects the generated git-ignored directory (default
+`.doc-bridge/vault`). `vault.humanNotes` names the disjoint committed notes folder
+(default `docs/notes`); discovery remains explicit through
+`corpus.human: { plugin: 'obsidian', options: { root: 'docs/notes' } }`.
+`vault.templates` maps note types (`package`, `area`, `document`, `index`,
+`graph-signals`) to project-relative knap template files. Required identity and
+source-hash frontmatter remains outside template overrides. Paths reject traversal
+and symlinks. See [vault export v1](./vault-export-v1.md) for the full contract.

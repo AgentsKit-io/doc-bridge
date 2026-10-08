@@ -29,6 +29,8 @@
 
 ### Minor Changes
 
+- Add deterministic vault export with source bindings, wikilinks, graph signals, knap templates and manifest-scoped cleanup.
+
 - Prove changed callable compatibility across bounded relative and local workspace imports using retained historical syntax; unresolved external types remain review candidates.
 
 - Classify provably compatible callable changes, suppress additive-only configuration parent findings, and prioritize specific fact citations with a 256-reference cap.
