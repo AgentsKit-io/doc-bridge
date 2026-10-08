@@ -15,6 +15,7 @@ export type { HumanAdapter, HumanDocMap, HumanDocRecord } from './core.js'
 
 const ADAPTERS: readonly HumanAdapter[] = [
   plainMarkdownAdapter,
+  { ...plainMarkdownAdapter, plugin: 'obsidian' },
   fumadocsAdapter,
   docusaurusAdapter,
   vitepressAdapter,

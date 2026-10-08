@@ -4,6 +4,7 @@ export const CONFIG_SCHEMA_VERSION = 1 as const
 
 export const HumanCorpusPluginIdSchema = z.enum([
   'plain-markdown',
+  'obsidian',
   'fumadocs',
   'docusaurus',
   'mkdocs',

@@ -17,6 +17,8 @@ import { toPosix } from '../../lib/paths.js'
 import { resolutionFingerprint, type PriorFile } from '../incremental.js'
 import { MARKDOWN_ANALYZER_VERSION, analyzeMarkdownDocument, markdownPathCandidateIndex, declaredAudience, markdownContentHash, parseMarkdownDocument, type MarkdownDocumentV1, type AmbiguousSymbolReference, type MarkdownFact, type AmbiguousFactReference } from '../markdown.js'
 import { documentClassification } from '../inputs.js'
+import { contentRef } from '../../storage/local.js'
+import { analyzeObsidianDocuments, parseObsidianDocument, obsidianCorpora, obsidianCorpusPath, OBSIDIAN_ANALYZER_VERSION } from '../obsidian.js'
 import type { DiscoverySnapshotV1, Evidence } from '../../schemas/knowledge.js'
 const MAX_MARKDOWN_NOTES = 32
 const relativePath = (root: string, path: string): string => toPosix(relative(root, path)) || '.'
@@ -37,6 +39,8 @@ export const createMarkdownExtraction = (io: ScanIO, adapters: readonly Discover
    * whether a document's references were truncated is part of what the entity has to say.
    */
   const markdownDocuments: MarkdownDocumentV1[] = []
+  const corpora = obsidianCorpora(opts.config)
+  const vaultDocuments: ReturnType<typeof parseObsidianDocument>[] = []
   const documentsByPath = new Map<string, string>()
   const documentFiles = new Map<string, string>()
   const unreadableDocuments: string[] = []
@@ -80,9 +84,9 @@ export const createMarkdownExtraction = (io: ScanIO, adapters: readonly Discover
   })
   const packageUniverse = canonicalJsonV1([...entities.values()].filter(entity => entity.kind === 'package').sort((a,b) => a.id.localeCompare(b.id)).map(entity => entity.metadata))
   const oldPackageUniverse = canonicalJsonV1(opts.previous?.entities.filter(entity => entity.kind === 'package').sort((a,b) => a.id.localeCompare(b.id)).map(entity => entity.metadata) ?? [])
-  const reuseDocumentRelations = Boolean(prior) && prior?.resolution === resolution && packageUniverse === oldPackageUniverse
+  const reuseDocumentRelations = !corpora.length && Boolean(prior) && prior?.resolution === resolution && packageUniverse === oldPackageUniverse
   if (prior && reuseModuleRelations && !reuseDocumentRelations) {
-    ledger.invalidated.push(prior?.resolution !== resolution ? 'the set of documents, areas or exported symbols changed' : 'package version facts changed')
+    ledger.invalidated.push(corpora.length ? 'vault aliases require fresh document resolution' : prior?.resolution !== resolution ? 'the set of documents, areas or exported symbols changed' : 'package version facts changed')
   }
 
   const reusedDocuments = new Map<string, PriorFile>()
@@ -109,6 +113,7 @@ export const createMarkdownExtraction = (io: ScanIO, adapters: readonly Discover
     ledger.parsedFiles.push(path)
     try {
       markdownDocuments.push(parseMarkdownDocument(path, text))
+      if (corpora.some(corpus => obsidianCorpusPath(path, corpus) !== undefined)) vaultDocuments.push(parseObsidianDocument(path, text))
     } catch {
       unreadableDocuments.push(path)
     }
@@ -150,6 +155,19 @@ export const createMarkdownExtraction = (io: ScanIO, adapters: readonly Discover
   const truncatedAmbiguities = new Set<string>()
   const factAmbiguities = new Map<string, readonly AmbiguousFactReference[]>()
   const truncatedFactAmbiguities = new Set<string>()
+  const vaults = corpora.map(corpus => analyzeObsidianDocuments(vaultDocuments, corpus))
+  const vaultDocumentsByPath = new Map(vaultDocuments.map(document => [document.path, document]))
+  for (const vault of vaults) {
+    for (const relation of vault.relations) addRelation(relation)
+    for (const note of vault.notes.slice(0, MAX_MARKDOWN_NOTES)) coverage.push({ analyzer: 'obsidian', analyzerVersion: OBSIDIAN_ANALYZER_VERSION, scope: note.scope, status: 'partial', reason: note.reason, evidence: note.evidence })
+    if (vault.notes.length > MAX_MARKDOWN_NOTES) coverage.push({ analyzer: 'obsidian', analyzerVersion: OBSIDIAN_ANALYZER_VERSION, scope: 'obsidian:diagnostics', status: 'partial', reason: `${vault.notes.length - MAX_MARKDOWN_NOTES} additional unresolved or ambiguous wikilinks omitted.` })
+  }
+  if (corpora.length) {
+    coverage.push({ analyzer: 'obsidian', analyzerVersion: OBSIDIAN_ANALYZER_VERSION, scope: 'markdown', status: 'complete', reason: `Analyzed ${vaultDocuments.length} vault document(s).` })
+    for (const path of io.excludedDocumentation ?? []) if (corpora.some(corpus => obsidianCorpusPath(path, path.endsWith('/') ? { ...corpus, options: { ...corpus.options, include: [] } } : corpus) !== undefined)) coverage.push({ analyzer: 'obsidian', analyzerVersion: OBSIDIAN_ANALYZER_VERSION, scope: 'obsidian:excluded', status: 'partial', reason: path.endsWith('/') ? `EXCLUDED_VAULT_DIRECTORY: ${path}; contained note names were not enumerated.` : `EXCLUDED_VAULT_FILE: ${path}; contents were not read.` })
+    if (io.excludedDocumentationOmitted) coverage.push({ analyzer: 'obsidian', analyzerVersion: OBSIDIAN_ANALYZER_VERSION, scope: 'obsidian:excluded', status: 'partial', reason: `EXCLUDED_VAULT_INVENTORY_TRUNCATED: ${io.excludedDocumentationOmitted} further excluded repository documentation paths were not listed.` })
+    if (io.excludedDocumentation === undefined) coverage.push({ analyzer: 'obsidian', analyzerVersion: OBSIDIAN_ANALYZER_VERSION, scope: 'obsidian:excluded', status: 'not-analyzed', reason: 'EXCLUDED_VAULT_INVENTORY_UNAVAILABLE: the bounded reader does not disclose excluded paths.' })
+  }
   for (const document of markdownDocuments) {
     const analysis = analyzeMarkdownDocument(document, entityId('document', document.path), markdownResolution)
     for (const relation of analysis.relations) addRelation(relation)
@@ -183,6 +201,7 @@ export const createMarkdownExtraction = (io: ScanIO, adapters: readonly Discover
       continue
     }
     const parsed = parsedDocuments.get(path)
+    const vaultDocument = vaultDocumentsByPath.get(path)
     const owner = owners.find(entity => entity.path === '.' || path.startsWith(`${entity.path}/`))
     const targetAdapter: TargetAdapter = { normalizeRange(purl, range) {
       const results = adapters.flatMap(adapter => adapter.normalizeRange ? [adapter.normalizeRange(purl, range)] : [])
@@ -195,6 +214,7 @@ export const createMarkdownExtraction = (io: ScanIO, adapters: readonly Discover
       kind: 'document',
       name: basename(absPath),
       path,
+      ...(vaultDocument?.aliases.length ? { aliases: vaultDocument.aliases } : {}),
       provenance: 'observed',
       evidence: [
         {
@@ -203,6 +223,7 @@ export const createMarkdownExtraction = (io: ScanIO, adapters: readonly Discover
         },
       ],
       metadata: {
+        ...(vaultDocument ? { markdownSyntax: 'obsidian', tags: vaultDocument.tags, ...(vaults.some(vault => vault.assets.has(path)) ? { assetEmbeds: vaults.flatMap(vault => vault.assets.get(path) ?? []) } : {}) } : {}),
         targets,
         classification: (parsed && declaredAudience(parsed.frontmatter)) ?? documentClassification(path),
         ...(parsed?.title ? { title: parsed.title } : {}),
@@ -246,8 +267,8 @@ export const createMarkdownExtraction = (io: ScanIO, adapters: readonly Discover
 })
 
 export const markdownManifest = builtInManifest('markdown', MARKDOWN_ANALYZER_VERSION, DOCUMENT_EXTENSIONS.map(extension => `**/*${extension}`))
-export const createMarkdownPluginV2 = (adapters: readonly DiscoveryPluginV2[] = [createJsTsPluginV2()]): DiscoveryPluginV2 => ({
-  manifest: markdownManifest,
+const createDocumentPluginV2 = (adapters: readonly DiscoveryPluginV2[], obsidian: boolean): DiscoveryPluginV2 => ({
+  manifest: obsidian ? { ...markdownManifest, id: 'obsidian', version: OBSIDIAN_ANALYZER_VERSION } : markdownManifest,
   async discover(input) {
     const { root, opts, io } = await pluginScan(input)
     const graph = extractionGraph(input.resolution.entities, input.resolution.relations)
@@ -287,6 +308,19 @@ export const createMarkdownPluginV2 = (adapters: readonly DiscoveryPluginV2[] = 
       reuseModuleRelations: false, modules: new Map(), modulesByPath, reusedModules: new Set(), areaModules: [], symbolModules,
       areas: [], areasByPath, facts,
     })
-    return extractionOutput(graph, coverage, input)
+    const output = extractionOutput(graph, coverage, input)
+    if (!obsidian) return output
+    // Caller registries require reader-issued hashes; the compatibility stage keeps its documentation codec.
+    const proof = (evidence: Evidence): Evidence => ({ ...evidence, contentHash: contentRef(Buffer.from(io.readText(resolve(root, evidence.path)))).hash })
+    const hashed = { ...output, entities: output.entities.map(entity => ({ ...entity, evidence: entity.evidence.map(proof) })), relations: output.relations.map(relation => ({ ...relation, evidence: relation.evidence.map(proof) })), coverage: output.coverage.map(entry => ({ ...entry, ...(entry.evidence ? { evidence: entry.evidence.map(proof) } : {}) })) }
+    const diagnostics = new Map(hashed.coverage.filter(entry => entry.analyzer === 'obsidian' && /^(?:UNRESOLVED_WIKILINK|AMBIGUOUS_WIKILINK|EXCLUDED_VAULT_)/.test(entry.reason ?? '')).map(entry => {
+      const id = entityId('diagnostic', `${entry.scope}:${entry.reason}`)
+      return [id, { id, code: entry.reason!.split(':')[0]!, status: entry.scope.startsWith('obsidian:excluded') ? 'not-analyzed' as const : 'unresolved' as const, severity: 'warn' as const, message: entry.reason!, evidence: entry.evidence ?? [] }] as const
+    }))
+    return { ...hashed, diagnostics: [...diagnostics.values()] }
   },
 })
+
+/** Owns Markdown documents once, including the configured vault syntax. */
+export const createObsidianPluginV2 = (adapters: readonly DiscoveryPluginV2[] = [createJsTsPluginV2()]): DiscoveryPluginV2 => createDocumentPluginV2(adapters, true)
+export const createMarkdownPluginV2 = (adapters: readonly DiscoveryPluginV2[] = [createJsTsPluginV2()]): DiscoveryPluginV2 => createDocumentPluginV2(adapters, false)

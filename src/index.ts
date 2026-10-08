@@ -1088,7 +1088,7 @@ export { writeStoredWorkflowStep } from './workflow/engine.js'
 /** Built-in source adapters compatible with caller-registered discovery v2. */
 export { createJsTsPluginV2 } from './discovery/plugins/js-ts.js'
 /** Built-in bounded Markdown adapter for discovery v2. */
-export { createMarkdownPluginV2 } from './discovery/plugins/markdown.js'
+export { createMarkdownPluginV2, createObsidianPluginV2 } from './discovery/plugins/markdown.js'
 
 /** Caller-owned immutable service capability ceiling. */
 export { executionContext, withExecutionProfile, type ExecutionProfile, type ExecutionContext } from './execution/profile.js'

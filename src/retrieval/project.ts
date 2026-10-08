@@ -181,6 +181,7 @@ const tagsFor = (kind: RetrievalKind, entity: KnowledgeEntity | undefined, path:
         ? [extname(path).replace('.', '') || undefined, TEST_MODULE_PATTERN.test(path) ? 'test' : undefined, path.split('/').slice(0, -1).pop()]
         : []),
       ...extra,
+      ...(entity?.metadata?.markdownSyntax === 'obsidian' && Array.isArray(entity.metadata.tags) ? entity.metadata.tags.filter((tag): tag is string => typeof tag === 'string') : []),
     ],
     MAX_TAGS,
   )
@@ -315,7 +316,7 @@ export const projectRetrievalIndex = (options: ProjectRetrievalOptions): Retriev
     if (kind === 'document') {
       const raw = options.readDocument?.(entity.path)
       // A body that no longer matches the entity is not this entity's body.
-      if (raw !== undefined && (!hash || sha256NormalizedV1(raw.replace(/^﻿/, '')) === hash)) bodyText = extractSearchBody(raw, DOCUMENT_BODY_LIMIT)
+      if (raw !== undefined && (!hash || sha256NormalizedV1(raw.replace(/^﻿/, '')) === hash || entity.metadata?.markdownSyntax === 'obsidian' && sha256NormalizedV1(raw) === hash)) bodyText = extractSearchBody(raw, DOCUMENT_BODY_LIMIT)
     }
 
     /*

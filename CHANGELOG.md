@@ -25,6 +25,8 @@
 
 ### Minor Changes
 
+- Add opt-in vault Markdown discovery with wikilinks, embeds, aliases, tags and exclusion diagnostics, preserving existing discovery when disabled.
+
 - Resolve exact bounded code-fence citations and extract hand-rolled CLI declarations, using implementation facts over help text with visible usage drift. Verify surviving fence citations in removal and changed-reference findings, including generated-region policy exclusions.
 
 - Add observable caller limits, cancellation, bounded deterministic progress and transient run metrics for injected discovery, partitioned indexing and diff, plus async CLI duration/progress controls that prevent cancelled publication.

@@ -13,7 +13,8 @@ import { toPosix } from '../lib/paths.js'
 import { contentHashForVersionedArtifact, SEMANTIC_HASH_ALGORITHM, sha256NormalizedV1 } from '../index-builder/content-hash.js'
 import { extractionGraph, createReplayRelations } from './plugins/built-in.js'
 import { createJsTsPluginV2, createJsTsExtraction } from './plugins/js-ts.js'
-import { createMarkdownPluginV2, createMarkdownExtraction } from './plugins/markdown.js'
+import { createMarkdownPluginV2, createObsidianPluginV2, createMarkdownExtraction } from './plugins/markdown.js'
+import { obsidianCorpora, OBSIDIAN_ANALYZER_VERSION } from './obsidian.js'
 import { preloadScan } from './preload.js'
 import { createDiscoveryRegistryV2, type DiscoveryPluginV2, type ExtractionV2 } from '../plugins/contract.js'
 import { surfaceFactToEntity, packageFactToEntity } from '../storage/facts.js'
@@ -93,7 +94,7 @@ const artifact = (root: string, config: DocBridgeConfigV1 | undefined, files: re
     sourceRevisionKind: revision.kind,
     configurationHash: configurationHashOf(config),
     pipelineVersion: PIPELINE_VERSION,
-    analyzerVersions: ANALYZER_VERSIONS,
+    analyzerVersions: obsidianCorpora(config).length ? { ...ANALYZER_VERSIONS, obsidian: OBSIDIAN_ANALYZER_VERSION } : ANALYZER_VERSIONS,
     entities: [...entities].sort((a, b) => a.id.localeCompare(b.id)),
     relations: [...relations].sort((a, b) => a.id.localeCompare(b.id)),
     coverage: coverage.map((entry) => ({ ...entry, analyzerVersion: entry.analyzerVersion ?? (ANALYZER_VERSIONS[entry.analyzer] ?? '1.0.0') })),
@@ -295,10 +296,12 @@ export const discoverRepositoryWithRead = async (read: RepositoryReadV1, opts: D
     // The compatibility fast path runs the identical built-in stages as the synchronous facade.
     if (!opts.plugins?.length && !opts.replaceSourcePlugins) return bound(scan({ ...opts, root }))
     const source = createJsTsPluginV2()
-    const documents = createMarkdownPluginV2([source, ...(opts.plugins ?? [])])
+    const markdown = createMarkdownPluginV2([source, ...(opts.plugins ?? [])])
+    // Built-in documentation retains its BOM-normalized evidence codec.
+    const documents = obsidianCorpora(opts.config).length ? { ...markdown, manifest: createObsidianPluginV2().manifest } : markdown
     const registry = createDiscoveryRegistryV2({ builtIns: [
       { plugin: source, analyzerVersions: { 'js-ts': source.manifest.version, ...factAnalyzerVersions() } },
-      { plugin: documents, analyzerVersions: { markdown: documents.manifest.version } },
+      { plugin: documents, analyzerVersions: { markdown: MARKDOWN_ANALYZER_VERSION, obsidian: OBSIDIAN_ANALYZER_VERSION } },
     ] })
     if (!opts.replaceSourcePlugins) registry.register(source)
     registry.register(documents)
@@ -352,7 +355,7 @@ export const discoverRepositoryWithRead = async (read: RepositoryReadV1, opts: D
     const semantic = {
       ...sealed,
       configurationHash: sha256NormalizedV1({ configuration: opts.config ?? {}, replaceSourcePlugins: opts.replaceSourcePlugins ?? false, plugins: configured.map(plugin => plugin.manifest) }),
-      analyzerVersions: { ...(opts.replaceSourcePlugins ? { markdown: documents.manifest.version, graph: GRAPH_ANALYZER_VERSION } : ANALYZER_VERSIONS), ...Object.fromEntries(configured.map(plugin => [plugin.manifest.id, plugin.manifest.version])) },
+      analyzerVersions: { ...(opts.replaceSourcePlugins ? { markdown: MARKDOWN_ANALYZER_VERSION, graph: GRAPH_ANALYZER_VERSION } : ANALYZER_VERSIONS), ...(obsidianCorpora(opts.config).length ? { obsidian: OBSIDIAN_ANALYZER_VERSION } : {}), ...Object.fromEntries(configured.map(plugin => [plugin.manifest.id, plugin.manifest.version])) },
     }
     return bound(DiscoverySnapshotV1Schema.parse({ ...semantic, contentHash: contentHashForVersionedArtifact(semantic) }))
   } catch (error) {
