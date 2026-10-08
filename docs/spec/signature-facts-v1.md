@@ -9,9 +9,10 @@ validationPath: pnpm vitest run tests/signatures.test.ts
 
 # Syntactic signature facts v1
 
-The built-in `js-ts:signature` component, version `1.0.0`, extracts `signature`
-facts from scan-local TypeScript syntax trees. It never creates a type checker or
-program, executes repository code, or infers types. The existing surface codec,
+The built-in `js-ts:signature` component, version `1.1.0`, extracts `signature`
+facts from scan-local TypeScript syntax trees. Extraction never creates a type checker or
+program, executes repository code, or infers types. Diff-time compatibility checks
+use an in-memory TypeScript checker only for changed signature hashes. The existing surface codec,
 module owner IDs, snapshot, index and handoff envelopes remain unchanged.
 
 An exported function or arrow/function-expression binding has its exported name
@@ -52,10 +53,35 @@ module carries `factKind: signature` and `factName` equal to that symbol. No new
 token matching is introduced. Citing a class or type references its aggregate
 signature, including its public member declarations. Exact paths retain
 precedence, ambiguous symbols produce no signature relation, and the existing
-64-relation/eight-location bounds apply. Facts do not become retrieval documents.
+256-fact-relation/eight-location bounds apply. Facts do not become retrieval documents.
 
 The existing generic delta compares value hashes. A retained symbol with changed
 parameters produces a `signature` change with operation `changed`, before/after
 value hashes and documentation review impact. It creates no new finding code and
 no `BROKEN_REFERENCE` for a changed signature. Removal uses the existing removal
 finding flow and completeness rules; incomplete extraction cannot prove a break.
+
+## Compatible callable changes
+
+Callable facts optionally retain `signature`, with codec `typescript-callable-v1`, containing the canonical overload
+projections and reachable module-local interface/type declarations (`types`).
+The entire proof is bounded to 16 KiB; unsupported or oversized proofs are omitted.
+Bodies, imports and inferred types are never retained or executed. Legacy facts
+without a proof remain readable and cannot establish compatibility.
+
+A changed callable is marked `compatibility: compatible` in its ChangeSet when
+all previous calls retain accepting parameters and a return assignable to the
+previous return. Added parameters must be optional or defaulted. Declared
+parameter types are checked contravariantly and returns covariantly under strict
+TypeScript checking. Unchanged syntax/context needs no checker. Existing
+overloads must remain an identical prefix; appended overloads are compatible when they preserve selection for old calls.
+Literal-specialized additions require a return assignable to every prior return,
+because TypeScript can prioritize them even when appended.
+Reordered or shadowing overloads, changed generics/rest parameters, missing types,
+`any`-dependent proofs, unresolved imports and compiler diagnostics cannot prove
+compatibility. The checker reads only retained declarations and installed
+compiler libraries, never repository files or network resources.
+
+These changes remain in the ChangeSet and participate in its semantic hash,
+but produce no `CHANGED_REFERENCE`. Other unproven signature changes remain
+review candidates. Aggregate class/type/member compatibility is not inferred.

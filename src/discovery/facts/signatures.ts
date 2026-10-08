@@ -1,13 +1,13 @@
 import * as ts from 'typescript'
 import { sha256NormalizedV1 } from '../../index-builder/content-hash.js'
-import { surfaceFactEntityId, type SurfaceFact } from '../../storage/facts.js'
+import { surfaceFactEntityId, SignatureProofSchema, type SurfaceFact } from '../../storage/facts.js'
 import type { DiscoverySnapshotV1, Evidence } from '../../schemas/knowledge.js'
 import { isExported } from '../inputs.js'
 import { fileContentHash } from '../incremental.js'
 import type { FactExtractor } from './index.js'
 
 export const SIGNATURE_ANALYZER_ID = 'js-ts:signature' as const
-export const SIGNATURE_ANALYZER_VERSION = '1.0.0'
+export const SIGNATURE_ANALYZER_VERSION = '1.1.0'
 const MAX_FACTS = 4096
 const MAX_SIGNATURE_BYTES = 16_384
 
@@ -134,9 +134,39 @@ export const extractSignatures = (source: ts.SourceFile, ownerId: string, path: 
       else limitations.add('An exported declaration has no static name.')
     }
   }
+  const localTypes = new Map(source.statements.filter(statement => ts.isTypeAliasDeclaration(statement) || ts.isInterfaceDeclaration(statement))
+    .map(statement => [statement.name.text, statement] as const))
+  const proof = (entries: { value: unknown; node: ts.Node }[]): SurfaceFact['signature'] => {
+    if (entries.length !== 1) return undefined
+    const value = entries[0]!.value as { kind?: string; signatures?: unknown[] }
+    if (value.kind !== 'function' || !value.signatures) return undefined
+    const types: Record<string, string> = {}
+    const visit = (node: ts.Node): void => {
+      if ((ts.isTypeReferenceNode(node) && ts.isIdentifier(node.typeName)) || (ts.isExpressionWithTypeArguments(node) && ts.isIdentifier(node.expression))) {
+        const name = ts.isTypeReferenceNode(node) ? node.typeName.getText(source) : node.expression.getText(source), declaration = localTypes.get(name)
+        if (declaration && !(name in types)) {
+          types[name] = tokens(declaration).filter(token => token !== 'export' && token !== 'declare').join(' ')
+          ts.forEachChild(declaration, visit)
+        }
+      }
+      ts.forEachChild(node, visit)
+    }
+    const node = entries[0]!.node
+    // Bodies are never retained; only declared types form the proof context.
+    if (ts.isFunctionDeclaration(node) || ts.isArrowFunction(node) || ts.isFunctionExpression(node)) {
+      for (const parameter of node.parameters) if (parameter.type) visit(parameter.type)
+      if (node.type) visit(node.type)
+      for (const sibling of functions.get(memberName(node) ?? '') ?? []) {
+        for (const parameter of sibling.parameters) if (parameter.type) visit(parameter.type)
+        if (sibling.type) visit(sibling.type)
+      }
+    }
+    const parsed = SignatureProofSchema.safeParse({ codec: 'typescript-callable-v1', overloads: value.signatures, types })
+    return parsed.success ? parsed.data : undefined
+  }
   const facts = [...groups].sort(([a], [b]) => a.localeCompare(b)).map(([name, entries]) => ({ kind: 'signature' as const,
     id: surfaceFactEntityId('signature', ownerId, name), ownerId, name,
-    valueHash: sha256NormalizedV1(entries.map(entry => entry.value)), evidence: entries.slice(0, 8).map(entry => evidence(entry.node)) }))
+    valueHash: sha256NormalizedV1(entries.map(entry => entry.value)), ...((signature => signature ? { signature } : {})(proof(entries))), evidence: entries.slice(0, 8).map(entry => evidence(entry.node)) }))
   return { facts, coverage: [{ analyzer: SIGNATURE_ANALYZER_ID, analyzerVersion: SIGNATURE_ANALYZER_VERSION, scope: 'signatures',
     status: limitations.size ? 'partial' : 'complete', ...(limitations.size ? { reason: [...limitations].sort().join(' ') } : {}), evidence: [evidence(source)] }] }
 }

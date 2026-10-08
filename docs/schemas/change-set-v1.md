@@ -74,3 +74,12 @@ plus generator references (an excluded subset). Main findings remain strict
 KnowledgeDiagnostic records and omit excluded/pending records by default.
 CHANGED_REFERENCE hashes its locator, target and before/after value-hash pair
 and remains stale-or-unverified. `--no-policy` restores the raw main list.
+
+## Signature compatibility annotation
+
+Changes optionally carry `compatibility: compatible`, valid only for operation
+`changed` and kind `signature`. The annotation records a deterministic proof,
+not human approval or a confirmed documentation claim. It participates in the
+ChangeSet content hash; old facts lacking retained callable proof remain readable
+and unclassified. Strict older ChangeSet readers must upgrade before consuming
+this annotation. DocBridgeIndexV1 and AgentHandoffV1 schemas do not change.

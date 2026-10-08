@@ -1,3 +1,4 @@
+import { compatibleSignature } from '../discovery/facts/signature-compatibility.js'
 import { resolveDocumentTargets } from '../discovery/document-targets.js'
 import { classifyDocument } from '../findings/classification.js'
 import { findingFromChangeDiagnostic, routeFinding } from '../findings/contracts.js'
@@ -49,6 +50,7 @@ export const snapshotChanges = (base: SnapshotForChanges, head: SnapshotForChang
     if (!old || !next || asIdentity(old).valueHash !== asIdentity(next).valueHash) changes.push({
       kind: (newFacts.get(id) ?? oldFacts.get(id))?.kind ?? 'package',
       op: !old ? 'added' : !next ? 'removed' : 'changed',
+      ...(old && next && 'kind' in old && 'kind' in next && old.kind === 'signature' && compatibleSignature(old, next) ? { compatibility: 'compatible' as const } : {}),
       ...(old ? { before: asIdentity(old) } : {}), ...(next ? { after: asIdentity(next) } : {}),
     })
   }
@@ -196,7 +198,7 @@ const genericFindings = (base: DiscoverySnapshotV1, head: DiscoverySnapshotV1, c
   const currentRelations = new Map<string, KnowledgeRelation[] | undefined>()
   const after = new Map(head.entities.map(entity => [entity.id, entity]))
   const before = new Map(base.entities.map(entity => [entity.id, entity]))
-  const changed = new Map(changes.filter(change => change.op === 'changed' && SurfaceFactKindSchema.safeParse(change.kind).success && change.before?.valueHash && change.after?.valueHash && change.before.valueHash !== change.after.valueHash).map(change => [change.before!.id, change]))
+  const changed = new Map(changes.filter(change => change.op === 'changed' && change.compatibility !== 'compatible' && SurfaceFactKindSchema.safeParse(change.kind).success && change.before?.valueHash && change.after?.valueHash && change.before.valueHash !== change.after.valueHash).map(change => [change.before!.id, change]))
   const removedExports = new Set(changes.filter(change => change.kind === 'symbol' && ['removed', 'renamed'].includes(change.op)).map(change => canonicalJsonV1([change.before!.ownerId, change.before!.name])))
   const symbolAssertions = new Set(base.relations.filter(relation => DOCUMENT_RELATIONS.has(relation.kind) && typeof relation.metadata?.symbol === 'string').map(relation => canonicalJsonV1([relation.from, relation.to, relation.metadata!.symbol])))
   const removed = new Set(changes.filter(change => change.op === 'removed' || change.op === 'renamed').map(change => change.before!.id))
@@ -229,7 +231,11 @@ const genericFindings = (base: DiscoverySnapshotV1, head: DiscoverySnapshotV1, c
       const descendants = changes.filter(change => change.kind === 'config-key' &&
         (change.before ?? change.after)?.ownerId === fact.ownerId &&
         (change.before ?? change.after)!.name!.startsWith(`${fact.name}.`))
-      const leaves = descendants.filter(change => !descendants.some(child =>
+      const nonAdditive = descendants.filter(change => change.op !== 'added')
+      const current = newFacts.find(item => item.id === fact.id)
+      const unchangedOwnValue = fact.ownValueHash && current && 'ownValueHash' in current && fact.ownValueHash === current.ownValueHash
+      if (descendants.length && !nonAdditive.length && unchangedOwnValue) continue
+      const leaves = nonAdditive.filter(change => !nonAdditive.some(child =>
         (child.before ?? child.after)!.name!.startsWith(`${(change.before ?? change.after)!.name}.`)))
       if (!currentRelations.has(doc.id)) currentRelations.set(doc.id, text === undefined ? undefined : citationsFromText(doc, base, text, cliResolution))
       const cited = (currentRelations.get(doc.id) ?? base.relations).filter(item => item.from === doc.id && item.to === fact.ownerId &&
@@ -237,7 +243,7 @@ const genericFindings = (base: DiscoverySnapshotV1, head: DiscoverySnapshotV1, c
       changedDescendantPaths = leaves.map(change => (change.before ?? change.after)!.name!).filter(path =>
         !cited.some(item => item.metadata!.factName !== fact.name &&
           (item.metadata!.factName === path || path.startsWith(`${item.metadata!.factName}.`)))).sort()
-      if (leaves.length && !changedDescendantPaths.length) continue
+      if (leaves.length && !changedDescendantPaths.length && unchangedOwnValue) continue
     }
     const cli = fact.kind === 'cli-command' || fact.kind === 'cli-flag'
     const citations = cli ? parsed && cliCitationTokens(parsed.cliTokens, cliResolution).filter(token => token.kind === fact.kind && (!token.ownerIds || token.ownerIds.includes(fact.ownerId))) : parsed && [...parsed.codeTokens, ...(parsed.fenceTokens ?? []).filter(token => !token.configOnly || fact.kind === 'config-key')]

@@ -95,3 +95,12 @@ in force.
 Existing open metadata and the surface-fact codec preserve strict
 `DocBridgeIndexV1` and `AgentHandoffV1` envelopes. Facts are not retrieval entries;
 the projection still indexes documents and modules only.
+
+## Parent-local value identity
+
+Config extractor version 1.2.0 adds optional `ownValueHash` to surface facts.
+It uses the existing projection/hash codec with immediate child properties
+excluded; parent optionality, defaults, enum, items and variants remain included.
+Diff can therefore suppress additive-only child changes without hiding a
+simultaneous parent-local modification. Missing local hashes cannot prove that
+only children changed. Value hashes, IDs and index/handoff schemas are unchanged.

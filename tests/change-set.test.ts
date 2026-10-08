@@ -306,3 +306,54 @@ it('does not retain removed fence references when head code uses only keys or te
     expect(scanDiff(root, base).findings).toEqual([])
   }
 })
+
+it.each([
+  ['optional parameter', 'export function run(value: string): string { return value }', 'export function run(value: string, count?: number): string { return value }', true],
+  ['defaulted parameter', 'export function run(value: string): string { return value }', 'export function run(value: string, count: number = 1): string { return value }', true],
+  ['widened parameter', 'export function run(value: string): string { return value }', 'export function run(value: string | number): string { return String(value) }', true],
+  ['narrowed return', 'export function run(): { value: string } { return {value:"x"} }', 'export function run(): { value: string; extra: number } { return {value:"x",extra:1} }', true],
+  ['local named return', 'interface Result { value: string }; export function run(): Result { throw 0 }', 'interface Result { value: string }; interface Extended extends Result { extra: number }; export function run(): Extended { throw 0 }', true],
+  ['local alias parameter', 'export function run(value: { count?: number }): string { throw 0 }', 'type Options = { count?: number }; export function run(value: Options): string { throw 0 }', true],
+  ['appended overload', 'export function run(value: string): string; export function run(value: string): string { return value }', 'export function run(value: string): string; export function run(value: number): number; export function run(value: string | number): string | number { return value }', true],
+  ['required parameter', 'export function run(value: string): string { return value }', 'export function run(value: string, count: number): string { return value }', false],
+  ['narrowed parameter', 'export function run(value: string | number): string { throw 0 }', 'export function run(value: string): string { throw 0 }', false],
+  ['widened return', 'export function run(): string { throw 0 }', 'export function run(): string | number { throw 0 }', false],
+  ['unresolved return', 'export function run(): External { throw 0 }', 'export function run(): OtherExternal { throw 0 }', false],
+  ['unsafe any', 'export function run(): string { throw 0 }', 'export function run(): any { throw 0 }', false],
+  ['appended specialized overload', 'export function run(value: string): string; export function run(value: string): string { return value }', 'export function run(value: string): string; export function run(value: "x"): number; export function run(value: string): string | number { throw 0 }', false],
+  ['safe specialized overload', 'export function run(value: string): string; export function run(value: string): string { return value }', 'export function run(value: string): string; export function run(value: "x"): "x"; export function run(value: string): string { return value }', true],
+  ['shadowing overload', 'export function run(value: string): string; export function run(value: string): string { return value }', 'export function run(value: "x"): number; export function run(value: string): string; export function run(value: string): string | number { throw 0 }', false],
+])('classifies %s through real discovery and diff', (_label, old, next, compatible) => {
+  const {root} = fixture()
+  write(root, 'src/api.ts', old)
+  write(root, 'docs/api.md', 'Use `run`.')
+  const base = discoverRepository({root})
+  write(root, 'src/api.ts', next)
+  const result = scanDiff(root, base)
+  const change = result.changeSet.changes.find(change => change.kind === 'signature' && change.op === 'changed')
+  expect(change).toBeDefined()
+  expect(change?.compatibility).toBe(compatible ? 'compatible' : undefined)
+  expect(result.findings.filter(finding => finding.code === 'CHANGED_REFERENCE').length).toBe(compatible ? 0 : 1)
+  expect(ChangeSetV1Schema.parse(result.changeSet)).toEqual(result.changeSet)
+})
+
+it.each(['added', 'removed', 'changed'])('handles %s configuration children beneath a cited parent', operation => {
+  const {root} = fixture()
+  const source = (keys: string) => `import {z} from 'zod'; export const ConfigSchema = z.object({ settings: z.object({ output: z.object({ ${keys} }) }) });`
+  write(root, 'src/api.ts', source('first: z.string()' + (operation === 'removed' ? ', second: z.number()' : '')))
+  write(root, 'docs/api.md', 'See `src/api.ts`; configure `settings.output`.')
+  const base = discoverRepository({root})
+  write(root, 'src/api.ts', source(operation === 'added' ? 'first: z.string(), second: z.number()' : operation === 'changed' ? 'first: z.number()' : 'first: z.string()'))
+  const result = scanDiff(root, base)
+  expect(result.findings.filter(finding => finding.code === 'CHANGED_REFERENCE').length).toBe(operation === 'added' ? 0 : 1)
+})
+
+it('retains a parent-local modification alongside an added child', () => {
+  const {root} = fixture()
+  const source = (added: boolean) => `import {z} from 'zod'; export const ConfigSchema = z.object({ settings: z.object({ output: z.object({ first: z.string()${added ? ', second: z.number()' : ''} })${added ? '.optional()' : ''} }) });`
+  write(root, 'src/api.ts', source(false))
+  write(root, 'docs/api.md', 'See `src/api.ts`; configure `settings.output`.')
+  const base = discoverRepository({root})
+  write(root, 'src/api.ts', source(true))
+  expect(scanDiff(root, base).findings).toMatchObject([{code:'CHANGED_REFERENCE'}])
+})

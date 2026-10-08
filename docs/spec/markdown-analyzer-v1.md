@@ -136,7 +136,7 @@ additional entries set `metadata.ambiguousFactReferencesTruncated: true`.
 A partial coverage note also records ambiguity. Snapshot, index and handoff
 schemas remain compatible through their existing open metadata records.
 
-Markdown analyzer version `1.2.0` introduces an independent 64-relation fact
+Markdown analyzer version `1.6.0` uses an independent 256-relation fact
 citation cap for every fact kind. Fact citations cannot consume or displace the
 legacy relation cap; legacy relation identities and evidence remain unchanged.
 The v2 plugin parses documents afresh; the synchronous shared fact hook binds
@@ -260,7 +260,7 @@ eight-location bound and ambiguity metadata. Fence-only relations carry
 and retrieval excludes them from ranking signals. Existing inline relations
 retain their metadata and legacy inline evidence when a fence adds another
 evidence line. Same-line evidence deduplication applies only to fence citations. Non-symbol facts use the separate
-64-fact citation cap. Generated regions remain excluded.
+256-fact citation cap. Generated regions remain excluded.
 
 ## Citation region evidence
 
@@ -285,3 +285,13 @@ For these scoped declarative blocks, multiline JSDoc uses explicit closing
 lines as comment boundaries, so illustrative glob text containing a terminator
 sequence does not swallow later property signatures. Line coordinates remain
 bound to the original fence text.
+
+## Fact citation priority and bound
+
+Fact references have a separate cap of 256 unique relations per document.
+Selection ranks dotted fact names by descending depth, then stable relation ID;
+source order does not let broad parent citations displace specific descendants.
+Repeated citations retain up to eight locations. Legacy entity references retain
+their existing separate cap. Exceeding the fact cap sets
+`factReferencesTruncated` and emits explicit partial coverage; truncation never
+means complete analysis. Analyzer version 1.6.0 invalidates prior citation caches.

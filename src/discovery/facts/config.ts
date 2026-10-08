@@ -7,7 +7,7 @@ import { surfaceFactEntityId, type SurfaceFact } from '../../storage/facts.js'
 import type { DiscoverySnapshotV1, Evidence } from '../../schemas/knowledge.js'
 
 export const CONFIG_FACT_ANALYZER_ID = 'js-ts:config-key' as const
-export const CONFIG_FACT_ANALYZER_VERSION = '1.1.0'
+export const CONFIG_FACT_ANALYZER_VERSION = '1.2.0'
 const MAX_KEYS = 4096
 const MAX_DEPTH = 32
 const JSON_SCHEMA_KEYS = new Set(['$schema', '$id', '$anchor', '$comment', '$defs', 'definitions', 'title', 'description', 'examples', 'deprecated', 'readOnly', 'writeOnly', 'type', 'properties', 'required', 'items', 'additionalProperties', 'enum', 'const', 'default', 'format', 'pattern', 'minimum', 'maximum', 'exclusiveMinimum', 'exclusiveMaximum', 'multipleOf', 'minLength', 'maxLength', 'minItems', 'maxItems', 'uniqueItems', 'minProperties', 'maxProperties'])
@@ -248,13 +248,13 @@ export const configFactsFromSource = (source: ts.SourceFile, path: string, owner
   return result
 }
 
-const projection = (shape: Shape): unknown => ({
+const projection = (shape: Shape, includeProperties = true): unknown => ({
   type: shape.type, optional: shape.optional,
   ...('default' in shape ? { default: shape.default } : {}),
   ...(shape.enum ? { enum: [...shape.enum].sort((a, b) => canonicalJsonV1(a).localeCompare(canonicalJsonV1(b))) } : {}),
   ...(shape.items ? { items: projection(shape.items) } : {}),
-  ...(shape.variants ? { variants: shape.variants.map(projection) } : {}),
-  ...(shape.properties ? { properties: Object.fromEntries([...shape.properties].sort(([a], [b]) => a.localeCompare(b)).map(([key, value]) => [key, projection(value)])) } : {}),
+  ...(shape.variants ? { variants: shape.variants.map(value => projection(value)) } : {}),
+  ...(includeProperties && shape.properties ? { properties: Object.fromEntries([...shape.properties].sort(([a], [b]) => a.localeCompare(b)).map(([key, value]) => [key, projection(value)])) } : {}),
 })
 const emit = (roots: readonly { shape: Shape; evidence: Evidence }[], ownerId: string, incomplete: boolean, path: string): Result => {
   const facts = new Map<string, SurfaceFact>()
@@ -264,7 +264,7 @@ const emit = (roots: readonly { shape: Shape; evidence: Evidence }[], ownerId: s
     for (const [key, value] of [...(shape.properties ?? [])].sort(([a], [b]) => a.localeCompare(b))) {
       const name = prefix ? `${prefix}.${key}` : key
       if (!name.length || name.length > 256 || facts.size >= MAX_KEYS) { incomplete = true; continue }
-      const fact: SurfaceFact = { kind: 'config-key', id: surfaceFactEntityId('config-key', ownerId, name), ownerId, name, valueHash: sha256NormalizedV1(projection(value)), evidence: [{ ...evidence, ...value.lines }] }
+      const fact: SurfaceFact = { kind: 'config-key', id: surfaceFactEntityId('config-key', ownerId, name), ownerId, name, valueHash: sha256NormalizedV1(projection(value)), ownValueHash: sha256NormalizedV1(projection(value, false)), evidence: [{ ...evidence, ...value.lines }] }
       const previous = facts.get(name)
       if (conflicting.has(name)) continue
       if (previous && previous.valueHash !== fact.valueHash) { facts.delete(name); conflicting.add(name); incomplete = true; continue }
