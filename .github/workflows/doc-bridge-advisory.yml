@@ -6,7 +6,7 @@ concurrency:
   group: doc-bridge-advisory-${{ github.repository }}-${{ github.event.pull_request.number }}
   cancel-in-progress: false
 jobs:
-  docs:
+  doc-advisory:
     runs-on: ubuntu-latest
     permissions:
       contents: read
