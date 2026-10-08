@@ -86,10 +86,12 @@ const totals = results => {
   return { tp, fp: fp.length, fn: fn.length, precision: tp + fp.length ? tp / (tp + fp.length) : null, coverage: tp + fn.length ? tp / (tp + fn.length) : null }
 }
 const cause = (result, unit, label) => {
+  if (result.review?.mismatch) return result.review.mismatch
+
   if (result.id === 'doc-bridge-default-change' && unit.channel === 'finding') return 'The native documentation uses bin?: string with a default comment. The strict-context matcher deliberately leaves this property signature unresolved: no owned base citation links it to surfaces.cli.bin, despite the extracted default delta. This remains an explicit native limitation.'
-  if (unit.channel === 'finding' && unit.name === 'benchLimit' && result.id.includes('-fixture-')) return 'Fixture-design limit: Set benchLimit to 10 by default has no schema or configuration-owner anchor. Strict owner scoping leaves this bare token unresolved; the frozen fixture is retained and matchers are not loosened to improve its score.'
+  if (!result.review && unit.channel === 'finding' && unit.name === 'benchLimit' && result.id.includes('-fixture-')) return 'Fixture-design limit: Set benchLimit to 10 by default has no schema or configuration-owner anchor. Strict owner scoping leaves this bare token unresolved; the frozen fixture is retained and matchers are not loosened to improve its score.'
   if (result.id === 'doc-bridge-symbol-rename' && unit.channel === 'finding') return 'Historical head-citation revalidation sees the declaration plus two re-export modules as competing defineConfig owners. Base discovery resolved the citation, but this historical resolver emits no matching head edge despite the recorded declaration removal.'
-  if (result.id.startsWith('doc-bridge-fixture-') && ['cli-command', 'cli-flag'].includes(unit.kind) || result.id.startsWith('doc-bridge-fixture-') && unit.channel === 'finding' && (unit.name.startsWith('--') || unit.name.startsWith('ak-bench-fixture'))) return 'The pinned workspace manifest includes only the root package. The added fixture package bin is not an owned workspace CLI, so neither fixture CLI facts nor their documentation relations exist.'
+  if (!result.review && (result.id.startsWith('doc-bridge-fixture-') && ['cli-command', 'cli-flag'].includes(unit.kind) || result.id.startsWith('doc-bridge-fixture-') && unit.channel === 'finding' && (unit.name.startsWith('--') || unit.name.startsWith('ak-bench-fixture')))) return 'The pinned workspace manifest includes only the root package. The added fixture package bin is not an owned workspace CLI, so neither fixture CLI facts nor their documentation relations exist.'
   if (unit.channel === 'finding') {
     if (unit.kind === 'CHANGED_REFERENCE' && !result.citations?.some(item => item.from === `document:${unit.path}` && (item.symbol === unit.name || item.factName === unit.name))) return 'No owned base citation relation for the changed fact; no documentation review candidate can be emitted.'
     if (label === 'fp' && result.id.includes('negative-')) return 'The diagnostic remains included in this scoring mode; inspect the policy sidecar for exclusion or pending-version routing.'
@@ -118,13 +120,14 @@ const cause = (result, unit, label) => {
 }
 export const renderReport = report => {
   const measured = report.results.filter(item => item.status === 'measured')
-  const findingScore = (items, raw = false) => totals(items.map(item => ({ ...item, score: score(item.expected.filter(unit => unit.channel === 'finding'), (raw ? item.rawObserved : item.observed).filter(unit => unit.channel === 'finding')) })))
+  const findingScore = (items, raw = false) => totals(items.map(item => ({ ...item, score: score((raw ? item.rawExpected ?? item.expected : item.expected).filter(unit => unit.channel === 'finding'), (raw ? item.rawObserved : item.observed).filter(unit => unit.channel === 'finding')) })))
   const headline = findingScore(measured.filter(item => item.origin === 'native'))
-  const lines = ['---', 'owner: maintainers', 'lifecycle: active', 'sourceOfTruth: docs/bench/layer1-cases-v1.json', 'validationPath: node scripts/bench-layer1.mjs --self-check', '---', '', '# Layer-1 benchmark results v1', '',
+  const version = report.suiteVersion ?? 1
+  const lines = ['---', 'owner: maintainers', 'lifecycle: active', `sourceOfTruth: docs/bench/layer1-cases-v${version}.json`, 'validationPath: node scripts/bench-layer1.mjs --self-check', '---', '', `# Layer-1 benchmark results v${version}`, '',
     `Native included documentation findings: precision **${percent(headline.precision)}**, coverage **${percent(headline.coverage)}** (TP ${headline.tp}, FP ${headline.fp}, FN ${headline.fn}). Targets: native precision ≥95% ${headline.precision !== null && headline.precision >= 0.95 ? 'met' : 'not met'}; native coverage ≥90% ${headline.coverage !== null && headline.coverage >= 0.9 ? 'met' : 'not met'}.`, '',
     'The headline uses shipped default policy routing. Included means proposed or routed-to-L2; excluded and pending-version candidates are reported separately. Review candidates, including CHANGED_REFERENCE (stale-or-unverified, routed-to-L2), are not confirmed divergences.', '',
-    'Vocabulary alignment: frozen FACT_CHANGE expectations now use the shipped CHANGED_REFERENCE code. All 53 cases, expected locations, operations and tokens remain unchanged. This is contract vocabulary maintenance, not engine tuning.', '',
-    `Engine revision: \`${report.engineRevision}\`. Engine bundle SHA-256: \`${report.engineHash}\`.`, `Frozen case SHA-256: \`${report.caseHash}\`.`, '',
+    version === 1 ? 'Vocabulary alignment: frozen FACT_CHANGE expectations now use the shipped CHANGED_REFERENCE code. All 53 cases, expected locations, operations and tokens remain unchanged. This is contract vocabulary maintenance, not engine tuning.' : 'V2 retains v1 native cases and repairs authored fixture ownership, configuration anchors and raw policy gold. Historical cases compare unmodified public first-parent revisions; their reasoning is recorded in the case file.', '',
+    `Engine revision: \`${report.engineRevision}\`. Engine bundle SHA-256: \`${report.engineHash}\`.`, `Case SHA-256: \`${report.caseHash}\`.`, ...(report.harnessHash ? [`Harness SHA-256: \`${report.harnessHash}\`.`] : []), '',
     'Coverage is recall: TP / (TP + FN). Precision is TP / (TP + FP). Units are distinct (case, channel, kind, operation, token, path); repeated citations in one document count once. Facts measure extraction/change detection separately from documentation findings.', '',
     `Measured cases: ${measured.length}; unavailable: ${report.results.filter(item => item.status === 'unavailable').length}; invalid: ${report.results.filter(item => item.status === 'invalid').length}.`, '',
     '## Policy dispositions in frozen document scopes', '', 'Policy counts use diagnostic identities; scores deduplicate assertion units, so totals can differ.', '', '| Origin | Proposed | Routed to L2 | Excluded | Pending version |', '| --- | ---: | ---: | ---: | ---: |']
@@ -137,9 +140,17 @@ export const renderReport = report => {
     lines.push('', raw ? '## Secondary raw scores (--no-policy equivalent)' : '## Default included scores', '', '| Origin / channel / kind | TP | FP | FN | Precision | Coverage |', '| --- | ---: | ---: | ---: | ---: | ---: |')
     for (const origin of ['native', 'fixture-backed', 'historical']) for (const kind of [...kinds, 'finding-overall', 'fact-overall']) {
       const matches = unit => kind.endsWith('-overall') ? unit.channel === kind.split('-')[0] : `${unit.channel}/${unit.kind}` === kind
-      const selected = measured.filter(item => item.origin === origin).map(item => ({ ...item, score: score(item.expected.filter(matches), (raw ? item.rawObserved : item.observed).filter(matches)) }))
+      const selected = measured.filter(item => item.origin === origin).map(item => ({ ...item, score: score((raw ? item.rawExpected ?? item.expected : item.expected).filter(matches), (raw ? item.rawObserved : item.observed).filter(matches)) }))
       const total = totals(selected)
       if (kind.endsWith('-overall') || total.tp + total.fp + total.fn) lines.push(`| ${origin}: ${kind} | ${total.tp} | ${total.fp} | ${total.fn} | ${percent(total.precision)} | ${percent(total.coverage)} |`)
+    }
+  }
+  if (version === 2) {
+    lines.push('', '## Historical assertion controls', '', '| Label | Cases | Finding TP | FP | FN |', '| --- | ---: | ---: | ---: | ---: |')
+    for (const label of ['positive', 'negative']) {
+      const selected = measured.filter(item => item.origin === 'historical' && item.review?.label === label)
+      const total = findingScore(selected)
+      lines.push(`| ${label} | ${selected.length} | ${total.tp} | ${total.fp} | ${total.fn} |`)
     }
   }
   lines.push('', '## Case results', '', '| Case | Origin | State | Default TP / FP / FN | Raw TP / FP / FN |', '| --- | --- | --- | --- | --- |')
@@ -157,9 +168,9 @@ export const renderReport = report => {
     if (!count) lines.push('None.')
   }
   lines.push('', '## Limits and maintenance', '',
-    'Acquisition fetches exact pinned commits directly, rather than relying on a moving shallow default-branch history. All 53 cases now execute; the earlier preview failures are not reproduced on this pinned corpus and engine bundle. No fixture precondition repair was needed or claimed; fixture mutations remain unchanged. No case or expected location was removed. The runner records concrete mutation/citation/acquisition failures and never publishes subprocess output.', '',
-    `Confirmed historical cases: ${report.historicalCount}. ${report.historyLimit}`, 'Historical recall is not analyzed.', '', report.limits, '',
-    'The two included finding-overall fixture FPs are secondary flag-removal findings missing from command-only gold annotations. They remain scored as FPs; the frozen v1 set is kept for comparability. Raw-only negative-control FPs reflect intentionally disabled exclusions/version routing and are listed individually above. Fixture misses and annotation limits are accepted measurement limits, not reasons to loosen the engine matchers.', '',
+    version === 1 ? 'Acquisition fetches exact pinned commits directly, rather than relying on a moving shallow default-branch history. All 53 cases now execute; the earlier preview failures are not reproduced on this pinned corpus and engine bundle. No fixture precondition repair was needed or claimed; fixture mutations remain unchanged. No case or expected location was removed. The runner records concrete mutation/citation/acquisition failures and never publishes subprocess output.' : 'V1 case bytes are unchanged. V2 adds workspace membership, schema-owner anchors, secondary command-owner flag gold and separate raw expectations for policy-excluded documents. Acquisition and measurement failures remain visible; no engine tuning was performed.', '',
+    `Confirmed historical cases: ${report.historicalCount}. ${report.historyLimit}`, version === 1 ? 'Historical recall is not analyzed.' : 'Historical positives and correctly updated negatives are scored separately from authored and native mutations; purposive sampling does not establish historical prevalence.', '', report.limits, '',
+    version === 1 ? 'The two included finding-overall fixture FPs are secondary flag-removal findings missing from command-only gold annotations. They remain scored as FPs; the frozen v1 set is kept for comparability. Raw-only negative-control FPs reflect intentionally disabled exclusions/version routing and are listed individually above. Fixture misses and annotation limits are accepted measurement limits, not reasons to loosen the engine matchers.' : 'Raw policy-excluded findings have explicit gold and are not mislabeled as engine false positives. Every remaining mismatch above is a measurement limit or follow-up; no engine change is included.', '',
     'No engine tuning was performed. Unavailable or invalid cases are excluded from score denominators, remain visible, and prevent a complete-corpus measurement claim. Scores below target are benchmark failures, not execution failures or release-readiness evidence.', '')
   return lines.join('\n')
 }
@@ -177,6 +188,25 @@ async function main() {
     assert(rendered.includes('| native | 0 | 0 | 1 | 0 |'))
     assert(rendered.includes('| native: finding-overall | 0 | 1 | 0 | 0.00% | n/a |'))
     assert.equal(rendered, renderReport(JSON.parse(JSON.stringify(report))))
+    const v2 = { ...report, suiteVersion: 2, results: report.results.map(item => ({ ...item, rawExpected: [one], rawScore: score([one], [one]) })) }
+    const v2Text = renderReport(v2)
+    assert(v2Text.includes('# Layer-1 benchmark results v2'))
+    assert(v2Text.includes('| native: finding-overall | 1 | 0 | 0 | 100.00% | 100.00% |'))
+    assert(!v2Text.includes('Historical recall is not analyzed.'))
+    const frozen = readFileSync(join(root, 'docs/bench/layer1-cases-v1.json'))
+    assert.equal(hash(frozen), '0264264d3b390b8dc0cbf48b1d721ea336abcf26c51e9dab1bead42543e5ff0f')
+    const suite = JSON.parse(readFileSync(join(root, 'docs/bench/layer1-cases-v2.json'), 'utf8'))
+    const history = suite.cases.filter(item => item.origin === 'historical')
+    assert(history.length >= 20)
+    assert(history.some(item => item.review.label === 'positive'))
+    assert(history.some(item => item.review.label === 'negative'))
+    for (const item of history) {
+      assert.match(item.base, /^[a-f0-9]{40}$/)
+      assert.match(item.head, /^[a-f0-9]{40}$/)
+      assert(!item.setup && !item.mutations, 'Historical cases cannot contain authored edits')
+      assert(item.review.reasoning && item.citations.length)
+    }
+    for (const item of suite.cases.filter(item => item.origin === 'fixture-backed')) assert(Array.isArray(item.rawExpected), 'V2 fixtures require complete raw gold')
     assert.equal(safeFailure(new Error('Git fetch failed (exit 128)')), 'Git fetch failed (exit 128)')
     assert(!safeFailure(new Error('untrusted subprocess output')).includes('untrusted'))
     assert.throws(() => safePath(root, '../escape'))
@@ -194,7 +224,10 @@ async function main() {
     return
   }
   const { discoverRepository, diffSnapshots } = await import('../dist/index.js')
-  const suiteText = readFileSync(join(root, 'docs/bench/layer1-cases-v1.json'), 'utf8')
+  const casesFlag = process.argv.indexOf('--cases')
+  const suitePath = casesFlag < 0 ? 'docs/bench/layer1-cases-v1.json' : process.argv[casesFlag + 1]
+  assert(suitePath, 'Supply --cases path')
+  const suiteText = readFileSync(safePath(root, suitePath), 'utf8')
   const suite = JSON.parse(suiteText)
   assert.equal(suite.schemaVersion, 1)
   assert.equal(new Set(suite.cases.map(item => item.id)).size, suite.cases.length)
@@ -228,7 +261,10 @@ async function main() {
           }
           const base = discoverRepository({ root: checkout })
           assertAcquisition(base)
-          if (item.head) await git(checkout, 'reset', '--hard', item.head)
+          if (item.head) {
+            assert.equal(splitLines(await git(checkout, 'cat-file', '-p', item.head)).find(line => line.startsWith('parent '))?.slice(7), item.base, 'Historical base must be first parent')
+            await git(checkout, 'reset', '--hard', item.head)
+          }
           else apply(checkout, item.mutations)
           const head = discoverRepository({ root: checkout, previous: base })
           assertAcquisition(head)
@@ -240,9 +276,9 @@ async function main() {
           const rawObserved = observations(raw, base, head).filter(inScope)
           const observed = observations(diff, base, head).filter(inScope)
           results.push({ id: item.id, origin: item.origin, status: 'measured', expected: item.expected, observed,
-            score: score(item.expected, observed), rawObserved, rawScore: score(item.expected, rawObserved),
+            score: score(item.expected, observed), rawObserved, rawExpected: item.rawExpected ?? item.expected, rawScore: score(item.rawExpected ?? item.expected, rawObserved),
             policy: diff.policy.findings.filter(finding => !item.scope.documents.length || item.scope.documents.includes(finding.assertion.document)).map(({ id, routing, assertion, coverage }) => ({ id, routing, assertion, coverage })),
-            findingCause: item.findingCause, factCause: item.factCause,
+            findingCause: item.findingCause, factCause: item.factCause, review: item.review,
             targets: [base, head].map(snapshot => snapshot.entities.filter(entity => item.scope.facts.some(target => target.kind === entity.kind && target.names.includes(entity.name))).map(entity => ({ id: entity.id, kind: entity.kind, name: entity.name, owner: entity.metadata?.ownerId, path: entity.evidence[0]?.path }))),
             citations: base.relations.filter(relation => item.scope.documents.includes(base.entities.find(entity => entity.id === relation.from)?.path) && (relation.metadata?.symbol || relation.metadata?.factName)).map(relation => ({ from: relation.from, to: relation.to, symbol: relation.metadata?.symbol, factKind: relation.metadata?.factKind, factName: relation.metadata?.factName })),
             coverage: diff.changeSet.coverage.map(({ analyzer, scope, status, reason }) => ({ analyzer, scope, status, ...(reason ? { reason } : {}) })) })
@@ -253,7 +289,7 @@ async function main() {
       }
     }
   } finally { rmSync(directory, { recursive: true, force: true }) }
-  const report = { schemaVersion: 1, engineRevision: await git(root, 'rev-parse', 'HEAD'), engineHash: hash(readFileSync(join(root, 'dist/index.js'))), caseHash: hash(suiteText),
+  const report = { schemaVersion: 1, suiteVersion: suite.suiteVersion ?? 1, engineRevision: await git(root, 'rev-parse', 'HEAD'), engineHash: hash(readFileSync(join(root, 'dist/index.js'))), harnessHash: hash(readFileSync(fileURLToPath(import.meta.url))), caseHash: hash(suiteText),
     historicalCount: suite.cases.filter(item => item.origin === 'historical').length, historyLimit: suite.history.limit, limits: suite.limits, results }
   const outputFlag = process.argv.indexOf('--output')
   assert(outputFlag >= 0 && process.argv[outputFlag + 1], 'Supply --output outside the checkout for raw results')
