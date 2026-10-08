@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict'
-import { createSymlink, runCommand, splitLines } from '@agentskit/cross-platform'
+import { createSymlink, runCommand, spawnProcess, splitLines } from '@agentskit/cross-platform'
 import { createHash } from 'node:crypto'
 import { lstatSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -66,10 +66,14 @@ const observations = (result, base, head) => {
   }
   return [...new Map(items.map(item => [key(item), item])).values()].sort((a, b) => key(a).localeCompare(key(b)))
 }
+export const assertAcquisition = snapshot => {
+  assert(snapshot.entities.some(entity => entity.kind === 'module'), 'Invalid acquisition: no source modules')
+  assert(!snapshot.coverage.some(entry => entry.scope.startsWith('limits:') && entry.status !== 'complete'), 'Invalid acquisition: repository resource limit reached')
+}
 const safeFailure = error => {
   const message = splitLines(String(error.message))[0]
   // Only benchmark-owned messages contain public relative paths; never publish engine/subprocess output.
-  if (/^(Mutation precondition: |Ground truth citation: |Git (init|remote|fetch|reset|clean|cat-file) failed)/.test(message)) return message
+  if (/^(Invalid acquisition: |Mutation precondition: |Ground truth citation: |Git (init|remote|fetch|reset|clean|cat-file) failed)/.test(message)) return message
   if (error.code === 'ERR_ASSERTION') return 'Assertion failed outside mutation/citation preconditions'
   return `Engine execution failed (${error.name === 'TypeError' ? 'TypeError' : 'error'}); requires investigation`
 }
@@ -82,6 +86,8 @@ const totals = results => {
   return { tp, fp: fp.length, fn: fn.length, precision: tp + fp.length ? tp / (tp + fp.length) : null, coverage: tp + fn.length ? tp / (tp + fn.length) : null }
 }
 const cause = (result, unit, label) => {
+  if (result.id === 'doc-bridge-default-change' && unit.channel === 'finding') return 'The native documentation uses bin?: string with a default comment. The strict-context matcher deliberately leaves this property signature unresolved: no owned base citation links it to surfaces.cli.bin, despite the extracted default delta. This remains an explicit native limitation.'
+  if (unit.channel === 'finding' && unit.name === 'benchLimit' && result.id.includes('-fixture-')) return 'Fixture-design limit: Set benchLimit to 10 by default has no schema or configuration-owner anchor. Strict owner scoping leaves this bare token unresolved; the frozen fixture is retained and matchers are not loosened to improve its score.'
   if (result.id === 'doc-bridge-symbol-rename' && unit.channel === 'finding') return 'Historical head-citation revalidation sees the declaration plus two re-export modules as competing defineConfig owners. Base discovery resolved the citation, but this historical resolver emits no matching head edge despite the recorded declaration removal.'
   if (result.id.startsWith('doc-bridge-fixture-') && ['cli-command', 'cli-flag'].includes(unit.kind) || result.id.startsWith('doc-bridge-fixture-') && unit.channel === 'finding' && (unit.name.startsWith('--') || unit.name.startsWith('ak-bench-fixture'))) return 'The pinned workspace manifest includes only the root package. The added fixture package bin is not an owned workspace CLI, so neither fixture CLI facts nor their documentation relations exist.'
   if (unit.channel === 'finding') {
@@ -115,7 +121,7 @@ export const renderReport = report => {
   const findingScore = (items, raw = false) => totals(items.map(item => ({ ...item, score: score(item.expected.filter(unit => unit.channel === 'finding'), (raw ? item.rawObserved : item.observed).filter(unit => unit.channel === 'finding')) })))
   const headline = findingScore(measured.filter(item => item.origin === 'native'))
   const lines = ['---', 'owner: maintainers', 'lifecycle: active', 'sourceOfTruth: docs/bench/layer1-cases-v1.json', 'validationPath: node scripts/bench-layer1.mjs --self-check', '---', '', '# Layer-1 benchmark results v1', '',
-    `Native included documentation findings: precision **${percent(headline.precision)}**, coverage **${percent(headline.coverage)}** (TP ${headline.tp}, FP ${headline.fp}, FN ${headline.fn}). Targets: precision ≥95%, coverage ≥90%.`, '',
+    `Native included documentation findings: precision **${percent(headline.precision)}**, coverage **${percent(headline.coverage)}** (TP ${headline.tp}, FP ${headline.fp}, FN ${headline.fn}). Targets: native precision ≥95% ${headline.precision !== null && headline.precision >= 0.95 ? 'met' : 'not met'}; native coverage ≥90% ${headline.coverage !== null && headline.coverage >= 0.9 ? 'met' : 'not met'}.`, '',
     'The headline uses shipped default policy routing. Included means proposed or routed-to-L2; excluded and pending-version candidates are reported separately. Review candidates, including CHANGED_REFERENCE (stale-or-unverified, routed-to-L2), are not confirmed divergences.', '',
     'Vocabulary alignment: frozen FACT_CHANGE expectations now use the shipped CHANGED_REFERENCE code. All 53 cases, expected locations, operations and tokens remain unchanged. This is contract vocabulary maintenance, not engine tuning.', '',
     `Engine revision: \`${report.engineRevision}\`. Engine bundle SHA-256: \`${report.engineHash}\`.`, `Frozen case SHA-256: \`${report.caseHash}\`.`, '',
@@ -153,6 +159,7 @@ export const renderReport = report => {
   lines.push('', '## Limits and maintenance', '',
     'Acquisition fetches exact pinned commits directly, rather than relying on a moving shallow default-branch history. All 53 cases now execute; the earlier preview failures are not reproduced on this pinned corpus and engine bundle. No fixture precondition repair was needed or claimed; fixture mutations remain unchanged. No case or expected location was removed. The runner records concrete mutation/citation/acquisition failures and never publishes subprocess output.', '',
     `Confirmed historical cases: ${report.historicalCount}. ${report.historyLimit}`, 'Historical recall is not analyzed.', '', report.limits, '',
+    'The two included finding-overall fixture FPs are secondary flag-removal findings missing from command-only gold annotations. They remain scored as FPs; the frozen v1 set is kept for comparability. Raw-only negative-control FPs reflect intentionally disabled exclusions/version routing and are listed individually above. Fixture misses and annotation limits are accepted measurement limits, not reasons to loosen the engine matchers.', '',
     'No engine tuning was performed. Unavailable or invalid cases are excluded from score denominators, remain visible, and prevent a complete-corpus measurement claim. Scores below target are benchmark failures, not execution failures or release-readiness evidence.', '')
   return lines.join('\n')
 }
@@ -161,6 +168,9 @@ async function main() {
     const one = { channel: 'finding', kind: 'BROKEN_REFERENCE', name: 'sample', path: 'docs/api.md' }
     assert.deepEqual(score([one], [one, one]), { tp: 1, fp: [], fn: [], precision: 1, coverage: 1 })
     assert.equal(score([one], []).coverage, 0)
+    assert.throws(() => assertAcquisition({ entities: [], coverage: [] }), /Invalid acquisition/)
+    assert.throws(() => assertAcquisition({ entities: [{ kind: 'module' }], coverage: [{ scope: 'limits:source', status: 'partial' }] }), /resource limit/)
+    assertAcquisition({ entities: [{ kind: 'module' }], coverage: [] })
     assert.equal(score([], [one]).precision, 0)
     const report = { engineRevision: 'test', engineHash: 'test', caseHash: 'test', historicalCount: 0, historyLimit: 'Not analyzed.', limits: 'Test.', results: [{ id: 'negative', origin: 'native', status: 'measured', expected: [], observed: [], rawObserved: [one], score: score([], []), rawScore: score([], [one]), policy: [{ assertion: { document: one.path, key: one.name }, routing: 'excluded', coverage: [{ reason: 'Historical documentation' }] }] }] }
     const rendered = renderReport(report)
@@ -176,6 +186,11 @@ async function main() {
       assert.throws(() => safePath(directory, 'alias'), /Symlink path denied/)
     } finally { rmSync(directory, { recursive: true, force: true }) }
     console.log('Layer-1 scoring and path checks passed')
+    return
+  }
+  if (!globalThis.gc) {
+    const child = spawnProcess(process.execPath, [...process.execArgv, '--expose-gc', ...process.argv.slice(1)], { stdin: 'inherit', stdout: 'inherit', stderr: 'inherit' })
+    process.exitCode = (await child.exited).code ?? 2
     return
   }
   const { discoverRepository, diffSnapshots } = await import('../dist/index.js')
@@ -201,6 +216,7 @@ async function main() {
       for (const item of suite.cases.filter(item => item.repository === repository.id)) {
         if (unavailableReason) { results.push({ id: item.id, origin: item.origin, status: 'unavailable', reason: `Pinned public checkout unavailable: ${unavailableReason}` }); continue }
         try {
+          globalThis.gc()
           console.error(`Measuring ${item.id}`)
           await git(checkout, 'reset', '--hard', item.base ?? repository.sha)
           await git(checkout, 'clean', '-fdx')
@@ -211,9 +227,11 @@ async function main() {
             for (const line of citation.lines) assert(lines[line - 1]?.includes(citation.token), `Ground truth citation: ${citation.path}:${line}`)
           }
           const base = discoverRepository({ root: checkout })
+          assertAcquisition(base)
           if (item.head) await git(checkout, 'reset', '--hard', item.head)
           else apply(checkout, item.mutations)
           const head = discoverRepository({ root: checkout, previous: base })
+          assertAcquisition(head)
           const diff = diffSnapshots(base, head, { headRoot: checkout, policy: true })
           const raw = diffSnapshots(base, head, { headRoot: checkout, policy: false })
           const inScope = unit => unit.channel === 'finding'
@@ -248,7 +266,10 @@ async function main() {
   const native = results.filter(item => item.origin === 'native')
   const total = totals(native.map(item => item.status === 'measured' ? { ...item, score: score(item.expected.filter(unit => unit.channel === 'finding'), item.observed.filter(unit => unit.channel === 'finding')) } : item))
   console.log(JSON.stringify({ measured: results.filter(item => item.status === 'measured').length, unavailable: results.filter(item => item.status === 'unavailable').length, invalid: results.filter(item => item.status === 'invalid').length, ...total }))
-  if (results.some(item => item.status !== 'measured')) process.exitCode = 2
+  if (results.some(item => item.status !== 'measured')) {
+    console.error('Benchmark failed: unavailable or invalid acquisition/case; inspect reported reasons')
+    process.exitCode = 2
+  }
   else if (total.precision === null || total.coverage === null || total.precision < suite.targets.precision || total.coverage < suite.targets.coverage) process.exitCode = 1
 }
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) await main()

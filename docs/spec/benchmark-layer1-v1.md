@@ -30,7 +30,11 @@ inside task-owned temporary checkouts, and removes those checkouts in `finally`.
 No dependency installation or upstream code execution occurs. Git downloads are
 corpus acquisition; discovery/diff remain deterministic and network-free.
 Download failure produces `unavailable`, not a negative case or a passing result.
-An unavailable or invalid case exits 2. Native finding precision below 95% or
+The runner enables explicit garbage collection in a child process when needed
+and collects between cases without increasing the engine memory ceiling. Empty
+source acquisition or resource-limit coverage invalidates a case before scoring.
+An unavailable or invalid case prints an explicit failure and exits 2. Native
+finding precision below 95% or
 coverage below 90% exits 1; meeting both targets exits 0. Fixture metrics cannot
 rescue a native failure. Git and a built engine are prerequisites.
 

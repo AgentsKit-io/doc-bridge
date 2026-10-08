@@ -45,7 +45,7 @@ The published controlled study with 96 anonymized executions reported a directio
 - **39.75 seconds lower P95 latency**;
 - **87.5% operationally completed executions vs. 75.0%** with repository-only context.
 
-These are historical, separately defined measures: the 99% figure is an estimated context-payload reduction, while the 18.46% figure uses provider-token-equivalent data from 46 paired observations. The bounded adjudicator recorded zero adjudicator-success outcomes in both arms; because that adjudicator is mechanical and does not independently judge semantic correctness, this result is directional and inconclusive. A newer local pilot is intentionally not promoted here while its semantic evaluation and publication review remain incomplete. See the [full methodology and anonymized data](docs/study/README.md).
+These are historical, separately defined measures: the 99% figure is an estimated context-payload reduction, while the 18.46% figure uses provider-token-equivalent data from 46 paired observations. The bounded adjudicator recorded zero adjudicator-success outcomes in both arms; because that adjudicator is mechanical and does not independently judge semantic correctness, this result is directional and inconclusive. A newer local pilot is intentionally not promoted here while its semantic evaluation and publication review remain incomplete. See the [full methodology and anonymized data](docs/study/README.md). The separate [Layer-1 benchmark results](docs/bench/layer1-results-v1.md) measure deterministic documentation findings with native and fixture scores reported separately.
 
 ## Why teams use it
 
