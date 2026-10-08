@@ -1,6 +1,6 @@
 ---
 title: Configuration key facts v1
-description: Extract bounded static configuration keys and resolve dotted Markdown citations.
+description: Extract bounded static configuration keys and resolve context-bound Markdown citations.
 owner: maintainers
 lifecycle: active
 sourceOfTruth: src/discovery/facts/config.ts
@@ -48,6 +48,18 @@ default produces a generic `changed` delta with before/after hashes. Defaults
 are hashed rather than copied into metadata. Documentation default claims remain
 the parity registry's responsibility.
 
+Operational defaults also contribute to this projection when a defaults function
+uses a same-file or imported Zod-inferred type derived from the selected schema
+as its config parameter. A direct object return may assign literals, local constant
+literals, or the matching config path's nullish fallback to known keys. Nested
+object assignments preserve the schema owner and key identity. Caller-config
+spreads are supported; other spreads, dynamic expressions, control flow,
+conflicting assignments and ambiguous roots produce partial coverage without
+invented default values. Source and defaults-module hashes retain scan evidence;
+an assigned key lists its default assignment location first while retaining
+schema ownership.
+No module is imported or executed.
+
 Unresolved references, dynamic defaults, open record/passthrough keys, refinement callbacks, unsupported transformations,
 computed/spread properties, recursion, conflicts and exceeded bounds produce
 explicit partial coverage. Extraction allows 32 nesting steps, 4,096 facts per
@@ -59,12 +71,26 @@ projection.
 ## Citations and compatibility
 
 Inline-code dotted paths match exactly within the same package and test-fixture
-boundary as the source evidence. Bare leaf aliases and undotted top-level names
-produce no config relation, avoiding incidental common-word matches. Exact
-repository paths retain precedence. Relations target the owner with
+boundary as the source evidence. Bare leaf aliases (including top-level keys)
+require example syntax and an independent owner anchor in the same document. Examples are JSON/JSONC/YAML/TOML
+key assignments, JS/TS object literals, or inline code
+immediately labeled “configuration example”. The document must also cite the
+schema file/export or a dotted key of that owner; a leaf must be unique within
+that owner. Multiple eligible owners remain ambiguous. Bare prose, unanchored
+examples, generated anchors and repeated leaves within an owner stay unresolved.
+Bare aliases select terminal schema keys, excluding object parents with known
+descendants. Object examples retain their nested paths, which must match the
+canonical key. All root keys must belong to that schema, or the example must be
+a single-key fragment. This prevents unrelated workflow and index artifacts
+from borrowing a config anchor elsewhere in the document. JSON/JSONC and YAML
+use syntax trees with at most 32 nesting steps; TOML supports flat assignments
+only. TypeScript property
+signatures, arrays of config fragments, and TOML tables remain unresolved. Canonical dotted citations retain their existing behavior.
+Exact repository paths retain precedence. Relations target the owner with
 `metadata.factKind: "config-key"` and canonical dotted `metadata.factName`.
-Existing generic historical verification handles removed keys. Generated
-regions, relation caps and evidence bounds remain in force.
+Historical verification reuses the same context-bound matches for removed keys
+and changed values. Generated regions, relation caps and evidence bounds remain
+in force.
 
 Existing open metadata and the surface-fact codec preserve strict
 `DocBridgeIndexV1` and `AgentHandoffV1` envelopes. Facts are not retrieval entries;

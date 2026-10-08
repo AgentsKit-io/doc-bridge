@@ -121,9 +121,11 @@ Different kinds sharing a token are evaluated in sorted kind order.
 The relation discriminator is `${factKind}:${factName}`; repeated citations
 accumulate at most eight documentation evidence locations.
 
-Configuration facts use an isolated citation index: only dotted paths match,
-and source/document package and fixture boundaries must agree. Bare keys produce
-no config relation. Relations retain canonical dotted `metadata.factName`.
+Configuration facts use an isolated citation index: dotted paths match exactly,
+and source/document package and fixture boundaries must agree. Bare keys require
+config-example syntax, an independent same-owner schema/file or dotted-key anchor,
+and unique leaf ownership. Bare prose stays unresolved. Relations retain canonical
+`metadata.factName`, including top-level keys.
 See [configuration key facts](config-key-facts-v1.md).
 
 Generic ambiguity uses document `metadata.ambiguousFactReferences`, an array of
@@ -243,8 +245,11 @@ tokens per document. Untagged, text, Markdown, diff and other fences are skipped
 JSX tags, type references, and bare value identifiers in assignments/arguments qualify.
 Object keys, ordinary shorthand properties, member property names, strings, template
 text and comments never cite exports. Module import/destructuring specifiers qualify.
-Configuration fences contribute only dotted paths matching extracted configuration
-keys, never exports. Dotted JS/TS member expressions may cite configuration keys only.
+Configuration fences contribute dotted paths and structurally bound bare key
+assignments under the context rules in the configuration-key contract, never
+exports. JS/TS object literals use those same rules for bare config keys; bare
+property signatures remain unresolved.
+Dotted JS/TS member expressions may cite configuration keys only.
 Substrings and
 fuzzy paths never create fence relations. Only extracted names resolve, with
 exactly one owner per kind. Dotted config keys retain package/fixture scoping.

@@ -89,6 +89,56 @@ describe('static configuration facts', () => {
     expect(result.facts.map(fact=>fact.name)).toEqual(expect.arrayContaining(['gates.include','surfaces.cli.defaultFormat','retrieval.params.k1','corpus.agent.root']))
     expect(result.coverage[0]?.status).toBe('partial')
   })
+  it('hashes schema-linked operational defaults through real snapshot deltas and warm reuse', () => {
+    const root = fixture()
+    const schema = join(root, 'config.ts')
+    writeFileSync(schema, readFileSync(schema, 'utf8') + '\nexport type Config = z.infer<typeof ConfigSchema>\n')
+    const defaults = join(root, 'defaults.ts')
+    const body = (value: string) => `import type { Config } from './config.js';
+      const FORMAT = ${value};
+      export function applyConfigDefaults(config: Config): Config {
+        return {...config, output: {...config.output, format: config.output.format ?? FORMAT}};
+      }`
+    writeFileSync(defaults, body("'json'"))
+    const base = discoverRepository({root})
+    writeFileSync(defaults, body("'text'"))
+    const head = discoverRepository({root})
+    expect(discoverRepository({root, previous:base}).contentHash).toBe(head.contentHash)
+    const result = diffSnapshots(base, head, {headRoot:root})
+    expect(result.changeSet.changes).toContainEqual(expect.objectContaining({kind:'config-key', op:'changed', before:expect.objectContaining({name:'output.format'})}))
+    expect(result.findings).toContainEqual(expect.objectContaining({code:'CHANGED_REFERENCE'}))
+    expect(head.entities.find(entity=>entity.kind==='config-key' && entity.name==='output.format')?.evidence).toContainEqual(expect.objectContaining({path:'defaults.ts'}))
+    writeFileSync(defaults, body('getDefault()'))
+    expect(discoverRepository({root}).coverage).toContainEqual(expect.objectContaining({analyzer:'js-ts:config-key',status:'partial'}))
+  })
+  it('attaches same-file defaults without executing the defaults function', () => {
+    const schema = (value: number) => `export const ConfigSchema=z.object({port:z.number()}); export type Config=z.infer<typeof ConfigSchema>; export const applyDefaults=(config:Config)=>({...config,port:config.port ?? ${value}});`
+    expect(hash(schema(42),'port')).not.toBe(hash(schema(43),'port'))
+  })
+  it('does not guess dynamic, conditional, mismatched fallback or unknown-spread defaults', () => {
+    const schema = ts.createSourceFile('config.ts', "import {z} from 'zod'; export const ConfigSchema=z.object({port:z.number()}); export type Config=z.infer<typeof ConfigSchema>;", ts.ScriptTarget.Latest, true)
+    const baseline = configFactsFromSource(schema,'config.ts','module:config.ts').facts[0]!.valueHash
+    for (const body of ['return {port:getDefault()}', 'if (config.port) return {port:1}; return {port:2}', 'return {port:other.port ?? 42}', 'return {port:42,...other}']) {
+      const defaults = ts.createSourceFile('defaults.ts', `import type {Config} from './config.js'; export function applyDefaults(config:Config) {${body}}`, ts.ScriptTarget.Latest, true)
+      const result = configFactsFromSource(schema,'config.ts','module:config.ts',new Map([['defaults.ts',defaults]]))
+      expect(result.facts[0]!.valueHash).toBe(baseline)
+      expect(result.coverage[0]?.status).toBe('partial')
+    }
+  })
+  it('keeps conflicting operational defaults partial instead of choosing a value', () => {
+    const schema = ts.createSourceFile('config.ts', "import {z} from 'zod'; export const ConfigSchema=z.object({port:z.number()}); export type Config=z.infer<typeof ConfigSchema>;", ts.ScriptTarget.Latest, true)
+    const defaults = ts.createSourceFile('defaults.ts', "import type {Config as Settings} from './config.js'; export const applyDefaults=(config:Settings)=>({...config,port:42}); export const otherDefaults=(config:Settings)=>({...config,port:43});", ts.ScriptTarget.Latest, true)
+    const base = configFactsFromSource(schema,'config.ts','module:config.ts')
+    const result = configFactsFromSource(schema,'config.ts','module:config.ts',new Map([['defaults.ts',defaults]]))
+    expect(result.facts[0]!.valueHash).toBe(base.facts[0]!.valueHash)
+    expect(result.coverage[0]?.status).toBe('partial')
+  })
+  it('does not attach defaults without a schema-linked config parameter', () => {
+    const schema = ts.createSourceFile('config.ts', "import {z} from 'zod'; export const ConfigSchema=z.object({port:z.number()}); export type Config=z.infer<typeof ConfigSchema>;", ts.ScriptTarget.Latest, true)
+    const defaults = ts.createSourceFile('defaults.ts', "import type {Other} from './config.js'; export const applyDefaults=(config:Other)=>({port:42});", ts.ScriptTarget.Latest, true)
+    const base = configFactsFromSource(schema,'config.ts','module:config.ts')
+    expect(configFactsFromSource(schema,'config.ts','module:config.ts',new Map([['defaults.ts',defaults]]))).toEqual(base)
+  })
   it('resolves dotted tokens and rejects bare leaf aliases', () => {
     const facts = new Map([
       ['output.format', [{kind:'config-key', name:'output.format', ownerId:'module:config.ts'}]],
@@ -118,6 +168,60 @@ describe('static configuration facts', () => {
     expect(removed.changeSet.changes.some(change=>change.kind==='config-key' && change.op==='removed' && change.before?.name==='output.format')).toBe(true)
     expect(removed.findings).toContainEqual(expect.objectContaining({code:'BROKEN_REFERENCE', status:'conflict'}))
     expect(discoverRepository({root, previous:base}).contentHash).toBe(head.contentHash)
+  })
+  it('binds unique config-example leaves to independently cited owners and retains historical aliases', () => {
+    const root = fixture()
+    const doc = join(root, 'README.md')
+    for (const example of ['```json\n{"format": "json"}\n```', '```yaml\nformat: json\n```', 'Configuration example: `format`', '```ts\nconst config = {output: {format: "json"}}\n```']) {
+      writeFileSync(doc, '# Config\nSee `config.ts`.\n' + example + '\nUse `format` in prose.\n')
+      const base = discoverRepository({root})
+      const relation = base.relations.find(item => item.metadata?.factName === 'output.format')
+      expect(relation?.evidence).toHaveLength(1)
+      const path = join(root, 'config.ts'), source = readFileSync(path, 'utf8')
+      writeFileSync(path, source.replace(".default('json')", ".default('text')"))
+      expect(diffSnapshots(base, discoverRepository({root}), {headRoot:root}).findings).toContainEqual(expect.objectContaining({code:'CHANGED_REFERENCE'}))
+      writeFileSync(path, source.replace('format:', 'encoding:'))
+      expect(diffSnapshots(base, discoverRepository({root}), {headRoot:root}).findings).toContainEqual(expect.objectContaining({code:'BROKEN_REFERENCE',status:'conflict'}))
+      writeFileSync(doc, '# Config\n' + example)
+      expect(diffSnapshots(base, discoverRepository({root}), {headRoot:root}).findings.some(item => item.code === 'BROKEN_REFERENCE')).toBe(false)
+      writeFileSync(path, source)
+    }
+    writeFileSync(doc, '# Config\n`output.format`\n```toml\nenabled = true\n```')
+    expect(discoverRepository({root}).relations.some(item => item.metadata?.factName === 'enabled')).toBe(true)
+    writeFileSync(doc, '# Config\n```json\n{"format": "json"}\n```')
+    expect(discoverRepository({root}).relations.some(item => item.metadata?.factName === 'output.format')).toBe(false)
+    writeFileSync(doc, '# Config\nSee `config.ts`.\n```json\n{"format": "json"}\n```')
+    for (const body of ['"format: json"', '// format: json', '# format: json']) {
+      writeFileSync(doc, '# Config\nSee `config.ts`.\n```jsonc\n' + body + '\n```')
+      expect(discoverRepository({root}).relations.some(item => item.metadata?.factName === 'output.format')).toBe(false)
+    }
+    writeFileSync(doc, '# Config\nSee `config.ts`.\n```json\n{"format": "json"}\n```')
+    const path = join(root, 'config.ts')
+    writeFileSync(path, readFileSync(path, 'utf8') + "\nexport const OtherConfig = z.object({format:z.string()})")
+    expect(discoverRepository({root}).relations.some(item => item.metadata?.factName === 'output.format')).toBe(false)
+  })
+  it('rejects unrelated artifacts and object-parent aliases without leaking a valid leaf context', () => {
+    const root = fixture()
+    const doc = join(root,'README.md')
+    writeFileSync(doc, '# Config\nSee `config.ts`.\n```json\n{"output":{"format":"json"}}\n```\n```json\n{"notConfig":{"format":"json"}}\n```\n```yaml\nname: workflow\njobs:\n  format: text\n```\n```ts\ninterface Config { format?: string }\n```')
+    const snapshot = discoverRepository({root})
+    const relation = snapshot.relations.find(item => item.metadata?.factName === 'output.format')
+    expect(relation?.evidence.map(item => item.lineStart)).toEqual([4])
+    expect(snapshot.relations.some(item => item.metadata?.factName === 'output')).toBe(false)
+    writeFileSync(doc,'# Config\nSee `config.ts`.\n```json\n[{"format":"json"}]\n```\n```toml\n[output]\nformat = "json"\n```')
+    expect(discoverRepository({root}).relations.some(item => item.metadata?.factName === 'output.format')).toBe(false)
+    writeFileSync(doc,'# Config\n<!-- doc-bridge:generated hash=abc -->\n`config.ts`\n<!-- /doc-bridge:generated -->\n```json\n{"format":"json"}\n```')
+    expect(discoverRepository({root}).relations.some(item => item.metadata?.factName === 'output.format')).toBe(false)
+  })
+  it('retains a bare leaf owner anchor when a sibling schema adds the same canonical key', () => {
+    const root = fixture(), doc = join(root,'README.md'), path = join(root,'config.ts')
+    writeFileSync(doc,'# Config\nSee `config.ts`.\n```json\n{"format":"json"}\n```')
+    const base = discoverRepository({root})
+    writeFileSync(join(root,'other.config-schema.ts'),"import {z} from 'zod'; export const OtherConfig=z.object({output:z.object({format:z.string()})})")
+    writeFileSync(path,readFileSync(path,'utf8').replace(".default('json')", ".default('text')"))
+    const result = diffSnapshots(base,discoverRepository({root}),{headRoot:root})
+    expect(result.findings).toContainEqual(expect.objectContaining({code:'CHANGED_REFERENCE'}))
+    expect(result.findings.some(item => item.code === 'AMBIGUOUS_REFERENCE')).toBe(false)
   })
   it('ignores bare leaf and generated dotted citations', () => {
     const root = fixture()

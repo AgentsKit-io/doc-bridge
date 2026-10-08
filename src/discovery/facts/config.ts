@@ -1,5 +1,5 @@
 import * as ts from 'typescript'
-import { relative } from 'node:path'
+import { dirname, posix, relative } from 'node:path'
 import { toPosix } from '../../lib/paths.js'
 import type { FactExtractor } from './index.js'
 import { canonicalJsonV1, sha256NormalizedV1 } from '../../index-builder/content-hash.js'
@@ -7,7 +7,7 @@ import { surfaceFactEntityId, type SurfaceFact } from '../../storage/facts.js'
 import type { DiscoverySnapshotV1, Evidence } from '../../schemas/knowledge.js'
 
 export const CONFIG_FACT_ANALYZER_ID = 'js-ts:config-key' as const
-export const CONFIG_FACT_ANALYZER_VERSION = '1.0.0'
+export const CONFIG_FACT_ANALYZER_VERSION = '1.1.0'
 const MAX_KEYS = 4096
 const MAX_DEPTH = 32
 const JSON_SCHEMA_KEYS = new Set(['$schema', '$id', '$anchor', '$comment', '$defs', 'definitions', 'title', 'description', 'examples', 'deprecated', 'readOnly', 'writeOnly', 'type', 'properties', 'required', 'items', 'additionalProperties', 'enum', 'const', 'default', 'format', 'pattern', 'minimum', 'maximum', 'exclusiveMinimum', 'exclusiveMaximum', 'multipleOf', 'minLength', 'maxLength', 'minItems', 'maxItems', 'uniqueItems', 'minProperties', 'maxProperties'])
@@ -22,7 +22,7 @@ const boundedLiteral = (value: unknown, depth = 0): boolean => depth <= MAX_DEPT
 )
 
 /** A scan-local syntax tree only: never import or execute a repository schema. */
-export const configFactsFromSource = (source: ts.SourceFile, path: string, ownerId: string): Result => {
+export const configFactsFromSource = (source: ts.SourceFile, path: string, ownerId: string, defaults: ReadonlyMap<string, ts.SourceFile> = new Map()): Result => {
   if ((source as ts.SourceFile & { parseDiagnostics?: readonly ts.Diagnostic[] }).parseDiagnostics?.length) return emit([], ownerId, true, path)
   const bindings = new Map<string, ts.Expression>()
   const declarations = new Map<string, ts.VariableDeclaration>()
@@ -61,7 +61,7 @@ export const configFactsFromSource = (source: ts.SourceFile, path: string, owner
   }
   const unknown = (): undefined => { incomplete = true; return undefined }
   const unwrap = (node: ts.Expression): ts.Expression => ts.isParenthesizedExpression(node) || ts.isAsExpression(node) || ts.isSatisfiesExpression(node) ? unwrap(node.expression) : node
-  const literal = (input: ts.Expression | undefined, seen = new Set<string>(), depth = 0): { value: unknown } | undefined => {
+  const literal = (input: ts.Expression | undefined, seen = new Set<string>(), depth = 0, values = bindings): { value: unknown } | undefined => {
     if (!input || depth > MAX_DEPTH) return undefined
     const node = unwrap(input)
     if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) return { value: node.text }
@@ -70,16 +70,16 @@ export const configFactsFromSource = (source: ts.SourceFile, path: string, owner
     if (node.kind === ts.SyntaxKind.FalseKeyword) return { value: false }
     if (node.kind === ts.SyntaxKind.NullKeyword) return { value: null }
     if (ts.isPrefixUnaryExpression(node) && node.operator === ts.SyntaxKind.MinusToken && ts.isNumericLiteral(node.operand)) return Number.isFinite(Number(node.operand.text)) ? { value: -Number(node.operand.text) } : undefined
-    if (ts.isIdentifier(node) && bindings.has(node.text) && !seen.has(node.text)) return literal(bindings.get(node.text), new Set([...seen, node.text]), depth + 1)
+    if (ts.isIdentifier(node) && values.has(node.text) && !seen.has(node.text)) return literal(values.get(node.text), new Set([...seen, node.text]), depth + 1, values)
     if (ts.isArrayLiteralExpression(node)) {
-      const values = node.elements.map(item => literal(item as ts.Expression, seen, depth + 1))
-      return values.every(Boolean) ? { value: values.map(item => item!.value) } : undefined
+      const elements = node.elements.map(item => literal(item as ts.Expression, seen, depth + 1, values))
+      return elements.every(Boolean) ? { value: elements.map(item => item!.value) } : undefined
     }
     if (ts.isObjectLiteralExpression(node)) {
       const entries: [string, unknown][] = []
       for (const item of node.properties) {
         if (!ts.isPropertyAssignment(item) || !(ts.isIdentifier(item.name) || ts.isStringLiteral(item.name))) return undefined
-        const value = literal(item.initializer, seen, depth + 1)
+        const value = literal(item.initializer, seen, depth + 1, values)
         if (!value) return undefined
         entries.push([item.name.text, value.value])
       }
@@ -159,7 +159,93 @@ export const configFactsFromSource = (source: ts.SourceFile, path: string, owner
     if (shape?.properties) roots.push({ shape, evidence: { source: 'code', path, lineStart: source.getLineAndCharacterOfPosition(statement.getStart(source)).line + 1, lineEnd: source.getLineAndCharacterOfPosition(statement.getEnd()).line + 1, contentHash: sha256NormalizedV1(source.text) } })
     else unknown()
   }
-  return emit(roots, ownerId, incomplete, path)
+  if (!roots.length) return emit(roots, ownerId, incomplete, path)
+  const linkedDefaults = new Map<string, ts.SourceFile>()
+  const rootNames = new Set([...candidates].filter(name => !referenced.has(name)))
+  const rootTypes = new Set(source.statements.filter(ts.isTypeAliasDeclaration).filter(declaration => {
+    const type = declaration.type
+    if (!ts.isTypeReferenceNode(type) || !ts.isQualifiedName(type.typeName) || !ts.isIdentifier(type.typeName.left) || !zodNames.has(type.typeName.left.text) || !['infer', 'input', 'output'].includes(type.typeName.right.text) || type.typeArguments?.length !== 1) return false
+    const target = type.typeArguments[0]!
+    return ts.isTypeQueryNode(target) && ts.isIdentifier(target.exprName) && rootNames.has(target.exprName.text)
+  }).map(declaration => declaration.name.text))
+  const assigned = new Map<string, { value: unknown; shape: Shape; evidence: Evidence }>()
+  const conflicting = new Set<string>()
+  // Only schema-linked defaults functions contribute operational values; never execute them.
+  for (const [defaultPath, defaultSource] of new Map([[path, source], ...defaults])) {
+    const imported = new Set<string>(defaultPath === path ? rootTypes : [])
+    for (const statement of defaultSource.statements) {
+      if (!ts.isImportDeclaration(statement) || !ts.isStringLiteral(statement.moduleSpecifier)) continue
+      const target = posix.normalize(posix.join(toPosix(dirname(defaultPath)), statement.moduleSpecifier.text)).replace(/\.[cm]?[jt]s$/, '')
+      if (target !== path.replace(/\.[cm]?[jt]s$/, '')) continue
+      const names = statement.importClause?.namedBindings
+      if (names && ts.isNamedImports(names)) for (const name of names.elements) { if (rootTypes.has((name.propertyName ?? name.name).text)) imported.add(name.name.text) }
+    }
+    if (!imported.size) continue
+    if ((defaultSource as ts.SourceFile & { parseDiagnostics?: readonly ts.Diagnostic[] }).parseDiagnostics?.length) { incomplete = true; linkedDefaults.set(defaultPath, defaultSource); continue }
+    const values = new Map<string, ts.Expression>()
+    for (const statement of defaultSource.statements) if (ts.isVariableStatement(statement) && (statement.declarationList.flags & ts.NodeFlags.Const)) for (const declaration of statement.declarationList.declarations) {
+      if (ts.isIdentifier(declaration.name) && declaration.initializer) values.set(declaration.name.text, declaration.initializer)
+    }
+    const functions: (ts.FunctionDeclaration | ts.ArrowFunction | ts.FunctionExpression)[] = []
+    for (const statement of defaultSource.statements) {
+      if (ts.isFunctionDeclaration(statement) && /default/i.test(statement.name?.text ?? '')) functions.push(statement)
+      if (ts.isVariableStatement(statement)) for (const declaration of statement.declarationList.declarations) {
+        if (ts.isIdentifier(declaration.name) && /default/i.test(declaration.name.text) && declaration.initializer && (ts.isArrowFunction(declaration.initializer) || ts.isFunctionExpression(declaration.initializer))) functions.push(declaration.initializer)
+      }
+    }
+    for (const fn of functions) {
+      if (!fn.parameters.some(parameter => parameter.type && ts.isTypeReferenceNode(parameter.type) && ts.isIdentifier(parameter.type.typeName) && imported.has(parameter.type.typeName.text))) continue
+      linkedDefaults.set(defaultPath, defaultSource)
+      if (roots.length !== 1 || !fn.body) { incomplete = true; continue }
+      const localValues = new Map(values)
+      if (ts.isBlock(fn.body)) for (const statement of fn.body.statements) {
+        if (ts.isVariableStatement(statement) && (statement.declarationList.flags & ts.NodeFlags.Const)) for (const declaration of statement.declarationList.declarations) {
+          if (ts.isIdentifier(declaration.name) && declaration.initializer) localValues.set(declaration.name.text, declaration.initializer)
+        }
+      }
+      const apply = (input: ts.Expression, shape: Shape, prefix = '', depth = 0): void => {
+        if (depth > MAX_DEPTH) { incomplete = true; return }
+        const node = unwrap(input)
+        if (!ts.isObjectLiteralExpression(node)) { incomplete = true; return }
+        if (node.properties.some(property => ts.isSpreadAssignment(property) && !fn.parameters.some(parameter => ts.isIdentifier(parameter.name) && property.expression.getText(defaultSource).replace(/\?\./g, '.') === (prefix ? `${parameter.name.text}.${prefix}` : parameter.name.text)))) { incomplete = true; return }
+        for (const property of node.properties) {
+          if (ts.isSpreadAssignment(property)) continue
+          if (!ts.isPropertyAssignment(property) || !(ts.isIdentifier(property.name) || ts.isStringLiteral(property.name))) { incomplete = true; continue }
+          const child = shape.properties?.get(property.name.text)
+          if (!child) continue
+          const key = prefix ? `${prefix}.${property.name.text}` : property.name.text
+          let expression = unwrap(property.initializer)
+          if (ts.isBinaryExpression(expression) && expression.operatorToken.kind === ts.SyntaxKind.QuestionQuestionToken) {
+            const left = expression.left.getText(defaultSource).replace(/\?\./g, '.')
+            if (!fn.parameters.some(parameter => ts.isIdentifier(parameter.name) && left === `${parameter.name.text}.${key}`)) { incomplete = true; continue }
+            expression = unwrap(expression.right)
+          }
+          if (ts.isObjectLiteralExpression(expression) && child.properties) { apply(expression, child, key, depth + 1); continue }
+          const value = literal(expression, new Set(), 0, localValues)
+          if (!value) { incomplete = true; continue }
+          const prior = assigned.get(key)
+          if (conflicting.has(key)) continue
+          if (prior && canonicalJsonV1(prior.value) !== canonicalJsonV1(value.value)) { incomplete = true; assigned.delete(key); conflicting.add(key); continue }
+          assigned.set(key, { value: value.value, shape: child, evidence: { source: 'code', path: defaultPath, lineStart: defaultSource.getLineAndCharacterOfPosition(property.getStart(defaultSource)).line + 1, lineEnd: defaultSource.getLineAndCharacterOfPosition(property.getEnd()).line + 1, contentHash: sha256NormalizedV1(defaultSource.text) } })
+        }
+      }
+      if (ts.isBlock(fn.body)) {
+        const returns = fn.body.statements.filter(ts.isReturnStatement)
+        if (returns.length !== 1 || !returns[0]!.expression || fn.body.statements.some(statement => !ts.isReturnStatement(statement) && !ts.isVariableStatement(statement))) { incomplete = true; continue }
+        apply(returns[0]!.expression, roots[0]!.shape)
+      } else apply(fn.body, roots[0]!.shape)
+    }
+  }
+  for (const { value, shape } of assigned.values()) shape.default = value
+  const result = emit(roots, ownerId, incomplete, path)
+  result.facts = result.facts.map(fact => assigned.has(fact.name) ? { ...fact, evidence: [assigned.get(fact.name)!.evidence, ...fact.evidence] } : fact)
+  for (const [defaultPath, defaultSource] of linkedDefaults) {
+    if (defaultPath === path) continue
+    const evidence: Evidence = { source: 'code', path: defaultPath, lineStart: 1, lineEnd: defaultSource.getLineAndCharacterOfPosition(defaultSource.end).line + 1, contentHash: sha256NormalizedV1(defaultSource.text) }
+    result.facts = result.facts.map(fact => ({ ...fact, evidence: [...fact.evidence, evidence].slice(0, 64) }))
+    result.coverage = result.coverage.map(coverage => ({ ...coverage, evidence: [...(coverage.evidence ?? []), evidence].slice(0, 32) }))
+  }
+  return result
 }
 
 const projection = (shape: Shape): unknown => ({
@@ -187,7 +273,7 @@ const emit = (roots: readonly { shape: Shape; evidence: Evidence }[], ownerId: s
     }
   }
   for (const root of roots) visit(root.shape, '', root.evidence, 0)
-  return { facts: [...facts.values()].sort((a, b) => a.id.localeCompare(b.id)), coverage: [{ analyzer: CONFIG_FACT_ANALYZER_ID, analyzerVersion: CONFIG_FACT_ANALYZER_VERSION, scope: 'config-keys', status: incomplete ? 'partial' : 'complete', ...(incomplete ? { reason: 'Dynamic, unsupported, conflicting or bounded configuration schema extraction.' } : {}), evidence: roots.length ? roots.map(root => root.evidence).slice(0, 32) : [{ source: path.endsWith('.json') ? 'configuration' : 'code', path }] }] }
+  return { facts: [...facts.values()].sort((a, b) => a.id.localeCompare(b.id)), coverage: [{ analyzer: CONFIG_FACT_ANALYZER_ID, analyzerVersion: CONFIG_FACT_ANALYZER_VERSION, scope: 'config-keys', status: incomplete ? 'partial' : 'complete', ...(incomplete ? { reason: 'Dynamic, unsupported, conflicting or bounded configuration schema/default extraction.' } : {}), evidence: roots.length ? roots.map(root => root.evidence).slice(0, 32) : [{ source: path.endsWith('.json') ? 'configuration' : 'code', path }] }] }
 }
 
 export const configFactsFromJsonSchema = (text: string, path: string, ownerId: string): Result => {
@@ -234,12 +320,20 @@ export const configFactExtractor: FactExtractor = {
   id: CONFIG_FACT_ANALYZER_ID, version: CONFIG_FACT_ANALYZER_VERSION, kinds: ['config-key'], inputExtensions: ['.json'],
   extract({ root, io, sourceFiles, modules, packages, walkOptions }) {
     const results: Result[] = []
+    const defaults = new Map<string, ts.SourceFile>()
+    for (const path of sourceFiles.keys()) {
+      if (/(?:^|\/)(?:tests?|__tests__)\//.test(path)) continue
+      const source = sourceFiles.get(path)!
+      if (/default/i.test(path) || /(?:function\s+\w*default\w*|(?:const|let)\s+\w*default\w*\s*=)/i.test(source.text)) defaults.set(path, source)
+    }
     const owners = new Map([...modules.values()].map(module => [module.path, module.entityId]))
     for (const path of [...sourceFiles.keys()].sort((a, b) => a.localeCompare(b))) {
       if (/(?:^|\/)(?:tests?|__tests__)\/fixtures\//.test(path)) continue
       const source = sourceFiles.get(path)!
       const owner = owners.get(path)
-      if (owner) results.push(configFactsFromSource(source, path, owner))
+      if (owner) {
+        results.push(configFactsFromSource(source, path, owner, defaults))
+      }
     }
     const walk = io.walk(['.json'], walkOptions ?? {})
     for (const absPath of [...walk.files].sort()) {
