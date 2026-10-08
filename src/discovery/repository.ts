@@ -80,7 +80,7 @@ const sourceRevision = (root: string, files: readonly string[], readText: (path:
 }
 
 export const PIPELINE_VERSION = '1.5.0'
-export const ANALYZER_VERSIONS: Readonly<Record<string, string>> = { repository: '1.3.0', 'js-ts': '1.4.1', markdown: MARKDOWN_ANALYZER_VERSION, graph: GRAPH_ANALYZER_VERSION, ...factAnalyzerVersions() }
+export const ANALYZER_VERSIONS: Readonly<Record<string, string>> = { repository: '1.3.0', 'js-ts': '1.5.0', markdown: MARKDOWN_ANALYZER_VERSION, graph: GRAPH_ANALYZER_VERSION, ...factAnalyzerVersions() }
 const configurationHashOf = (config: DocBridgeConfigV1 | undefined): string => sha256NormalizedV1(config ?? {})
 
 const artifact = (root: string, config: DocBridgeConfigV1 | undefined, files: readonly string[], entities: readonly KnowledgeEntity[], relations: readonly KnowledgeRelation[], coverage: DiscoverySnapshotV1['coverage'], suppliedRevision: { readonly value: string; readonly kind: 'git' | 'content' }): DiscoverySnapshotV1 => {

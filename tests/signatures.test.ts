@@ -1,6 +1,6 @@
 import * as ts from 'typescript'
 import { afterEach, describe, expect, it } from 'vitest'
-import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, relative, resolve } from 'node:path'
 import { discoverRepository, discoverRepositoryWithRead } from '../src/discovery/repository.js'
@@ -12,6 +12,7 @@ import { safeWalkFiles } from '../src/safety/repository.js'
 import { createJsTsPluginV2 } from '../src/discovery/plugins/js-ts.js'
 import { createDiscoveryRegistryV2 } from '../src/plugins/contract.js'
 import { factAnalyzerVersions } from '../src/discovery/facts/index.js'
+import { signatureEntryPoints } from '../src/discovery/facts/signature-context.js'
 import { extractSignatures } from '../src/discovery/facts/signatures.js'
 
 const extract = (text: string) => extractSignatures(ts.createSourceFile('api.ts', text, ts.ScriptTarget.Latest, true), 'module:api.ts', 'api.ts', '0'.repeat(64))
@@ -159,4 +160,191 @@ describe('signature citation bounds and matching', () => {
     const classResolution = { ...resolution, symbols: new Map([['Thing', ['module:api.ts']]]), facts: new Map([['Thing.run', [{ kind: 'signature', name: 'Thing.run', ownerId: 'module:api.ts' }]]]) }
     expect(analyzeMarkdownDocument(parseMarkdownDocument('guide.md', '`Thing.run`'), 'document:guide.md', classResolution).relations).toEqual([])
   })
+})
+
+describe('cross-module callable compatibility', () => {
+  it.each([
+    ['relative named import', './types.js', 'export interface Base { value: string }', true],
+    ['external import', 'external-types', 'export interface Base { value: string }', false],
+    ['unresolved nested type', './types.js', 'export interface Base { value: Missing }', false],
+    ['unsafe any type', './types.js', 'export interface Base { value: any }', false],
+  ])('%s uses historical syntax and keeps unsupported findings', (_name, from, declaration, compatible) => {
+    const root = mkdtempSync(join(tmpdir(), 'doc-bridge-signatures-')); roots.push(root)
+    writeFileSync(join(root, 'package.json'), JSON.stringify({ name: 'doc-bridge-fixture', version: '1.0.0' }))
+    writeFileSync(join(root, 'README.md'), '# Guide\n\nCall `createThing`.\n')
+    writeFileSync(join(root, 'types.ts'), declaration)
+    const source = `import type { Base as Result } from '${from}'; export function createThing(): Result { throw 0 }`
+    writeFileSync(join(root, 'api.ts'), source)
+    const base = discoverRepository({ root })
+    const changed = source.replace('export function', 'interface Extended extends Result { extra: number }; export function').replace('(): Result', '(): Extended')
+    writeFileSync(join(root, 'api.ts'), from === 'external-types' ? changed.replace('extends Result { extra: number }', '{ value: Result }') : changed)
+    const head = discoverRepository({ root })
+    // No filesystem/source dependency at diff time; serialized historical metadata is sufficient.
+    rmSync(join(root, 'types.ts'))
+    const result = diffSnapshots(JSON.parse(JSON.stringify(base)), JSON.parse(JSON.stringify(head)), { headRoot: root })
+    expect(result.changeSet.changes.find(change => change.before?.name === 'createThing' && change.kind === 'signature')?.compatibility).toBe(compatible ? 'compatible' : undefined)
+    expect(result.findings.filter(finding => finding.code === 'CHANGED_REFERENCE')).toHaveLength(compatible ? 0 : 1)
+  })
+
+  it('rejects a changed imported base instead of substituting the head for history', () => {
+    const root = mkdtempSync(join(tmpdir(), 'doc-bridge-signatures-')); roots.push(root)
+    writeFileSync(join(root, 'package.json'), '{"name":"doc-bridge-fixture","version":"1.0.0"}')
+    writeFileSync(join(root, 'README.md'), '# Guide\n\nCall `createThing`.\n')
+    writeFileSync(join(root, 'types.ts'), 'export interface Base { value: string }')
+    writeFileSync(join(root, 'api.ts'), "import type { Base } from './types.js'; export function createThing(): Base { throw 0 }")
+    const base = discoverRepository({ root })
+    writeFileSync(join(root, 'types.ts'), 'export interface Base { value: number }')
+    writeFileSync(join(root, 'api.ts'), "import type { Base } from './types.js'; interface Extended extends Base { extra: number }; export function createThing(): Extended { throw 0 }")
+    const result = diffSnapshots(base, discoverRepository({ root }), { headRoot: root })
+    expect(result.changeSet.changes.find(change => change.before?.name === 'createThing' && change.kind === 'signature')?.compatibility).toBeUndefined()
+    expect(result.findings.some(finding => finding.code === 'CHANGED_REFERENCE')).toBe(true)
+  })
+})
+
+
+describe('workspace exports and traversal bounds', () => {
+  const setup = () => {
+    const root = mkdtempSync(join(tmpdir(), 'doc-bridge-signatures-')); roots.push(root)
+    writeFileSync(join(root, 'package.json'), JSON.stringify({ name: 'doc-bridge-fixture', version: '1.0.0', workspaces: ['packages/*'] }))
+    writeFileSync(join(root, 'README.md'), '# Guide\n\nCall `createThing`.\n')
+    return root
+  }
+  it('follows an explicit workspace entrypoint and named re-export', () => {
+    const root = setup()
+    mkdirSync(join(root, 'packages/types'), { recursive: true })
+    writeFileSync(join(root, 'packages/types/package.json'), JSON.stringify({ name: '@agentskit/fixture-types', version: '1.0.0', exports: { '.': { types: './index.ts' } } }))
+    writeFileSync(join(root, 'packages/types/index.ts'), "export type { Base as Result } from './types.js'")
+    writeFileSync(join(root, 'packages/types/types.ts'), 'export interface Base { value: string }')
+    const text = "import type { Result } from '@agentskit/fixture-types'; export function createThing(): Result { throw 0 }"
+    writeFileSync(join(root, 'api.ts'), text)
+    const base = discoverRepository({ root })
+    writeFileSync(join(root, 'api.ts'), text.replace('export function', 'interface Extended extends Result { extra: number }; export function').replace('(): Result', '(): Extended'))
+    const head = discoverRepository({ root })
+    const result = diffSnapshots(base, head, { headRoot: root })
+    expect(result.changeSet.changes.find(change => change.before?.name === 'createThing' && change.kind === 'signature')?.compatibility).toBe('compatible')
+    expect(result.findings).toHaveLength(0)
+    for (const entity of [...base.entities, ...head.entities]) delete entity.metadata?.signatureContext
+    expect(diffSnapshots(base, head, { headRoot: root }).findings.some(finding => finding.code === 'CHANGED_REFERENCE')).toBe(true)
+  })
+  it.each([2, 10])('bounds depth while terminating an import cycle (depth %i)', count => {
+    const root = setup()
+    for (let i = 0; i < count; i++) writeFileSync(join(root, `types${i}.ts`), `import type { T${(i+1)%count} } from './types${(i+1)%count}.js'; export interface T${i} { value: string; next?: T${(i+1)%count} }`)
+    const text = "import type { T0 } from './types0.js'; export function createThing(): T0 { throw 0 }"
+    writeFileSync(join(root, 'api.ts'), text)
+    const base = discoverRepository({ root })
+    writeFileSync(join(root, 'api.ts'), text.replace('export function', 'interface Extended extends T0 { extra: number }; export function').replace('(): T0', '(): Extended'))
+    const result = diffSnapshots(base, discoverRepository({ root }), { headRoot: root })
+    expect(result.changeSet.changes.find(change => change.before?.name === 'createThing' && change.kind === 'signature')?.compatibility).toBe(count === 2 ? 'compatible' : undefined)
+  })
+  it('omits oversized module context and keeps its changed signature unproven', () => {
+    const root = setup()
+    writeFileSync(join(root, 'types.ts'), `export interface Base { value: string }; type Unused = '${'x'.repeat(65536)}'`)
+    const text = "import type { Base } from './types.js'; export function createThing(): Base { throw 0 }"
+    writeFileSync(join(root, 'api.ts'), text)
+    const base = discoverRepository({ root })
+    expect(base.entities.find(entity => entity.path === 'types.ts')?.metadata?.signatureContext).toBeNull()
+    writeFileSync(join(root, 'api.ts'), text.replace('export function', 'interface Extended extends Base { extra: number }; export function').replace('(): Base', '(): Extended'))
+    expect(diffSnapshots(base, discoverRepository({ root }), { headRoot: root }).findings.some(finding => finding.code === 'CHANGED_REFERENCE')).toBe(true)
+  })
+})
+
+
+it.each([['file count', 33, 0], ['total context bytes', 5, 60000]] as const)('keeps %s over-budget proofs unproven', (_bound, count, padding) => {
+  const root = mkdtempSync(join(tmpdir(), 'doc-bridge-signatures-')); roots.push(root)
+  writeFileSync(join(root, 'package.json'), '{"name":"doc-bridge-fixture","version":"1.0.0"}')
+  writeFileSync(join(root, 'README.md'), '# Guide\n\nCall `createThing`.\n')
+  const imports: string[] = [], members: string[] = []
+  for (let i = 0; i < count; i++) {
+    imports.push(`import type { Item${i} } from './item${i}.js';`)
+    members.push(`item${i}: Item${i};`)
+    writeFileSync(join(root, `item${i}.ts`), `export interface Item${i} { value: string }; type Padding = '${'x'.repeat(padding)}'`)
+  }
+  const text = `${imports.join('\n')} interface Base { ${members.join(' ')} }; export function createThing(): Base { throw 0 }`
+  writeFileSync(join(root, 'api.ts'), text)
+  const base = discoverRepository({ root })
+  writeFileSync(join(root, 'api.ts'), text.replace('export function', 'interface Extended extends Base { extra: number }; export function').replace('(): Base', '(): Extended'))
+  const result = diffSnapshots(base, discoverRepository({ root }), { headRoot: root })
+  expect(result.changeSet.changes.find(change => change.before?.name === 'createThing' && change.kind === 'signature')?.compatibility).toBeUndefined()
+  expect(result.findings.some(finding => finding.code === 'CHANGED_REFERENCE')).toBe(true)
+})
+
+it.each(["import type Promise from 'external-types'", "import type * as Intl from 'external-types'"])('never substitutes a compiler builtin for an unsupported import (%s)', statement => {
+  const root = mkdtempSync(join(tmpdir(), 'doc-bridge-signatures-')); roots.push(root)
+  writeFileSync(join(root, 'package.json'), '{"name":"doc-bridge-fixture","version":"1.0.0"}')
+  writeFileSync(join(root, 'README.md'), '# Guide\n\nCall `createThing`.\n')
+  const type = statement.includes('Promise') ? 'Promise<string>' : 'Intl.DateTimeFormat'
+  const text = `${statement}; export function createThing(): ${type} { throw 0 }`
+  writeFileSync(join(root, 'api.ts'), text)
+  const base = discoverRepository({ root })
+  writeFileSync(join(root, 'api.ts'), text.replace('createThing()', 'createThing(optional?: boolean)'))
+  expect(diffSnapshots(base, discoverRepository({ root }), { headRoot: root }).findings.some(finding => finding.code === 'CHANGED_REFERENCE')).toBe(true)
+})
+
+
+it('labels direct opaque imported heritage as conditional and leaves other external shapes unproven', () => {
+  const root = mkdtempSync(join(tmpdir(), 'doc-bridge-signatures-')); roots.push(root)
+  writeFileSync(join(root, 'package.json'), '{"name":"doc-bridge-fixture","version":"1.0.0"}')
+  writeFileSync(join(root, 'README.md'), '# Guide\n\nCall `createThing`.\n')
+  const text = "import type { Base } from 'external-types'; export function createThing(): Base { throw 0 }"
+  writeFileSync(join(root, 'api.ts'), text)
+  const base = discoverRepository({ root })
+  for (const [shape, compatible] of [['interface Extended extends Base { extra: UnknownExternal }', true], ['class Base {}; interface Extended extends Base { extra: number }', false], ['interface Extended<T> extends Base { extra: T }', false], ['type Extended = Base & { extra: number }', false], ['interface Middle extends Base {}; interface Extended extends Middle { extra: number }', false]] as const) {
+    writeFileSync(join(root, 'api.ts'), text.replace('export function', `${shape}; export function`).replace('(): Base', '(): Extended'))
+    const result = diffSnapshots(base, discoverRepository({ root }), { headRoot: root })
+    const change = result.changeSet.changes.find(change => change.kind === 'signature' && change.before?.name === 'createThing')
+    expect(change?.compatibility).toBe(compatible ? 'compatible' : undefined)
+    expect(change?.after?.evidence.some(item => item.context === 'heritage proof (assumes head compiles)')).toBe(compatible)
+    expect(result.findings.some(finding => finding.code === 'CHANGED_REFERENCE')).toBe(!compatible)
+  }
+})
+
+it.each(["import type { Base } from './types.js'; import type { Base } from './other.js'", "import type { Base } from './types.mjs'"])('does not select an ambiguous binding or wrong extension (%s)', imports => {
+  const root = mkdtempSync(join(tmpdir(), 'doc-bridge-signatures-')); roots.push(root)
+  writeFileSync(join(root, 'package.json'), '{"name":"doc-bridge-fixture","version":"1.0.0"}')
+  writeFileSync(join(root, 'README.md'), '# Guide\n\nCall `createThing`.\n')
+  writeFileSync(join(root, 'types.ts'), 'export interface Base { value: string }')
+  writeFileSync(join(root, 'other.ts'), 'export interface Base { value: number }')
+  const text = `${imports}; export function createThing(): Base { throw 0 }`
+  writeFileSync(join(root, 'api.ts'), text)
+  const base = discoverRepository({ root })
+  writeFileSync(join(root, 'api.ts'), text.replace('export function', 'interface Extended extends Base { extra: number }; export function').replace('(): Base', '(): Extended'))
+  expect(diffSnapshots(base, discoverRepository({ root }), { headRoot: root }).findings.some(finding => finding.code === 'CHANGED_REFERENCE')).toBe(true)
+})
+
+
+it('bounds package export conditions and never falls through an explicit invalid export', () => {
+  expect(signatureEntryPoints({ exports: null, types: './src/api.ts' })).toBeUndefined()
+  expect(signatureEntryPoints({ exports: { types: null, default: './src/api.ts' } })).toBeUndefined()
+  expect(signatureEntryPoints({ exports: { require: './src/api.ts' }, types: './src/api.ts' })).toBeUndefined()
+  let value: unknown = './src/api.ts'
+  for (let i = 0; i < 10; i++) value = { types: value }
+  expect(signatureEntryPoints({ exports: value })).toBeUndefined()
+  expect(signatureEntryPoints({ exports: { '.': { types: './src/api.ts', default: './dist/api.js' } } })).toEqual({ '.': './src/api.ts' })
+})
+
+
+it.each(['enum Date { value }', 'class Date {}', 'import Date = require("external-types")', 'declare namespace Local { export type Value = string }'])('does not substitute a builtin for an unsupported local type (%s)', declaration => {
+  const root = mkdtempSync(join(tmpdir(), 'doc-bridge-signatures-')); roots.push(root)
+  writeFileSync(join(root, 'package.json'), '{"name":"doc-bridge-fixture","version":"1.0.0"}')
+  writeFileSync(join(root, 'README.md'), '# Guide\n\nCall `createThing`.\n')
+  const text = `${declaration}; export function createThing(): Date { throw 0 }`
+  writeFileSync(join(root, 'api.ts'), text)
+  const base = discoverRepository({ root })
+  writeFileSync(join(root, 'api.ts'), text.replace('export function', 'interface Extended extends Date { extra: number }; export function').replace('(): Date', '(): Extended'))
+  expect(diffSnapshots(base, discoverRepository({ root }), { headRoot: root }).findings.some(finding => finding.code === 'CHANGED_REFERENCE')).toBe(true)
+})
+
+
+it('proves a dependency cycle through the owner module without inventing namespaces', () => {
+  const root = mkdtempSync(join(tmpdir(), 'doc-bridge-signatures-')); roots.push(root)
+  writeFileSync(join(root, 'package.json'), '{"name":"doc-bridge-fixture","version":"1.0.0"}')
+  writeFileSync(join(root, 'README.md'), '# Guide\n\nCall `createThing`.\n')
+  writeFileSync(join(root, 'types.ts'), "import type { Base } from './api.js'; export interface Extended extends Base { extra: number }")
+  const text = "import type { Extended } from './types.js'; export interface Base { value: string }; export function createThing(): Base { throw 0 }"
+  writeFileSync(join(root, 'api.ts'), text)
+  const base = discoverRepository({ root })
+  writeFileSync(join(root, 'api.ts'), text.replace('(): Base', '(): Extended'))
+  expect(diffSnapshots(base, discoverRepository({ root }), { headRoot: root }).changeSet.changes.find(change => change.kind === 'signature' && change.before?.name === 'createThing')?.compatibility).toBe('compatible')
+  writeFileSync(join(root, 'api.ts'), text.replace('(): Base', '(): Before.Base'))
+  expect(diffSnapshots(base, discoverRepository({ root }), { headRoot: root }).findings.some(finding => finding.code === 'CHANGED_REFERENCE')).toBe(true)
 })

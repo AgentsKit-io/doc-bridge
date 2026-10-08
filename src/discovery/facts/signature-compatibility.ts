@@ -3,7 +3,15 @@ import { basename, dirname, resolve } from 'node:path'
 import { canonicalJsonV1 } from '../../index-builder/content-hash.js'
 import type { SurfaceFact } from '../../storage/facts.js'
 
-/** A proof uses retained declarations and compiler libraries, never repository imports. */
+export const identifierNames = (text: string): Set<string> => {
+  const scanner = ts.createScanner(ts.ScriptTarget.Latest, true)
+  scanner.setText(text)
+  const names = new Set<string>()
+  for (let token = scanner.scan(); token !== ts.SyntaxKind.EndOfFileToken; token = scanner.scan()) if (token === ts.SyntaxKind.Identifier) names.add(scanner.getTokenValue())
+  return names
+}
+
+/** A proof uses bounded retained declarations and compiler libraries, never live source. */
 export const compatibleSignature = (before: SurfaceFact, after: SurfaceFact): boolean => {
   const old = before.signature, next = after.signature
   if (!old || !next) return false
@@ -51,8 +59,13 @@ export const compatibleSignature = (before: SurfaceFact, after: SurfaceFact): bo
 
 const prove = (checks: [string[], string[], boolean][], oldTypes: Record<string, string>, newTypes: Record<string, string>): boolean => {
   if (!checks.length) return true
-  const aliases = checks.map(([, , parameter], i) => ({ from: `${parameter ? 'Before' : 'After'}.T${i}`, to: `${parameter ? 'After' : 'Before'}.T${i}`, parameter }))
-  const text = ['Before', 'After'].map((name, side) => `namespace ${name} { ${Object.values(side ? newTypes : oldTypes).map(value => `export ${value}`).join('\n')} ${checks.map(([from, to], i) => `export type T${i} = ${(side === (aliases[i]!.parameter ? 0 : 1) ? from : to).join(' ')};`).join('\n')} }`).join('\n') + '\n' + aliases.map((pair, i) => `type From${i} = ${pair.from}; type To${i} = ${pair.to};`).join('\n')
+  let prefix = '__DocBridgeProof'
+  const declarations = [...Object.values(oldTypes), ...Object.values(newTypes), ...checks.flatMap(([from, to]) => [...from, ...to])].join(' ')
+  const identifiers = identifierNames(declarations)
+  while (identifiers.has(`${prefix}Before`) || identifiers.has(`${prefix}After`) || checks.some((_, i) => [`${prefix}${i}`, `${prefix}From${i}`, `${prefix}To${i}`].some(name => identifiers.has(name)))) prefix += '_'
+  const scopes = [`${prefix}Before`, `${prefix}After`]
+  const aliases = checks.map(([, , parameter], i) => ({ from: `${scopes[parameter ? 0 : 1]}.${prefix}${i}`, to: `${scopes[parameter ? 1 : 0]}.${prefix}${i}`, parameter }))
+  const text = scopes.map((name, side) => `namespace ${name} { ${Object.values(side ? newTypes : oldTypes).map(value => `export ${value}`).join('\n')} ${checks.map(([from, to], i) => `export type ${prefix}${i} = ${(side === (aliases[i]!.parameter ? 0 : 1) ? from : to).join(' ')};`).join('\n')} }`).join('\n') + '\n' + aliases.map((pair, i) => `type ${prefix}From${i} = ${pair.from}; type ${prefix}To${i} = ${pair.to};`).join('\n')
   const options: ts.CompilerOptions = { strict: true, noEmit: true, target: ts.ScriptTarget.ESNext, types: [] }
   const host = ts.createCompilerHost(options)
   const readSource = host.getSourceFile.bind(host)

@@ -83,3 +83,12 @@ not human approval or a confirmed documentation claim. It participates in the
 ChangeSet content hash; old facts lacking retained callable proof remain readable
 and unclassified. Strict older ChangeSet readers must upgrade before consuming
 this annotation. DocBridgeIndexV1 and AgentHandoffV1 schemas do not change.
+
+Bounded local-import compiler proofs use each snapshot's retained context. A
+narrow direct opaque imported-base inheritance proof instead labels the head
+identity's code evidence `heritage proof (assumes head compiles)`. That label is a
+compilation assumption, not validation of external members or of the repository
+build. Consumers requiring fully compiler-checked compatibility must inspect
+this evidence basis. Both annotation and evidence participate in semantic identity;
+no new serialization field is introduced. See
+[signature facts](../spec/signature-facts-v1.md#conditional-direct-heritage-of-an-opaque-external-base).

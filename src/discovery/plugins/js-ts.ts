@@ -1,3 +1,4 @@
+import { signatureContext, signatureEntryPoints } from '../facts/signature-context.js'
 import { extractNpmPackages } from './npm-packages.js'
 import { npmVersionHooks } from './npm-versions.js'
 import { FACT_EXTRACTORS, runFactExtractors } from '../facts/index.js'
@@ -415,12 +416,13 @@ const dependencyEntries = (manifest: JsonRecord): readonly { readonly name: stri
   const prepare = ({ root, opts, sourcePaths, packageResult, entities, relations, addEntity, addRelation }: SourceContext) => {
   for (const pkg of packageResult.packages) {
     const text = io.readText(pkg.manifestPath)
+    const entryPoints = signatureEntryPoints(pkg.manifest)
     addEntity({
       id: pkg.id,
       kind: 'package',
       name: pkg.name ?? pkg.path,
       path: pkg.path,
-      ...(pkg.manifest.bin !== undefined ? { metadata: { cliBin: pkg.manifest.bin } } : {}),
+      ...(pkg.manifest.bin !== undefined || entryPoints ? { metadata: { ...(pkg.manifest.bin !== undefined ? { cliBin: pkg.manifest.bin } : {}), ...(entryPoints ? { signatureEntryPoints: entryPoints } : {}) } } : {}),
       provenance: 'observed',
       evidence: [
         {
@@ -509,6 +511,7 @@ const dependencyEntries = (manifest: JsonRecord): readonly { readonly name: stri
       const declared = new Set(exportedNames(sourceFile, { declaredOnly: true }))
       const reexports = exports.filter((name) => !declared.has(name))
       registerSymbols(id, exports, declared)
+      const context = signatureContext(sourceFile)
       addEntity({
         id,
         kind: 'module',
@@ -521,9 +524,7 @@ const dependencyEntries = (manifest: JsonRecord): readonly { readonly name: stri
             contentHash,
           },
         ],
-        ...(exports.length
-          ? { metadata: { exports, ...(reexports.length ? { reexports } : {}), test: TEST_MODULE_PATTERN.test(path) } }
-          : {}),
+        metadata: { ...(exports.length ? { exports, ...(reexports.length ? { reexports } : {}), test: TEST_MODULE_PATTERN.test(path) } : {}), signatureContext: context ?? null },
       })
     }
     if (pkg) addRelation({ id: entityId('relation', `${pkg.id}:contains:${id}`), kind: 'contains', from: pkg.id, to: id, provenance: 'observed', evidence: [lineEvidence('code', root, absPath, 1)] })
@@ -654,7 +655,7 @@ const dependencyEntries = (manifest: JsonRecord): readonly { readonly name: stri
 }
 export type SourceState = ReturnType<ReturnType<typeof createJsTsExtraction>['prepare']>
 
-const baseManifest = builtInManifest('js-ts', '1.4.0', [...new Set([...SOURCE_EXTENSIONS, ...CONFIG_EXTENSIONS])].map(extension => `**/*${extension}`))
+const baseManifest = builtInManifest('js-ts', '1.5.0', [...new Set([...SOURCE_EXTENSIONS, ...CONFIG_EXTENSIONS])].map(extension => `**/*${extension}`))
 const factCapabilities = { symbol: 'symbols', 'cli-command': 'cli-commands', 'cli-flag': 'cli-flags', 'config-key': 'config-keys', signature: 'signatures' } as const
 export const jsTsManifest = { ...baseManifest, capabilities: [...new Set([...baseManifest.capabilities, 'lockfile' as const, 'versions' as const, 'release-map' as const, ...FACT_EXTRACTORS.flatMap(extractor => extractor.kinds.map(kind => factCapabilities[kind]))])] }
 export const createJsTsPluginV2 = (): DiscoveryPluginV2 => ({
