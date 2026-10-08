@@ -140,7 +140,7 @@
     "ignore": "^7.0.6",
     "knap": "~0.6.0",
     "mdast-util-to-string": "^4.0.0",
-    "mermaid": "^11.17.2",
+    "mermaid": "^12.1.0",
     "minimatch": "^10.2.6",
     "packageurl-js": "2.0.1",
     "remark-frontmatter": "^5.0.0",
