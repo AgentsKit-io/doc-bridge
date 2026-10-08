@@ -69,6 +69,13 @@
 
 - Precompute semantic hash ordering keys once per entry and bound syntax-tree retention for index-only scans and reuse parsed trees in discovery, reducing index-build cost without changing artifact bytes or hash identity.
 
+## 1.14.0-next.2
+
+### Patch Changes
+
+- 33482c3: Bound service diagnostics without rejecting large ignored configurations, generate enabled ignored exports in isolated CI-built captures, and print actionable bounded gate/rule and advisory engine errors while preserving committed-index drift policy.
+- a025efe: Pin ecosystem verification to an immutable upstream commit, add snapshot sync automation, and preserve release freshness checks against upstream main.
+
 ## 1.14.0-next.1
 
 ### Minor Changes
