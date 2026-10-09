@@ -17,7 +17,7 @@ afterEach(() => { for (const root of roots.splice(0)) rmSync(root, { recursive: 
 const flow = (before: string, after: string, document: string, nextDocument = document, files: Record<string, string> = {}) => {
   const root = mkdtempSync(join(tmpdir(), 'doc-bridge-claims-')); roots.push(root)
   mkdirSync(join(root, 'docs'))
-  writeFileSync(join(root, 'package.json'), JSON.stringify({ name: 'doc-bridge-claim-fixture', version: '1.0.0' }))
+  writeFileSync(join(root, 'package.json'), JSON.stringify({ name: 'doc-bridge-claim-fixture', version: '1.0.0', dependencies: { zod: '^4.0.0' } }))
   for (const [path, text] of Object.entries(files)) writeFileSync(join(root, path), text)
   writeFileSync(join(root, 'api.ts'), before)
   writeFileSync(join(root, 'docs/guide.md'), document)
@@ -164,4 +164,61 @@ it('retains implicit default usage when a simultaneous signature change cannot v
 it('retains explicit prose configuration values', () => {
   const before = "import { z } from 'zod'; export const ConfigSchema = z.object({ settings: z.object({ count: z.number().default(1) }) })"
   expect(changed(flow(before, before.replace('default(1)', 'default(2)'), '# Config\n\n`settings.count` is 1.\n').result)).toHaveLength(1)
+})
+
+it('proves schema-backed inputs independently of optional return additions', () => {
+  const before = 'import { z } from "zod"; const RequestSchema = z.object({ partition: z.object({ revision: z.string() }), signal: z.instanceof(AbortSignal) }).strict(); type Request = Readonly<z.infer<typeof RequestSchema>>; type Options = Request & { config: string }; export function make(options: Options): { value: string } { throw 1 }'
+  const after = before.replace('{ value: string } { throw', '{ value: string; coverage?: UnresolvedValue } { throw')
+  const prose = '# API\n\n`make` accepts explicit configuration and a partition/signal.\n'
+  expect(changed(flow(before, after, prose).result)).toEqual([])
+  const call = '# API\n\n```ts\nconst result = make({ partition, signal, config })\nconsole.log(result.value)\n```\n'
+  expect(changed(flow(before, after, call).result)).toEqual([])
+  expect(changed(flow(before, after.replace('revision: z.string()', 'revision: z.number()'), call).result)).toHaveLength(1)
+  expect(changed(flow(before, after.replace('}).strict(); type Request', '}).transform(value => value); type Request'), call).result)).toHaveLength(1)
+  expect(changed(flow(before, after, call.replace('result.value', 'result.coverage')).result)).toHaveLength(1)
+  expect(changed(flow(before, after.replace('const RequestSchema =', 'const RequestSchema: OpaqueSchema ='), call).result)).toHaveLength(1)
+})
+
+it('keeps legacy and unsupported schema inputs unproven', () => {
+  const before = 'import { z } from "zod"; const Schema = z.object({ value: z.string() }); type Options = z.infer<typeof Schema>; export function make(options: Options): string { throw 1 }'
+  const after = before.replace('): string', ', extra?: boolean): string')
+  const { base, head } = flow(before, after, '# API\n\n`make` accepts an input.\n')
+  for (const snapshot of [base, head]) for (const entity of snapshot.entities) if (entity.kind === 'module' && entity.metadata) entity.metadata.signatureContext = String(entity.metadata.signatureContext).replace(/const Schema[^\n]*\n?/, '')
+  expect(changed(diffSnapshots(base, head, { headRoot: roots.at(-1)! }))).toHaveLength(1)
+})
+
+it('resolves bounded local schema values and pure schema expression helpers', () => {
+  const before = 'import { z } from "zod"; import { PartSchema } from "./parts.js"; const Schema = z.object({ part: PartSchema }); type Options = z.infer<typeof Schema>; export function make(options: Options): { value: string } { throw 1 }'
+  const after = before.replace('{ value: string } { throw', '{ value: string; coverage?: UnresolvedValue } { throw')
+  const document = '# API\n\n`make` accepts an input.\n'
+  const files = { 'parts.ts': 'import { z } from "zod"; const bounded = (max: number) => z.string().min(1).max(max); export const PartSchema = z.object({ value: bounded(8) }); export type Part = z.infer<typeof PartSchema>' }
+  expect(changed(flow(before, after, document, document, files).result)).toEqual([])
+  expect(changed(flow(before, after, document, document, { ...files, 'package.json': '{"name":"doc-bridge-claim-fixture","version":"1.0.0","dependencies":{"zod":"^3.0.0"}}' }).result)).toHaveLength(1)
+})
+
+it('proves literal-bound schema helpers, object extension and closed schema registries', () => {
+  const before = 'import { z } from "zod"; const fields = { signal: z.instanceof(AbortSignal) }; const payloads = { a: z.object({ value: z.string() }) } as const; const shape = <K extends keyof typeof payloads>(kind: K) => z.object({ ...fields, kind: z.literal(kind), payload: payloads[kind] }).extend({ bytes: z.instanceof(Uint8Array) }); const Schema = shape("a"); type Options = z.infer<typeof Schema>; export function make(options: Options): { value: string } { throw 1 }'
+  const after = before.replace('{ value: string } { throw', '{ value: string; coverage?: UnresolvedValue } { throw')
+  const document = '# API\n\n`make` accepts an input.\n'
+  expect(changed(flow(before, after, document).result)).toEqual([])
+  expect(changed(flow(before, after.replace('shape("a")', 'shape("missing")'), document).result)).toHaveLength(1)
+  expect(changed(flow(before, after.replace('value: z.string()', 'value: z.number()'), document).result)).toHaveLength(1)
+})
+
+it('does not let local standard-type aliases mask schema changes', () => {
+  const before = 'import { z } from "zod"; type Record<K, V> = { fixed: string }; const Schema = z.object({ values: z.record(z.string(), z.string()) }); type Options = z.infer<typeof Schema>; export function make(options: Options): { value: string } { throw 1 }'
+  const after = before.replace('z.record(z.string(), z.string())', 'z.record(z.string(), z.number())').replace('{ value: string } { throw', '{ value: string; coverage?: UnresolvedValue } { throw')
+  expect(changed(flow(before, after, '# API\n\n`make` accepts an input.\n').result)).toHaveLength(1)
+})
+
+it('does not substitute helper parameters into global schema objects', () => {
+  const before = 'import { z } from "zod"; let dynamic: string = "global"; const fields = { value: z.literal(dynamic) }; const shape = (dynamic: string) => z.object({ ...fields }); const Schema = shape("fixed"); type Options = z.infer<typeof Schema>; export function make(options: Options): { value: string } { throw 1 }'
+  const after = before.replace('dynamic: string = "global"', 'dynamic: number = 1').replace('{ value: string } { throw', '{ value: string; coverage?: UnresolvedValue } { throw')
+  expect(changed(flow(before, after, '# API\n\n`make` accepts an input.\n').result)).toHaveLength(1)
+})
+
+it('keeps type-only schema factory imports unproven', () => {
+  const before = 'import type { z } from "zod"; const Schema = z.object({ value: z.string() }); type Options = z.infer<typeof Schema>; export function make(options: Options): { value: string } { throw 1 }'
+  const after = before.replace('{ value: string } { throw', '{ value: string; coverage?: UnresolvedValue } { throw')
+  expect(changed(flow(before, after, '# API\n\n`make` accepts an input.\n').result)).toHaveLength(1)
 })

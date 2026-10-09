@@ -219,7 +219,9 @@ and usage exercising the changed aspect remain claims; unclear or unavailable
 regions remain claims. Subject sentences and adjacent code must refer to the
 cited symbol. Optional input/return checks retain unknown, required-field and
 implicit-default uses. Bounded snapshot-matching source can prove an exact
-current string-enum claim. See [the claim decision](../adr/0023-changed-reference-claims.md).
+current string-enum claim. Bounded retained schema syntax can also prove
+parameter-only compatibility through `z.infer<typeof Schema>`; unsupported or
+missing initializers remain candidates. See [signature proofs](signature-facts-v1.md) and [the claim decision](../adr/0023-changed-reference-claims.md).
 Its status is
 always `stale-or-unverified`: a changed implementation value does not prove
 that prose contradicts it. IDs retain the assertion/target projection and add

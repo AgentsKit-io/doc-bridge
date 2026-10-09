@@ -1,3 +1,4 @@
+import { schemaOutputTypes } from './schema-types.js'
 import { identifierNames } from './signature-compatibility.js'
 import * as ts from 'typescript'
 import { posix } from 'node:path'
@@ -9,12 +10,39 @@ const MAX_BYTES = 65_536
 const ContextSchema = z.string().refine(text => Buffer.byteLength(text) <= MAX_BYTES)
 
 /** Syntax only: retain each module once, without bodies or a checker. */
-export const signatureContext = (source: ts.SourceFile): string | undefined => {
+export const signatureContext = (source: ts.SourceFile, schemaOutputs = false): string | undefined => {
   if (source.statements.some(ts.isModuleDeclaration)) return undefined
   if ((source as ts.SourceFile & { parseDiagnostics?: readonly unknown[] }).parseDiagnostics?.length) return undefined
   const printer = ts.createPrinter({ removeComments: true })
+  const constantDeclarations = source.statements.filter(ts.isVariableStatement).filter(node => node.declarationList.flags & ts.NodeFlags.Const).flatMap(node => node.declarationList.declarations.filter(item => ts.isIdentifier(item.name) && item.initializer).map(item => [item.name.getText(source), item] as const))
+  const constants = new Map(constantDeclarations)
+  if (constants.size !== constantDeclarations.length) return undefined
+  const schemaImports = new Set((schemaOutputs ? source.statements : ([] as readonly ts.Statement[])).filter(ts.isImportDeclaration).flatMap(node => ts.isStringLiteral(node.moduleSpecifier) && node.moduleSpecifier.text === 'zod' && node.importClause?.namedBindings && ts.isNamedImports(node.importClause.namedBindings) ? node.importClause.namedBindings.elements.filter(item => (item.propertyName ?? item.name).text === 'z').map(item => item.name.text) : []))
+  const retained = new Set<string>()
+  const schemaHelper = (node: ts.ArrowFunction): boolean => {
+    let body: ts.Node = node.body
+    while (ts.isCallExpression(body) && ts.isPropertyAccessExpression(body.expression)) body = body.expression.expression
+    return ts.isIdentifier(body) && schemaImports.has(body.text)
+  }
+  const retain = (node: ts.Node): void => {
+    if (ts.isFunctionExpression(node) || ts.isArrowFunction(node) && !schemaHelper(node)) return
+    if (ts.isIdentifier(node) && constants.has(node.text) && !retained.has(node.text)) { retained.add(node.text); ts.forEachChild(constants.get(node.text)!.initializer!, retain) }
+    else ts.forEachChild(node, retain)
+  }
+  for (const node of source.statements) { const visit = (item: ts.Node): void => { if (ts.isTypeReferenceNode(item) && ts.isQualifiedName(item.typeName) && ts.isIdentifier(item.typeName.left) && schemaImports.has(item.typeName.left.text) && item.typeName.right.text === 'infer' && item.typeArguments?.length === 1 && ts.isTypeQueryNode(item.typeArguments[0]!)) retain(item.typeArguments[0]!.exprName); ts.forEachChild(item, visit) }; visit(node) }
+  const schemas = [...retained].map(name => {
+    const transformed = ts.transform(constants.get(name)!, [context => root => {
+      const visit: ts.Visitor = node => {
+        if (ts.isArrowFunction(node) && !schemaHelper(node)) return ts.factory.updateArrowFunction(node, node.modifiers, node.typeParameters, node.parameters, node.type, node.equalsGreaterThanToken, ts.factory.createTrue())
+        if (ts.isFunctionExpression(node)) return ts.factory.updateFunctionExpression(node, node.modifiers, node.asteriskToken, node.name, node.typeParameters, node.parameters, node.type, ts.factory.createBlock([ts.factory.createReturnStatement(ts.factory.createTrue())]))
+        return ts.visitEachChild(node, visit, context)
+      }
+      return ts.visitNode(root, visit) as ts.VariableDeclaration
+    }])
+    try { return `${ts.isVariableStatement(constants.get(name)!.parent.parent) && ts.getModifiers(constants.get(name)!.parent.parent as ts.VariableStatement)?.some(modifier => modifier.kind === ts.SyntaxKind.ExportKeyword) ? 'export ' : ''}const ${printer.printNode(ts.EmitHint.Unspecified, transformed.transformed[0]!, source)};` } finally { transformed.dispose() }
+  }).join('\n')
   const text = source.statements.filter(node => ts.isInterfaceDeclaration(node) || ts.isTypeAliasDeclaration(node) || ts.isImportDeclaration(node) || ts.isExportDeclaration(node) || ts.isClassDeclaration(node) || ts.isEnumDeclaration(node) || ts.isImportEqualsDeclaration(node))
-    .map(node => ts.isClassDeclaration(node) || ts.isEnumDeclaration(node) || ts.isImportEqualsDeclaration(node) ? `class ${node.name?.text ?? '__default'} {}` : printer.printNode(ts.EmitHint.Unspecified, node, source)).join('\n')
+    .map(node => ts.isClassDeclaration(node) || ts.isEnumDeclaration(node) || ts.isImportEqualsDeclaration(node) ? `class ${node.name?.text ?? '__default'} {}` : printer.printNode(ts.EmitHint.Unspecified, node, source)).join('\n') + (schemas ? '\n' + schemas : '')
   return Buffer.byteLength(text) <= MAX_BYTES ? text : undefined
 }
 
@@ -115,8 +143,19 @@ export const importedSignatureTypes = (fact: SurfaceFact, entities: readonly Kno
     if (bindings.length > 1 || (bindings.length && context.declarations.has(name))) throw new Error('AMBIGUOUS_BINDING')
     const declaration = context.declarations.get(name)
     if (declaration) {
-      context.selected.set(name, declaration.getText(context.source).replace(/^(?:export\s+)?(?:declare\s+)?/, ''))
-      visit(path, declaration, depth); return
+      const text = schemaOutputTypes(declaration, context.source, (source, name) => {
+        const binding = source.statements.filter(ts.isImportDeclaration).flatMap(item => item.importClause?.namedBindings && ts.isNamedImports(item.importClause.namedBindings) && ts.isStringLiteral(item.moduleSpecifier) ? item.importClause.namedBindings.elements.filter(value => value.name.text === name).map(value => ({ specifier: (item.moduleSpecifier as ts.StringLiteral).text, name: (value.propertyName ?? value.name).text })) : [])
+        if (binding.length !== 1) return undefined
+        const target = resolveModule(source.fileName, binding[0]!.specifier)
+        if (!target) return undefined
+        if (modules.get(target)?.metadata?.schemaOutputCodec !== 'zod-4-output-v1') return undefined
+        const imported = load(target, depth + 1).source
+        const values = imported.statements.filter(ts.isVariableStatement).filter(item => item.declarationList.flags & ts.NodeFlags.Const && ts.getModifiers(item)?.some(modifier => modifier.kind === ts.SyntaxKind.ExportKeyword)).flatMap(item => item.declarationList.declarations.filter(value => ts.isIdentifier(value.name) && value.name.text === binding[0]!.name && value.initializer && !value.type))
+        return values.length === 1 ? values[0]!.initializer : undefined
+      }, modules.get(path)?.metadata?.schemaOutputCodec === 'zod-4-output-v1')
+      if (!text) throw new Error('SCHEMA')
+      context.selected.set(name, text)
+      visit(path, ts.createSourceFile('declaration.ts', text, ts.ScriptTarget.Latest, true), depth); return
     }
     for (const node of context.source.statements) if (ts.isImportDeclaration(node) && ts.isStringLiteral(node.moduleSpecifier) && node.importClause?.namedBindings && ts.isNamedImports(node.importClause.namedBindings)) {
       const binding = node.importClause.namedBindings.elements.find(item => item.name.text === name)

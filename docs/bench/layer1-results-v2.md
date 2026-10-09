@@ -7,7 +7,11 @@ validationPath: node scripts/bench-layer1.mjs --self-check
 
 # Layer-1 benchmark results v2
 
-Historical release gate: **BLOCKED**. CHANGED_REFERENCE precision is **66.67%** (TP 10, FP 5, FN 0), below the required 80%.
+Current historical precision gate: **PASS**, at **83.33%** (TP 10, FP 2, FN 0).
+See the [precision-tail measurement](#precision-tail-gate-measurement) for current
+controls, limits and provenance. Frozen cases and earlier measurements follow.
+
+Earlier claim-policy gate: **BLOCKED**. CHANGED_REFERENCE precision is **66.67%** (TP 10, FP 5, FN 0), below the required 80%.
 
 Native included documentation findings: precision **100.00%**, coverage **100.00%** (TP 15, FP 0, FN 0). Targets: native precision ≥95% met; native coverage ≥90% met.
 
@@ -396,3 +400,75 @@ Index/handoff schemas, citation relations, changed facts and surviving finding i
 Not analyzed: broader semantic prose/architecture coverage, dependency-only changes with unchanged callable hashes, unknown schema/type-query compatibility, current large-repository latency/heap cost, UI and production endpoint/database behavior. Prior cost measurements belong to their earlier bundle and are not current validation. The next engine step needs a conservative proof for inherited schema-backed inputs/returns, with an ADR and fresh compatibility/privacy/cost evidence if retained context changes.
 
 The historical release gate remains blocked; maintainer review and CI are still required.
+
+
+## Precision-tail gate measurement
+
+The numerical historical gate **passes** on all 94 acquired and measured v2
+cases, including 39 hand-reviewed historical cases. No case, gold expectation,
+threshold or benchmark matcher changed. The prior claim policy result remains
+above as the comparison baseline. This purposive sample is not a claim of
+repository-wide semantic accuracy or general release readiness.
+
+| Finding control | TP | FP | FN | Precision | Coverage |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Historical CHANGED_REFERENCE | 10 | 2 | 0 | 83.33% | 100% |
+| Native, default and raw | 15 | 0 | 0 | 100% | 100% |
+| Fixtures, default | 26 | 0 | 0 | 100% | 100% |
+| Fixtures, raw | 38 | 0 | 0 | 100% | 100% |
+
+Historical positive-case coverage is 7/7. Negative-case false-positive rate is
+2/32 = 6.25%, below the 20% gate. The preceding engine result was historical
+10 TP / 5 FP / 0 FN (66.67% precision). Three schema-backed input/call candidates
+are now positively proved compatible; no true positive was lost.
+
+The two remaining false positives are deliberately retained:
+
+- `history-doc-bridge-9a775a55-reconciliation-scope`: the configuration region
+  still includes an informal MCP “core set” default claim. Matching its enum
+  cannot prove that opaque default unchanged in effect.
+- `history-doc-bridge-8c8ec5a9-compatible-controls`: the injected-storage example
+  uses a guarded result, but the return union is restructured. The existing
+  optional-member wrapper proof cannot establish that flow's compatibility.
+
+There are no historical false negatives. Unknown syntax and unsupported schema
+shapes remain candidates; they were not discarded to improve precision.
+
+Measured engine bundle SHA-256:
+`3123ad343536999af078de674c5661c85a0480f47374376f90a1ed10a10dfffb`.
+V2 case SHA-256: `a75743e479eb976270a9186483a1a05cf5039e63bc341f5cc96f41dcd07eb92a`.
+Runner SHA-256: `06c98e1a2f3bd7c2e3d47f4afa8620bfb23a3ce9336dde653ea0b9d6eaf3a6fa`.
+Raw provenance records the baseline revision at measurement; bundle and source
+manifest evidence bind the working implementation without rewriting provenance.
+
+
+Frozen v1 was measured again on all 53 cases. Every default/raw case score
+matches the preceding published engine run. Native findings remain 15 TP /
+0 FP / 0 FN. Included fixture findings remain 13 TP / 2 FP / 8 FN; raw fixture
+findings remain 13 TP / 14 FP / 8 FN. These frozen annotation/ownership limits
+are still reported, and v1 fixture scores are not presented as passing the v2
+control gate. V1 case bytes remain unchanged (SHA-256
+`0264264d3b390b8dc0cbf48b1d721ea336abcf26c51e9dab1bead42543e5ff0f`).
+
+This update uses one fresh complete run per suite. The earlier two-run
+reproducibility measurements above belong to their earlier bundle, and are not
+a new two-run claim for the precision-tail implementation.
+
+
+### Local discovery retention cost
+
+Three fresh process samples per engine/corpus compare the preceding adapter
+against this bundle on immutable public corpora. Snapshot size is stable across
+each set of three samples; the table reports median discovery time, excluding
+module import and acquisition. No incremental snapshot was reused.
+
+| Corpus | Baseline bytes | Current bytes | Growth | Baseline median | Current median |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| doc-bridge | 5,304,273 | 5,441,007 | +2.578% | 2966.4 ms | 2878.0 ms |
+| monorepo | 19,129,702 | 19,142,113 | +0.065% | 9511.5 ms | 8848.4 ms |
+
+Both versions discover the same entity counts (3,375 and 9,813), with no partial
+limit coverage. Samples use warm filesystem caches and were collected serially,
+without randomized ordering; these timings establish local observations, not a
+causal speed improvement or a production latency guarantee. Diff-time proof
+latency and broader repository performance were not measured.
