@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Major Changes
+
+- Reject reserved `session-export` and `bootstrap-delta` memory adapters previously accepted with warnings.
+
+- Replace CLI/MCP whole-file fixes with region remediation, reserve legacy index/snapshot hashes for migration guidance, and make memory rule paths configurable. Human decisions require local confirmation; MCP cannot approve or apply remediations. See the 1.x to 2.0 migration guide.
+
 ### Patch Changes
 
 - Refresh bounded public Studio samples with manifest package labels and current engine provenance.

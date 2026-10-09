@@ -40,7 +40,7 @@ const snapshot = (
   type: 'discovery-snapshot',
   schemaVersion: 1,
   contentHash,
-  contentHashAlgo: 'sha256-normalized-v1',
+  contentHashAlgo: 'sha256-semantic-v1',
   project: { name: 'fixture', root: '.' },
   sourceRevision: 'revision-1',
   sourceRevisionKind: 'content',

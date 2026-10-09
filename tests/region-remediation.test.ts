@@ -106,8 +106,10 @@ describe('region remediation real filesystem acceptance', () => {
   it('rolls back actual files on post-apply failure and preserves originals when restore fails', () => {
     const { project, proposal } = prepare([edit(), edit('other.md')])
     const original = fs.readFileSync(join(project, 'guide.md'), 'utf8')
+    const originalMode = fs.statSync(join(project, 'guide.md')).mode
     expect(() => applyRemediation(project, approve(proposal), { ...applyOptions(), verify: () => { throw new Error('gate failed') } })).toThrow('gate failed')
     for (const path of ['guide.md', 'other.md']) expect(fs.readFileSync(join(project, path), 'utf8')).toBe(original)
+    expect(fs.statSync(join(project, 'guide.md')).mode).toBe(originalMode)
     expect(fs.readdirSync(project).sort()).toEqual(['guide.md', 'other.md'])
     // A real filesystem obstruction makes restoring one original impossible.
     expect(() => applyRemediation(project, approve(proposal), { ...applyOptions(), verify: () => { fs.unlinkSync(join(project, 'guide.md')); fs.mkdirSync(join(project, 'guide.md')); throw new Error('gate failed') } })).toThrow('Rollback failed; recoverable originals')

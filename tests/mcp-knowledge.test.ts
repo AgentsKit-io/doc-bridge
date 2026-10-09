@@ -52,6 +52,6 @@ describe('MCP knowledge parity', () => {
     const ctx = { root, config }
     expect(() => call(ctx, 'docbridge.run')).toThrow()
     expect(() => call(ctx, 'docbridge.diagnostics', { severity: 42 })).toThrow('invalid arguments')
-    expect(() => call(ctx, 'docbridge.proposals', { action: 'approve', proposalHash: 'a'.repeat(64) })).toThrow('No saved fix proposal')
+    expect(() => call(ctx, 'docbridge.proposals', { action: 'approve', proposalHash: 'a'.repeat(64) })).toThrow('MCP cannot approve or apply')
   })
 })

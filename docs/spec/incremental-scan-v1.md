@@ -113,9 +113,8 @@ and cold/warm scans, therefore have equal semantic hashes while retaining distin
 A content, configuration, analyzer-version or meaningful coverage change invalidates identity.
 
 Legacy `sha256-normalized-v1` snapshots retain their original verifier: remove `contentHash`,
-then hash the remaining canonical JSON, including revision and reuse coverage. Readers select the
-verifier by the declared algorithm and reject unsupported algorithms with a compatible-version and
-explicit-regeneration diagnostic. Unlike algorithms are never equal identities. Declaration
+then hash the remaining canonical JSON, including revision and reuse coverage. Legacy snapshots and reports are verified only to diagnose migration, then refused
+for analysis with explicit regeneration guidance. Unsupported algorithms are rejected. Unlike algorithms are never equal identities. Declaration
 resealing, reconciliation and documentation audit inherit the snapshot algorithm.
 
 File/evidence hashes, workflow-run seals and revision-based workflow reuse, fix affected-file hashes,
@@ -125,8 +124,8 @@ Existing study artifact hash projections are unchanged.
 
 Before explicit index regeneration migrates a legacy algorithm, the builder reads and verifies
 the on-disk index being replaced and warns about legacy drift before writing. The warning concerns
-that artifact; in a clean checkout it equals the committed index. CI's `gate run index-freshness`
-still verifies the committed state under its stored algorithm and fails closed on drift.
+that artifact; in a clean checkout it equals the committed index. In 2.0 `gate run index-freshness` refuses legacy indexes even when their original
+hash is valid. Regeneration remains explicit; committed drift is checked before replacement.
 
 ## Discovery v2 acquisition
 

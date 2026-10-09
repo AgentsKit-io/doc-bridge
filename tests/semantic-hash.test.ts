@@ -79,22 +79,26 @@ describe('versioned semantic identity', () => {
 
   it('verifies legacy indexes under their original projection and reports migration without writing', () => {
     const { root } = fixture()
-    const legacy = buildDocBridgeIndex({ root, config, hashAlgorithm: LEGACY_HASH_ALGORITHM }).index
+    expect(() => DocBridgeConfigV1Schema.parse({ ...config, index: { contentHash: LEGACY_HASH_ALGORITHM } })).toThrow('migration-only')
+    expect(() => buildDocBridgeIndex({ root, config, hashAlgorithm: LEGACY_HASH_ALGORITHM })).toThrow('migration-only')
+    const legacy = buildDocBridgeIndex({ root, config, hashAlgorithm: LEGACY_HASH_ALGORITHM, write: false }).index
+    mkdirSync(join(root, '.doc-bridge'), { recursive: true })
+    writeFileSync(join(root, '.doc-bridge/index.json'), JSON.stringify(legacy))
     expect(legacy.contentHash).toBe(sha256NormalizedV1({ schemaVersion: 1, knowledge: legacy.knowledge, handoffs: legacy.handoffs, lookup: legacy.lookup, retrieval: legacy.retrieval, inputs: legacy.inputs, projection: legacy.projection?.contentHash }))
     const scanned = discoverRepository({ root, config })
     const old = { ...scanned, contentHashAlgo: LEGACY_HASH_ALGORITHM }
     const snapshot = { ...old, contentHash: contentHashForArtifactV1(old) }
-    expect(parseDiscoverySnapshot(snapshot)).toEqual(snapshot)
+    expect(() => parseDiscoverySnapshot(snapshot)).toThrow('migration-only')
     const report = reconcileKnowledge(snapshot, snapshot)
-    expect(parseReconciliationReport(report)).toEqual(report)
+    expect(() => parseReconciliationReport(report)).toThrow('migration-only')
     expect(() => parseDiscoverySnapshot({ ...snapshot, sourceRevision: 'tampered' })).toThrow('Invalid artifact content hash')
     expect(() => parseDiscoverySnapshot({ ...snapshot, contentHashAlgo: 'unknown' })).toThrow('compatible doc-bridge version')
     expect(loadDocBridgeIndex(root, config)).toEqual(legacy)
-    expect(loadFreshDocBridgeIndex(root, config)).toEqual(legacy)
+    expect(() => loadFreshDocBridgeIndex(root, config)).toThrow('migration-only')
     const bytes = readFileSync(join(root, '.doc-bridge/index.json'), 'utf8')
     const gate = runGate(root, config, 'index-freshness')
-    expect(runGate(root, config, 'index-reproducible').ok).toBe(true)
-    expect(gate.ok).toBe(true); expect(gate.message).toContain('ak-docs index to migrate')
+    expect(runGate(root, config, 'index-reproducible').ok).toBe(false)
+    expect(gate.ok).toBe(false); expect(gate.message).toContain('ak-docs index to regenerate')
     expect(readFileSync(join(root, '.doc-bridge/index.json'), 'utf8')).toBe(bytes)
     expect(sameHashIdentity(legacy, { ...legacy, contentHashAlgo: SEMANTIC_HASH_ALGORITHM })).toBe(false)
     writeFileSync(join(root, '.doc-bridge/index.json'), JSON.stringify({ ...legacy, contentHash: 'f'.repeat(64) }))
@@ -103,7 +107,9 @@ describe('versioned semantic identity', () => {
 
   it('reports replaced legacy drift before migration writes and keeps freshness fail-closed', () => {
     const { root } = fixture()
-    buildDocBridgeIndex({ root, config, hashAlgorithm: LEGACY_HASH_ALGORITHM })
+    const legacy = buildDocBridgeIndex({ root, config, hashAlgorithm: LEGACY_HASH_ALGORITHM, write: false }).index
+    mkdirSync(join(root, '.doc-bridge'), { recursive: true })
+    writeFileSync(join(root, '.doc-bridge/index.json'), JSON.stringify(legacy))
     writeFileSync(join(root, 'src/run.ts'), 'export const run = () => 3\n')
     expect(runGate(root, config, 'index-freshness').ok).toBe(false)
     const before = readFileSync(join(root, '.doc-bridge/index.json'), 'utf8')

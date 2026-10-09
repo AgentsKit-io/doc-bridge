@@ -73,9 +73,11 @@ import {
 import { reconcileKnowledge } from '../reconciliation/reconcile.js'
 import type { DiscoverySnapshotV1, ReconciliationReportV1 } from '../schemas/knowledge.js'
 import { sha256NormalizedV1 } from '../index-builder/content-hash.js'
-import { applyFixProposal, approveFixProposal, createArtifactNormalizationProposal, createMarkdownLinkFixProposal } from '../fixes/proposals.js'
+import { applyRemediation, approveRemediation, remediationBindingHash } from '../fixes/regions.js'
+import { remediationWorkflow } from '../fixes/workflow.js'
+import { DecisionV1Schema, RemediationV1Schema } from '../schemas/findings.js'
+import { recordDecision } from '../enrich/settled.js'
 import { createRegistryAgentAdapter, loadRegistryAgentRunner, persistRegistryAgentProposal } from '../agents/registry-adapter.js'
-import { fixApprovalId, recordApproval, FIX_APPROVAL_GATE } from '../enrich/approvals.js'
 import { readEnrichmentOverlay, withAcceptedRelations } from '../enrich/overlay.js'
 import { decideEnrichment, listEnrichment } from '../enrich/review.js'
 import { formatEnrichmentText, runEnrichment, type EnrichmentRunResult } from '../enrich/stage.js'
@@ -1066,28 +1068,40 @@ const runFixCommand = async (argv: readonly string[], positional: readonly strin
       writeJson(await runL2Fix(root, config, argv))
       return 0
     }
-    const sourceRevision = discoverRepository({ root, config }).sourceRevision
-    const fixOptions = { baseRevision: sourceRevision, configurationHash: sha256NormalizedV1(config), ...(config.project?.name ? { projectName: config.project.name } : {}) }
-    if (action === 'propose') {
-      const proposal = positional[2] === 'links'
-        ? createMarkdownLinkFixProposal(root, fixOptions)
-        : positional[2] === 'normalize' && positional[3] ? createArtifactNormalizationProposal(root, positional[3], fixOptions) : undefined
-      if (!proposal) { writeJson({ ok: true, proposal: null }); return 0 }
-      const outputPath = optionValues(argv, '--output')[0]
-      if (outputPath) { mkdirSync(dirname(resolve(root, outputPath)), { recursive: true }); writeFileSync(resolve(root, outputPath), `${JSON.stringify(proposal, null, 2)}\n`, 'utf8') }
-      writeJson({ ok: true, proposal, ...(outputPath ? { proposalPath: resolve(root, outputPath) } : {}) })
-      return 0
-    }
-    if (!proposalPath || !['approve', 'apply'].includes(action ?? '')) throw new Error('Usage: ak-docs fix propose links|normalize <artifact> [--output <file>] | fix approve|apply <proposal.json> [--by <name>]')
+    const basePath = optionValues(argv, '--base')[0]
+    const allowedRoots = optionValues(argv, '--allowed-root')
+    if (!proposalPath || !basePath || !allowedRoots.length || !['propose', 'revalidate', 'approve', 'apply', 'reject'].includes(action ?? '')) throw new Error('Usage: ak-docs fix propose|revalidate|approve|apply|reject <remediation.json> --base <snapshot.json> --allowed-root <path> [--by <name>] [--yes]')
     const file = resolve(root, proposalPath)
-    const proposal = JSON.parse(readFileSync(file, 'utf8')) as unknown
-    const result = action === 'approve' ? approveFixProposal(proposal, optionValues(argv, '--by')[0] ?? 'human') : applyFixProposal(root, proposal, { currentRevision: sourceRevision })
-    // An approval is recorded through the ecosystem gate too, bound to the proposal and its exact content hash.
-    const recorded = action === 'approve' && result.approval
-      ? await recordApproval(root, { id: fixApprovalId(result.proposalId, result.approval.proposalHash), name: FIX_APPROVAL_GATE, payload: { proposalId: result.proposalId, proposalHash: result.approval.proposalHash }, decision: 'approved', by: result.approval.approvedBy })
-      : undefined
-    writeFileSync(file, `${JSON.stringify(result, null, 2)}\n`, 'utf8')
-    writeJson({ ok: true, proposal: result, proposalPath: file, ...(recorded ? { approvalId: recorded.approval.id } : {}) })
+    const input = RemediationV1Schema.parse(JSON.parse(readBoundedText(file, { used: 0 })))
+    const workflow = remediationWorkflow(root, config, JSON.parse(readBoundedText(resolve(root, basePath), { used: 0 })), input, allowedRoots, action === 'reject' ? 'decision' : 'prepare')
+    let result = workflow.proposal
+    if (action === 'approve' || action === 'apply' || action === 'reject') {
+      if (process.env.GITHUB_ACTIONS === 'true') throw new Error('Human remediation decisions and application are forbidden in the Action')
+      const by = optionValues(argv, '--by')[0]
+      if (!by?.trim()) throw new Error('--by is required for human attribution; it is not authentication')
+      if (!argv.includes('--yes')) {
+        if (!process.stdin.isTTY || !process.stdout.isTTY) throw new Error('Interactive human confirmation required; use --yes only as an explicit local authority assertion')
+        const prompt = createInterface({ input: process.stdin, output: process.stderr })
+        try { if ((await prompt.question(`${action} remediation ${result.id} as ${by}? [y/N] `)).trim().toLowerCase() !== 'y') throw new Error('Human confirmation declined') } finally { prompt.close() }
+      }
+      if (action === 'approve') result = approveRemediation(result, by, identity => identity === by)
+      else if (action === 'apply') {
+        if (remediationBindingHash(input) !== remediationBindingHash(result)) throw new Error('Review artifact changed: revalidate and approve again')
+        result = applyRemediation(root, input, workflow.options)
+      } else {
+        const decisionPath = optionValues(argv, '--decision')[0]
+        if (!decisionPath) throw new Error('fix reject requires --decision <decision.json>')
+        const decision = DecisionV1Schema.parse(JSON.parse(readBoundedText(resolve(root, decisionPath), { used: 0 })))
+        const target = decision.target.kind === 'remediation' ? input : workflow.findings.find(finding => finding.id === decision.target.id)
+        if (!target) throw new Error('Decision target is not a fresh finding')
+        recordDecision(root, decision, target, identity => identity === by)
+        if (decision.target.kind === 'remediation') result = { ...input, status: 'rejected' }
+      }
+    }
+    const outputPath = optionValues(argv, '--output')[0]
+    const destination = outputPath ? resolve(root, outputPath) : file
+    writeFileSync(destination, `${JSON.stringify(result, null, 2)}\n`, 'utf8')
+    writeJson({ ok: true, proposal: result, proposalPath: destination })
     return 0
   } catch (error) {
     process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`)

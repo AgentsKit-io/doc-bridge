@@ -71,6 +71,7 @@ export const runGate = (
     } catch (error) {
       return { id, ok: false, message: error instanceof Error ? error.message : String(error) }
     }
+    if (index.contentHashAlgo === LEGACY_HASH_ALGORITHM) return { id, ok: false, message: 'Legacy index is migration-only. Run: ak-docs index to regenerate with sha256-semantic-v1.' }
     const result = checkIndexReproducibility(
       root,
       config.index?.outFile ?? '.doc-bridge/index.json',
@@ -111,18 +112,20 @@ export const runGate = (
     return { id, ok: false, message: error instanceof Error ? error.message : String(error) }
   }
 
+  if (current.contentHashAlgo === LEGACY_HASH_ALGORITHM) return { id, ok: false, message: 'Legacy index is migration-only. Run: ak-docs index to regenerate with sha256-semantic-v1.' }
+
   const next = buildDocBridgeIndex({ root, config, write: false, hashAlgorithm: current.contentHashAlgo }).index
   if (!sameHashIdentity(current, next)) {
     return {
       id,
       ok: false,
-      message: `Index is stale under ${current.contentHashAlgo}. Run: ak-docs index${current.contentHashAlgo === LEGACY_HASH_ALGORITHM ? ' to migrate to sha256-semantic-v1.' : ''}`,
+      message: `Index is stale under ${current.contentHashAlgo}. Run: ak-docs index`,
       expected: next.contentHash,
       actual: current.contentHash,
     }
   }
 
-  return { id, ok: true, message: current.contentHashAlgo === LEGACY_HASH_ALGORITHM ? 'Index is fresh under sha256-normalized-v1; explicitly regenerate with ak-docs index to migrate to sha256-semantic-v1 (requires new readers).' : 'Index is fresh', expected: next.contentHash, actual: current.contentHash }
+  return { id, ok: true, message: 'Index is fresh', expected: next.contentHash, actual: current.contentHash }
 }
 
 const runHumanGuideLinksGate = (root: string, config: DocBridgeConfigV1): GateResult => {

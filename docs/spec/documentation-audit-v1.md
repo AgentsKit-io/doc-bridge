@@ -83,7 +83,7 @@ filesystem fallbacks are refused. Ordinary local calls remain unchanged.
 
 Region fixes and settled human decisions follow [region remediation v1](../spec/region-remediation-v1.md),
 [FindingV1](../schemas/finding-v1.md), [RemediationV1](../schemas/remediation-v1.md) and
-[DecisionV1](../schemas/decision-v1.md). Existing whole-file fix commands remain V1;
+[DecisionV1](../schemas/decision-v1.md). CLI and MCP use region remediation contracts;
 region creation/review is a deterministic library API. Enrichment retains settled Decision records
 through cache replay, without converting remediation rejection into finding rejection.
 

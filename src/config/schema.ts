@@ -62,7 +62,7 @@ export const IndexConfigSchema = z
       })
       .strict()
       .optional(),
-    contentHash: z.literal('sha256-normalized-v1').optional(),
+    contentHash: z.literal('sha256-semantic-v1', { error: 'Legacy or unsupported index.contentHash is migration-only. Use sha256-semantic-v1 and run ak-docs index.' }).optional(),
   })
   .strict()
 
@@ -400,10 +400,11 @@ export const IntelligenceConfigSchema = z
       .object({
         enabled: z.boolean().optional(),
         adapters: z
-          .array(z.enum(['playbook-memory', 'cursor-rules', 'session-export', 'bootstrap-delta']))
+          .array(z.enum(['playbook-memory', 'cursor-rules']))
           .max(8)
           .optional(),
         ingestDir: z.union([z.string().min(1).max(512), z.array(z.string().min(1).max(512)).min(1).max(32)]).optional(),
+        rulesDir: z.union([z.string().min(1).max(512), z.array(z.string().min(1).max(512)).min(1).max(32)]).optional(),
         classify: z.boolean().optional(),
         promote: z
           .object({

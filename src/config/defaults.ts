@@ -28,7 +28,7 @@ export const applyConfigDefaults = (config: DocBridgeConfigV1): DocBridgeConfigV
     },
     index: {
       outFile: '.doc-bridge/index.json',
-      contentHash: 'sha256-normalized-v1',
+      contentHash: 'sha256-semantic-v1',
       llmsTxt: {
         enabled: true,
         outFile: 'llms.txt',
@@ -84,3 +84,9 @@ export const applyConfigDefaults = (config: DocBridgeConfigV1): DocBridgeConfigV
       : { enabled: false },
   }
 }
+
+/** Documented defaults, shared by direct library ingestion and loaded configuration. */
+export const memoryPathDefaults = (memory: NonNullable<DocBridgeConfigV1['intelligence']>['memory']) => ({
+  ingestDir: memory?.ingestDir ?? '.agent-memory',
+  rulesDir: memory?.rulesDir ?? '.cursor/rules',
+})

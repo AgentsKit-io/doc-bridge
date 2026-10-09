@@ -5,7 +5,7 @@ import { createHash } from 'node:crypto'
 import { afterEach, describe, expect, it } from 'vitest'
 
 import { classifyMemoryCandidates, draftMemoryPromotion, linkMemoryToEntities } from '../src/memory/pipeline.js'
-import { ingestMemoryCandidates, ingestAgentMemory, ingestCursorRules, unsupportedMemoryAdapters, unsupportedMemoryAdapterWarning } from '../src/memory/ingest.js'
+import { ingestMemoryCandidates, ingestAgentMemory, ingestCursorRules } from '../src/memory/ingest.js'
 import { DocBridgeConfigV1Schema } from '../src/config/schema.js'
 import { KnowledgeEntitiesV1Schema, type KnowledgeEntitiesV1 } from '../src/schemas/knowledge-entity.js'
 import { canCreateSymlinks } from './helpers/symlink-support.js'
@@ -38,6 +38,20 @@ const index: DocBridgeIndexV1 = {
 }
 
 describe('memory pipeline', () => {
+  it('uses configured rule directories without reading conventional rules', () => {
+    const root = mkdtempSync(join(tmpdir(), 'doc-bridge-memory-config-'))
+    try {
+      mkdirSync(join(root, '.cursor/rules'), { recursive: true })
+      mkdirSync(join(root, 'notes/rules'), { recursive: true })
+      writeFileSync(join(root, '.cursor/rules/default.md'), '# Default\nIgnored')
+      writeFileSync(join(root, 'notes/rules/configured.md'), '# Configured\nSelected')
+      const candidates = ingestMemoryCandidates(root, { memory: { adapters: ['cursor-rules'], rulesDir: 'notes/rules' } })
+      expect(candidates.map(candidate => candidate.rawPath)).toEqual(['notes/rules/configured.md'])
+      expect(ingestCursorRules(root, 'notes/rules')).toEqual(candidates)
+      expect(() => ingestMemoryCandidates(root, { memory: { adapters: ['cursor-rules'], rulesDir: '../outside' } })).toThrow('inside the repository')
+    } finally { rmSync(root, { recursive: true, force: true }) }
+  })
+
   it('classifies memory candidates into doc routes', () => {
     const result = classifyMemoryCandidates(
       [
@@ -122,14 +136,8 @@ describe('configured deterministic memory', () => {
 
   it('fails clearly for unsupported adapters, escapes, symlink escapes and oversized files', () => {
     const root = memoryRoot()
-    // 1.x compatibility: reserved adapters are accepted by config validation and ignored with a warning.
-    expect(() => DocBridgeConfigV1Schema.parse({ schemaVersion: 1, corpus: { agent: { root: 'docs' } }, intelligence: { memory: { adapters: ['session-export'] } } })).not.toThrow()
-    for (const adapter of ['session-export', 'bootstrap-delta'] as const) {
-      expect(ingestMemoryCandidates(root, { memory: { adapters: [adapter] } })).toEqual([])
-      expect(unsupportedMemoryAdapters({ memory: { adapters: ['playbook-memory', adapter, adapter] } })).toEqual([adapter])
-      expect(unsupportedMemoryAdapterWarning({ memory: { adapters: [adapter] } })).toContain(adapter)
-    }
-    expect(unsupportedMemoryAdapterWarning({ memory: { adapters: ['playbook-memory'] } })).toBeUndefined()
+    for (const adapter of ['session-export', 'bootstrap-delta']) expect(() => DocBridgeConfigV1Schema.parse({ schemaVersion: 1, corpus: { agent: { root: 'docs' } }, intelligence: { memory: { adapters: [adapter] } } })).toThrow()
+    for (const adapter of ['session-export', 'bootstrap-delta'] as const) expect(() => ingestMemoryCandidates(root, { memory: { adapters: [adapter as 'playbook-memory'] } })).toThrow(`Unsupported deterministic memory adapter: ${adapter}`)
     expect(() => ingestMemoryCandidates(root, { memory: { ingestDir: '../outside' } })).toThrow('inside the repository')
     if (canCreateSymlinks()) {
       const outside = memoryRoot()

@@ -22,12 +22,12 @@ import type { DocBridgeIndexV1 } from '../schemas/doc-bridge-index.js'
 import { PACKAGE_VERSION } from '../version.js'
 import { loadWorkflowManifest, loadWorkflowStepOutput } from '../workflow/engine.js'
 import { parseDiscoverySnapshot, parseReconciliationReport } from '../validate.js'
-import { applyFixProposal, approveFixProposal, createArtifactNormalizationProposal, createMarkdownLinkFixProposal } from '../fixes/proposals.js'
+import { remediationWorkflow } from '../fixes/workflow.js'
+import { readBoundedText } from '../lib/bounded-text.js'
+import { RemediationV1Schema, type RemediationV1 } from '../schemas/findings.js'
 import { createRegistryAgentAdapter, loadRegistryAgentRunner, persistRegistryAgentProposal } from '../agents/registry-adapter.js'
 import { decideEnrichment, listEnrichment } from '../enrich/review.js'
-import { sha256NormalizedV1 } from '../index-builder/content-hash.js'
-import { discoverRepository } from '../discovery/repository.js'
-import { FixProposalV1Schema, type DiscoverySnapshotV1, type ReconciliationReportV1, type FixProposalV1 } from '../schemas/knowledge.js'
+import { type DiscoverySnapshotV1, type ReconciliationReportV1 } from '../schemas/knowledge.js'
 import { redactValue, redactSecrets } from '../safety/repository.js'
 
 type JsonRpcRequest = {
@@ -160,9 +160,9 @@ export const MCP_TOOLS = [
   },
   {
     name: 'docbridge.proposals',
-    title: 'Read or approve proposals',
-    description: 'Create, inspect, approve and apply deterministic proposals through the shared human-gated workflow.',
-    inputSchema: { type: 'object', properties: { action: { type: 'string', enum: ['list', 'propose-links', 'propose-normalize', 'suggest', 'approve', 'apply', 'enrich-list', 'enrich-approve', 'enrich-reject'] }, proposalHash: { type: 'string' }, artifactPath: { type: 'string' }, approvedBy: { type: 'string' }, proposal: { type: 'object' }, proposalId: { type: 'string' }, reason: { type: 'string' } } },
+    title: 'Prepare and inspect region remediations',
+    description: 'Prepare and revalidate region remediations; human approval and application use the local CLI.',
+    inputSchema: { type: 'object', properties: { action: { type: 'string', enum: ['list', 'propose', 'revalidate', 'suggest', 'enrich-list', 'enrich-approve', 'enrich-reject'] }, base: { type: 'object' }, allowedRoots: { type: 'array', items: { type: 'string' }, minItems: 1 }, approvedBy: { type: 'string' }, proposal: { type: 'object' }, proposalId: { type: 'string' }, reason: { type: 'string' } } },
   },
   {
     name: 'knowledge.search',
@@ -254,7 +254,7 @@ const DocGetArgsSchema = z
 const WorkflowRunArgsSchema = z.object({ runId: z.string().min(1).optional() })
 const DiagnosticsArgsSchema = z.object({ status: z.string().min(1).optional(), severity: z.string().min(1).optional(), format: z.enum(['diagnostic', 'finding']).optional() })
 const RelationsArgsSchema = z.object({ kind: z.string().min(1).optional(), limit: z.number().int().positive().max(500).optional() })
-const ProposalsArgsSchema = z.object({ action: z.enum(['list', 'propose-links', 'propose-normalize', 'suggest', 'approve', 'apply', 'enrich-list', 'enrich-approve', 'enrich-reject']).optional(), proposalHash: z.string().min(1).optional(), artifactPath: z.string().min(1).optional(), approvedBy: z.string().min(1).optional(), proposal: z.unknown().optional(), proposalId: z.string().min(1).optional(), reason: z.string().max(1_024).optional() })
+const ProposalsArgsSchema = z.object({ action: z.enum(['list', 'propose', 'revalidate', 'suggest', 'approve', 'apply', 'enrich-list', 'enrich-approve', 'enrich-reject']).optional(), base: z.unknown().optional(), allowedRoots: z.array(z.string().min(1)).min(1).max(32).optional(), approvedBy: z.string().min(1).optional(), proposal: z.unknown().optional(), proposalId: z.string().min(1).optional(), reason: z.string().max(1_024).optional() })
 
 const parseToolArgs = <T>(tool: string, schema: z.ZodType<T>, value: unknown): T => {
   try {
@@ -321,11 +321,11 @@ const workflowReport = (ctx: McpContext, runId?: string): ReconciliationReportV1
 }
 
 const proposalPath = (ctx: McpContext): string => join(ctx.root, '.doc-bridge', 'proposal.json')
-const readSavedProposal = (ctx: McpContext, input: unknown): FixProposalV1 => {
-  if (input !== undefined) return FixProposalV1Schema.parse(input)
-  try { return FixProposalV1Schema.parse(JSON.parse(readFileSync(proposalPath(ctx), 'utf8')) as unknown) } catch { throw new Error(`No saved fix proposal at ${proposalPath(ctx)}.`) }
+const readSavedProposal = (ctx: McpContext, input: unknown): RemediationV1 => {
+  if (input !== undefined) return RemediationV1Schema.parse(input)
+  return RemediationV1Schema.parse(JSON.parse(readBoundedText(proposalPath(ctx), { used: 0 })) as unknown)
 }
-const saveProposal = (ctx: McpContext, proposal: FixProposalV1): void => { mkdirSync(join(ctx.root, '.doc-bridge'), { recursive: true }); writeFileSync(proposalPath(ctx), `${JSON.stringify(proposal, null, 2)}\n`, 'utf8') }
+const saveProposal = (ctx: McpContext, proposal: RemediationV1): void => { mkdirSync(join(ctx.root, '.doc-bridge'), { recursive: true }); writeFileSync(proposalPath(ctx), `${JSON.stringify(proposal, null, 2)}\n`, 'utf8') }
 
 const enabledMcpTools = (ctx: McpContext) => {
   const configured = ctx.config.surfaces?.mcp?.tools
@@ -480,8 +480,10 @@ export const handleMcpRequest = (ctx: McpContext, request: JsonRpcRequest): unkn
         })()
       }
       if (!parsed.action || parsed.action === 'list') {
-        let proposal: FixProposalV1 | undefined
-        try { proposal = readSavedProposal(ctx, undefined) } catch { proposal = undefined }
+        let proposal: RemediationV1 | undefined
+        try { proposal = readSavedProposal(ctx, undefined) } catch (error) {
+          if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error
+        }
         return toolResult(redactValue({ ...(run ? { runId: run.runId } : {}), proposals: proposal ? [proposal] : [] }))
       }
       if (parsed.action === 'suggest') {
@@ -495,26 +497,9 @@ export const handleMcpRequest = (ctx: McpContext, request: JsonRpcRequest): unkn
           return toolResult(redactValue({ ...(run ? { runId: run.runId } : {}), proposal, proposalPath: savedPath }))
         })()
       }
-      const discovered = discoverRepository({ root: ctx.root, config: ctx.config })
-      const options = { baseRevision: discovered.sourceRevision, configurationHash: sha256NormalizedV1(ctx.config), ...(ctx.config.project?.name ? { projectName: ctx.config.project.name } : {}) }
-      if (parsed.action === 'propose-links') {
-        const proposal = createMarkdownLinkFixProposal(ctx.root, options)
-        if (proposal) saveProposal(ctx, proposal)
-        return toolResult(redactValue({ ...(run ? { runId: run.runId } : {}), proposal: proposal ?? null }))
-      }
-      if (parsed.action === 'propose-normalize') {
-        if (!parsed.artifactPath) throw new Error('docbridge.proposals propose-normalize requires artifactPath')
-        const proposal = createArtifactNormalizationProposal(ctx.root, parsed.artifactPath, options)
-        if (proposal) saveProposal(ctx, proposal)
-        return toolResult(redactValue({ ...(run ? { runId: run.runId } : {}), proposal: proposal ?? null }))
-      }
-      if (parsed.action === 'approve') {
-        const proposal = approveFixProposal(readSavedProposal(ctx, parsed.proposal), parsed.approvedBy ?? 'human')
-        if (parsed.proposalHash && proposal.approval?.proposalHash !== parsed.proposalHash) throw new Error('proposalHash does not match the saved proposal')
-        saveProposal(ctx, proposal)
-        return toolResult(redactValue({ ...(run ? { runId: run.runId } : {}), proposal }))
-      }
-      const proposal = applyFixProposal(ctx.root, readSavedProposal(ctx, parsed.proposal), { currentRevision: discovered.sourceRevision })
+      if (parsed.action === 'approve' || parsed.action === 'apply') throw new Error('MCP cannot approve or apply remediations; return to a human through the local CLI')
+      if (!parsed.base || !parsed.allowedRoots) throw new Error('Region remediation requires base snapshot and caller allowedRoots')
+      const { proposal } = remediationWorkflow(ctx.root, ctx.config, parsed.base, readSavedProposal(ctx, parsed.proposal), parsed.allowedRoots)
       saveProposal(ctx, proposal)
       return toolResult(redactValue({ ...(run ? { runId: run.runId } : {}), proposal }))
     }
