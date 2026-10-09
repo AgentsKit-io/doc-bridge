@@ -1,0 +1,49 @@
+{
+  "name": "@agentskit/doc-bridge-studio",
+  "version": "0.1.0",
+  "description": "Optional local graph and review workspace for doc-bridge.",
+  "type": "module",
+  "main": "./dist/server.js",
+  "types": "./dist/server.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/server.d.ts",
+      "import": "./dist/server.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "node build.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "pnpm --dir ../.. exec vitest run tests/studio-server.test.ts --maxWorkers=2",
+    "test:browser": "playwright test --config playwright.config.ts",
+    "prepack": "node build.mjs"
+  },
+  "dependencies": {
+    "graphology": "~0.26.0",
+    "sigma": "^3.0.2",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  },
+  "peerDependencies": {
+    "@agentskit/doc-bridge": ">=1.15.0 <2"
+  },
+  "devDependencies": {
+    "@agentskit/doc-bridge": "workspace:*"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AgentsKit-io/doc-bridge.git",
+    "directory": "packages/studio"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

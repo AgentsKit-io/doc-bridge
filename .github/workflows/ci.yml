@@ -120,3 +120,15 @@ jobs:
           include-hidden-files: true
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm docs:e2e
+      - run: pnpm --filter @agentskit/doc-bridge-studio typecheck
+      - run: pnpm --filter @agentskit/doc-bridge-studio build
+      - name: Studio browser acceptance
+        run: pnpm --filter @agentskit/doc-bridge-studio test:browser
+        env:
+          STUDIO_EVIDENCE_DIR: ${{ runner.temp }}/doc-bridge-studio-evidence
+      - name: Upload Studio browser evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: studio-browser-evidence
+          path: ${{ runner.temp }}/doc-bridge-studio-evidence

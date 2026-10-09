@@ -213,7 +213,8 @@
     "react-dom": "19.3.0",
     "tailwindcss": "4.3.3",
     "tsup": "^8.5.0",
-    "vitest": "^4.1.11"
+    "vitest": "^4.1.11",
+    "@agentskit/doc-bridge-studio": "workspace:*"
   },
   "directories": {
     "doc": "docs",

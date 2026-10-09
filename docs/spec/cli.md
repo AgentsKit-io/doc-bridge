@@ -381,3 +381,7 @@ See [vault diff v1](./vault-diff-v1.md).
 
 `ak-docs why <path|symbol|concept> [--json]` exposes exact indexed rationale. See
 [knowledge query v1](knowledge-query-v1.md) for evidence, bounds and enablement.
+
+## Optional local Studio
+
+`ak-docs studio [--config <path>] [--findings <file>] [--sample synthetic|doc-bridge|agentskit]` loads the separately installed `@agentskit/doc-bridge-studio` package and starts an authenticated 127.0.0.1 server. `studio export` remains deterministic JSON export. See the [Studio server contract](studio-server-v1.md) and [guide](../guides/studio.md).
