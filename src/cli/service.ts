@@ -1,3 +1,4 @@
+import { knowledgeWhy, formatKnowledgeWhyText } from '../query/why.js'
 import { relative, resolve } from 'node:path'
 import { loadCliConfig } from '../config/load-config.js'
 import { discoverRepositoryWithRead } from '../discovery/repository.js'
@@ -22,7 +23,7 @@ export const runServiceCli = (argv: readonly string[]): Promise<number> => withE
   process.on('SIGINT', abort)
   try {
     if (argv.includes('--watch')) throw new Error('not-analyzed: service profile denies watch')
-    const supported = ['validate-config', 'discover', 'index', 'search', 'mcp']
+    const supported = ['validate-config', 'discover', 'index', 'search', 'why', 'mcp']
     if (!supported.includes(command ?? '')) throw new Error('not-analyzed: command unavailable in service profile; supported: ' + supported.join(', '))
     const artifactRoot = value('--artifact-root')
     if (command === 'index' && !artifactRoot) throw new Error('Service index writes require caller-provided --artifact-root <directory>')
@@ -69,6 +70,12 @@ export const runServiceCli = (argv: readonly string[]): Promise<number> => withE
     const built = await buildStoredDocBridgeIndex({ repository, artifacts, partition, config, snapshot: discovered.snapshot, snapshotBinding: discovered.binding, profile: 'service', write: command === 'index', ...controls })
     if (built.status === 'ok' && built.value.metrics) process.stderr.write(`metrics: ${JSON.stringify(built.value.metrics)}\n`)
     if (built.status !== 'ok') throw new Error(`not-analyzed: ${built.code}`)
+    if (command === 'why') {
+      const response = knowledgeWhy(built.value.index, { target: argv[1] ?? '' }, true)
+      if (argv.includes('--json')) output(response)
+      else process.stdout.write(formatKnowledgeWhyText(response) + '\n')
+      return 0
+    }
     if (command === 'mcp') {
       startMcpStdioServer({ root, config, profile: 'service', loadIndex: () => built.value.index, readDocument: () => { throw new Error('not-analyzed: synchronous document text unavailable; use knowledge.search') } })
       return 0

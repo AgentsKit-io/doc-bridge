@@ -1119,3 +1119,4 @@ export { KNOWLEDGE_ENTITY_SCHEMA_VERSION, KnowledgeEntityV1Schema, KnowledgeEnti
 export { STUDIO_SCHEMA_VERSION, STUDIO_LIMITS, StudioGraphV1Schema, StudioGraphV1JsonSchema, StudioNodeV1Schema, StudioEdgeV1Schema, StudioFindingV1Schema, StudioProposalV1Schema, StudioSearchV1Schema, StudioWhyV1Schema } from './schemas/studio-graph.js'
 export type { StudioGraphV1, StudioNodeV1, StudioEdgeV1, StudioFindingV1, StudioProposalV1, StudioSearchV1, StudioWhyV1 } from './schemas/studio-graph.js'
 export { exportStudioGraph, searchStudioGraph, whyStudioNode, type StudioExportOptions } from './studio/export.js'
+export { knowledgeWhy, formatKnowledgeWhyText, KnowledgeWhyRequestSchema, KnowledgeWhyResponseV1Schema, type KnowledgeWhyRequest, type KnowledgeWhyResponse } from './query/why.js'

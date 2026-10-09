@@ -259,13 +259,22 @@ describe('intelligence runtime', () => {
 
   it('runs one-shot chat with handoff-first context when the question names a package', async () => {
     const root = tempProject()
+    const captured = index()
+    captured.knowledgeEntities = { schemaVersion: 1, coverage: [], entities: Array.from({ length: 10 }, (_, position) => ({
+      schemaVersion: 1, id: `concept-${position}`, kind: 'concept', name: 'Storage', aliases: ['schemas'],
+      evidence: [{ kind: 'fact', factId: 'module-store' }], links: [],
+    })) }
     const result = await runChatOnce(
       root,
       config({ enabled: true, adapter: { provider: 'ollama' } }),
-      index(),
+      captured,
       'How do I edit os-core schemas?',
     )
 
+    const prompt = String(mocks.createChatController.mock.calls[0]?.[0]?.system)
+    expect(prompt).toContain('cite entity IDs')
+    expect(prompt).toContain('concept-7')
+    expect(prompt).not.toContain('concept-8')
     expect(result).toEqual({ content: 'Answer from AgentsKit.', handoffPrefixed: true })
     expect(mocks.createChatController).toHaveBeenCalledWith(
       expect.objectContaining({

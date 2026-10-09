@@ -66,7 +66,7 @@ export const applyConfigDefaults = (config: DocBridgeConfigV1): DocBridgeConfigV
           'memory.classify', 'memory.promoteDraft', 'registry.topology',
           'docbridge.snapshot', 'docbridge.report', 'docbridge.diagnostics',
           'docbridge.relations', 'docbridge.run', 'docbridge.proposals',
-          'knowledge.search', 'knowledge.lookup',
+          'knowledge.search', 'knowledge.lookup', 'knowledge.decision', 'knowledge.concept', 'knowledge.whyChanged',
         ],
         transport: 'stdio',
         ...config.surfaces?.mcp,

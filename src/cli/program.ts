@@ -1,3 +1,4 @@
+import { knowledgeWhy, formatKnowledgeWhyText } from '../query/why.js'
 import { runOperationCli } from './operation.js'
 import { executionContext } from '../execution/profile.js'
 import { runServiceCli } from './service.js'
@@ -146,6 +147,7 @@ type Command =
   | 'query'
   | 'search'
   | 'retrieve'
+  | 'why'
   | 'ask'
   | 'chat'
   | 'rag'
@@ -226,6 +228,7 @@ const parseArgs = (argv: readonly string[]) => {
   else if (positional[0] === 'query') command = 'query'
   else if (positional[0] === 'search') command = 'search'
   else if (positional[0] === 'retrieve') command = 'retrieve'
+  else if (positional[0] === 'why') command = 'why'
   else if (positional[0] === 'ask') command = 'ask'
   else if (positional[0] === 'chat') command = 'chat'
   else if (positional[0] === 'rag') command = 'rag'
@@ -2225,6 +2228,19 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
         return 1
       }
     })()
+  }
+
+  if (command === 'why') {
+    try {
+      const { config, root } = loadProject(configPath)
+      const response = knowledgeWhy(loadFreshDocBridgeIndex(root, config), { target: positional.slice(1).join(' ') })
+      if (flags.has('--json')) writeJson(response)
+      else writeLines([formatKnowledgeWhyText(response)])
+      return 0
+    } catch (error) {
+      process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`)
+      return 1
+    }
   }
 
   if (command === 'ask') {

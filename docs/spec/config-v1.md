@@ -719,7 +719,7 @@ type SurfacesConfig = {
   mcp?: {
     enabled?: boolean               // default: true
     /** Tool ids to expose; default: core set */
-    tools?: McpToolId[]
+    tools?: McpToolId[]            // at most 21; includes knowledge rationale tools
     transport?: 'stdio' | 'http'
     http?: { port?: number; path?: string }
   }
@@ -730,6 +730,9 @@ type McpToolId =
   | 'doc.search'                   // deterministic index search
   | 'doc.get'
   | 'gate.status'
+  | 'knowledge.decision'
+  | 'knowledge.concept'
+  | 'knowledge.whyChanged'
   | 'playbook.pattern.get'         // requires federation
 ```
 
@@ -1125,3 +1128,7 @@ See [Marketplace](../MARKETPLACE.md) for permissions and the self-CI exception.
 `graph-signals`) to project-relative knap template files. Required identity and
 source-hash frontmatter remains outside template overrides. Paths reject traversal
 and symlinks. See [vault export v1](./vault-export-v1.md) for the full contract.
+
+The default MCP tool set includes `knowledge.decision`, `knowledge.concept` and
+`knowledge.whyChanged`; explicit tool allowlists remain restrictive. See
+[knowledge query v1](knowledge-query-v1.md) for typed inputs and service coverage.

@@ -52,6 +52,7 @@ const stage = async () => {
     entryPoints: [resolve(root, 'bin', 'ak-docs.js')],
     bundle: true,
     format: 'esm',
+    banner: { js: "import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);" },
     platform: 'node',
     target: 'node22',
     outfile: resolve(runtimeDir, 'ak-docs.js'),
