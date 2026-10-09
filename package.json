@@ -18,6 +18,10 @@
     "./config": {
       "types": "./dist/config/index.d.ts",
       "import": "./dist/config/index.js"
+    },
+    "./remediation": {
+      "types": "./dist/llm/program.d.ts",
+      "import": "./dist/llm/program.js"
     }
   },
   "files": [

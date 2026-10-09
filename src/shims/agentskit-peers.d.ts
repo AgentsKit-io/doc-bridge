@@ -46,6 +46,12 @@ declare module '@agentskit/adapters' {
 }
 
 declare module '@agentskit/core' {
+  export type AdapterFactory = {
+    createSource(request: {
+      messages: { id: string; role: 'user'; content: string; status: 'complete'; createdAt: Date }[]
+      context: { maxTokens: number; temperature: number }
+    }): { stream(): AsyncIterableIterator<{ type: string; content?: string }>; abort(): void }
+  }
   export function createChatController(config: Record<string, unknown>): {
     send: (input: string) => Promise<{ content?: string; messages?: unknown[] }>
     messages?: unknown[]

@@ -9,6 +9,10 @@ Command-line interface for **`@agentskit/doc-bridge`**. The package publishes tw
 
 ## Naming
 
+Optional region proposals: `ak-docs fix --llm --base <snapshot.json>`.
+See [L2 remediation](llm-remediation-v1.md) for budgets, scripted responses, dry-run
+and draft review previews; ordinary fix commands retain their existing behavior.
+
 | What | Name |
 |------|------|
 | npm package | `@agentskit/doc-bridge` |

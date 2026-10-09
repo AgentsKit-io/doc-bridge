@@ -29,6 +29,8 @@
 
 ### Minor Changes
 
+- Add optional bounded L2 region remediation with deterministic in-memory rechecking, key-free scripted providers and draft review previews.
+
 - Export opt-in knowledge entity notes and convert generated vault edits into deterministic human-reviewed enrichment proposals with a local draft preview.
 - Honor configured memory directories and deterministic adapters, and link safe classified memories to opt-in knowledge entities through exact typed evidence while keeping promotion draft-only.
 - Add a bounded deterministic studio graph contract, local JSON export, search/why payloads, public samples and design brief.
