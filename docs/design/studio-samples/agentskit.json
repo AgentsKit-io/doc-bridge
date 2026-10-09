@@ -3,7 +3,7 @@
   "schemaVersion": 1,
   "source": {
     "project": "AgentsKit",
-    "indexHash": "3ba230ebf27c16d0050846a36562468d83bb1f9c65bab4d093e512d75cd878f3",
+    "indexHash": "73abb33d2964257e0adb4ecf21b35db3089831db31ae99cbcca17987f85c6169",
     "indexHashAlgo": "sha256-semantic-v1",
     "revision": "cff4ba9b36a393d9d226bd2b6a64152120990a95"
   },
@@ -53,7 +53,7 @@
       "cluster": "package:agentskit",
       "metrics": {
         "canonicality": 0,
-        "degree": 145
+        "degree": 144
       }
     },
     {
@@ -441,18 +441,6 @@
       }
     },
     {
-      "id": "area:packages/eval-braintrust/src/scorers",
-      "label": "scorers",
-      "kind": "area",
-      "path": "packages/eval-braintrust/src/scorers",
-      "sourceKind": "area",
-      "cluster": "package:@agentskit/eval-braintrust",
-      "metrics": {
-        "canonicality": 0.002769,
-        "degree": 1
-      }
-    },
-    {
       "id": "area:packages/eval/src/ci",
       "label": "ci",
       "kind": "area",
@@ -700,7 +688,7 @@
       "sourceKind": "document",
       "metrics": {
         "canonicality": 0,
-        "degree": 1
+        "degree": 0
       }
     },
     {
@@ -711,7 +699,7 @@
       "sourceKind": "document",
       "metrics": {
         "canonicality": 0,
-        "degree": 4
+        "degree": 3
       }
     },
     {
@@ -722,7 +710,7 @@
       "sourceKind": "document",
       "metrics": {
         "canonicality": 0,
-        "degree": 4
+        "degree": 2
       }
     },
     {
@@ -733,7 +721,7 @@
       "sourceKind": "document",
       "metrics": {
         "canonicality": 0,
-        "degree": 1
+        "degree": 0
       }
     },
     {
@@ -744,7 +732,7 @@
       "sourceKind": "document",
       "metrics": {
         "canonicality": 0,
-        "degree": 1
+        "degree": 0
       }
     },
     {
@@ -755,7 +743,7 @@
       "sourceKind": "document",
       "metrics": {
         "canonicality": 0,
-        "degree": 1
+        "degree": 0
       }
     },
     {
@@ -766,7 +754,7 @@
       "sourceKind": "document",
       "metrics": {
         "canonicality": 0,
-        "degree": 1
+        "degree": 0
       }
     },
     {
@@ -777,7 +765,7 @@
       "sourceKind": "document",
       "metrics": {
         "canonicality": 0,
-        "degree": 9
+        "degree": 8
       }
     },
     {
@@ -788,7 +776,7 @@
       "sourceKind": "document",
       "metrics": {
         "canonicality": 0,
-        "degree": 1
+        "degree": 0
       }
     },
     {
@@ -799,7 +787,7 @@
       "sourceKind": "document",
       "metrics": {
         "canonicality": 0,
-        "degree": 2
+        "degree": 1
       }
     },
     {
@@ -810,7 +798,7 @@
       "sourceKind": "document",
       "metrics": {
         "canonicality": 0,
-        "degree": 1
+        "degree": 0
       }
     },
     {
@@ -821,7 +809,7 @@
       "sourceKind": "document",
       "metrics": {
         "canonicality": 0,
-        "degree": 3
+        "degree": 2
       }
     },
     {
@@ -898,7 +886,7 @@
       "sourceKind": "document",
       "metrics": {
         "canonicality": 0.001943,
-        "degree": 25
+        "degree": 23
       }
     },
     {
@@ -1661,17 +1649,6 @@
       }
     },
     {
-      "id": "document:apps/docs-next/content/docs/agents/tools/integrations/google-calendar.mdx",
-      "label": "google-calendar.mdx",
-      "kind": "document",
-      "path": "apps/docs-next/content/docs/agents/tools/integrations/google-calendar.mdx",
-      "sourceKind": "document",
-      "metrics": {
-        "canonicality": 0,
-        "degree": 0
-      }
-    },
-    {
       "id": "document:apps/docs-next/content/docs/agents/tools/integrations/hubspot.mdx",
       "label": "hubspot.mdx",
       "kind": "document",
@@ -2343,17 +2320,6 @@
       }
     },
     {
-      "id": "document:apps/docs-next/content/docs/data/providers/bedrock.mdx",
-      "label": "bedrock.mdx",
-      "kind": "document",
-      "path": "apps/docs-next/content/docs/data/providers/bedrock.mdx",
-      "sourceKind": "document",
-      "metrics": {
-        "canonicality": 0,
-        "degree": 1
-      }
-    },
-    {
       "id": "document:apps/docs-next/content/docs/data/providers/cerebras.mdx",
       "label": "cerebras.mdx",
       "kind": "document",
@@ -2372,39 +2338,6 @@
       "sourceKind": "document",
       "metrics": {
         "canonicality": 0,
-        "degree": 1
-      }
-    },
-    {
-      "id": "document:apps/docs-next/content/docs/data/providers/cohere.mdx",
-      "label": "cohere.mdx",
-      "kind": "document",
-      "path": "apps/docs-next/content/docs/data/providers/cohere.mdx",
-      "sourceKind": "document",
-      "metrics": {
-        "canonicality": 0,
-        "degree": 1
-      }
-    },
-    {
-      "id": "document:apps/docs-next/content/docs/data/providers/deepseek-embedder.mdx",
-      "label": "deepseek-embedder.mdx",
-      "kind": "document",
-      "path": "apps/docs-next/content/docs/data/providers/deepseek-embedder.mdx",
-      "sourceKind": "document",
-      "metrics": {
-        "canonicality": 0,
-        "degree": 0
-      }
-    },
-    {
-      "id": "document:apps/docs-next/content/docs/data/providers/deepseek.mdx",
-      "label": "deepseek.mdx",
-      "kind": "document",
-      "path": "apps/docs-next/content/docs/data/providers/deepseek.mdx",
-      "sourceKind": "document",
-      "metrics": {
-        "canonicality": 0,
         "degree": 0
       }
     },
@@ -2417,25 +2350,6 @@
       "metrics": {
         "canonicality": 0.001943,
         "degree": 1
-      }
-    },
-    {
-      "id": "document:apps/docs-next/content/docs/data/providers/fireworks.mdx",
-      "label": "fireworks.mdx",
-      "kind": "document",
-      "path": "apps/docs-next/content/docs/data/providers/fireworks.mdx",
-      "sourceKind": "document",
-      "metrics": {
-        "canonicality": 0,
-        "degree": 0
-      }
-    },
-    {
-      "id": "knowledge-change:cff4ba9b36a393d9d226bd2b6a64152120990a95",
-      "label": "feat(eval): add hashed result provenance records (#1834)",
-      "kind": "change",
-      "metrics": {
-        "degree": 12
       }
     },
     {
@@ -3474,15 +3388,6 @@
       }
     },
     {
-      "id": "knowledge-concept:Branching inside a node stays in code",
-      "label": "Branching inside a node stays in code",
-      "kind": "concept",
-      "path": "apps/docs-next/content/docs/get-started/migrating/from-langgraph.mdx",
-      "metrics": {
-        "degree": 0
-      }
-    },
-    {
       "id": "knowledge-concept:Browser-only chat",
       "label": "Browser-only chat",
       "kind": "concept",
@@ -3561,15 +3466,6 @@
       "path": "packages/cli/README.md",
       "metrics": {
         "degree": 0
-      }
-    },
-    {
-      "id": "knowledge-concept:Cheapest first-class multi-modal",
-      "label": "Cheapest first-class multi-modal",
-      "kind": "concept",
-      "path": "apps/docs-next/content/docs/data/providers/choosing.mdx",
-      "metrics": {
-        "degree": 1
       }
     },
     {
@@ -3672,15 +3568,6 @@
       }
     },
     {
-      "id": "knowledge-concept:Decide what happens to the three existing non-English locales (`pt-BR`, `es`, `zh-Hans`) on `apps/docs` now that the docs site is moving from Docusaurus to Fumadocs",
-      "label": "Decide what happens to the three existing non-English locales (`pt-BR`, `es`, `zh-Hans`) on `apps/docs` now that the docs site is moving from Docusaurus to Fumadocs",
-      "kind": "concept",
-      "path": "rfcs/0001-i18n-strategy.md",
-      "metrics": {
-        "degree": 0
-      }
-    },
-    {
       "id": "knowledge-concept:Demotions are loud",
       "label": "Demotions are loud",
       "kind": "concept",
@@ -3699,28 +3586,10 @@
       }
     },
     {
-      "id": "knowledge-concept:Docusaurus shipped mature first-party i18n with `apps/docs/i18n/{es,pt-BR,zh-Hans}` already populated. Fumadocs leaves i18n to the consumer",
-      "label": "Docusaurus shipped mature first-party i18n with `apps/docs/i18n/{es,pt-BR,zh-Hans}` already populated. Fumadocs leaves i18n to the consumer",
-      "kind": "concept",
-      "path": "rfcs/0001-i18n-strategy.md",
-      "metrics": {
-        "degree": 0
-      }
-    },
-    {
       "id": "knowledge-concept:Driver-light: consumes Bot Framework activity payloads at `/api/messages` and verifies the inbound JWT via an injected `verifyToken` callback. No `botbuilder` / `microsoft-graph-client` dependency in this template",
       "label": "Driver-light: consumes Bot Framework activity payloads at `/api/messages` and verifies the inbound JWT via an injected `verifyToken` callback. No `botbuilder` / `microsoft-graph-client` dependency in this template",
       "kind": "concept",
       "path": "apps/example-teams-bot/README.md",
-      "metrics": {
-        "degree": 0
-      }
-    },
-    {
-      "id": "knowledge-concept:Each `runner.step(id, fn)` is recorded; replays short-circuit on resume. Crash, deploy, or retry",
-      "label": "Each `runner.step(id, fn)` is recorded; replays short-circuit on resume. Crash, deploy, or retry",
-      "kind": "concept",
-      "path": "apps/docs-next/content/docs/get-started/migrating/from-langgraph.mdx",
       "metrics": {
         "degree": 0
       }
@@ -3793,15 +3662,6 @@
       "label": "Every adapter ships in `@agentskit/adapters` runs the same contract test suite before merge",
       "kind": "concept",
       "path": "apps/docs-next/content/docs/reference/recipes/adapter-contract-tests.mdx",
-      "metrics": {
-        "degree": 0
-      }
-    },
-    {
-      "id": "knowledge-concept:Every agent run becomes a Langfuse **trace**. LLM calls map to **generations** (with token usage), tool calls map to **spans**. Network errors are swallowed",
-      "label": "Every agent run becomes a Langfuse **trace**. LLM calls map to **generations** (with token usage), tool calls map to **spans**. Network errors are swallowed",
-      "kind": "concept",
-      "path": "apps/docs-next/content/docs/production/observability/loggers.mdx",
       "metrics": {
         "degree": 0
       }
@@ -3912,15 +3772,6 @@
       "path": "docs/architecture/adrs/0006-runtime-contract.md",
       "metrics": {
         "degree": 0
-      }
-    },
-    {
-      "id": "knowledge-decision:docs/architecture/adrs/0007-docs-platform-fumadocs.md:ADR 0007 — Documentation platform: Fumadocs",
-      "label": "ADR 0007 — Documentation platform: Fumadocs",
-      "kind": "decision",
-      "path": "docs/architecture/adrs/0007-docs-platform-fumadocs.md",
-      "metrics": {
-        "degree": 1
       }
     },
     {
@@ -4339,8 +4190,8 @@
       "cluster": "area:agents",
       "metrics": {
         "canonicality": 0,
-        "degree": 9,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 9
       }
     },
     {
@@ -4353,8 +4204,8 @@
       "cluster": "area:agents",
       "metrics": {
         "canonicality": 0,
-        "degree": 5,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 5
       }
     },
     {
@@ -4380,8 +4231,8 @@
       "cluster": "area:apps/ask-backend",
       "metrics": {
         "canonicality": 0,
-        "degree": 3,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 3
       }
     },
     {
@@ -4394,8 +4245,8 @@
       "cluster": "area:apps/ask-backend",
       "metrics": {
         "canonicality": 0,
-        "degree": 7,
-        "centrality": 0.000158
+        "centrality": 0.000158,
+        "degree": 7
       }
     },
     {
@@ -4408,8 +4259,8 @@
       "cluster": "area:apps/ask-backend",
       "metrics": {
         "canonicality": 0,
-        "degree": 4,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 4
       }
     },
     {
@@ -4422,8 +4273,8 @@
       "cluster": "area:apps/ask-backend",
       "metrics": {
         "canonicality": 0,
-        "degree": 12,
-        "centrality": 0.000633
+        "centrality": 0.000633,
+        "degree": 12
       }
     },
     {
@@ -4436,8 +4287,8 @@
       "cluster": "area:apps/ask-backend",
       "metrics": {
         "canonicality": 0,
-        "degree": 12,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 12
       }
     },
     {
@@ -4450,8 +4301,8 @@
       "cluster": "area:apps/ask-backend",
       "metrics": {
         "canonicality": 0,
-        "degree": 4,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 4
       }
     },
     {
@@ -4464,8 +4315,8 @@
       "cluster": "area:apps/ask-backend",
       "metrics": {
         "canonicality": 0,
-        "degree": 16,
-        "centrality": 0.000633
+        "centrality": 0.000633,
+        "degree": 16
       }
     },
     {
@@ -4478,8 +4329,8 @@
       "cluster": "area:apps/ask-backend",
       "metrics": {
         "canonicality": 0,
-        "degree": 8,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 8
       }
     },
     {
@@ -4492,8 +4343,8 @@
       "cluster": "area:apps/ask-backend",
       "metrics": {
         "canonicality": 0,
-        "degree": 22,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 22
       }
     },
     {
@@ -4506,8 +4357,8 @@
       "cluster": "area:apps/ask-backend",
       "metrics": {
         "canonicality": 0,
-        "degree": 5,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 5
       }
     },
     {
@@ -4520,8 +4371,8 @@
       "cluster": "area:apps/ask-backend",
       "metrics": {
         "canonicality": 0,
-        "degree": 3,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 3
       }
     },
     {
@@ -4534,8 +4385,8 @@
       "cluster": "area:apps/ask-backend",
       "metrics": {
         "canonicality": 0,
-        "degree": 6,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 6
       }
     },
     {
@@ -4548,8 +4399,8 @@
       "cluster": "area:apps/ask-backend",
       "metrics": {
         "canonicality": 0,
-        "degree": 3,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 3
       }
     },
     {
@@ -4562,8 +4413,8 @@
       "cluster": "area:apps/ask-backend",
       "metrics": {
         "canonicality": 0,
-        "degree": 5,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 5
       }
     },
     {
@@ -4576,8 +4427,8 @@
       "cluster": "area:apps/ask-backend",
       "metrics": {
         "canonicality": 0,
-        "degree": 9,
-        "centrality": 0.000475
+        "centrality": 0.000475,
+        "degree": 9
       }
     },
     {
@@ -4590,8 +4441,8 @@
       "cluster": "area:apps/ask-backend",
       "metrics": {
         "canonicality": 0,
-        "degree": 7,
-        "centrality": 0.000316
+        "centrality": 0.000316,
+        "degree": 7
       }
     },
     {
@@ -4604,8 +4455,8 @@
       "cluster": "area:apps/ask-backend",
       "metrics": {
         "canonicality": 0,
-        "degree": 14,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 14
       }
     },
     {
@@ -4618,8 +4469,8 @@
       "cluster": "area:apps/ask-backend",
       "metrics": {
         "canonicality": 0,
-        "degree": 11,
-        "centrality": 0.000475
+        "centrality": 0.000475,
+        "degree": 11
       }
     },
     {
@@ -4632,8 +4483,8 @@
       "cluster": "area:apps/ask-backend",
       "metrics": {
         "canonicality": 0,
-        "degree": 10,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 10
       }
     },
     {
@@ -4659,8 +4510,8 @@
       "cluster": "area:apps/docs-next",
       "metrics": {
         "canonicality": 0,
-        "degree": 4,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 4
       }
     },
     {
@@ -4699,8 +4550,8 @@
       "cluster": "area:apps/docs-next",
       "metrics": {
         "canonicality": 0,
-        "degree": 6,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 6
       }
     },
     {
@@ -4713,8 +4564,8 @@
       "cluster": "area:apps/docs-next",
       "metrics": {
         "canonicality": 0,
-        "degree": 4,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 4
       }
     },
     {
@@ -4727,8 +4578,8 @@
       "cluster": "area:apps/docs-next",
       "metrics": {
         "canonicality": 0,
-        "degree": 4,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 4
       }
     },
     {
@@ -4741,8 +4592,8 @@
       "cluster": "area:apps/docs-next",
       "metrics": {
         "canonicality": 0,
-        "degree": 7,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 7
       }
     },
     {
@@ -4859,8 +4710,8 @@
       "cluster": "area:apps/docs-next",
       "metrics": {
         "canonicality": 0,
-        "degree": 4,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 4
       }
     },
     {
@@ -4899,8 +4750,8 @@
       "cluster": "area:apps/docs-next",
       "metrics": {
         "canonicality": 0,
-        "degree": 4,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 4
       }
     },
     {
@@ -4939,8 +4790,8 @@
       "cluster": "area:apps/docs-next",
       "metrics": {
         "canonicality": 0,
-        "degree": 4,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 4
       }
     },
     {
@@ -4966,8 +4817,8 @@
       "cluster": "area:apps/docs-next",
       "metrics": {
         "canonicality": 0,
-        "degree": 4,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 4
       }
     },
     {
@@ -4993,8 +4844,8 @@
       "cluster": "area:apps/docs-next",
       "metrics": {
         "canonicality": 0,
-        "degree": 4,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 4
       }
     },
     {
@@ -5020,8 +4871,8 @@
       "cluster": "area:apps/docs-next",
       "metrics": {
         "canonicality": 0,
-        "degree": 4,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 4
       }
     },
     {
@@ -5047,8 +4898,8 @@
       "cluster": "area:apps/docs-next",
       "metrics": {
         "canonicality": 0,
-        "degree": 17,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 17
       }
     },
     {
@@ -5087,8 +4938,8 @@
       "cluster": "area:apps/docs-next",
       "metrics": {
         "canonicality": 0,
-        "degree": 4,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 4
       }
     },
     {
@@ -5166,8 +5017,8 @@
       "cluster": "area:apps/docs-next",
       "metrics": {
         "canonicality": 0,
-        "degree": 4,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 4
       }
     },
     {
@@ -5193,8 +5044,8 @@
       "cluster": "area:apps/docs-next",
       "metrics": {
         "canonicality": 0,
-        "degree": 4,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 4
       }
     },
     {
@@ -5220,8 +5071,8 @@
       "cluster": "area:apps/docs-next",
       "metrics": {
         "canonicality": 0,
-        "degree": 4,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 4
       }
     },
     {
@@ -5260,8 +5111,8 @@
       "cluster": "area:apps/docs-next",
       "metrics": {
         "canonicality": 0,
-        "degree": 3,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 3
       }
     },
     {
@@ -5313,8 +5164,8 @@
       "cluster": "area:apps/docs-next",
       "metrics": {
         "canonicality": 0,
-        "degree": 3,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 3
       }
     },
     {
@@ -5353,8 +5204,8 @@
       "cluster": "area:apps/docs-next",
       "metrics": {
         "canonicality": 0,
-        "degree": 3,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 3
       }
     },
     {
@@ -5471,8 +5322,8 @@
       "cluster": "area:apps/docs-next",
       "metrics": {
         "canonicality": 0,
-        "degree": 3,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 3
       }
     },
     {
@@ -5485,8 +5336,8 @@
       "cluster": "area:apps/docs-next",
       "metrics": {
         "canonicality": 0,
-        "degree": 3,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 3
       }
     },
     {
@@ -5499,8 +5350,8 @@
       "cluster": "area:apps/docs-next",
       "metrics": {
         "canonicality": 0,
-        "degree": 5,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 5
       }
     },
     {
@@ -5513,8 +5364,8 @@
       "cluster": "area:apps/docs-next",
       "metrics": {
         "canonicality": 0,
-        "degree": 3,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 3
       }
     },
     {
@@ -5527,8 +5378,8 @@
       "cluster": "area:apps/docs-next",
       "metrics": {
         "canonicality": 0,
-        "degree": 6,
-        "centrality": 0.001741
+        "centrality": 0.001741,
+        "degree": 6
       }
     },
     {
@@ -5541,8 +5392,8 @@
       "cluster": "area:apps/docs-next",
       "metrics": {
         "canonicality": 0,
-        "degree": 4,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 4
       }
     },
     {
@@ -5555,8 +5406,8 @@
       "cluster": "area:apps/docs-next",
       "metrics": {
         "canonicality": 0,
-        "degree": 6,
-        "centrality": 0.000949
+        "centrality": 0.000949,
+        "degree": 6
       }
     },
     {
@@ -5569,8 +5420,8 @@
       "cluster": "area:apps/docs-next",
       "metrics": {
         "canonicality": 0,
-        "degree": 5,
-        "centrality": 0.000633
+        "centrality": 0.000633,
+        "degree": 5
       }
     },
     {
@@ -5583,8 +5434,8 @@
       "cluster": "area:apps/docs-next",
       "metrics": {
         "canonicality": 0,
-        "degree": 4,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 4
       }
     },
     {
@@ -5597,8 +5448,8 @@
       "cluster": "area:apps/docs-next",
       "metrics": {
         "canonicality": 0,
-        "degree": 6,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 6
       }
     },
     {
@@ -5611,8 +5462,8 @@
       "cluster": "area:apps/docs-next",
       "metrics": {
         "canonicality": 0,
-        "degree": 6,
-        "centrality": 0.000665
+        "centrality": 0.000665,
+        "degree": 6
       }
     },
     {
@@ -5625,8 +5476,8 @@
       "cluster": "area:apps/docs-next",
       "metrics": {
         "canonicality": 0,
-        "degree": 4,
-        "centrality": 0.000032
+        "centrality": 0.000032,
+        "degree": 4
       }
     },
     {
@@ -5639,8 +5490,8 @@
       "cluster": "area:apps/docs-next",
       "metrics": {
         "canonicality": 0,
-        "degree": 4,
-        "centrality": 0.000032
+        "centrality": 0.000032,
+        "degree": 4
       }
     },
     {
@@ -5653,8 +5504,8 @@
       "cluster": "area:apps/docs-next",
       "metrics": {
         "canonicality": 0,
-        "degree": 4,
-        "centrality": 0.000032
+        "centrality": 0.000032,
+        "degree": 4
       }
     },
     {
@@ -5667,8 +5518,8 @@
       "cluster": "area:apps/docs-next",
       "metrics": {
         "canonicality": 0,
-        "degree": 5,
-        "centrality": 0.000032
+        "centrality": 0.000032,
+        "degree": 5
       }
     },
     {
@@ -5681,8 +5532,8 @@
       "cluster": "area:apps/docs-next",
       "metrics": {
         "canonicality": 0,
-        "degree": 8,
-        "centrality": 0.003481
+        "centrality": 0.003481,
+        "degree": 8
       }
     },
     {
@@ -5695,8 +5546,8 @@
       "cluster": "area:apps/docs-next",
       "metrics": {
         "canonicality": 0,
-        "degree": 9,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 9
       }
     },
     {
@@ -5709,8 +5560,8 @@
       "cluster": "area:apps/docs-next",
       "metrics": {
         "canonicality": 0,
-        "degree": 7,
-        "centrality": 0.003323
+        "centrality": 0.003323,
+        "degree": 7
       }
     },
     {
@@ -5762,8 +5613,8 @@
       "cluster": "area:apps/docs-next",
       "metrics": {
         "canonicality": 0,
-        "degree": 3,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 3
       }
     },
     {
@@ -5776,8 +5627,8 @@
       "cluster": "area:apps/docs-next",
       "metrics": {
         "canonicality": 0,
-        "degree": 3,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 3
       }
     },
     {
@@ -5790,8 +5641,8 @@
       "cluster": "area:apps/docs-next",
       "metrics": {
         "canonicality": 0,
-        "degree": 4,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 4
       }
     },
     {
@@ -5843,8 +5694,8 @@
       "cluster": "area:apps/docs-next",
       "metrics": {
         "canonicality": 0,
-        "degree": 4,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 4
       }
     },
     {
@@ -5870,8 +5721,8 @@
       "cluster": "area:apps/docs-next",
       "metrics": {
         "canonicality": 0,
-        "degree": 3,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 3
       }
     },
     {
@@ -5884,8 +5735,8 @@
       "cluster": "area:apps/docs-next",
       "metrics": {
         "canonicality": 0,
-        "degree": 5,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 5
       }
     },
     {
@@ -5898,8 +5749,8 @@
       "cluster": "area:apps/docs-next",
       "metrics": {
         "canonicality": 0,
-        "degree": 3,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 3
       }
     },
     {
@@ -5925,8 +5776,8 @@
       "cluster": "area:apps/docs-next",
       "metrics": {
         "canonicality": 0,
-        "degree": 5,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 5
       }
     },
     {
@@ -5952,8 +5803,8 @@
       "cluster": "area:apps/docs-next",
       "metrics": {
         "canonicality": 0,
-        "degree": 4,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 4
       }
     },
     {
@@ -6005,8 +5856,8 @@
       "cluster": "area:apps/docs-next",
       "metrics": {
         "canonicality": 0,
-        "degree": 3,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 3
       }
     },
     {
@@ -6032,8 +5883,8 @@
       "cluster": "area:apps/docs-next",
       "metrics": {
         "canonicality": 0,
-        "degree": 4,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 4
       }
     },
     {
@@ -6046,8 +5897,8 @@
       "cluster": "area:apps/docs-next",
       "metrics": {
         "canonicality": 0,
-        "degree": 5,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 5
       }
     },
     {
@@ -6060,8 +5911,8 @@
       "cluster": "area:apps/docs-next",
       "metrics": {
         "canonicality": 0,
-        "degree": 4,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 4
       }
     },
     {
@@ -6074,8 +5925,8 @@
       "cluster": "area:apps/docs-next",
       "metrics": {
         "canonicality": 0,
-        "degree": 9,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 9
       }
     },
     {
@@ -6088,8 +5939,8 @@
       "cluster": "area:apps/docs-next",
       "metrics": {
         "canonicality": 0,
-        "degree": 14,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 14
       }
     },
     {
@@ -6102,8 +5953,8 @@
       "cluster": "area:apps/docs-next",
       "metrics": {
         "canonicality": 0,
-        "degree": 7,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 7
       }
     },
     {
@@ -6116,8 +5967,8 @@
       "cluster": "area:apps/docs-next",
       "metrics": {
         "canonicality": 0,
-        "degree": 3,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 3
       }
     },
     {
@@ -6130,8 +5981,8 @@
       "cluster": "area:apps/docs-next",
       "metrics": {
         "canonicality": 0,
-        "degree": 3,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 3
       }
     },
     {
@@ -6157,8 +6008,8 @@
       "cluster": "area:apps/docs-next",
       "metrics": {
         "canonicality": 0,
-        "degree": 4,
-        "centrality": 0.000158
+        "centrality": 0.000158,
+        "degree": 4
       }
     },
     {
@@ -6184,8 +6035,8 @@
       "cluster": "area:apps/docs-next",
       "metrics": {
         "canonicality": 0,
-        "degree": 4,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 4
       }
     },
     {
@@ -6380,8 +6231,8 @@
       "cluster": "area:apps/docs-next",
       "metrics": {
         "canonicality": 0,
-        "degree": 4,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 4
       }
     },
     {
@@ -6394,8 +6245,8 @@
       "cluster": "area:apps/docs-next",
       "metrics": {
         "canonicality": 0,
-        "degree": 4,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 4
       }
     },
     {
@@ -6408,8 +6259,8 @@
       "cluster": "area:apps/docs-next",
       "metrics": {
         "canonicality": 0,
-        "degree": 4,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 4
       }
     },
     {
@@ -6505,14 +6356,14 @@
     },
     {
       "id": "package:@agentskit/adapters",
-      "label": "adapters",
+      "label": "@agentskit/adapters",
       "kind": "package",
       "path": "packages/adapters",
       "sourceKind": "package",
       "cluster": "package:@agentskit/adapters",
       "metrics": {
         "canonicality": 0.004421,
-        "degree": 9
+        "degree": 8
       }
     },
     {
@@ -6541,7 +6392,7 @@
     },
     {
       "id": "package:@agentskit/core",
-      "label": "core",
+      "label": "@agentskit/core",
       "kind": "package",
       "path": "packages/core",
       "sourceKind": "package",
@@ -6553,7 +6404,7 @@
     },
     {
       "id": "package:@agentskit/cross-platform",
-      "label": "cross-platform",
+      "label": "@agentskit/cross-platform",
       "kind": "package",
       "path": "packages/cross-platform",
       "sourceKind": "package",
@@ -6565,7 +6416,7 @@
     },
     {
       "id": "package:@agentskit/eval",
-      "label": "eval",
+      "label": "@agentskit/eval",
       "kind": "package",
       "path": "packages/eval",
       "sourceKind": "package",
@@ -6573,18 +6424,6 @@
       "metrics": {
         "canonicality": 0.007724,
         "degree": 7
-      }
-    },
-    {
-      "id": "package:@agentskit/eval-braintrust",
-      "label": "eval-braintrust",
-      "kind": "package",
-      "path": "packages/eval-braintrust",
-      "sourceKind": "package",
-      "cluster": "package:@agentskit/eval-braintrust",
-      "metrics": {
-        "canonicality": 0,
-        "degree": 2
       }
     },
     {
@@ -6601,7 +6440,7 @@
     },
     {
       "id": "package:@agentskit/integrations",
-      "label": "integrations",
+      "label": "@agentskit/integrations",
       "kind": "package",
       "path": "packages/integrations",
       "sourceKind": "package",
@@ -6613,7 +6452,7 @@
     },
     {
       "id": "package:@agentskit/mcp",
-      "label": "mcp",
+      "label": "@agentskit/mcp",
       "kind": "package",
       "path": "packages/mcp",
       "sourceKind": "package",
@@ -6625,7 +6464,7 @@
     },
     {
       "id": "package:@agentskit/memory",
-      "label": "memory",
+      "label": "@agentskit/memory",
       "kind": "package",
       "path": "packages/memory",
       "sourceKind": "package",
@@ -6637,7 +6476,7 @@
     },
     {
       "id": "package:@agentskit/net",
-      "label": "net",
+      "label": "@agentskit/net",
       "kind": "package",
       "path": "packages/net",
       "sourceKind": "package",
@@ -6649,7 +6488,7 @@
     },
     {
       "id": "package:@agentskit/observability",
-      "label": "observability",
+      "label": "@agentskit/observability",
       "kind": "package",
       "path": "packages/observability",
       "sourceKind": "package",
@@ -6660,32 +6499,20 @@
       }
     },
     {
-      "id": "package:@agentskit/observability-langfuse",
-      "label": "observability-langfuse",
-      "kind": "package",
-      "path": "packages/observability-langfuse",
-      "sourceKind": "package",
-      "cluster": "package:@agentskit/observability-langfuse",
-      "metrics": {
-        "canonicality": 0.005247,
-        "degree": 2
-      }
-    },
-    {
       "id": "package:@agentskit/rag",
-      "label": "rag",
+      "label": "@agentskit/rag",
       "kind": "package",
       "path": "packages/rag",
       "sourceKind": "package",
       "cluster": "package:@agentskit/rag",
       "metrics": {
         "canonicality": 0.005247,
-        "degree": 6
+        "degree": 5
       }
     },
     {
       "id": "package:@agentskit/react",
-      "label": "react",
+      "label": "@agentskit/react",
       "kind": "package",
       "path": "packages/react",
       "sourceKind": "package",
@@ -6709,7 +6536,7 @@
     },
     {
       "id": "package:@agentskit/runtime",
-      "label": "runtime",
+      "label": "@agentskit/runtime",
       "kind": "package",
       "path": "packages/runtime",
       "sourceKind": "package",
@@ -6721,7 +6548,7 @@
     },
     {
       "id": "package:@agentskit/sandbox",
-      "label": "optional peer for the default E2B cloud backend:",
+      "label": "@agentskit/sandbox",
       "kind": "package",
       "path": "packages/sandbox",
       "sourceKind": "package",
@@ -6733,7 +6560,7 @@
     },
     {
       "id": "package:@agentskit/skills",
-      "label": "skills",
+      "label": "@agentskit/skills",
       "kind": "package",
       "path": "packages/skills",
       "sourceKind": "package",
@@ -6757,7 +6584,7 @@
     },
     {
       "id": "package:@agentskit/statechart",
-      "label": "statechart",
+      "label": "@agentskit/statechart",
       "kind": "package",
       "path": "packages/statechart",
       "sourceKind": "package",
@@ -6781,7 +6608,7 @@
     },
     {
       "id": "package:@agentskit/templates",
-      "label": "templates",
+      "label": "@agentskit/templates",
       "kind": "package",
       "path": "packages/templates",
       "sourceKind": "package",
@@ -6793,7 +6620,7 @@
     },
     {
       "id": "package:@agentskit/tools",
-      "label": "tools",
+      "label": "@agentskit/tools",
       "kind": "package",
       "path": "packages/tools",
       "sourceKind": "package",
@@ -6805,7 +6632,7 @@
     },
     {
       "id": "package:@agentskit/validation",
-      "label": "validation",
+      "label": "@agentskit/validation",
       "kind": "package",
       "path": "packages/validation",
       "sourceKind": "package",
@@ -9791,20 +9618,6 @@
       "weight": 1
     },
     {
-      "id": "relation:document:.agent-memory/MEMORY.md:changed-by:knowledge-change:cff4ba9b36a393d9d226bd2b6a64152120990a95",
-      "from": "document:.agent-memory/MEMORY.md",
-      "to": "knowledge-change:cff4ba9b36a393d9d226bd2b6a64152120990a95",
-      "kind": "changed-by",
-      "weight": 1
-    },
-    {
-      "id": "relation:document:.agent-memory/feedback_json-schema-canonical.md:changed-by:knowledge-change:cff4ba9b36a393d9d226bd2b6a64152120990a95",
-      "from": "document:.agent-memory/feedback_json-schema-canonical.md",
-      "to": "knowledge-change:cff4ba9b36a393d9d226bd2b6a64152120990a95",
-      "kind": "changed-by",
-      "weight": 1
-    },
-    {
       "id": "relation:document:.agent-memory/feedback_json-schema-canonical.md:mentions:package:@agentskit/core",
       "from": "document:.agent-memory/feedback_json-schema-canonical.md",
       "to": "package:@agentskit/core",
@@ -9819,23 +9632,9 @@
       "weight": 1
     },
     {
-      "id": "relation:document:.agent-memory/feedback_zero-dep-core.md:changed-by:knowledge-change:cff4ba9b36a393d9d226bd2b6a64152120990a95",
-      "from": "document:.agent-memory/feedback_zero-dep-core.md",
-      "to": "knowledge-change:cff4ba9b36a393d9d226bd2b6a64152120990a95",
-      "kind": "changed-by",
-      "weight": 1
-    },
-    {
       "id": "relation:document:.agent-memory/feedback_zero-dep-core.md:mentions:package:@agentskit/core",
       "from": "document:.agent-memory/feedback_zero-dep-core.md",
       "to": "package:@agentskit/core",
-      "kind": "mentions",
-      "weight": 1
-    },
-    {
-      "id": "relation:document:.agent-memory/feedback_zero-dep-core.md:mentions:package:@agentskit/observability-langfuse",
-      "from": "document:.agent-memory/feedback_zero-dep-core.md",
-      "to": "package:@agentskit/observability-langfuse",
       "kind": "mentions",
       "weight": 1
     },
@@ -9844,41 +9643,6 @@
       "from": "document:.agent-memory/feedback_zero-dep-core.md",
       "to": "package:@agentskit/validation",
       "kind": "mentions",
-      "weight": 1
-    },
-    {
-      "id": "relation:document:.agent-memory/project_file-size-baselines.md:changed-by:knowledge-change:cff4ba9b36a393d9d226bd2b6a64152120990a95",
-      "from": "document:.agent-memory/project_file-size-baselines.md",
-      "to": "knowledge-change:cff4ba9b36a393d9d226bd2b6a64152120990a95",
-      "kind": "changed-by",
-      "weight": 1
-    },
-    {
-      "id": "relation:document:.agent-memory/project_ignored-package-changesets-block-release.md:changed-by:knowledge-change:cff4ba9b36a393d9d226bd2b6a64152120990a95",
-      "from": "document:.agent-memory/project_ignored-package-changesets-block-release.md",
-      "to": "knowledge-change:cff4ba9b36a393d9d226bd2b6a64152120990a95",
-      "kind": "changed-by",
-      "weight": 1
-    },
-    {
-      "id": "relation:document:.agent-memory/project_npm-publish-workspace-protocol.md:changed-by:knowledge-change:cff4ba9b36a393d9d226bd2b6a64152120990a95",
-      "from": "document:.agent-memory/project_npm-publish-workspace-protocol.md",
-      "to": "knowledge-change:cff4ba9b36a393d9d226bd2b6a64152120990a95",
-      "kind": "changed-by",
-      "weight": 1
-    },
-    {
-      "id": "relation:document:.agent-memory/project_playbook-alignment.md:changed-by:knowledge-change:cff4ba9b36a393d9d226bd2b6a64152120990a95",
-      "from": "document:.agent-memory/project_playbook-alignment.md",
-      "to": "knowledge-change:cff4ba9b36a393d9d226bd2b6a64152120990a95",
-      "kind": "changed-by",
-      "weight": 1
-    },
-    {
-      "id": "relation:document:.agent-memory/project_v1-readiness.md:changed-by:knowledge-change:cff4ba9b36a393d9d226bd2b6a64152120990a95",
-      "from": "document:.agent-memory/project_v1-readiness.md",
-      "to": "knowledge-change:cff4ba9b36a393d9d226bd2b6a64152120990a95",
-      "kind": "changed-by",
       "weight": 1
     },
     {
@@ -9910,38 +9674,10 @@
       "weight": 1
     },
     {
-      "id": "relation:document:.agent-memory/reference_cli-adapter-protocol-boundary.md:changed-by:knowledge-change:cff4ba9b36a393d9d226bd2b6a64152120990a95",
-      "from": "document:.agent-memory/reference_cli-adapter-protocol-boundary.md",
-      "to": "knowledge-change:cff4ba9b36a393d9d226bd2b6a64152120990a95",
-      "kind": "changed-by",
-      "weight": 1
-    },
-    {
-      "id": "relation:document:.agent-memory/reference_models-catalog.md:changed-by:knowledge-change:cff4ba9b36a393d9d226bd2b6a64152120990a95",
-      "from": "document:.agent-memory/reference_models-catalog.md",
-      "to": "knowledge-change:cff4ba9b36a393d9d226bd2b6a64152120990a95",
-      "kind": "changed-by",
-      "weight": 1
-    },
-    {
       "id": "relation:document:.agent-memory/reference_models-catalog.md:mentions:package:@agentskit/adapters",
       "from": "document:.agent-memory/reference_models-catalog.md",
       "to": "package:@agentskit/adapters",
       "kind": "mentions",
-      "weight": 1
-    },
-    {
-      "id": "relation:document:.agent-memory/reference_quality-gates.md:changed-by:knowledge-change:cff4ba9b36a393d9d226bd2b6a64152120990a95",
-      "from": "document:.agent-memory/reference_quality-gates.md",
-      "to": "knowledge-change:cff4ba9b36a393d9d226bd2b6a64152120990a95",
-      "kind": "changed-by",
-      "weight": 1
-    },
-    {
-      "id": "relation:document:.agent-memory/reference_security-surfaces.md:changed-by:knowledge-change:cff4ba9b36a393d9d226bd2b6a64152120990a95",
-      "from": "document:.agent-memory/reference_security-surfaces.md",
-      "to": "knowledge-change:cff4ba9b36a393d9d226bd2b6a64152120990a95",
-      "kind": "changed-by",
       "weight": 1
     },
     {
@@ -10204,13 +9940,6 @@
       "weight": 1
     },
     {
-      "id": "relation:document:GOVERNANCE.md:mentions:package:@agentskit/eval-braintrust",
-      "from": "document:GOVERNANCE.md",
-      "to": "package:@agentskit/eval-braintrust",
-      "kind": "mentions",
-      "weight": 1
-    },
-    {
       "id": "relation:document:GOVERNANCE.md:mentions:package:@agentskit/ink",
       "from": "document:GOVERNANCE.md",
       "to": "package:@agentskit/ink",
@@ -10228,13 +9957,6 @@
       "id": "relation:document:GOVERNANCE.md:mentions:package:@agentskit/observability",
       "from": "document:GOVERNANCE.md",
       "to": "package:@agentskit/observability",
-      "kind": "mentions",
-      "weight": 1
-    },
-    {
-      "id": "relation:document:GOVERNANCE.md:mentions:package:@agentskit/observability-langfuse",
-      "from": "document:GOVERNANCE.md",
-      "to": "package:@agentskit/observability-langfuse",
       "kind": "mentions",
       "weight": 1
     },
@@ -11000,20 +10722,6 @@
       "weight": 1
     },
     {
-      "id": "relation:document:apps/docs-next/content/docs/data/providers/bedrock.mdx:mentions:package:@agentskit/rag",
-      "from": "document:apps/docs-next/content/docs/data/providers/bedrock.mdx",
-      "to": "package:@agentskit/rag",
-      "kind": "mentions",
-      "weight": 1
-    },
-    {
-      "id": "relation:document:apps/docs-next/content/docs/data/providers/cohere.mdx:mentions:package:@agentskit/adapters",
-      "from": "document:apps/docs-next/content/docs/data/providers/cohere.mdx",
-      "to": "package:@agentskit/adapters",
-      "kind": "mentions",
-      "weight": 1
-    },
-    {
       "id": "relation:document:apps/docs-next/content/docs/data/providers/embedders.mdx:covers:area:packages/adapters/src/embedders",
       "from": "document:apps/docs-next/content/docs/data/providers/embedders.mdx",
       "to": "area:packages/adapters/src/embedders",
@@ -11203,13 +10911,6 @@
       "weight": 1
     },
     {
-      "id": "relation:knowledge-concept:Cheapest first-class multi-modal:cites:document:apps/docs-next/content/docs/data/providers/choosing.mdx",
-      "from": "knowledge-concept:Cheapest first-class multi-modal",
-      "to": "document:apps/docs-next/content/docs/data/providers/choosing.mdx",
-      "kind": "cites",
-      "weight": 1
-    },
-    {
       "id": "relation:knowledge-concept:Committed branch-protection rulesets for this repo. Source of truth:cites:document:.github/rulesets/README.md",
       "from": "knowledge-concept:Committed branch-protection rulesets for this repo. Source of truth",
       "to": "document:.github/rulesets/README.md",
@@ -11234,13 +10935,6 @@
       "id": "relation:knowledge-decision:docs/architecture/adrs/0005-skill-contract.md:ADR 0005 — Skill Contract:explains:symbol:module:agents/ecosystem-doc-bridge-corpus-scanner/doc-bridge-adapter.js:run",
       "from": "knowledge-decision:docs/architecture/adrs/0005-skill-contract.md:ADR 0005 — Skill Contract",
       "to": "symbol:module:agents/ecosystem-doc-bridge-corpus-scanner/doc-bridge-adapter.js:run",
-      "kind": "explains",
-      "weight": 1
-    },
-    {
-      "id": "relation:knowledge-decision:docs/architecture/adrs/0007-docs-platform-fumadocs.md:ADR 0007 — Documentation platform: Fumadocs:explains:area:apps/docs-next",
-      "from": "knowledge-decision:docs/architecture/adrs/0007-docs-platform-fumadocs.md:ADR 0007 — Documentation platform: Fumadocs",
-      "to": "area:apps/docs-next",
       "kind": "explains",
       "weight": 1
     },
@@ -13240,13 +12934,6 @@
       "weight": 1
     },
     {
-      "id": "relation:package:@agentskit/eval-braintrust:owns:area:packages/eval-braintrust/src/scorers",
-      "from": "package:@agentskit/eval-braintrust",
-      "to": "area:packages/eval-braintrust/src/scorers",
-      "kind": "owns",
-      "weight": 1
-    },
-    {
       "id": "relation:package:@agentskit/eval:owns:area:packages/eval/src/ci",
       "from": "package:@agentskit/eval",
       "to": "area:packages/eval/src/ci",
@@ -14694,26 +14381,24 @@
       "Graph caps apply before centrality and degree; those metrics describe the emitted view.",
       "The index has bounded adjacency per entry; studio truncation does not measure earlier discovery/retrieval omissions.",
       "Generic adapter facts are not in the retrieval index; module and exported-symbol facts are available.",
-      "Timestamps are emitted only from explicit knowledge-entity dates; file modification times are never inferred.",
-      "Public sample presentation omits provider integration, third-party product and retired import-name references; omitted counts include these exclusions.",
-      "Source acquisition is shallow; history analysis cannot establish coverage beyond the commits present in the clone."
+      "Timestamps are emitted only from explicit knowledge-entity dates; file modification times are never inferred."
     ]
   },
   "truncation": {
     "nodes": {
       "total": 9032,
-      "emitted": 779,
-      "omitted": 8253
+      "emitted": 762,
+      "omitted": 8270
     },
     "documents": {
       "total": 665,
-      "emitted": 158,
-      "omitted": 507
+      "emitted": 152,
+      "omitted": 513
     },
     "edges": {
       "total": 15836,
-      "emitted": 858,
-      "omitted": 14978
+      "emitted": 838,
+      "omitted": 14998
     },
     "findings": {
       "total": 0,

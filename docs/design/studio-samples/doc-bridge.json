@@ -3,9 +3,9 @@
   "schemaVersion": 1,
   "source": {
     "project": "@agentskit/doc-bridge",
-    "indexHash": "b966b1f2ee034c3fa0be30c95fc6a7912c0a8118adc4a0133f30f1a5d5160b5c",
+    "indexHash": "82297fa0289c2f4b45bf6f4fb8e33d149391268dcceee93a7046448a54728746",
     "indexHashAlgo": "sha256-semantic-v1",
-    "revision": "e1c49f1ab0c008fec6dd64b3aa33c41c69069fd6"
+    "revision": "6291c1d2de185f56cfb11c1a116f2e7e327d5435"
   },
   "nodes": [
     {
@@ -40,7 +40,7 @@
       "sourceKind": "area",
       "cluster": "package:@agentskit/doc-bridge",
       "metrics": {
-        "canonicality": 0.005925,
+        "canonicality": 0.00551,
         "degree": 5
       }
     },
@@ -52,7 +52,7 @@
       "sourceKind": "area",
       "cluster": "package:@agentskit/doc-bridge",
       "metrics": {
-        "canonicality": 0.005925,
+        "canonicality": 0.00551,
         "degree": 45
       }
     },
@@ -77,7 +77,7 @@
       "cluster": "package:@agentskit/doc-bridge",
       "metrics": {
         "canonicality": 0,
-        "degree": 46
+        "degree": 47
       }
     },
     {
@@ -102,7 +102,7 @@
       "areaId": "area:src",
       "cluster": "area:src",
       "metrics": {
-        "canonicality": 0.005925,
+        "canonicality": 0.00551,
         "degree": 4
       }
     },
@@ -128,7 +128,7 @@
       "areaId": "area:src",
       "cluster": "area:src",
       "metrics": {
-        "canonicality": 0.005925,
+        "canonicality": 0.00551,
         "degree": 5
       }
     },
@@ -141,7 +141,7 @@
       "areaId": "area:src",
       "cluster": "area:src",
       "metrics": {
-        "canonicality": 0.005925,
+        "canonicality": 0.00551,
         "degree": 9
       }
     },
@@ -154,7 +154,7 @@
       "areaId": "area:src",
       "cluster": "area:src",
       "metrics": {
-        "canonicality": 0.005925,
+        "canonicality": 0.00551,
         "degree": 8
       }
     },
@@ -167,7 +167,7 @@
       "areaId": "area:src",
       "cluster": "area:src",
       "metrics": {
-        "canonicality": 0.005925,
+        "canonicality": 0.00551,
         "degree": 5
       }
     },
@@ -206,7 +206,7 @@
       "areaId": "area:src",
       "cluster": "area:src",
       "metrics": {
-        "canonicality": 0.005925,
+        "canonicality": 0.00551,
         "degree": 6
       }
     },
@@ -220,7 +220,7 @@
       "cluster": "area:src",
       "metrics": {
         "canonicality": 0,
-        "degree": 6
+        "degree": 5
       }
     },
     {
@@ -258,7 +258,7 @@
       "areaId": "area:src",
       "cluster": "area:src",
       "metrics": {
-        "canonicality": 0.005925,
+        "canonicality": 0.00551,
         "degree": 3
       }
     },
@@ -271,7 +271,7 @@
       "areaId": "area:src",
       "cluster": "area:src",
       "metrics": {
-        "canonicality": 0.005925,
+        "canonicality": 0.00551,
         "degree": 3
       }
     },
@@ -284,7 +284,7 @@
       "areaId": "area:src",
       "cluster": "area:src",
       "metrics": {
-        "canonicality": 0.005925,
+        "canonicality": 0.00551,
         "degree": 3
       }
     },
@@ -297,7 +297,7 @@
       "areaId": "area:src",
       "cluster": "area:src",
       "metrics": {
-        "canonicality": 0.005925,
+        "canonicality": 0.00551,
         "degree": 3
       }
     },
@@ -323,7 +323,7 @@
       "areaId": "area:src",
       "cluster": "area:src",
       "metrics": {
-        "canonicality": 0.005925,
+        "canonicality": 0.00551,
         "degree": 4
       }
     },
@@ -336,7 +336,7 @@
       "areaId": "area:src",
       "cluster": "area:src",
       "metrics": {
-        "canonicality": 0.005925,
+        "canonicality": 0.00551,
         "degree": 3
       }
     },
@@ -349,7 +349,7 @@
       "areaId": "area:src",
       "cluster": "area:src",
       "metrics": {
-        "canonicality": 0.005925,
+        "canonicality": 0.00551,
         "degree": 3
       }
     },
@@ -362,7 +362,7 @@
       "areaId": "area:src",
       "cluster": "area:src",
       "metrics": {
-        "canonicality": 0.005925,
+        "canonicality": 0.00551,
         "degree": 5
       }
     },
@@ -375,7 +375,7 @@
       "areaId": "area:src",
       "cluster": "area:src",
       "metrics": {
-        "canonicality": 0.005925,
+        "canonicality": 0.003822,
         "degree": 3
       }
     },
@@ -388,7 +388,7 @@
       "areaId": "area:src",
       "cluster": "area:src",
       "metrics": {
-        "canonicality": 0.005925,
+        "canonicality": 0.00551,
         "degree": 3
       }
     },
@@ -401,7 +401,7 @@
       "areaId": "area:src",
       "cluster": "area:src",
       "metrics": {
-        "canonicality": 0.005925,
+        "canonicality": 0.00551,
         "degree": 3
       }
     },
@@ -414,7 +414,7 @@
       "areaId": "area:src",
       "cluster": "area:src",
       "metrics": {
-        "canonicality": 0.005925,
+        "canonicality": 0.00551,
         "degree": 3
       }
     },
@@ -427,7 +427,7 @@
       "areaId": "area:src",
       "cluster": "area:src",
       "metrics": {
-        "canonicality": 0.005925,
+        "canonicality": 0.00551,
         "degree": 3
       }
     },
@@ -440,7 +440,7 @@
       "areaId": "area:src",
       "cluster": "area:src",
       "metrics": {
-        "canonicality": 0.005925,
+        "canonicality": 0.00551,
         "degree": 5
       }
     },
@@ -479,7 +479,7 @@
       "areaId": "area:src",
       "cluster": "area:src",
       "metrics": {
-        "canonicality": 0.005925,
+        "canonicality": 0.00551,
         "degree": 3
       }
     },
@@ -492,7 +492,7 @@
       "areaId": "area:src",
       "cluster": "area:src",
       "metrics": {
-        "canonicality": 0.005925,
+        "canonicality": 0.00551,
         "degree": 3
       }
     },
@@ -518,7 +518,7 @@
       "areaId": "area:src",
       "cluster": "area:src",
       "metrics": {
-        "canonicality": 0.005925,
+        "canonicality": 0.00551,
         "degree": 3
       }
     },
@@ -531,7 +531,7 @@
       "areaId": "area:src",
       "cluster": "area:src",
       "metrics": {
-        "canonicality": 0.005925,
+        "canonicality": 0.00551,
         "degree": 3
       }
     },
@@ -544,7 +544,7 @@
       "areaId": "area:src",
       "cluster": "area:src",
       "metrics": {
-        "canonicality": 0.005925,
+        "canonicality": 0.00551,
         "degree": 3
       }
     },
@@ -557,7 +557,7 @@
       "areaId": "area:src",
       "cluster": "area:src",
       "metrics": {
-        "canonicality": 0.005925,
+        "canonicality": 0.00551,
         "degree": 3
       }
     },
@@ -571,7 +571,20 @@
       "cluster": "area:src",
       "metrics": {
         "canonicality": 0,
-        "degree": 3
+        "degree": 2
+      }
+    },
+    {
+      "id": "area:src/studio",
+      "label": "studio",
+      "kind": "area",
+      "path": "src/studio",
+      "sourceKind": "area",
+      "areaId": "area:src",
+      "cluster": "area:src",
+      "metrics": {
+        "canonicality": 0,
+        "degree": 2
       }
     },
     {
@@ -643,7 +656,7 @@
       "path": "AGENTS.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.003203,
+        "canonicality": 0.002978,
         "degree": 11
       }
     },
@@ -654,8 +667,8 @@
       "path": "CHANGELOG.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.003344,
-        "degree": 164
+        "canonicality": 0.00311,
+        "degree": 159
       }
     },
     {
@@ -665,7 +678,7 @@
       "path": "CODE_OF_CONDUCT.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.005946,
+        "canonicality": 0.00553,
         "degree": 5
       }
     },
@@ -676,8 +689,8 @@
       "path": "CONTRIBUTING.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.006067,
-        "degree": 15
+        "canonicality": 0.005642,
+        "degree": 14
       }
     },
     {
@@ -687,7 +700,7 @@
       "path": "GOVERNANCE.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.004633,
+        "canonicality": 0.004309,
         "degree": 12
       }
     },
@@ -698,7 +711,7 @@
       "path": "PRIVACY.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.003344,
+        "canonicality": 0.00311,
         "degree": 1
       }
     },
@@ -709,8 +722,8 @@
       "path": "README.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.003991,
-        "degree": 45
+        "canonicality": 0.003716,
+        "degree": 44
       }
     },
     {
@@ -720,7 +733,7 @@
       "path": "SECURITY.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.005946,
+        "canonicality": 0.00553,
         "degree": 7
       }
     },
@@ -797,7 +810,7 @@
       "path": "docs/MARKETPLACE.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.016167,
+        "canonicality": 0.014846,
         "degree": 13
       }
     },
@@ -808,7 +821,7 @@
       "path": "docs/POSITIONING.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.006297,
+        "canonicality": 0.005679,
         "degree": 8
       }
     },
@@ -863,7 +876,7 @@
       "path": "docs/RELEASE.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.004516,
+        "canonicality": 0.004199,
         "degree": 5
       }
     },
@@ -885,7 +898,7 @@
       "path": "docs/adr/0002-documentation-audit-boundary.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.003203,
+        "canonicality": 0.002978,
         "degree": 5
       }
     },
@@ -929,7 +942,7 @@
       "path": "docs/adr/0006-registry-semantic-grounding.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.003203,
+        "canonicality": 0.002978,
         "degree": 3
       }
     },
@@ -973,7 +986,7 @@
       "path": "docs/adr/0010-versioned-change-set-and-semantic-identity.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.011436,
+        "canonicality": 0.010352,
         "degree": 16
       }
     },
@@ -984,7 +997,7 @@
       "path": "docs/adr/0011-findings-and-region-remediation.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.008648,
+        "canonicality": 0.008042,
         "degree": 18
       }
     },
@@ -1018,7 +1031,7 @@
       "sourceKind": "document",
       "metrics": {
         "canonicality": 0,
-        "degree": 11
+        "degree": 10
       }
     },
     {
@@ -1061,7 +1074,40 @@
       "path": "docs/adr/0018-opt-in-knowledge-entities.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.003203,
+        "canonicality": 0.002978,
+        "degree": 2
+      }
+    },
+    {
+      "id": "document:docs/adr/0019-memory-entity-evidence.md",
+      "label": "Configurable memory source and exact entity evidence",
+      "kind": "document",
+      "path": "docs/adr/0019-memory-entity-evidence.md",
+      "sourceKind": "document",
+      "metrics": {
+        "canonicality": 0.002978,
+        "degree": 3
+      }
+    },
+    {
+      "id": "document:docs/adr/0020-vault-edit-review.md",
+      "label": "Generated vault edit review",
+      "kind": "document",
+      "path": "docs/adr/0020-vault-edit-review.md",
+      "sourceKind": "document",
+      "metrics": {
+        "canonicality": 0.002978,
+        "degree": 1
+      }
+    },
+    {
+      "id": "document:docs/adr/0022-l2-remediation-acceptance.md",
+      "label": "Deterministic acceptance of optional L2 region proposals",
+      "kind": "document",
+      "path": "docs/adr/0022-l2-remediation-acceptance.md",
+      "sourceKind": "document",
+      "metrics": {
+        "canonicality": 0.011976,
         "degree": 2
       }
     },
@@ -1072,7 +1118,7 @@
       "path": "docs/agent-corpus/INDEX.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.003203,
+        "canonicality": 0.002978,
         "degree": 3
       }
     },
@@ -1094,7 +1140,7 @@
       "path": "docs/agent-corpus/audit.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.003203,
+        "canonicality": 0.002978,
         "degree": 2
       }
     },
@@ -1105,7 +1151,7 @@
       "path": "docs/agent-corpus/bin.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.003203,
+        "canonicality": 0.002978,
         "degree": 5
       }
     },
@@ -1116,7 +1162,7 @@
       "path": "docs/agent-corpus/budget.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.003203,
+        "canonicality": 0.002978,
         "degree": 3
       }
     },
@@ -1127,7 +1173,7 @@
       "path": "docs/agent-corpus/chat.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.003203,
+        "canonicality": 0.002978,
         "degree": 1
       }
     },
@@ -1138,7 +1184,7 @@
       "path": "docs/agent-corpus/cli.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.003203,
+        "canonicality": 0.002978,
         "degree": 1
       }
     },
@@ -1149,7 +1195,7 @@
       "path": "docs/agent-corpus/config.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.003203,
+        "canonicality": 0.002978,
         "degree": 5
       }
     },
@@ -1160,7 +1206,7 @@
       "path": "docs/agent-corpus/conformance.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.003203,
+        "canonicality": 0.002978,
         "degree": 1
       }
     },
@@ -1171,7 +1217,7 @@
       "path": "docs/agent-corpus/doc-bridge.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.003203,
+        "canonicality": 0.002978,
         "degree": 8
       }
     },
@@ -1182,7 +1228,7 @@
       "path": "docs/agent-corpus/doctor.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.003203,
+        "canonicality": 0.002978,
         "degree": 1
       }
     },
@@ -1193,7 +1239,7 @@
       "path": "docs/agent-corpus/federation.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.003203,
+        "canonicality": 0.002978,
         "degree": 1
       }
     },
@@ -1204,7 +1250,7 @@
       "path": "docs/agent-corpus/findings.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.003203,
+        "canonicality": 0.002978,
         "degree": 2
       }
     },
@@ -1215,7 +1261,7 @@
       "path": "docs/agent-corpus/fixes.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.003203,
+        "canonicality": 0.002978,
         "degree": 1
       }
     },
@@ -1226,7 +1272,7 @@
       "path": "docs/agent-corpus/gates.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.003203,
+        "canonicality": 0.002978,
         "degree": 1
       }
     },
@@ -1237,7 +1283,7 @@
       "path": "docs/agent-corpus/lib.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.003203,
+        "canonicality": 0.002978,
         "degree": 2
       }
     },
@@ -1248,7 +1294,7 @@
       "path": "docs/agent-corpus/mcp.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.003203,
+        "canonicality": 0.002978,
         "degree": 2
       }
     },
@@ -1259,8 +1305,8 @@
       "path": "docs/agent-corpus/memory.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.003203,
-        "degree": 1
+        "canonicality": 0.002978,
+        "degree": 3
       }
     },
     {
@@ -1270,7 +1316,7 @@
       "path": "docs/agent-corpus/metrics.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.003203,
+        "canonicality": 0.002978,
         "degree": 1
       }
     },
@@ -1281,7 +1327,7 @@
       "path": "docs/agent-corpus/parity.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.003203,
+        "canonicality": 0.002978,
         "degree": 1
       }
     },
@@ -1292,7 +1338,7 @@
       "path": "docs/agent-corpus/playbook.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.003203,
+        "canonicality": 0.002978,
         "degree": 2
       }
     },
@@ -1303,7 +1349,7 @@
       "path": "docs/agent-corpus/plugins.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.003203,
+        "canonicality": 0.002978,
         "degree": 2
       }
     },
@@ -1314,7 +1360,7 @@
       "path": "docs/agent-corpus/query.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.003203,
+        "canonicality": 0.002978,
         "degree": 4
       }
     },
@@ -1325,7 +1371,7 @@
       "path": "docs/agent-corpus/report.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.003203,
+        "canonicality": 0.002978,
         "degree": 2
       }
     },
@@ -1336,7 +1382,7 @@
       "path": "docs/agent-corpus/retrieval.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.003203,
+        "canonicality": 0.002978,
         "degree": 3
       }
     },
@@ -1347,7 +1393,7 @@
       "path": "docs/agent-corpus/rules.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.003203,
+        "canonicality": 0.002978,
         "degree": 4
       }
     },
@@ -1358,7 +1404,7 @@
       "path": "docs/agent-corpus/safety.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.003203,
+        "canonicality": 0.002978,
         "degree": 2
       }
     },
@@ -1369,7 +1415,7 @@
       "path": "docs/agent-corpus/schemas.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.003203,
+        "canonicality": 0.002978,
         "degree": 2
       }
     },
@@ -1380,7 +1426,7 @@
       "path": "docs/agent-corpus/scripts.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.003203,
+        "canonicality": 0.002978,
         "degree": 5
       }
     },
@@ -1391,7 +1437,7 @@
       "path": "docs/agent-corpus/shims.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.003203,
+        "canonicality": 0.002978,
         "degree": 1
       }
     },
@@ -1402,7 +1448,7 @@
       "path": "docs/bench/README.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.004409,
+        "canonicality": 0.004211,
         "degree": 6
       }
     },
@@ -1413,7 +1459,7 @@
       "path": "docs/bench/layer1-results-v1.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.007224,
+        "canonicality": 0.006718,
         "degree": 2
       }
     },
@@ -1424,7 +1470,7 @@
       "path": "docs/bench/layer1-results-v2.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.004564,
+        "canonicality": 0.004244,
         "degree": 2
       }
     },
@@ -1435,8 +1481,30 @@
       "path": "docs/chat-and-rag.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.010465,
+        "canonicality": 0.009797,
         "degree": 12
+      }
+    },
+    {
+      "id": "document:docs/design/studio-brief.md",
+      "label": "Local studio design brief",
+      "kind": "document",
+      "path": "docs/design/studio-brief.md",
+      "sourceKind": "document",
+      "metrics": {
+        "canonicality": 0.006129,
+        "degree": 4
+      }
+    },
+    {
+      "id": "document:docs/design/studio-samples/README.md",
+      "label": "Studio sample exports",
+      "kind": "document",
+      "path": "docs/design/studio-samples/README.md",
+      "sourceKind": "document",
+      "metrics": {
+        "canonicality": 0.005584,
+        "degree": 4
       }
     },
     {
@@ -1446,7 +1514,7 @@
       "path": "docs/examples.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.005665,
+        "canonicality": 0.005268,
         "degree": 8
       }
     },
@@ -1457,7 +1525,7 @@
       "path": "docs/for-agents.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.008844,
+        "canonicality": 0.008037,
         "degree": 13
       }
     },
@@ -1468,7 +1536,7 @@
       "path": "docs/getting-started.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.012054,
+        "canonicality": 0.011275,
         "degree": 20
       }
     },
@@ -1479,7 +1547,7 @@
       "path": "docs/guides/action-advisory.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.003405,
+        "canonicality": 0.003166,
         "degree": 5
       }
     },
@@ -1490,7 +1558,7 @@
       "path": "docs/guides/choose-context-layer.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.003203,
+        "canonicality": 0.002978,
         "degree": 6
       }
     },
@@ -1501,7 +1569,7 @@
       "path": "docs/guides/cli-map.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.00608,
+        "canonicality": 0.005657,
         "degree": 11
       }
     },
@@ -1512,7 +1580,7 @@
       "path": "docs/guides/diff-and-findings.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.003405,
+        "canonicality": 0.003166,
         "degree": 5
       }
     },
@@ -1523,8 +1591,8 @@
       "path": "docs/guides/facts-and-citations.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.003263,
-        "degree": 5
+        "canonicality": 0.003035,
+        "degree": 4
       }
     },
     {
@@ -1534,7 +1602,7 @@
       "path": "docs/guides/findings-and-remediation.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.003263,
+        "canonicality": 0.003035,
         "degree": 5
       }
     },
@@ -1545,7 +1613,7 @@
       "path": "docs/guides/gate-ci.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.010791,
+        "canonicality": 0.009981,
         "degree": 12
       }
     },
@@ -1556,7 +1624,7 @@
       "path": "docs/guides/index-and-query.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.01202,
+        "canonicality": 0.010978,
         "degree": 15
       }
     },
@@ -1567,8 +1635,8 @@
       "path": "docs/guides/injected-storage.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.005302,
-        "degree": 9
+        "canonicality": 0.004616,
+        "degree": 8
       }
     },
     {
@@ -1578,8 +1646,19 @@
       "path": "docs/guides/install-and-run.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.010391,
+        "canonicality": 0.009629,
         "degree": 12
+      }
+    },
+    {
+      "id": "document:docs/guides/llm-remediation.md",
+      "label": "Key-free region remediation",
+      "kind": "document",
+      "path": "docs/guides/llm-remediation.md",
+      "sourceKind": "document",
+      "metrics": {
+        "canonicality": 0.011976,
+        "degree": 2
       }
     },
     {
@@ -1589,7 +1668,7 @@
       "path": "docs/guides/mcp-agents.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.011873,
+        "canonicality": 0.010972,
         "degree": 14
       }
     },
@@ -1600,8 +1679,8 @@
       "path": "docs/guides/memory-pipeline.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.005827,
-        "degree": 9
+        "canonicality": 0.006143,
+        "degree": 10
       }
     },
     {
@@ -1611,8 +1690,8 @@
       "path": "docs/guides/service-profile.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.003263,
-        "degree": 4
+        "canonicality": 0.003035,
+        "degree": 3
       }
     },
     {
@@ -1622,8 +1701,8 @@
       "path": "docs/guides/vault.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.010379,
-        "degree": 3
+        "canonicality": 0.005802,
+        "degree": 1
       }
     },
     {
@@ -1633,7 +1712,7 @@
       "path": "docs/guides/versions-and-release-stamping.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.003263,
+        "canonicality": 0.003035,
         "degree": 5
       }
     },
@@ -1644,8 +1723,8 @@
       "path": "docs/index.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.003203,
-        "degree": 43
+        "canonicality": 0.002978,
+        "degree": 36
       }
     },
     {
@@ -1655,7 +1734,7 @@
       "path": "docs/knowledge-engine-runbook.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.003802,
+        "canonicality": 0.00354,
         "degree": 5
       }
     },
@@ -1677,8 +1756,8 @@
       "path": "docs/mcp.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.008543,
-        "degree": 13
+        "canonicality": 0.00791,
+        "degree": 14
       }
     },
     {
@@ -1688,19 +1767,8 @@
       "path": "docs/playbook/doc-bridge-pattern.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.006127,
+        "canonicality": 0.005698,
         "degree": 10
-      }
-    },
-    {
-      "id": "document:docs/qa/vitepress-starlight-adapters.md",
-      "label": "VitePress and Starlight adapter QA plan",
-      "kind": "document",
-      "path": "docs/qa/vitepress-starlight-adapters.md",
-      "sourceKind": "document",
-      "metrics": {
-        "canonicality": 0,
-        "degree": 0
       }
     },
     {
@@ -1710,8 +1778,8 @@
       "path": "docs/query.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.003263,
-        "degree": 15
+        "canonicality": 0.003035,
+        "degree": 16
       }
     },
     {
@@ -1721,7 +1789,7 @@
       "path": "docs/recipes/index-pipeline.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.003405,
+        "canonicality": 0.003166,
         "degree": 5
       }
     },
@@ -1732,7 +1800,7 @@
       "path": "docs/schemas/agent-handoff-v1.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.008597,
+        "canonicality": 0.008037,
         "degree": 12
       }
     },
@@ -1743,8 +1811,8 @@
       "path": "docs/schemas/change-set-v1.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.004167,
-        "degree": 5
+        "canonicality": 0.003876,
+        "degree": 4
       }
     },
     {
@@ -1754,7 +1822,7 @@
       "path": "docs/schemas/decision-v1.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.02723,
+        "canonicality": 0.016567,
         "degree": 10
       }
     },
@@ -1765,7 +1833,7 @@
       "path": "docs/schemas/discovery-coverage-v1.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.010019,
+        "canonicality": 0.008632,
         "degree": 2
       }
     },
@@ -1776,7 +1844,7 @@
       "path": "docs/schemas/doc-bridge-index-v1.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.004931,
+        "canonicality": 0.004622,
         "degree": 15
       }
     },
@@ -1787,7 +1855,7 @@
       "path": "docs/schemas/finding-v1.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.010584,
+        "canonicality": 0.009274,
         "degree": 10
       }
     },
@@ -1798,8 +1866,8 @@
       "path": "docs/schemas/knowledge-entity-v1.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.007453,
-        "degree": 5
+        "canonicality": 0.011313,
+        "degree": 9
       }
     },
     {
@@ -1809,7 +1877,7 @@
       "path": "docs/schemas/knowledge-symbol-references-v1.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.003203,
+        "canonicality": 0.002978,
         "degree": 1
       }
     },
@@ -1820,8 +1888,8 @@
       "path": "docs/schemas/memory-candidate-v1.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.005122,
-        "degree": 3
+        "canonicality": 0.005021,
+        "degree": 5
       }
     },
     {
@@ -1831,8 +1899,19 @@
       "path": "docs/schemas/remediation-v1.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.010584,
+        "canonicality": 0.009274,
         "degree": 10
+      }
+    },
+    {
+      "id": "document:docs/schemas/studio-graph-v1.md",
+      "label": "StudioGraphV1",
+      "kind": "document",
+      "path": "docs/schemas/studio-graph-v1.md",
+      "sourceKind": "document",
+      "metrics": {
+        "canonicality": 0.008735,
+        "degree": 5
       }
     },
     {
@@ -1842,7 +1921,7 @@
       "path": "docs/skills/doc-bridge.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.013488,
+        "canonicality": 0.012368,
         "degree": 8
       }
     },
@@ -1853,7 +1932,7 @@
       "path": "docs/spec/analyzer-plugin-v1.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.006408,
+        "canonicality": 0.005337,
         "degree": 8
       }
     },
@@ -1864,7 +1943,7 @@
       "path": "docs/spec/benchmark-layer1-v1.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.004564,
+        "canonicality": 0.004244,
         "degree": 4
       }
     },
@@ -1875,7 +1954,7 @@
       "path": "docs/spec/benchmark-layer1-v2.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.003203,
+        "canonicality": 0.002978,
         "degree": 2
       }
     },
@@ -1897,8 +1976,8 @@
       "path": "docs/spec/change-set-v1.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.029056,
-        "degree": 12
+        "canonicality": 0.026018,
+        "degree": 11
       }
     },
     {
@@ -1908,8 +1987,8 @@
       "path": "docs/spec/cli.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.017969,
-        "degree": 37
+        "canonicality": 0.016465,
+        "degree": 40
       }
     },
     {
@@ -1919,7 +1998,7 @@
       "path": "docs/spec/config-key-facts-v1.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.01039,
+        "canonicality": 0.009612,
         "degree": 3
       }
     },
@@ -1930,8 +2009,8 @@
       "path": "docs/spec/config-v1.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.013112,
-        "degree": 49
+        "canonicality": 0.015257,
+        "degree": 51
       }
     },
     {
@@ -1941,8 +2020,8 @@
       "path": "docs/spec/discovery-plugin-v2.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.018878,
-        "degree": 17
+        "canonicality": 0.013878,
+        "degree": 15
       }
     },
     {
@@ -1952,7 +2031,7 @@
       "path": "docs/spec/documentation-audit-v1.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.003263,
+        "canonicality": 0.003035,
         "degree": 9
       }
     },
@@ -1963,7 +2042,7 @@
       "path": "docs/spec/documentation-standard-v1.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.006425,
+        "canonicality": 0.006097,
         "degree": 5
       }
     },
@@ -1974,8 +2053,8 @@
       "path": "docs/spec/enrichment-overlay-v1.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.007194,
-        "degree": 30
+        "canonicality": 0.00669,
+        "degree": 29
       }
     },
     {
@@ -1985,7 +2064,7 @@
       "path": "docs/spec/graph-signals-v1.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.003263,
+        "canonicality": 0.003035,
         "degree": 10
       }
     },
@@ -1996,8 +2075,30 @@
       "path": "docs/spec/incremental-scan-v1.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.004248,
+        "canonicality": 0.003876,
         "degree": 15
+      }
+    },
+    {
+      "id": "document:docs/spec/knowledge-query-v1.md",
+      "label": "Knowledge query v1",
+      "kind": "document",
+      "path": "docs/spec/knowledge-query-v1.md",
+      "sourceKind": "document",
+      "metrics": {
+        "canonicality": 0.015857,
+        "degree": 6
+      }
+    },
+    {
+      "id": "document:docs/spec/llm-remediation-v1.md",
+      "label": "Optional L2 remediation v1",
+      "kind": "document",
+      "path": "docs/spec/llm-remediation-v1.md",
+      "sourceKind": "document",
+      "metrics": {
+        "canonicality": 0.021216,
+        "degree": 5
       }
     },
     {
@@ -2007,8 +2108,8 @@
       "path": "docs/spec/markdown-analyzer-v1.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.022915,
-        "degree": 19
+        "canonicality": 0.021132,
+        "degree": 18
       }
     },
     {
@@ -2018,8 +2119,8 @@
       "path": "docs/spec/mcp-knowledge-tools-v1.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.004301,
-        "degree": 23
+        "canonicality": 0.003875,
+        "degree": 24
       }
     },
     {
@@ -2029,7 +2130,7 @@
       "path": "docs/spec/measured-enrichment-v1.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.004624,
+        "canonicality": 0.004301,
         "degree": 19
       }
     },
@@ -2040,8 +2141,8 @@
       "path": "docs/spec/obsidian-markdown-v1.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.013339,
-        "degree": 6
+        "canonicality": 0.008381,
+        "degree": 5
       }
     },
     {
@@ -2051,7 +2152,7 @@
       "path": "docs/spec/playbook-feedback.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.003203,
+        "canonicality": 0.002978,
         "degree": 3
       }
     },
@@ -2062,8 +2163,8 @@
       "path": "docs/spec/public-parity-v1.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.003263,
-        "degree": 10
+        "canonicality": 0.003035,
+        "degree": 9
       }
     },
     {
@@ -2073,8 +2174,8 @@
       "path": "docs/spec/region-remediation-v1.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.019582,
-        "degree": 10
+        "canonicality": 0.017157,
+        "degree": 11
       }
     },
     {
@@ -2084,7 +2185,7 @@
       "path": "docs/spec/registry-agents.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.003203,
+        "canonicality": 0.002978,
         "degree": 2
       }
     },
@@ -2095,7 +2196,7 @@
       "path": "docs/spec/render-v1.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.005367,
+        "canonicality": 0.00481,
         "degree": 14
       }
     },
@@ -2106,7 +2207,7 @@
       "path": "docs/spec/retrieval-index-v1.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.004139,
+        "canonicality": 0.00383,
         "degree": 24
       }
     },
@@ -2117,132 +2218,13 @@
       "path": "docs/spec/service-profile-v1.md",
       "sourceKind": "document",
       "metrics": {
-        "canonicality": 0.022031,
-        "degree": 12
+        "canonicality": 0.01914,
+        "degree": 11
       }
     },
     {
-      "id": "document:docs/spec/signature-facts-v1.md",
-      "label": "Syntactic signature facts v1",
-      "kind": "document",
-      "path": "docs/spec/signature-facts-v1.md",
-      "sourceKind": "document",
-      "metrics": {
-        "canonicality": 0.0236,
-        "degree": 7
-      }
-    },
-    {
-      "id": "document:docs/spec/storage-io-v1.md",
-      "label": "Storage I/O v1",
-      "kind": "document",
-      "path": "docs/spec/storage-io-v1.md",
-      "sourceKind": "document",
-      "metrics": {
-        "canonicality": 0.009587,
-        "degree": 8
-      }
-    },
-    {
-      "id": "document:docs/spec/study-metrics-v1.md",
-      "label": "Longitudinal study metrics v1",
-      "kind": "document",
-      "path": "docs/spec/study-metrics-v1.md",
-      "sourceKind": "document",
-      "metrics": {
-        "canonicality": 0.003263,
-        "degree": 1
-      }
-    },
-    {
-      "id": "document:docs/spec/study-protocol-v1.md",
-      "label": "Study protocol v1",
-      "kind": "document",
-      "path": "docs/spec/study-protocol-v1.md",
-      "sourceKind": "document",
-      "metrics": {
-        "canonicality": 0.003263,
-        "degree": 1
-      }
-    },
-    {
-      "id": "document:docs/spec/study-provider-cli-v1.md",
-      "label": "Study provider CLI contract v1",
-      "kind": "document",
-      "path": "docs/spec/study-provider-cli-v1.md",
-      "sourceKind": "document",
-      "metrics": {
-        "canonicality": 0.006037,
-        "degree": 2
-      }
-    },
-    {
-      "id": "document:docs/spec/study-runner-v1.md",
-      "label": "Controlled study runner v1",
-      "kind": "document",
-      "path": "docs/spec/study-runner-v1.md",
-      "sourceKind": "document",
-      "metrics": {
-        "canonicality": 0.003263,
-        "degree": 2
-      }
-    },
-    {
-      "id": "document:docs/spec/study-task-suite-v1.md",
-      "label": "Study task suite v1",
-      "kind": "document",
-      "path": "docs/spec/study-task-suite-v1.md",
-      "sourceKind": "document",
-      "metrics": {
-        "canonicality": 0.003263,
-        "degree": 1
-      }
-    },
-    {
-      "id": "document:docs/spec/study-verification-v1.md",
-      "label": "Study verification binding v1",
-      "kind": "document",
-      "path": "docs/spec/study-verification-v1.md",
-      "sourceKind": "document",
-      "metrics": {
-        "canonicality": 0.003263,
-        "degree": 2
-      }
-    },
-    {
-      "id": "document:docs/spec/vault-export-v1.md",
-      "label": "Vault export v1",
-      "kind": "document",
-      "path": "docs/spec/vault-export-v1.md",
-      "sourceKind": "document",
-      "metrics": {
-        "canonicality": 0.014127,
-        "degree": 6
-      }
-    },
-    {
-      "id": "document:docs/study/README.md",
-      "label": "Documentation efficiency study",
-      "kind": "document",
-      "path": "docs/study/README.md",
-      "sourceKind": "document",
-      "metrics": {
-        "canonicality": 0.004694,
-        "degree": 5
-      }
-    },
-    {
-      "id": "knowledge-change:CHANGELOG.md:--config resolves project root from the config file directory.:1.5.0",
+      "id": "knowledge-change:CHANGELOG.md:--config resolves project root from the config file directory.:1.5.2",
       "label": "--config resolves project root from the config file directory.",
-      "kind": "change",
-      "path": "CHANGELOG.md",
-      "metrics": {
-        "degree": 1
-      }
-    },
-    {
-      "id": "knowledge-change:CHANGELOG.md:03c17bc: Add a first-party Nextra human-documentation adapter for deterministic content-directory routes.:1.5.0",
-      "label": "03c17bc: Add a first-party Nextra human-documentation adapter for deterministic content-directory routes.",
       "kind": "change",
       "path": "CHANGELOG.md",
       "metrics": {
@@ -2252,6 +2234,24 @@
     {
       "id": "knowledge-change:CHANGELOG.md:0926c57: Keep a committed index fresh across commits.The retrieval projection sealed its content hash over the discovery snapshot's hash, and a\nsnapshot's hash covers its sourceRevision — the c:4b4425a57867b8447ff2aa3d22c175e6",
       "label": "0926c57: Keep a committed index fresh across commits.The retrieval projection sealed its content hash over the discovery snapshot's hash, and a\nsnapshot's hash covers its sourceRevision — the commit SHA when the working tree is clean, a\ndigest of the scann",
+      "kind": "change",
+      "path": "CHANGELOG.md",
+      "metrics": {
+        "degree": 1
+      }
+    },
+    {
+      "id": "knowledge-change:CHANGELOG.md:10b5efd: Add deterministic why queries and typed, budgeted read-only MCP entity rationale tools with explicit evidence, coverage and enablement guidance.:1.15.0-next.0",
+      "label": "10b5efd: Add deterministic why queries and typed, budgeted read-only MCP entity rationale tools with explicit evidence, coverage and enablement guidance.",
+      "kind": "change",
+      "path": "CHANGELOG.md",
+      "metrics": {
+        "degree": 1
+      }
+    },
+    {
+      "id": "knowledge-change:CHANGELOG.md:1249758: Add opt-in bounded L2 region proposals with deterministic in-memory rechecking,\nscripted key-free providers, machine-readable rejection reasons and review previews.:1.15.0-next.0",
+      "label": "1249758: Add opt-in bounded L2 region proposals with deterministic in-memory rechecking,\nscripted key-free providers, machine-readable rejection reasons and review previews.",
       "kind": "change",
       "path": "CHANGELOG.md",
       "metrics": {
@@ -2331,8 +2331,17 @@
       }
     },
     {
-      "id": "knowledge-change:CHANGELOG.md:14a9075: Add a portable, fail-closed Doc Bridge handoff skill with a zero-credential resolver and synthetic compatibility fixture for Agent Skills runtimes.:1.5.0",
+      "id": "knowledge-change:CHANGELOG.md:14a9075: Add a portable, fail-closed Doc Bridge handoff skill with a zero-credential resolver and synthetic compatibility fixture for Agent Skills runtimes.:1.5.2",
       "label": "14a9075: Add a portable, fail-closed Doc Bridge handoff skill with a zero-credential resolver and synthetic compatibility fixture for Agent Skills runtimes.",
+      "kind": "change",
+      "path": "CHANGELOG.md",
+      "metrics": {
+        "degree": 1
+      }
+    },
+    {
+      "id": "knowledge-change:CHANGELOG.md:150eccb: Record provably compatible callable signature changes without documentation findings, omit additive-only configuration parent findings, and prioritize specific fact citations within a :c7c3024115ade78b27de87772f39f508",
+      "label": "150eccb: Record provably compatible callable signature changes without documentation findings, omit additive-only configuration parent findings, and prioritize specific fact citations within a 256-reference bound.",
       "kind": "change",
       "path": "CHANGELOG.md",
       "metrics": {
@@ -2556,6 +2565,15 @@
       }
     },
     {
+      "id": "knowledge-change:CHANGELOG.md:2fa7b96: Add a versioned Layer-1 benchmark with reviewed public historical transitions, workspace-owned fixtures and separate raw-policy gold, preserving frozen v1 cases.:1.15.0-next.0",
+      "label": "2fa7b96: Add a versioned Layer-1 benchmark with reviewed public historical transitions, workspace-owned fixtures and separate raw-policy gold, preserving frozen v1 cases.",
+      "kind": "change",
+      "path": "CHANGELOG.md",
+      "metrics": {
+        "degree": 1
+      }
+    },
+    {
       "id": "knowledge-change:CHANGELOG.md:3138e23: Use @agentskit/cross-platform for process spawning, process-tree termination, path separators, line splitting and frontmatter detection. Registry agent and study CLIs that are .cmd shi:57b0e5ba6ed4a6d1cdcffbccd641aec9",
       "label": "3138e23: Use @agentskit/cross-platform for process spawning, process-tree termination, path separators, line splitting and frontmatter detection. Registry agent and study CLIs that are .cmd shims now start on Windows without a shell, timed-out children no ",
       "kind": "change",
@@ -2565,8 +2583,17 @@
       }
     },
     {
-      "id": "knowledge-change:CHANGELOG.md:319605e: Add read-only Nx project inference for Doc Bridge ownership, handoffs, and available test and lint checks.:1.5.0",
+      "id": "knowledge-change:CHANGELOG.md:319605e: Add read-only Nx project inference for Doc Bridge ownership, handoffs, and available test and lint checks.:1.5.2",
       "label": "319605e: Add read-only Nx project inference for Doc Bridge ownership, handoffs, and available test and lint checks.",
+      "kind": "change",
+      "path": "CHANGELOG.md",
+      "metrics": {
+        "degree": 1
+      }
+    },
+    {
+      "id": "knowledge-change:CHANGELOG.md:321efbd: Add opt-in vault Markdown discovery with deterministic wikilinks, embeds, aliases, tags, and visible exclusion diagnostics.:1.15.0-next.0",
+      "label": "321efbd: Add opt-in vault Markdown discovery with deterministic wikilinks, embeds, aliases, tags, and visible exclusion diagnostics.",
       "kind": "change",
       "path": "CHANGELOG.md",
       "metrics": {
@@ -2727,7 +2754,7 @@
       }
     },
     {
-      "id": "knowledge-change:CHANGELOG.md:5133bda: Expose the portable Doc Bridge handoff skill as a discoverable Pi package.:1.5.0",
+      "id": "knowledge-change:CHANGELOG.md:5133bda: Expose the portable Doc Bridge handoff skill as a discoverable Pi package.:1.5.2",
       "label": "5133bda: Expose the portable Doc Bridge handoff skill as a discoverable Pi package.",
       "kind": "change",
       "path": "CHANGELOG.md",
@@ -2799,6 +2826,15 @@
       }
     },
     {
+      "id": "knowledge-change:CHANGELOG.md:57da536: Add opt-in deterministic decision, concept and change entities with a versioned\nevidence contract, bounded local history and exact symbol aliases. Existing\nindex and handoff output sta:6953f8277a41a4f49378ec81d40c52ca",
+      "label": "57da536: Add opt-in deterministic decision, concept and change entities with a versioned\nevidence contract, bounded local history and exact symbol aliases. Existing\nindex and handoff output stays unchanged when disabled.",
+      "kind": "change",
+      "path": "CHANGELOG.md",
+      "metrics": {
+        "degree": 1
+      }
+    },
+    {
       "id": "knowledge-change:CHANGELOG.md:5b70e2e: Resolve context-bound configuration citations and statically linked operational defaults without changing public index or handoff envelopes.:1.14.0",
       "label": "5b70e2e: Resolve context-bound configuration citations and statically linked operational defaults without changing public index or handoff envelopes.",
       "kind": "change",
@@ -2817,7 +2853,16 @@
       }
     },
     {
-      "id": "knowledge-change:CHANGELOG.md:60s demo path (ak-docs demo):1.5.0",
+      "id": "knowledge-change:CHANGELOG.md:5b80003: Prove changed callable compatibility across bounded relative and local workspace type imports using each snapshot's retained syntax. External and unsupported dependencies remain review:ad3da93eee1e0cd5d9bcbb9f60c047ee",
+      "label": "5b80003: Prove changed callable compatibility across bounded relative and local workspace type imports using each snapshot's retained syntax. External and unsupported dependencies remain review candidates, except a labeled direct-interface heritage proof t",
+      "kind": "change",
+      "path": "CHANGELOG.md",
+      "metrics": {
+        "degree": 1
+      }
+    },
+    {
+      "id": "knowledge-change:CHANGELOG.md:60s demo path (ak-docs demo):1.5.2",
       "label": "60s demo path (ak-docs demo)",
       "kind": "change",
       "path": "CHANGELOG.md",
@@ -2846,6 +2891,15 @@
     {
       "id": "knowledge-change:CHANGELOG.md:6d552b3: The documentation-standard ecosystem contract no longer hard-codes product membership. It used to require the deprecated properties shim to project either a fixed three-product list th:59d4aed427b3c83c2f245efdd045ddbf",
       "label": "6d552b3: The documentation-standard ecosystem contract no longer hard-codes product membership. It used to require the deprecated properties shim to project either a fixed three-product list that included Playbook or a fixed six-product list without Harnes",
+      "kind": "change",
+      "path": "CHANGELOG.md",
+      "metrics": {
+        "degree": 1
+      }
+    },
+    {
+      "id": "knowledge-change:CHANGELOG.md:7263365: Honor configured memory directories and deterministic adapters, reject unsupported adapters explicitly, and link safe classified memories to opt-in knowledge entities with exact typed :2157f27b81f607910a34532c3a661ab2",
+      "label": "7263365: Honor configured memory directories and deterministic adapters, reject unsupported adapters explicitly, and link safe classified memories to opt-in knowledge entities with exact typed evidence. Promotion remains draft-only.",
       "kind": "change",
       "path": "CHANGELOG.md",
       "metrics": {
@@ -2889,7 +2943,7 @@
       }
     },
     {
-      "id": "knowledge-change:CHANGELOG.md:8106e2e: Add the verified MCP Registry namespace to the published package metadata.:1.5.0",
+      "id": "knowledge-change:CHANGELOG.md:8106e2e: Add the verified MCP Registry namespace to the published package metadata.:1.5.2",
       "label": "8106e2e: Add the verified MCP Registry namespace to the published package metadata.",
       "kind": "change",
       "path": "CHANGELOG.md",
@@ -2912,12 +2966,21 @@
       "kind": "change",
       "path": "CHANGELOG.md",
       "metrics": {
-        "degree": 1
+        "degree": 0
       }
     },
     {
       "id": "knowledge-change:CHANGELOG.md:8c8ec5a: Add caller-controlled operation limits, cancellation, bounded progress and transient run metrics to injected discovery, partitioned indexing and diff, with opt-in async CLI controls an:b298add2637217b185fb12117560ce06",
       "label": "8c8ec5a: Add caller-controlled operation limits, cancellation, bounded progress and transient run metrics to injected discovery, partitioned indexing and diff, with opt-in async CLI controls and explicit stopped-stage coverage.",
+      "kind": "change",
+      "path": "CHANGELOG.md",
+      "metrics": {
+        "degree": 1
+      }
+    },
+    {
+      "id": "knowledge-change:CHANGELOG.md:91c20de: Add a bounded deterministic StudioGraphV1 contract, local JSON export command,\nsearch/why payloads, public sample graphs and a local studio design brief.:1.15.0-next.0",
+      "label": "91c20de: Add a bounded deterministic StudioGraphV1 contract, local JSON export command,\nsearch/why payloads, public sample graphs and a local studio design brief.",
       "kind": "change",
       "path": "CHANGELOG.md",
       "metrics": {
@@ -2984,7 +3047,7 @@
       "kind": "change",
       "path": "CHANGELOG.md",
       "metrics": {
-        "degree": 1
+        "degree": 0
       }
     },
     {
@@ -3069,6 +3132,24 @@
       }
     },
     {
+      "id": "knowledge-change:CHANGELOG.md:9c3db9c: Add deterministic vault diff with human-reviewed enrichment edit proposals and a local draft preview, preserving source documents.:1.15.0-next.0",
+      "label": "9c3db9c: Add deterministic vault diff with human-reviewed enrichment edit proposals and a local draft preview, preserving source documents.",
+      "kind": "change",
+      "path": "CHANGELOG.md",
+      "metrics": {
+        "degree": 1
+      }
+    },
+    {
+      "id": "knowledge-change:CHANGELOG.md:9c3db9c: Export opt-in decision, concept and change notes with source evidence and stable knowledge links.:1.15.0-next.0",
+      "label": "9c3db9c: Export opt-in decision, concept and change notes with source evidence and stable knowledge links.",
+      "kind": "change",
+      "path": "CHANGELOG.md",
+      "metrics": {
+        "degree": 1
+      }
+    },
+    {
       "id": "knowledge-change:CHANGELOG.md:9d41d7d: Release Registry CLI concurrency before reporting a failed call so immediate retries after deadlines or output overflow can proceed.:1.14.0",
       "label": "9d41d7d: Release Registry CLI concurrency before reporting a failed call so immediate retries after deadlines or output overflow can proceed.",
       "kind": "change",
@@ -3080,6 +3161,15 @@
     {
       "id": "knowledge-change:CHANGELOG.md:9d41d7d: Release Registry CLI concurrency before reporting a failed call so immediate retries after deadlines or output overflow can proceed.:1.14.0-next.0",
       "label": "9d41d7d: Release Registry CLI concurrency before reporting a failed call so immediate retries after deadlines or output overflow can proceed.",
+      "kind": "change",
+      "path": "CHANGELOG.md",
+      "metrics": {
+        "degree": 1
+      }
+    },
+    {
+      "id": "knowledge-change:CHANGELOG.md:Add a bounded deterministic studio graph contract, local JSON export, search/why payloads, public samples and design brief.:Unreleased",
+      "label": "Add a bounded deterministic studio graph contract, local JSON export, search/why payloads, public samples and design brief.",
       "kind": "change",
       "path": "CHANGELOG.md",
       "metrics": {
@@ -3141,15 +3231,6 @@
       }
     },
     {
-      "id": "knowledge-change:CHANGELOG.md:Add desktop/mobile Playwright coverage for the landing, Fumadocs, local chat, ambiguity, and completed backend stream.:1.5.0",
-      "label": "Add desktop/mobile Playwright coverage for the landing, Fumadocs, local chat, ambiguity, and completed backend stream.",
-      "kind": "change",
-      "path": "CHANGELOG.md",
-      "metrics": {
-        "degree": 1
-      }
-    },
-    {
       "id": "knowledge-change:CHANGELOG.md:Add deterministic ChangeSetV1 and ak-docs diff, with historical documentation impact, proven-removal and ambiguity findings, and explicit unsupported extraction coverage. Change digests now inc:3f1c2cf16f5cd82a25123f15c5619db5",
       "label": "Add deterministic ChangeSetV1 and ak-docs diff, with historical documentation impact, proven-removal and ambiguity findings, and explicit unsupported extraction coverage. Change digests now include documentation citing removed targets.",
       "kind": "change",
@@ -3186,7 +3267,16 @@
       }
     },
     {
-      "id": "knowledge-change:CHANGELOG.md:Add dynamic AgentsKit Chat dogfood with local exact answers, ambiguity choices, session-aware backend fallback, and explicit provenance.:1.5.0",
+      "id": "knowledge-change:CHANGELOG.md:Add deterministic why queries and typed budgeted MCP decision, concept and change lookup with indexed evidence and service history restrictions.:Unreleased",
+      "label": "Add deterministic why queries and typed budgeted MCP decision, concept and change lookup with indexed evidence and service history restrictions.",
+      "kind": "change",
+      "path": "CHANGELOG.md",
+      "metrics": {
+        "degree": 1
+      }
+    },
+    {
+      "id": "knowledge-change:CHANGELOG.md:Add dynamic AgentsKit Chat dogfood with local exact answers, ambiguity choices, session-aware backend fallback, and explicit provenance.:1.5.2",
       "label": "Add dynamic AgentsKit Chat dogfood with local exact answers, ambiguity choices, session-aware backend fallback, and explicit provenance.",
       "kind": "change",
       "path": "CHANGELOG.md",
@@ -3258,6 +3348,15 @@
       }
     },
     {
+      "id": "knowledge-change:CHANGELOG.md:Add optional bounded L2 region remediation with deterministic in-memory rechecking, key-free scripted providers and draft review previews.:Unreleased",
+      "label": "Add optional bounded L2 region remediation with deterministic in-memory rechecking, key-free scripted providers and draft review previews.",
+      "kind": "change",
+      "path": "CHANGELOG.md",
+      "metrics": {
+        "degree": 1
+      }
+    },
+    {
       "id": "knowledge-change:CHANGELOG.md:Add public root entrypoints for reader-backed exact-partition index building, freshness loading and artifact persistence without changing index/handoff payloads or synchronous local compatibili:6815c0f58cccb9770258a6c56a6ff2a2",
       "label": "Add public root entrypoints for reader-backed exact-partition index building, freshness loading and artifact persistence without changing index/handoff payloads or synchronous local compatibility. Missing or mismatched bodies carry exact repository/revisio",
       "kind": "change",
@@ -3294,7 +3393,7 @@
       }
     },
     {
-      "id": "knowledge-change:CHANGELOG.md:Add the canonical knowledge-engine workflow, architecture map, configurable MCP surfaces, and human-gated Registry agent proposals.:1.5.0",
+      "id": "knowledge-change:CHANGELOG.md:Add the canonical knowledge-engine workflow, architecture map, configurable MCP surfaces, and human-gated Registry agent proposals.:1.5.2",
       "label": "Add the canonical knowledge-engine workflow, architecture map, configurable MCP surfaces, and human-gated Registry agent proposals.",
       "kind": "change",
       "path": "CHANGELOG.md",
@@ -3303,7 +3402,7 @@
       }
     },
     {
-      "id": "knowledge-change:CHANGELOG.md:Add the stable, HITL-approved Documentation Standard v1 deterministic conformance profile, CLI command, reports, remediation, explicit approved exceptions, generated llms.txt freshness checks, :eccf8299a166be6bbd04e08d3561b2e6",
+      "id": "knowledge-change:CHANGELOG.md:Add the stable, HITL-approved Documentation Standard v1 deterministic conformance profile, CLI command, reports, remediation, explicit approved exceptions, generated llms.txt freshness checks, :9cce6bdd065980c796302f3ea3c031e8",
       "label": "Add the stable, HITL-approved Documentation Standard v1 deterministic conformance profile, CLI command, reports, remediation, explicit approved exceptions, generated llms.txt freshness checks, and canonical ecosystem manifest/claims validation.",
       "kind": "change",
       "path": "CHANGELOG.md",
@@ -3312,7 +3411,7 @@
       }
     },
     {
-      "id": "knowledge-change:CHANGELOG.md:Adopt README Standard v1 for repository, package, and public-app profiles with synchronized executable examples and freshness evidence.:1.5.0",
+      "id": "knowledge-change:CHANGELOG.md:Adopt README Standard v1 for repository, package, and public-app profiles with synchronized executable examples and freshness evidence.:1.5.2",
       "label": "Adopt README Standard v1 for repository, package, and public-app profiles with synchronized executable examples and freshness evidence.",
       "kind": "change",
       "path": "CHANGELOG.md",
@@ -3321,7 +3420,7 @@
       }
     },
     {
-      "id": "knowledge-change:CHANGELOG.md:Allow ak-docs query <id> --agent as a shortcut for package/ownership handoff lookup.:1.5.0",
+      "id": "knowledge-change:CHANGELOG.md:Allow ak-docs query <id> --agent as a shortcut for package/ownership handoff lookup.:1.5.2",
       "label": "Allow ak-docs query <id> --agent as a shortcut for package/ownership handoff lookup.",
       "kind": "change",
       "path": "CHANGELOG.md",
@@ -3359,132 +3458,6 @@
     {
       "id": "knowledge-change:CHANGELOG.md:Avoid recalculating hidden findings and insight dashboards during architecture navigation.:1.7.7",
       "label": "Avoid recalculating hidden findings and insight dashboards during architecture navigation.",
-      "kind": "change",
-      "path": "CHANGELOG.md",
-      "metrics": {
-        "degree": 1
-      }
-    },
-    {
-      "id": "knowledge-change:CHANGELOG.md:Avoid recompiling the conventional agent-package path matcher for every document during reconciliation.:1.7.39",
-      "label": "Avoid recompiling the conventional agent-package path matcher for every document during reconciliation.",
-      "kind": "change",
-      "path": "CHANGELOG.md",
-      "metrics": {
-        "degree": 1
-      }
-    },
-    {
-      "id": "knowledge-change:CHANGELOG.md:Balance dense graph nodes into a readable grid instead of compressing deep hierarchies into a narrow vertical strip.:1.7.32",
-      "label": "Balance dense graph nodes into a readable grid instead of compressing deep hierarchies into a narrow vertical strip.",
-      "kind": "change",
-      "path": "CHANGELOG.md",
-      "metrics": {
-        "degree": 1
-      }
-    },
-    {
-      "id": "knowledge-change:CHANGELOG.md:Bound ignored service configuration diagnostics, generate declared ignored exports in isolated CI-built captures, and report actionable gate/rule and redacted advisory errors without clearing committed-index drift.:Unreleased",
-      "label": "Bound ignored service configuration diagnostics, generate declared ignored exports in isolated CI-built captures, and report actionable gate/rule and redacted advisory errors without clearing committed-index drift.",
-      "kind": "change",
-      "path": "CHANGELOG.md",
-      "metrics": {
-        "degree": 1
-      }
-    },
-    {
-      "id": "knowledge-change:CHANGELOG.md:Bound large-repository discovery coverage with deterministic counted summaries, capped evidence samples and explicit truncation, preserving small snapshot bytes and rescanning sampled snapshots:e45ed4359f18a10216612356143d9494",
-      "label": "Bound large-repository discovery coverage with deterministic counted summaries, capped evidence samples and explicit truncation, preserving small snapshot bytes and rescanning sampled snapshots for complete per-file diagnostics.",
-      "kind": "change",
-      "path": "CHANGELOG.md",
-      "metrics": {
-        "degree": 1
-      }
-    },
-    {
-      "id": "knowledge-change:CHANGELOG.md:Cache the graph model for the active report navigation state and invalidate it after lazy data hydration.:1.7.8",
-      "label": "Cache the graph model for the active report navigation state and invalidate it after lazy data hydration.",
-      "kind": "change",
-      "path": "CHANGELOG.md",
-      "metrics": {
-        "degree": 1
-      }
-    },
-    {
-      "id": "knowledge-change:CHANGELOG.md:Clarify runtime-wiring coverage so resolved static targets and unresolved indirect wiring are not conflated.:1.7.23",
-      "label": "Clarify runtime-wiring coverage so resolved static targets and unresolved indirect wiring are not conflated.",
-      "kind": "change",
-      "path": "CHANGELOG.md",
-      "metrics": {
-        "degree": 1
-      }
-    },
-    {
-      "id": "knowledge-change:CHANGELOG.md:Clarify that ak-verify is portable while verification contracts remain project-local.:1.7.40",
-      "label": "Clarify that ak-verify is portable while verification contracts remain project-local.",
-      "kind": "change",
-      "path": "CHANGELOG.md",
-      "metrics": {
-        "degree": 1
-      }
-    },
-    {
-      "id": "knowledge-change:CHANGELOG.md:Classify provably compatible callable changes, suppress additive-only configuration parent findings, and prioritize specific fact citations with a 256-reference cap.:Unreleased",
-      "label": "Classify provably compatible callable changes, suppress additive-only configuration parent findings, and prioritize specific fact citations with a 256-reference cap.",
-      "kind": "change",
-      "path": "CHANGELOG.md",
-      "metrics": {
-        "degree": 1
-      }
-    },
-    {
-      "id": "knowledge-change:CHANGELOG.md:Compare codec-backed surface and package facts with value hashes, extraction-aware generic citation findings and bounded injected head reads. Resolve generic citations with the built-in Markdow:4f55f5233840bfffc2cd67650f961a22",
-      "label": "Compare codec-backed surface and package facts with value hashes, extraction-aware generic citation findings and bounded injected head reads. Resolve generic citations with the built-in Markdown plugin and bounded owner ambiguity. Prove the language-neutra",
-      "kind": "change",
-      "path": "CHANGELOG.md",
-      "metrics": {
-        "degree": 1
-      }
-    },
-    {
-      "id": "knowledge-change:CHANGELOG.md:Corpus ownership inference — packages/<id>.md, pillars patterns, registry READMEs (toggle routing.options.ownershipFromCorpus):1.5.0",
-      "label": "Corpus ownership inference — packages/<id>.md, pillars patterns, registry READMEs (toggle routing.options.ownershipFromCorpus)",
-      "kind": "change",
-      "path": "CHANGELOG.md",
-      "metrics": {
-        "degree": 1
-      }
-    },
-    {
-      "id": "knowledge-change:CHANGELOG.md:Correct package documentation health classification when aggregated relations are undocumented.:1.7.42",
-      "label": "Correct package documentation health classification when aggregated relations are undocumented.",
-      "kind": "change",
-      "path": "CHANGELOG.md",
-      "metrics": {
-        "degree": 1
-      }
-    },
-    {
-      "id": "knowledge-change:CHANGELOG.md:Count conventional agent documents under packages/ and apps/ as package coverage even when they do not declare a humanDoc bridge.:1.7.38",
-      "label": "Count conventional agent documents under packages/ and apps/ as package coverage even when they do not declare a humanDoc bridge.",
-      "kind": "change",
-      "path": "CHANGELOG.md",
-      "metrics": {
-        "degree": 1
-      }
-    },
-    {
-      "id": "knowledge-change:CHANGELOG.md:Deduplicate removed-export advisories, preserve kind-specific conflict status and distinct citation evidence, summarize advisory coverage, and retain actionable Action failure reports with syml:5941abf6ff78358b6c664d661628e32b",
-      "label": "Deduplicate removed-export advisories, preserve kind-specific conflict status and distinct citation evidence, summarize advisory coverage, and retain actionable Action failure reports with symlink-safe runner invocation.",
-      "kind": "change",
-      "path": "CHANGELOG.md",
-      "metrics": {
-        "degree": 1
-      }
-    },
-    {
-      "id": "knowledge-change:CHANGELOG.md:Default agent include **/*.{md,mdx}:1.5.0",
-      "label": "Default agent include **/*.{md,mdx}",
       "kind": "change",
       "path": "CHANGELOG.md",
       "metrics": {
@@ -5004,6 +4977,42 @@
       }
     },
     {
+      "id": "knowledge-decision:docs/adr/0019-memory-entity-evidence.md:Configurable memory source and exact entity evidence",
+      "label": "Configurable memory source and exact entity evidence",
+      "kind": "decision",
+      "path": "docs/adr/0019-memory-entity-evidence.md",
+      "timestamps": {
+        "authored": "2026-10-08"
+      },
+      "metrics": {
+        "degree": 1
+      }
+    },
+    {
+      "id": "knowledge-decision:docs/adr/0020-vault-edit-review.md:Generated vault edit review",
+      "label": "Generated vault edit review",
+      "kind": "decision",
+      "path": "docs/adr/0020-vault-edit-review.md",
+      "timestamps": {
+        "authored": "2026-10-08"
+      },
+      "metrics": {
+        "degree": 1
+      }
+    },
+    {
+      "id": "knowledge-decision:docs/adr/0022-l2-remediation-acceptance.md:Deterministic acceptance of optional L2 region proposals",
+      "label": "Deterministic acceptance of optional L2 region proposals",
+      "kind": "decision",
+      "path": "docs/adr/0022-l2-remediation-acceptance.md",
+      "timestamps": {
+        "authored": "2026-10-09"
+      },
+      "metrics": {
+        "degree": 1
+      }
+    },
+    {
       "id": "module:agents/content-fact-checker/agent.ts",
       "label": "agent.ts",
       "kind": "fact",
@@ -5221,8 +5230,8 @@
       "cluster": "area:apps/docs",
       "metrics": {
         "canonicality": 0,
-        "degree": 4,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 4
       }
     },
     {
@@ -5235,8 +5244,8 @@
       "cluster": "area:apps/docs",
       "metrics": {
         "canonicality": 0,
-        "degree": 4,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 4
       }
     },
     {
@@ -5405,8 +5414,8 @@
       "cluster": "area:apps/docs",
       "metrics": {
         "canonicality": 0,
-        "degree": 5,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 5
       }
     },
     {
@@ -5432,8 +5441,8 @@
       "cluster": "area:apps/docs",
       "metrics": {
         "canonicality": 0,
-        "degree": 5,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 5
       }
     },
     {
@@ -5446,8 +5455,8 @@
       "cluster": "area:apps/docs",
       "metrics": {
         "canonicality": 0,
-        "degree": 7,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 8
       }
     },
     {
@@ -5460,8 +5469,8 @@
       "cluster": "area:apps/docs",
       "metrics": {
         "canonicality": 0,
-        "degree": 5,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 5
       }
     },
     {
@@ -5526,8 +5535,8 @@
       "cluster": "area:apps/docs",
       "metrics": {
         "canonicality": 0,
-        "degree": 4,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 4
       }
     },
     {
@@ -5553,8 +5562,8 @@
       "cluster": "area:apps/docs",
       "metrics": {
         "canonicality": 0,
-        "degree": 6,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 6
       }
     },
     {
@@ -5584,18 +5593,6 @@
       }
     },
     {
-      "id": "module:playwright.config.ts",
-      "label": "playwright.config.ts",
-      "kind": "fact",
-      "path": "playwright.config.ts",
-      "sourceKind": "module",
-      "cluster": "package:@agentskit/doc-bridge",
-      "metrics": {
-        "canonicality": 0,
-        "degree": 2
-      }
-    },
-    {
       "id": "module:scripts/action-runner.mjs",
       "label": "action-runner.mjs",
       "kind": "fact",
@@ -5605,8 +5602,8 @@
       "cluster": "area:scripts",
       "metrics": {
         "canonicality": 0,
-        "degree": 9,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 9
       }
     },
     {
@@ -5632,8 +5629,8 @@
       "cluster": "area:scripts",
       "metrics": {
         "canonicality": 0,
-        "degree": 3,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 3
       }
     },
     {
@@ -5659,7 +5656,7 @@
       "cluster": "area:scripts",
       "metrics": {
         "canonicality": 0,
-        "degree": 5
+        "degree": 6
       }
     },
     {
@@ -5672,8 +5669,8 @@
       "cluster": "area:scripts",
       "metrics": {
         "canonicality": 0,
-        "degree": 4,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 4
       }
     },
     {
@@ -5699,8 +5696,8 @@
       "cluster": "area:scripts",
       "metrics": {
         "canonicality": 0,
-        "degree": 4,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 4
       }
     },
     {
@@ -5739,8 +5736,8 @@
       "cluster": "area:scripts",
       "metrics": {
         "canonicality": 0,
-        "degree": 4,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 4
       }
     },
     {
@@ -5766,8 +5763,8 @@
       "cluster": "area:scripts",
       "metrics": {
         "canonicality": 0,
-        "degree": 3,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 3
       }
     },
     {
@@ -5793,8 +5790,8 @@
       "cluster": "area:scripts",
       "metrics": {
         "canonicality": 0,
-        "degree": 10,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 9
       }
     },
     {
@@ -5807,8 +5804,8 @@
       "cluster": "area:scripts",
       "metrics": {
         "canonicality": 0,
-        "degree": 7,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 7
       }
     },
     {
@@ -5821,8 +5818,8 @@
       "cluster": "area:scripts",
       "metrics": {
         "canonicality": 0,
-        "degree": 5,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 5
       }
     },
     {
@@ -5900,8 +5897,8 @@
       "cluster": "area:scripts",
       "metrics": {
         "canonicality": 0,
-        "degree": 3,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 3
       }
     },
     {
@@ -6018,8 +6015,8 @@
       "cluster": "area:scripts",
       "metrics": {
         "canonicality": 0,
-        "degree": 3,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 3
       }
     },
     {
@@ -6032,8 +6029,8 @@
       "cluster": "area:scripts",
       "metrics": {
         "canonicality": 0,
-        "degree": 5,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 5
       }
     },
     {
@@ -6046,8 +6043,8 @@
       "cluster": "area:scripts",
       "metrics": {
         "canonicality": 0,
-        "degree": 3,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 3
       }
     },
     {
@@ -6060,7 +6057,7 @@
       "cluster": "area:scripts",
       "metrics": {
         "canonicality": 0,
-        "degree": 3
+        "degree": 2
       }
     },
     {
@@ -6086,8 +6083,8 @@
       "cluster": "area:scripts",
       "metrics": {
         "canonicality": 0,
-        "degree": 3,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 3
       }
     },
     {
@@ -6126,8 +6123,8 @@
       "cluster": "area:scripts",
       "metrics": {
         "canonicality": 0,
-        "degree": 15,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 15
       }
     },
     {
@@ -6140,8 +6137,8 @@
       "cluster": "area:scripts",
       "metrics": {
         "canonicality": 0,
-        "degree": 3,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 3
       }
     },
     {
@@ -6193,8 +6190,8 @@
       "cluster": "area:src/agents",
       "metrics": {
         "canonicality": 0,
-        "degree": 21,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 21
       }
     },
     {
@@ -6207,8 +6204,8 @@
       "cluster": "area:src/audit",
       "metrics": {
         "canonicality": 0,
-        "degree": 21,
-        "centrality": 0.00018
+        "centrality": 0.000185,
+        "degree": 21
       }
     },
     {
@@ -6221,8 +6218,8 @@
       "cluster": "area:src/bench",
       "metrics": {
         "canonicality": 0,
-        "degree": 15,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 15
       }
     },
     {
@@ -6235,8 +6232,8 @@
       "cluster": "area:src/bench",
       "metrics": {
         "canonicality": 0,
-        "degree": 14,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 14
       }
     },
     {
@@ -6249,8 +6246,8 @@
       "cluster": "area:src/bench",
       "metrics": {
         "canonicality": 0,
-        "degree": 14,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 13
       }
     },
     {
@@ -6263,8 +6260,8 @@
       "cluster": "area:src/budget",
       "metrics": {
         "canonicality": 0,
-        "degree": 8,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 8
       }
     },
     {
@@ -6277,8 +6274,8 @@
       "cluster": "area:src/budget",
       "metrics": {
         "canonicality": 0,
-        "degree": 4,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 4
       }
     },
     {
@@ -6291,8 +6288,8 @@
       "cluster": "area:src/cli",
       "metrics": {
         "canonicality": 0,
-        "degree": 8,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 8
       }
     },
     {
@@ -6305,8 +6302,8 @@
       "cluster": "area:src/cli",
       "metrics": {
         "canonicality": 0,
-        "degree": 4,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 4
       }
     },
     {
@@ -6319,8 +6316,8 @@
       "cluster": "area:src/cli",
       "metrics": {
         "canonicality": 0,
-        "degree": 9,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 8
       }
     },
     {
@@ -6333,8 +6330,8 @@
       "cluster": "area:src/cli",
       "metrics": {
         "canonicality": 0,
-        "degree": 28,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 27
       }
     },
     {
@@ -6347,8 +6344,8 @@
       "cluster": "area:src/cli",
       "metrics": {
         "canonicality": 0,
-        "degree": 6,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 6
       }
     },
     {
@@ -6361,8 +6358,8 @@
       "cluster": "area:src/cli",
       "metrics": {
         "canonicality": 0,
-        "degree": 3,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 3
       }
     },
     {
@@ -6375,8 +6372,8 @@
       "cluster": "area:src/config",
       "metrics": {
         "canonicality": 0,
-        "degree": 7,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 7
       }
     },
     {
@@ -6389,8 +6386,8 @@
       "cluster": "area:src/config",
       "metrics": {
         "canonicality": 0,
-        "degree": 7,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 7
       }
     },
     {
@@ -6403,8 +6400,8 @@
       "cluster": "area:src/config",
       "metrics": {
         "canonicality": 0,
-        "degree": 6,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 6
       }
     },
     {
@@ -6417,8 +6414,8 @@
       "cluster": "area:src/config",
       "metrics": {
         "canonicality": 0,
-        "degree": 13,
-        "centrality": 0.000871
+        "centrality": 0.000895,
+        "degree": 13
       }
     },
     {
@@ -6431,8 +6428,8 @@
       "cluster": "area:src/config",
       "metrics": {
         "canonicality": 0,
-        "degree": 27,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 27
       }
     },
     {
@@ -6445,8 +6442,8 @@
       "cluster": "area:src/conformance",
       "metrics": {
         "canonicality": 0,
-        "degree": 6,
-        "centrality": 0.00018
+        "centrality": 0.000185,
+        "degree": 6
       }
     },
     {
@@ -6459,8 +6456,8 @@
       "cluster": "area:src/conformance",
       "metrics": {
         "canonicality": 0,
-        "degree": 3,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 3
       }
     },
     {
@@ -6473,8 +6470,8 @@
       "cluster": "area:src/diff",
       "metrics": {
         "canonicality": 0,
-        "degree": 18,
-        "centrality": 0.008018
+        "centrality": 0.008238,
+        "degree": 18
       }
     },
     {
@@ -6487,8 +6484,8 @@
       "cluster": "area:src/diff",
       "metrics": {
         "canonicality": 0,
-        "degree": 6,
-        "centrality": 0.006486
+        "centrality": 0.006664,
+        "degree": 6
       }
     },
     {
@@ -6501,8 +6498,8 @@
       "cluster": "area:src/discovery",
       "metrics": {
         "canonicality": 0,
-        "degree": 6,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 6
       }
     },
     {
@@ -6515,8 +6512,8 @@
       "cluster": "area:src/discovery",
       "metrics": {
         "canonicality": 0,
-        "degree": 4,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 4
       }
     },
     {
@@ -6529,8 +6526,8 @@
       "cluster": "area:src/discovery",
       "metrics": {
         "canonicality": 0,
-        "degree": 5,
-        "centrality": 0.007568
+        "centrality": 0.007775,
+        "degree": 5
       }
     },
     {
@@ -6543,8 +6540,8 @@
       "cluster": "area:src/discovery",
       "metrics": {
         "canonicality": 0,
-        "degree": 6,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 6
       }
     },
     {
@@ -6557,8 +6554,8 @@
       "cluster": "area:src/discovery",
       "metrics": {
         "canonicality": 0,
-        "degree": 6,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 6
       }
     },
     {
@@ -6571,8 +6568,8 @@
       "cluster": "area:src/discovery",
       "metrics": {
         "canonicality": 0,
-        "degree": 4,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 4
       }
     },
     {
@@ -6585,8 +6582,8 @@
       "cluster": "area:src/discovery",
       "metrics": {
         "canonicality": 0,
-        "degree": 14,
-        "centrality": 0.015511
+        "centrality": 0.015935,
+        "degree": 14
       }
     },
     {
@@ -6599,8 +6596,8 @@
       "cluster": "area:src/discovery",
       "metrics": {
         "canonicality": 0,
-        "degree": 5,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 4
       }
     },
     {
@@ -6613,8 +6610,8 @@
       "cluster": "area:src/discovery",
       "metrics": {
         "canonicality": 0,
-        "degree": 6,
-        "centrality": 0.002523
+        "centrality": 0.002592,
+        "degree": 5
       }
     },
     {
@@ -6627,8 +6624,8 @@
       "cluster": "area:src/discovery",
       "metrics": {
         "canonicality": 0,
-        "degree": 6,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 6
       }
     },
     {
@@ -6641,8 +6638,8 @@
       "cluster": "area:src/discovery",
       "metrics": {
         "canonicality": 0,
-        "degree": 13,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 13
       }
     },
     {
@@ -6655,8 +6652,8 @@
       "cluster": "area:src/discovery",
       "metrics": {
         "canonicality": 0,
-        "degree": 11,
-        "centrality": 0.001592
+        "centrality": 0.001635,
+        "degree": 10
       }
     },
     {
@@ -6669,8 +6666,8 @@
       "cluster": "area:src/discovery",
       "metrics": {
         "canonicality": 0,
-        "degree": 12,
-        "centrality": 0.000547
+        "centrality": 0.000562,
+        "degree": 12
       }
     },
     {
@@ -6683,8 +6680,8 @@
       "cluster": "area:src/discovery",
       "metrics": {
         "canonicality": 0,
-        "degree": 11,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 10
       }
     },
     {
@@ -6697,8 +6694,8 @@
       "cluster": "area:src/discovery",
       "metrics": {
         "canonicality": 0,
-        "degree": 7,
-        "centrality": 0.000306
+        "centrality": 0.000315,
+        "degree": 7
       }
     },
     {
@@ -6711,8 +6708,8 @@
       "cluster": "area:src/discovery",
       "metrics": {
         "canonicality": 0,
-        "degree": 8,
-        "centrality": 0.000156
+        "centrality": 0.00016,
+        "degree": 8
       }
     },
     {
@@ -6725,8 +6722,8 @@
       "cluster": "area:src/discovery",
       "metrics": {
         "canonicality": 0,
-        "degree": 22,
-        "centrality": 0.020216
+        "centrality": 0.02077,
+        "degree": 22
       }
     },
     {
@@ -6739,8 +6736,8 @@
       "cluster": "area:src/discovery",
       "metrics": {
         "canonicality": 0,
-        "degree": 21,
-        "centrality": 0.013333
+        "centrality": 0.013699,
+        "degree": 21
       }
     },
     {
@@ -6753,8 +6750,8 @@
       "cluster": "area:src/discovery",
       "metrics": {
         "canonicality": 0,
-        "degree": 6,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 6
       }
     },
     {
@@ -6767,8 +6764,8 @@
       "cluster": "area:src/discovery",
       "metrics": {
         "canonicality": 0,
-        "degree": 5,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 5
       }
     },
     {
@@ -6781,8 +6778,8 @@
       "cluster": "area:src/discovery",
       "metrics": {
         "canonicality": 0,
-        "degree": 6,
-        "centrality": 0.003784
+        "centrality": 0.003887,
+        "degree": 6
       }
     },
     {
@@ -6795,8 +6792,8 @@
       "cluster": "area:src/discovery",
       "metrics": {
         "canonicality": 0,
-        "degree": 36,
-        "centrality": 0.029886
+        "centrality": 0.030705,
+        "degree": 36
       }
     },
     {
@@ -6809,8 +6806,8 @@
       "cluster": "area:src/discovery",
       "metrics": {
         "canonicality": 0,
-        "degree": 4,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 4
       }
     },
     {
@@ -6823,8 +6820,8 @@
       "cluster": "area:src/discovery",
       "metrics": {
         "canonicality": 0,
-        "degree": 14,
-        "centrality": 0.013348
+        "centrality": 0.013714,
+        "degree": 14
       }
     },
     {
@@ -6837,8 +6834,8 @@
       "cluster": "area:src/doctor",
       "metrics": {
         "canonicality": 0,
-        "degree": 5,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 5
       }
     },
     {
@@ -6851,8 +6848,8 @@
       "cluster": "area:src/doctor",
       "metrics": {
         "canonicality": 0,
-        "degree": 9,
-        "centrality": 0.005045
+        "centrality": 0.005183,
+        "degree": 9
       }
     },
     {
@@ -6865,8 +6862,8 @@
       "cluster": "area:src/enrich",
       "metrics": {
         "canonicality": 0,
-        "degree": 5,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 5
       }
     },
     {
@@ -6879,8 +6876,8 @@
       "cluster": "area:src/enrich",
       "metrics": {
         "canonicality": 0,
-        "degree": 4,
-        "centrality": 0
+        "centrality": 0,
+        "degree": 3
       }
     },
     {
@@ -6893,22 +6890,8 @@
       "cluster": "area:src/enrich",
       "metrics": {
         "canonicality": 0,
-        "degree": 6,
-        "centrality": 0.00018
-      }
-    },
-    {
-      "id": "module:src/enrich/overlay.ts",
-      "label": "overlay.ts",
-      "kind": "fact",
-      "path": "src/enrich/overlay.ts",
-      "sourceKind": "module",
-      "areaId": "area:src/enrich",
-      "cluster": "area:src/enrich",
-      "metrics": {
-        "canonicality": 0,
-        "degree": 6,
-        "centrality": 0
+        "centrality": 0.000185,
+        "degree": 6
       }
     },
     {
@@ -6919,7 +6902,7 @@
       "sourceKind": "package",
       "cluster": "package:@agentskit/doc-bridge",
       "metrics": {
-        "canonicality": 0.004564,
+        "canonicality": 0.004244,
         "degree": 204
       }
     },
@@ -7760,15 +7743,6 @@
       }
     },
     {
-      "id": "symbol:module:playwright.config.ts:default",
-      "label": "default",
-      "kind": "symbol",
-      "path": "playwright.config.ts",
-      "metrics": {
-        "degree": 1
-      }
-    },
-    {
       "id": "symbol:module:scripts/action-runner.mjs:analyzeAdvisory",
       "label": "analyzeAdvisory",
       "kind": "symbol",
@@ -8508,17 +8482,6 @@
     {
       "id": "symbol:module:src/bench/retrieval.ts:RetrievalSuite",
       "label": "RetrievalSuite",
-      "kind": "symbol",
-      "path": "src/bench/retrieval.ts",
-      "areaId": "area:src/bench",
-      "cluster": "area:src/bench",
-      "metrics": {
-        "degree": 1
-      }
-    },
-    {
-      "id": "symbol:module:src/bench/retrieval.ts:RetrievalSuiteCase",
-      "label": "RetrievalSuiteCase",
       "kind": "symbol",
       "path": "src/bench/retrieval.ts",
       "areaId": "area:src/bench",
@@ -9503,13 +9466,6 @@
       "weight": 1
     },
     {
-      "id": "relation:area:src/enrich:owns:module:src/enrich/overlay.ts",
-      "from": "area:src/enrich",
-      "to": "module:src/enrich/overlay.ts",
-      "kind": "owns",
-      "weight": 1
-    },
-    {
       "id": "relation:area:src:owns:area:src/agents",
       "from": "area:src",
       "to": "area:src/agents",
@@ -9776,6 +9732,13 @@
       "weight": 1
     },
     {
+      "id": "relation:area:src:owns:area:src/studio",
+      "from": "area:src",
+      "to": "area:src/studio",
+      "kind": "owns",
+      "weight": 1
+    },
+    {
       "id": "relation:area:src:owns:area:src/study",
       "from": "area:src",
       "to": "area:src/study",
@@ -9888,13 +9851,6 @@
       "weight": 1
     },
     {
-      "id": "relation:document:CHANGELOG.md:mentions:document:docs/study/README.md",
-      "from": "document:CHANGELOG.md",
-      "to": "document:docs/study/README.md",
-      "kind": "mentions",
-      "weight": 1
-    },
-    {
       "id": "relation:document:CHANGELOG.md:mentions:module:scripts/lib/aliases.mjs",
       "from": "document:CHANGELOG.md",
       "to": "module:scripts/lib/aliases.mjs",
@@ -9966,13 +9922,6 @@
       "id": "relation:document:CONTRIBUTING.md:links-to:document:SECURITY.md",
       "from": "document:CONTRIBUTING.md",
       "to": "document:SECURITY.md",
-      "kind": "links-to",
-      "weight": 1
-    },
-    {
-      "id": "relation:document:CONTRIBUTING.md:links-to:document:docs/study/README.md",
-      "from": "document:CONTRIBUTING.md",
-      "to": "document:docs/study/README.md",
       "kind": "links-to",
       "weight": 1
     },
@@ -10213,13 +10162,6 @@
       "id": "relation:document:README.md:links-to:document:docs/spec/config-v1.md",
       "from": "document:README.md",
       "to": "document:docs/spec/config-v1.md",
-      "kind": "links-to",
-      "weight": 1
-    },
-    {
-      "id": "relation:document:README.md:links-to:document:docs/study/README.md",
-      "from": "document:README.md",
-      "to": "document:docs/study/README.md",
       "kind": "links-to",
       "weight": 1
     },
@@ -10951,13 +10893,6 @@
       "weight": 1
     },
     {
-      "id": "relation:document:docs/adr/0014-pluggable-io-and-revision-partitions.md:mentions:document:docs/spec/storage-io-v1.md",
-      "from": "document:docs/adr/0014-pluggable-io-and-revision-partitions.md",
-      "to": "document:docs/spec/storage-io-v1.md",
-      "kind": "mentions",
-      "weight": 1
-    },
-    {
       "id": "relation:document:docs/adr/0014-pluggable-io-and-revision-partitions.md:mentions:module:src/discovery/repository.ts",
       "from": "document:docs/adr/0014-pluggable-io-and-revision-partitions.md",
       "to": "module:src/discovery/repository.ts",
@@ -11010,6 +10945,20 @@
       "id": "relation:document:docs/adr/0018-opt-in-knowledge-entities.md:links-to:document:docs/schemas/knowledge-entity-v1.md",
       "from": "document:docs/adr/0018-opt-in-knowledge-entities.md",
       "to": "document:docs/schemas/knowledge-entity-v1.md",
+      "kind": "links-to",
+      "weight": 1
+    },
+    {
+      "id": "relation:document:docs/adr/0019-memory-entity-evidence.md:links-to:document:docs/schemas/knowledge-entity-v1.md",
+      "from": "document:docs/adr/0019-memory-entity-evidence.md",
+      "to": "document:docs/schemas/knowledge-entity-v1.md",
+      "kind": "links-to",
+      "weight": 1
+    },
+    {
+      "id": "relation:document:docs/adr/0019-memory-entity-evidence.md:links-to:document:docs/spec/config-v1.md",
+      "from": "document:docs/adr/0019-memory-entity-evidence.md",
+      "to": "document:docs/spec/config-v1.md",
       "kind": "links-to",
       "weight": 1
     },
@@ -11247,6 +11196,20 @@
       "weight": 1
     },
     {
+      "id": "relation:document:docs/agent-corpus/memory.md:links-to:document:docs/guides/memory-pipeline.md",
+      "from": "document:docs/agent-corpus/memory.md",
+      "to": "document:docs/guides/memory-pipeline.md",
+      "kind": "links-to",
+      "weight": 1
+    },
+    {
+      "id": "relation:document:docs/agent-corpus/memory.md:links-to:document:docs/schemas/knowledge-entity-v1.md",
+      "from": "document:docs/agent-corpus/memory.md",
+      "to": "document:docs/schemas/knowledge-entity-v1.md",
+      "kind": "links-to",
+      "weight": 1
+    },
+    {
       "id": "relation:document:docs/agent-corpus/metrics.md:covers:area:src/metrics",
       "from": "document:docs/agent-corpus/metrics.md",
       "to": "area:src/metrics",
@@ -11371,6 +11334,41 @@
       "id": "relation:document:docs/chat-and-rag.md:mentions:module:scripts/build-docs-artifacts.mjs",
       "from": "document:docs/chat-and-rag.md",
       "to": "module:scripts/build-docs-artifacts.mjs",
+      "kind": "mentions",
+      "weight": 1
+    },
+    {
+      "id": "relation:document:docs/design/studio-brief.md:links-to:document:docs/design/studio-samples/README.md",
+      "from": "document:docs/design/studio-brief.md",
+      "to": "document:docs/design/studio-samples/README.md",
+      "kind": "links-to",
+      "weight": 1
+    },
+    {
+      "id": "relation:document:docs/design/studio-brief.md:links-to:document:docs/schemas/studio-graph-v1.md",
+      "from": "document:docs/design/studio-brief.md",
+      "to": "document:docs/schemas/studio-graph-v1.md",
+      "kind": "links-to",
+      "weight": 1
+    },
+    {
+      "id": "relation:document:docs/design/studio-samples/README.md:links-to:document:docs/design/studio-brief.md",
+      "from": "document:docs/design/studio-samples/README.md",
+      "to": "document:docs/design/studio-brief.md",
+      "kind": "links-to",
+      "weight": 1
+    },
+    {
+      "id": "relation:document:docs/design/studio-samples/README.md:links-to:document:docs/schemas/studio-graph-v1.md",
+      "from": "document:docs/design/studio-samples/README.md",
+      "to": "document:docs/schemas/studio-graph-v1.md",
+      "kind": "links-to",
+      "weight": 1
+    },
+    {
+      "id": "relation:document:docs/design/studio-samples/README.md:mentions:package:@agentskit/doc-bridge",
+      "from": "document:docs/design/studio-samples/README.md",
+      "to": "package:@agentskit/doc-bridge",
       "kind": "mentions",
       "weight": 1
     },
@@ -11669,13 +11667,6 @@
       "weight": 1
     },
     {
-      "id": "relation:document:docs/guides/facts-and-citations.md:links-to:document:docs/spec/signature-facts-v1.md",
-      "from": "document:docs/guides/facts-and-citations.md",
-      "to": "document:docs/spec/signature-facts-v1.md",
-      "kind": "links-to",
-      "weight": 1
-    },
-    {
       "id": "relation:document:docs/guides/findings-and-remediation.md:links-to:document:docs/schemas/decision-v1.md",
       "from": "document:docs/guides/findings-and-remediation.md",
       "to": "document:docs/schemas/decision-v1.md",
@@ -11781,13 +11772,6 @@
       "weight": 1
     },
     {
-      "id": "relation:document:docs/guides/injected-storage.md:links-to:document:docs/spec/storage-io-v1.md",
-      "from": "document:docs/guides/injected-storage.md",
-      "to": "document:docs/spec/storage-io-v1.md",
-      "kind": "links-to",
-      "weight": 1
-    },
-    {
       "id": "relation:document:docs/guides/injected-storage.md:mentions:module:src/audit/documentation.ts",
       "from": "document:docs/guides/injected-storage.md",
       "to": "module:src/audit/documentation.ts",
@@ -11865,6 +11849,13 @@
       "id": "relation:document:docs/guides/install-and-run.md:links-to:document:docs/spec/config-v1.md",
       "from": "document:docs/guides/install-and-run.md",
       "to": "document:docs/spec/config-v1.md",
+      "kind": "links-to",
+      "weight": 1
+    },
+    {
+      "id": "relation:document:docs/guides/llm-remediation.md:links-to:document:docs/spec/llm-remediation-v1.md",
+      "from": "document:docs/guides/llm-remediation.md",
+      "to": "document:docs/spec/llm-remediation-v1.md",
       "kind": "links-to",
       "weight": 1
     },
@@ -11949,20 +11940,6 @@
       "id": "relation:document:docs/guides/service-profile.md:links-to:document:docs/spec/service-profile-v1.md",
       "from": "document:docs/guides/service-profile.md",
       "to": "document:docs/spec/service-profile-v1.md",
-      "kind": "links-to",
-      "weight": 1
-    },
-    {
-      "id": "relation:document:docs/guides/service-profile.md:links-to:document:docs/spec/storage-io-v1.md",
-      "from": "document:docs/guides/service-profile.md",
-      "to": "document:docs/spec/storage-io-v1.md",
-      "kind": "links-to",
-      "weight": 1
-    },
-    {
-      "id": "relation:document:docs/guides/vault.md:links-to:document:docs/spec/vault-export-v1.md",
-      "from": "document:docs/guides/vault.md",
-      "to": "document:docs/spec/vault-export-v1.md",
       "kind": "links-to",
       "weight": 1
     },
@@ -12241,55 +12218,6 @@
       "weight": 1
     },
     {
-      "id": "relation:document:docs/index.md:links-to:document:docs/spec/study-metrics-v1.md",
-      "from": "document:docs/index.md",
-      "to": "document:docs/spec/study-metrics-v1.md",
-      "kind": "links-to",
-      "weight": 1
-    },
-    {
-      "id": "relation:document:docs/index.md:links-to:document:docs/spec/study-protocol-v1.md",
-      "from": "document:docs/index.md",
-      "to": "document:docs/spec/study-protocol-v1.md",
-      "kind": "links-to",
-      "weight": 1
-    },
-    {
-      "id": "relation:document:docs/index.md:links-to:document:docs/spec/study-provider-cli-v1.md",
-      "from": "document:docs/index.md",
-      "to": "document:docs/spec/study-provider-cli-v1.md",
-      "kind": "links-to",
-      "weight": 1
-    },
-    {
-      "id": "relation:document:docs/index.md:links-to:document:docs/spec/study-runner-v1.md",
-      "from": "document:docs/index.md",
-      "to": "document:docs/spec/study-runner-v1.md",
-      "kind": "links-to",
-      "weight": 1
-    },
-    {
-      "id": "relation:document:docs/index.md:links-to:document:docs/spec/study-task-suite-v1.md",
-      "from": "document:docs/index.md",
-      "to": "document:docs/spec/study-task-suite-v1.md",
-      "kind": "links-to",
-      "weight": 1
-    },
-    {
-      "id": "relation:document:docs/index.md:links-to:document:docs/spec/study-verification-v1.md",
-      "from": "document:docs/index.md",
-      "to": "document:docs/spec/study-verification-v1.md",
-      "kind": "links-to",
-      "weight": 1
-    },
-    {
-      "id": "relation:document:docs/index.md:links-to:document:docs/study/README.md",
-      "from": "document:docs/index.md",
-      "to": "document:docs/study/README.md",
-      "kind": "links-to",
-      "weight": 1
-    },
-    {
       "id": "relation:document:docs/knowledge-engine-runbook.md:links-to:document:docs/spec/config-v1.md",
       "from": "document:docs/knowledge-engine-runbook.md",
       "to": "document:docs/spec/config-v1.md",
@@ -12389,6 +12317,13 @@
       "weight": 1
     },
     {
+      "id": "relation:document:docs/mcp.md:links-to:document:docs/spec/knowledge-query-v1.md",
+      "from": "document:docs/mcp.md",
+      "to": "document:docs/spec/knowledge-query-v1.md",
+      "kind": "links-to",
+      "weight": 1
+    },
+    {
       "id": "relation:document:docs/mcp.md:links-to:document:docs/spec/mcp-knowledge-tools-v1.md",
       "from": "document:docs/mcp.md",
       "to": "document:docs/spec/mcp-knowledge-tools-v1.md",
@@ -12466,6 +12401,13 @@
       "weight": 1
     },
     {
+      "id": "relation:document:docs/query.md:links-to:document:docs/spec/knowledge-query-v1.md",
+      "from": "document:docs/query.md",
+      "to": "document:docs/spec/knowledge-query-v1.md",
+      "kind": "links-to",
+      "weight": 1
+    },
+    {
       "id": "relation:document:docs/query.md:links-to:document:docs/spec/retrieval-index-v1.md",
       "from": "document:docs/query.md",
       "to": "document:docs/spec/retrieval-index-v1.md",
@@ -12518,13 +12460,6 @@
       "id": "relation:document:docs/schemas/change-set-v1.md:links-to:document:docs/spec/change-set-v1.md",
       "from": "document:docs/schemas/change-set-v1.md",
       "to": "document:docs/spec/change-set-v1.md",
-      "kind": "links-to",
-      "weight": 1
-    },
-    {
-      "id": "relation:document:docs/schemas/change-set-v1.md:links-to:document:docs/spec/signature-facts-v1.md",
-      "from": "document:docs/schemas/change-set-v1.md",
-      "to": "document:docs/spec/signature-facts-v1.md",
       "kind": "links-to",
       "weight": 1
     },
@@ -12600,6 +12535,13 @@
       "weight": 1
     },
     {
+      "id": "relation:document:docs/schemas/knowledge-entity-v1.md:links-to:document:docs/spec/knowledge-query-v1.md",
+      "from": "document:docs/schemas/knowledge-entity-v1.md",
+      "to": "document:docs/spec/knowledge-query-v1.md",
+      "kind": "links-to",
+      "weight": 1
+    },
+    {
       "id": "relation:document:docs/schemas/knowledge-entity-v1.md:mentions:module:scripts/lib/aliases.mjs",
       "from": "document:docs/schemas/knowledge-entity-v1.md",
       "to": "module:scripts/lib/aliases.mjs",
@@ -12615,6 +12557,20 @@
       "weight": 1
     },
     {
+      "id": "relation:document:docs/schemas/memory-candidate-v1.md:links-to:document:docs/schemas/knowledge-entity-v1.md",
+      "from": "document:docs/schemas/memory-candidate-v1.md",
+      "to": "document:docs/schemas/knowledge-entity-v1.md",
+      "kind": "links-to",
+      "weight": 1
+    },
+    {
+      "id": "relation:document:docs/schemas/memory-candidate-v1.md:links-to:document:docs/spec/config-v1.md",
+      "from": "document:docs/schemas/memory-candidate-v1.md",
+      "to": "document:docs/spec/config-v1.md",
+      "kind": "links-to",
+      "weight": 1
+    },
+    {
       "id": "relation:document:docs/schemas/memory-candidate-v1.md:mentions:package:@agentskit/doc-bridge",
       "from": "document:docs/schemas/memory-candidate-v1.md",
       "to": "package:@agentskit/doc-bridge",
@@ -12626,6 +12582,22 @@
       "from": "document:docs/schemas/remediation-v1.md",
       "to": "document:docs/spec/region-remediation-v1.md",
       "kind": "links-to",
+      "weight": 1
+    },
+    {
+      "id": "relation:document:docs/schemas/studio-graph-v1.md:mentions:module:apps/docs/lib/source.ts",
+      "from": "document:docs/schemas/studio-graph-v1.md",
+      "to": "module:apps/docs/lib/source.ts",
+      "kind": "mentions",
+      "sourceKind": "mentions-symbol",
+      "weight": 1
+    },
+    {
+      "id": "relation:document:docs/schemas/studio-graph-v1.md:mentions:module:scripts/bench-layer1.mjs",
+      "from": "document:docs/schemas/studio-graph-v1.md",
+      "to": "module:scripts/bench-layer1.mjs",
+      "kind": "mentions",
+      "sourceKind": "mentions-symbol",
       "weight": 1
     },
     {
@@ -12701,13 +12673,6 @@
       "weight": 1
     },
     {
-      "id": "relation:document:docs/spec/change-set-v1.md:links-to:document:docs/spec/signature-facts-v1.md",
-      "from": "document:docs/spec/change-set-v1.md",
-      "to": "document:docs/spec/signature-facts-v1.md",
-      "kind": "links-to",
-      "weight": 1
-    },
-    {
       "id": "relation:document:docs/spec/change-set-v1.md:mentions:module:src/diff/change-set.ts",
       "from": "document:docs/spec/change-set-v1.md",
       "to": "module:src/diff/change-set.ts",
@@ -12726,6 +12691,13 @@
       "id": "relation:document:docs/spec/cli.md:links-to:document:docs/POSITIONING.md",
       "from": "document:docs/spec/cli.md",
       "to": "document:docs/POSITIONING.md",
+      "kind": "links-to",
+      "weight": 1
+    },
+    {
+      "id": "relation:document:docs/spec/cli.md:links-to:document:docs/design/studio-brief.md",
+      "from": "document:docs/spec/cli.md",
+      "to": "document:docs/design/studio-brief.md",
       "kind": "links-to",
       "weight": 1
     },
@@ -12765,6 +12737,13 @@
       "weight": 1
     },
     {
+      "id": "relation:document:docs/spec/cli.md:links-to:document:docs/schemas/studio-graph-v1.md",
+      "from": "document:docs/spec/cli.md",
+      "to": "document:docs/schemas/studio-graph-v1.md",
+      "kind": "links-to",
+      "weight": 1
+    },
+    {
       "id": "relation:document:docs/spec/cli.md:links-to:document:docs/spec/change-set-v1.md",
       "from": "document:docs/spec/cli.md",
       "to": "document:docs/spec/change-set-v1.md",
@@ -12775,6 +12754,20 @@
       "id": "relation:document:docs/spec/cli.md:links-to:document:docs/spec/config-v1.md",
       "from": "document:docs/spec/cli.md",
       "to": "document:docs/spec/config-v1.md",
+      "kind": "links-to",
+      "weight": 1
+    },
+    {
+      "id": "relation:document:docs/spec/cli.md:links-to:document:docs/spec/knowledge-query-v1.md",
+      "from": "document:docs/spec/cli.md",
+      "to": "document:docs/spec/knowledge-query-v1.md",
+      "kind": "links-to",
+      "weight": 1
+    },
+    {
+      "id": "relation:document:docs/spec/cli.md:links-to:document:docs/spec/llm-remediation-v1.md",
+      "from": "document:docs/spec/cli.md",
+      "to": "document:docs/spec/llm-remediation-v1.md",
       "kind": "links-to",
       "weight": 1
     },
@@ -12796,13 +12789,6 @@
       "id": "relation:document:docs/spec/cli.md:links-to:document:docs/spec/service-profile-v1.md",
       "from": "document:docs/spec/cli.md",
       "to": "document:docs/spec/service-profile-v1.md",
-      "kind": "links-to",
-      "weight": 1
-    },
-    {
-      "id": "relation:document:docs/spec/cli.md:links-to:document:docs/spec/vault-export-v1.md",
-      "from": "document:docs/spec/cli.md",
-      "to": "document:docs/spec/vault-export-v1.md",
       "kind": "links-to",
       "weight": 1
     },
@@ -12900,6 +12886,13 @@
       "weight": 1
     },
     {
+      "id": "relation:document:docs/spec/config-v1.md:links-to:document:docs/spec/knowledge-query-v1.md",
+      "from": "document:docs/spec/config-v1.md",
+      "to": "document:docs/spec/knowledge-query-v1.md",
+      "kind": "links-to",
+      "weight": 1
+    },
+    {
       "id": "relation:document:docs/spec/config-v1.md:links-to:document:docs/spec/obsidian-markdown-v1.md",
       "from": "document:docs/spec/config-v1.md",
       "to": "document:docs/spec/obsidian-markdown-v1.md",
@@ -12917,13 +12910,6 @@
       "id": "relation:document:docs/spec/config-v1.md:links-to:document:docs/spec/service-profile-v1.md",
       "from": "document:docs/spec/config-v1.md",
       "to": "document:docs/spec/service-profile-v1.md",
-      "kind": "links-to",
-      "weight": 1
-    },
-    {
-      "id": "relation:document:docs/spec/config-v1.md:links-to:document:docs/spec/vault-export-v1.md",
-      "from": "document:docs/spec/config-v1.md",
-      "to": "document:docs/spec/vault-export-v1.md",
       "kind": "links-to",
       "weight": 1
     },
@@ -13003,20 +12989,6 @@
       "id": "relation:document:docs/spec/discovery-plugin-v2.md:links-to:document:docs/spec/obsidian-markdown-v1.md",
       "from": "document:docs/spec/discovery-plugin-v2.md",
       "to": "document:docs/spec/obsidian-markdown-v1.md",
-      "kind": "links-to",
-      "weight": 1
-    },
-    {
-      "id": "relation:document:docs/spec/discovery-plugin-v2.md:links-to:document:docs/spec/signature-facts-v1.md",
-      "from": "document:docs/spec/discovery-plugin-v2.md",
-      "to": "document:docs/spec/signature-facts-v1.md",
-      "kind": "links-to",
-      "weight": 1
-    },
-    {
-      "id": "relation:document:docs/spec/discovery-plugin-v2.md:links-to:document:docs/spec/storage-io-v1.md",
-      "from": "document:docs/spec/discovery-plugin-v2.md",
-      "to": "document:docs/spec/storage-io-v1.md",
       "kind": "links-to",
       "weight": 1
     },
@@ -13214,14 +13186,6 @@
       "weight": 1
     },
     {
-      "id": "relation:document:docs/spec/enrichment-overlay-v1.md:mentions:module:src/enrich/overlay.ts",
-      "from": "document:docs/spec/enrichment-overlay-v1.md",
-      "to": "module:src/enrich/overlay.ts",
-      "kind": "mentions",
-      "sourceKind": "mentions-symbol",
-      "weight": 1
-    },
-    {
       "id": "relation:document:docs/spec/graph-signals-v1.md:links-to:document:docs/spec/config-v1.md",
       "from": "document:docs/spec/graph-signals-v1.md",
       "to": "document:docs/spec/config-v1.md",
@@ -13244,6 +13208,20 @@
       "weight": 1
     },
     {
+      "id": "relation:document:docs/spec/llm-remediation-v1.md:links-to:document:docs/adr/0022-l2-remediation-acceptance.md",
+      "from": "document:docs/spec/llm-remediation-v1.md",
+      "to": "document:docs/adr/0022-l2-remediation-acceptance.md",
+      "kind": "links-to",
+      "weight": 1
+    },
+    {
+      "id": "relation:document:docs/spec/llm-remediation-v1.md:links-to:document:docs/guides/llm-remediation.md",
+      "from": "document:docs/spec/llm-remediation-v1.md",
+      "to": "document:docs/guides/llm-remediation.md",
+      "kind": "links-to",
+      "weight": 1
+    },
+    {
       "id": "relation:document:docs/spec/markdown-analyzer-v1.md:links-to:document:docs/spec/change-set-v1.md",
       "from": "document:docs/spec/markdown-analyzer-v1.md",
       "to": "document:docs/spec/change-set-v1.md",
@@ -13254,13 +13232,6 @@
       "id": "relation:document:docs/spec/markdown-analyzer-v1.md:links-to:document:docs/spec/config-key-facts-v1.md",
       "from": "document:docs/spec/markdown-analyzer-v1.md",
       "to": "document:docs/spec/config-key-facts-v1.md",
-      "kind": "links-to",
-      "weight": 1
-    },
-    {
-      "id": "relation:document:docs/spec/markdown-analyzer-v1.md:links-to:document:docs/spec/signature-facts-v1.md",
-      "from": "document:docs/spec/markdown-analyzer-v1.md",
-      "to": "document:docs/spec/signature-facts-v1.md",
       "kind": "links-to",
       "weight": 1
     },
@@ -13304,6 +13275,13 @@
       "id": "relation:document:docs/spec/mcp-knowledge-tools-v1.md:links-to:document:docs/spec/incremental-scan-v1.md",
       "from": "document:docs/spec/mcp-knowledge-tools-v1.md",
       "to": "document:docs/spec/incremental-scan-v1.md",
+      "kind": "links-to",
+      "weight": 1
+    },
+    {
+      "id": "relation:document:docs/spec/mcp-knowledge-tools-v1.md:links-to:document:docs/spec/knowledge-query-v1.md",
+      "from": "document:docs/spec/mcp-knowledge-tools-v1.md",
+      "to": "document:docs/spec/knowledge-query-v1.md",
       "kind": "links-to",
       "weight": 1
     },
@@ -13411,16 +13389,16 @@
       "weight": 1
     },
     {
-      "id": "relation:document:docs/spec/public-parity-v1.md:mentions:document:docs/study/README.md",
-      "from": "document:docs/spec/public-parity-v1.md",
-      "to": "document:docs/study/README.md",
-      "kind": "mentions",
-      "weight": 1
-    },
-    {
       "id": "relation:document:docs/spec/region-remediation-v1.md:links-to:document:docs/schemas/decision-v1.md",
       "from": "document:docs/spec/region-remediation-v1.md",
       "to": "document:docs/schemas/decision-v1.md",
+      "kind": "links-to",
+      "weight": 1
+    },
+    {
+      "id": "relation:document:docs/spec/region-remediation-v1.md:links-to:document:docs/spec/llm-remediation-v1.md",
+      "from": "document:docs/spec/region-remediation-v1.md",
+      "to": "document:docs/spec/llm-remediation-v1.md",
       "kind": "links-to",
       "weight": 1
     },
@@ -13541,96 +13519,8 @@
       "weight": 1
     },
     {
-      "id": "relation:document:docs/spec/signature-facts-v1.md:mentions:module:src/discovery/facts/signature-compatibility.ts",
-      "from": "document:docs/spec/signature-facts-v1.md",
-      "to": "module:src/discovery/facts/signature-compatibility.ts",
-      "kind": "mentions",
-      "weight": 1
-    },
-    {
-      "id": "relation:document:docs/spec/signature-facts-v1.md:mentions:module:src/discovery/facts/signature-context.ts",
-      "from": "document:docs/spec/signature-facts-v1.md",
-      "to": "module:src/discovery/facts/signature-context.ts",
-      "kind": "mentions",
-      "sourceKind": "mentions-symbol",
-      "weight": 1
-    },
-    {
-      "id": "relation:document:docs/spec/storage-io-v1.md:links-to:document:docs/spec/service-profile-v1.md",
-      "from": "document:docs/spec/storage-io-v1.md",
-      "to": "document:docs/spec/service-profile-v1.md",
-      "kind": "links-to",
-      "weight": 1
-    },
-    {
-      "id": "relation:document:docs/spec/storage-io-v1.md:mentions:area:src/storage",
-      "from": "document:docs/spec/storage-io-v1.md",
-      "to": "area:src/storage",
-      "kind": "mentions",
-      "weight": 1
-    },
-    {
-      "id": "relation:document:docs/spec/storage-io-v1.md:mentions:module:src/discovery/incremental.ts",
-      "from": "document:docs/spec/storage-io-v1.md",
-      "to": "module:src/discovery/incremental.ts",
-      "kind": "mentions",
-      "sourceKind": "mentions-symbol",
-      "weight": 1
-    },
-    {
-      "id": "relation:document:docs/spec/storage-io-v1.md:mentions:module:src/discovery/markdown.ts",
-      "from": "document:docs/spec/storage-io-v1.md",
-      "to": "module:src/discovery/markdown.ts",
-      "kind": "mentions",
-      "sourceKind": "mentions-symbol",
-      "weight": 1
-    },
-    {
-      "id": "relation:document:docs/spec/study-runner-v1.md:links-to:document:docs/spec/study-provider-cli-v1.md",
-      "from": "document:docs/spec/study-runner-v1.md",
-      "to": "document:docs/spec/study-provider-cli-v1.md",
-      "kind": "links-to",
-      "weight": 1
-    },
-    {
-      "id": "relation:document:docs/spec/study-verification-v1.md:mentions:module:scripts/study-privacy-gate.mjs",
-      "from": "document:docs/spec/study-verification-v1.md",
-      "to": "module:scripts/study-privacy-gate.mjs",
-      "kind": "mentions",
-      "weight": 1
-    },
-    {
-      "id": "relation:document:docs/spec/vault-export-v1.md:links-to:document:docs/guides/vault.md",
-      "from": "document:docs/spec/vault-export-v1.md",
-      "to": "document:docs/guides/vault.md",
-      "kind": "links-to",
-      "weight": 1
-    },
-    {
-      "id": "relation:document:docs/spec/vault-export-v1.md:links-to:document:docs/spec/obsidian-markdown-v1.md",
-      "from": "document:docs/spec/vault-export-v1.md",
-      "to": "document:docs/spec/obsidian-markdown-v1.md",
-      "kind": "links-to",
-      "weight": 1
-    },
-    {
-      "id": "relation:document:docs/spec/vault-export-v1.md:mentions:module:scripts/lib/aliases.mjs",
-      "from": "document:docs/spec/vault-export-v1.md",
-      "to": "module:scripts/lib/aliases.mjs",
-      "kind": "mentions",
-      "sourceKind": "mentions-symbol",
-      "weight": 1
-    },
-    {
-      "id": "relation:knowledge-change:CHANGELOG.md:--config resolves project root from the config file directory.:1.5.0:cites:document:CHANGELOG.md",
-      "from": "knowledge-change:CHANGELOG.md:--config resolves project root from the config file directory.:1.5.0",
-      "to": "document:CHANGELOG.md",
-      "kind": "cites",
-      "weight": 1
-    },
-    {
-      "id": "relation:knowledge-change:CHANGELOG.md:03c17bc: Add a first-party Nextra human-documentation adapter for deterministic content-directory routes.:1.5.0:cites:document:CHANGELOG.md",
-      "from": "knowledge-change:CHANGELOG.md:03c17bc: Add a first-party Nextra human-documentation adapter for deterministic content-directory routes.:1.5.0",
+      "id": "relation:knowledge-change:CHANGELOG.md:--config resolves project root from the config file directory.:1.5.2:cites:document:CHANGELOG.md",
+      "from": "knowledge-change:CHANGELOG.md:--config resolves project root from the config file directory.:1.5.2",
       "to": "document:CHANGELOG.md",
       "kind": "cites",
       "weight": 1
@@ -13638,6 +13528,20 @@
     {
       "id": "relation:knowledge-change:CHANGELOG.md:0926c57: Keep a committed index fresh across commits.The retrieval projection sealed its content hash over the discovery snapshot's hash, and a\nsnapshot's hash covers its sourceRevisio:a77f00911f0e37229d20ae66a7125e18",
       "from": "knowledge-change:CHANGELOG.md:0926c57: Keep a committed index fresh across commits.The retrieval projection sealed its content hash over the discovery snapshot's hash, and a\nsnapshot's hash covers its sourceRevision — the c:4b4425a57867b8447ff2aa3d22c175e6",
+      "to": "document:CHANGELOG.md",
+      "kind": "cites",
+      "weight": 1
+    },
+    {
+      "id": "relation:knowledge-change:CHANGELOG.md:10b5efd: Add deterministic why queries and typed, budgeted read-only MCP entity rationale tools with explicit evidence, coverage and enablement guidance.:1.15.0-next.0:cites:document:CHANGELOG.md",
+      "from": "knowledge-change:CHANGELOG.md:10b5efd: Add deterministic why queries and typed, budgeted read-only MCP entity rationale tools with explicit evidence, coverage and enablement guidance.:1.15.0-next.0",
+      "to": "document:CHANGELOG.md",
+      "kind": "cites",
+      "weight": 1
+    },
+    {
+      "id": "relation:knowledge-change:CHANGELOG.md:1249758: Add opt-in bounded L2 region proposals with deterministic in-memory rechecking,\nscripted key-free providers, machine-readable rejection reasons and review previews.:1.15.0-next.0:cites:document:CHANGELOG.md",
+      "from": "knowledge-change:CHANGELOG.md:1249758: Add opt-in bounded L2 region proposals with deterministic in-memory rechecking,\nscripted key-free providers, machine-readable rejection reasons and review previews.:1.15.0-next.0",
       "to": "document:CHANGELOG.md",
       "kind": "cites",
       "weight": 1
@@ -13699,8 +13603,15 @@
       "weight": 1
     },
     {
-      "id": "relation:knowledge-change:CHANGELOG.md:14a9075: Add a portable, fail-closed Doc Bridge handoff skill with a zero-credential resolver and synthetic compatibility fixture for Agent Skills runtimes.:1.5.0:cites:document:CHANGELOG.md",
-      "from": "knowledge-change:CHANGELOG.md:14a9075: Add a portable, fail-closed Doc Bridge handoff skill with a zero-credential resolver and synthetic compatibility fixture for Agent Skills runtimes.:1.5.0",
+      "id": "relation:knowledge-change:CHANGELOG.md:14a9075: Add a portable, fail-closed Doc Bridge handoff skill with a zero-credential resolver and synthetic compatibility fixture for Agent Skills runtimes.:1.5.2:cites:document:CHANGELOG.md",
+      "from": "knowledge-change:CHANGELOG.md:14a9075: Add a portable, fail-closed Doc Bridge handoff skill with a zero-credential resolver and synthetic compatibility fixture for Agent Skills runtimes.:1.5.2",
+      "to": "document:CHANGELOG.md",
+      "kind": "cites",
+      "weight": 1
+    },
+    {
+      "id": "relation:knowledge-change:CHANGELOG.md:150eccb: Record provably compatible callable signature changes without documentation findings, omit additive-only configuration parent findings, and prioritize specific fact citations :d4dbac0b13d90bc5134844b3699e01a5",
+      "from": "knowledge-change:CHANGELOG.md:150eccb: Record provably compatible callable signature changes without documentation findings, omit additive-only configuration parent findings, and prioritize specific fact citations within a :c7c3024115ade78b27de87772f39f508",
       "to": "document:CHANGELOG.md",
       "kind": "cites",
       "weight": 1
@@ -13874,6 +13785,13 @@
       "weight": 1
     },
     {
+      "id": "relation:knowledge-change:CHANGELOG.md:2fa7b96: Add a versioned Layer-1 benchmark with reviewed public historical transitions, workspace-owned fixtures and separate raw-policy gold, preserving frozen v1 cases.:1.15.0-next.0:cites:document:CHANGELOG.md",
+      "from": "knowledge-change:CHANGELOG.md:2fa7b96: Add a versioned Layer-1 benchmark with reviewed public historical transitions, workspace-owned fixtures and separate raw-policy gold, preserving frozen v1 cases.:1.15.0-next.0",
+      "to": "document:CHANGELOG.md",
+      "kind": "cites",
+      "weight": 1
+    },
+    {
       "id": "relation:knowledge-change:CHANGELOG.md:3138e23: Use @agentskit/cross-platform for process spawning, process-tree termination, path separators, line splitting and frontmatter detection. Registry agent and study CLIs that are:e0d990a1e75013e8dbe001691279e173",
       "from": "knowledge-change:CHANGELOG.md:3138e23: Use @agentskit/cross-platform for process spawning, process-tree termination, path separators, line splitting and frontmatter detection. Registry agent and study CLIs that are .cmd shi:57b0e5ba6ed4a6d1cdcffbccd641aec9",
       "to": "document:CHANGELOG.md",
@@ -13881,8 +13799,15 @@
       "weight": 1
     },
     {
-      "id": "relation:knowledge-change:CHANGELOG.md:319605e: Add read-only Nx project inference for Doc Bridge ownership, handoffs, and available test and lint checks.:1.5.0:cites:document:CHANGELOG.md",
-      "from": "knowledge-change:CHANGELOG.md:319605e: Add read-only Nx project inference for Doc Bridge ownership, handoffs, and available test and lint checks.:1.5.0",
+      "id": "relation:knowledge-change:CHANGELOG.md:319605e: Add read-only Nx project inference for Doc Bridge ownership, handoffs, and available test and lint checks.:1.5.2:cites:document:CHANGELOG.md",
+      "from": "knowledge-change:CHANGELOG.md:319605e: Add read-only Nx project inference for Doc Bridge ownership, handoffs, and available test and lint checks.:1.5.2",
+      "to": "document:CHANGELOG.md",
+      "kind": "cites",
+      "weight": 1
+    },
+    {
+      "id": "relation:knowledge-change:CHANGELOG.md:321efbd: Add opt-in vault Markdown discovery with deterministic wikilinks, embeds, aliases, tags, and visible exclusion diagnostics.:1.15.0-next.0:cites:document:CHANGELOG.md",
+      "from": "knowledge-change:CHANGELOG.md:321efbd: Add opt-in vault Markdown discovery with deterministic wikilinks, embeds, aliases, tags, and visible exclusion diagnostics.:1.15.0-next.0",
       "to": "document:CHANGELOG.md",
       "kind": "cites",
       "weight": 1
@@ -14007,8 +13932,8 @@
       "weight": 1
     },
     {
-      "id": "relation:knowledge-change:CHANGELOG.md:5133bda: Expose the portable Doc Bridge handoff skill as a discoverable Pi package.:1.5.0:cites:document:CHANGELOG.md",
-      "from": "knowledge-change:CHANGELOG.md:5133bda: Expose the portable Doc Bridge handoff skill as a discoverable Pi package.:1.5.0",
+      "id": "relation:knowledge-change:CHANGELOG.md:5133bda: Expose the portable Doc Bridge handoff skill as a discoverable Pi package.:1.5.2:cites:document:CHANGELOG.md",
+      "from": "knowledge-change:CHANGELOG.md:5133bda: Expose the portable Doc Bridge handoff skill as a discoverable Pi package.:1.5.2",
       "to": "document:CHANGELOG.md",
       "kind": "cites",
       "weight": 1
@@ -14063,6 +13988,13 @@
       "weight": 1
     },
     {
+      "id": "relation:knowledge-change:CHANGELOG.md:57da536: Add opt-in deterministic decision, concept and change entities with a versioned\nevidence contract, bounded local history and exact symbol aliases. Existing\nindex and handoff o:6ca606eef7606dcf19154d31a9af29e5",
+      "from": "knowledge-change:CHANGELOG.md:57da536: Add opt-in deterministic decision, concept and change entities with a versioned\nevidence contract, bounded local history and exact symbol aliases. Existing\nindex and handoff output sta:6953f8277a41a4f49378ec81d40c52ca",
+      "to": "document:CHANGELOG.md",
+      "kind": "cites",
+      "weight": 1
+    },
+    {
       "id": "relation:knowledge-change:CHANGELOG.md:5b70e2e: Resolve context-bound configuration citations and statically linked operational defaults without changing public index or handoff envelopes.:1.14.0-next.1:cites:document:CHANGELOG.md",
       "from": "knowledge-change:CHANGELOG.md:5b70e2e: Resolve context-bound configuration citations and statically linked operational defaults without changing public index or handoff envelopes.:1.14.0-next.1",
       "to": "document:CHANGELOG.md",
@@ -14077,8 +14009,15 @@
       "weight": 1
     },
     {
-      "id": "relation:knowledge-change:CHANGELOG.md:60s demo path (ak-docs demo):1.5.0:cites:document:CHANGELOG.md",
-      "from": "knowledge-change:CHANGELOG.md:60s demo path (ak-docs demo):1.5.0",
+      "id": "relation:knowledge-change:CHANGELOG.md:5b80003: Prove changed callable compatibility across bounded relative and local workspace type imports using each snapshot's retained syntax. External and unsupported dependencies rema:cbaf24f2f0ebf49563a2799d73d4951b",
+      "from": "knowledge-change:CHANGELOG.md:5b80003: Prove changed callable compatibility across bounded relative and local workspace type imports using each snapshot's retained syntax. External and unsupported dependencies remain review:ad3da93eee1e0cd5d9bcbb9f60c047ee",
+      "to": "document:CHANGELOG.md",
+      "kind": "cites",
+      "weight": 1
+    },
+    {
+      "id": "relation:knowledge-change:CHANGELOG.md:60s demo path (ak-docs demo):1.5.2:cites:document:CHANGELOG.md",
+      "from": "knowledge-change:CHANGELOG.md:60s demo path (ak-docs demo):1.5.2",
       "to": "document:CHANGELOG.md",
       "kind": "cites",
       "weight": 1
@@ -14100,6 +14039,13 @@
     {
       "id": "relation:knowledge-change:CHANGELOG.md:6d552b3: The documentation-standard ecosystem contract no longer hard-codes product membership. It used to require the deprecated properties shim to project either a fixed three-produc:e9251f9f0c4c50e9147566ea935ade17",
       "from": "knowledge-change:CHANGELOG.md:6d552b3: The documentation-standard ecosystem contract no longer hard-codes product membership. It used to require the deprecated properties shim to project either a fixed three-product list th:59d4aed427b3c83c2f245efdd045ddbf",
+      "to": "document:CHANGELOG.md",
+      "kind": "cites",
+      "weight": 1
+    },
+    {
+      "id": "relation:knowledge-change:CHANGELOG.md:7263365: Honor configured memory directories and deterministic adapters, reject unsupported adapters explicitly, and link safe classified memories to opt-in knowledge entities with exa:76af14b895a7aa8d4154c6b752f92e60",
+      "from": "knowledge-change:CHANGELOG.md:7263365: Honor configured memory directories and deterministic adapters, reject unsupported adapters explicitly, and link safe classified memories to opt-in knowledge entities with exact typed :2157f27b81f607910a34532c3a661ab2",
       "to": "document:CHANGELOG.md",
       "kind": "cites",
       "weight": 1
@@ -14133,8 +14079,8 @@
       "weight": 1
     },
     {
-      "id": "relation:knowledge-change:CHANGELOG.md:8106e2e: Add the verified MCP Registry namespace to the published package metadata.:1.5.0:cites:document:CHANGELOG.md",
-      "from": "knowledge-change:CHANGELOG.md:8106e2e: Add the verified MCP Registry namespace to the published package metadata.:1.5.0",
+      "id": "relation:knowledge-change:CHANGELOG.md:8106e2e: Add the verified MCP Registry namespace to the published package metadata.:1.5.2:cites:document:CHANGELOG.md",
+      "from": "knowledge-change:CHANGELOG.md:8106e2e: Add the verified MCP Registry namespace to the published package metadata.:1.5.2",
       "to": "document:CHANGELOG.md",
       "kind": "cites",
       "weight": 1
@@ -14147,15 +14093,15 @@
       "weight": 1
     },
     {
-      "id": "relation:knowledge-change:CHANGELOG.md:8c8ec5a: Add caller-controlled operation limits, cancellation, bounded progress and transient run metrics to injected discovery, partitioned indexing and diff, with opt-in async CLI co:52e2b7e446efed1219b87af4639d4747",
-      "from": "knowledge-change:CHANGELOG.md:8c8ec5a: Add caller-controlled operation limits, cancellation, bounded progress and transient run metrics to injected discovery, partitioned indexing and diff, with opt-in async CLI controls an:02d3590ed7b9aaa9e3c8925c7e0fea76",
+      "id": "relation:knowledge-change:CHANGELOG.md:8c8ec5a: Add caller-controlled operation limits, cancellation, bounded progress and transient run metrics to injected discovery, partitioned indexing and diff, with opt-in async CLI co:bd021cf3d28b643fe386aca3841c3811",
+      "from": "knowledge-change:CHANGELOG.md:8c8ec5a: Add caller-controlled operation limits, cancellation, bounded progress and transient run metrics to injected discovery, partitioned indexing and diff, with opt-in async CLI controls an:b298add2637217b185fb12117560ce06",
       "to": "document:CHANGELOG.md",
       "kind": "cites",
       "weight": 1
     },
     {
-      "id": "relation:knowledge-change:CHANGELOG.md:8c8ec5a: Add caller-controlled operation limits, cancellation, bounded progress and transient run metrics to injected discovery, partitioned indexing and diff, with opt-in async CLI co:bd021cf3d28b643fe386aca3841c3811",
-      "from": "knowledge-change:CHANGELOG.md:8c8ec5a: Add caller-controlled operation limits, cancellation, bounded progress and transient run metrics to injected discovery, partitioned indexing and diff, with opt-in async CLI controls an:b298add2637217b185fb12117560ce06",
+      "id": "relation:knowledge-change:CHANGELOG.md:91c20de: Add a bounded deterministic StudioGraphV1 contract, local JSON export command,\nsearch/why payloads, public sample graphs and a local studio design brief.:1.15.0-next.0:cites:document:CHANGELOG.md",
+      "from": "knowledge-change:CHANGELOG.md:91c20de: Add a bounded deterministic StudioGraphV1 contract, local JSON export command,\nsearch/why payloads, public sample graphs and a local studio design brief.:1.15.0-next.0",
       "to": "document:CHANGELOG.md",
       "kind": "cites",
       "weight": 1
@@ -14198,13 +14144,6 @@
     {
       "id": "relation:knowledge-change:CHANGELOG.md:9929eb0: Harden dependency resolution, filesystem and URL handling, reconciliation schema compatibility, generated-code boundaries, CI permissions, and npm publishing without long-live:83acf329d4c20ed2a96382097ccbd576",
       "from": "knowledge-change:CHANGELOG.md:9929eb0: Harden dependency resolution, filesystem and URL handling, reconciliation schema compatibility, generated-code boundaries, CI permissions, and npm publishing without long-lived npm tokens.:1.7.45",
-      "to": "document:CHANGELOG.md",
-      "kind": "cites",
-      "weight": 1
-    },
-    {
-      "id": "relation:knowledge-change:CHANGELOG.md:9a775a5: Add code areas — the unit of architecture between a package and a file — so reconciliation says\nsomething useful about a single-package repository.With reconciliation.scope: \":c5ee18ee2bebe453561c7c42bc399077",
-      "from": "knowledge-change:CHANGELOG.md:9a775a5: Add code areas — the unit of architecture between a package and a file — so reconciliation says\nsomething useful about a single-package repository.With reconciliation.scope: \"package\" :936437fada4c10337d5eda86f2cff0c1",
       "to": "document:CHANGELOG.md",
       "kind": "cites",
       "weight": 1
@@ -14273,6 +14212,20 @@
       "weight": 1
     },
     {
+      "id": "relation:knowledge-change:CHANGELOG.md:9c3db9c: Add deterministic vault diff with human-reviewed enrichment edit proposals and a local draft preview, preserving source documents.:1.15.0-next.0:cites:document:CHANGELOG.md",
+      "from": "knowledge-change:CHANGELOG.md:9c3db9c: Add deterministic vault diff with human-reviewed enrichment edit proposals and a local draft preview, preserving source documents.:1.15.0-next.0",
+      "to": "document:CHANGELOG.md",
+      "kind": "cites",
+      "weight": 1
+    },
+    {
+      "id": "relation:knowledge-change:CHANGELOG.md:9c3db9c: Export opt-in decision, concept and change notes with source evidence and stable knowledge links.:1.15.0-next.0:cites:document:CHANGELOG.md",
+      "from": "knowledge-change:CHANGELOG.md:9c3db9c: Export opt-in decision, concept and change notes with source evidence and stable knowledge links.:1.15.0-next.0",
+      "to": "document:CHANGELOG.md",
+      "kind": "cites",
+      "weight": 1
+    },
+    {
       "id": "relation:knowledge-change:CHANGELOG.md:9d41d7d: Release Registry CLI concurrency before reporting a failed call so immediate retries after deadlines or output overflow can proceed.:1.14.0-next.0:cites:document:CHANGELOG.md",
       "from": "knowledge-change:CHANGELOG.md:9d41d7d: Release Registry CLI concurrency before reporting a failed call so immediate retries after deadlines or output overflow can proceed.:1.14.0-next.0",
       "to": "document:CHANGELOG.md",
@@ -14282,6 +14235,13 @@
     {
       "id": "relation:knowledge-change:CHANGELOG.md:9d41d7d: Release Registry CLI concurrency before reporting a failed call so immediate retries after deadlines or output overflow can proceed.:1.14.0:cites:document:CHANGELOG.md",
       "from": "knowledge-change:CHANGELOG.md:9d41d7d: Release Registry CLI concurrency before reporting a failed call so immediate retries after deadlines or output overflow can proceed.:1.14.0",
+      "to": "document:CHANGELOG.md",
+      "kind": "cites",
+      "weight": 1
+    },
+    {
+      "id": "relation:knowledge-change:CHANGELOG.md:Add a bounded deterministic studio graph contract, local JSON export, search/why payloads, public samples and design brief.:Unreleased:cites:document:CHANGELOG.md",
+      "from": "knowledge-change:CHANGELOG.md:Add a bounded deterministic studio graph contract, local JSON export, search/why payloads, public samples and design brief.:Unreleased",
       "to": "document:CHANGELOG.md",
       "kind": "cites",
       "weight": 1
@@ -14329,13 +14289,6 @@
       "weight": 1
     },
     {
-      "id": "relation:knowledge-change:CHANGELOG.md:Add desktop/mobile Playwright coverage for the landing, Fumadocs, local chat, ambiguity, and completed backend stream.:1.5.0:cites:document:CHANGELOG.md",
-      "from": "knowledge-change:CHANGELOG.md:Add desktop/mobile Playwright coverage for the landing, Fumadocs, local chat, ambiguity, and completed backend stream.:1.5.0",
-      "to": "document:CHANGELOG.md",
-      "kind": "cites",
-      "weight": 1
-    },
-    {
       "id": "relation:knowledge-change:CHANGELOG.md:Add deterministic ChangeSetV1 and ak-docs diff, with historical documentation impact, proven-removal and ambiguity findings, and explicit unsupported extraction coverage. Change digest:f990ba55a6d616ec57e7c5bc2a134624",
       "from": "knowledge-change:CHANGELOG.md:Add deterministic ChangeSetV1 and ak-docs diff, with historical documentation impact, proven-removal and ambiguity findings, and explicit unsupported extraction coverage. Change digests now inc:3f1c2cf16f5cd82a25123f15c5619db5",
       "to": "document:CHANGELOG.md",
@@ -14364,8 +14317,15 @@
       "weight": 1
     },
     {
-      "id": "relation:knowledge-change:CHANGELOG.md:Add dynamic AgentsKit Chat dogfood with local exact answers, ambiguity choices, session-aware backend fallback, and explicit provenance.:1.5.0:cites:document:CHANGELOG.md",
-      "from": "knowledge-change:CHANGELOG.md:Add dynamic AgentsKit Chat dogfood with local exact answers, ambiguity choices, session-aware backend fallback, and explicit provenance.:1.5.0",
+      "id": "relation:knowledge-change:CHANGELOG.md:Add deterministic why queries and typed budgeted MCP decision, concept and change lookup with indexed evidence and service history restrictions.:Unreleased:cites:document:CHANGELOG.md",
+      "from": "knowledge-change:CHANGELOG.md:Add deterministic why queries and typed budgeted MCP decision, concept and change lookup with indexed evidence and service history restrictions.:Unreleased",
+      "to": "document:CHANGELOG.md",
+      "kind": "cites",
+      "weight": 1
+    },
+    {
+      "id": "relation:knowledge-change:CHANGELOG.md:Add dynamic AgentsKit Chat dogfood with local exact answers, ambiguity choices, session-aware backend fallback, and explicit provenance.:1.5.2:cites:document:CHANGELOG.md",
+      "from": "knowledge-change:CHANGELOG.md:Add dynamic AgentsKit Chat dogfood with local exact answers, ambiguity choices, session-aware backend fallback, and explicit provenance.:1.5.2",
       "to": "document:CHANGELOG.md",
       "kind": "cites",
       "weight": 1
@@ -14420,6 +14380,13 @@
       "weight": 1
     },
     {
+      "id": "relation:knowledge-change:CHANGELOG.md:Add optional bounded L2 region remediation with deterministic in-memory rechecking, key-free scripted providers and draft review previews.:Unreleased:cites:document:CHANGELOG.md",
+      "from": "knowledge-change:CHANGELOG.md:Add optional bounded L2 region remediation with deterministic in-memory rechecking, key-free scripted providers and draft review previews.:Unreleased",
+      "to": "document:CHANGELOG.md",
+      "kind": "cites",
+      "weight": 1
+    },
+    {
       "id": "relation:knowledge-change:CHANGELOG.md:Add public root entrypoints for reader-backed exact-partition index building, freshness loading and artifact persistence without changing index/handoff payloads or synchronous local co:c3ee14ffa220aa9eb832bfd935fe5a98",
       "from": "knowledge-change:CHANGELOG.md:Add public root entrypoints for reader-backed exact-partition index building, freshness loading and artifact persistence without changing index/handoff payloads or synchronous local compatibili:6815c0f58cccb9770258a6c56a6ff2a2",
       "to": "document:CHANGELOG.md",
@@ -14448,29 +14415,29 @@
       "weight": 1
     },
     {
-      "id": "relation:knowledge-change:CHANGELOG.md:Add the canonical knowledge-engine workflow, architecture map, configurable MCP surfaces, and human-gated Registry agent proposals.:1.5.0:cites:document:CHANGELOG.md",
-      "from": "knowledge-change:CHANGELOG.md:Add the canonical knowledge-engine workflow, architecture map, configurable MCP surfaces, and human-gated Registry agent proposals.:1.5.0",
+      "id": "relation:knowledge-change:CHANGELOG.md:Add the canonical knowledge-engine workflow, architecture map, configurable MCP surfaces, and human-gated Registry agent proposals.:1.5.2:cites:document:CHANGELOG.md",
+      "from": "knowledge-change:CHANGELOG.md:Add the canonical knowledge-engine workflow, architecture map, configurable MCP surfaces, and human-gated Registry agent proposals.:1.5.2",
       "to": "document:CHANGELOG.md",
       "kind": "cites",
       "weight": 1
     },
     {
-      "id": "relation:knowledge-change:CHANGELOG.md:Add the stable, HITL-approved Documentation Standard v1 deterministic conformance profile, CLI command, reports, remediation, explicit approved exceptions, generated llms.txt freshness:04687bd8bf773abf7a98423224d139a0",
-      "from": "knowledge-change:CHANGELOG.md:Add the stable, HITL-approved Documentation Standard v1 deterministic conformance profile, CLI command, reports, remediation, explicit approved exceptions, generated llms.txt freshness checks, :eccf8299a166be6bbd04e08d3561b2e6",
+      "id": "relation:knowledge-change:CHANGELOG.md:Add the stable, HITL-approved Documentation Standard v1 deterministic conformance profile, CLI command, reports, remediation, explicit approved exceptions, generated llms.txt freshness:d3cdb2ff747672b722015a47c3c5283f",
+      "from": "knowledge-change:CHANGELOG.md:Add the stable, HITL-approved Documentation Standard v1 deterministic conformance profile, CLI command, reports, remediation, explicit approved exceptions, generated llms.txt freshness checks, :9cce6bdd065980c796302f3ea3c031e8",
       "to": "document:CHANGELOG.md",
       "kind": "cites",
       "weight": 1
     },
     {
-      "id": "relation:knowledge-change:CHANGELOG.md:Adopt README Standard v1 for repository, package, and public-app profiles with synchronized executable examples and freshness evidence.:1.5.0:cites:document:CHANGELOG.md",
-      "from": "knowledge-change:CHANGELOG.md:Adopt README Standard v1 for repository, package, and public-app profiles with synchronized executable examples and freshness evidence.:1.5.0",
+      "id": "relation:knowledge-change:CHANGELOG.md:Adopt README Standard v1 for repository, package, and public-app profiles with synchronized executable examples and freshness evidence.:1.5.2:cites:document:CHANGELOG.md",
+      "from": "knowledge-change:CHANGELOG.md:Adopt README Standard v1 for repository, package, and public-app profiles with synchronized executable examples and freshness evidence.:1.5.2",
       "to": "document:CHANGELOG.md",
       "kind": "cites",
       "weight": 1
     },
     {
-      "id": "relation:knowledge-change:CHANGELOG.md:Allow ak-docs query <id> --agent as a shortcut for package/ownership handoff lookup.:1.5.0:cites:document:CHANGELOG.md",
-      "from": "knowledge-change:CHANGELOG.md:Allow ak-docs query <id> --agent as a shortcut for package/ownership handoff lookup.:1.5.0",
+      "id": "relation:knowledge-change:CHANGELOG.md:Allow ak-docs query <id> --agent as a shortcut for package/ownership handoff lookup.:1.5.2:cites:document:CHANGELOG.md",
+      "from": "knowledge-change:CHANGELOG.md:Allow ak-docs query <id> --agent as a shortcut for package/ownership handoff lookup.:1.5.2",
       "to": "document:CHANGELOG.md",
       "kind": "cites",
       "weight": 1
@@ -14499,104 +14466,6 @@
     {
       "id": "relation:knowledge-change:CHANGELOG.md:Avoid recalculating hidden findings and insight dashboards during architecture navigation.:1.7.7:cites:document:CHANGELOG.md",
       "from": "knowledge-change:CHANGELOG.md:Avoid recalculating hidden findings and insight dashboards during architecture navigation.:1.7.7",
-      "to": "document:CHANGELOG.md",
-      "kind": "cites",
-      "weight": 1
-    },
-    {
-      "id": "relation:knowledge-change:CHANGELOG.md:Avoid recompiling the conventional agent-package path matcher for every document during reconciliation.:1.7.39:cites:document:CHANGELOG.md",
-      "from": "knowledge-change:CHANGELOG.md:Avoid recompiling the conventional agent-package path matcher for every document during reconciliation.:1.7.39",
-      "to": "document:CHANGELOG.md",
-      "kind": "cites",
-      "weight": 1
-    },
-    {
-      "id": "relation:knowledge-change:CHANGELOG.md:Balance dense graph nodes into a readable grid instead of compressing deep hierarchies into a narrow vertical strip.:1.7.32:cites:document:CHANGELOG.md",
-      "from": "knowledge-change:CHANGELOG.md:Balance dense graph nodes into a readable grid instead of compressing deep hierarchies into a narrow vertical strip.:1.7.32",
-      "to": "document:CHANGELOG.md",
-      "kind": "cites",
-      "weight": 1
-    },
-    {
-      "id": "relation:knowledge-change:CHANGELOG.md:Bound ignored service configuration diagnostics, generate declared ignored exports in isolated CI-built captures, and report actionable gate/rule and redacted advisory errors without c:5751843f6d46e6c2a6608729fd0b237d",
-      "from": "knowledge-change:CHANGELOG.md:Bound ignored service configuration diagnostics, generate declared ignored exports in isolated CI-built captures, and report actionable gate/rule and redacted advisory errors without clearing committed-index drift.:Unreleased",
-      "to": "document:CHANGELOG.md",
-      "kind": "cites",
-      "weight": 1
-    },
-    {
-      "id": "relation:knowledge-change:CHANGELOG.md:Bound large-repository discovery coverage with deterministic counted summaries, capped evidence samples and explicit truncation, preserving small snapshot bytes and rescanning sampled :6ee8828cba43617e15cdf5342203d5ed",
-      "from": "knowledge-change:CHANGELOG.md:Bound large-repository discovery coverage with deterministic counted summaries, capped evidence samples and explicit truncation, preserving small snapshot bytes and rescanning sampled snapshots:e45ed4359f18a10216612356143d9494",
-      "to": "document:CHANGELOG.md",
-      "kind": "cites",
-      "weight": 1
-    },
-    {
-      "id": "relation:knowledge-change:CHANGELOG.md:Cache the graph model for the active report navigation state and invalidate it after lazy data hydration.:1.7.8:cites:document:CHANGELOG.md",
-      "from": "knowledge-change:CHANGELOG.md:Cache the graph model for the active report navigation state and invalidate it after lazy data hydration.:1.7.8",
-      "to": "document:CHANGELOG.md",
-      "kind": "cites",
-      "weight": 1
-    },
-    {
-      "id": "relation:knowledge-change:CHANGELOG.md:Clarify runtime-wiring coverage so resolved static targets and unresolved indirect wiring are not conflated.:1.7.23:cites:document:CHANGELOG.md",
-      "from": "knowledge-change:CHANGELOG.md:Clarify runtime-wiring coverage so resolved static targets and unresolved indirect wiring are not conflated.:1.7.23",
-      "to": "document:CHANGELOG.md",
-      "kind": "cites",
-      "weight": 1
-    },
-    {
-      "id": "relation:knowledge-change:CHANGELOG.md:Clarify that ak-verify is portable while verification contracts remain project-local.:1.7.40:cites:document:CHANGELOG.md",
-      "from": "knowledge-change:CHANGELOG.md:Clarify that ak-verify is portable while verification contracts remain project-local.:1.7.40",
-      "to": "document:CHANGELOG.md",
-      "kind": "cites",
-      "weight": 1
-    },
-    {
-      "id": "relation:knowledge-change:CHANGELOG.md:Classify provably compatible callable changes, suppress additive-only configuration parent findings, and prioritize specific fact citations with a 256-reference cap.:Unreleased:cites:document:CHANGELOG.md",
-      "from": "knowledge-change:CHANGELOG.md:Classify provably compatible callable changes, suppress additive-only configuration parent findings, and prioritize specific fact citations with a 256-reference cap.:Unreleased",
-      "to": "document:CHANGELOG.md",
-      "kind": "cites",
-      "weight": 1
-    },
-    {
-      "id": "relation:knowledge-change:CHANGELOG.md:Compare codec-backed surface and package facts with value hashes, extraction-aware generic citation findings and bounded injected head reads. Resolve generic citations with the built-i:04acbb5feeef867c12ee70df97363fbd",
-      "from": "knowledge-change:CHANGELOG.md:Compare codec-backed surface and package facts with value hashes, extraction-aware generic citation findings and bounded injected head reads. Resolve generic citations with the built-in Markdow:4f55f5233840bfffc2cd67650f961a22",
-      "to": "document:CHANGELOG.md",
-      "kind": "cites",
-      "weight": 1
-    },
-    {
-      "id": "relation:knowledge-change:CHANGELOG.md:Corpus ownership inference — packages/<id>.md, pillars patterns, registry READMEs (toggle routing.options.ownershipFromCorpus):1.5.0:cites:document:CHANGELOG.md",
-      "from": "knowledge-change:CHANGELOG.md:Corpus ownership inference — packages/<id>.md, pillars patterns, registry READMEs (toggle routing.options.ownershipFromCorpus):1.5.0",
-      "to": "document:CHANGELOG.md",
-      "kind": "cites",
-      "weight": 1
-    },
-    {
-      "id": "relation:knowledge-change:CHANGELOG.md:Correct package documentation health classification when aggregated relations are undocumented.:1.7.42:cites:document:CHANGELOG.md",
-      "from": "knowledge-change:CHANGELOG.md:Correct package documentation health classification when aggregated relations are undocumented.:1.7.42",
-      "to": "document:CHANGELOG.md",
-      "kind": "cites",
-      "weight": 1
-    },
-    {
-      "id": "relation:knowledge-change:CHANGELOG.md:Count conventional agent documents under packages/ and apps/ as package coverage even when they do not declare a humanDoc bridge.:1.7.38:cites:document:CHANGELOG.md",
-      "from": "knowledge-change:CHANGELOG.md:Count conventional agent documents under packages/ and apps/ as package coverage even when they do not declare a humanDoc bridge.:1.7.38",
-      "to": "document:CHANGELOG.md",
-      "kind": "cites",
-      "weight": 1
-    },
-    {
-      "id": "relation:knowledge-change:CHANGELOG.md:Deduplicate removed-export advisories, preserve kind-specific conflict status and distinct citation evidence, summarize advisory coverage, and retain actionable Action failure reports :6fb094897456e0e83ffd506fe51656a4",
-      "from": "knowledge-change:CHANGELOG.md:Deduplicate removed-export advisories, preserve kind-specific conflict status and distinct citation evidence, summarize advisory coverage, and retain actionable Action failure reports with syml:5941abf6ff78358b6c664d661628e32b",
-      "to": "document:CHANGELOG.md",
-      "kind": "cites",
-      "weight": 1
-    },
-    {
-      "id": "relation:knowledge-change:CHANGELOG.md:Default agent include **/*.{md,mdx}:1.5.0:cites:document:CHANGELOG.md",
-      "from": "knowledge-change:CHANGELOG.md:Default agent include **/*.{md,mdx}:1.5.0",
       "to": "document:CHANGELOG.md",
       "kind": "cites",
       "weight": 1
@@ -15806,6 +15675,27 @@
       "weight": 1
     },
     {
+      "id": "relation:knowledge-decision:docs/adr/0019-memory-entity-evidence.md:Configurable memory source and exact entity evidence:cites:document:docs/adr/0019-memory-entity-evidence.md",
+      "from": "knowledge-decision:docs/adr/0019-memory-entity-evidence.md:Configurable memory source and exact entity evidence",
+      "to": "document:docs/adr/0019-memory-entity-evidence.md",
+      "kind": "cites",
+      "weight": 1
+    },
+    {
+      "id": "relation:knowledge-decision:docs/adr/0020-vault-edit-review.md:Generated vault edit review:cites:document:docs/adr/0020-vault-edit-review.md",
+      "from": "knowledge-decision:docs/adr/0020-vault-edit-review.md:Generated vault edit review",
+      "to": "document:docs/adr/0020-vault-edit-review.md",
+      "kind": "cites",
+      "weight": 1
+    },
+    {
+      "id": "relation:knowledge-decision:docs/adr/0022-l2-remediation-acceptance.md:Deterministic acceptance of optional L2 region proposals:cites:document:docs/adr/0022-l2-remediation-acceptance.md",
+      "from": "knowledge-decision:docs/adr/0022-l2-remediation-acceptance.md:Deterministic acceptance of optional L2 region proposals",
+      "to": "document:docs/adr/0022-l2-remediation-acceptance.md",
+      "kind": "cites",
+      "weight": 1
+    },
+    {
       "id": "relation:module:agents/content-fact-checker/agent.ts:owns:symbol:module:agents/content-fact-checker/agent.ts:AgentOutput",
       "from": "module:agents/content-fact-checker/agent.ts",
       "to": "symbol:module:agents/content-fact-checker/agent.ts:AgentOutput",
@@ -16362,13 +16252,6 @@
       "id": "relation:module:apps/docs/source.config.ts:owns:symbol:module:apps/docs/source.config.ts:docs",
       "from": "module:apps/docs/source.config.ts",
       "to": "symbol:module:apps/docs/source.config.ts:docs",
-      "kind": "owns",
-      "weight": 1
-    },
-    {
-      "id": "relation:module:playwright.config.ts:owns:symbol:module:playwright.config.ts:default",
-      "from": "module:playwright.config.ts",
-      "to": "symbol:module:playwright.config.ts:default",
       "kind": "owns",
       "weight": 1
     },
@@ -16968,13 +16851,6 @@
       "weight": 1
     },
     {
-      "id": "relation:module:src/bench/retrieval.ts:owns:symbol:module:src/bench/retrieval.ts:RetrievalSuiteCase",
-      "from": "module:src/bench/retrieval.ts",
-      "to": "symbol:module:src/bench/retrieval.ts:RetrievalSuiteCase",
-      "kind": "owns",
-      "weight": 1
-    },
-    {
       "id": "relation:module:src/budget/sections.ts:imports:module:src/budget/compile.ts",
       "from": "module:src/budget/sections.ts",
       "to": "module:src/budget/compile.ts",
@@ -17055,13 +16931,6 @@
       "id": "relation:module:src/cli/operation.ts:imports:module:src/discovery/repository.ts",
       "from": "module:src/cli/operation.ts",
       "to": "module:src/discovery/repository.ts",
-      "kind": "imports",
-      "weight": 1
-    },
-    {
-      "id": "relation:module:src/cli/operation.ts:imports:module:src/enrich/overlay.ts",
-      "from": "module:src/cli/operation.ts",
-      "to": "module:src/enrich/overlay.ts",
       "kind": "imports",
       "weight": 1
     },
@@ -17223,13 +17092,6 @@
       "id": "relation:module:src/cli/program.ts:imports:module:src/enrich/approvals.ts",
       "from": "module:src/cli/program.ts",
       "to": "module:src/enrich/approvals.ts",
-      "kind": "imports",
-      "weight": 1
-    },
-    {
-      "id": "relation:module:src/cli/program.ts:imports:module:src/enrich/overlay.ts",
-      "from": "module:src/cli/program.ts",
-      "to": "module:src/enrich/overlay.ts",
       "kind": "imports",
       "weight": 1
     },
@@ -17955,13 +17817,6 @@
       "weight": 1
     },
     {
-      "id": "relation:module:src/enrich/cache.ts:imports:module:src/enrich/overlay.ts",
-      "from": "module:src/enrich/cache.ts",
-      "to": "module:src/enrich/overlay.ts",
-      "kind": "imports",
-      "weight": 1
-    },
-    {
       "id": "relation:module:src/enrich/context-pack.ts:imports:module:src/config/schema.ts",
       "from": "module:src/enrich/context-pack.ts",
       "to": "module:src/config/schema.ts",
@@ -18280,6 +18135,13 @@
       "id": "relation:package:@agentskit/doc-bridge:owns:area:src/storage",
       "from": "package:@agentskit/doc-bridge",
       "to": "area:src/storage",
+      "kind": "owns",
+      "weight": 1
+    },
+    {
+      "id": "relation:package:@agentskit/doc-bridge:owns:area:src/studio",
+      "from": "package:@agentskit/doc-bridge",
+      "to": "area:src/studio",
       "kind": "owns",
       "weight": 1
     },
@@ -18616,13 +18478,6 @@
       "id": "relation:package:@agentskit/doc-bridge:owns:module:bin/ak-verify.js",
       "from": "package:@agentskit/doc-bridge",
       "to": "module:bin/ak-verify.js",
-      "kind": "owns",
-      "weight": 1
-    },
-    {
-      "id": "relation:package:@agentskit/doc-bridge:owns:module:playwright.config.ts",
-      "from": "package:@agentskit/doc-bridge",
-      "to": "module:playwright.config.ts",
       "kind": "owns",
       "weight": 1
     },
@@ -19292,13 +19147,6 @@
       "weight": 1
     },
     {
-      "id": "relation:package:@agentskit/doc-bridge:owns:module:src/enrich/overlay.ts",
-      "from": "package:@agentskit/doc-bridge",
-      "to": "module:src/enrich/overlay.ts",
-      "kind": "owns",
-      "weight": 1
-    },
-    {
       "id": "relation:symbol:module:scripts/lib/aliases.mjs:aliases:changed-by:knowledge-change:CHANGELOG.md:9a775a5: Make the retrieval index a projection of the snapshot, explain every ranking, and derive handoffs\nfor any entity from :67e385dc6e1f51cf3811526788c4944c",
       "from": "symbol:module:scripts/lib/aliases.mjs:aliases",
       "to": "knowledge-change:CHANGELOG.md:9a775a5: Make the retrieval index a projection of the snapshot, explain every ranking, and derive handoffs\nfor any entity from the graph.buildDocBridgeIndex used to run a scanner of its own: it:ff977aae76f0f75ad51a842ab1bf4a03",
@@ -19332,25 +19180,24 @@
       "Graph caps apply before centrality and degree; those metrics describe the emitted view.",
       "The index has bounded adjacency per entry; studio truncation does not measure earlier discovery/retrieval omissions.",
       "Generic adapter facts are not in the retrieval index; module and exported-symbol facts are available.",
-      "Timestamps are emitted only from explicit knowledge-entity dates; file modification times are never inferred.",
-      "Public sample presentation omits provider integration, third-party product and retired import-name references; omitted counts include these exclusions."
+      "Timestamps are emitted only from explicit knowledge-entity dates; file modification times are never inferred."
     ]
   },
   "truncation": {
     "nodes": {
-      "total": 2833,
-      "emitted": 785,
-      "omitted": 2048
+      "total": 2931,
+      "emitted": 781,
+      "omitted": 2150
     },
     "documents": {
-      "total": 177,
-      "emitted": 146,
-      "omitted": 31
+      "total": 187,
+      "emitted": 144,
+      "omitted": 43
     },
     "edges": {
-      "total": 5404,
-      "emitted": 1530,
-      "omitted": 3874
+      "total": 5646,
+      "emitted": 1514,
+      "omitted": 4132
     },
     "findings": {
       "total": 0,
