@@ -3,7 +3,7 @@
 import { spawnSync } from 'node:child_process'
 import { isAbsolute } from 'node:path'
 
-const VERSION = '1.15.0-next.1'
+const VERSION = '2.0.0-next.2'
 const kinds = new Set(['package', 'ownership'])
 const args = process.argv.slice(2)
 const id = args[0]

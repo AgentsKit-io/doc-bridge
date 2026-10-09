@@ -103,6 +103,20 @@
 
 - Precompute semantic hash ordering keys once per entry and bound syntax-tree retention for index-only scans and reuse parsed trees in discovery, reducing index-build cost without changing artifact bytes or hash identity.
 
+## 2.0.0-next.2
+
+### Major Changes
+
+- e70891a: Replace CLI/MCP whole-file fix contracts with RemediationV1 region edits and
+  DecisionV1 settled rejection. Fresh findings and exact review bindings are
+  required; local human confirmation authorizes CLI decisions, while MCP cannot
+  approve or apply. Legacy index/snapshot hashes are migration guidance only:
+  regenerate indexes and analysis artifacts explicitly. Configure memory rule
+  paths with intelligence.memory.rulesDir; explicit paths never add defaults.
+  See docs/migration/1.x-to-2.0.md before upgrading consumers.
+  
+  Reject reserved session-export and bootstrap-delta memory adapters that 1.x accepted with warnings.
+
 ## 1.15.0-next.1
 
 ### Minor Changes
