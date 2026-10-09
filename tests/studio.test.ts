@@ -178,12 +178,20 @@ it('caps symbol expansion while retaining exact omission counts and deterministi
   expect(exportStudioGraph(shuffled)).toEqual(graph)
 })
 it('validates both pinned real design samples, provenance, caps and explicit missing inbox analysis', () => {
-  for (const [name, revision] of [['doc-bridge', 'e1c49f1ab0c008fec6dd64b3aa33c41c69069fd6'], ['agentskit', 'cff4ba9b36a393d9d226bd2b6a64152120990a95']]) {
+  for (const [name, revision] of [['doc-bridge', '6291c1d2de185f56cfb11c1a116f2e7e327d5435'], ['agentskit', 'cff4ba9b36a393d9d226bd2b6a64152120990a95']]) {
     const bytes = readFileSync(new URL(`../docs/design/studio-samples/${name}.json`, import.meta.url), 'utf8')
     const graph = StudioGraphV1Schema.parse(JSON.parse(bytes))
     expect(graph.source.revision).toBe(revision)
+    if (name === 'agentskit') {
+      expect(graph.nodes.find(node => node.kind === 'package' && node.path === 'packages/sandbox')?.label).toBe('@agentskit/sandbox')
+    }
     expect(graph.nodes.length).toBeGreaterThan(100)
-    expect(new Set(graph.nodes.map(node => node.kind)).size).toBe(8)
+    // Public presentation filtering omits the shallow clone's tracker-numbered change.
+    expect([...new Set(graph.nodes.map(node => node.kind))].sort()).toEqual(
+      (name === 'doc-bridge'
+        ? ['area', 'change', 'concept', 'decision', 'document', 'fact', 'package', 'symbol']
+        : ['area', 'concept', 'decision', 'document', 'fact', 'package', 'symbol']).sort(),
+    )
     expect(graph.coverage.entities).toBe('enabled')
     expect(graph.coverage.findings).toBe('not-analyzed')
     expect(graph.coverage.proposals).toBe('not-analyzed')

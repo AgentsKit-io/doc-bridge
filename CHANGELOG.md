@@ -4,6 +4,8 @@
 
 ### Patch Changes
 
+- Refresh bounded public Studio samples with manifest package labels and current engine provenance.
+
 - Use manifest names with directory-name fallback for package labels, keeping documentation titles and purpose text separate from package identity.
 
 - Bound large-repository discovery coverage with deterministic counted summaries, capped evidence samples and explicit truncation, preserving small snapshot bytes and rescanning sampled snapshots for complete per-file diagnostics.
