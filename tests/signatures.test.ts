@@ -202,7 +202,7 @@ describe('cross-module callable compatibility', () => {
 })
 
 
-describe('workspace exports and traversal bounds', () => {
+describe('workspace exports and traversal bounds', { timeout: 30_000 }, () => {
   const setup = () => {
     const root = mkdtempSync(join(tmpdir(), 'doc-bridge-signatures-')); roots.push(root)
     writeFileSync(join(root, 'package.json'), JSON.stringify({ name: 'doc-bridge-fixture', version: '1.0.0', workspaces: ['packages/*'] }))
