@@ -12,7 +12,8 @@ validationPath: pnpm vitest run tests/finding-contracts.test.ts tests/region-rem
 The deterministic library exports creation, revalidation, approval, presentation/application
 and human merge acceptance. `applyFixProposal` retains the legacy V1 apply API; `applyRemediation` is the region successor. Both use the shared atomic replacement path. No network, model, implicit shell hook or repository-config
 approval is involved. Existing CLI/MCP whole-file fix commands retain their V1 contract;
-region flows are library-only until a caller integrates authenticated review controls.
+region application remains library-only until a caller integrates authenticated review controls.
+The optional [`fix --llm`](llm-remediation-v1.md) command proposes verified regions without applying them.
 
 ## Region validation
 

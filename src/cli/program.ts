@@ -157,7 +157,7 @@ type Command =
   | 'vault'
   | 'studio'
 
-const usage = CLI_COMMAND_USAGE
+const usage = `${CLI_COMMAND_USAGE}\nOptional remediation:\n  ak-docs fix --llm --base <snapshot.json> [--responses <script.json>] [--dry-run] [--pr]\n`
 
 const QUERY_KINDS = new Set<QueryKind>(['package', 'ownership', 'intent', 'change', 'search'])
 const LIST_KINDS = new Set(['packages', 'intents', 'changes', 'knowledge'])
@@ -1057,6 +1057,12 @@ const runFixCommand = async (argv: readonly string[], positional: readonly strin
     const { config, root } = loadProject(configPath)
     const action = positional[1]
     const proposalPath = positional[2]
+    if (argv.includes('--llm')) {
+      const moduleUrl = new URL('../llm/program.js', import.meta.url).href
+      const { runL2Fix } = await import(moduleUrl) as typeof import('../fixes/llm-cli.js')
+      writeJson(await runL2Fix(root, config, argv))
+      return 0
+    }
     const sourceRevision = discoverRepository({ root, config }).sourceRevision
     const fixOptions = { baseRevision: sourceRevision, configurationHash: sha256NormalizedV1(config), ...(config.project?.name ? { projectName: config.project.name } : {}) }
     if (action === 'propose') {

@@ -5,6 +5,7 @@ export default defineConfig({
     index: 'src/index.ts',
     'config/index': 'src/config/index.ts',
     'cli/program': 'src/cli/program.ts',
+    'llm/program': 'src/fixes/llm-cli.ts',
   },
   format: ['esm'],
   dts: true,
@@ -12,5 +13,5 @@ export default defineConfig({
   clean: true,
   splitting: false,
   target: 'node22',
-  external: ['typescript'],
+  external: ['typescript', '@agentskit/adapters', '@agentskit/core'],
 })
