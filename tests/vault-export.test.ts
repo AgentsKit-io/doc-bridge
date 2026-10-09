@@ -7,7 +7,7 @@ import { afterEach, expect, it } from 'vitest'
 import { parse } from 'yaml'
 import { DocBridgeConfigV1Schema } from '../src/config/schema.js'
 import { discoverRepository } from '../src/discovery/repository.js'
-import { exportVault } from '../src/vault/export.js'
+import { exportVault, renderVault } from '../src/vault/export.js'
 
 const roots: string[] = []
 afterEach(() => { for (const root of roots) rmSync(root, { recursive: true, force: true }); roots.length = 0 })
@@ -110,4 +110,32 @@ it('escapes source filenames and rejects hard-linked generated files', async () 
   linkSync(join(output, 'index.md'), join(root, 'linked.md'))
   await expect(exportVault(root, config)).rejects.toThrow('hard-linked')
   expect(readFileSync(join(root, 'linked.md'), 'utf8')).toContain('Knowledge map')
+})
+
+it('adds opt-in knowledge notes with region evidence and resolved wikilinks while disabled export stays identical', async () => {
+  const { root, config, output } = fixture()
+  mkdirSync(join(root, 'docs/adr'), { recursive: true })
+  writeFileSync(join(root, 'docs/adr/0001-store.md'), '# Store decision\n\nUse `a`.\n')
+  writeFileSync(join(root, 'docs/notes/glossary.md'), '# Glossary\n\n**a**: Entry point.\n')
+  writeFileSync(join(root, 'CHANGELOG.md'), '# Changelog\n\n## 1.0.0\n\n- Added `a`.\n')
+  await exportVault(root, config)
+  const disabled = bytes(output)
+  await exportVault(root, { ...config, index: { ...config.index, knowledgeEntities: { enabled: false } } })
+  expect(bytes(output)).toEqual(disabled)
+  await exportVault(root, { ...config, index: { ...config.index, knowledgeEntities: { enabled: true } } })
+  const enabled = bytes(output)
+  for (const kind of ['decision', 'concept', 'change']) expect(Object.values(enabled).some(content => content.includes(`type: ${kind}\n`))).toBe(true)
+  expect(Object.values(enabled).some(content => content.includes('[Source region]'))).toBe(true)
+  const names = new Set(Object.keys(enabled).map(name => name.replace(/\.md$/, '')))
+  for (const content of Object.values(enabled)) for (const match of content.matchAll(/\[\[([^\]]+)\]\]/g)) expect(names.has(match[1]!)).toBe(true)
+  await exportVault(root, { ...config, index: { ...config.index, knowledgeEntities: { enabled: true } } })
+  expect(bytes(output)).toEqual(enabled)
+})
+
+it('keeps additive entity types and their templates inactive when entities are disabled', () => {
+  const { root, config, output } = fixture()
+  const snapshot = discoverRepository({ root, config })
+  const baseline = renderVault(root, output, config, snapshot)
+  const additive = { ...snapshot, entities: [...snapshot.entities, { id: 'knowledge-decision:custom', kind: 'decision', name: 'Custom decision', provenance: 'observed' as const, evidence: [] }] }
+  expect(renderVault(root, output, { ...config, vault: { templates: { decision: 'missing-template.md' } } }, additive)).toEqual(baseline)
 })

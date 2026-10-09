@@ -52,7 +52,7 @@ Required frontmatter is generated independently of the presentation template:
 | Field | Meaning |
 | --- | --- |
 | `id` | Original stable entity ID, or `vault:index` / `vault:graph-signals` |
-| `type` | `package`, `area`, `document`, `index`, or `graph-signals` |
+| `type` | `package`, `area`, `document`, `index`, or `graph-signals`; opt-in knowledge adds `decision`, `concept`, `change`, `symbol` and `module` |
 | `sourcePath` | Entity source path, or null when absent; entity notes only |
 | `sources` | File bindings from entity path and evidence; entity notes only |
 | `aliases` | Sorted unique discovered aliases |
@@ -84,10 +84,15 @@ the renderer's existing knap parser, validators and synchronous evaluator before
 any output writes. Invalid templates fail the export.
 
 The internal `VAULT_NOTE_TYPES` registry selects entity kinds and bundled
-presentations. Adding a future decision, concept or change entry uses the same ID,
-source bindings, relations, templates and manifest path, without changing index or
-handoff schemas. This version does not extract those entity kinds or implement
-round-trip proposals.
+presentations. When `index.knowledgeEntities.enabled` is true, export uses the existing bounded
+knowledge extractor to add decision, concept and change notes. Their IDs,
+source-region/commit evidence and links are preserved. Symbol/module notes provide
+wikilink targets for observed facts; unresolved targets retain text IDs. Knowledge
+notes include an additive `evidence` frontmatter field from the entity contract.
+Local first-parent commit SHAs are evidence locators, not remote links. Templates
+may override the additive note types. When knowledge entities are disabled,
+existing export bytes are unchanged; index and handoff schemas are untouched.
+
 
 ## Ownership and errors
 

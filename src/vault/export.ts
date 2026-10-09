@@ -6,6 +6,7 @@ import { stringify } from 'yaml'
 import { z } from 'zod'
 
 import type { DocBridgeConfigV1 } from '../config/schema.js'
+import { extractKnowledgeEntities } from '../entities/extract.js'
 import { parseMarkdownDocument } from '../discovery/markdown.js'
 import { discoverRepository } from '../discovery/repository.js'
 import { denyServiceOperation } from '../execution/profile.js'
@@ -15,10 +16,10 @@ import { toPosix } from '../lib/paths.js'
 import { compileTemplate, renderCompiledTemplate } from '../render/engine.js'
 import type { DiscoverySnapshotV1 } from '../schemas/knowledge.js'
 
-const hash = (value: string | Buffer): string => createHash('sha256').update(value).digest('hex')
-const MANIFEST = '.doc-bridge-vault.json'
+export const hash = (value: string | Buffer): string => createHash('sha256').update(value).digest('hex')
+export const MANIFEST = '.doc-bridge-vault.json'
 const ownedName = /^(?:[a-f0-9]{64}|index|graph-signals)\.md$/
-const ManifestSchema = z.object({
+export const ManifestSchema = z.object({
   schemaVersion: z.literal(1),
   files: z.record(z.string().regex(ownedName), z.string().regex(/^[a-f0-9]{64}$/)),
 }).strict()
@@ -39,13 +40,16 @@ function removeIfPresent(path: string): void {
 export const VAULT_NOTE_TYPES: Readonly<Record<string, string>> = {
   package: '{{ body }}',
   area: '{{ body }}',
+  decision: '{{ body }}',
+  concept: '{{ body }}',
+  change: '{{ body }}',
   document: '{{ body }}',
   'graph-signals': '{{ body }}',
   index: '{{ body }}',
 }
 
 /** Reject symlinks in every component, including dangling links and not-yet-created children. */
-const safePath = (root: string, candidate: string): string => {
+export const safePath = (root: string, candidate: string): string => {
   const target = resolve(root, candidate)
   const rel = relative(root, target)
   if (isAbsolute(rel) || rel === '..' || rel.startsWith(`..${sep}`)) throw new Error('Vault path escapes its allowed folder')
@@ -64,7 +68,7 @@ const safePath = (root: string, candidate: string): string => {
 }
 const overlaps = (a: string, b: string): boolean => a === b || a.startsWith(`${b}${sep}`) || b.startsWith(`${a}${sep}`)
 
-const requireIgnored = async (root: string, output: string): Promise<void> => {
+export const requireIgnored = async (root: string, output: string): Promise<void> => {
   const probe = toPosix(relative(root, resolve(output, 'index.md')))
   const ignored = createIgnoreFilter(root)
   if (ignored.mode === 'gitignore') {
@@ -89,18 +93,27 @@ export const exportVault = async (rootPath: string, config: DocBridgeConfigV1): 
   if (output === root || overlaps(output, human)) throw new Error('Vault output and human-notes folders must be disjoint')
   await requireIgnored(root, output)
   const snapshot = discoverRepository({ root, config })
-  return writeVault(root, output, config, snapshot)
+  return writeVault(root, output, renderVault(root, output, config, snapshot))
 }
 
-const writeVault = (root: string, output: string, config: DocBridgeConfigV1, snapshot: DiscoverySnapshotV1): { output: string; notes: number; removed: number } => {
-  const entities = snapshot.entities.filter(entity => entity.kind !== 'index' && entity.kind !== 'graph-signals' && Object.hasOwn(VAULT_NOTE_TYPES, entity.kind)).sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0)
+export const renderVault = (root: string, output: string, config: DocBridgeConfigV1, snapshot: DiscoverySnapshotV1): Record<string, string> => {
+  const knowledge = config.index?.knowledgeEntities?.enabled ? extractKnowledgeEntities({
+    snapshot,
+    documents: new Map(snapshot.entities.filter(entity => entity.kind === 'document' && entity.path).map(entity => [entity.path!, readFileSync(safePath(root, entity.path!), 'utf8')])),
+    gitRoot: root,
+    window: config.index.knowledgeEntities,
+  }) : undefined
+  const knowledgeById = new Map(knowledge?.entities.map(entity => [entity.id, entity]))
+  if (knowledge) snapshot = { ...snapshot, entities: [...snapshot.entities, ...knowledge.entities.map(entity => ({ id: entity.id, kind: entity.kind, name: entity.name, aliases: entity.aliases, provenance: 'observed' as const, evidence: entity.evidence.flatMap(item => item.kind === 'document-region' ? [{ source: 'documentation' as const, path: item.path, lineStart: item.lineStart, lineEnd: item.lineEnd, contentHash: item.regionHash }] : []) }))], coverage: [...snapshot.coverage, ...knowledge.coverage] }
+
+  const entities = snapshot.entities.filter(entity => entity.kind !== 'index' && entity.kind !== 'graph-signals' && (knowledge || !['decision', 'concept', 'change'].includes(entity.kind)) && (Object.hasOwn(VAULT_NOTE_TYPES, entity.kind) || (knowledge && ['symbol', 'module'].includes(entity.kind)))).sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0)
   const filenames = new Map(entities.map(entity => [entity.id, `${hash(entity.id)}.md`]))
   const link = (id: string): string => {
     const filename = filenames.get(id)
     // Labels are deliberately omitted: arbitrary source names cannot alter wikilink syntax.
     return filename ? `[[${filename.slice(0, -3)}]]` : `\`${id.replace(/`/g, '')}\``
   }
-  const templates = new Map(Object.entries(VAULT_NOTE_TYPES).map(([kind, bundled]) => {
+  const templates = new Map(Object.entries({ ...VAULT_NOTE_TYPES, ...(knowledge ? { symbol: '{{ body }}', module: '{{ body }}' } : {}) }).filter(([kind]) => knowledge || !['decision', 'concept', 'change'].includes(kind)).map(([kind, bundled]) => {
     const override = config.vault?.templates?.[kind]
     return [kind, compileTemplate(override ? readFileSync(safePath(root, override), 'utf8') : bundled, `vault ${kind}`)]
   }))
@@ -120,14 +133,27 @@ const writeVault = (root: string, output: string, config: DocBridgeConfigV1, sna
     const sources = [...new Set([...(entity.path ? [entity.path] : []), ...entity.evidence.map(item => item.path)])].filter(path => existsSync(safePath(root, path)) && lstatSync(safePath(root, path)).isFile()).sort()
     const sourceBindings = sources.map(path => {
       const bytes = readFileSync(safePath(root, path))
-      const regions = entity.kind === 'document' ? parseMarkdownDocument(path, bytes.toString('utf8')).citationRegions ?? [] : []
+      const regions = (entity.kind === 'document' || knowledgeById.has(entity.id)) ? parseMarkdownDocument(path, bytes.toString('utf8')).citationRegions ?? [] : []
       return { path: toPosix(path), fileHash: hash(bytes), hashAlgorithm: 'sha256-exact-bytes-v1', regions, regionHashAlgorithm: 'sha256-normalized-v1' }
     })
     const tags = Array.isArray(entity.metadata?.tags) ? entity.metadata.tags.filter((tag): tag is string => typeof tag === 'string').sort() : []
     const relations = (adjacency.get(entity.id) ?? []).sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0)
-    const sourceLinks = sources.map(path => `[Source](${toPosix(relative(output, safePath(root, path))).split('/').map(part => encodeURIComponent(part).replace(/[()]/g, character => character === '(' ? '%28' : '%29')).join('/')})`)
-    const body = [`# ${entity.name.replace(/[\r\n]/g, ' ')}`, '', ...sourceLinks, '', '## Relations', '', ...relations.map(relation => `- ${relation.provenance} ${relation.kind}: ${link(relation.from)} → ${link(relation.to)}`), '', '[[index]]'].join('\n')
-    render(filenames.get(entity.id)!, entity.kind, { id: entity.id, sourcePath: entity.path ?? null, sources: sourceBindings, aliases: [...new Set(entity.aliases ?? [])].sort(), tags }, body)
+    const sourceHref = (path: string): string => toPosix(relative(output, safePath(root, path))).split('/').map(part => encodeURIComponent(part).replace(/[()]/g, character => character === '(' ? '%28' : '%29')).join('/')
+    const sourceLinks = sources.map(path => `[Source](${sourceHref(path)})`)
+    const observed = knowledgeById.get(entity.id)
+    const evidenceLinks = observed?.evidence.flatMap(item => item.kind === 'document-region' ? [`- [Source region](${sourceHref(item.path)}#L${item.lineStart}-L${item.lineEnd}) (${item.regionHash})`] : item.kind === 'commit' ? [`- Commit: \`${item.sha}\``] : [`- Fact: ${link(item.factId)}`]) ?? []
+    const knowledgeLinks = observed?.links.map(item => `- ${item.kind}: ${link(item.target)}`) ?? []
+    if (observed) {
+      for (const document of snapshot.entities.filter(item => item.kind === 'document' && item.path && sources.includes(item.path))) knowledgeLinks.push(`- source-document: ${link(document.id)}`)
+      const ancestors = new Set(observed.links.filter(item => item.kind === 'affected-fact' || item.kind === 'defines-symbol').map(item => item.target))
+      for (let changed = true; changed;) {
+        changed = false
+        for (const relation of snapshot.relations) if (relation.kind === 'contains' && ancestors.has(relation.to) && !ancestors.has(relation.from)) { ancestors.add(relation.from); changed = true }
+      }
+      for (const owner of snapshot.entities.filter(item => item.kind === 'package' && ancestors.has(item.id))) knowledgeLinks.push(`- package: ${link(owner.id)}`)
+    }
+    const body = [`# ${entity.name.replace(/[\r\n]/g, ' ')}`, '', ...sourceLinks, '', '## Relations', '', ...relations.map(relation => `- ${relation.provenance} ${relation.kind}: ${link(relation.from)} → ${link(relation.to)}`), ...(observed ? ['', '## Evidence', '', ...evidenceLinks, '', '## Knowledge links', '', ...knowledgeLinks] : []), '', '[[index]]'].join('\n')
+    render(filenames.get(entity.id)!, entity.kind, { id: entity.id, sourcePath: entity.path ?? null, sources: sourceBindings, aliases: [...new Set(entity.aliases ?? [])].sort(), tags, ...(observed ? { evidence: observed.evidence } : {}) }, body)
   }
   const scores = (signal: ReadonlyMap<string, number>): string[] => [...signal].map(([id, score]) => `- ${link(id)}: ${score}`)
   render('graph-signals.md', 'graph-signals', { id: 'vault:graph-signals', aliases: [], tags: [] }, [
@@ -137,6 +163,10 @@ const writeVault = (root: string, output: string, config: DocBridgeConfigV1, sna
   ].join('\n'))
   render('index.md', 'index', { id: 'vault:index', aliases: [], tags: [] }, ['# Knowledge map', '', ...entities.map(entity => `- ${entity.kind}: ${link(entity.id)}`), '', '[[graph-signals]]', '', 'Generated navigation links to source documents; it does not copy their contents.', '', 'Coverage:', ...snapshot.coverage.map(item => `- ${item.analyzer}: ${item.scope} — ${item.status}${item.reason ? ` (${item.reason})` : ''}`)].join('\n'))
 
+  return pages
+}
+
+const writeVault = (root: string, output: string, pages: Record<string, string>): { output: string; notes: number; removed: number } => {
   const manifestPath = safePath(root, relative(root, resolve(output, MANIFEST)))
   const manifest = readIfPresent(manifestPath)
   const previous = manifest === undefined ? {} : ManifestSchema.parse(JSON.parse(manifest.toString('utf8'))).files
