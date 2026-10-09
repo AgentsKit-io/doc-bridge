@@ -12,7 +12,9 @@ Portable JSON Schema export: `DocBridgeIndexV1JsonSchema`.
 Optional `knowledgeEntities` uses the separate [knowledge entity v1 contract](knowledge-entity-v1.md).
 It is emitted only with explicit `index.knowledgeEntities.enabled: true` and
 semantic hashing. Default-off output preserves legacy strict-reader compatibility;
-old readers must not receive opted-in output. `AgentHandoffV1` stays unchanged.
+old readers must not receive opted-in output. The section may include optional
+typed `memoryRelations` with exact memory evidence; updated opt-in readers must
+support that field. `AgentHandoffV1` stays unchanged.
 
 ## Shape
 

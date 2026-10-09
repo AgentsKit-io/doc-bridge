@@ -1,4 +1,4 @@
-import { cpSync, mkdirSync, mkdtempSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs'
+import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -343,23 +343,35 @@ describe('MCP tools', () => {
   })
 
   it('exposes retriever, memory, and registry tools', () => {
-    const root = join(mkdtempSync(join(tmpdir(), 'ak-docs-mcp-pipeline-')), 'sample-project')
-    cpSync(fixtureRoot, root, { recursive: true })
-    mkdirSync(join(root, '.agent-memory'), { recursive: true })
-    writeFileSync(join(root, '.agent-memory/sidecar.md'), '# Sidecar\n\npackage os-core owns schema contracts.\n')
+    const temporary = mkdtempSync(join(tmpdir(), 'ak-docs-mcp-pipeline-'))
+    const root = join(temporary, 'sample-project')
+    try {
+      cpSync(fixtureRoot, root, { recursive: true })
+      mkdirSync(join(root, 'notes'), { recursive: true })
+      writeFileSync(join(root, 'notes/sidecar.md'), '# Sidecar\n\npackage os-core owns schema contracts. Follow `docs/for-agents/adr/0001-memory.md`.\n')
 
-    const config = loadFixtureConfig()
-    const index = buildDocBridgeIndex({ root, config, write: false }).index
-    const ctx = { root, config, loadIndex: () => index }
+      mkdirSync(join(root, 'docs/for-agents/adr'), { recursive: true })
+      writeFileSync(join(root, 'docs/for-agents/adr/0001-memory.md'), '# Keep evidence\n\nUse exact evidence.\n')
 
-    for (const name of ['retriever.query', 'memory.classify', 'memory.promoteDraft', 'registry.topology']) {
-      const result = handleMcpRequest(ctx, {
-        jsonrpc: '2.0',
-        id: 1,
-        method: 'tools/call',
-        params: { name, arguments: name === 'retriever.query' ? { query: 'schema', limit: 1 } : {} },
-      }) as { content: { text: string }[] }
-      expect(result.content[0]?.text.length).toBeGreaterThan(10)
+      const config = { ...loadFixtureConfig(), index: { knowledgeEntities: { enabled: true } }, intelligence: { memory: { ingestDir: 'notes', adapters: ['playbook-memory' as const] } } }
+      const index = buildDocBridgeIndex({ root, config, write: false }).index
+      const ctx = { root, config, loadIndex: () => index }
+
+      for (const name of ['retriever.query', 'memory.classify', 'memory.promoteDraft', 'registry.topology']) {
+        const result = handleMcpRequest(ctx, {
+          jsonrpc: '2.0',
+          id: 1,
+          method: 'tools/call',
+          params: { name, arguments: name === 'retriever.query' ? { query: 'schema', limit: 1 } : {} },
+        }) as { content: { text: string }[] }
+        if (name.startsWith('memory.')) {
+          expect(result.content[0]?.text).toContain('notes/sidecar.md')
+          expect(result.content[0]?.text).toContain('memory-supports')
+        }
+        expect(result.content[0]?.text.length).toBeGreaterThan(10)
+      }
+    } finally {
+      rmSync(temporary, { recursive: true, force: true })
     }
   })
 

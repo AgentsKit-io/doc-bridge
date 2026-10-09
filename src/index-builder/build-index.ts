@@ -36,6 +36,8 @@ import { projectRetrievalIndex, toKnowledgeEntry } from '../retrieval/project.js
 import { resolveSearchParams, resolveSearchWeights } from '../retrieval/weights.js'
 import { projectEnrichmentOverlay, readEnrichmentOverlay } from '../enrich/overlay.js'
 import type { EnrichmentOverlayV1 } from '../schemas/enrichment.js'
+import { ingestMemoryCandidates } from '../memory/ingest.js'
+import { linkMemoryToEntities } from '../memory/pipeline.js'
 import { extractKnowledgeEntities } from '../entities/extract.js'
 import type { KnowledgeEntitiesV1 } from '../schemas/knowledge-entity.js'
 import { withoutDisabledKnowledgeEntities } from '../config/defaults.js'
@@ -136,7 +138,16 @@ const projectFromSnapshot = (
     ...(overlay ? { overlay } : {}),
     readDocument: (path) => contents.get(path),
   })
-  return { projection, ...(config.index?.knowledgeEntities?.enabled ? { knowledgeEntities: extractKnowledgeEntities({ snapshot: declared, documents: contents, ...(!files ? { gitRoot: root } : {}), window: config.index.knowledgeEntities }) } : {}) }
+  if (!config.index?.knowledgeEntities?.enabled) return { projection }
+  const knowledgeEntities = extractKnowledgeEntities({ snapshot: declared, documents: contents, ...(!files ? { gitRoot: root } : {}), window: config.index.knowledgeEntities })
+  if (files || isServiceProfile(config)) {
+    knowledgeEntities.coverage.push({ analyzer: 'memory-entities', analyzerVersion: '1.0.0', scope: 'memory', status: 'not-analyzed', reason: 'Captured inputs do not supply a memory source; local memory was not read.' })
+  } else {
+    const candidates = ingestMemoryCandidates(root, config.intelligence)
+    const memoryRelations = linkMemoryToEntities(candidates, knowledgeEntities)
+    if (memoryRelations.length) knowledgeEntities.memoryRelations = memoryRelations
+  }
+  return { projection, knowledgeEntities }
 }
 
 const existingGeneratedAt = (indexPath: string, contentHash: string): string | undefined => {

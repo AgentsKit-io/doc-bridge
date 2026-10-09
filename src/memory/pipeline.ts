@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto'
+import type { KnowledgeEntitiesV1, MemoryEntityRelationV1 } from '../schemas/knowledge-entity.js'
 import type { DocBridgeIndexV1 } from '../schemas/doc-bridge-index.js'
 import type { MemoryCandidateV1 } from '../schemas/memory-candidate.js'
 import { searchIndex } from '../query/search.js'
@@ -10,6 +12,7 @@ export type MemoryClassification = {
   readonly route: MemoryRoute
   readonly reason: string
   readonly target?: string
+  readonly entityRelations?: readonly MemoryEntityRelationV1[]
   readonly duplicateOf?: string
 }
 
@@ -43,21 +46,68 @@ const classifyRoute = (fact: string): Pick<MemoryClassification, 'route' | 'reas
   return { route: 'agent', reason: 'project convention or ownership note' }
 }
 
+/** Explicit, exact references only; a shared alias/path never chooses an arbitrary entity. */
+export const linkMemoryToEntities = (
+  candidates: readonly MemoryCandidateV1[],
+  section: KnowledgeEntitiesV1,
+): MemoryEntityRelationV1[] => {
+  const references = new Map<string, { target: string; kind: MemoryEntityRelationV1['evidence']['kind'] } | null>()
+  for (const entity of section.entities) {
+    const values = [
+      { value: entity.id, kind: 'id' as const },
+      ...entity.aliases.map(value => ({ value, kind: 'alias' as const })),
+      ...entity.evidence.flatMap(evidence => evidence.kind === 'document-region' ? [{ value: evidence.path, kind: 'path' as const }] : []),
+    ]
+    for (const { value, kind } of values) {
+      const prior = references.get(value)
+      if (prior === undefined) references.set(value, { target: entity.id, kind })
+      else if (prior && prior.target !== entity.id) references.set(value, null)
+    }
+  }
+  const relations: MemoryEntityRelationV1[] = []
+  for (const candidate of candidates) {
+    if (classifyRoute(candidate.fact).route === 'discard' || scanMemorySafety([{ candidate, route: 'agent', reason: '' }]).length) continue
+    const tokens = new Set([
+      ...candidate.references,
+      candidate.fact,
+      ...candidate.fact.split(/[\s()[\]`"'<>;,!?]+/),
+      ...[...candidate.fact.matchAll(/`([^`]+)`|\[[^\]]*\]\(([^)\s]+)\)/g)].map(match => match[1] ?? match[2]!),
+    ])
+    const factHash = createHash('sha256').update(candidate.fact).digest('hex')
+    for (const value of [...tokens].sort()) {
+      const match = references.get(value)
+      if (!match) continue
+      relations.push({ kind: 'memory-supports', candidateId: candidate.id, target: match.target, evidence: { kind: match.kind, value, ...(candidate.rawPath ? { rawPath: candidate.rawPath } : {}), factHash } })
+      if (relations.length > 10_000) throw new Error('Memory entity relations exceed the 10000 relation limit.')
+    }
+  }
+  return [...new Map(relations.map(relation => [JSON.stringify(relation), relation])).values()]
+    .sort((a, b) => a.candidateId.localeCompare(b.candidateId) || a.target.localeCompare(b.target) || a.evidence.value.localeCompare(b.evidence.value))
+}
+
 export const classifyMemoryCandidates = (
   candidates: readonly MemoryCandidateV1[],
   index: DocBridgeIndexV1,
-): MemoryClassification[] =>
-  candidates.map((candidate) => {
+): MemoryClassification[] => {
+  const byCandidate = new Map<string, MemoryEntityRelationV1[]>()
+  for (const relation of index.knowledgeEntities ? linkMemoryToEntities(candidates, index.knowledgeEntities) : []) {
+    const key = JSON.stringify([relation.candidateId, relation.evidence.rawPath, relation.evidence.factHash])
+    byCandidate.set(key, [...(byCandidate.get(key) ?? []), relation])
+  }
+  return candidates.map((candidate) => {
     const duplicate = searchIndex(index, candidate.fact, 1)[0]
     const targetMatch = packageOwnership.exec(candidate.fact)
     const route = classifyRoute(candidate.fact)
+    const entityRelations = byCandidate.get(JSON.stringify([candidate.id, candidate.rawPath, createHash('sha256').update(candidate.fact).digest('hex')])) ?? []
     return {
       candidate,
       ...route,
+      ...(entityRelations.length ? { entityRelations } : {}),
       ...(targetMatch?.[1] ? { target: targetMatch[1] } : {}),
       ...(duplicate && duplicate.score >= 16 ? { duplicateOf: duplicate.path } : {}),
     }
   })
+}
 
 export const scanMemorySafety = (
   classifications: readonly MemoryClassification[],

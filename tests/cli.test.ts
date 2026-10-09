@@ -1,4 +1,4 @@
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
@@ -781,24 +781,32 @@ export default (context) => {
       process.chdir(root)
       writeFileSync(
         join(root, 'doc-bridge.config.json'),
-        JSON.stringify({ schemaVersion: 1, corpus: { agent: { root: 'docs/for-agents' } } }),
+        JSON.stringify({ schemaVersion: 1, corpus: { agent: { root: 'docs/for-agents' } }, intelligence: { memory: { ingestDir: ['notes'], adapters: ['playbook-memory'] } } }),
       )
       mkdirSync(join(root, 'docs/for-agents/packages'), { recursive: true })
-      mkdirSync(join(root, '.agent-memory'), { recursive: true })
+      mkdirSync(join(root, 'notes'), { recursive: true })
       writeFileSync(join(root, 'docs/for-agents/INDEX.md'), '# Agent docs\n')
       writeFileSync(join(root, 'docs/for-agents/packages/sidecar.md'), '# Sidecar\n\nPackage sidecar owns transport.\n')
-      writeFileSync(join(root, '.agent-memory/sidecar.md'), '# Sidecar\n\npackage sidecar owns transport boundaries.\n')
+      writeFileSync(join(root, 'notes/sidecar.md'), '# Sidecar\n\npackage sidecar owns transport boundaries.\n')
       expect(runCli(['index'])).toBe(0)
 
       const classified = captureStdout(() => runCli(['memory', 'classify']))
       expect(classified.code).toBe(0)
+      expect(classified.out).toContain('notes/sidecar.md')
       expect(classified.out).toContain('"route": "agent"')
 
       const promoted = captureStdout(() => runCli(['memory', 'promote']))
       expect(promoted.code).toBe(0)
       expect(promoted.out).toContain('Draft doc-bridge memory promotion')
+      const dryRun = captureStdout(() => runCli(['memory', 'promote', '--pr', '--dry-run']))
+      expect(dryRun.code).toBe(0)
+      const payload = JSON.parse(dryRun.out)
+      expect(payload.pr.commands.join('\n')).toContain('gh pr create --draft')
+      expect(readFileSync(payload.pr.draftPath, 'utf8')).toContain('Draft doc-bridge memory promotion')
+      expect(readFileSync(join(root, 'docs/for-agents/packages/sidecar.md'), 'utf8')).toBe('# Sidecar\n\nPackage sidecar owns transport.\n')
     } finally {
       process.chdir(projectRoot)
+      rmSync(root, { recursive: true, force: true })
     }
   })
 
