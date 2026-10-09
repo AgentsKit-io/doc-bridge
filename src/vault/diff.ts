@@ -1,4 +1,4 @@
-import { existsSync, lstatSync, readFileSync, readdirSync, realpathSync } from 'node:fs'
+import { closeSync, existsSync, fstatSync, openSync, readFileSync, readdirSync, realpathSync } from 'node:fs'
 import { relative, resolve, sep } from 'node:path'
 import { parse } from 'yaml'
 import type { DocBridgeConfigV1 } from '../config/schema.js'
@@ -11,6 +11,17 @@ import { EnrichmentProposalV1Schema, enrichmentProposalId, type EnrichmentPropos
 import { containsSecret } from '../safety/repository.js'
 import { toPosix } from '../lib/paths.js'
 import { hash, MANIFEST, ManifestSchema, renderVault, requireIgnored, safePath } from './export.js'
+
+/** Reads a note through one descriptor so the size check and the read observe the same file. */
+function readBoundedNote(path: string, maxBytes: number): Buffer | undefined {
+  const fd = openSync(path, 'r')
+  try {
+    if (fstatSync(fd).size > maxBytes) return undefined
+    return readFileSync(fd)
+  } finally {
+    closeSync(fd)
+  }
+}
 
 /** Review generated-note edits only; the regenerated baseline authenticates source bindings. */
 export const diffVault = async (rootPath: string, config: DocBridgeConfigV1) => {
@@ -32,8 +43,8 @@ export const diffVault = async (rootPath: string, config: DocBridgeConfigV1) => 
     if (deleted.includes(name)) continue
     const note = toPosix(relative(root, resolve(output, name)))
     const notePath = safePath(root, note)
-    if (lstatSync(notePath).size > 262144) { unproposed.push({ note, reason: 'Note exceeds the review budget' }); continue }
-    const editedBytes = readFileSync(notePath)
+    const editedBytes = readBoundedNote(notePath, 262144)
+    if (!editedBytes) { unproposed.push({ note, reason: 'Note exceeds the review budget' }); continue }
     if (hash(editedBytes) === manifest.files[name]) continue
     const original = baseline[name]
     if (!original || hash(original) !== manifest.files[name]) { unproposed.push({ note, reason: 'Source or export configuration changed; original binding cannot be revalidated' }); continue }
