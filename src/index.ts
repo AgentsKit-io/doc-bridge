@@ -1115,3 +1115,7 @@ export { FindingV1JsonSchema, RemediationV1JsonSchema, DecisionV1JsonSchema } fr
 export type { OperationOptions, ProgressEvent, RunMetrics } from './storage/operation.js'
 export { extractKnowledgeEntities, type ExtractKnowledgeEntitiesOptions } from './entities/extract.js'
 export { KNOWLEDGE_ENTITY_SCHEMA_VERSION, KnowledgeEntityV1Schema, KnowledgeEntityEvidenceV1Schema, KnowledgeEntityLinkV1Schema, KnowledgeEntitiesV1Schema, MemoryEntityRelationV1Schema, type MemoryEntityRelationV1, type KnowledgeEntityV1, type KnowledgeEntityEvidenceV1, type KnowledgeEntityLinkV1, type KnowledgeEntitiesV1 } from './schemas/knowledge-entity.js'
+
+export { STUDIO_SCHEMA_VERSION, STUDIO_LIMITS, StudioGraphV1Schema, StudioGraphV1JsonSchema, StudioNodeV1Schema, StudioEdgeV1Schema, StudioFindingV1Schema, StudioProposalV1Schema, StudioSearchV1Schema, StudioWhyV1Schema } from './schemas/studio-graph.js'
+export type { StudioGraphV1, StudioNodeV1, StudioEdgeV1, StudioFindingV1, StudioProposalV1, StudioSearchV1, StudioWhyV1 } from './schemas/studio-graph.js'
+export { exportStudioGraph, searchStudioGraph, whyStudioNode, type StudioExportOptions } from './studio/export.js'

@@ -51,6 +51,30 @@ pnpm add -D @agentskit/doc-bridge
 }
 ```
 
+## Studio graph export
+
+```bash
+ak-docs index
+ak-docs studio export --json --output .doc-bridge/studio.json
+```
+
+Without `--output`, prints JSON to stdout. `--output` exclusively creates a new
+file and refuses to overwrite existing files. Missing/stale indexes, invalid
+inputs and write errors exit 1 without a successful artifact. Runtime export is
+local and deterministic; it does not launch a UI or call a network service.
+Use `--config <path>` as usual. Optional `--revision <sha>` records an exact
+caller-confirmed clean revision; omit it for a dirty tree. Repeated
+`--human-note <repository-relative-path>` marks exact note documents.
+
+`--findings <json>` accepts an array of strict FindingV1 records;
+`--overlay <json>` accepts an EnrichmentOverlayV1; `--vault-diff <json>` accepts
+an array of StudioProposalV1 records with kind `vault-diff`. Each input file is
+bounded at 16 MB; collections are validated before the output is created.
+Only reference findings enter this inbox. Absent artifacts remain not-analyzed.
+No proposal is approved or applied. See [StudioGraphV1](../schemas/studio-graph-v1.md)
+for limits, metrics, status and search/why shapes, and the
+[design brief](../design/studio-brief.md) for the separate UI consumer.
+
 ## Commands (v1)
 
 ### Layer 0 — no API key

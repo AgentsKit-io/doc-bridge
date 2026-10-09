@@ -84,6 +84,7 @@ import { PACKAGE_VERSION } from '../version.js'
 import { auditDocumentation, formatDocumentationAuditText } from '../audit/documentation.js'
 import { diffVault } from '../vault/diff.js'
 import { exportVault, safePath } from '../vault/export.js'
+import { exportStudioGraph, type StudioExportOptions } from '../studio/export.js'
 import { renderArtifact, writeRenderedPages } from '../render/render.js'
 import { CLI_COMMAND_USAGE } from './usage.js'
 import { checkPublicParity, formatPublicParityText } from '../parity/check.js'
@@ -154,6 +155,7 @@ type Command =
   | 'parity'
   | 'render'
   | 'vault'
+  | 'studio'
 
 const usage = CLI_COMMAND_USAGE
 
@@ -232,6 +234,7 @@ const parseArgs = (argv: readonly string[]) => {
   else if (positional[0] === 'audit') command = 'audit'
   else if (positional[0] === 'parity') command = 'parity'
   else if (positional[0] === 'render') command = 'render'
+  else if (positional[0] === 'studio') command = 'studio'
   else if (positional[0] === 'vault') command = 'vault'
 
   return { command, flags, configPath, positional }
@@ -1687,6 +1690,48 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
   if (command === 'audit') return runDocumentationAuditCommand(flags, positional, configPath)
   if (command === 'parity') return runParityCommand(flags, configPath, argv)
   if (command === 'render') return runRenderCommand(flags, positional, configPath, argv)
+  if (command === 'studio') return (async () => {
+    try {
+      if (positional[1] !== 'export') throw new Error('Usage: ak-docs studio export [--output <file>] [--json] [--config <path>]')
+      const valueFlags = new Set(['--output', '--config', '--revision', '--human-note', '--findings', '--overlay', '--vault-diff'])
+      for (let i = 2; i < argv.length; i += 1) {
+        const arg = argv[i]!
+        if (arg === '--json') continue
+        const flag = arg.split('=')[0]!
+        if (!valueFlags.has(flag)) throw new Error('Unknown studio export argument')
+        if (arg.includes('=')) { if (!arg.slice(arg.indexOf('=') + 1)) throw new Error(`${flag} requires a value`) }
+        else { if (!argv[i + 1] || argv[i + 1]!.startsWith('-')) throw new Error(`${flag} requires a value`); i += 1 }
+      }
+      const { config, root } = loadProject(optionValues(argv, '--config')[0] ?? configPath)
+      const index = loadFreshDocBridgeIndex(root, config)
+      const read = (name: string): unknown => {
+        const path = optionValues(argv, name)[0]
+        return path ? JSON.parse(readBoundedText(resolve(root, path), { used: 0 }, { maxFileBytes: 16_000_000 })) : undefined
+      }
+      const findings = read('--findings')
+      const overlay = read('--overlay')
+      const vaultDiff = read('--vault-diff')
+      const graph = exportStudioGraph(index, {
+        ...(optionValues(argv, '--revision')[0] ? { revision: optionValues(argv, '--revision')[0] } : {}),
+        humanNotes: optionValues(argv, '--human-note'),
+        ...(findings === undefined ? {} : { findings: findings as NonNullable<StudioExportOptions['findings']> }),
+        ...(overlay === undefined ? {} : { overlay: overlay as NonNullable<StudioExportOptions['overlay']> }),
+        ...(vaultDiff === undefined ? {} : { vaultDiff: vaultDiff as NonNullable<StudioExportOptions['vaultDiff']> }),
+      })
+      const output = optionValues(argv, '--output')[0]
+      if (argv.includes('--output') && !output) throw new Error('--output requires a file')
+      if (output) {
+        const path = resolve(root, output)
+        mkdirSync(dirname(path), { recursive: true })
+        // Exclusive creation protects source documents and prior exports from accidental replacement.
+        writeFileSync(path, JSON.stringify(graph, null, 2) + '\n', { flag: 'wx' })
+      } else writeJson(graph)
+      return 0
+    } catch (error) {
+      process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`)
+      return 1
+    }
+  })()
   if (command === 'vault') return (async () => {
     try {
       if (!['export', 'diff'].includes(positional[1] ?? '') || positional.length !== 2) throw new Error('Usage: ak-docs vault export|diff [--pr] [--config <path>] [--text|--json]')
