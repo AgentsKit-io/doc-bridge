@@ -251,7 +251,7 @@ type IndexConfig = {
   }
 
   /** Hash algorithm for contentHash field */
-  contentHash?: 'sha256-normalized-v1'  // only algo in v1
+  contentHash?: 'sha256-semantic-v1'  // default; normalized legacy setting requires migration
 }
 ```
 
@@ -776,7 +776,8 @@ type IntelligenceConfig = {
   memory?: {
     enabled?: boolean
     adapters?: MemoryAdapterId[]
-    ingestDir?: string | string[]   // repository-contained directories; defaults depend on adapter
+    ingestDir?: string | string[]   // playbook directories; default .agent-memory
+    rulesDir?: string | string[]    // rules directories; default .cursor/rules
     classify?: boolean              // default: false — opt-in
     promote?: {
       enabled?: boolean
@@ -985,8 +986,8 @@ remain explicit inputs, with bounded reads and no symlink following.
 `playbook-memory` and `cursor-rules` ingest Markdown (`.md`, `.mdc`) recursively,
 using their existing source/confidence mapping. With no configuration, defaults
 remain `.agent-memory` then `.cursor/rules`, preserving candidate order and bytes.
-`ingestDir` overrides only `playbook-memory`; `cursor-rules` always reads its
-conventional `.cursor/rules` directory. Duplicate source/path
+`ingestDir` overrides only `playbook-memory`; `rulesDir` overrides `cursor-rules`.
+Explicit directories never add the conventional default as a fallback. Duplicate source/path
 pairs are emitted once. Adapter order and directory order determine traversal;
 files within a directory sort by path. `enabled: false` disables ingestion and
 `adapters: []` selects no sources. The reserved `session-export` and

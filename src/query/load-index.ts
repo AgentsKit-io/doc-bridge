@@ -5,8 +5,8 @@ import { readJsonArtifact } from '../index-builder/artifact-io.js'
 import { readRepositoryFiles, INDEX_READ_PATTERNS } from '../index-builder/repository-io.js'
 import { repositoryInputsFromFiles } from '../index-builder/project-corpus.js'
 import type { ArtifactIOV1, RepositoryReadV1, StorageRequest, StorageResult } from '../storage/contract.js'
-import { contentHashForIndex, sameHashIdentity } from '../index-builder/content-hash.js'
-import { existsSync, readFileSync } from 'node:fs'
+import { contentHashForIndex, sameHashIdentity, LEGACY_HASH_ALGORITHM } from '../index-builder/content-hash.js'
+import { readFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 
 import type { DocBridgeConfigV1 } from '../config/schema.js'
@@ -38,8 +38,12 @@ export const indexFilePath = (root: string, config: DocBridgeConfigV1): string =
 export const loadDocBridgeIndex = (root: string, config: DocBridgeConfigV1): DocBridgeIndexV1 => {
   denyServiceOperation('legacy index read', config)
   const path = indexFilePath(root, config)
-  if (!existsSync(path)) throw new IndexNotFoundError(path)
-  const raw = JSON.parse(readFileSync(path, 'utf8')) as unknown
+  let text: string
+  try { text = readFileSync(path, 'utf8') } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') throw new IndexNotFoundError(path)
+    throw error
+  }
+  const raw = JSON.parse(text) as unknown
   return validateIndex(raw)
 }
 
@@ -69,6 +73,7 @@ const validateIndex = (raw: unknown): DocBridgeIndexV1 => {
 export const loadFreshDocBridgeIndex = (root: string, config: DocBridgeConfigV1): DocBridgeIndexV1 => {
   config = withoutDisabledKnowledgeEntities(config)
   const index = loadDocBridgeIndex(root, config)
+  if (index.contentHashAlgo === LEGACY_HASH_ALGORITHM) throw new Error('Legacy index is migration-only. Run: ak-docs index to regenerate with sha256-semantic-v1.')
 
   // History can change without file bytes changing; opt-in entity indexes require a real rebuild.
   if (index.inputs && index.retrieval && !index.knowledgeEntities) {
@@ -113,6 +118,7 @@ export const loadFreshStoredDocBridgeIndex = async (io: ArtifactIOV1, reader: Re
   const loaded = await loadStoredDocBridgeIndex(io, request)
   if (loaded.status !== 'ok') return loaded
   const index = loaded.value.index
+  if (index.contentHashAlgo === LEGACY_HASH_ALGORITHM) return { status: 'denied', code: 'INVALID_CONTRACT' }
   if (!index.inputs || !index.retrieval) return { status: 'denied', code: 'INVALID_CONTRACT' }
   const { files, contentRefs, byteSizes, limitations } = await readRepositoryFiles(reader, request, INDEX_READ_PATTERNS)
   if (limitations.length) return { status: limitations[0]!.status, code: limitations[0]!.code }

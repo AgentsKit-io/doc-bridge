@@ -1,6 +1,6 @@
 {
   "name": "doc-bridge",
-  "description": "Fail closed before Claude edits the wrong files: resolve the right docs, ownership boundaries, edit roots, and checks for each change.",
+  "description": "Resolve repository handoffs and prepare region remediations; human approval and application use the local CLI.",
   "version": "1.15.0-next.1",
   "author": {
     "name": "AgentsKit"

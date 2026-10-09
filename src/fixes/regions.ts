@@ -1,9 +1,10 @@
 import { createHash } from 'node:crypto'
-import { readFileSync, realpathSync, statSync } from 'node:fs'
+import { closeSync, fstatSync, openSync, readFileSync, realpathSync } from 'node:fs'
 import { isAbsolute, relative, resolve, sep } from 'node:path'
 import { denyServiceOperation } from '../execution/profile.js'
 import { parseMarkdownDocument } from '../discovery/markdown.js'
 import { sha256NormalizedV1 } from '../index-builder/content-hash.js'
+import { MAX_DOCUMENT_BYTES } from '../lib/bounded-text.js'
 import { containedPath } from '../safety/repository.js'
 import { RemediationV1Schema, type RegionEdit, type RemediationV1 } from '../schemas/findings.js'
 import { exactLines, unifiedDiff } from './diff.js'
@@ -29,7 +30,7 @@ const intersects = (a: { start: number; end: number }, b: { start: number; end: 
 const canonicalPath = (root: string, path: string): string => {
   if (isAbsolute(path) || path.includes('\n') || path.includes('\r') || path.includes('\t') || path.includes('\\') || path.split('/').includes('..')) throw new Error('Invalid edit path')
   const absolute = containedPath(root, path)
-  if (!absolute || !statSync(absolute).isFile()) throw new Error('Edit path escapes containment or is not a file')
+  if (!absolute) throw new Error('Edit path escapes containment or is not a file')
   return absolute
 }
 const utf8Boundary = (bytes: Buffer, offset: number) => offset <= bytes.length && (offset === bytes.length || (bytes[offset]! & 0xc0) !== 0x80)
@@ -71,7 +72,16 @@ const validate = (root: string, remediation: RemediationV1, options: Remediation
     const absolute = canonicalPath(project, edit.path)
     if (!roots.some(root => inside(root, absolute))) throw new Error('Edit outside caller allowed roots')
     let file = files.get(absolute)
-    if (!file) { const bytes = readFileSync(absolute); if (!bytes.equals(Buffer.from(bytes.toString('utf8')))) throw new Error('Target is not valid UTF-8'); file = { path: edit.path, before: readFileSync(absolute, 'utf8'), edits: [] }; files.set(absolute, file) }
+    if (!file) {
+      const fd = openSync(absolute, 'r')
+      try {
+        const stat = fstatSync(fd)
+        if (!stat.isFile() || stat.size > MAX_DOCUMENT_BYTES) throw new Error('Edit target must be a bounded regular file')
+        const bytes = readFileSync(fd), text = bytes.toString('utf8')
+        if (!bytes.equals(Buffer.from(text))) throw new Error('Target is not valid UTF-8')
+        file = { path: edit.path, before: text, edits: [] }; files.set(absolute, file)
+      } finally { closeSync(fd) }
+    }
     const range = locate(Buffer.from(file.before), edit)
     const protectedRanges = [...generatedRanges(edit.path, file.before), ...(options.protectedRegions ?? []).filter(region => canonicalPath(project, region.path) === absolute).map(region => region.range)]
     if (protectedRanges.some(protectedRange => intersects(range, protectedRange))) throw new Error('Protected/generated region intersection')

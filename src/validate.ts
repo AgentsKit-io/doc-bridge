@@ -1,4 +1,4 @@
-import { contentHashForVersionedArtifact } from './index-builder/content-hash.js'
+import { contentHashForVersionedArtifact, LEGACY_HASH_ALGORITHM } from './index-builder/content-hash.js'
 import { ZodError } from 'zod'
 
 import { DocBridgeConfigV1Schema, type DocBridgeConfigV1 } from './config/schema.js'
@@ -77,11 +77,17 @@ const verifyKnowledgeHash = <T extends { contentHash: string; contentHashAlgo: s
   return artifact
 }
 
-export const parseDiscoverySnapshot = (input: unknown): DiscoverySnapshotV1 =>
-  verifyKnowledgeHash(DiscoverySnapshotV1Schema.parse(input))
+export const parseDiscoverySnapshot = (input: unknown): DiscoverySnapshotV1 => {
+  const snapshot = verifyKnowledgeHash(DiscoverySnapshotV1Schema.parse(input))
+  if (snapshot.contentHashAlgo === LEGACY_HASH_ALGORITHM) throw new Error('Legacy snapshot is migration-only. Regenerate with ak-docs discover before analysis.')
+  return snapshot
+}
 
-export const parseReconciliationReport = (input: unknown): ReconciliationReportV1 =>
-  verifyKnowledgeHash(ReconciliationReportV1Schema.parse(input))
+export const parseReconciliationReport = (input: unknown): ReconciliationReportV1 => {
+  const report = verifyKnowledgeHash(ReconciliationReportV1Schema.parse(input))
+  if (report.contentHashAlgo === LEGACY_HASH_ALGORITHM) throw new Error('Legacy report is migration-only. Regenerate with ak-docs reconcile before analysis.')
+  return report
+}
 
 export const parseWorkflowRun = (input: unknown): WorkflowRunV1 => WorkflowRunV1Schema.parse(input)
 

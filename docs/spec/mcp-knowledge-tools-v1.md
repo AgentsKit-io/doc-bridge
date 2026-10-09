@@ -149,8 +149,8 @@ CI step that runs `ak-docs doctor --text` fails on a stale index, not on a B.
 ## Semantic hash compatibility
 
 Discovery snapshots and derived reconciliation reports declare `sha256-semantic-v1` after explicit
-regeneration. New readers verify both this algorithm and legacy `sha256-normalized-v1` using their
-respective projections; unsupported algorithms require a compatible version and regeneration.
+regeneration. Legacy `sha256-normalized-v1` snapshots/reports are migration-only and refused
+for analysis; unsupported algorithms require a compatible version and regeneration.
 Revision/time and reuse statistics remain provenance, not semantic identity. Legacy handoff field
 sets and exact proposal, fix and study hash bindings are unchanged. See
 [incremental scan v1](incremental-scan-v1.md) and [index schema v1](../schemas/doc-bridge-index-v1.md).
@@ -174,7 +174,7 @@ no service metadata.
 
 Region fixes and settled human decisions follow [region remediation v1](../spec/region-remediation-v1.md),
 [FindingV1](../schemas/finding-v1.md), [RemediationV1](../schemas/remediation-v1.md) and
-[DecisionV1](../schemas/decision-v1.md). Existing whole-file fix commands remain V1;
+[DecisionV1](../schemas/decision-v1.md). CLI and MCP use region remediation contracts;
 region creation/review is a deterministic library API. Enrichment retains settled Decision records
 through cache replay, without converting remediation rejection into finding rejection.
 

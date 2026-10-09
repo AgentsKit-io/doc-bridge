@@ -75,7 +75,7 @@ fingerprint also binds pipeline/analyzer versions and effective configuration fo
 
 Legacy `sha256-normalized-v1` projections keep the original input-only seal: projection version,
 observation fingerprint, overlay/configuration hashes, lexicon/graph versions, weights and parameters.
-Public-index freshness rebuilds select the stored algorithm for both formats. Unknown algorithms
+Public-index freshness and query loaders refuse legacy identity with regeneration guidance. Unknown algorithms
 fail with an actionable compatible-version/regeneration diagnostic; unlike algorithms cannot be
 equal identities. Explicit regeneration migrates the index and its projection together. Old strict
 readers must be upgraded before consuming the new algorithm. Entity/evidence hashes, exact
@@ -232,7 +232,7 @@ index even when no source or Markdown file changes.
 
 Region fixes and settled human decisions follow [region remediation v1](../spec/region-remediation-v1.md),
 [FindingV1](../schemas/finding-v1.md), [RemediationV1](../schemas/remediation-v1.md) and
-[DecisionV1](../schemas/decision-v1.md). Existing whole-file fix commands remain V1;
+[DecisionV1](../schemas/decision-v1.md). CLI and MCP use region remediation contracts;
 region creation/review is a deterministic library API. Enrichment retains settled Decision records
 through cache replay, without converting remediation rejection into finding rejection.
 

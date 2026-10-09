@@ -1,5 +1,5 @@
 name: doc-bridge-gate
-description: Run independent documentation gates and optional deterministic PR advisories
+description: Run documentation gates and deterministic advisories; human remediation application is forbidden
 branding:
   icon: book
   color: blue

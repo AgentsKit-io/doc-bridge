@@ -11,8 +11,8 @@ validationPath: pnpm vitest run tests/finding-contracts.test.ts tests/region-rem
 
 The deterministic library exports creation, revalidation, approval, presentation/application
 and human merge acceptance. `applyFixProposal` retains the legacy V1 apply API; `applyRemediation` is the region successor. Both use the shared atomic replacement path. No network, model, implicit shell hook or repository-config
-approval is involved. Existing CLI/MCP whole-file fix commands retain their V1 contract;
-region application remains library-only until a caller integrates authenticated review controls.
+approval is involved. CLI/MCP prepare and revalidate `RemediationV1` from a caller-supplied base snapshot,
+fresh current discovery and explicit allowed roots. Legacy whole-file commands are removed.
 The optional [`fix --llm`](llm-remediation-v1.md) command proposes verified regions without applying them.
 
 ## Region validation
@@ -67,3 +67,31 @@ recoverable rollback failures, binding renewal, denied default-branch writes, is
 presentation and authenticated acceptance with fresh verification. `tests/finding-contracts.test.ts`
 exercises policy and both rejection targets through enrichment/disk-cache replay;
 `tests/handoff-caveats.test.ts` exercises both strict-reader compatibility directions.
+
+## Local CLI and MCP authority in 2.0
+
+`fix propose|revalidate|approve|apply|reject <remediation.json>` requires
+`--base <snapshot.json>` and one or more `--allowed-root <path>` values.
+Preparation accepts a RemediationV1 envelope produced by the region library or a
+proposal producer; it does not infer edits from link similarity or normalize whole files.
+Fresh diff findings must match finding ID and evidence hash; proposed and routed-to-L2
+findings are eligible, excluded/pending-version and settled rejected evidence are refused.
+The trusted host library interface supports additional fresh evidence validators.
+
+CLI approve/apply/reject require `--by` attribution and interactive confirmation,
+or an explicit local `--yes` authority assertion. Attribution is not authentication.
+These actions are forbidden in the Action even with `--yes`. MCP cannot approve/apply;
+it only lists, prepares and revalidates remediations. Host libraries retain authenticated
+callbacks. Existing enrichment actions use their separate enrichment contract.
+
+Application revalidates fresh findings and the exact review binding, then runs all
+configured gates against actual written files. A changed binding requires renewed
+approval. Failed gates restore original files; no gate is excluded or index rewritten
+implicitly. A configured index freshness gate therefore requires a host workflow that
+can produce fresh index evidence; otherwise local application fails closed and rolls back.
+`fix reject --decision <decision.json>` persists a DecisionV1 through the existing
+settled overlay, distinguishing finding rejection from remediation rejection.
+
+Rejection validates fresh finding evidence without requiring the rejected edit to be
+applicable. Corrupt settled decision evidence blocks preparation and application; it
+is never treated as an empty rejection history.

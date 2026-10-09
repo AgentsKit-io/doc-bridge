@@ -1,3 +1,4 @@
+import { contentHashForArtifactV1 } from '../src/index-builder/content-hash.js'
 import { runWorkflow, readStoredWorkflowManifest, writeStoredWorkflowManifest, readStoredWorkflowStep, writeStoredWorkflowStep } from '../src/workflow/engine.js'
 import { sealEnrichmentOverlay, readStoredEnrichmentOverlay, writeStoredEnrichmentOverlay } from '../src/enrich/overlay.js'
 import { applyConfigDefaults } from '../src/config/defaults.js'
@@ -60,6 +61,8 @@ describe('exact partition indexing and persistence', () => {
       expect(JSON.stringify(built.value.index)).toBe(JSON.stringify(legacy))
       const loaded = await loadFreshStoredDocBridgeIndex(artifacts, repository, request, config)
       expect(loaded.status).toBe('ok')
+      expect(await buildStoredDocBridgeIndex({ ...request, repository, artifacts, config, snapshot, hashAlgorithm: 'sha256-normalized-v1' })).toMatchObject({ status: 'denied', code: 'INVALID_CONTRACT' })
+      expect(await loadFreshStoredDocBridgeIndex(artifacts, repository, request, config)).toEqual(loaded)
       for (const term of ['storage', 'authentication', 'documentation', 'index', 'query']) {
         expect(runQuery(built.value.index, config, { kind: 'search', term })).toEqual(runQuery(legacy, config, { kind: 'search', term }))
         expect(runQuery(built.value.index, config, { kind: 'search', term, agent: true, contextBudgetTokens: 1024 })).toEqual(runQuery(legacy, config, { kind: 'search', term, agent: true, contextBudgetTokens: 1024 }))
@@ -69,6 +72,9 @@ describe('exact partition indexing and persistence', () => {
       expect(runRetrievalBench({ index: built.value.index, suite })).toEqual(runRetrievalBench({ index: legacy, suite }))
       const repeat = await buildStoredDocBridgeIndex({ ...request, repository, artifacts, config, snapshot, overlay: 'ignore' })
       expect(repeat.status === 'ok' && repeat.value.index).toEqual(built.value.index)
+      const oldSnapshot = { ...snapshot, contentHashAlgo: 'sha256-normalized-v1' as const }
+      oldSnapshot.contentHash = contentHashForArtifactV1(oldSnapshot)
+      expect(() => writeStoredSnapshot(artifacts, request, oldSnapshot, null)).toThrow('migration-only')
       expect((await writeStoredSnapshot(artifacts, request, snapshot, null)).status).toBe('ok')
       const restored = await readStoredSnapshot(artifacts, request)
       expect(restored.status === 'ok' && restored.value.value).toEqual(snapshot)

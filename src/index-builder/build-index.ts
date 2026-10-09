@@ -171,17 +171,19 @@ const buildIndex = (opts: BuildIndexOptions, files?: RepositoryFiles, fallbackPr
   const config = withoutDisabledKnowledgeEntities(opts.config)
   if (config.index?.knowledgeEntities?.enabled && opts.hashAlgorithm === LEGACY_HASH_ALGORITHM) throw new Error('Knowledge entities require sha256-semantic-v1; disable entities for legacy index readers.')
   const write = opts.write ?? true
+  if (write && opts.hashAlgorithm === LEGACY_HASH_ALGORITHM) throw new Error('Legacy index emission is migration-only. Generate a sha256-semantic-v1 index instead.')
   const outFile = config.index?.outFile ?? '.doc-bridge/index.json'
   const indexPath = join(root, outFile)
 
   if (write && (opts.hashAlgorithm ?? SEMANTIC_HASH_ALGORITHM) !== LEGACY_HASH_ALGORITHM) {
-    if (existsSync(indexPath)) {
-      const prior = DocBridgeIndexV1Schema.parse(JSON.parse(readFileSync(indexPath, 'utf8')))
-      if (prior.contentHashAlgo === LEGACY_HASH_ALGORITHM) {
-        const expected = buildDocBridgeIndex({ ...opts, write: false, hashAlgorithm: prior.contentHashAlgo }).index
-        const drift = prior.contentHash !== contentHashForIndex(prior) || prior.contentHash !== expected.contentHash
-        console.warn(`Replaced index ${drift ? 'drift detected' : 'verified'} under ${prior.contentHashAlgo}; explicit regeneration migrates to ${SEMANTIC_HASH_ALGORITHM}. New readers are required.`)
-      }
+    let prior: DocBridgeIndexV1 | undefined
+    try { prior = DocBridgeIndexV1Schema.parse(JSON.parse(readFileSync(indexPath, 'utf8'))) } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error
+    }
+    if (prior?.contentHashAlgo === LEGACY_HASH_ALGORITHM) {
+      const expected = buildDocBridgeIndex({ ...opts, write: false, hashAlgorithm: prior.contentHashAlgo }).index
+      const drift = prior.contentHash !== contentHashForIndex(prior) || prior.contentHash !== expected.contentHash
+      console.warn(`Replaced index ${drift ? 'drift detected' : 'verified'} under ${prior.contentHashAlgo}; explicit regeneration migrates to ${SEMANTIC_HASH_ALGORITHM}. New readers are required.`)
     }
   }
 
@@ -335,6 +337,7 @@ export const buildStoredDocBridgeIndex = async (options: BuildStoredIndexOptions
   options = { ...options, repository: operation.read, signal: operation.signal }
   try {
     operation.boundary('index-acquisition')
+    if (options.write !== false && options.hashAlgorithm === LEGACY_HASH_ALGORITHM) return { status: 'denied', code: 'INVALID_CONTRACT', ...(options.collectMetrics ? { metrics: operation.finish() } : {}) }
     const incomplete = options.snapshot.coverage.find(entry => entry.status === 'partial' && entry.scope.startsWith('limits:'))
     if (incomplete) {
       const parsed = StorageFailureCodeSchema.safeParse(incomplete.reason)

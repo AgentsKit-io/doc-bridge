@@ -39,8 +39,8 @@ Core (no API key):
   ak-docs check --enrich          run the enrichment stage between reconcile and evaluate
   ak-docs enrich [--json|--text]  run the configured Registry roles over context packs
   ak-docs enrich list | approve <proposalId> --by <name> | reject <proposalId> --by <name> [--reason <text>]
-  ak-docs fix propose links|normalize <artifact> [--output <file>]
-  ak-docs fix approve|apply <proposal.json> [--by <name>]
+  ak-docs fix propose|revalidate <remediation.json> --base <snapshot.json> --allowed-root <path>
+  ak-docs fix approve|apply|reject <remediation.json> --base <snapshot.json> --allowed-root <path> --by <name> [--yes]
   ak-docs suggest [--documentation] [--json|--text]   run the configured Registry agent
   ak-docs why <path|symbol|concept> [--json]
   ak-docs query [package|ownership|intent|change] <id> [--agent] [--text]

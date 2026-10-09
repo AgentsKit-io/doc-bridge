@@ -440,22 +440,12 @@ describe('ak-docs enrich, check --enrich, index, search and MCP', () => {
     }
   })
 
-  it('records a fix approval through the same gate', async () => {
+  it('refuses whole-file CLI fixes without recording legacy approvals', async () => {
     const { root, configPath } = repository()
-    write(root, 'docs/broken.md', '# Broken\n\nSee [ranking](./rankng.md).\n')
-    const previous = process.cwd()
-    try {
-      process.chdir(root)
-      const proposed = await capture(() => runCli(['fix', 'propose', 'links', '--output', '.doc-bridge/fix.json', '--config', configPath]))
-      expect(proposed.code).toBe(0)
-      const approved = await capture(() => runCli(['fix', 'approve', '.doc-bridge/fix.json', '--by', 'reviewer', '--config', configPath]))
-      expect(approved.code, approved.err).toBe(0)
-      const payload = JSON.parse(approved.out)
-      expect(payload.approvalId).toMatch(/^[a-f0-9]{64}$/)
-      expect(listApprovals(approvalsDir(root))).toEqual([expect.objectContaining({ id: payload.approvalId, name: 'doc-bridge.fix', status: 'approved', decisionMetadata: expect.objectContaining({ by: 'reviewer' }) })])
-    } finally {
-      process.chdir(previous)
-    }
+    const proposed = await capture(() => runCli(['fix', 'propose', 'links', '--config', configPath]))
+    expect(proposed.code).toBe(2)
+    expect(proposed.err).toContain('<remediation.json>')
+    expect(listApprovals(approvalsDir(root))).toEqual([])
   })
 })
 

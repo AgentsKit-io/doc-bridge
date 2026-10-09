@@ -72,10 +72,15 @@ The stdio server accepts the newline-delimited JSON transport used by current MC
 | `knowledge.decision` / `knowledge.concept` / `knowledge.whyChanged` | Exact target/name/alias rationale with indexed evidence, budgets and explicit history coverage |
 | `knowledge.lookup` | One entity with neighbours, documents, handoff, open diagnostics and evidence, within a `budgetTokens` |
 | `docbridge.diagnostics { format: 'finding' }` | Diagnostics as ecosystem `Finding`s |
+| `docbridge.proposals` | Prepare/revalidate region remediations from a base snapshot and allowed roots; human approval/application use the local CLI |
 
 Budgets, the drop order and the lookup shape are specified in [MCP knowledge tools v1](./spec/mcp-knowledge-tools-v1.md).
 
-The rationale tools are read-only; [knowledge query v1](./spec/knowledge-query-v1.md) defines their contract and enablement guidance. Proposal tools use the human-gated mutation workflow. Memory draft tools do not publish promotions.
+The rationale tools are read-only; [knowledge query v1](./spec/knowledge-query-v1.md) defines their contract and enablement guidance.
+Retrieval tools are annotated read-only and never publish a memory promotion.
+`docbridge.proposals` may save review artifacts and retains separate enrichment
+actions, but cannot approve or apply region remediations to documentation. See the
+[2.0 migration guide](./migration/1.x-to-2.0.md) for the human boundary.
 
 ## Agent guidance (paste into AGENTS.md)
 

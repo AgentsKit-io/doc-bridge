@@ -293,21 +293,13 @@ describe('MCP tools', () => {
     ).toThrow('Unknown indexed doc path "package.json"')
   })
 
-  it('keeps MCP fix proposals human-gated from discovery through application', () => {
-    const root = mkdtempSync(join(tmpdir(), 'ak-docs-mcp-fixes-'))
-    writeFileSync(join(root, 'guide.md'), '[API](./api)\n')
-    writeFileSync(join(root, 'api.md'), '# API\n')
-    const config = loadFixtureConfig()
-    const ctx = { root, config }
-    const call = (arguments_: Record<string, unknown>) => JSON.parse(((handleMcpRequest(ctx, {
-      method: 'tools/call',
-      params: { name: 'docbridge.proposals', arguments: arguments_ },
-    }) as { content: { text: string }[] }).content[0]?.text ?? '{}')) as { proposal?: { status?: string } }
-
-    expect(call({ action: 'propose-links' }).proposal?.status).toBe('proposed')
-    expect(call({ action: 'approve', approvedBy: 'human' }).proposal?.status).toBe('approved')
-    expect(call({ action: 'apply' }).proposal?.status).toBe('applied')
-    expect(readFileSync(join(root, 'guide.md'), 'utf8')).toBe('[API](./api.md)\n')
+  it('refuses agent approval, application and legacy whole-file preparation', () => {
+    const ctx = { root: fixtureRoot, config: loadFixtureConfig() }
+    const call = (action: string) => handleMcpRequest(ctx, { method: 'tools/call', params: { name: 'docbridge.proposals', arguments: { action, approvedBy: 'human' } } })
+    expect(() => call('approve')).toThrow('MCP cannot approve or apply')
+    expect(() => call('apply')).toThrow('MCP cannot approve or apply')
+    expect(() => call('propose-links')).toThrow('invalid arguments')
+    expect(() => call('propose-normalize')).toThrow('invalid arguments')
   })
 
   it.skipIf(!canCreateSymlinks())('rejects doc.get symlinks that resolve outside the project root', () => {

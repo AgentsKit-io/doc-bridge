@@ -137,7 +137,8 @@ check committed path inputs for either supported algorithm; this check does not 
 ## Content Hash
 
 New explicit index regeneration writes `contentHashAlgo: sha256-semantic-v1`.
-New readers accept both `sha256-normalized-v1` and `sha256-semantic-v1`; unknown algorithms
+New readers verify `sha256-normalized-v1` for migration guidance only; freshness and
+queries require `sha256-semantic-v1`. Unknown algorithms
 fail with a diagnostic to install a compatible doc-bridge and explicitly regenerate.
 The v1 field shape is retained, including embedded legacy handoffs. Old strict readers reject
 the new algorithm with a schema error: upgrade readers before explicitly regenerating.

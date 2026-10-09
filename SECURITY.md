@@ -34,3 +34,11 @@ the reporter before publishing details.
 - Core commands must work without sending repository content to a network service.
 - MCP `doc.get` must only read indexed docs inside the project root.
 - Optional intelligence features must stay opt-in and provider-controlled by the user.
+
+## Region remediation authority
+
+Local CLI confirmation (or explicit `--yes`) represents local operator authority.
+`--by` records attribution, not authentication. MCP cannot approve or apply region
+remediations, and the Action refuses these actions. Authenticated host integrations
+use the library callbacks; proposal JSON and repository configuration cannot grant
+human authority. Fresh evidence, exact approval bindings and post-apply gates remain required.

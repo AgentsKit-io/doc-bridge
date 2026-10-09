@@ -4,7 +4,7 @@
   "display_name": "Doc Bridge",
   "version": "1.15.0-next.1",
   "description": "Deterministic repository handoffs for coding agents, running locally without an LLM or API key.",
-  "long_description": "Doc Bridge turns a repository's own documentation and ownership metadata into deterministic handoffs: where an agent should start, which paths it may edit, which checks it must run, and when a human must take over. The local connector exposes the same read-only contract available through Doc Bridge CLI and CI.",
+  "long_description": "Doc Bridge turns a repository's own documentation and ownership metadata into deterministic handoffs: where an agent should start, which paths it may edit, which checks it must run, and when a human must take over. The local connector provides repository reads and reviewable region proposals; human approval and application use the local CLI.",
   "author": {
     "name": "AgentsKit",
     "url": "https://agentskit.io"
@@ -86,7 +86,7 @@
     },
     {
       "name": "docbridge.proposals",
-      "description": "Create, inspect, approve, and apply human-gated Doc Bridge proposals."
+      "description": "Prepare and revalidate region remediations; human approval and application use the local CLI."
     },
     {
       "name": "knowledge.search",

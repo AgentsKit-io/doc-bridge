@@ -453,3 +453,7 @@ To improve the evidence base, reproduce the [anonymized study](docs/study/README
 ## License
 
 [MIT](LICENSE)
+
+## Upgrading to 2.0
+
+See the [1.x to 2.0 migration guide](docs/migration/1.x-to-2.0.md) for region remediation, explicit index regeneration and configurable memory paths.

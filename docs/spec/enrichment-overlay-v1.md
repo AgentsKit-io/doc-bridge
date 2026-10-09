@@ -197,9 +197,9 @@ version of a document cannot be replayed against the next. `ak-docs enrich appro
 --by <name>`, MCP `docbridge.proposals { action: "enrich-approve" }` and a rendered review page
 call the same `decideEnrichment`: the gate decides first, the overlay moves second, and if the
 gate refuses — already decided, unknown — the overlay is untouched. An approver equal to the
-proposal's author is refused; `policy` is not a person. `ak-docs fix approve` records its
-approval through the same gate under `doc-bridge.fix`, bound to the fix proposal id and its
-content hash.
+proposal's author is refused; `policy` is not a person. `ak-docs fix approve` now records a region remediation approval binding in the
+remediation artifact after local human confirmation. It does not reuse whole-file
+`doc-bridge.fix` approvals; decisions use the settled overlay authority.
 
 ## Projection and bounded influence
 
@@ -254,7 +254,7 @@ filesystem fallbacks are refused. Ordinary local calls remain unchanged.
 
 Region fixes and settled human decisions follow [region remediation v1](../spec/region-remediation-v1.md),
 [FindingV1](../schemas/finding-v1.md), [RemediationV1](../schemas/remediation-v1.md) and
-[DecisionV1](../schemas/decision-v1.md). Existing whole-file fix commands remain V1;
+[DecisionV1](../schemas/decision-v1.md). CLI and MCP use region remediation contracts;
 region creation/review is a deterministic library API. Enrichment retains settled Decision records
 through cache replay, without converting remediation rejection into finding rejection.
 

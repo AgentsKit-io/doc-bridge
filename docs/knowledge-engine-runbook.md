@@ -28,9 +28,9 @@ The safe repository walk excludes common generated trees, including `dist`, `bui
 ## Safe fixes
 
 ```bash
-ak-docs fix propose links --output .doc-bridge/proposal.json
-ak-docs fix approve .doc-bridge/proposal.json --by human
-ak-docs fix apply .doc-bridge/proposal.json
+ak-docs fix revalidate .doc-bridge/remediation.json --base .doc-bridge/base.json --allowed-root docs
+ak-docs fix approve .doc-bridge/remediation.json --base .doc-bridge/base.json --allowed-root docs --by maintainer
+ak-docs fix apply .doc-bridge/remediation.json --base .doc-bridge/base.json --allowed-root docs --by maintainer
 ```
 
 Proposal generation never changes project files. Approval is bound to the exact proposal and affected-file hashes; apply rejects drift and rolls back on failure.
