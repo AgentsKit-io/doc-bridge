@@ -1,0 +1,60 @@
+{
+  "version": "minimal-study-v1",
+  "repetitions": 3,
+  "scenarios": ["repository-only", "doc-bridge-mcp"],
+  "repositories": {
+    "doc-bridge": "948e8b2211c367f36581c503dcb7280bdd3b1028",
+    "agentskit-chat": "7f7388bcc60b7259d4148c0a0fb1142b8629dfff",
+    "agents-playbook": "c922b52249605c3e2437897364e722b76de67224"
+  },
+  "tasks": [
+    {
+      "id": "bridge-discovery",
+      "repository": "doc-bridge",
+      "category": "discovery",
+      "question": "How do Markdown symbol citations choose their owner, and what happens when two modules declare the same symbol? Cite the contract and implementation with line numbers.",
+      "sources": ["docs/spec/markdown-analyzer-v1.md", "src/discovery/markdown.ts"],
+      "expected": ["Select the declaring module rather than a re-export barrel", "Do not arbitrarily select an ambiguous owner; report coverage and ambiguousSymbolReferences", "Keep a distinct relation per cited symbol with bounded citation evidence"]
+    },
+    {
+      "id": "bridge-architecture",
+      "repository": "doc-bridge",
+      "category": "architecture",
+      "question": "Explain the index semantic hash migration: what algorithm does regeneration write, which algorithms can readers accept, and does hash equality grant human approval? Cite sources with line numbers.",
+      "sources": ["docs/schemas/doc-bridge-index-v1.md", "docs/adr/0010-versioned-change-set-and-semantic-identity.md"],
+      "expected": ["Regeneration writes sha256-semantic-v1; readers also accept legacy sha256-normalized-v1", "Exclude generatedAt and provenance from semantic identity, retain meaningful content and configuration", "Unknown algorithms fail; old strict readers need upgrading before regeneration", "Semantic equality never transfers human approval across revisions"]
+    },
+    {
+      "id": "chat-discovery",
+      "repository": "agentskit-chat",
+      "category": "discovery",
+      "question": "Which public package and import subpaths expose shared protocol/server/devtools and the seven framework renderers? Explain the difference between workspace boundaries and public release boundaries; cite current sources with line numbers.",
+      "sources": ["packages/chat/package.json", "docs/architecture/adrs/0028-public-package-consolidation.md", "docs/architecture/adrs/0029-renderers-as-chat-subpaths.md"],
+      "expected": ["One public @agentskit/chat package with protocol, protocol/fixtures, server and devtools subpaths", "Renderer subpaths: react, react-native, ink, vue, svelte, solid, angular", "Internal workspace separation preserves builds/tests; ADR 0029 supersedes separate renderer publication"]
+    },
+    {
+      "id": "chat-architecture",
+      "repository": "agentskit-chat",
+      "category": "architecture",
+      "question": "Why does the v1 turn protocol stream snapshots instead of raw adapter chunks? Name its original three events and explain sequence/message identity and incompatible evolution. Cite sources with line numbers.",
+      "sources": ["docs/architecture/adrs/0004-snapshot-first-turn-protocol.md", "docs/architecture/adrs/0028-public-package-consolidation.md"],
+      "expected": ["client.turn.submit, server.turn.snapshot, server.turn.diagnostic", "Successive full snapshots have increasing sequence numbers and stable message ids", "AgentsKit owns lifecycle; raw chunks would require a second reducer and telemetry is not durable state", "Unknown events/versions are inert; required-field or semantic changes require v2, migration, fixtures and an ADR"]
+    },
+    {
+      "id": "playbook-documentation",
+      "repository": "agents-playbook",
+      "category": "documentation",
+      "question": "What artifacts must exist before leaving Discover, and which exit criteria establish that a new agent can proceed? Distinguish draft threat mitigations from required structure and accepted decisions. Cite sources with line numbers.",
+      "sources": ["content/docs/phases/01-discover/index.md"],
+      "expected": ["Product brief, surface inventory, draft threat model, AGENTS.md routing, CLAUDE.md bootstrap and docs/adr decision log", "A new agent can identify ownership and non-negotiables", "At least ADR-0001 accepted and threat model assets, actors and surfaces enumerated", "Threat mitigations can initially be empty; planned boundaries should be marked planned"]
+    },
+    {
+      "id": "playbook-architecture",
+      "repository": "agents-playbook",
+      "category": "architecture",
+      "question": "Explain local-first pattern discovery: which questions remain local, when does the backend run, and how are corrupt artifacts or failed streams represented? Cite sources with line numbers.",
+      "sources": ["content/docs/discovery.mdx"],
+      "expected": ["Hash-verified bounded public corpus answers known exact facts locally with canonical citations", "Ambiguous facts return clarification; misses needing interpretation use a grounded backend", "Corrupt or wrong-site artifacts are rejected; transient failure uses visibly degraded backend fallback and later retry", "Only a successfully completed backend answer is grounded; the browser does not choose corpus authority or model"]
+    }
+  ]
+}

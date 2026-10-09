@@ -41,6 +41,11 @@ artifacts. They remain open validation work for a future adjudicated corpus.
 
 ## Published artifacts
 
+The [minimal six-task study](./minimal-study-v1.md) is a separate preparation
+protocol with pinned public questions and a budget-first pilot. No model was run
+for that protocol; results remain pending maintainer budget approval and human
+adjudication.
+
 | Artifact | Purpose |
 | --- | --- |
 | [Protocol](./protocol-v1.json) | Metric definitions, scenarios, privacy boundary, and stopping rules. |

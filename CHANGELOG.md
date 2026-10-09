@@ -10,6 +10,8 @@
 
 ### Patch Changes
 
+- Prepare a separate pinned six-task agent-efficiency protocol and optional budget-capped pilot runner with offline validation and pending independent human adjudication; no model was run.
+
 - Refresh bounded public Studio samples with manifest package labels and current engine provenance.
 
 - Use manifest names with directory-name fallback for package labels, keeping documentation titles and purpose text separate from package identity.
