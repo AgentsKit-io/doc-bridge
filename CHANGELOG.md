@@ -91,6 +91,34 @@
 
 - Precompute semantic hash ordering keys once per entry and bound syntax-tree retention for index-only scans and reuse parsed trees in discovery, reducing index-build cost without changing artifact bytes or hash identity.
 
+## 1.15.0-next.0
+
+### Minor Changes
+
+- 91c20de: Add a bounded deterministic StudioGraphV1 contract, local JSON export command,
+  search/why payloads, public sample graphs and a local studio design brief.
+- 150eccb: Record provably compatible callable signature changes without documentation findings, omit additive-only configuration parent findings, and prioritize specific fact citations within a 256-reference bound.
+- 7263365: Honor configured memory directories and deterministic adapters, reject unsupported adapters explicitly, and link safe classified memories to opt-in knowledge entities with exact typed evidence. Promotion remains draft-only.
+- c42c527: Add deterministic vault export with configurable templates, source bindings, wikilinks and manifest-scoped cleanup that preserves human notes.
+- 10b5efd: Add deterministic why queries and typed, budgeted read-only MCP entity rationale tools with explicit evidence, coverage and enablement guidance.
+- 5b80003: Prove changed callable compatibility across bounded relative and local workspace type imports using each snapshot's retained syntax. External and unsupported dependencies remain review candidates, except a labeled direct-interface heritage proof that assumes the head compiles; indexing remains syntax-only.
+- 1249758: Add opt-in bounded L2 region proposals with deterministic in-memory rechecking,
+  scripted key-free providers, machine-readable rejection reasons and review previews.
+- cfa03a4: Attribute nested configuration changes to specific citations and retain edited citation regions in a separate review group with optional contract metadata.
+- 57da536: Add opt-in deterministic decision, concept and change entities with a versioned
+  evidence contract, bounded local history and exact symbol aliases. Existing
+  index and handoff output stays unchanged when disabled.
+- 9c3db9c: Add deterministic vault diff with human-reviewed enrichment edit proposals and a local draft preview, preserving source documents.
+- 9c3db9c: Export opt-in decision, concept and change notes with source evidence and stable knowledge links.
+- 321efbd: Add opt-in vault Markdown discovery with deterministic wikilinks, embeds, aliases, tags, and visible exclusion diagnostics.
+
+### Patch Changes
+
+- bee2bd2: Bound large-repository discovery coverage with deterministic counted summaries,
+  capped evidence samples and explicit truncation. Preserve small snapshot bytes
+  and rescan sampled snapshots instead of replaying incomplete per-file diagnostics.
+- 2fa7b96: Add a versioned Layer-1 benchmark with reviewed public historical transitions, workspace-owned fixtures and separate raw-policy gold, preserving frozen v1 cases.
+
 ## 1.14.0
 
 ### Minor Changes
