@@ -23,6 +23,18 @@ const ManifestSchema = z.object({
   files: z.record(z.string().regex(ownedName), z.string().regex(/^[a-f0-9]{64}$/)),
 }).strict()
 
+const isMissing = (error: unknown): boolean => (error as NodeJS.ErrnoException | undefined)?.code === 'ENOENT'
+
+/** Reads a file in one operation; a missing file yields undefined instead of a check-then-read race. */
+function readIfPresent(path: string): Buffer | undefined {
+  try { return readFileSync(path) } catch (error) { if (isMissing(error)) return undefined; throw error }
+}
+
+/** Removes a file in one operation; an already-missing file is not an error. */
+function removeIfPresent(path: string): void {
+  try { unlinkSync(path) } catch (error) { if (!isMissing(error)) throw error }
+}
+
 // Add an entity kind here to opt it into the same identity, links and ownership contract.
 export const VAULT_NOTE_TYPES: Readonly<Record<string, string>> = {
   package: '{{ body }}',
@@ -126,11 +138,12 @@ const writeVault = (root: string, output: string, config: DocBridgeConfigV1, sna
   render('index.md', 'index', { id: 'vault:index', aliases: [], tags: [] }, ['# Knowledge map', '', ...entities.map(entity => `- ${entity.kind}: ${link(entity.id)}`), '', '[[graph-signals]]', '', 'Generated navigation links to source documents; it does not copy their contents.', '', 'Coverage:', ...snapshot.coverage.map(item => `- ${item.analyzer}: ${item.scope} — ${item.status}${item.reason ? ` (${item.reason})` : ''}`)].join('\n'))
 
   const manifestPath = safePath(root, relative(root, resolve(output, MANIFEST)))
-  const previous = existsSync(manifestPath) ? ManifestSchema.parse(JSON.parse(readFileSync(manifestPath, 'utf8'))).files : {}
+  const manifest = readIfPresent(manifestPath)
+  const previous = manifest === undefined ? {} : ManifestSchema.parse(JSON.parse(manifest.toString('utf8'))).files
   // Preflight the entire set before writes: edited notes remain available for round-trip review.
   for (const [filename, expected] of Object.entries(previous)) {
-    const target = safePath(root, relative(root, resolve(output, filename)))
-    if (existsSync(target) && hash(readFileSync(target)) !== expected) throw new Error(`Generated vault note was edited: ${filename}; preserve or review the edit before exporting`)
+    const current = readIfPresent(safePath(root, relative(root, resolve(output, filename))))
+    if (current !== undefined && hash(current) !== expected) throw new Error(`Generated vault note was edited: ${filename}; preserve or review the edit before exporting`)
   }
   for (const filename of Object.keys(pages)) {
     const target = safePath(root, relative(root, resolve(output, filename)))
@@ -139,7 +152,7 @@ const writeVault = (root: string, output: string, config: DocBridgeConfigV1, sna
   mkdirSync(output, { recursive: true })
   for (const [filename, content] of Object.entries(pages)) writeFileSync(safePath(output, filename), content, 'utf8')
   const stale = Object.keys(previous).filter(filename => !Object.hasOwn(pages, filename))
-  for (const filename of stale) { const target = safePath(output, filename); if (existsSync(target)) unlinkSync(target) }
+  for (const filename of stale) removeIfPresent(safePath(output, filename))
   const files = Object.fromEntries(Object.entries(pages).sort(([a], [b]) => a < b ? -1 : 1).map(([filename, content]) => [filename, hash(content)]))
   writeFileSync(manifestPath, `${JSON.stringify({ schemaVersion: 1, files }, null, 2)}\n`, 'utf8')
   return { output: toPosix(relative(root, output)), notes: Object.keys(pages).length, removed: stale.length }
