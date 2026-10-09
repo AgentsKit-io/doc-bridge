@@ -202,8 +202,7 @@ export function parseOptions(args, env) {
   return options
 }
 
-export async function main(args = process.argv.slice(2), env = process.env) {
-  const protocol = loadProtocol()
+export async function main(args = process.argv.slice(2), env = process.env, protocol = loadProtocol()) {
   const options = parseOptions(args, env)
   const plan = planStudy(protocol, options.pilot)
   for (const [repository, root] of Object.entries(options.roots)) {

@@ -132,16 +132,18 @@ describe('minimal study without network or a real credential', () => {
     const http = vi.fn(async () => reply())
     vi.stubGlobal('fetch', http)
     try {
-      execFileSync('git', ['clone', '--quiet', '--shared', '--no-checkout', resolve('.'), root], { stdio: 'pipe' })
-      execFileSync('git', ['-C', root, 'checkout', '--quiet', '--detach', loadProtocol().repositories['doc-bridge']], { stdio: 'pipe' })
+      const protocol = loadProtocol()
+      protocol.repositories['doc-bridge'] = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim()
+      execFileSync('git', ['clone', '--quiet', '--depth', '1', '--no-local', '--no-checkout', resolve('.'), root], { stdio: 'pipe' })
+      execFileSync('git', ['-C', root, 'checkout', '--quiet', '--detach', protocol.repositories['doc-bridge']], { stdio: 'pipe' })
       execFileSync(process.execPath, [resolve('bin/ak-docs.js'), 'index'], { cwd: root, stdio: 'pipe', timeout: 60000 })
       const args = ['--pilot', '--approve-budget', '--root', `doc-bridge=${root}`, '--output', output]
       const env = { STUDY_MODEL: config.model, ANTHROPIC_API_KEY: config.key, STUDY_BUDGET_USD: '1', STUDY_INPUT_USD_PER_MILLION: '1', STUDY_OUTPUT_USD_PER_MILLION: '2' }
       const link = join(temporary, 'output-link')
       symlinkSync(root, link, 'junction')
-      await expect(main([...args.slice(0, -1), join(link, 'private.json')], env)).rejects.toThrow('Private output must be outside checkouts')
+      await expect(main([...args.slice(0, -1), join(link, 'private.json')], env, protocol)).rejects.toThrow('Private output must be outside checkouts')
       expect(http).not.toHaveBeenCalled()
-      await main(args, env)
+      await main(args, env, protocol)
       const fd = openSync(output, 'r')
       let ledgerText
       try {
@@ -158,7 +160,7 @@ describe('minimal study without network or a real credential', () => {
       const requests = http.mock.calls.map(call => JSON.parse(call[1].body))
       expect(requests[0].tools).toHaveLength(3)
       expect(requests[1].tools).toHaveLength(6)
-      await expect(main(args, env)).rejects.toThrow()
+      await expect(main(args, env, protocol)).rejects.toThrow()
       expect(http).toHaveBeenCalledTimes(2)
     } finally { vi.unstubAllGlobals(); log.mockRestore(); rmSync(temporary, { recursive: true, force: true }) }
   }, 120000)
