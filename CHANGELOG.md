@@ -39,6 +39,8 @@
 
 ### Minor Changes
 
+- Prove schema-backed callable inputs from bounded retained syntax while keeping unsupported schemas and changed dependencies review-required.
+
 - Distinguish changed-aspect claims from bare mentions in changed-reference findings, preserving citation relations and removal diagnostics while verifying current string-enum claims against bounded snapshot-matching source.
 
 - Surface bounded indexed memory-supports evidence in deterministic why queries and typed MCP rationale tools.

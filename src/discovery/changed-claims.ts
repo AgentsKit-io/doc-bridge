@@ -212,7 +212,7 @@ const changedParameters = (input: Input, suppliedArguments?: number): boolean =>
   return a.parameters.some((p, i) => {
     const q = b.parameters[i]!
     if ((p.optional || p.default) && !q.optional && !q.default || p.default && (suppliedArguments === undefined || i >= suppliedArguments)) return true
-    if (same(p.type, q.type) && same(old.types, next.types) || optionalObjectAddition(input, p.type, q.type)) return false
+    if (optionalObjectAddition(input, p.type, q.type)) return false
     const proof = (fact: SurfaceFact, parameter: typeof p, entities: readonly KnowledgeEntity[]) => {
       const signature = { codec: 'typescript-callable-v1' as const, overloads: [{ parameters: [parameter], typeParameters: [], returnType: ['void'] }], types: fact.signature!.types }
       const types = importedSignatureTypes({ ...fact, signature }, entities)

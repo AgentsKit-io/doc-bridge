@@ -120,6 +120,44 @@ through visited declarations; compiler diagnostics still reject invalid cycles.
 Over-budget or missing context retains the review finding. This is deliberately
 incomplete compatibility evidence, not acceptance or a repository-wide type check.
 
+### Bounded schema output syntax
+
+Adapter version `1.6.0` retains const initializers referenced by schema type queries,
+including their local const dependencies, within the same 64 KiB module bound.
+This requires an explicit stable `4.x.y`, `^4.x.y` or `~4.x.y` Zod dependency declaration in
+the owning package. Module metadata records `schemaOutputCodec: zod-4-output-v1`;
+other versions or unresolved ranges remain unproven.
+Initializers are syntax only and are never imported or evaluated. Refinement
+callback bodies are replaced with inert type-preserving sentinels; only pure
+schema expression helpers with statically bound arguments retain their expression syntax. This metadata
+changes snapshot semantic identity and invalidates prior adapter reuse. Legacy
+contexts without the needed initializer remain unproven.
+
+Diff-time proofs can replace a named `z.infer<typeof Schema>` declaration with
+its bounded output shape for a named `z` import from `zod`. Supported syntax is
+object properties and extension, bounded object spreads and closed literal-key
+schema registries, string/number/boolean/unknown/never, literal and string enum
+values, arrays, unions, discriminated unions, record/partialRecord, optional and
+nullable values, and unshadowed `AbortSignal` and `Uint8Array` instance shapes. Strictness and
+ordinary value constraints preserve the declared output type. Inline refinements
+without type predicates preserve that type; transforms, defaults, coercion,
+lazy schemas, unresolved aliases and other syntax fail
+closed. Unique named local schema imports resolve through the same bounded
+source graph and require exported retained initializers. Helper blocks, explicit return annotations, parameter defaults/rest,
+unknown registry keys and schema type-argument overrides are unsupported.
+Expansion is limited to depth 32 and 4,096 expression visits per declaration;
+existing cross-module and expanded-proof byte limits also apply. Helper argument
+bindings do not flow into global const objects or registry values. Generated
+record shapes use mapped types and instance types use global qualification, so
+caller-owned standard-type aliases cannot mask schema changes.
+
+Parameter-only claim proofs use each side's reachable imported declarations,
+including schema-backed output shapes, independently of return types. Equal
+parameter tokens alone cannot bypass changed imported dependencies. The
+compiler checks the expanded types without executing schema code; this proves
+TypeScript call compatibility, not runtime validation or semantic prose truth.
+The bounded expansion lives in [schema-types.ts](../../src/discovery/facts/schema-types.ts).
+
 ### Conditional direct heritage of an opaque external base
 
 A narrow declaration-only fallback recognizes a single nongeneric callable whose
