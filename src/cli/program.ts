@@ -34,7 +34,7 @@ import { runChatOnce, startInkChat } from '../intelligence/chat.js'
 import { PeerMissingError, layer1InstallHint } from '../intelligence/peers.js'
 import { createDocBridgeRag } from '../intelligence/rag.js'
 import { firstHeading, firstParagraph } from '../lib/markdown.js'
-import { ingestMemoryCandidates } from '../memory/ingest.js'
+import { ingestMemoryCandidates, unsupportedMemoryAdapterWarning } from '../memory/ingest.js'
 import { classifyMemoryCandidates, draftMemoryPromotion } from '../memory/pipeline.js'
 import { promoteMemoryToGithubPr } from '../memory/github-pr.js'
 import { watchDocBridgeIndex } from '../index-builder/watch-index.js'
@@ -1832,6 +1832,8 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
     }
     try {
       const { config, root } = loadProject(configPath)
+      const ignoredAdapters = unsupportedMemoryAdapterWarning(config.intelligence)
+      if (ignoredAdapters) process.stderr.write(`warning: ${ignoredAdapters}\n`)
       const candidates = ingestMemoryCandidates(root, config.intelligence)
       if (positional[1] === 'ingest') {
         writeJson({ ok: true, count: candidates.length, candidates })

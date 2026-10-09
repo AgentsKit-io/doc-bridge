@@ -5,7 +5,7 @@ import { createHash } from 'node:crypto'
 import { afterEach, describe, expect, it } from 'vitest'
 
 import { classifyMemoryCandidates, draftMemoryPromotion, linkMemoryToEntities } from '../src/memory/pipeline.js'
-import { ingestMemoryCandidates, ingestAgentMemory, ingestCursorRules } from '../src/memory/ingest.js'
+import { ingestMemoryCandidates, ingestAgentMemory, ingestCursorRules, unsupportedMemoryAdapters, unsupportedMemoryAdapterWarning } from '../src/memory/ingest.js'
 import { DocBridgeConfigV1Schema } from '../src/config/schema.js'
 import { KnowledgeEntitiesV1Schema, type KnowledgeEntitiesV1 } from '../src/schemas/knowledge-entity.js'
 import { canCreateSymlinks } from './helpers/symlink-support.js'
@@ -122,8 +122,14 @@ describe('configured deterministic memory', () => {
 
   it('fails clearly for unsupported adapters, escapes, symlink escapes and oversized files', () => {
     const root = memoryRoot()
-    expect(() => DocBridgeConfigV1Schema.parse({ schemaVersion: 1, corpus: { agent: { root: 'docs' } }, intelligence: { memory: { adapters: ['session-export'] } } })).toThrow('Unsupported deterministic memory adapter')
-    for (const adapter of ['session-export', 'bootstrap-delta'] as const) expect(() => ingestMemoryCandidates(root, { memory: { adapters: [adapter] } })).toThrow(`Unsupported deterministic memory adapter: ${adapter}`)
+    // 1.x compatibility: reserved adapters are accepted by config validation and ignored with a warning.
+    expect(() => DocBridgeConfigV1Schema.parse({ schemaVersion: 1, corpus: { agent: { root: 'docs' } }, intelligence: { memory: { adapters: ['session-export'] } } })).not.toThrow()
+    for (const adapter of ['session-export', 'bootstrap-delta'] as const) {
+      expect(ingestMemoryCandidates(root, { memory: { adapters: [adapter] } })).toEqual([])
+      expect(unsupportedMemoryAdapters({ memory: { adapters: ['playbook-memory', adapter, adapter] } })).toEqual([adapter])
+      expect(unsupportedMemoryAdapterWarning({ memory: { adapters: [adapter] } })).toContain(adapter)
+    }
+    expect(unsupportedMemoryAdapterWarning({ memory: { adapters: ['playbook-memory'] } })).toBeUndefined()
     expect(() => ingestMemoryCandidates(root, { memory: { ingestDir: '../outside' } })).toThrow('inside the repository')
     if (canCreateSymlinks()) {
       const outside = memoryRoot()

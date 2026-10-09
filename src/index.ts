@@ -603,6 +603,8 @@ export {
   ingestAgentMemory,
   ingestCursorRules,
   ingestMemoryCandidates,
+  unsupportedMemoryAdapters,
+  unsupportedMemoryAdapterWarning,
 } from './memory/ingest.js'
 
 export {
