@@ -829,8 +829,8 @@ type EnrichmentRole = {
 type MemoryAdapterId =
   | 'playbook-memory'              // recursive Markdown notes; default .agent-memory
   | 'cursor-rules'                 // recursive Markdown rules; default .cursor/rules
-  | 'session-export'               // reserved; currently rejected as unsupported
-  | 'bootstrap-delta'              // reserved; currently rejected as unsupported
+  | 'session-export'               // reserved; accepted and ignored with a warning in 1.x
+  | 'bootstrap-delta'              // reserved; accepted and ignored with a warning in 1.x
 ```
 
 Registry agents are advisory and must come from the AgentsKit Registry. The
@@ -989,9 +989,10 @@ remain `.agent-memory` then `.cursor/rules`, preserving candidate order and byte
 conventional `.cursor/rules` directory. Duplicate source/path
 pairs are emitted once. Adapter order and directory order determine traversal;
 files within a directory sort by path. `enabled: false` disables ingestion and
-`adapters: []` selects no sources. Unsupported `session-export` and
-`bootstrap-delta` produce a validation error before reading, rather than silently
-being ignored. No provider or intelligence adapter is required.
+`adapters: []` selects no sources. The reserved `session-export` and
+`bootstrap-delta` adapters are accepted for 1.x compatibility but not read: memory
+commands print a warning naming the ignored adapters (also available through
+`unsupportedMemoryAdapters`). 2.0 turns them into a validation error. No provider or intelligence adapter is required.
 
 Opt-in knowledge entity indexes include exact memory evidence as described in
 [knowledge entity v1](../schemas/knowledge-entity-v1.md). Memory classification
