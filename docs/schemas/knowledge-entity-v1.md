@@ -79,8 +79,9 @@ memory source and report `not-analyzed` memory coverage without local reads.
 Memory edits that change linked fact bytes alter semantic hashes; opt-in
 freshness rebuilds validate them. This optional section is additive for updated
 readers; older strict opt-in readers require an update. Default-off indexes and
-handoffs keep the legacy field set. Query/MCP knowledge consumption follows
-separately; the memory MCP tools already return classification/draft relations.
+handoffs keep the legacy field set. Why queries and typed MCP rationale tools expose bounded relations targeting
+returned entities under [knowledge query v1](../spec/knowledge-query-v1.md).
+The memory MCP tools also return classification/draft relations.
 
 ## Extraction and identity
 

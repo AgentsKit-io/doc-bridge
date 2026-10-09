@@ -94,3 +94,7 @@ Before editing a package:
 - [For agents](./for-agents.md)  
 - [Index and query](./guides/index-and-query.md)  
 - [Skill](./skills/doc-bridge.md) 
+
+Rationale tools include bounded indexed `memory-supports` relations with exact
+`id`, `alias`, or `path` evidence in JSON and text, following
+[knowledge query v1](spec/knowledge-query-v1.md). Relations only target returned entities, including under service restrictions.
