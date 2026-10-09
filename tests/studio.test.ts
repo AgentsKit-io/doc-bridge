@@ -1,6 +1,6 @@
 import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { basename, join } from 'node:path'
 import { afterEach, expect, it, vi } from 'vitest'
 import { applyConfigDefaults } from '../src/config/defaults.js'
 import { buildDocBridgeIndex } from '../src/index-builder/build-index.js'
@@ -11,6 +11,8 @@ import { entityId } from '../src/discovery/identity.js'
 import { exportStudioGraph, searchStudioGraph, whyStudioNode } from '../src/studio/export.js'
 import { STUDIO_LIMITS, StudioGraphV1Schema, StudioGraphV1JsonSchema } from '../src/schemas/studio-graph.js'
 import { runCli } from '../src/cli/program.js'
+import { discoverRepository } from '../src/discovery/repository.js'
+import { renderVault } from '../src/vault/export.js'
 
 const roots: string[] = []
 afterEach(() => { vi.restoreAllMocks(); for (const root of roots) rmSync(root, { recursive: true, force: true }); roots.length = 0 })
@@ -29,6 +31,37 @@ const fixture = () => {
   const configPath = join(root, 'doc-bridge.config.json'); writeFileSync(configPath, JSON.stringify(config))
   return { root, config, configPath }
 }
+it.each(['@agentskit/sandbox', undefined, ''])('keeps package labels separate from documentation with manifest name %s', (name) => {
+  const { root, config } = fixture()
+  mkdirSync(join(root, 'packages/sandbox'), { recursive: true })
+  mkdirSync(join(root, 'docs/agent/packages'), { recursive: true })
+  writeFileSync(join(root, 'package.json'), JSON.stringify({ name: '@agentskit/example', workspaces: ['packages/*'] }))
+  writeFileSync(join(root, 'packages/sandbox/package.json'), JSON.stringify({ name }))
+  const prose = 'optional peer for the default backend:'
+  writeFileSync(join(root, 'packages/sandbox/README.md'), `# ${prose}\n`)
+  writeFileSync(join(root, 'docs/agent/packages/sandbox.md'), `---\npackage: sandbox\neditRoot: packages/sandbox\npurpose: Documentation purpose\n---\n# ${prose}\n`)
+  const snapshot = discoverRepository({ root, config })
+  const pkg = snapshot.entities.find(entity => entity.kind === 'package' && entity.path === 'packages/sandbox')!
+  const expected = name || 'sandbox'
+  expect(pkg.name).toBe(expected)
+  const index = buildDocBridgeIndex({ root, config, write: false }).index
+  const entry = index.projection!.entries.find(entry => entry.id === pkg.id)!
+  expect(entry.title).toBe(expected)
+  expect(entry.summary).toBe('Documentation purpose')
+  expect(exportStudioGraph(index).nodes.find(node => node.id === pkg.id)?.label).toBe(expected)
+  const pages = renderVault(root, join(root, '.doc-bridge/vault'), config, snapshot)
+  expect(Object.values(pages).some(page => page.includes(`id: ${pkg.id}\n`) && page.includes(`# ${expected}\n`))).toBe(true)
+  expect(index.knowledge.find(doc => doc.path === 'docs/agent/packages/sandbox.md')?.title).toBe(prose)
+})
+it('uses the root directory name for an unnamed root package without changing its ID', () => {
+  const { root, config } = fixture()
+  writeFileSync(join(root, 'package.json'), '{}')
+  const pkg = discoverRepository({ root, config }).entities.find(entity => entity.kind === 'package' && entity.path === '.')!
+  expect(pkg.id).toBe('package:root')
+  expect(pkg.name).toBe(basename(root))
+  const index = buildDocBridgeIndex({ root, config, write: false }).index
+  expect(index.projection!.entries.find(entry => entry.id === pkg.id)?.title).toBe(basename(root))
+})
 it('projects a real index with stable symbols, ownership, metrics, knowledge entities and exact human notes', () => {
   const { root, config } = fixture()
   const index = buildDocBridgeIndex({ root, config, write: false }).index
