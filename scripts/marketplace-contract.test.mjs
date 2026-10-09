@@ -330,7 +330,7 @@ test('real Action separates edited citations from pending findings without accep
 test('real Action Markdown lists changed references and summarizes default policy with a raw CLI opt-out', async () => fixture(async ({ directory, repo, env }) => {
   rmSync(join(repo, 'docs/guide@team.md'))
   put(repo, 'src/api.ts', 'export function removed(): void {}\nexport function changed(value: string): void {}\n')
-  put(repo, 'docs/guide.md', '# Guide\n\nCall `removed` and `changed`.\n')
+  put(repo, 'docs/guide.md', '# Guide\n\nCall `removed` and `changed` with one string argument.\n')
   put(repo, 'docs/adr/decision.md', '# Decision\n\nCall `removed`.\n')
   put(repo, 'docs/generated.md', '# Guide\n\nCall `removed`.\n')
   put(repo, 'docs/consumer.md', '---\ndocbridge:\n  targets:\n    "pkg:npm/other": ">=2.0.0"\n---\n# Consumer\n\nCall `removed`.\n')

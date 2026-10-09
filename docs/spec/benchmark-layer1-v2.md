@@ -8,7 +8,7 @@ validationPath: node scripts/bench-layer1.mjs --self-check
 # Layer-1 benchmark v2
 
 The [v2 cases](../bench/layer1-cases-v2.json) extend the
-[frozen v1 protocol](benchmark-layer1-v1.md) without changing engine source or
+[frozen v1 protocol](benchmark-layer1-v1.md) without changing frozen v1 inputs or
 index/handoff schemas. [Results](../bench/layer1-results-v2.md) separate native
 mutations, authored fixtures and real historical Git commit pairs. Review candidates
 remain `stale-or-unverified`; detecting a changed citation does not confirm
@@ -61,7 +61,9 @@ claiming line-level recall.
 
 ## Historical review
 
-The three immutable v1 repository pins bound first-parent mining. Historical
+The three immutable v1 repository pins and the additional public AgentsKit
+monorepo pin declared in v2 bound first-parent mining. V1 repositories and case
+bytes remain frozen. Historical
 cases declare exact base/head commits; the runner verifies that base is head's
 first parent before scoring unmodified checkouts. They have no authored setup or
 mutation. Each `review` records the source location, prior citation lines,
@@ -70,15 +72,34 @@ unrepaired drift at head and concurrent-update negatives; a later repair commit
 is not required. Gold is not inferred from engine output. A document
 changed in the same commit may still contain a stale claim, so changed-document status alone is not a negative.
 
-The twenty historical assertions span nine commit pairs: two positive
-configuration cases and eighteen negatives. Twelve negatives share one package-retirement
-commit and deleted README; these correlated assertion units are not twenty
-independent commits. Correct concurrent updates, compatible API changes and
-retired documentation distinguish real drift from token overlap. The
-include-default commit also changed two enums whose exhaustive doc unions
-stayed stale; those leaf candidates have explicit gold. Named re-export
-removals are annotated independently from the declaring modules. No delayed
-repair pair is claimed. The sample is purposive and does not estimate prevalence,
-semantic prose recall, confidence intervals or release readiness. Unsupported
-citation syntax/extraction stays visible as an FN, and every FP/FN is explained
-in the results. Engine misses are follow-up work, outside this benchmark change.
+The 39 historical cases include seven positive cases and 32 negative controls.
+Review covers exhaustive stale configuration/type claims, compatible optional
+parameters and fields, correctly updated unions, and retired documentation.
+The original 20 cases retain their gold unchanged. Twelve retirement controls
+share one transition and deleted README; parallel documentation sites and
+multiple cited facts in a document are also correlated. Case count is separate
+from distinct measured finding units and independent commit count. Added cases
+with overlapping document scopes in the same transition are consolidated so a
+shared diagnostic cannot inflate the retained finding denominator. The fourth
+source adds stale exhaustive stream/scaffold unions and compatible type controls;
+it does not change the native or fixture repository pins.
+
+## Historical release gate
+
+The measured set must contain at least 30 hand-reviewed historical cases,
+including positive and negative controls. The historical
+`finding/CHANGED_REFERENCE` default included precision must be at least 80%
+over the findings actually emitted. At most 20% of negative cases may emit any
+included `CHANGED_REFERENCE` finding (negative-case false-positive rate). Report
+positive-case coverage alongside finding-unit recall; historical coverage must
+not regress, and native and v2 fixture finding precision and coverage must stay
+at 100%. Case count and emitted finding count remain separate measurements.
+Raw scores and frozen v1 score changes are reported independently. A failed
+gate remains failed even when the runner exits successfully for native targets.
+
+The sample is purposive and does not estimate prevalence, semantic prose recall,
+confidence intervals or repository-wide readiness. Changed documentation is not
+automatically correct, and an unchanged example that still accepts a compatible
+API is not automatically stale. Unsupported citation syntax/extraction remains
+visible as an FN. Every remaining FP/FN must be explained against source and
+document evidence; gold cannot be rewritten to fit the engine.

@@ -30,7 +30,12 @@ and names its generator; adapter-owned version eligibility produces `pending-ver
 for ineligible or unresolved targets. Routing never changes knowledge status.
 
 `changed-reference` is produced for a cited fact's before/after value-hash
-change. It remains stale-or-unverified and routes to Layer 2 review, with no
+change when the citing region claims something about the changed aspect.
+Bare mentions keep citation relations without emitting this finding; uncertain
+regions remain claims. Bounded verified current enum claims can be omitted.
+The record shape and surviving identity are unchanged; see
+[claim classification](../adr/0023-changed-reference-claims.md).
+It remains stale-or-unverified and routes to Layer 2 review, with no
 automatic remediation. Relevant identity includes the cited target and both
 value hashes, not revision or line position. Before/head evidence contexts
 retain those hashes; available codec summaries may describe the values, while

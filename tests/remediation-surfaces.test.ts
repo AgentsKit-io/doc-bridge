@@ -12,6 +12,9 @@ import { readEnrichmentOverlay, sealEnrichmentOverlay, writeEnrichmentOverlay } 
 import { findingSuppressed } from '../src/enrich/settled.js'
 import { runCli } from '../src/cli/program.js'
 
+// Real remediation flows repeatedly discover fixtures and run retained TypeScript proofs.
+vi.setConfig({ testTimeout: 30_000 })
+
 const roots: string[] = []
 afterEach(() => { vi.restoreAllMocks(); vi.unstubAllEnvs(); roots.splice(0).forEach(root => rmSync(root, { recursive: true, force: true })) })
 const fixture = (excludeFreshness = true) => {
@@ -19,7 +22,7 @@ const fixture = (excludeFreshness = true) => {
   mkdirSync(join(root, 'docs')); mkdirSync(join(root, '.doc-bridge'))
   writeFileSync(join(root, 'package.json'), '{"name":"doc-bridge-fixture","version":"1.0.0"}')
   writeFileSync(join(root, '.gitignore'), '.doc-bridge/\n')
-  const text = '# Guide\n\nUse `changed`.\n'
+  const text = '# Guide\n\nUse `changed` with one string argument.\n'
   writeFileSync(join(root, 'docs/guide.md'), text)
   writeFileSync(join(root, 'api.ts'), 'export function changed(value: string): void {}\n')
   const path = join(root, 'doc-bridge.config.json')
@@ -30,7 +33,7 @@ const fixture = (excludeFreshness = true) => {
   const head = discoverRepository({ root, config })
   const finding = diffSnapshots(base, head, { headRoot: root }).policy.findings.find(item => item.assertion.document === 'docs/guide.md')!
   expect(finding.routing).toBe('routed-to-L2')
-  const start = text.indexOf('Use'), original = 'Use `changed`.'
+  const start = text.indexOf('Use'), original = 'Use `changed` with one string argument.'
   const proposal = createRemediation(root, { findingId: finding.id, evidenceHash: finding.evidenceHash, baseRevision: head.sourceRevision, configurationHash: head.configurationHash, edits: [{ path: 'docs/guide.md', range: { start, end: start + original.length }, original, replacement: 'Use `changed` with an explicit enabled argument.', expectedRegionHash: regionHash(original), lineStart: 3, lineEnd: 3 }] }, { currentRevision: head.sourceRevision, configurationHash: head.configurationHash, evidenceHash: finding.evidenceHash, allowedRoots: ['docs'], validateEvidence: () => true })
   writeFileSync(join(root, '.doc-bridge/base.json'), JSON.stringify(base))
   writeFileSync(join(root, '.doc-bridge/remediation.json'), JSON.stringify(proposal))

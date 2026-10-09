@@ -1,3 +1,7 @@
 # Guide
 
-Use `Gone`, `Keep`, `inspect`, `--brief`, `output.format`, and `Keep`.
+Use `Gone`, `inspect`, and `--brief`.
+
+The `Keep` signature is (value)->text.
+
+The default `output.format` is text.
