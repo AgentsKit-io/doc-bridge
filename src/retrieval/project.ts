@@ -334,6 +334,7 @@ export const projectRetrievalIndex = (options: ProjectRetrievalOptions): Retriev
     }
 
     const title =
+      (kind === 'package' ? entity.name : undefined) ??
       curated?.title ??
       agentDocCurated?.title ??
       (typeof entity.metadata?.title === 'string' ? entity.metadata.title : undefined) ??

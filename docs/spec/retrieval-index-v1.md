@@ -19,6 +19,13 @@ projected next to them.
 
 ## The artifact
 
+Package entry titles use the observed `package.json` name, with the package
+directory name as fallback when the manifest name is missing or empty. Attached
+documentation titles and ownership descriptions never replace that name; they
+remain document titles and package summaries respectively. Studio projects this
+title as its package label; vault notes use the same discovery entity name.
+Existing package IDs retain their manifest-name or path-based fallback encoding.
+
 `RetrievalIndexV1` lives inside `DocBridgeIndexV1` as `projection`, so every reader of the index
 receives it with the same freshness check. `knowledge[]` is still written for every reader that
 predates it and now carries every projected document and module — without body text, which lives

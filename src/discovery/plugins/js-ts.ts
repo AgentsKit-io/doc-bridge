@@ -147,7 +147,7 @@ const discoverPackages = (
   const rootManifestPath = join(root, 'package.json')
 
   if (rootManifest) {
-    const name = packageName(rootManifest, '')
+    const name = packageName(rootManifest, basename(root))
     packages.push({
       id: entityId('package', packageName(rootManifest, 'root') ?? 'root'),
       ...(name ? { name } : {}),
@@ -175,8 +175,8 @@ const discoverPackages = (
       continue
     }
     const path = relativePath(root, absPath)
-    const name = packageName(parsed.value, path)
-    const id = entityId('package', name ?? path)
+    const name = packageName(parsed.value, basename(absPath))
+    const id = entityId('package', packageName(parsed.value, path) ?? path)
     const duplicate = packages.find((pkg) => pkg.id === id)
     // Compare toPosix'd, not raw: the root package above is always registered with its raw, native-separator
     // `absPath` (other code depends on that — e.g. `packageForModule`'s `startsWith` matching against
@@ -655,7 +655,7 @@ const dependencyEntries = (manifest: JsonRecord): readonly { readonly name: stri
 }
 export type SourceState = ReturnType<ReturnType<typeof createJsTsExtraction>['prepare']>
 
-const baseManifest = builtInManifest('js-ts', '1.5.0', [...new Set([...SOURCE_EXTENSIONS, ...CONFIG_EXTENSIONS])].map(extension => `**/*${extension}`))
+const baseManifest = builtInManifest('js-ts', '1.5.1', [...new Set([...SOURCE_EXTENSIONS, ...CONFIG_EXTENSIONS])].map(extension => `**/*${extension}`))
 const factCapabilities = { symbol: 'symbols', 'cli-command': 'cli-commands', 'cli-flag': 'cli-flags', 'config-key': 'config-keys', signature: 'signatures' } as const
 export const jsTsManifest = { ...baseManifest, capabilities: [...new Set([...baseManifest.capabilities, 'lockfile' as const, 'versions' as const, 'release-map' as const, ...FACT_EXTRACTORS.flatMap(extractor => extractor.kinds.map(kind => factCapabilities[kind]))])] }
 export const createJsTsPluginV2 = (): DiscoveryPluginV2 => ({
