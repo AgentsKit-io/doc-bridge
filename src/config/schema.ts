@@ -629,6 +629,11 @@ export const DocBridgeConfigV1Schema = z
     conformance: ConformanceConfigSchema.optional(),
     retrieval: RetrievalConfigSchema.optional(),
     render: RenderConfigSchema.optional(),
+    vault: z.object({
+      output: z.string().min(1).max(512).optional(),
+      humanNotes: z.string().min(1).max(512).optional(),
+      templates: z.record(z.string().min(1).max(128), z.string().min(1).max(512)).optional(),
+    }).strict().optional(),
   })
   .strict()
 

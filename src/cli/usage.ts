@@ -51,6 +51,7 @@ Core (no API key):
   ak-docs conformance run documentation-standard-v1 [--text|--json]
   ak-docs audit documentation [--text|--json]
   ak-docs parity [--claims <file>] [--json|--text]   check public claims against what the repository proves
+  ak-docs vault export [--config <path>] [--text|--json]
   ak-docs render <llms.txt|area|ownership|change-digest|overlay-review> [--data <artifact>] [--output <path>] [--print-template] [--json]
   ak-docs mcp
   ak-docs mcp install --cursor | --claude

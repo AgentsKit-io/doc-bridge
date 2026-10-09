@@ -332,3 +332,15 @@ commands and flags, bounded to 64 names. Help-only extraction remains partial.
 Fact IDs, snapshot/index envelopes and handoff schemas remain unchanged; analyzer
 versions invalidate prior extraction caches. JSON configuration inputs also
 invalidate warm CLI extraction when source mapping changes.
+
+## Vault export
+
+```bash
+ak-docs vault export [--config <path>] [--text|--json]
+```
+
+Discover the working tree and export deterministic generated Markdown navigation
+to `vault.output`. JSON reports `ok`, project-relative `output`, `notes` and
+`removed`; text reports the same counts. Failures return exit code 1 and an
+actionable diagnostic. See [vault export v1](./vault-export-v1.md) and the
+[vault guide](../guides/vault.md).

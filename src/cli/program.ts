@@ -82,6 +82,7 @@ import { renderOfflineReportArtifact } from '../report/html.js'
 import { benchmarkFixture, formatBenchmarkText, measureBenchmark } from '../metrics/benchmark.js'
 import { PACKAGE_VERSION } from '../version.js'
 import { auditDocumentation, formatDocumentationAuditText } from '../audit/documentation.js'
+import { exportVault } from '../vault/export.js'
 import { renderArtifact, writeRenderedPages } from '../render/render.js'
 import { CLI_COMMAND_USAGE } from './usage.js'
 import { checkPublicParity, formatPublicParityText } from '../parity/check.js'
@@ -151,6 +152,7 @@ type Command =
   | 'audit'
   | 'parity'
   | 'render'
+  | 'vault'
 
 const usage = CLI_COMMAND_USAGE
 
@@ -229,6 +231,7 @@ const parseArgs = (argv: readonly string[]) => {
   else if (positional[0] === 'audit') command = 'audit'
   else if (positional[0] === 'parity') command = 'parity'
   else if (positional[0] === 'render') command = 'render'
+  else if (positional[0] === 'vault') command = 'vault'
 
   return { command, flags, configPath, positional }
 }
@@ -1683,6 +1686,19 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
   if (command === 'audit') return runDocumentationAuditCommand(flags, positional, configPath)
   if (command === 'parity') return runParityCommand(flags, configPath, argv)
   if (command === 'render') return runRenderCommand(flags, positional, configPath, argv)
+  if (command === 'vault') return (async () => {
+    try {
+      if (positional[1] !== 'export' || positional.length !== 2) throw new Error('Usage: ak-docs vault export [--config <path>] [--text|--json]')
+      const { config, root } = loadProject(configPath)
+      const result = await exportVault(root, config)
+      if (wantsTextOutput(flags, config)) writeLines([`Vault: ${result.output}`, `Notes: ${result.notes}`, `Removed: ${result.removed}`])
+      else writeJson({ ok: true, ...result })
+      return 0
+    } catch (error) {
+      process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`)
+      return 1
+    }
+  })()
   if (command === 'bench') return runBenchCommand(flags, positional, configPath, argv)
 
   if (command === 'fix') return runFixCommand(argv, positional, configPath)
