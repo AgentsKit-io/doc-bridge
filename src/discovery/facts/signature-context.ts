@@ -17,7 +17,7 @@ export const signatureContext = (source: ts.SourceFile, schemaOutputs = false): 
   const constantDeclarations = source.statements.filter(ts.isVariableStatement).filter(node => node.declarationList.flags & ts.NodeFlags.Const).flatMap(node => node.declarationList.declarations.filter(item => ts.isIdentifier(item.name) && item.initializer).map(item => [item.name.getText(source), item] as const))
   const constants = new Map(constantDeclarations)
   if (constants.size !== constantDeclarations.length) return undefined
-  const schemaImports = new Set((schemaOutputs ? source.statements : []).filter(ts.isImportDeclaration).flatMap(node => ts.isStringLiteral(node.moduleSpecifier) && node.moduleSpecifier.text === 'zod' && node.importClause?.namedBindings && ts.isNamedImports(node.importClause.namedBindings) ? node.importClause.namedBindings.elements.filter(item => (item.propertyName ?? item.name).text === 'z').map(item => item.name.text) : []))
+  const schemaImports = new Set((schemaOutputs ? source.statements : ([] as readonly ts.Statement[])).filter(ts.isImportDeclaration).flatMap(node => ts.isStringLiteral(node.moduleSpecifier) && node.moduleSpecifier.text === 'zod' && node.importClause?.namedBindings && ts.isNamedImports(node.importClause.namedBindings) ? node.importClause.namedBindings.elements.filter(item => (item.propertyName ?? item.name).text === 'z').map(item => item.name.text) : []))
   const retained = new Set<string>()
   const schemaHelper = (node: ts.ArrowFunction): boolean => {
     let body: ts.Node = node.body
