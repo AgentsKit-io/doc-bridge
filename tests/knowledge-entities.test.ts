@@ -34,6 +34,23 @@ const fixture = () => {
 const gitAt = (root: string) => (...args: string[]) => execFileSync('git', args, { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim()
 
 describe('knowledge entity extraction', () => {
+  it('indexes configured memory links and invalidates freshness after memory evidence changes', () => {
+    const { root, config } = fixture()
+    writeFileSync(join(root, 'docs', 'adr', '0001-store.md'), '# Use Store\n\nUse storage.\n')
+    mkdirSync(join(root, 'notes'))
+    writeFileSync(join(root, 'notes', 'fact.md'), '# Note\n\nFollow `docs/adr/0001-store.md`.\n')
+    const enabledConfig = { ...config, index: { ...config.index, knowledgeEntities: { enabled: true } }, intelligence: { memory: { ingestDir: 'notes', adapters: ['playbook-memory' as const] } } }
+    const built = buildDocBridgeIndex({ root, config: enabledConfig }).index
+    expect(built.knowledgeEntities!.memoryRelations).toHaveLength(1)
+    expect(built.knowledgeEntities!.memoryRelations![0]).toMatchObject({ kind: 'memory-supports', evidence: { kind: 'path', value: 'docs/adr/0001-store.md', rawPath: 'notes/fact.md' } })
+    expect(DocBridgeIndexV1Schema.parse(built).contentHash).toBe(contentHashForIndex(built))
+    expect(() => loadFreshDocBridgeIndex(root, enabledConfig)).not.toThrow()
+    writeFileSync(join(root, 'notes', 'fact.md'), '# Note\n\nStill follow `docs/adr/0001-store.md`.\n')
+    expect(() => loadFreshDocBridgeIndex(root, enabledConfig)).toThrow('stale')
+    const changed = buildDocBridgeIndex({ root, config: enabledConfig }).index
+    expect(changed.contentHash).not.toBe(built.contentHash)
+  })
+
   it('hashes complete source lines with CRLF and legacy CR endings', () => {
     const { root, config } = fixture()
     const snapshot = discoverRepository({ root, config })
@@ -171,13 +188,15 @@ describe('knowledge entity extraction', () => {
   it('extracts captured documents without accessing local history and keeps service opt-in denied', async () => {
     const { root, config } = fixture()
     writeFileSync(join(root, 'docs', 'glossary.md'), '# Glossary\n\n**Store**: Holds values.\n')
+    mkdirSync(join(root, '.agent-memory'))
+    writeFileSync(join(root, '.agent-memory', 'fact.md'), '# Note\n\nFollow `docs/glossary.md`.\n')
     const enabledConfig = { ...config, index: { ...config.index, knowledgeEntities: { enabled: true } } }
     expect(serviceConfig(enabledConfig).config.index).not.toHaveProperty('knowledgeEntities')
     const snapshot = discoverRepository({ root, config: enabledConfig })
     const isolated = withExecutionProfile('service', () => extractKnowledgeEntities({ snapshot, documents: new Map(), gitRoot: root }))
     expect(isolated.coverage.find(item => item.scope === 'git:first-parent')).toMatchObject({ status: 'not-analyzed' })
     const partition = { repositoryId: 'fixture', revision: snapshot.sourceRevision }
-    const inventory = Object.fromEntries(['package.json', 'src/store.ts', 'docs/glossary.md'].map(path => [path, contentRef(readFileSync(join(root, path)))]))
+    const inventory = Object.fromEntries(['package.json', 'src/store.ts', 'docs/glossary.md', '.agent-memory/fact.md'].map(path => [path, contentRef(readFileSync(join(root, path)))]))
     const limits = { maxFiles: 100, maxBytes: 1024 * 1024, maxFileBytes: 1024 * 1024, maxTimeMs: 10_000, maxMemoryMb: 1024 }
     const repository = await createLocalRepositoryRead({ root, partition, inventory, limits })
     const artifactRoot = mkdtempSync(join(tmpdir(), 'doc-bridge-entity-artifacts-'))
@@ -186,6 +205,8 @@ describe('knowledge entity extraction', () => {
     const built = await buildStoredDocBridgeIndex({ partition, signal: new AbortController().signal, config: enabledConfig, snapshot, repository, artifacts, write: false, overlay: 'ignore' })
     expect(built.status).toBe('ok')
     if (built.status !== 'ok') return
+    expect(built.value.index.knowledgeEntities).not.toHaveProperty('memoryRelations')
+    expect(built.value.index.knowledgeEntities!.coverage).toContainEqual(expect.objectContaining({ analyzer: 'memory-entities', status: 'not-analyzed' }))
     expect(built.value.index.knowledgeEntities!.entities[0]!.name).toBe('Store')
     expect(built.value.index.knowledgeEntities!.coverage.find(item => item.scope === 'git:first-parent')).toMatchObject({ status: 'not-analyzed' })
   })

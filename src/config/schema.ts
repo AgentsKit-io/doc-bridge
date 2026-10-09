@@ -397,10 +397,12 @@ export const IntelligenceConfigSchema = z
       .object({
         enabled: z.boolean().optional(),
         adapters: z
-          .array(z.enum(['playbook-memory', 'cursor-rules', 'session-export', 'bootstrap-delta']))
+          .array(z.enum(['playbook-memory', 'cursor-rules', 'session-export', 'bootstrap-delta']).superRefine((adapter, context) => {
+            if (adapter === 'session-export' || adapter === 'bootstrap-delta') context.addIssue({ code: 'custom', message: `Unsupported deterministic memory adapter: ${adapter}. Use playbook-memory or cursor-rules.` })
+          }))
           .max(8)
           .optional(),
-        ingestDir: z.string().min(1).max(512).optional(),
+        ingestDir: z.union([z.string().min(1).max(512), z.array(z.string().min(1).max(512)).min(1).max(32)]).optional(),
         classify: z.boolean().optional(),
         promote: z
           .object({

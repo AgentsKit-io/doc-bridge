@@ -1778,7 +1778,7 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
     }
     try {
       const { config, root } = loadProject(configPath)
-      const candidates = ingestMemoryCandidates(root)
+      const candidates = ingestMemoryCandidates(root, config.intelligence)
       if (positional[1] === 'ingest') {
         writeJson({ ok: true, count: candidates.length, candidates })
         return 0
@@ -1842,7 +1842,7 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
     try {
       const { config, root } = loadProject(configPath)
       const index = loadFreshDocBridgeIndex(root, config)
-      const draft = draftMemoryPromotion(classifyMemoryCandidates(ingestMemoryCandidates(root), index))
+      const draft = draftMemoryPromotion(classifyMemoryCandidates(ingestMemoryCandidates(root, config.intelligence), index))
       writeJson({
         ...draft,
         title: 'Draft Playbook feedback promotion',

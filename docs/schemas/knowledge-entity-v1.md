@@ -12,10 +12,12 @@ or network access.
 
 Public API: `extractKnowledgeEntities` in `src/entities/extract.ts`; runtime
 validation and exported TypeScript types come from `src/schemas/knowledge-entity.ts`.
+`linkMemoryToEntities(candidates, section)` in `src/memory/pipeline.ts` returns
+exact typed memory relations without changing the supplied entities.
 
 ## Shape
 
-`KnowledgeEntitiesV1` contains `schemaVersion: 1`, `entities` and `coverage`.
+`KnowledgeEntitiesV1` contains `schemaVersion: 1`, `entities`, `coverage` and optional `memoryRelations`.
 
 | Entity field | Meaning |
 | --- | --- |
@@ -42,6 +44,43 @@ relative path; `affected-fact` targets a snapshot entity; `defines-symbol` targe
 a unique exact symbol owner. Legacy module export facts retain the precise name
 in `symbol`, with the module ID as `target`. `supersedes` and `superseded-by`
 target extracted decision IDs. Ambiguous/unresolved owners get no arbitrary link.
+
+## Memory relations
+
+Optional `memoryRelations` contains at most 10,000 typed entries:
+
+```ts
+{
+  kind: 'memory-supports'
+  candidateId: string
+  target: string // must be an entity ID in this section
+  evidence: {
+    kind: 'id' | 'alias' | 'path'
+    value: string
+    rawPath?: string // repository-relative memory input
+    factHash: string // SHA-256 of exact UTF-8 candidate.fact bytes
+  }
+}
+```
+
+Local indexes ingest configured memory and link safe, non-discarded candidates
+by exact unique ID, declared alias or document-region path. Explicit candidate
+references, backtick spans, Markdown link destinations and complete bare tokens
+are supported; whole-fact equality also supports a multiword alias. No title,
+case folding, fuzzy matching, path normalization or fragment inference occurs.
+Multiple entity owners omit the match. The relation records the matching token,
+not an inferred fact or acceptance decision. Repeated evidence deduplicates;
+entries sort by candidate ID, target and evidence value. Limit overflow fails
+instead of silently truncating. Empty relation arrays are omitted.
+
+Classification/draft JSON may include `entityRelations` only when the index has
+the opt-in entity section and matches exist. Captured inputs have no supplied
+memory source and report `not-analyzed` memory coverage without local reads.
+Memory edits that change linked fact bytes alter semantic hashes; opt-in
+freshness rebuilds validate them. This optional section is additive for updated
+readers; older strict opt-in readers require an update. Default-off indexes and
+handoffs keep the legacy field set. Query/MCP knowledge consumption follows
+separately; the memory MCP tools already return classification/draft relations.
 
 ## Extraction and identity
 

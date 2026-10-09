@@ -405,11 +405,11 @@ export const handleMcpRequest = (ctx: McpContext, request: JsonRpcRequest): unkn
     }
 
     if (name === 'memory.classify') {
-      return toolResult(classifyMemoryCandidates(ingestMemoryCandidates(ctx.root), index()))
+      return toolResult(classifyMemoryCandidates(ingestMemoryCandidates(ctx.root, ctx.config.intelligence), index()))
     }
 
     if (name === 'memory.promoteDraft') {
-      return toolResult(draftMemoryPromotion(classifyMemoryCandidates(ingestMemoryCandidates(ctx.root), index())))
+      return toolResult(draftMemoryPromotion(classifyMemoryCandidates(ingestMemoryCandidates(ctx.root, ctx.config.intelligence), index())))
     }
 
     if (name === 'registry.topology') {

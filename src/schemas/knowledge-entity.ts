@@ -28,15 +28,31 @@ export const KnowledgeEntityV1Schema = z.object({
   date: z.string().min(1).max(128).optional(),
   conventional: z.object({ type: z.string().min(1).max(128), scope: z.string().min(1).max(128).optional(), breaking: z.boolean() }).strict().optional(),
 }).strict()
+export const MemoryEntityRelationV1Schema = z.object({
+  kind: z.literal('memory-supports'),
+  candidateId: id,
+  target: id,
+  evidence: z.object({
+    kind: z.enum(['id', 'alias', 'path']),
+    value: text,
+    rawPath: path.optional(),
+    factHash: hash,
+  }).strict(),
+}).strict()
+export type MemoryEntityRelationV1 = z.infer<typeof MemoryEntityRelationV1Schema>
 export const KnowledgeEntitiesV1Schema = z.object({
   schemaVersion: z.literal(KNOWLEDGE_ENTITY_SCHEMA_VERSION),
   entities: z.array(KnowledgeEntityV1Schema).max(10_000),
+  memoryRelations: z.array(MemoryEntityRelationV1Schema).max(10_000).optional(),
   coverage: z.array(CoverageSchema).max(32),
 }).strict().superRefine((value, context) => {
   const ids = new Set<string>()
   value.entities.forEach((entity, index) => {
     if (ids.has(entity.id)) context.addIssue({ code: 'custom', path: ['entities', index, 'id'], message: 'Duplicate entity id' })
     ids.add(entity.id)
+  })
+  value.memoryRelations?.forEach((relation, index) => {
+    if (!ids.has(relation.target)) context.addIssue({ code: 'custom', path: ['memoryRelations', index, 'target'], message: 'Unknown memory relation entity target' })
   })
 })
 export type KnowledgeEntityV1 = z.infer<typeof KnowledgeEntityV1Schema>

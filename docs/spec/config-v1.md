@@ -773,7 +773,7 @@ type IntelligenceConfig = {
   memory?: {
     enabled?: boolean
     adapters?: MemoryAdapterId[]
-    ingestDir?: string              // default: '.agent-memory'
+    ingestDir?: string | string[]   // repository-contained directories; defaults depend on adapter
     classify?: boolean              // default: false — opt-in
     promote?: {
       enabled?: boolean
@@ -824,10 +824,10 @@ type EnrichmentRole = {
 }
 
 type MemoryAdapterId =
-  | 'playbook-memory'              // .agent-memory/MEMORY.md layout
-  | 'cursor-rules'                 // .cursor/rules/*.mdc
-  | 'session-export'               // manual JSON/md drop folder
-  | 'bootstrap-delta'              // git diff on AGENTS.md
+  | 'playbook-memory'              // recursive Markdown notes; default .agent-memory
+  | 'cursor-rules'                 // recursive Markdown rules; default .cursor/rules
+  | 'session-export'               // reserved; currently rejected as unsupported
+  | 'bootstrap-delta'              // reserved; currently rejected as unsupported
 ```
 
 Registry agents are advisory and must come from the AgentsKit Registry. The
@@ -970,6 +970,29 @@ export default defineConfig({
   },
 })
 ```
+
+### Deterministic memory input
+
+`intelligence.memory.ingestDir` accepts one directory or an ordered list (1–32)
+for the generic `playbook-memory` adapter.
+Paths resolve inside the repository; traversal and symlink escapes are rejected.
+Missing directories are empty inputs. Files inside ignored memory directories
+remain explicit inputs, with bounded reads and no symlink following.
+
+`playbook-memory` and `cursor-rules` ingest Markdown (`.md`, `.mdc`) recursively,
+using their existing source/confidence mapping. With no configuration, defaults
+remain `.agent-memory` then `.cursor/rules`, preserving candidate order and bytes.
+`ingestDir` overrides only `playbook-memory`; `cursor-rules` always reads its
+conventional `.cursor/rules` directory. Duplicate source/path
+pairs are emitted once. Adapter order and directory order determine traversal;
+files within a directory sort by path. `enabled: false` disables ingestion and
+`adapters: []` selects no sources. Unsupported `session-export` and
+`bootstrap-delta` produce a validation error before reading, rather than silently
+being ignored. No provider or intelligence adapter is required.
+
+Opt-in knowledge entity indexes include exact memory evidence as described in
+[knowledge entity v1](../schemas/knowledge-entity-v1.md). Memory classification
+and promotion remain deterministic and advisory; no automatic corpus writes.
 
 ### 4. Docusaurus + optional memory
 

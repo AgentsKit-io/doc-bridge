@@ -30,6 +30,7 @@
 ### Minor Changes
 
 - Export opt-in knowledge entity notes and convert generated vault edits into deterministic human-reviewed enrichment proposals with a local draft preview.
+- Honor configured memory directories and deterministic adapters, and link safe classified memories to opt-in knowledge entities through exact typed evidence while keeping promotion draft-only.
 
 - Add deterministic vault export with source bindings, wikilinks, graph signals, knap templates and manifest-scoped cleanup.
 - Add opt-in deterministic decision, concept and change entities with bounded evidence, exact symbol aliases, local first-parent history and explicit coverage; preserve default-off index and handoff output.

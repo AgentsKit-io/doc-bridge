@@ -12,7 +12,11 @@ Portable JSON Schema export: `MemoryCandidateV1JsonSchema`.
 This is the normalized shape for memory ingestion. The core ships deterministic
 local ingest for Cursor rules and `.agent-memory/**/*.md`, classification into
 `agent | human | playbook | discard`, safety scanning, draft generation, and an
-optional GitHub draft PR flow.
+optional GitHub draft PR flow. Configured repository-contained directories and
+adapter selection use [config v1](../spec/config-v1.md). The candidate shape
+remains unchanged; classifications may additionally carry exact
+[entity relations](knowledge-entity-v1.md#memory-relations) when knowledge
+entities are enabled.
 
 ```bash
 ak-docs memory ingest
@@ -36,6 +40,11 @@ ak-docs memory promote --pr --dry-run
   "references": ["docs/for-agents/auth.md"]
 }
 ```
+
+`ingestMemoryCandidates(root, intelligence?)` accepts the optional parsed
+`DocBridgeConfigV1.intelligence` configuration. Existing one-argument callers
+retain default ingestion behavior. CLI, playbook drafts and memory MCP tools
+pass the project configuration through this shared entry point.
 
 ## Validation
 
