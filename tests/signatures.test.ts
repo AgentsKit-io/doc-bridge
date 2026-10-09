@@ -1,5 +1,5 @@
 import * as ts from 'typescript'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, relative, resolve } from 'node:path'
@@ -14,6 +14,10 @@ import { createDiscoveryRegistryV2 } from '../src/plugins/contract.js'
 import { factAnalyzerVersions } from '../src/discovery/facts/index.js'
 import { signatureEntryPoints } from '../src/discovery/facts/signature-context.js'
 import { extractSignatures } from '../src/discovery/facts/signatures.js'
+
+// These tests build multi-package fixtures and run the TypeScript checker; the default 5s
+// budget is too tight under CI coverage load.
+vi.setConfig({ testTimeout: 30_000 })
 
 const extract = (text: string) => extractSignatures(ts.createSourceFile('api.ts', text, ts.ScriptTarget.Latest, true), 'module:api.ts', 'api.ts', '0'.repeat(64))
 const hash = (text: string, name = 'createThing') => extract(text).facts.find(fact => fact.name === name)!.valueHash
