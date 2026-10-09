@@ -175,7 +175,7 @@ describe('cross-module callable compatibility', () => {
   ])('%s uses historical syntax and keeps unsupported findings', (_name, from, declaration, compatible) => {
     const root = mkdtempSync(join(tmpdir(), 'doc-bridge-signatures-')); roots.push(root)
     writeFileSync(join(root, 'package.json'), JSON.stringify({ name: 'doc-bridge-fixture', version: '1.0.0' }))
-    writeFileSync(join(root, 'README.md'), '# Guide\n\nCall `createThing`.\n')
+    writeFileSync(join(root, 'README.md'), '# Guide\n\nCall `createThing` with its declared parameters and return type.\n')
     writeFileSync(join(root, 'types.ts'), declaration)
     const source = `import type { Base as Result } from '${from}'; export function createThing(): Result { throw 0 }`
     writeFileSync(join(root, 'api.ts'), source)
@@ -193,7 +193,7 @@ describe('cross-module callable compatibility', () => {
   it('rejects a changed imported base instead of substituting the head for history', () => {
     const root = mkdtempSync(join(tmpdir(), 'doc-bridge-signatures-')); roots.push(root)
     writeFileSync(join(root, 'package.json'), '{"name":"doc-bridge-fixture","version":"1.0.0"}')
-    writeFileSync(join(root, 'README.md'), '# Guide\n\nCall `createThing`.\n')
+    writeFileSync(join(root, 'README.md'), '# Guide\n\nCall `createThing` with its declared parameters and return type.\n')
     writeFileSync(join(root, 'types.ts'), 'export interface Base { value: string }')
     writeFileSync(join(root, 'api.ts'), "import type { Base } from './types.js'; export function createThing(): Base { throw 0 }")
     const base = discoverRepository({ root })
@@ -210,7 +210,7 @@ describe('workspace exports and traversal bounds', { timeout: 30_000 }, () => {
   const setup = () => {
     const root = mkdtempSync(join(tmpdir(), 'doc-bridge-signatures-')); roots.push(root)
     writeFileSync(join(root, 'package.json'), JSON.stringify({ name: 'doc-bridge-fixture', version: '1.0.0', workspaces: ['packages/*'] }))
-    writeFileSync(join(root, 'README.md'), '# Guide\n\nCall `createThing`.\n')
+    writeFileSync(join(root, 'README.md'), '# Guide\n\nCall `createThing` with its declared parameters and return type.\n')
     return root
   }
   it('follows an explicit workspace entrypoint and named re-export', () => {
@@ -256,7 +256,7 @@ describe('workspace exports and traversal bounds', { timeout: 30_000 }, () => {
 it.each([['file count', 33, 0], ['total context bytes', 5, 60000]] as const)('keeps %s over-budget proofs unproven', (_bound, count, padding) => {
   const root = mkdtempSync(join(tmpdir(), 'doc-bridge-signatures-')); roots.push(root)
   writeFileSync(join(root, 'package.json'), '{"name":"doc-bridge-fixture","version":"1.0.0"}')
-  writeFileSync(join(root, 'README.md'), '# Guide\n\nCall `createThing`.\n')
+  writeFileSync(join(root, 'README.md'), '# Guide\n\nCall `createThing` with its declared parameters and return type.\n')
   const imports: string[] = [], members: string[] = []
   for (let i = 0; i < count; i++) {
     imports.push(`import type { Item${i} } from './item${i}.js';`)
@@ -275,7 +275,7 @@ it.each([['file count', 33, 0], ['total context bytes', 5, 60000]] as const)('ke
 it.each(["import type Promise from 'external-types'", "import type * as Intl from 'external-types'"])('never substitutes a compiler builtin for an unsupported import (%s)', statement => {
   const root = mkdtempSync(join(tmpdir(), 'doc-bridge-signatures-')); roots.push(root)
   writeFileSync(join(root, 'package.json'), '{"name":"doc-bridge-fixture","version":"1.0.0"}')
-  writeFileSync(join(root, 'README.md'), '# Guide\n\nCall `createThing`.\n')
+  writeFileSync(join(root, 'README.md'), '# Guide\n\nCall `createThing` with its declared parameters and return type.\n')
   const type = statement.includes('Promise') ? 'Promise<string>' : 'Intl.DateTimeFormat'
   const text = `${statement}; export function createThing(): ${type} { throw 0 }`
   writeFileSync(join(root, 'api.ts'), text)
@@ -288,7 +288,7 @@ it.each(["import type Promise from 'external-types'", "import type * as Intl fro
 it('labels direct opaque imported heritage as conditional and leaves other external shapes unproven', () => {
   const root = mkdtempSync(join(tmpdir(), 'doc-bridge-signatures-')); roots.push(root)
   writeFileSync(join(root, 'package.json'), '{"name":"doc-bridge-fixture","version":"1.0.0"}')
-  writeFileSync(join(root, 'README.md'), '# Guide\n\nCall `createThing`.\n')
+  writeFileSync(join(root, 'README.md'), '# Guide\n\nCall `createThing` with its declared parameters and return type.\n')
   const text = "import type { Base } from 'external-types'; export function createThing(): Base { throw 0 }"
   writeFileSync(join(root, 'api.ts'), text)
   const base = discoverRepository({ root })
@@ -305,7 +305,7 @@ it('labels direct opaque imported heritage as conditional and leaves other exter
 it.each(["import type { Base } from './types.js'; import type { Base } from './other.js'", "import type { Base } from './types.mjs'"])('does not select an ambiguous binding or wrong extension (%s)', imports => {
   const root = mkdtempSync(join(tmpdir(), 'doc-bridge-signatures-')); roots.push(root)
   writeFileSync(join(root, 'package.json'), '{"name":"doc-bridge-fixture","version":"1.0.0"}')
-  writeFileSync(join(root, 'README.md'), '# Guide\n\nCall `createThing`.\n')
+  writeFileSync(join(root, 'README.md'), '# Guide\n\nCall `createThing` with its declared parameters and return type.\n')
   writeFileSync(join(root, 'types.ts'), 'export interface Base { value: string }')
   writeFileSync(join(root, 'other.ts'), 'export interface Base { value: number }')
   const text = `${imports}; export function createThing(): Base { throw 0 }`
@@ -330,7 +330,7 @@ it('bounds package export conditions and never falls through an explicit invalid
 it.each(['enum Date { value }', 'class Date {}', 'import Date = require("external-types")', 'declare namespace Local { export type Value = string }'])('does not substitute a builtin for an unsupported local type (%s)', declaration => {
   const root = mkdtempSync(join(tmpdir(), 'doc-bridge-signatures-')); roots.push(root)
   writeFileSync(join(root, 'package.json'), '{"name":"doc-bridge-fixture","version":"1.0.0"}')
-  writeFileSync(join(root, 'README.md'), '# Guide\n\nCall `createThing`.\n')
+  writeFileSync(join(root, 'README.md'), '# Guide\n\nCall `createThing` with its declared parameters and return type.\n')
   const text = `${declaration}; export function createThing(): Date { throw 0 }`
   writeFileSync(join(root, 'api.ts'), text)
   const base = discoverRepository({ root })
@@ -342,7 +342,7 @@ it.each(['enum Date { value }', 'class Date {}', 'import Date = require("externa
 it('proves a dependency cycle through the owner module without inventing namespaces', () => {
   const root = mkdtempSync(join(tmpdir(), 'doc-bridge-signatures-')); roots.push(root)
   writeFileSync(join(root, 'package.json'), '{"name":"doc-bridge-fixture","version":"1.0.0"}')
-  writeFileSync(join(root, 'README.md'), '# Guide\n\nCall `createThing`.\n')
+  writeFileSync(join(root, 'README.md'), '# Guide\n\nCall `createThing` with its declared parameters and return type.\n')
   writeFileSync(join(root, 'types.ts'), "import type { Base } from './api.js'; export interface Extended extends Base { extra: number }")
   const text = "import type { Extended } from './types.js'; export interface Base { value: string }; export function createThing(): Base { throw 0 }"
   writeFileSync(join(root, 'api.ts'), text)

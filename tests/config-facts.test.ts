@@ -159,7 +159,7 @@ describe('static configuration facts', () => {
     writeFileSync(join(root, 'config.ts'), schema.replace("default('json')", "default('text')"))
     const result = diffSnapshots(base, discoverRepository({root}), {headRoot:root})
     expect(result.policy.findings.map(item => item.assertion.key)).toEqual(['settings.output.format'])
-    writeFileSync(join(root, 'README.md'), '# Configuration\n\nSee `config.ts`; configure `settings.output`.\n')
+    writeFileSync(join(root, 'README.md'), '# Configuration\n\nSee `config.ts`; `settings.output` has configuration fields and default values.\n')
     writeFileSync(join(root, 'config.ts'), schema)
     const parentBase = discoverRepository({root})
     writeFileSync(join(root, 'config.ts'), schema.replace("default('json')", "default('text')"))
@@ -243,7 +243,7 @@ describe('static configuration facts', () => {
   it('binds unique config-example leaves to independently cited owners and retains historical aliases', () => {
     const root = fixture()
     const doc = join(root, 'README.md')
-    for (const example of ['```json\n{"format": "json"}\n```', '```yaml\nformat: json\n```', 'Configuration example: `format`', '```ts\nconst config = {output: {format: "json"}}\n```']) {
+    for (const example of ['```json\n{"format": "json"}\n```', '```yaml\nformat: json\n```', 'Configuration example: `format` (default json)', '```ts\nconst config = {output: {format: "json"}}\n```']) {
       writeFileSync(doc, '# Config\nSee `config.ts`.\n' + example + '\nUse `format` in prose.\n')
       const base = discoverRepository({root})
       const relation = base.relations.find(item => item.metadata?.factName === 'output.format')

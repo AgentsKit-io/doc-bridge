@@ -1,5 +1,6 @@
 import { declaredImportedHeritage, importedSignatureTypes } from '../discovery/facts/signature-context.js'
 import { compatibleSignature } from '../discovery/facts/signature-compatibility.js'
+import { changedCitationClaims } from '../discovery/changed-claims.js'
 import { resolveDocumentTargets } from '../discovery/document-targets.js'
 import { classifyDocument } from '../findings/classification.js'
 import { findingFromChangeDiagnostic, routeFinding } from '../findings/contracts.js'
@@ -268,6 +269,8 @@ const genericFindings = (base: DiscoverySnapshotV1, head: DiscoverySnapshotV1, c
       ? (token.value.includes('.') || token.configExample) && configMatches?.get(configCitationKey(token))?.some(item => item.name === fact.name && item.ownerId === fact.ownerId)
       : token.value === fact.name) ?? []
     if (parsed && !tokens.length) continue
+    const currentFact = newFacts.find(item => item.id === fact!.id)
+    if (valueChange && !ambiguous && fact.kind !== 'package' && currentFact && currentFact.kind !== 'package' && parsed && text !== undefined && !changedCitationClaims({ before: fact, after: currentFact, base: base.entities, head: head.entities, document: parsed, text, lines: tokens.map(token => token.line), texts })) continue
     const code = ambiguous ? 'AMBIGUOUS_REFERENCE' : valueChange ? 'CHANGED_REFERENCE' : 'BROKEN_REFERENCE'
     const status = ambiguous ? 'unresolved' : !valueChange && parsed && extractionComplete(base, head, fact.kind, fact.evidence) ? 'conflict' : 'stale-or-unverified'
     const evidence: Evidence[] = uniqueEvidence([
@@ -289,14 +292,21 @@ const genericFindings = (base: DiscoverySnapshotV1, head: DiscoverySnapshotV1, c
   return [...findings.values()]
 }
 
-const verifiedLocalDocuments = (head: DiscoverySnapshotV1, root: string): Map<string, string> => {
+const changedConfigInputs = (base: SnapshotForChanges, head: SnapshotForChanges) => {
+  const before = new Map(factsOf(base).filter(fact => fact.kind === 'config-key').map(fact => [fact.id, fact.valueHash]))
+  const changed = factsOf(head).filter(fact => fact.kind === 'config-key' && before.has(fact.id) && before.get(fact.id) !== fact.valueHash)
+  const paths = new Set(changed.flatMap(fact => fact.evidence.map(item => item.path)))
+  return new Set([...changed.map(fact => fact.ownerId), ...head.entities.filter(entity => entity.kind === 'module' && entity.path && paths.has(entity.path)).map(entity => entity.id)])
+}
+const verifiedLocalDocuments = (base: DiscoverySnapshotV1, head: DiscoverySnapshotV1, root: string): Map<string, string> => {
   const texts = new Map<string, string>()
-  for (const doc of head.entities.filter(entity => entity.kind === 'document' && entity.path)) {
+  const configOwners = changedConfigInputs(base, head)
+  for (const doc of head.entities.filter(entity => entity.path && (entity.kind === 'document' || configOwners.has(entity.id)))) {
     try {
       const path = containedProjectPath(root, doc.path!)
       if (!path) continue
       const text = readBoundedText(path, { used: 0 }, { maxFileBytes: 1_000_000 })
-      if (parseMarkdownDocument(doc.path!, text).contentHash === hashOf(doc)) texts.set(doc.id, text)
+      if ((doc.kind === 'document' ? parseMarkdownDocument(doc.path!, text).contentHash : sha256NormalizedV1(text)) === hashOf(doc)) texts.set(doc.id, text)
     } catch { /* Unavailable text cannot prove a current citation. */ }
   }
   return texts
@@ -313,7 +323,8 @@ export const diffSnapshotsWithRead = async (base: DiscoverySnapshotV1, head: Dis
   let limitation: import('../storage/contract.js').StorageFailure | undefined
   try {
     operation.boundary('diff-documents')
-    for (const doc of head.entities.filter(entity => entity.kind === 'document' && entity.path).sort((a,b) => a.id.localeCompare(b.id))) {
+    const configOwners = changedConfigInputs(base, head)
+    for (const doc of head.entities.filter(entity => entity.path && (entity.kind === 'document' || configOwners.has(entity.id))).sort((a,b) => Number(b.kind === 'document') - Number(a.kind === 'document') || a.id.localeCompare(b.id))) {
       const meta = await read.stat({ partition, signal, path: doc.path! })
       if (meta.status === 'limit' || meta.status === 'cancelled') operation.stop(meta)
       if (meta.status !== 'ok' || meta.value.kind !== 'file' || meta.value.bytes > 1_000_000) continue
@@ -321,7 +332,7 @@ export const diffSnapshotsWithRead = async (base: DiscoverySnapshotV1, head: Dis
       if (result.status === 'limit' || result.status === 'cancelled') operation.stop(result)
       if (result.status !== 'ok' || result.value.bytes.length > 1_000_000 || contentRef(result.value.bytes).hash !== result.value.content.hash) continue
       const text = Buffer.from(result.value.bytes).toString('utf8')
-      if (parseMarkdownDocument(doc.path!, text).contentHash === hashOf(doc)) texts.set(doc.id, text)
+      if ((doc.kind === 'document' ? parseMarkdownDocument(doc.path!, text).contentHash : sha256NormalizedV1(text)) === hashOf(doc)) texts.set(doc.id, text)
     }
     operation.boundary('diff-analysis')
     operation.check()
@@ -344,7 +355,7 @@ export const diffSnapshotsWithRead = async (base: DiscoverySnapshotV1, head: Dis
 })
 
 export const diffSnapshots = (base: DiscoverySnapshotV1, head: DiscoverySnapshotV1, options: DiffOptions = {}) =>
-  diffWithDocuments(base, head, options, options.headRoot ? verifiedLocalDocuments(head, options.headRoot) : new Map())
+  diffWithDocuments(base, head, options, options.headRoot ? verifiedLocalDocuments(base, head, options.headRoot) : new Map())
 
 const diffWithDocuments = (base: DiscoverySnapshotV1, head: DiscoverySnapshotV1, options: DiffOptions, texts: VerifiedDocuments) => {
   if (canonicalJsonV1(base.project) !== canonicalJsonV1(head.project)) throw new Error('Cannot diff different project identities; provide snapshots from the same repository.')

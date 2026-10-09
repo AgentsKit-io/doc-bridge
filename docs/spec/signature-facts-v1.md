@@ -84,7 +84,15 @@ compiler libraries, never live repository files or network resources. Bounded lo
 
 These changes remain in the ChangeSet and participate in its semantic hash,
 but produce no `CHANGED_REFERENCE`. Other unproven signature changes remain
-review candidates. Aggregate class/type/member compatibility is not inferred.
+review candidates when their citing regions claim the changed aspect; bare
+mentions remain relations without findings. Parameter-only usage checks reuse
+the retained callable proof with a void return, so unrelated opaque returns do
+not invalidate a proof about an unchanged call. Explicit return uses remain
+claims when unverified. Shallow owned option shapes may prove optional additions;
+required fields, unresolved shapes and omitted existing defaults remain claims.
+Unused optional return fields may be omitted beneath unchanged positive wrappers;
+opaque or restructured return variants remain unverified. These are finding
+relevance checks, not new aggregate compatibility classifications. Aggregate class/type/member compatibility is not inferred.
 
 ## Local imported context
 

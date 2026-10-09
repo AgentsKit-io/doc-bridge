@@ -39,6 +39,8 @@
 
 ### Minor Changes
 
+- Distinguish changed-aspect claims from bare mentions in changed-reference findings, preserving citation relations and removal diagnostics while verifying current string-enum claims against bounded snapshot-matching source.
+
 - Surface bounded indexed memory-supports evidence in deterministic why queries and typed MCP rationale tools.
 
 - Add optional bounded L2 region remediation with deterministic in-memory rechecking, key-free scripted providers and draft review previews.

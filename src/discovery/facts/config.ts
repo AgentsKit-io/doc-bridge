@@ -22,7 +22,7 @@ const boundedLiteral = (value: unknown, depth = 0): boolean => depth <= MAX_DEPT
 )
 
 /** A scan-local syntax tree only: never import or execute a repository schema. */
-export const configFactsFromSource = (source: ts.SourceFile, path: string, ownerId: string, defaults: ReadonlyMap<string, ts.SourceFile> = new Map()): Result => {
+export const configFactsFromSource = (source: ts.SourceFile, path: string, ownerId: string, defaults: ReadonlyMap<string, ts.SourceFile> = new Map(), observe?: (fact: SurfaceFact, value: unknown) => void): Result => {
   if ((source as ts.SourceFile & { parseDiagnostics?: readonly ts.Diagnostic[] }).parseDiagnostics?.length) return emit([], ownerId, true, path)
   const bindings = new Map<string, ts.Expression>()
   const declarations = new Map<string, ts.VariableDeclaration>()
@@ -237,7 +237,7 @@ export const configFactsFromSource = (source: ts.SourceFile, path: string, owner
     }
   }
   for (const { value, shape } of assigned.values()) shape.default = value
-  const result = emit(roots, ownerId, incomplete, path)
+  const result = emit(roots, ownerId, incomplete, path, observe)
   result.facts = result.facts.map(fact => assigned.has(fact.name) ? { ...fact, evidence: [assigned.get(fact.name)!.evidence, ...fact.evidence] } : fact)
   for (const [defaultPath, defaultSource] of linkedDefaults) {
     if (defaultPath === path) continue
@@ -256,8 +256,9 @@ const projection = (shape: Shape, includeProperties = true): unknown => ({
   ...(shape.variants ? { variants: shape.variants.map(value => projection(value)) } : {}),
   ...(includeProperties && shape.properties ? { properties: Object.fromEntries([...shape.properties].sort(([a], [b]) => a.localeCompare(b)).map(([key, value]) => [key, projection(value)])) } : {}),
 })
-const emit = (roots: readonly { shape: Shape; evidence: Evidence }[], ownerId: string, incomplete: boolean, path: string): Result => {
+const emit = (roots: readonly { shape: Shape; evidence: Evidence }[], ownerId: string, incomplete: boolean, path: string, observe?: (fact: SurfaceFact, value: unknown) => void): Result => {
   const facts = new Map<string, SurfaceFact>()
+  const values = new Map<string, unknown>()
   const conflicting = new Set<string>()
   const visit = (shape: Shape, prefix: string, evidence: Evidence, depth: number): void => {
     if (depth > MAX_DEPTH) { incomplete = true; return }
@@ -269,10 +270,12 @@ const emit = (roots: readonly { shape: Shape; evidence: Evidence }[], ownerId: s
       if (conflicting.has(name)) continue
       if (previous && previous.valueHash !== fact.valueHash) { facts.delete(name); conflicting.add(name); incomplete = true; continue }
       facts.set(name, fact)
+      if (observe) values.set(name, projection(value))
       visit(value, name, evidence, depth + 1)
     }
   }
   for (const root of roots) visit(root.shape, '', root.evidence, 0)
+  if (observe) for (const [name, fact] of facts) observe(fact, values.get(name))
   return { facts: [...facts.values()].sort((a, b) => a.id.localeCompare(b.id)), coverage: [{ analyzer: CONFIG_FACT_ANALYZER_ID, analyzerVersion: CONFIG_FACT_ANALYZER_VERSION, scope: 'config-keys', status: incomplete ? 'partial' : 'complete', ...(incomplete ? { reason: 'Dynamic, unsupported, conflicting or bounded configuration schema/default extraction.' } : {}), evidence: roots.length ? roots.map(root => root.evidence).slice(0, 32) : [{ source: path.endsWith('.json') ? 'configuration' : 'code', path }] }] }
 }
 
