@@ -40,6 +40,11 @@ export const HumanCorpusConfigSchema = z
 export const IndexConfigSchema = z
   .object({
     outFile: z.string().min(1).max(512).optional(),
+    knowledgeEntities: z.object({
+      enabled: z.boolean().optional(),
+      maxCommits: z.number().int().min(1).max(200).optional(),
+      sinceTag: z.string().min(1).max(256).regex(/^[A-Za-z0-9][A-Za-z0-9._/-]*$/).refine(value => !value.includes('..') && !value.includes('//') && !value.endsWith('/')).optional(),
+    }).strict().optional(),
     llmsTxt: z
       .object({
         enabled: z.boolean().optional(),

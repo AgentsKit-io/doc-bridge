@@ -2,7 +2,16 @@ import type { DocBridgeConfigV1 } from './schema.js'
 
 const DEFAULT_AGENT_EXCLUDE = ['**/node_modules/**', '**/.git/**'] as const
 
+/** Disabled opt-in settings must not change an existing index's configuration identity. */
+export const withoutDisabledKnowledgeEntities = (config: DocBridgeConfigV1): DocBridgeConfigV1 => {
+  if (!config.index?.knowledgeEntities || config.index.knowledgeEntities.enabled) return config
+  const { knowledgeEntities: _disabled, ...index } = config.index
+  const { index: _index, ...rest } = config
+  return Object.keys(index).length ? { ...rest, index } : rest
+}
+
 export const applyConfigDefaults = (config: DocBridgeConfigV1): DocBridgeConfigV1 => {
+  config = withoutDisabledKnowledgeEntities(config)
   const agentRoot = config.corpus.agent.root
   const agentIndex = config.corpus.agent.index ?? `${agentRoot}/INDEX.md`
 

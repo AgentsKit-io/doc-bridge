@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { KnowledgeEntitiesV1Schema } from './knowledge-entity.js'
 import { HandoffCaveatsSchema } from './agent-handoff.js'
 import { FindingV1Schema, RemediationV1Schema, DecisionV1Schema } from './findings.js'
 import { ChangeSetV1JsonSchema } from './change-set.js'
@@ -122,12 +123,13 @@ export const DocBridgeIndexV1JsonSchema = {
   $id: 'https://agentskit.io/schemas/doc-bridge/doc-bridge-index-v1.schema.json',
   title: 'DocBridgeIndex v1',
   type: 'object',
+  allOf: [{ if: { required: ['knowledgeEntities'] }, then: { properties: { contentHashAlgo: { const: 'sha256-semantic-v1' } } } }],
   additionalProperties: false,
   required: ['schemaVersion', 'contentHash', 'contentHashAlgo', 'knowledge'],
   properties: {
     schemaVersion: { const: 1 },
     contentHash: { type: 'string', pattern: '^[a-f0-9]{64}$' },
-    contentHashAlgo: { const: 'sha256-normalized-v1' },
+    contentHashAlgo: { enum: ['sha256-normalized-v1', 'sha256-semantic-v1'] },
     generatedAt: { type: 'string', format: 'date-time' },
     project: {
       type: 'object',
@@ -190,6 +192,7 @@ export const DocBridgeIndexV1JsonSchema = {
       additionalProperties: { type: 'object' },
     },
     lookup: { type: 'object' },
+    knowledgeEntities: z.toJSONSchema(KnowledgeEntitiesV1Schema),
   },
 } as const satisfies JsonSchema
 

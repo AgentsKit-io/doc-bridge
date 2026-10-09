@@ -16,6 +16,7 @@ import { buildDocBridgeIndex } from '../index-builder/build-index.js'
 import { repositoryInputs } from '../index-builder/project-corpus.js'
 import { GRAPH_ANALYZER_VERSION } from '../graph/build.js'
 import { SEARCH_LEXICON_VERSION } from './text.js'
+import { withoutDisabledKnowledgeEntities } from '../config/defaults.js'
 
 export class IndexNotFoundError extends Error {
   constructor(readonly path: string) {
@@ -66,9 +67,11 @@ const validateIndex = (raw: unknown): DocBridgeIndexV1 => {
  * is still validated rather than trusted.
  */
 export const loadFreshDocBridgeIndex = (root: string, config: DocBridgeConfigV1): DocBridgeIndexV1 => {
+  config = withoutDisabledKnowledgeEntities(config)
   const index = loadDocBridgeIndex(root, config)
 
-  if (index.inputs && index.retrieval) {
+  // History can change without file bytes changing; opt-in entity indexes require a real rebuild.
+  if (index.inputs && index.retrieval && !index.knowledgeEntities) {
     const inputs = repositoryInputs(root, config, index.contentHashAlgo)
     /*
      * The projection is a function of the snapshot, the overlay and the configuration under a
@@ -104,6 +107,7 @@ export const loadStoredDocBridgeIndex = async (io: ArtifactIOV1, request: Storag
 
 /** Freshness is checked with verified bytes from the same exact partition. */
 export const loadFreshStoredDocBridgeIndex = async (io: ArtifactIOV1, reader: RepositoryReadV1, request: StorageRequest, config: DocBridgeConfigV1): Promise<StorageResult<{ index: DocBridgeIndexV1; byteHash: string }>> => withExecutionProfile(isServiceProfile(config) ? 'service' : request.profile, async () => {
+  config = withoutDisabledKnowledgeEntities(config)
   if (request.profile === 'service' || isServiceProfile(config)) { config = serviceConfig(config).config; reader = restrictServiceRead(reader, config) }
   request = { partition: request.partition, signal: request.signal }
   const loaded = await loadStoredDocBridgeIndex(io, request)

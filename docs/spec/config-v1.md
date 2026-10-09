@@ -19,6 +19,13 @@ Standalone CLI — not merged into a framework or OS CLI.
 
 ## Design rules
 
+`index.knowledgeEntities` enables [knowledge entity v1](../schemas/knowledge-entity-v1.md):
+`{ enabled?: boolean, maxCommits?: number, sinceTag?: string }`. Default is off;
+`maxCommits` defaults to 50 (allowed 1–200); `sinceTag` names a local ancestor tag.
+No tag fetch occurs. Opt-in requires compatible readers and semantic hashing.
+The service configuration allowlist does not permit this option.
+
+
 1. **Progressive** — only `schemaVersion` + `corpus.agent` required; everything else defaults sensibly.
 2. **Plugin-shaped** — doc sites and monorepo layout are plugins, not hardcoded paths.
 3. **No provider in core** — adapter config lives under `intelligence`, never required.

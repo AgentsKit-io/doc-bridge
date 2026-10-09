@@ -3,6 +3,7 @@ import { VersionedHashAlgorithmSchema } from '../index-builder/content-hash.js'
 
 import { AgentHandoffLegacySchema } from './agent-handoff.js'
 import { RETRIEVAL_MAX_ENTRIES, RetrievalIndexV1Schema } from './retrieval-index.js'
+import { KnowledgeEntitiesV1Schema } from './knowledge-entity.js'
 
 export const INDEX_SCHEMA_VERSION = 1 as const
 
@@ -141,6 +142,7 @@ export const DocBridgeIndexV1Schema = z
      * server fail on a repository `index` had reported building successfully.
      */
     knowledge: z.array(KnowledgeEntrySchema).max(RETRIEVAL_MAX_ENTRIES),
+    knowledgeEntities: KnowledgeEntitiesV1Schema.optional(),
     capabilities: z.array(CapabilityRefSchema).max(5_000).optional(),
     handoffs: z.record(z.string().min(1).max(256), AgentHandoffLegacySchema).optional(),
     lookup: IndexLookupSchema.optional(),
@@ -153,6 +155,7 @@ export const DocBridgeIndexV1Schema = z
     projection: RetrievalIndexV1Schema.optional(),
   })
   .strict()
+  .refine(index => !index.knowledgeEntities || index.contentHashAlgo === 'sha256-semantic-v1', 'Knowledge entities require sha256-semantic-v1; disable entities for legacy index readers.')
 
 export type DocBridgeIndexV1 = z.infer<typeof DocBridgeIndexV1Schema>
 export type KnowledgeEntry = z.infer<typeof KnowledgeEntrySchema>

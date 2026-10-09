@@ -36,6 +36,9 @@ import { projectRetrievalIndex, toKnowledgeEntry } from '../retrieval/project.js
 import { resolveSearchParams, resolveSearchWeights } from '../retrieval/weights.js'
 import { projectEnrichmentOverlay, readEnrichmentOverlay } from '../enrich/overlay.js'
 import type { EnrichmentOverlayV1 } from '../schemas/enrichment.js'
+import { extractKnowledgeEntities } from '../entities/extract.js'
+import type { KnowledgeEntitiesV1 } from '../schemas/knowledge-entity.js'
+import { withoutDisabledKnowledgeEntities } from '../config/defaults.js'
 
 export type BuildIndexOptions = {
   readonly profile?: ExecutionProfile
@@ -96,7 +99,7 @@ const projectFromSnapshot = (
   requested: BuildIndexOptions['overlay'],
   hashAlgorithm: HashAlgorithm,
   files?: RepositoryFiles,
-): { readonly projection: RetrievalIndexV1 } => {
+): { readonly projection: RetrievalIndexV1; readonly knowledgeEntities?: KnowledgeEntitiesV1 } => {
   const scanned = given ?? discoverRepositoryForIndex({ root, config })
   const selected = { ...scanned, contentHashAlgo: hashAlgorithm }
   const observed = { ...selected, contentHash: contentHashForVersionedArtifact(selected) }
@@ -133,7 +136,7 @@ const projectFromSnapshot = (
     ...(overlay ? { overlay } : {}),
     readDocument: (path) => contents.get(path),
   })
-  return { projection }
+  return { projection, ...(config.index?.knowledgeEntities?.enabled ? { knowledgeEntities: extractKnowledgeEntities({ snapshot: declared, documents: contents, ...(!files ? { gitRoot: root } : {}), window: config.index.knowledgeEntities }) } : {}) }
 }
 
 const existingGeneratedAt = (indexPath: string, contentHash: string): string | undefined => {
@@ -154,7 +157,8 @@ export const buildDocBridgeIndex = (opts: BuildIndexOptions): BuildIndexResult =
 
 const buildIndex = (opts: BuildIndexOptions, files?: RepositoryFiles, fallbackProjectName?: string, contentRefs?: ReadonlyMap<string, ContentRef>, byteSizes?: ReadonlyMap<string, number>): BuildIndexResult => {
   const root = opts.root ?? process.cwd()
-  const config = opts.config
+  const config = withoutDisabledKnowledgeEntities(opts.config)
+  if (config.index?.knowledgeEntities?.enabled && opts.hashAlgorithm === LEGACY_HASH_ALGORITHM) throw new Error('Knowledge entities require sha256-semantic-v1; disable entities for legacy index readers.')
   const write = opts.write ?? true
   const outFile = config.index?.outFile ?? '.doc-bridge/index.json'
   const indexPath = join(root, outFile)
@@ -202,8 +206,8 @@ const buildIndex = (opts: BuildIndexOptions, files?: RepositoryFiles, fallbackPr
    * the snapshot: the index has no scanner of its own, so a record retrieval can find is an entity
    * discovery observed, with the same id and the same content hash.
    */
-  const projected = config.retrieval?.corpus?.enabled === false ? undefined : projectFromSnapshot(root, config, opts.snapshot, lookup, curated, opts.overlay, opts.hashAlgorithm ?? SEMANTIC_HASH_ALGORITHM, files)
-  const projection = projected?.projection
+  const projected = config.retrieval?.corpus?.enabled === false && !config.index?.knowledgeEntities?.enabled ? undefined : projectFromSnapshot(root, config, opts.snapshot, lookup, curated, opts.overlay, opts.hashAlgorithm ?? SEMANTIC_HASH_ALGORITHM, files)
+  const projection = config.retrieval?.corpus?.enabled === false ? undefined : projected?.projection
   const inputs = projected ? files ? repositoryInputsFromFiles(files, config, opts.hashAlgorithm ?? SEMANTIC_HASH_ALGORITHM, contentRefs, byteSizes) : repositoryInputs(root, config, opts.hashAlgorithm ?? SEMANTIC_HASH_ALGORITHM) : undefined
   const curatedPaths = new Set(curated.map((entry) => entry.path))
   /*
@@ -232,6 +236,7 @@ const buildIndex = (opts: BuildIndexOptions, files?: RepositoryFiles, fallbackPr
     ...(inputs ? { inputs } : {}),
     retrieval,
     ...(projection ? { projection } : {}),
+    ...(projected?.knowledgeEntities ? { knowledgeEntities: projected.knowledgeEntities } : {}),
   }
 
   if (executionContext().profile === 'service') index = DocBridgeIndexV1Schema.parse(redactValue(index))
