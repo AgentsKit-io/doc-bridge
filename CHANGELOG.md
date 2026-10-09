@@ -97,6 +97,18 @@
 
 - Precompute semantic hash ordering keys once per entry and bound syntax-tree retention for index-only scans and reuse parsed trees in discovery, reducing index-build cost without changing artifact bytes or hash identity.
 
+## 1.15.0-next.1
+
+### Minor Changes
+
+- c113930: Surface bounded indexed memory-supports evidence in why queries and typed MCP rationale tools.
+
+### Patch Changes
+
+- 8f86194: Accept the reserved `session-export` and `bootstrap-delta` memory adapters again in 1.x and ignore them with a warning instead of failing config validation, restoring compatibility for existing configurations.
+- 293acf6: Refresh bounded public Studio samples with manifest package labels and current engine provenance.
+- 65184e8: Use manifest names with directory-name fallback for package labels in discovery, indexes, Studio exports and vault notes. Preserve package IDs and keep documentation titles and purpose text separate from package identity.
+
 ## 1.15.0-next.0
 
 ### Minor Changes
