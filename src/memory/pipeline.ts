@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto'
+import { parseMarkdownDocument } from '../discovery/markdown.js'
 import type { KnowledgeEntitiesV1, MemoryEntityRelationV1 } from '../schemas/knowledge-entity.js'
 import type { DocBridgeIndexV1 } from '../schemas/doc-bridge-index.js'
 import type { MemoryCandidateV1 } from '../schemas/memory-candidate.js'
@@ -67,11 +68,15 @@ export const linkMemoryToEntities = (
   const relations: MemoryEntityRelationV1[] = []
   for (const candidate of candidates) {
     if (classifyRoute(candidate.fact).route === 'discard' || scanMemorySafety([{ candidate, route: 'agent', reason: '' }]).length) continue
+    const markdown = candidate.fact.includes('`') || candidate.fact.includes('](')
+      ? parseMarkdownDocument(candidate.rawPath ?? 'memory.md', candidate.fact)
+      : undefined
     const tokens = new Set([
       ...candidate.references,
       candidate.fact,
       ...candidate.fact.split(/[\s()[\]`"'<>;,!?]+/),
-      ...[...candidate.fact.matchAll(/`([^`]+)`|\[[^\]]*\]\(([^)\s]+)\)/g)].map(match => match[1] ?? match[2]!),
+      ...(markdown?.codeTokens ?? []).map(token => token.value),
+      ...(markdown?.links ?? []).map(token => token.value),
     ])
     const factHash = createHash('sha256').update(candidate.fact).digest('hex')
     for (const value of [...tokens].sort()) {

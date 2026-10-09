@@ -1,4 +1,3 @@
-import { existsSync } from 'node:fs'
 import { join, relative, resolve } from 'node:path'
 
 import { firstHeading, firstParagraph, slugFromPath } from '../lib/markdown.js'
@@ -21,8 +20,6 @@ const ingestMarkdownDir = (
   confidence: number,
   budget: TextReadBudget = { used: 0 },
 ): MemoryCandidateV1[] => {
-  if (!existsSync(dir)) return []
-
   return walkFiles(dir, { extensions: ['.md', '.mdc'], respectIgnore: false }).map((abs) => {
     const rel = relativePath(root, abs)
     const safePath = containedProjectPath(root, rel)

@@ -146,8 +146,17 @@ describe('configured deterministic memory', () => {
     expect(classifyMemoryCandidates(candidates, index)[0]).not.toHaveProperty('entityRelations')
   })
 
+  it('parses malformed bracket-heavy facts without losing exact inline evidence', () => {
+    for (const prefix of ['['.repeat(7900), '[](!'.repeat(1900)]) {
+      const relations = linkMemoryToEntities([candidate('brackets', `${prefix} \`Exact Alias\``)], section)
+      expect(relations).toHaveLength(1)
+      expect(relations[0]).toMatchObject({ target: 'entity-1', evidence: { kind: 'alias', value: 'Exact Alias' } })
+    }
+    expect(linkMemoryToEntities([candidate('link', 'Follow [decision](docs/entity-0.md).')], section)[0]).toMatchObject({ target: 'entity-0', evidence: { kind: 'path', value: 'docs/entity-0.md' } })
+  })
+
   it('fails rather than silently truncating relation limits', () => {
-    expect(() => linkMemoryToEntities(Array.from({ length: 10_001 }, (_, i) => candidate(`memory-${i}`, '`entity-0`')), section)).toThrow('relation limit')
+    expect(() => linkMemoryToEntities(Array.from({ length: 10_001 }, (_, i) => candidate(`memory-${i}`, 'entity-0')), section)).toThrow('relation limit')
   })
 
   it('omits ambiguous, fuzzy, discarded and unsafe matches', () => {
