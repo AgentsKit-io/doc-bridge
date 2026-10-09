@@ -1,4 +1,6 @@
 ---
+title: Layer-1 benchmark results v2
+description: Native, fixture and historical drift measurements with explicit limitations.
 owner: maintainers
 lifecycle: active
 sourceOfTruth: docs/bench/layer1-cases-v2.json

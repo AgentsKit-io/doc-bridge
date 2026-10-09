@@ -5,7 +5,7 @@ description: Practical Doc Bridge paths for humans, agents, PR gates, and MCP �
 
 # Documentation
 
-Doc Bridge keeps **one repository** useful to people and coding agents. Pick the shortest path:
+Doc Bridge provides deterministic proof of documentation drift and keeps **one repository** useful to people and coding agents. Pick the shortest path:
 
 ## Start
 
@@ -15,6 +15,19 @@ Doc Bridge keeps **one repository** useful to people and coding agents. Pick the
 | Guided install | [Install and run](./guides/install-and-run.md) |
 | Machine-first entry | [For agents](./for-agents.md) · site route `/for-agents` |
 | PR freshness gate | [Gate and CI](./guides/gate-ci.md) · [Marketplace](./MARKETPLACE.md) |
+
+## New in 2.0
+
+| Goal | Page |
+| --- | --- |
+| Discover and export Obsidian notes; review generated-note edits | [Vault](./guides/vault.md) |
+| Explain decisions, concepts and changes with CLI/MCP evidence | [Knowledge query](./spec/knowledge-query-v1.md) |
+| Preview optional remediation with a fake provider | [Key-free remediation](./guides/llm-remediation.md) |
+| Separate changed claims from mentions in PR evidence | [Action advisory](./guides/action-advisory.md) |
+| Upgrade existing configurations and artifacts | [1.x → 2.0 migration](./migration/1.x-to-2.0.md) |
+| Inspect measured precision and false positives | [Benchmark results and method](./bench/layer1-results-v2.md) |
+
+Studio is coming with its final design; this launch does not ship its interface.
 
 ## Build workflows
 

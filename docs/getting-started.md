@@ -1,11 +1,11 @@
 ---
 title: Getting started
-description: Install, index, query, and gate repository documentation in about 60 seconds.
+description: Install, index and query repository documentation without an API key.
 ---
 
 # Getting started
 
-doc-bridge turns your existing docs into an **AgentHandoff** index:
+doc-bridge provides deterministic proof of documentation drift and turns your existing docs into an **AgentHandoff** index:
 
 - `startHere` — what the agent reads first
 - `editRoots` — where the agent is allowed to work
@@ -30,17 +30,24 @@ For the canonical zero-setup proof, see the [README's 60-second proof](../README
 
 ## Two-minute path (no API key)
 
+Run local binaries through `npx` (or `pnpm exec`); a development dependency does
+not put `ak-docs` on your shell PATH. Node 22 or newer is required.
+
 ```bash
-ak-docs init          # config + demo ownership + AGENTS.md snippet
-ak-docs index
-ak-docs query package example --agent
-ak-docs doctor --text
-ak-docs doctor --badge
-ak-docs mcp install --cursor
-ak-docs index --watch          # optional — dev loop
+npx ak-docs init
+npx ak-docs index
+npx ak-docs query package example --agent
 ```
 
+This starter handoff proves wiring, not real ownership. Replace the generated
+example with your repository's edit roots and checks using the
+[config selection table](./examples.md), reindex, then query your actual package.
+The two-minute target depends on clone/install speed and repository size; it is
+not a universal latency guarantee. Watch mode and MCP installation are follow-ups.
+
 You should see an **AgentHandoff** with `startHere`, `editRoots`, `checks`, and optional `bridge`.
+
+Use `npx ak-docs` (or `pnpm exec ak-docs`) for the remaining CLI examples too.
 
 Useful follow-ups:
 
@@ -86,8 +93,8 @@ See [config-v1](./spec/config-v1.md) and [examples](./examples.md).
 {
   "mcpServers": {
     "ak-docs": {
-      "command": "ak-docs",
-      "args": ["mcp"]
+      "command": "npx",
+      "args": ["ak-docs", "mcp"]
     }
   }
 }
@@ -118,33 +125,54 @@ ak-docs memory promote --pr         # opens a GitHub draft PR via gh
 Sources include `.agent-memory/**` and `.cursor/rules/*.mdc`. Promotion is
 draft-only and never auto-merges.
 
-## Optional chat + RAG (AgentsKit)
+## 2.0: inspect drift and rationale
 
-```bash
-npm i -D @agentskit/rag @agentskit/ink @agentskit/adapters @agentskit/memory react
-```
+Use [diff and findings](./guides/diff-and-findings.md) to compare captured revisions.
+The [Action advisory](./guides/action-advisory.md) separates claims about changed
+aspects from bare mentions; `CHANGED_REFERENCE` requests review, not automatic
+correction. Removal requires evidence and unsupported analysis stays visible.
 
-Enable in config:
+Enable knowledge entities in your existing config, then rebuild:
 
 ```json
-{
-  "intelligence": {
-    "enabled": true,
-    "adapter": { "provider": "ollama", "model": "llama3.2" },
-    "chat": { "enabled": true, "handoffFirst": true, "sources": ["agent", "human"] }
-  }
-}
+{ "index": { "knowledgeEntities": { "enabled": true } } }
 ```
 
 ```bash
-ak-docs index
-ak-docs rag ingest
-ak-docs rag search "authentication boundaries"
-ak-docs chat
-ak-docs ask "how does auth work?" --chat
+npx ak-docs index
+npx ak-docs why src/auth.ts
 ```
 
-Details: [chat-and-rag.md](./chat-and-rag.md).
+Decisions, concepts and changes retain indexed evidence. No match is not proof
+that rationale does not exist. MCP adds `knowledge.decision`, `knowledge.concept`
+and `knowledge.whyChanged`; see [knowledge query](./spec/knowledge-query-v1.md).
+
+## Obsidian discovery, export and review
+
+Configure the opt-in `obsidian` human adapter for committed notes. Run
+`npx ak-docs vault export --text` for generated navigation and
+`npx ak-docs vault diff --text` to capture edited generated notes as pending
+proposals. Keep generated output ignored and human notes committed. Export
+refuses to overwrite edits. Follow the [vault guide](./guides/vault.md).
+
+## Optional LLM remediation
+
+The [key-free remediation guide](./guides/llm-remediation.md) uses a scripted fake
+provider via `--responses`; it reads no API key. Start with
+`npx ak-docs fix --llm --base base.json --dry-run`. Real providers are explicitly
+configured under `intelligence`; omit `--responses` only for an intended provider
+run. Deterministic rechecking gates proposals, and human review still decides
+correctness. Core init/index/query/handoff never requires that provider.
+Optional chat/RAG setup remains in [chat and RAG](./chat-and-rag.md).
+
+## Upgrade and measured limits
+
+Read [1.x → 2.0 migration](./migration/1.x-to-2.0.md) before regenerating old
+artifacts. Studio is coming with its final design; it is not shipped here.
+The [latest benchmark and method](./bench/layer1-results-v2.md) report native
+precision 100% (15/15 findings), historical precision 83.3% (10/12 findings),
+and historical negative-case false-positive rate 6.25% (2/32 cases).
+These sample results do not prove arbitrary prose correctness.
 
 ## Related
 
