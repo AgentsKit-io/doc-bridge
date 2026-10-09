@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
@@ -141,7 +142,19 @@ const proposalFor = (snapshot: DiscoverySnapshotV1, kind: EnrichmentKind, entity
 }
 
 /** One valid and at least one rejected fixture per kind. */
+const vaultPayload = () => {
+  const sourceRegions = [{ path: 'docs/query.md', lineStart: 1, lineEnd: 1, hash: 'a'.repeat(64) }]
+  const original = `---\nsources: ${JSON.stringify([{ path: 'docs/query.md', regions: [{ lineStart: 1, lineEnd: 1, hash: 'a'.repeat(64) }] }])}\n---\n# Query\n`
+  const edited = `${original}Review me.\n`
+  const hash = (text: string) => createHash('sha256').update(text).digest('hex')
+  return { note: '.doc-bridge/vault/index.md', original, edited, originalHash: hash(original), editedHash: hash(edited), sourceRegions }
+}
+
 const kindFixtures = (snapshot: DiscoverySnapshotV1): Record<EnrichmentKind, { valid: Record<string, unknown>; rejected: { proposal: Record<string, unknown>; reason: string }[] }> => ({
+  'vault-edit': {
+    valid: proposalFor(snapshot, 'vault-edit', 'document:docs/query.md', vaultPayload()),
+    rejected: [{ proposal: proposalFor(snapshot, 'vault-edit', 'document:docs/query.md', { ...vaultPayload(), editedHash: 'b'.repeat(64) }), reason: 'schema' }],
+  },
   'classify-document': {
     valid: proposalFor(snapshot, 'classify-document', 'document:docs/ranking.md', { type: 'guide', audience: 'human', lifecycle: 'active', criticality: 'tier-2' }),
     rejected: [

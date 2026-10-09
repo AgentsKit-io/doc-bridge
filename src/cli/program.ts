@@ -82,7 +82,8 @@ import { renderOfflineReportArtifact } from '../report/html.js'
 import { benchmarkFixture, formatBenchmarkText, measureBenchmark } from '../metrics/benchmark.js'
 import { PACKAGE_VERSION } from '../version.js'
 import { auditDocumentation, formatDocumentationAuditText } from '../audit/documentation.js'
-import { exportVault } from '../vault/export.js'
+import { diffVault } from '../vault/diff.js'
+import { exportVault, safePath } from '../vault/export.js'
 import { renderArtifact, writeRenderedPages } from '../render/render.js'
 import { CLI_COMMAND_USAGE } from './usage.js'
 import { checkPublicParity, formatPublicParityText } from '../parity/check.js'
@@ -1688,8 +1689,16 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
   if (command === 'render') return runRenderCommand(flags, positional, configPath, argv)
   if (command === 'vault') return (async () => {
     try {
-      if (positional[1] !== 'export' || positional.length !== 2) throw new Error('Usage: ak-docs vault export [--config <path>] [--text|--json]')
+      if (!['export', 'diff'].includes(positional[1] ?? '') || positional.length !== 2) throw new Error('Usage: ak-docs vault export|diff [--pr] [--config <path>] [--text|--json]')
       const { config, root } = loadProject(configPath)
+      if (positional[1] === 'diff') {
+        const result = await diffVault(root, config)
+        if (flags.has('--pr')) safePath(root, '.doc-bridge/drafts')
+        const pr = flags.has('--pr') && result.proposals.length ? promoteMemoryToGithubPr(root, { ok: true, title: 'Review generated vault note edits', body: `Review proposals only; source documents are unchanged.\n\n${JSON.stringify(result, null, 2)}`, findings: [], classifications: [] }, { dryRun: true }) : undefined
+        if (wantsTextOutput(flags, config)) writeLines([`Vault: ${result.output}`, `Proposals: ${result.proposals.length}`, `Added: ${result.added.join(', ')}`, `Deleted: ${result.deleted.join(', ')}`, ...result.unproposed.map(item => `${item.note}: ${item.reason}`), ...(pr ? [pr.message, ...pr.commands] : [])])
+        else writeJson({ ok: true, ...result, ...(pr ? { pr } : {}) })
+        return 0
+      }
       const result = await exportVault(root, config)
       if (wantsTextOutput(flags, config)) writeLines([`Vault: ${result.output}`, `Notes: ${result.notes}`, `Removed: ${result.removed}`])
       else writeJson({ ok: true, ...result })
