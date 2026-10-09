@@ -42,6 +42,7 @@ Core (no API key):
   ak-docs fix propose links|normalize <artifact> [--output <file>]
   ak-docs fix approve|apply <proposal.json> [--by <name>]
   ak-docs suggest [--documentation] [--json|--text]   run the configured Registry agent
+  ak-docs why <path|symbol|concept> [--json]
   ak-docs query [package|ownership|intent|change] <id> [--agent] [--text]
   ak-docs search <term> [--agent] [--explain] [--mode=<mode>] [--context-budget=<tokens>] [--text]
   ak-docs list <packages|intents|changes|knowledge> [--text]

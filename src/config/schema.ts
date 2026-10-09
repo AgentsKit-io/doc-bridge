@@ -334,9 +334,12 @@ export const SurfacesConfigSchema = z
               'docbridge.proposals',
               'knowledge.search',
               'knowledge.lookup',
+              'knowledge.decision',
+              'knowledge.concept',
+              'knowledge.whyChanged',
             ]),
           )
-          .max(18)
+          .max(21)
           .optional(),
         transport: z.enum(['stdio', 'http']).optional(),
         http: z

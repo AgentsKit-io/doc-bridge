@@ -1,3 +1,4 @@
+import { KnowledgeWhyRequestSchema, knowledgeWhy, formatKnowledgeWhyText } from '../query/why.js'
 import { withExecutionProfile, executionContext, isServiceProfile, serviceCoverage, type ExecutionProfile } from '../execution/profile.js'
 import { serviceConfig } from '../execution/config.js'
 import { mkdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs'
@@ -46,6 +47,11 @@ export type McpContext = {
 }
 
 export const MCP_TOOLS = [
+  ...(['knowledge.decision', 'knowledge.concept', 'knowledge.whyChanged'] as const).map(name => ({
+    name, title: name, description: 'Read exact indexed knowledge entities with evidence and explicit coverage.',
+    annotations: { readOnlyHint: true },
+    inputSchema: { type: 'object', properties: { target: { type: 'string', minLength: 1, maxLength: 512 }, limit: { type: 'integer', minimum: 1, maximum: 100 }, budgetTokens: { type: 'integer', minimum: 1, maximum: 1000000 }, format: { type: 'string', enum: ['json', 'text'] } }, required: ['target'], additionalProperties: false },
+  })),
   {
     name: 'handoff.resolve',
     title: 'Resolve repository handoff',
@@ -349,14 +355,14 @@ export const handleMcpRequest = (ctx: McpContext, request: JsonRpcRequest): unkn
     }
   }
 
-  if (request.method === 'tools/list') return { tools: service ? enabledMcpTools(ctx).filter(tool => ['knowledge.search', 'knowledge.lookup', 'handoff.resolve', 'doc.search', 'doc.get', 'retriever.query', 'playbook.pattern.get', 'registry.topology'].includes(tool.name)) : enabledMcpTools(ctx) }
+  if (request.method === 'tools/list') return { tools: service ? enabledMcpTools(ctx).filter(tool => ['knowledge.decision', 'knowledge.concept', 'knowledge.whyChanged', 'knowledge.search', 'knowledge.lookup', 'handoff.resolve', 'doc.search', 'doc.get', 'retriever.query', 'playbook.pattern.get', 'registry.topology'].includes(tool.name)) : enabledMcpTools(ctx) }
 
   if (request.method === 'tools/call') {
     const params = asRecord(request.params)
     const name = params.name
     const args = asRecord(params.arguments)
     if (typeof name !== 'string') throw new Error('MCP tools/call requires a tool name.')
-    if (service && (!['knowledge.search', 'knowledge.lookup', 'handoff.resolve', 'doc.search', 'doc.get', 'retriever.query', 'playbook.pattern.get', 'registry.topology'].includes(name) || !ctx.loadIndex || (name === 'doc.get' && !ctx.readDocument))) throw new Error('not-analyzed: service profile requires injected reads and refuses mutating/agent or filesystem tools')
+    if (service && (!['knowledge.decision', 'knowledge.concept', 'knowledge.whyChanged', 'knowledge.search', 'knowledge.lookup', 'handoff.resolve', 'doc.search', 'doc.get', 'retriever.query', 'playbook.pattern.get', 'registry.topology'].includes(name) || !ctx.loadIndex || (name === 'doc.get' && !ctx.readDocument))) throw new Error('not-analyzed: service profile requires injected reads and refuses mutating/agent or filesystem tools')
     assertMcpToolEnabled(ctx, name)
     const index = () => ctx.loadIndex?.() ?? loadFreshDocBridgeIndex(ctx.root, ctx.config)
 
@@ -370,6 +376,12 @@ export const handleMcpRequest = (ctx: McpContext, request: JsonRpcRequest): unkn
       }, service ? {} : { root: ctx.root })
       // The payload is the handoff it always was; a declared budget adds `budget` and may shed `related` and the summary note.
       return toolResult(parsed.budgetTokens === undefined ? handoff : budgetedHandoff(loaded, handoff as AgentHandoffV1, parsed.budgetTokens))
+    }
+
+    if (['knowledge.decision', 'knowledge.concept', 'knowledge.whyChanged'].includes(name)) {
+      const { format, ...parsed } = parseToolArgs(name, KnowledgeWhyRequestSchema.omit({ kind: true }).extend({ format: z.enum(['json', 'text']).optional() }), args)
+      const response = knowledgeWhy(index(), { ...parsed, kind: name === 'knowledge.decision' ? 'decision' : name === 'knowledge.concept' ? 'concept' : 'change' }, service)
+      return toolResult(format === 'text' ? formatKnowledgeWhyText(response) : response)
     }
 
     if (name === 'knowledge.search') {

@@ -376,3 +376,8 @@ actionable diagnostic. See [vault export v1](./vault-export-v1.md) and the
 `vault diff` stores generated-note edits as pending enrichment proposals without
 source writes. `--pr` writes a local review draft and prints commands only.
 See [vault diff v1](./vault-diff-v1.md).
+
+## Knowledge rationale
+
+`ak-docs why <path|symbol|concept> [--json]` exposes exact indexed rationale. See
+[knowledge query v1](knowledge-query-v1.md) for evidence, bounds and enablement.

@@ -1,13 +1,15 @@
 import assert from 'node:assert/strict'
 import { execFileSync } from 'node:child_process'
-import { cpSync, existsSync, mkdtempSync } from 'node:fs'
+import { cpSync, existsSync, mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 
 const root = resolve(import.meta.dirname, '..')
 const server = resolve(root, '.mcpb-build', 'server', 'ak-docs.js')
 const fixture = resolve(root, 'tests', 'fixtures', 'sample-project')
-const project = join(mkdtempSync(join(tmpdir(), 'doc-bridge-mcpb-smoke-')), 'sample-project')
+const temporaryRoot = mkdtempSync(join(tmpdir(), 'doc-bridge-mcpb-smoke-'))
+process.on('exit', () => rmSync(temporaryRoot, { recursive: true, force: true }))
+const project = join(temporaryRoot, 'sample-project')
 cpSync(fixture, project, { recursive: true })
 const config = resolve(project, 'doc-bridge.config.json')
 
@@ -25,6 +27,7 @@ const requests = [
   { jsonrpc: '2.0', id: 8, method: 'tools/call', params: { name: 'memory.classify', arguments: {} } },
   { jsonrpc: '2.0', id: 9, method: 'tools/call', params: { name: 'memory.promoteDraft', arguments: {} } },
   { jsonrpc: '2.0', id: 10, method: 'tools/call', params: { name: 'registry.topology', arguments: {} } },
+  ...['knowledge.decision', 'knowledge.concept', 'knowledge.whyChanged'].map((name, position) => ({ jsonrpc: '2.0', id: 11 + position, method: 'tools/call', params: { name, arguments: { target: 'schema', budgetTokens: 1000 } } })),
 ]
 
 const input = requests
@@ -57,7 +60,7 @@ while (rest.length > 0) {
 assert.equal(responses.length, requests.length)
 for (const response of responses) assert.equal(response.error, undefined)
 assert.equal(responses[0].result.serverInfo.name, 'ak-docs')
-assert.equal(responses[1].result.tools.length, 16)
+assert.equal(responses[1].result.tools.length, 19)
 for (const tool of responses[1].result.tools) {
   assert.equal(typeof tool.title, 'string')
   if (tool.name !== 'docbridge.proposals') assert.equal(tool.annotations.readOnlyHint, true)
@@ -67,4 +70,10 @@ for (const response of responses.slice(2)) {
   assert.ok(response.result.content[0].text.length > 1)
 }
 
-process.stdout.write(`${JSON.stringify({ server, toolsExercised: 8, advertisedTools: 16, responses: responses.length }, null, 2)}\n`)
+for (const response of responses.slice(10)) {
+  const payload = JSON.parse(response.result.content[0].text)
+  assert.equal(payload.enabled, false)
+  assert.match(payload.guidance, /index\.knowledgeEntities\.enabled/)
+}
+
+process.stdout.write(`${JSON.stringify({ server, toolsExercised: 11, advertisedTools: 19, responses: responses.length }, null, 2)}\n`)

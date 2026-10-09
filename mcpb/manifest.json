@@ -95,6 +95,18 @@
     {
       "name": "knowledge.lookup",
       "description": "Return an entity with its neighbours, documents, handoff, open diagnostics and evidence, within a token budget."
+    },
+    {
+      "name": "knowledge.decision",
+      "description": "Read exact indexed knowledge entities with evidence, token budgets and explicit coverage."
+    },
+    {
+      "name": "knowledge.concept",
+      "description": "Read exact indexed knowledge entities with evidence, token budgets and explicit coverage."
+    },
+    {
+      "name": "knowledge.whyChanged",
+      "description": "Read exact indexed knowledge entities with evidence, token budgets and explicit coverage."
     }
   ],
   "tools_generated": false,

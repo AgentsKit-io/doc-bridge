@@ -53,7 +53,7 @@ pnpm install --frozen-lockfile
 pnpm mcpb:pack
 ```
 
-The bundle asks the user to select the repository's `doc-bridge.config.json` and uses that file's directory as the project boundary. It contains a self-contained MCP runtime rather than the optional RAG, chat, or model-provider packages. The build validates the manifest, checks the archive inventory, and exercises all eight tools from the staged runtime.
+The bundle asks the user to select the repository's `doc-bridge.config.json` and uses that file's directory as the project boundary. It contains a self-contained MCP runtime rather than the optional RAG, chat, or model-provider packages. The build validates the manifest, checks the archive inventory, and exercises eleven read-only tools from the staged runtime.
 
 The stdio server accepts the newline-delimited JSON transport used by current MCP clients and the legacy `Content-Length` framing used by older integrations. Responses use the same framing as each request.
 
@@ -69,12 +69,13 @@ The stdio server accepts the newline-delimited JSON transport used by current MC
 | `memory.classify` / `memory.promoteDraft` | Memory pipeline |
 | `registry.topology` | Static curator and delegate topology |
 | `knowledge.search` | Ranked entries for a query, by kind, explained, within a `budgetTokens` |
+| `knowledge.decision` / `knowledge.concept` / `knowledge.whyChanged` | Exact target/name/alias rationale with indexed evidence, budgets and explicit history coverage |
 | `knowledge.lookup` | One entity with neighbours, documents, handoff, open diagnostics and evidence, within a `budgetTokens` |
 | `docbridge.diagnostics { format: 'finding' }` | Diagnostics as ecosystem `Finding`s |
 
 Budgets, the drop order and the lookup shape are specified in [MCP knowledge tools v1](./spec/mcp-knowledge-tools-v1.md).
 
-Every tool is annotated read-only. None of these MCP calls writes project files or publishes a memory promotion.
+The rationale tools are read-only; [knowledge query v1](./spec/knowledge-query-v1.md) defines their contract and enablement guidance. Proposal tools use the human-gated mutation workflow. Memory draft tools do not publish promotions.
 
 ## Agent guidance (paste into AGENTS.md)
 

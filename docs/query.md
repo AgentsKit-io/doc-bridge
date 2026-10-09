@@ -126,6 +126,7 @@ content hash, so changing it is a new artifact rather than a silent change of be
 
 | Need | Surface |
 | --- | --- |
+| Rationale for a path, symbol or concept | `why <target> [--json]` or typed MCP rationale tools ([contract](./spec/knowledge-query-v1.md)) |
 | Agent about to edit a module | `query … --agent` or MCP `handoff.resolve` |
 | Human browsing ownership | `query … --text` / `list packages` |
 | Free-form question with known docs | `ask "…"` (local first) |

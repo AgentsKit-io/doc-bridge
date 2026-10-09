@@ -185,3 +185,11 @@ capability defaults to the legacy field set. Default index and MCP writers never
 caveats. New strict readers accept legacy payloads; old strict readers receive legacy
 output. The public reader preserves negotiated caveats. Limitations cannot establish
 semantic validation or invent an answer.
+
+## Entity rationale tools
+
+`knowledge.decision`, `knowledge.concept`, and `knowledge.whyChanged` are
+read-only typed entity queries. Each accepts `target`, optional `limit` (1–100),
+`budgetTokens` and `format` (`json` or `text`). They share the versioned
+[knowledge query v1](knowledge-query-v1.md) contract, exact matching, evidence,
+enablement guidance and service history ceiling.
