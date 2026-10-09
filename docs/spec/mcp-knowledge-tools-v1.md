@@ -193,3 +193,7 @@ read-only typed entity queries. Each accepts `target`, optional `limit` (1–100
 `budgetTokens` and `format` (`json` or `text`). They share the versioned
 [knowledge query v1](knowledge-query-v1.md) contract, exact matching, evidence,
 enablement guidance and service history ceiling.
+
+Rationale tools include bounded indexed `memory-supports` relations with exact
+`id`, `alias`, or `path` evidence in JSON and text, following
+[knowledge query v1](knowledge-query-v1.md). Relations only target returned entities, including under service restrictions.

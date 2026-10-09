@@ -27,12 +27,20 @@ citation context naming the resolved indexed paths. Module-level projection
 citations remain module-level evidence for symbol queries; they do not prove a
 specific symbol mention or claim line-level evidence.
 Entity document regions retain exact lines and region hashes.
+Optional `memoryRelations` contains indexed `memory-supports` evidence targeting
+returned entities only. Each relation retains `candidateId`, `target`, and evidence
+`kind` (`id`, `alias`, or `path`), `value`, optional `rawPath`, and `factHash`.
+Relations sort by target, candidate ID, evidence kind/value, raw path and fact hash;
+`limit` bounds this array independently and omitted relations set `truncated`.
+The field is absent when no matching relations exist, preserving legacy payloads.
+Memory evidence is retained under token budgets and never implies promotion or
+causality. Service results exclude relations to omitted commit entities.
 
 ## Response
 
 `KnowledgeWhyResponseV1Schema` validates the public response:
 `type: knowledge-why`, `schemaVersion: 1`, `source: index:<hash>`, `target`,
-`enabled`, optional `guidance`, `entities`, `documents`, `coverage`, `truncated`.
+`enabled`, optional `guidance`, `entities`, `documents`, optional `memoryRelations`, `coverage`, `truncated`.
 Entities use KnowledgeEntityV1; coverage describes supported extraction and
 history windows. Arrays sort by ID and default to 20 results each, maximum 100.
 Limits set `truncated`; extraction coverage remains visible.

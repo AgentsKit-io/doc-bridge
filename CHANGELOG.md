@@ -29,6 +29,8 @@
 
 ### Minor Changes
 
+- Surface bounded indexed memory-supports evidence in deterministic why queries and typed MCP rationale tools.
+
 - Add optional bounded L2 region remediation with deterministic in-memory rechecking, key-free scripted providers and draft review previews.
 
 - Export opt-in knowledge entity notes and convert generated vault edits into deterministic human-reviewed enrichment proposals with a local draft preview.
