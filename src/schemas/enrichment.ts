@@ -27,6 +27,7 @@ const entityRef = boundedString(256)
 const languageTag = z.string().regex(/^[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$/)
 
 export const ENRICHMENT_KINDS = [
+  'vault-edit',
   'classify-document',
   'summarize',
   'add-alias',
@@ -52,6 +53,7 @@ export type EnrichmentKind = (typeof ENRICHMENT_KINDS)[number]
 export type EnrichmentPolicy = 'policy' | 'human' | 'finding'
 
 export const ENRICHMENT_POLICY: Readonly<Record<EnrichmentKind, EnrichmentPolicy>> = {
+  'vault-edit': 'human',
   'classify-document': 'policy',
   summarize: 'policy',
   'add-alias': 'policy',
@@ -92,6 +94,11 @@ export const ALIAS_MAX = 64
 export const INTENT_MAX = 120
 
 const payloads = {
+  'vault-edit': z.object({
+    note: boundedString(512), originalHash: hash, editedHash: hash,
+    original: z.string().max(262144), edited: z.string().max(262144),
+    sourceRegions: z.array(z.object({ path: boundedString(512), lineStart: z.number().int().positive(), lineEnd: z.number().int().positive(), hash }).strict().refine(region => region.lineEnd >= region.lineStart)).min(1).max(4096),
+  }).strict(),
   'classify-document': z
     .object({ type: DocumentTypeSchema, audience: DocumentAudienceSchema, lifecycle: DocumentLifecycleSchema, criticality: DocumentCriticalitySchema })
     .strict(),
@@ -132,6 +139,7 @@ const envelope = {
 const proposalOf = <K extends EnrichmentKind>(kind: K) => z.object({ ...envelope, kind: z.literal(kind), payload: payloads[kind] }).strict()
 
 export const EnrichmentProposalV1Schema = z.discriminatedUnion('kind', [
+  proposalOf('vault-edit'),
   proposalOf('classify-document'),
   proposalOf('summarize'),
   proposalOf('add-alias'),
@@ -158,6 +166,8 @@ export type EnrichmentProposalOf<K extends EnrichmentKind> = Extract<EnrichmentP
 export const enrichmentProposalKey = (kind: EnrichmentKind, payload: unknown): unknown => {
   const record = (payload && typeof payload === 'object' ? payload : {}) as Record<string, unknown>
   switch (kind) {
+    case 'vault-edit':
+      return { note: record.note, originalHash: record.originalHash, editedHash: record.editedHash }
     case 'add-alias':
       return { alias: record.alias }
     case 'add-intent':

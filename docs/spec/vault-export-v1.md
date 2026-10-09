@@ -92,7 +92,7 @@ notes include an additive `evidence` frontmatter field from the entity contract.
 Local first-parent commit SHAs are evidence locators, not remote links. Templates
 may override the additive note types. When knowledge entities are disabled,
 existing export bytes are unchanged; index and handoff schemas are untouched.
-
+Round-trip review follows [vault diff v1](./vault-diff-v1.md).
 
 ## Ownership and errors
 

@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto'
+import { parse } from 'yaml'
 import { z } from 'zod'
 
 import { sha256NormalizedV1 } from '../index-builder/content-hash.js'
@@ -157,6 +159,19 @@ const validateKind = (proposal: EnrichmentProposalV1, ready: Prepared, context: 
       })
       if (collision) return rejection(proposal, 'alias-collision', `"${proposal.payload.alias}" collides with "${collision.value}" (${collision.entity})`)
       return decided(byPolicy)
+    }
+    case 'vault-edit': {
+      const { original, edited, originalHash, editedHash, note, sourceRegions } = proposal.payload
+      const digest = (value: string) => createHash('sha256').update(value).digest('hex')
+      if (digest(original) !== originalHash || digest(edited) !== editedHash || originalHash === editedHash || note.startsWith('/') || note.includes('\\') || note.split('/').includes('..')) return rejection(proposal, 'schema', 'Invalid vault edit binding')
+      let bindings: string[]
+      try {
+        const metadata = parse(original.split('---\n')[1]!)
+        bindings = metadata.sources.flatMap((source: { path: string; regions: object[] }) => source.regions.map(region => sha256NormalizedV1({ path: source.path, ...region })))
+      } catch { return rejection(proposal, 'schema', 'Invalid original note') }
+      if (!sourceRegions.every(region => bindings.includes(sha256NormalizedV1(region)))) return rejection(proposal, 'evidence-outside-artifacts', 'Region is not bound to original note')
+      if (!proposal.payload.sourceRegions.every(region => region.path === entity.path || entity.evidence.some(item => item.path === region.path))) return rejection(proposal, 'evidence-outside-artifacts')
+      return decided('pending')
     }
     case 'add-intent':
       return decided(byPolicy)

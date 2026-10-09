@@ -336,7 +336,7 @@ invalidate warm CLI extraction when source mapping changes.
 ## Vault export
 
 ```bash
-ak-docs vault export [--config <path>] [--text|--json]
+ak-docs vault export|diff [--pr] [--config <path>] [--text|--json]
 ```
 
 Discover the working tree and export deterministic generated Markdown navigation
@@ -344,3 +344,7 @@ to `vault.output`. JSON reports `ok`, project-relative `output`, `notes` and
 `removed`; text reports the same counts. Failures return exit code 1 and an
 actionable diagnostic. See [vault export v1](./vault-export-v1.md) and the
 [vault guide](../guides/vault.md).
+
+`vault diff` stores generated-note edits as pending enrichment proposals without
+source writes. `--pr` writes a local review draft and prints commands only.
+See [vault diff v1](./vault-diff-v1.md).

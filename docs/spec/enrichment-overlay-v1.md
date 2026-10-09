@@ -265,3 +265,14 @@ capability defaults to the legacy field set. Default index and MCP writers never
 caveats. New strict readers accept legacy payloads; old strict readers receive legacy
 output. The public reader preserves negotiated caveats. Limitations cannot establish
 semantic validation or invent an answer.
+
+## Generated vault edits
+
+The additive `vault-edit` kind has `human` policy and preserves an arbitrary
+before/after note edit with exact note hashes and original source regions. It
+always remains pending until human review and contributes nothing to retrieval,
+ranking or observed facts, even after approval. Its identity includes the note
+path and both edit hashes; settled decisions remain stable across reruns. Older
+strict proposal readers reject this new kind; use updated readers for overlays
+containing vault edits. Existing proposal shapes, indexes and handoffs remain
+unchanged. See [vault diff v1](./vault-diff-v1.md) for the bounded payload contract.

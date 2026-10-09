@@ -44,9 +44,17 @@ path. `note.id`, `note.aliases`, `note.tags` and `note.sources` are available;
 required frontmatter is preserved outside the template.
 
 Export refuses to overwrite edits to generated notes. Preserve edits for review
-before regenerating; round-trip proposals are a separate capability. Prefer the
+before regenerating. Run `ak-docs vault diff --text` to store bound edits as
+pending enrichment proposals, then inspect them with `ak-docs enrich list`.
+`ak-docs vault diff --pr` writes a local draft and prints review commands.
+Added/deleted notes and edits without current source bindings are reported only. Prefer the
 committed human-notes folder for durable new knowledge. Keep generated output out
 of version control and do not copy it over the source corpus.
 
 See the [export contract](../spec/vault-export-v1.md) for filenames, hashes,
 containment and recovery limits.
+
+Enable `index.knowledgeEntities.enabled` to include decision, concept and change
+notes with source-region or local commit evidence and links to observed facts.
+These notes use the same stable IDs and template registry. See the
+[diff contract](../spec/vault-diff-v1.md) for review boundaries and stale bindings.
