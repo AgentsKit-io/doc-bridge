@@ -30,6 +30,7 @@
 ### Minor Changes
 
 - Add deterministic vault export with source bindings, wikilinks, graph signals, knap templates and manifest-scoped cleanup.
+- Add opt-in deterministic decision, concept and change entities with bounded evidence, exact symbol aliases, local first-parent history and explicit coverage; preserve default-off index and handoff output.
 
 - Prove changed callable compatibility across bounded relative and local workspace imports using retained historical syntax; unresolved external types remain review candidates.
 

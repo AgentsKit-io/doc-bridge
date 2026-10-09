@@ -9,6 +9,11 @@ Zod schema: `DocBridgeIndexV1Schema` in `@agentskit/doc-bridge`.
 
 Portable JSON Schema export: `DocBridgeIndexV1JsonSchema`.
 
+Optional `knowledgeEntities` uses the separate [knowledge entity v1 contract](knowledge-entity-v1.md).
+It is emitted only with explicit `index.knowledgeEntities.enabled: true` and
+semantic hashing. Default-off output preserves legacy strict-reader compatibility;
+old readers must not receive opted-in output. `AgentHandoffV1` stays unchanged.
+
 ## Shape
 
 ```json

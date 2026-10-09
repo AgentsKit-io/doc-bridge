@@ -66,6 +66,7 @@ export const contentHashForVersionedArtifact = <T extends { readonly contentHash
 /** The legacy public index used a narrower projection than knowledge artifacts. */
 export const contentHashForIndex = (index: import('../schemas/doc-bridge-index.js').DocBridgeIndexV1): string => {
   VersionedHashAlgorithmSchema.parse(index.contentHashAlgo)
+  if (index.knowledgeEntities && index.contentHashAlgo === LEGACY_HASH_ALGORITHM) throw new Error('Knowledge entities require sha256-semantic-v1; disable entities for legacy index readers.')
   if (index.contentHashAlgo !== LEGACY_HASH_ALGORITHM) return contentHashForVersionedArtifact(index)
   return sha256NormalizedV1({
     schemaVersion: index.schemaVersion,
