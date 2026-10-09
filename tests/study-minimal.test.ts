@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { mkdtempSync, writeFileSync, readFileSync, statSync, symlinkSync, rmSync, mkdirSync } from 'node:fs'
+import { mkdtempSync, writeFileSync, readFileSync, openSync, fstatSync, closeSync, symlinkSync, rmSync, mkdirSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { resolve, join } from 'node:path'
 import { execFileSync } from 'node:child_process'
@@ -142,11 +142,16 @@ describe('minimal study without network or a real credential', () => {
       await expect(main([...args.slice(0, -1), join(link, 'private.json')], env)).rejects.toThrow('Private output must be outside checkouts')
       expect(http).not.toHaveBeenCalled()
       await main(args, env)
-      const ledger = JSON.parse(readFileSync(output, 'utf8'))
+      const fd = openSync(output, 'r')
+      let ledgerText
+      try {
+        expect(fstatSync(fd).mode & 0o777).toBe(0o600)
+        ledgerText = readFileSync(fd, 'utf8')
+      } finally { closeSync(fd) }
+      const ledger = JSON.parse(ledgerText)
       expect(ledger).toMatchObject({ mode: 'pilot', status: 'awaiting-adjudication', model: 'fixture-model' })
       expect(ledger.observations).toHaveLength(2)
-      expect(statSync(output).mode & 0o777).toBe(0o600)
-      expect(readFileSync(output, 'utf8')).not.toContain(config.key)
+      expect(ledgerText).not.toContain(config.key)
       const summary = JSON.parse(log.mock.calls.at(-1)![0])
       expect(summary).toMatchObject({ inputTokens: 200, outputTokens: 40, attempts: 2 })
       expect(summary.extrapolatedFullRunUsd).toBeCloseTo(0.00028 * 18)
