@@ -1,0 +1,365 @@
+{
+  "type": "studio-graph",
+  "schemaVersion": 1,
+  "source": {
+    "project": "synthetic",
+    "indexHash": "0000000000000000000000000000000000000000000000000000000000000000",
+    "indexHashAlgo": "sha256-semantic-v1"
+  },
+  "nodes": [
+    {
+      "id": "area:example",
+      "kind": "area",
+      "label": "Example area",
+      "metrics": {
+        "degree": 1
+      },
+      "cluster": "package:example"
+    },
+    {
+      "id": "change:example",
+      "kind": "change",
+      "label": "Example change",
+      "metrics": {
+        "degree": 1
+      }
+    },
+    {
+      "id": "concept:example",
+      "kind": "concept",
+      "label": "Example concept",
+      "metrics": {
+        "degree": 2
+      }
+    },
+    {
+      "id": "decision:example",
+      "kind": "decision",
+      "label": "Example decision",
+      "metrics": {
+        "degree": 2
+      },
+      "timestamps": {
+        "authored": "2026-10-08"
+      }
+    },
+    {
+      "id": "document:example",
+      "kind": "document",
+      "label": "Example document",
+      "metrics": {
+        "degree": 3,
+        "canonicality": 0.25
+      },
+      "areaId": "area:example",
+      "cluster": "area:example",
+      "path": "docs/example.md"
+    },
+    {
+      "id": "fact:example",
+      "kind": "fact",
+      "label": "Example fact",
+      "metrics": {
+        "degree": 1,
+        "centrality": 0.5
+      }
+    },
+    {
+      "id": "human-note:example",
+      "kind": "human-note",
+      "label": "Example human-note",
+      "metrics": {
+        "degree": 1
+      }
+    },
+    {
+      "id": "package:example",
+      "kind": "package",
+      "label": "Example package",
+      "metrics": {
+        "degree": 1
+      }
+    },
+    {
+      "id": "symbol:example",
+      "kind": "symbol",
+      "label": "Example symbol",
+      "metrics": {
+        "degree": 2
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "relation:concept:explains:symbol",
+      "from": "concept:example",
+      "to": "symbol:example",
+      "kind": "explains",
+      "weight": 1
+    },
+    {
+      "id": "relation:decision:cites:document",
+      "from": "decision:example",
+      "to": "document:example",
+      "kind": "cites",
+      "weight": 1
+    },
+    {
+      "id": "relation:decision:supersedes:concept",
+      "from": "decision:example",
+      "to": "concept:example",
+      "kind": "supersedes",
+      "weight": 1
+    },
+    {
+      "id": "relation:document:links-to:human-note",
+      "from": "document:example",
+      "to": "human-note:example",
+      "kind": "links-to",
+      "weight": 1
+    },
+    {
+      "id": "relation:document:mentions:symbol",
+      "from": "document:example",
+      "to": "symbol:example",
+      "kind": "mentions",
+      "weight": 1
+    },
+    {
+      "id": "relation:fact:changed-by:change",
+      "from": "fact:example",
+      "to": "change:example",
+      "kind": "changed-by",
+      "weight": 1
+    },
+    {
+      "id": "relation:package:owns:area",
+      "from": "package:example",
+      "to": "area:example",
+      "kind": "owns",
+      "weight": 1
+    }
+  ],
+  "findings": [
+    {
+      "code": "BROKEN_REFERENCE",
+      "finding": {
+        "type": "finding",
+        "schemaVersion": 1,
+        "id": "finding:broken-reference",
+        "category": "broken-reference",
+        "assertion": {
+          "document": "docs/example.md",
+          "key": "example"
+        },
+        "evidenceHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "status": "unresolved",
+        "layer": "L0",
+        "confidence": 1,
+        "severity": "warn",
+        "entities": [
+          "document:example",
+          "symbol:example"
+        ],
+        "evidence": [
+          {
+            "source": "documentation",
+            "path": "docs/example.md",
+            "lineStart": 1,
+            "lineEnd": 2
+          }
+        ],
+        "routing": "proposed",
+        "coverage": [],
+        "provenance": {
+          "repository": "synthetic",
+          "revision": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "configurationHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        }
+      }
+    },
+    {
+      "code": "AMBIGUOUS_REFERENCE",
+      "finding": {
+        "type": "finding",
+        "schemaVersion": 1,
+        "id": "finding:ambiguous-reference",
+        "category": "ambiguous-reference",
+        "assertion": {
+          "document": "docs/example.md",
+          "key": "example"
+        },
+        "evidenceHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "status": "unresolved",
+        "layer": "L0",
+        "confidence": 1,
+        "severity": "warn",
+        "entities": [
+          "document:example",
+          "symbol:example"
+        ],
+        "evidence": [
+          {
+            "source": "documentation",
+            "path": "docs/example.md",
+            "lineStart": 1,
+            "lineEnd": 2
+          }
+        ],
+        "routing": "proposed",
+        "coverage": [],
+        "provenance": {
+          "repository": "synthetic",
+          "revision": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "configurationHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        }
+      }
+    },
+    {
+      "code": "CHANGED_REFERENCE",
+      "finding": {
+        "type": "finding",
+        "schemaVersion": 1,
+        "id": "finding:changed-reference",
+        "category": "changed-reference",
+        "assertion": {
+          "document": "docs/example.md",
+          "key": "example"
+        },
+        "evidenceHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "status": "unresolved",
+        "layer": "L0",
+        "confidence": 1,
+        "severity": "warn",
+        "entities": [
+          "document:example",
+          "symbol:example"
+        ],
+        "evidence": [
+          {
+            "source": "documentation",
+            "path": "docs/example.md",
+            "lineStart": 1,
+            "lineEnd": 2
+          }
+        ],
+        "routing": "routed-to-L2",
+        "coverage": [],
+        "provenance": {
+          "repository": "synthetic",
+          "revision": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "configurationHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        },
+        "documentationUpdate": "updated-in-this-change"
+      }
+    }
+  ],
+  "proposals": [
+    {
+      "id": "proposal:accepted",
+      "kind": "vault-diff",
+      "targetIds": [
+        "document:example"
+      ],
+      "status": "accepted",
+      "label": "Synthetic accepted proposal",
+      "evidenceHash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+    },
+    {
+      "id": "proposal:in-review",
+      "kind": "overlay",
+      "targetIds": [
+        "document:example"
+      ],
+      "status": "in-review",
+      "label": "Synthetic in-review proposal",
+      "evidenceHash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+    },
+    {
+      "id": "proposal:merged",
+      "kind": "vault-diff",
+      "targetIds": [
+        "document:example"
+      ],
+      "status": "merged",
+      "label": "Synthetic merged proposal",
+      "evidenceHash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+    },
+    {
+      "id": "proposal:proposed",
+      "kind": "overlay",
+      "targetIds": [
+        "document:example"
+      ],
+      "status": "proposed",
+      "label": "Synthetic proposed proposal",
+      "evidenceHash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+    },
+    {
+      "id": "proposal:rejected",
+      "kind": "overlay",
+      "targetIds": [
+        "document:example"
+      ],
+      "status": "rejected",
+      "label": "Synthetic rejected proposal",
+      "evidenceHash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+    },
+    {
+      "id": "proposal:stale",
+      "kind": "vault-diff",
+      "targetIds": [
+        "document:example"
+      ],
+      "status": "stale",
+      "label": "Synthetic stale proposal",
+      "evidenceHash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+    },
+    {
+      "id": "proposal:superseded",
+      "kind": "overlay",
+      "targetIds": [
+        "document:example"
+      ],
+      "status": "superseded",
+      "label": "Synthetic superseded proposal",
+      "evidenceHash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+    }
+  ],
+  "coverage": {
+    "entities": "enabled",
+    "entityAnalysis": [],
+    "findings": "supplied",
+    "proposals": "supplied",
+    "limitations": [
+      "Synthetic interaction fixture; metrics, evidence, proposal states and identities do not describe a real repository."
+    ]
+  },
+  "truncation": {
+    "nodes": {
+      "total": 9,
+      "emitted": 9,
+      "omitted": 0
+    },
+    "documents": {
+      "total": 2,
+      "emitted": 2,
+      "omitted": 0
+    },
+    "edges": {
+      "total": 7,
+      "emitted": 7,
+      "omitted": 0
+    },
+    "findings": {
+      "total": 3,
+      "emitted": 3,
+      "omitted": 0
+    },
+    "proposals": {
+      "total": 7,
+      "emitted": 7,
+      "omitted": 0
+    }
+  }
+}
