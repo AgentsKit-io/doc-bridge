@@ -48,7 +48,9 @@ Claude Code CLI in headless mode with the CLI's own login (no API key; the Messa
 API transport remains an option). It is approved with a 1 USD cumulative cap on the
 charged spend, which is the larger of the CLI-reported cost and the list-price
 computation per attempt. The CLI must be the pinned version 2.1.296, passed with
-`--claude-bin` to a local install of that exact version. Each attempt's CLI cap is
+`--claude-bin` to a local install of that exact version. Each attempt's init event is
+checked (model, tool set, MCP status) before its result is accepted, and costs are computed at list
+price with the CLI's own estimate recorded alongside. Each attempt's CLI cap is
 applied after spend, so an attempt can overshoot its reservation; any such overrun
 is recorded as `budget-exceeded`. The full 36-attempt run is not approved. The CLI
 cost is an estimate, not a billed amount on a subscription login. Results describe a coding

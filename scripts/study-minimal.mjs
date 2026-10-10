@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto'
 import { runCommand, spawnNodeChild, splitLines, safeEnv } from '@agentskit/cross-platform'
-import { readFileSync, realpathSync, openSync, writeSync, ftruncateSync, fsyncSync, closeSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { readFileSync, realpathSync, openSync, writeSync, ftruncateSync, fsyncSync, closeSync, mkdirSync, mkdtempSync, rmSync, writeFileSync, existsSync, readdirSync, chmodSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { basename, dirname, resolve, relative, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -56,6 +56,8 @@ export async function corpusFiles(root, revision) {
   })
 }
 // Clean export for the CLI agent's working directory: only corpusFiles, no .git, index, build output or lockfiles.
+// Files are 0444 and every directory is made 0555 once the export is complete, so the agent cannot write into the
+// corpus and nothing it creates can carry over to a later attempt. One export per repository and scenario.
 export async function exportCorpus(root, revision, destination) {
   const files = await corpusFiles(root, revision)
   const base = resolve(destination)
@@ -66,7 +68,21 @@ export async function exportCorpus(root, revision, destination) {
     mkdirSync(dirname(target), { recursive: true })
     writeFileSync(target, text, { mode: 0o444 })
   }
+  lockDirectories(base)
   return files
+}
+const lockDirectories = dir => {
+  chmodSync(dir, 0o555)
+  for (const entry of readdirSync(dir, { withFileTypes: true })) if (entry.isDirectory()) lockDirectories(join(dir, entry.name))
+}
+const unlockDirectories = dir => {
+  chmodSync(dir, 0o700)
+  for (const entry of readdirSync(dir, { withFileTypes: true })) if (entry.isDirectory()) unlockDirectories(join(dir, entry.name))
+}
+// Removes an export even though its directories are read-only: permissions are restored first.
+export function removeCorpus(dir) {
+  if (existsSync(dir)) unlockDirectories(dir)
+  rmSync(dir, { recursive: true, force: true })
 }
 export async function repositoryTools(root, revision) {
   const files = await corpusFiles(root, revision)
@@ -268,11 +284,11 @@ export function cliDisallowedMcpTools(serverToolNames) {
 // Argument array only (never a shell string). The scenarios differ only in --mcp-config and in the
 // MCP entries appended to --allowedTools, so both arrays have the same length. The prompt is last, after
 // boolean flags only, so no variadic option can swallow it.
-export function cliArguments({ model, scenario, prompt, maxBudgetUsd, engine, checkoutRoot, disallowedMcpTools = [] }) {
+export function cliArguments({ model, scenario, prompt, maxBudgetUsd, engine, configPath = null, disallowedMcpTools = [] }) {
   const mcp = scenario === 'doc-bridge-mcp'
   // The server runs against the prepared checkout by explicit config path, not the agent's working directory.
   const mcpConfig = mcp
-    ? { mcpServers: { [CLI_DOC_BRIDGE_SERVER]: { type: 'stdio', command: process.execPath, args: [engine, '--config', join(checkoutRoot, 'doc-bridge.config.json'), 'mcp'] } } }
+    ? { mcpServers: { [CLI_DOC_BRIDGE_SERVER]: { type: 'stdio', command: process.execPath, args: [engine, '--config', configPath, 'mcp'] } } }
     : { mcpServers: {} }
   return [
     '-p', '--model', model, '--output-format', 'stream-json', '--verbose', '--no-session-persistence', '--max-budget-usd', maxBudgetUsd,
@@ -283,6 +299,20 @@ export function cliArguments({ model, scenario, prompt, maxBudgetUsd, engine, ch
     '--mcp-config', JSON.stringify(mcpConfig), '--strict-mcp-config',
     prompt,
   ]
+}
+
+// Same candidates and order as the server's own discovery (src/config/load-config.ts), so the CLI-spawned server
+// reads the config the readiness probe checked. A package.json only counts when it carries a docBridge key.
+export const CHECKOUT_CONFIG_CANDIDATES = ['doc-bridge.config.ts', 'doc-bridge.config.mts', 'doc-bridge.config.js', 'doc-bridge.config.mjs',
+  'doc-bridge.config.json', 'doc-bridge.config.yaml', 'doc-bridge.config.yml', 'package.json']
+export function checkoutConfigPath(root) {
+  for (const name of CHECKOUT_CONFIG_CANDIDATES) {
+    const candidate = join(root, name)
+    if (!existsSync(candidate)) continue
+    if (name !== 'package.json') return candidate
+    if (JSON.parse(readFileSync(candidate, 'utf8'))?.docBridge) return candidate
+  }
+  return fail('No doc-bridge config found at the pinned checkout')
 }
 
 const isCount = value => Number.isInteger(value) && value >= 0
@@ -297,13 +327,21 @@ export async function probeCliVersion(claudeBin, expected = CLI_PINNED_VERSION) 
   return version
 }
 
-// Parses stream-json. Throws on any line that is not JSON, on a missing or duplicated result, or when the
-// result is not the last event. Tool calls are counted once per tool-use id; per-request usage is keyed by message id.
+// Parses stream-json without throwing: the CLI charges its cost even when the transcript is imperfect, so the caller
+// must still see the last result event. Every imperfection is listed in `problems`, which makes the attempt
+// invalid-setup. Tool calls are counted once per tool-use id; per-request usage is keyed by message id.
 export function observeCliStream(stdout, model) {
-  const events = splitLines(stdout).filter(line => line.trim() !== '').map(line => JSON.parse(line))
+  const problems = []
+  const events = []
+  for (const line of splitLines(stdout)) {
+    if (line.trim() === '') continue
+    try { events.push(JSON.parse(line)) } catch { problems.push('malformed stream line') }
+  }
   const results = events.filter(event => event?.type === 'result')
   const inits = events.filter(event => event?.type === 'system' && event.subtype === 'init')
-  if (results.length !== 1 || events.at(-1)?.type !== 'result' || inits.length > 1) fail('Malformed stream-json transcript')
+  if (results.length !== 1) problems.push('stream does not hold exactly one result event')
+  if (events.at(-1)?.type !== 'result') problems.push('result is not the last stream event')
+  if (inits.length > 1) problems.push('more than one init event')
   const toolCallsByName = {}
   const toolErrorsByName = {}
   const nameById = new Map()
@@ -334,7 +372,7 @@ export function observeCliStream(stdout, model) {
       toolCallsByName[name] = (toolCallsByName[name] ?? 0) + 1
     }
   })
-  return { init: inits[0] ?? null, result: results[0], toolCallsByName, toolErrorsByName, requests: [...requests.values()], foreignModel }
+  return { problems, init: inits[0] ?? null, result: results.at(-1) ?? null, toolCallsByName, toolErrorsByName, requests: [...requests.values()], foreignModel }
 }
 
 // Returns a reason string when the init event does not match the expected setup, otherwise null.
@@ -409,6 +447,8 @@ export async function runCliAttempt({ task, scenario, config, budget, engine, wo
   const started = performance.now()
   const prompt = studyPrompt(task)
   if (Buffer.byteLength(prompt) > CLI_MAX_PROMPT_BYTES) fail('Study prompt exceeds input bound')
+  // Resolved before any reservation: a checkout without a config fails closed with nothing charged.
+  const configPath = scenario === 'doc-bridge-mcp' ? checkoutConfigPath(mcpRoot) : null
   const observation = { transport: 'cli', cliVersion: config.cliVersion ?? null, expectedCliVersion: config.expectedCliVersion ?? CLI_PINNED_VERSION,
     attemptBudgetUsd: config.attemptBudgetUsd, initModel: null, initTools: null, initMcpServers: null, setupProblem: null,
     toolCallsByName: {}, toolCalls: 0, toolErrorsByName: {}, permissionDenials: null, permissionDenialTools: null, numTurns: null, cliSubtype: null, isError: null,
@@ -431,7 +471,7 @@ export async function runCliAttempt({ task, scenario, config, budget, engine, wo
   }
   let child
   try {
-    child = await runCommand(config.claudeBin, cliArguments({ model: config.model, scenario, prompt, maxBudgetUsd: limit.toFixed(6), engine, checkoutRoot: mcpRoot, disallowedMcpTools: config.disallowedMcpTools ?? [] }),
+    child = await runCommand(config.claudeBin, cliArguments({ model: config.model, scenario, prompt, maxBudgetUsd: limit.toFixed(6), engine, configPath, disallowedMcpTools: config.disallowedMcpTools ?? [] }),
       { cwd: workdir, env: cliChildEnv(), stdin: 'ignore', timeoutMs, maxOutputBytes: CLI_MAX_OUTPUT_BYTES })
   } catch { return charge('failed') }
   const ended = child.timedOut ? 'timed-out' : 'failed'
@@ -439,11 +479,12 @@ export async function runCliAttempt({ task, scenario, config, budget, engine, wo
   // Output cut at the bound cannot be trusted to contain the final result, so nothing is read from it.
   if (child.truncated) return charge('failed', base)
   // A non-zero exit or a timeout does not discard a valid result event: its reported cost is still charged.
-  let observed
-  try { observed = observeCliStream(child.stdout, config.model) } catch { return charge(ended, base) }
+  // Malformed lines do not hide the result either: the last result event is read whatever else the stream holds.
+  const observed = observeCliStream(child.stdout, config.model)
   const { init, result: final } = observed
+  if (final === null || typeof final !== 'object') return charge(ended, base)
   const usage = final.usage
-  const valid = final !== null && typeof final === 'object' && final.type === 'result' && typeof final.is_error === 'boolean' &&
+  const valid = final.type === 'result' && typeof final.is_error === 'boolean' &&
     Array.isArray(final.permission_denials) && isCount(final.num_turns) && isCount(usage?.input_tokens) && isCount(usage?.output_tokens) &&
     isCount(usage?.cache_creation_input_tokens) && isCount(usage?.cache_read_input_tokens)
   if (!valid) {
@@ -462,7 +503,8 @@ export async function runCliAttempt({ task, scenario, config, budget, engine, wo
     cacheReadInputTokens: usage.cache_read_input_tokens, usageComplete: true,
     cliReportedCostUsd: cliReported, computedCostUsd: cost.computedCostUsd, costBasis: cost.basis,
   }
-  const setupProblem = !init ? 'init event missing' : checkCliInit(init, { scenario, model: config.model }) ?? checkCliActivity({ toolCallsByName: observed.toolCallsByName, toolErrorsByName: observed.toolErrorsByName, denialNames, scenario })
+  const setupProblem = observed.problems.length ? observed.problems.join('; ')
+    : !init ? 'init event missing' : checkCliInit(init, { scenario, model: config.model }) ?? checkCliActivity({ toolCallsByName: observed.toolCallsByName, toolErrorsByName: observed.toolErrorsByName, denialNames, scenario })
   if (setupProblem) return charge('invalid-setup', { ...measured, setupProblem })
   const costProblem = cost.problem ?? (cliReported === null ? 'CLI-reported cost missing' : costsAgree(cliReported, cost.computedCostUsd) ? null : 'CLI-reported and computed cost differ by more than 2x')
   if (costProblem) return charge('invalid-cost', { ...measured, costProblem })
@@ -472,6 +514,23 @@ export async function runCliAttempt({ task, scenario, config, budget, engine, wo
   if (child.code !== 0 || final.is_error === true || final.subtype !== 'success' || typeof final.result !== 'string') return charge('failed', measured)
   const chargedUsd = settle(Math.max(cliReported, cost.computedCostUsd))
   return finish('completed', { ...measured, answer: final.result, chargedUsd, cumulativeCapExceeded: budget.spent > budget.cap + 1e-12 })
+}
+
+// Runs for every repository with a doc-bridge-mcp attempt, before any reservation: the config must resolve, the server
+// must answer from a fresh index, and every checkout must expose the same MCP tool list. Returns the deny list.
+export async function preflightCliMcp(plan, roots, engine) {
+  const repositories = [...new Set(plan.filter(item => item.scenario === 'doc-bridge-mcp').map(item => item.task.repository))]
+  let disallowed = null
+  for (const repository of repositories) {
+    const root = roots[repository]
+    if (!root) fail('Missing repository root')
+    checkoutConfigPath(root)
+    await probeDocBridgeReadiness(root, engine)
+    const denied = cliDisallowedMcpTools(await probeMcpToolNames(root, engine))
+    if (disallowed && JSON.stringify(denied) !== JSON.stringify(disallowed)) fail('doc-bridge MCP tool lists differ between checkouts')
+    disallowed = denied
+  }
+  return disallowed ?? []
 }
 
 export function parseOptions(args, env) {
@@ -542,19 +601,16 @@ export async function main(args = process.argv.slice(2), env = process.env, prot
   }
   const engine = resolve(directory, '../bin/ak-docs.js')
   const cliVersion = cli ? await probeCliVersion(options.config.claudeBin, options.config.expectedCliVersion) : undefined
-  // The deny list comes from the live server, so a newly added MCP tool is denied without a code change.
-  const mcpExecution = plan.find(item => item.scenario === 'doc-bridge-mcp')
-  // The readiness probe runs first: a missing or stale index must stop the run before any paid attempt.
-  if (cli && mcpExecution) await probeDocBridgeReadiness(options.roots[mcpExecution.task.repository], engine)
-  const disallowedMcpTools = cli && mcpExecution ? cliDisallowedMcpTools(await probeMcpToolNames(options.roots[mcpExecution.task.repository], engine)) : []
+  // Every checkout that a doc-bridge attempt uses is probed before any paid attempt.
+  const disallowedMcpTools = cli ? await preflightCliMcp(plan, options.roots, engine) : []
   const attemptConfig = cli ? { ...options.config, cliVersion, disallowedMcpTools } : options.config
   const budget = { cap: options.cap, spent: 0 }
   const ledger = { version: protocol.version, protocolHash: hash(JSON.stringify(protocol)), runnerHash: hash(readFileSync(fileURLToPath(import.meta.url))),
     engineRevision: (await git(resolve(directory, '..'), ['rev-parse', 'HEAD'])).trim(), engineBundleHash: hash(readFileSync(resolve(directory, '../dist/cli/program.js'))),
     repositories: protocol.repositories, transport: options.config.transport, model: options.config.model,
     ...(cli ? { cli: { cliVersion, expectedCliVersion: options.config.expectedCliVersion, attemptBudgetUsd: options.config.attemptBudgetUsd, disallowedMcpTools,
-      disallowedNote: 'The official CLI reference says a bare tool name in --disallowedTools removes the matching tools from Claude\'s context (documentation read on 2026-10-10; not confirmed by a live run). Any listed tool still in the init tool list makes the attempt invalid-setup.',
-      corpus: { rule: 'export of safePath regular blobs at the pin, each <= 200000 bytes; same set in both arms; no .git, index, build output, hidden files or lockfiles', files: {} },
+      disallowedNote: 'claude --help (2.1.296) describes --disallowedTools only as a list of tool names to deny; it does not say whether the definitions of denied tools are still sent to the model. Not verified. The init tool list is the live check: any listed tool outside the expected set makes the attempt invalid-setup.',
+      corpus: { rule: 'export of safePath regular blobs at the pin, each <= 200000 bytes; same set in each repository and scenario; files 0444, directories 0555; no .git, index, build output, hidden files or lockfiles', files: {} },
       prices: CLI_PRICES, costRule: 'list price from modelUsage; CLI estimate recorded alongside; max of both counts toward the cap' } }
       : { prices: { input: options.config.inputPrice, output: options.config.outputPrice } }),
     adjudication: { method: 'agent', humanReview: false },
@@ -571,22 +627,25 @@ export async function main(args = process.argv.slice(2), env = process.env, prot
   const scratch = []
   try {
     save()
-    // CLI agents run in a clean export of exactly the HTTP-readable files at the pin; one read-only directory per repository.
+    // CLI agents run in a clean, read-only export of exactly the HTTP-readable files at the pin: one directory per
+    // repository and scenario, so no attempt can see or leave anything in another arm's working directory.
     const corpora = {}
     if (cli) {
-      for (const repository of new Set(plan.map(item => item.task.repository))) {
+      for (const execution of plan) {
+        const key = `${execution.task.repository}:${execution.scenario}`
+        if (corpora[key]) continue
         const directoryPath = mkdtempSync(join(tmpdir(), 'study-corpus-'))
         scratch.push(directoryPath)
-        corpora[repository] = directoryPath
-        const exported = await exportCorpus(options.roots[repository], protocol.repositories[repository], directoryPath)
-        ledger.cli.corpus.files[repository] = exported.length
+        corpora[key] = directoryPath
+        const exported = await exportCorpus(options.roots[execution.task.repository], protocol.repositories[execution.task.repository], directoryPath)
+        ledger.cli.corpus.files[key] = exported.length
       }
     }
     for (const execution of plan) {
       const root = options.roots[execution.task.repository]
       if (cli) {
         // One fresh child per attempt; the CLI starts its own MCP server for doc-bridge-mcp against the checkout.
-        const result = await runCliAttempt({ task: execution.task, scenario: execution.scenario, config: attemptConfig, budget, engine, workdir: corpora[execution.task.repository], mcpRoot: root, checkpoint: save })
+        const result = await runCliAttempt({ task: execution.task, scenario: execution.scenario, config: attemptConfig, budget, engine, workdir: corpora[`${execution.task.repository}:${execution.scenario}`], mcpRoot: root, checkpoint: save })
         ledger.observations.push({ taskId: execution.task.id, scenario: execution.scenario, repetition: execution.repetition, ...result })
         save()
         if (result.status !== 'completed') break
@@ -615,7 +674,7 @@ export async function main(args = process.argv.slice(2), env = process.env, prot
   } catch { ledger.status = 'blocked'; save(); fail('Study blocked; private ledger preserves spend; do not retry without budget review') }
   finally {
     closeSync(fd)
-    for (const dir of scratch) rmSync(dir, { recursive: true, force: true })
+    for (const dir of scratch) removeCorpus(dir)
   }
 }
 

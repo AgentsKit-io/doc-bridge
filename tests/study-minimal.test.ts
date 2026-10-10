@@ -5,7 +5,8 @@ import { resolve, join, relative } from 'node:path'
 import { execFileSync } from 'node:child_process'
 import { performance } from 'node:perf_hooks'
 import { loadProtocol, planStudy, parseOptions, runAttempt, repositoryTools, connectMcp, probeMcpToolNames, main, runCliAttempt, cliArguments, cliChildEnv, studyPrompt, probeCliVersion,
-  safePath, exportCorpus, corpusFiles, cliDisallowedMcpTools, computeCliCost, checkCliInit, checkCliActivity, observeCliStream, probeDocBridgeReadiness,
+  safePath, exportCorpus, corpusFiles, removeCorpus, cliDisallowedMcpTools, computeCliCost, checkCliInit, checkCliActivity, observeCliStream, probeDocBridgeReadiness,
+  checkoutConfigPath, preflightCliMcp, CHECKOUT_CONFIG_CANDIDATES,
   CLI_DOC_BRIDGE_TOOLS, CLI_DEFAULT_ATTEMPT_BUDGET_USD, CLI_PINNED_VERSION, CLI_PRICES } from '../scripts/study-minimal.mjs'
 import { MCP_TOOLS } from '../src/mcp/server.js'
 
@@ -156,15 +157,22 @@ describe('minimal study without network or a real credential', () => {
       expect(exported.sort()).toEqual(expected)
       expect(await corpusFiles(root, pin)).toEqual(exported)
       const found = []
-      const walk = dir => { for (const entry of readdirSync(dir, { withFileTypes: true })) {
-        const full = join(dir, entry.name)
-        if (entry.isDirectory()) walk(full)
-        else { found.push(relative(destination, full)); expect(statSync(full).mode & 0o222).toBe(0) }
-      } }
+      // Directories as well as files carry no write bit, so nothing the agent creates can be written into the export.
+      const walk = dir => {
+        expect(statSync(dir).mode & 0o222).toBe(0)
+        for (const entry of readdirSync(dir, { withFileTypes: true })) {
+          const full = join(dir, entry.name)
+          if (entry.isDirectory()) walk(full)
+          else { found.push(relative(destination, full)); expect(statSync(full).mode & 0o222).toBe(0) }
+        }
+      }
       walk(destination)
       expect(found.sort()).toEqual(expected)
       expect(found.every(path => safePath(path))).toBe(true)
       expect(existsSync(join(destination, '.git'))).toBe(false)
+      // A read-only export can still be removed after the run.
+      removeCorpus(destination)
+      expect(existsSync(destination)).toBe(false)
     } finally { rmSync(root, { recursive: true, force: true }); rmSync(destination, { recursive: true, force: true }) }
   })
 
@@ -234,6 +242,8 @@ else {
   const init = { type: 'system', subtype: 'init', model: 'claude-haiku-5-5', tools: mcp ? [...builtins, ...behavior.mcpTools] : builtins,
     mcp_servers: mcp ? [{ name: 'doc-bridge', status: 'connected' }] : [], ...behavior.init }
   const lines = [init, ...behavior.events, behavior.result]
+  // Raw text written before the transcript, to simulate a malformed line ahead of the result.
+  if (behavior.prefix) process.stdout.write(behavior.prefix)
   process.stdout.write(lines.map(line => JSON.stringify(line)).join('\\n') + '\\n')
   // result-then-sleep: the transcript is complete but the process hangs, as a timed-out CLI would.
   if (behavior.mode === 'result-then-sleep') setTimeout(() => {}, 60000)
@@ -432,6 +442,44 @@ describe('CLI transport: headless Claude Code without an API key', () => {
     } finally { rmSync(allFailed.dir, { recursive: true, force: true }); rmSync(partlyFailed.dir, { recursive: true, force: true }) }
   })
 
+  it('probes every doc-bridge checkout before any paid attempt, not only the first one in the plan', async () => {
+    const indexed = mkdtempSync(join(tmpdir(), 'study-preflight-a-'))
+    const bare = mkdtempSync(join(tmpdir(), 'study-preflight-b-'))
+    try {
+      for (const root of [indexed, bare]) {
+        mkdirSync(join(root, 'docs'))
+        writeFileSync(join(root, 'docs', 'guide.md'), '# Evidence\nA public fixture guide.')
+        writeFileSync(join(root, 'doc-bridge.config.json'), JSON.stringify({ schemaVersion: 1, corpus: { agent: { root: 'docs' }, human: { plugin: 'plain-markdown', options: { root: 'docs' } } } }))
+      }
+      execFileSync(process.execPath, [engine, 'index'], { cwd: indexed, stdio: 'pipe', timeout: 30000 })
+      const plan = [{ task: { repository: 'agentskit-chat' }, scenario: 'doc-bridge-mcp' }, { task: { repository: 'agents-playbook' }, scenario: 'doc-bridge-mcp' }]
+      // The second checkout has no index; it must be refused even though the first one passes.
+      await expect(preflightCliMcp(plan, { 'agentskit-chat': indexed, 'agents-playbook': bare }, engine)).rejects.toThrow('fresh index')
+      const denied = await preflightCliMcp(plan.slice(0, 1), { 'agentskit-chat': indexed }, engine)
+      expect(denied).toContain('mcp__doc-bridge__gate_status')
+      expect(denied).not.toContain('mcp__doc-bridge__doc_search')
+      expect(await preflightCliMcp([{ task: { repository: 'agentskit-chat' }, scenario: 'repository-only' }], {}, engine)).toEqual([])
+    } finally { rmSync(indexed, { recursive: true, force: true }); rmSync(bare, { recursive: true, force: true }) }
+  }, 90000)
+
+  it('resolves the checkout config like the server does and refuses a checkout without one', () => {
+    const root = mkdtempSync(join(tmpdir(), 'study-config-'))
+    try {
+      writeFileSync(join(root, 'package.json'), JSON.stringify({ name: 'no-config' }))
+      expect(() => checkoutConfigPath(root)).toThrow('No doc-bridge config')
+      writeFileSync(join(root, 'doc-bridge.config.yaml'), 'schemaVersion: 1\n')
+      expect(checkoutConfigPath(root)).toBe(join(root, 'doc-bridge.config.yaml'))
+      writeFileSync(join(root, 'doc-bridge.config.ts'), 'export default {}\n')
+      expect(checkoutConfigPath(root)).toBe(join(root, 'doc-bridge.config.ts'))
+    } finally { rmSync(root, { recursive: true, force: true }) }
+  })
+
+  it('keeps the checkout config candidates identical to the server discovery order in src', () => {
+    const source = readFileSync(resolve('src/config/load-config.ts'), 'utf8')
+    const block = /const CONFIG_CANDIDATES = \[([\s\S]*?)\] as const/.exec(source)?.[1] ?? ''
+    expect([...block.matchAll(/'([^']+)'/g)].map(match => match[1])).toEqual(CHECKOUT_CONFIG_CANDIDATES)
+  })
+
   it('refuses the doc-bridge arm before any paid attempt when the server does not answer from an index at the pin', async () => {
     const root = mkdtempSync(join(tmpdir(), 'study-ready-'))
     try {
@@ -500,6 +548,18 @@ describe('CLI transport: headless Claude Code without an API key', () => {
       expect(result).toMatchObject({ status: 'budget-exceeded', exitCode: 1, cliSubtype: 'error_max_budget_usd', cliReportedCostUsd: 0.03 })
       expect(result.chargedUsd).toBeCloseTo(0.03, 12)
       expect(budget.spent).toBeCloseTo(0.03, 12)
+    } finally { rmSync(fake.dir, { recursive: true, force: true }) }
+  })
+
+  it('charges the cost of the last result event when an earlier stream line is malformed, as invalid-setup', async () => {
+    // Before the fix the malformed line discarded the transcript, so only the 0.5 USD reservation was charged.
+    const fake = cliFake({ prefix: 'not json\n', events: [], result: overCost })
+    try {
+      const budget = { cap: 1, spent: 0 }
+      const result = await runCli(fake, 'repository-only', { budget })
+      expect(result).toMatchObject({ status: 'invalid-setup', cliReportedCostUsd: 0.7, computedCostUsd: 0.7, chargedUsd: 0.7 })
+      expect(result.setupProblem).toBe('malformed stream line')
+      expect(budget.spent).toBeCloseTo(0.7, 12)
     } finally { rmSync(fake.dir, { recursive: true, force: true }) }
   })
 
@@ -577,7 +637,11 @@ describe('CLI transport: headless Claude Code without an API key', () => {
     expect(checkCliActivity({ toolCallsByName: { Read: 3 }, denialNames: ['Read'], scenario: 'repository-only' })).toBeNull()
     expect(checkCliActivity({ toolCallsByName: { Write: 1 }, denialNames: [], scenario: 'repository-only' })).toMatch(/outside the allowed set/)
     expect(checkCliActivity({ toolCallsByName: {}, denialNames: ['<unknown>'], scenario: 'repository-only' })).toMatch(/denied/)
-    expect(() => observeCliStream('{"type":"result"}\n{"type":"assistant"}', 'claude-haiku-5-5')).toThrow()
+    expect(observeCliStream('{"type":"result"}\n{"type":"assistant"}', 'claude-haiku-5-5').problems).toContain('result is not the last stream event')
+    // A malformed line is reported, and the last result event is still read so its cost can be charged.
+    const garbled = observeCliStream('not json\n{"type":"result","total_cost_usd":0.7}\n', 'claude-haiku-5-5')
+    expect(garbled.problems).toEqual(['malformed stream line'])
+    expect(garbled.result).toMatchObject({ total_cost_usd: 0.7 })
   })
 
   it('keeps the dry run at 36 full and 2 pilot attempts without spawning Claude or using the network', async () => {

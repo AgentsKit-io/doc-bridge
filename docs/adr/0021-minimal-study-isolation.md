@@ -36,15 +36,18 @@ pilot reports measured cost.
 The pilot runs through the Claude Code CLI in headless mode (`--transport cli`),
 authenticated by the CLI's own login. The runner never reads, requires or passes
 `ANTHROPIC_API_KEY`, and removes it from the child environment. Each attempt is a
-fresh `claude -p` child with an argument array, a `cwd` at a read-only export of the
-pinned corpus (the 2026-10-10 amendment replaces the earlier frozen-checkout `cwd`), an
+fresh `claude -p` child with an argument array, a `cwd` at a fresh export of the
+pinned corpus made per repository and scenario, with files mode 0444 and directories
+mode 0555 (the 2026-10-10 amendment replaces the earlier frozen-checkout `cwd`), an
 allowlisted environment, a timeout and an output bound. It uses read and search
 tools only, through `--tools`, `--allowedTools` and `--disallowedTools`, and
 non-interactive permissions (`--permission-mode dontAsk`, `--permission-prompts
 none`). Scenarios differ only in `--mcp-config` and the doc-bridge tool allowance.
-The cap applies to the charged spend (the larger of the CLI-reported and computed cost); each attempt is capped by
-`min(remaining, per-attempt limit)` through `--max-budget-usd`. A failed attempt is
-charged the full per-attempt limit.
+The cap applies to the charged spend (the larger of the CLI-reported and computed cost); each attempt is reserved
+`min(remaining, per-attempt limit)` and passed as `--max-budget-usd`, a safety net that the CLI enforces after
+spend. A completed attempt is charged the larger of its reported and computed cost. Any other attempt is charged
+the larger of its reservation and every valid cost it reported or that was computed, so a failure is never
+charged less than a valid reported cost.
 
 The Messages API transport (`--transport http`) remains as an option. It keeps its
 environment-only key, upper prices and built-in `fetch`, and it is tested as before.
@@ -53,7 +56,7 @@ Rules reused from [ADR 0009](0009-study-provider-cli-adapter.md): an executable 
 an argument array (never a shell string), an allowlisted environment, bounded input,
 output and runtime, and fail-closed handling of non-zero exit, timeout and malformed
 output. The output is a stream of stream-json events, one per line, that ends with a
-single `result` event. The runner rejects any transcript that does not have that shape. The runner does not import
+single `result` event. A transcript that does not have that shape is `invalid-setup`, and its last result is still charged. The runner does not import
 `src/study/provider-cli.ts`. That module provides configuration, hashing and pricing
 helpers, but no process invocation. The optional `.mjs` runner therefore carries
 its own short implementation of the same rules.
@@ -89,6 +92,8 @@ not verify. The runner now fails closed as follows:
   `claude --help` of 2.1.296, installed with `npx -y @anthropic-ai/claude-code@2.1.296`.
   Dated measurements that shaped this amendment, all on 2026-10-10:
   - On 2.1.288, the init event listed the built-in tools `Glob`, `Grep` and `Read`.
+  - On 2.1.288, `--tools Read,Grep,Glob` loaded tools named exactly `Glob`, `Grep` and
+    `Read` (stream-json init event `tools`), so those names are used.
   - On 2.1.288, a run emitted an `unrecognized_model` warning and cost 0.057 USD,
     about 60 times the list-price estimate. `modelUsage` contained an auxiliary
     `claude-haiku-4-5` entry next to the study model. This is why a foreign model
@@ -102,25 +107,35 @@ not verify. The runner now fails closed as follows:
 - **stream-json transcript.** The runner uses `--output-format stream-json --verbose`
   instead of a single JSON object. It reads the init event to check the model, the
   exact tool set and MCP server status. It counts tool calls by id, rejects any tool
-  outside the allowed set, and rejects any denial other than a built-in read tool.
-  Failing any check is `invalid-setup`.
+  outside the allowed set, and rejects any denial other than a built-in read tool
+  (a denied built-in read is recorded and accepted; a refused doc-bridge call is not).
+  Failing any check is `invalid-setup`. A malformed stream line is recorded as a setup
+  problem, and the last `result` event is still read so that its cost is charged.
 - **Cost cross-check.** The runner computes a list-price cost from `modelUsage`
   using the runner's `CLI_PRICES` table. Per-request tiering is used when per-message
-  usage is present, and an aggregate upper bound otherwise. The CLI-reported cost must
-  agree within a factor of two, or the attempt is `invalid-cost`.
+  usage is present, and the per-request sums must equal `modelUsage` exactly; an
+  aggregate prompt above 100k selects the above-100k tier otherwise. The CLI-reported
+  cost must agree within a factor of two, or the attempt is `invalid-cost`.
 - **Charging.** A completed attempt settles to the larger of the reported and computed
   cost. Any other outcome is charged at least the reservation, and at least every
-  valid cost. A valid result is read even after a non-zero exit or a timeout. The
-  earlier rule of charging only the reservation is withdrawn. The CLI checks
-  `--max-budget-usd` only after spend, so a success above its reservation is
+  valid cost. A valid result is read even after a non-zero exit, a timeout or a
+  malformed line. The earlier rule of charging only the reservation is withdrawn. The
+  CLI checks `--max-budget-usd` only after spend, so a success above its reservation is
   `budget-exceeded`, and `cumulativeCapExceeded` is set if the cap is passed.
-- **Readiness and tool errors.** Before the first attempt, the doc-bridge arm must
-  answer `doc.search` at the pin from a fresh index. An attempt in which every
-  doc-bridge tool call returned an error is `invalid-setup`. Partial errors are kept
-  per tool name.
-- **Export.** The child's working directory is a fresh read-only export of the pinned
-  blobs that pass the public-path filter, including the corpus's own `CLAUDE.md` and
-  `AGENTS.md`, and excluding files over 200000 bytes, dotfiles and build output.
+- **Preflight and tool errors.** Before any reservation, and for every checkout that a
+  doc-bridge attempt uses, the config must resolve in the server's discovery order, the
+  server must answer `doc.search` at the pin from a fresh index, and the tool lists must
+  agree. An attempt in which every doc-bridge tool call returned an error is
+  `invalid-setup`. Partial errors are kept per tool name.
+- **Export.** The child's working directory is a fresh export, one per repository and
+  scenario, of the pinned blobs that pass the public-path filter, including the corpus's
+  own `CLAUDE.md` and `AGENTS.md`, and excluding files over 200000 bytes, dotfiles,
+  lockfiles and build output. Files are mode 0444 and directories 0555 once written, so
+  the agent cannot write into the export; the directories are removed after the run.
+- **Denied definitions.** The `claude --help` text of 2.1.296 describes
+  `--disallowedTools` only as a list of names to deny, and does not say whether denied
+  tool definitions are still sent. This is not verified; the init tool list is the
+  live check.
 - **Narrower surface.** The disallowed tool list also covers every other tool the
   doc-bridge server lists in its live `tools/list`. Derivation happens once per run,
   and the list is passed to both arms.
