@@ -107,6 +107,13 @@
 
 - Precompute semantic hash ordering keys once per entry and bound syntax-tree retention for index-only scans and reuse parsed trees in discovery, reducing index-build cost without changing artifact bytes or hash identity.
 
+## 2.0.0-next.3
+
+### Minor Changes
+
+- 7989fa5: Distinguish changed-aspect claims from bare mentions before emitting changed-reference findings, and verify string-enum claims against bounded snapshot-matching source. Citation relations, changed facts, removal findings and surviving finding identities remain unchanged.
+- f1aa530: Retain bounded schema initializer syntax for deterministic callable input compatibility proofs, invalidating prior adapter reuse while preserving legacy readers and fail-closed unknown claims.
+
 ## 2.0.0-next.2
 
 ### Major Changes
