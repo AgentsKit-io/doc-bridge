@@ -116,19 +116,12 @@ Each attempt records `transport: "cli"`, `cliVersion`, `expectedCliVersion`,
 `timed-out`, `budget-exceeded`, `invalid-setup` or `invalid-cost`. Only `completed` is
 treated as a successful attempt, and any other status stops the run.
 
-Cost: the computed cost uses the `CLI_PRICES` table, and `costBasis` records which path
-was used. When the stream carries assistant messages with usage (keyed by message id),
-each request is priced in the tier its own prompt size selects (input plus cache read
-and write, above 100k tokens for the second tier). The per-request sums of input, output,
-cache read and cache write must equal the `modelUsage` totals exactly; otherwise the
-attempt is `invalid-cost`. Without per-request usage, one tier is chosen from the
-aggregate prompt of all requests: above 100k, every request is priced in the second
-tier. The aggregate is at least the largest single request, so this never prices a
-request above 100k in the base tier, and it may overprice a small request. A `modelUsage`
-that holds any model other than `claude-haiku-5-5`, a foreign model in any message, a
-missing or invalid count, or a computed cost that differs from the CLI-reported cost by
-more than a factor of two is `invalid-cost`. Both zero counts as agreement. The cap is
-charged with the larger of the two costs.
+Cost: the computed cost prices the `modelUsage` totals with the `CLI_PRICES` table.
+Per-message stream usage only selects the tier: if the largest single prompt (input plus
+cache read and write) exceeds 100k tokens, every token is priced in the second tier;
+without per-message sizes the aggregate prompt decides. Cache writes are priced by TTL
+from `usage.cache_creation` (5-minute at 1.25x input, 1-hour at 2x input; unattributed
+writes at the 1-hour rate). `costBasis` records the tier and its source.
 
 Budget: before each attempt, the attempt is refused unless the full per-attempt limit
 fits under the remaining cap. The CLI reservation is that limit, rounded down to 6 decimals and
