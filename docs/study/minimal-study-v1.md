@@ -253,29 +253,29 @@ produced such a denial.
 the CLI-reported `total_cost_usd`. The table is `CLI_PRICES` in the runner, in USD per
 million tokens:
 
-| Tier | Input | Output | Cache read | Cache write |
-| --- | --- | --- | --- | --- |
-| Prompt up to 100k tokens | 0.10 | 0.50 | 0.01 | 0.125 |
-| Prompt above 100k tokens | 0.50 | 2.50 | 0.05 | 0.625 |
+| Tier | Input | Output | Cache read | Cache write 5m | Cache write 1h |
+| --- | --- | --- | --- | --- | --- |
+| Prompt up to 100k tokens | 0.10 | 0.50 | 0.01 | 0.125 | 0.20 |
+| Prompt above 100k tokens | 0.50 | 2.50 | 0.05 | 0.625 | 1.00 |
 
 The input and output rates are the 2026-10-09 decision. The cache read and cache write
 rates in the same table were added on 2026-10-10 as list prices for the same tiers.
 They are part of the `CLI_PRICES` table the runner uses, and the maintainer confirms
 them before any report is published.
 
-Tiering works in two ways, and `costBasis` records which one was used:
-
-- **`per-request tier`** (used whenever the stream carries assistant messages with
-  usage, keyed by message id): each request is priced in its own tier, chosen by its
-  prompt size (input plus cache read and write). The per-request sums of input,
-  output, cache read and cache write must equal the `modelUsage` totals exactly.
-  Otherwise the attempt is `invalid-cost`.
-- **`aggregate-base` / `aggregate-above-100k`** (fallback): the whole attempt is priced
-  with one tier, chosen from the aggregate prompt of all requests. If that aggregate
-  exceeds 100k, every request is priced in the above-100k tier. The aggregate is at
-  least the largest single request, so a request above 100k is always priced in the
-  above tier. A small request in a large attempt may be overpriced. That is the
-  conservative direction.
+The computed cost prices the `modelUsage` totals, which are authoritative: they include
+the CLI's own same-model side requests. Per-message stream usage is a snapshot taken
+when a message starts (its output count is partial), so it never matches `modelUsage`
+and is used only to find the largest single prompt (input plus cache read and write).
+If that prompt exceeds 100k tokens, every token of the attempt is priced in the above-100k
+tier; without per-message sizes the aggregate prompt decides, which is an upper bound.
+Cache writes are split by TTL from the result's `usage.cache_creation`: 5-minute writes
+at 1.25x input and 1-hour writes at 2x input (0.20 USD per million in the base tier, 1.00
+above 100k). Claude Code 2.1.296 writes 1-hour entries; any write not attributed to the
+5-minute TTL is priced at the 1-hour rate. `costBasis` records the tier and whether it
+came from the largest request or the aggregate prompt. Measured on 2026-10-10: a
+three-message stream whose per-message usage did not sum to `modelUsage` computed to
+0.00119458 USD, equal to the CLI's reported cost.
 
 A model other than the study model, in `modelUsage` or in any message, is
 `invalid-cost`. So are missing or invalid counts. The CLI-reported and computed costs
@@ -345,9 +345,8 @@ No session is persisted. The child environment is an allowlist: system variables
   name exactly the expected tools; a denied tool listed there makes the attempt
   `invalid-setup`. Whether a denied definition adds input tokens that the list does not
   show remains unverified.
-- The per-message usage fields and `message.id` that the runner relies on for
-  per-request tiering were not confirmed against a live stream. Without them the
-  aggregate bound is used.
+- Per-message usage was checked against a live stream on 2026-10-10: it is a partial
+  snapshot, so it only selects the tier; `modelUsage` is what is priced.
 
 **Credential handling.** The CLI transport never reads, requires or passes
 `ANTHROPIC_API_KEY`. The variable is removed from the child's environment, and the

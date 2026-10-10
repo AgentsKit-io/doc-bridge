@@ -252,9 +252,10 @@ else {
 }
 `
 const CLI_VERSION = '2.1.296 (Claude Code)'
-const okUsage = { input_tokens: 1200, cache_creation_input_tokens: 300, cache_read_input_tokens: 5000, output_tokens: 150 }
+const okUsage = { input_tokens: 1200, cache_creation_input_tokens: 300, cache_read_input_tokens: 5000, output_tokens: 150,
+  cache_creation: { ephemeral_5m_input_tokens: 300, ephemeral_1h_input_tokens: 0 } }
 const okModelUsage = { 'claude-haiku-5-5': { inputTokens: 1200, outputTokens: 150, cacheReadInputTokens: 5000, cacheCreationInputTokens: 300, costUSD: 0.0002825 } }
-// 1200*0.10 + 150*0.50 + 5000*0.01 + 300*0.125 = 282.5 per million tokens = 0.0002825 USD at list price.
+// 1200*0.10 + 150*0.50 + 5000*0.01 + 300*0.125 (5-minute cache writes) = 282.5 per million tokens = 0.0002825 USD at list price.
 const okResult = { type: 'result', subtype: 'success', is_error: false, result: 'Answer with source:1', num_turns: 2, total_cost_usd: 0.0002825, duration_ms: 900,
   usage: okUsage, modelUsage: okModelUsage, permission_denials: [] }
 const okEvents = [{ type: 'assistant', message: { id: 'm1', model: 'claude-haiku-5-5', usage: okUsage, content: [{ type: 'text', text: 'Answer with source:1' }] } }]
@@ -365,7 +366,7 @@ describe('CLI transport: headless Claude Code without an API key', () => {
       const result = await runCli(fake, 'repository-only', { budget })
       expect(result).toMatchObject({ transport: 'cli', status: 'completed', answer: 'Answer with source:1', inputTokens: 1200, outputTokens: 150,
         cacheCreationInputTokens: 300, cacheReadInputTokens: 5000, numTurns: 2, cliReportedCostUsd: 0.0002825, chargedUsd: 0.0002825,
-        isError: false, usageComplete: true, toolCalls: 0, cliVersion: CLI_VERSION, correctness: null, adjudication: 'pending', costBasis: 'per-request tier' })
+        isError: false, usageComplete: true, toolCalls: 0, cliVersion: CLI_VERSION, correctness: null, adjudication: 'pending', costBasis: 'base tier from largest request' })
       expect(result.computedCostUsd).toBeCloseTo(0.0002825, 12)
       expect(result.initModel).toBe('claude-haiku-5-5')
       expect(result.initTools).toEqual(['Read', 'Grep', 'Glob'])
@@ -492,7 +493,7 @@ describe('CLI transport: headless Claude Code without an API key', () => {
     } finally { rmSync(root, { recursive: true, force: true }) }
   }, 60000)
 
-  it('computes cost at list price per request, applies the above-100k tier, and flags any non-study model or a 2x disagreement', () => {
+  it('computes cost from modelUsage at list price, applies the above-100k tier from the largest request, and flags any non-study model or a 2x disagreement', () => {
     const price = CLI_PRICES['claude-haiku-5-5']
     expect(price.threshold).toBe(100000)
     const aggregate = (tokens: Record<string, number>) => ({ 'claude-haiku-5-5': { inputTokens: tokens.input ?? 0, outputTokens: tokens.output ?? 0,
@@ -501,13 +502,24 @@ describe('CLI transport: headless Claude Code without an API key', () => {
     // Aggregate prompt above 100k: the above-100k tier is used for all tokens (conservative upper bound).
     const above = computeCliCost({ modelUsage: aggregate({ input: 120000, output: 1000 }), model: 'claude-haiku-5-5' })
     expect(above.computedCostUsd).toBeCloseTo((120000 * 0.5 + 1000 * 2.5) / 1000000, 12)
-    expect(above.basis).toBe('aggregate-above-100k')
-    // Per-request usage chooses the tier per request: one 150k request and one 10k request.
+    expect(above.basis).toBe('above-100k tier from aggregate prompt')
+    // The largest single request decides the tier; modelUsage totals are priced, not the partial per-message usage.
     const per = computeCliCost({ model: 'claude-haiku-5-5', modelUsage: aggregate({ input: 160000, output: 0 }), requests: [{ input_tokens: 150000, output_tokens: 0 }, { input_tokens: 10000, output_tokens: 0 }].map(u => ({ ...u, cache_read_input_tokens: 0, cache_creation_input_tokens: 0 })) })
-    expect(per.computedCostUsd).toBeCloseTo((150000 * 0.5 + 10000 * 0.1) / 1000000, 12)
+    expect(per.computedCostUsd).toBeCloseTo((160000 * 0.5) / 1000000, 12)
+    expect(per.basis).toBe('above-100k tier from largest request')
+    // Measured 2026-10-10 with Claude Code 2.1.296: three stream messages whose usage does not sum to modelUsage
+    // (partial output counts, plus a same-model side request); 1-hour cache writes. The CLI reported 0.00119458 USD.
+    const measured = computeCliCost({ model: 'claude-haiku-5-5',
+      modelUsage: { 'claude-haiku-5-5': { inputTokens: 1198, outputTokens: 244, cacheReadInputTokens: 16738, cacheCreationInputTokens: 3927, costUSD: 0.00119458 } },
+      requests: [[2, 16, 3109, 3629], [2, 16, 6738, 153], [2, 3, 6891, 145]].map(([input_tokens, output_tokens, cache_read_input_tokens, cache_creation_input_tokens]) => ({ input_tokens, output_tokens, cache_read_input_tokens, cache_creation_input_tokens })),
+      cacheCreation: { ephemeral_1h_input_tokens: 3927, ephemeral_5m_input_tokens: 0 } })
+    expect(measured.problem).toBeNull()
+    expect(measured.computedCostUsd).toBeCloseTo(0.00119458, 10)
+    // Without a TTL split every cache write is priced at the dearer 1-hour rate; 5-minute writes use 1.25x input.
+    expect(computeCliCost({ model: 'claude-haiku-5-5', modelUsage: aggregate({ write: 50000 }) }).computedCostUsd).toBeCloseTo(0.01, 12)
+    expect(computeCliCost({ model: 'claude-haiku-5-5', modelUsage: aggregate({ write: 50000 }), cacheCreation: { ephemeral_5m_input_tokens: 50000 } }).computedCostUsd).toBeCloseTo(0.00625, 12)
     expect(computeCliCost({ model: 'claude-haiku-5-5', modelUsage: { ...aggregate({ input: 1 }), 'claude-haiku-4-5': { inputTokens: 1, outputTokens: 1, cacheReadInputTokens: 0, cacheCreationInputTokens: 0, costUSD: 0 } } }).problem).toMatch(/other than the study model/)
     expect(computeCliCost({ model: 'claude-haiku-5-5', modelUsage: aggregate({ input: 1 }), foreignModel: true }).problem).toMatch(/other than the study model/)
-    expect(computeCliCost({ model: 'claude-haiku-5-5', modelUsage: aggregate({ input: 10 }), requests: [{ input_tokens: 9, output_tokens: 0, cache_read_input_tokens: 0, cache_creation_input_tokens: 0 }] }).problem).toMatch(/does not match/)
   })
 
   it('marks invalid-cost and stops when the CLI and computed costs differ by more than 2x, or a foreign model is in modelUsage', async () => {

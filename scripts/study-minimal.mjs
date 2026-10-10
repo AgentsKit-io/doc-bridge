@@ -260,8 +260,9 @@ export const CLI_DEFAULT_ATTEMPT_BUDGET_USD = 0.10
 export const CLI_PRICES = {
   'claude-haiku-5-5': {
     threshold: 100000,
-    base: { input: 0.10, output: 0.50, cacheRead: 0.01, cacheWrite: 0.125 },
-    above: { input: 0.50, output: 2.50, cacheRead: 0.05, cacheWrite: 0.625 },
+    // Cache writes: 5-minute TTL at 1.25x input, 1-hour TTL at 2x input (the CLI writes 1-hour entries).
+    base: { input: 0.10, output: 0.50, cacheRead: 0.01, cacheWrite: 0.125, cacheWrite1h: 0.20 },
+    above: { input: 0.50, output: 2.50, cacheRead: 0.05, cacheWrite: 0.625, cacheWrite1h: 1.00 },
   },
 }
 const CLI_MAX_PROMPT_BYTES = 8192
@@ -403,12 +404,16 @@ export function checkCliActivity({ toolCallsByName, denialNames, toolErrorsByNam
   return null
 }
 
-const tokensCost = (tokens, price) => (tokens.input * price.input + tokens.output * price.output + tokens.cacheRead * price.cacheRead + tokens.cacheWrite * price.cacheWrite) / 1000000
+const tokensCost = (tokens, price) => (tokens.input * price.input + tokens.output * price.output + tokens.cacheRead * price.cacheRead +
+  tokens.cacheWrite5m * price.cacheWrite + tokens.cacheWrite1h * price.cacheWrite1h) / 1000000
 
-// Independent cost from modelUsage at list price. With per-request stream usage the tier is chosen per request and
-// the per-request totals must equal modelUsage. Without it the aggregate prompt size is an upper bound for any
-// single request, so the above-100k tier is used whenever the aggregate exceeds 100k.
-export function computeCliCost({ modelUsage, model, requests = [], foreignModel = false }) {
+// Independent cost from the aggregate modelUsage at list price. modelUsage is authoritative: it includes the CLI's own
+// same-model side requests, and per-message stream usage is a snapshot taken when a message starts (its output count
+// is partial), so stream usage is used only to find the largest single prompt. If any prompt exceeds 100k, or no
+// per-request sizes are known and the aggregate prompt exceeds 100k, every token is priced at the above-100k tier
+// (an upper bound). Cache writes are split by TTL from the result's usage.cache_creation; any write not attributed to
+// the 5-minute TTL is priced at the dearer 1-hour rate.
+export function computeCliCost({ modelUsage, model, requests = [], foreignModel = false, cacheCreation = null }) {
   const price = CLI_PRICES[model]
   const none = problem => ({ computedCostUsd: null, basis: null, problem })
   if (!price) return none('no list price for the study model')
@@ -419,21 +424,18 @@ export function computeCliCost({ modelUsage, model, requests = [], foreignModel 
   const entry = modelUsage[model]
   const totals = { input: entry?.inputTokens, output: entry?.outputTokens, cacheRead: entry?.cacheReadInputTokens, cacheWrite: entry?.cacheCreationInputTokens }
   if (!Object.values(totals).every(isCount)) return none('modelUsage counts invalid')
-  const tierFor = prompt => prompt > price.threshold ? price.above : price.base
-  if (requests.length) {
-    const sum = { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }
-    let computedCostUsd = 0
-    for (const usage of requests) {
-      const tokens = { input: usage.input_tokens, output: usage.output_tokens, cacheRead: usage.cache_read_input_tokens, cacheWrite: usage.cache_creation_input_tokens }
-      if (!Object.values(tokens).every(isCount)) return none('per-request usage invalid')
-      computedCostUsd += tokensCost(tokens, tierFor(tokens.input + tokens.cacheRead + tokens.cacheWrite))
-      for (const key of Object.keys(sum)) sum[key] += tokens[key]
-    }
-    if (Object.keys(sum).some(key => sum[key] !== totals[key])) return none('per-request usage does not match modelUsage')
-    return { computedCostUsd, basis: 'per-request tier', problem: null }
+  const prompts = []
+  for (const usage of requests) {
+    const sizes = [usage?.input_tokens, usage?.cache_read_input_tokens, usage?.cache_creation_input_tokens]
+    if (!sizes.every(isCount)) return none('per-request usage invalid')
+    prompts.push(sizes[0] + sizes[1] + sizes[2])
   }
-  const prompt = totals.input + totals.cacheRead + totals.cacheWrite
-  return { computedCostUsd: tokensCost(totals, tierFor(prompt)), basis: prompt > price.threshold ? 'aggregate-above-100k' : 'aggregate-base', problem: null }
+  const largest = prompts.length ? Math.max(...prompts) : totals.input + totals.cacheRead + totals.cacheWrite
+  const above = largest > price.threshold
+  const fiveMinute = isCount(cacheCreation?.ephemeral_5m_input_tokens) ? Math.min(cacheCreation.ephemeral_5m_input_tokens, totals.cacheWrite) : 0
+  const tokens = { input: totals.input, output: totals.output, cacheRead: totals.cacheRead, cacheWrite5m: fiveMinute, cacheWrite1h: totals.cacheWrite - fiveMinute }
+  return { computedCostUsd: tokensCost(tokens, above ? price.above : price.base),
+    basis: `${above ? 'above-100k' : 'base'} tier from ${prompts.length ? 'largest request' : 'aggregate prompt'}`, problem: null }
 }
 
 // Two costs agree when they are equal or within a factor of 2 (both zero counts as agreement).
@@ -491,11 +493,11 @@ export async function runCliAttempt({ task, scenario, config, budget, engine, wo
   if (!valid) {
     const looseCost = Number.isFinite(final.total_cost_usd) && final.total_cost_usd >= 0 ? final.total_cost_usd : null
     // A well-formed modelUsage is still priced, so an incomplete result is never charged below its computed cost.
-    const looseComputed = computeCliCost({ modelUsage: final.modelUsage, model: config.model, requests: observed.requests, foreignModel: observed.foreignModel }).computedCostUsd
+    const looseComputed = computeCliCost({ modelUsage: final.modelUsage, model: config.model, requests: observed.requests, foreignModel: observed.foreignModel, cacheCreation: final.usage?.cache_creation }).computedCostUsd
     return charge(ended, { ...base, cliReportedCostUsd: looseCost, computedCostUsd: looseComputed })
   }
   const denialNames = final.permission_denials.map(entry => typeof entry?.tool_name === 'string' ? entry.tool_name : typeof entry?.name === 'string' ? entry.name : '<unknown>')
-  const cost = computeCliCost({ modelUsage: final.modelUsage, model: config.model, requests: observed.requests, foreignModel: observed.foreignModel })
+  const cost = computeCliCost({ modelUsage: final.modelUsage, model: config.model, requests: observed.requests, foreignModel: observed.foreignModel, cacheCreation: final.usage?.cache_creation })
   const cliReported = Number.isFinite(final.total_cost_usd) && final.total_cost_usd >= 0 ? final.total_cost_usd : null
   const measured = {
     ...base, initModel: init?.model ?? null, initTools: init?.tools ?? null, initMcpServers: init?.mcp_servers ?? null,
