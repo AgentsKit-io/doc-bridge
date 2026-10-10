@@ -151,7 +151,7 @@ describe('minimal study without network or a real credential', () => {
         ledgerText = readFileSync(fd, 'utf8')
       } finally { closeSync(fd) }
       const ledger = JSON.parse(ledgerText)
-      expect(ledger).toMatchObject({ mode: 'pilot', status: 'awaiting-adjudication', model: 'fixture-model' })
+      expect(ledger).toMatchObject({ mode: 'pilot', status: 'awaiting-adjudication', model: 'fixture-model', adjudication: { method: 'agent', humanReview: false } })
       expect(ledger.observations).toHaveLength(2)
       expect(ledgerText).not.toContain(config.key)
       const summary = JSON.parse(log.mock.calls.at(-1)![0])

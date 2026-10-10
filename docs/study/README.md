@@ -42,9 +42,12 @@ artifacts. They remain open validation work for a future adjudicated corpus.
 ## Published artifacts
 
 The [minimal six-task study](./minimal-study-v1.md) is a separate preparation
-protocol with pinned public questions and a budget-first pilot. No model was run
-for that protocol; results remain pending maintainer budget approval and human
-adjudication.
+protocol with pinned public questions and a budget-first pilot for
+`claude-haiku-5-5`. No model was run for that protocol. The pilot is approved with
+a 1 USD cumulative cap; the full 36-attempt run is not approved. Correctness will
+be adjudicated by an agent, not by humans, so any published result is
+agent-adjudicated evidence with no human review and needs maintainer publication
+approval.
 
 | Artifact | Purpose |
 | --- | --- |

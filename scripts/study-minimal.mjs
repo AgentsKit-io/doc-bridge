@@ -226,6 +226,7 @@ export async function main(args = process.argv.slice(2), env = process.env, prot
   const ledger = { version: protocol.version, protocolHash: hash(JSON.stringify(protocol)), runnerHash: hash(readFileSync(fileURLToPath(import.meta.url))),
     engineRevision: (await git(resolve(directory, '..'), ['rev-parse', 'HEAD'])).trim(), engineBundleHash: hash(readFileSync(resolve(directory, '../dist/cli/program.js'))),
     repositories: protocol.repositories, model: options.config.model, prices: { input: options.config.inputPrice, output: options.config.outputPrice },
+    adjudication: { method: 'agent', humanReview: false },
     mode: options.pilot ? 'pilot' : 'full', budget, observations: [], status: 'running' }
   const fd = openSync(output, 'wx', 0o600)
   const save = () => {

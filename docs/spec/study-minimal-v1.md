@@ -19,9 +19,12 @@ cap, required corpus roots and a new private outside-checkout output path.
 
 The private JSON ledger records protocol/runner hashes, corpus pins, engine
 revision/CLI bundle hash, model/prices, pilot/full mode, reserved/measured budget,
-observations and run status. Each observation records task/scenario/repetition,
+observations and run status. Its `adjudication` field declares `method: "agent"`
+and `humanReview: false`. Each observation records task/scenario/repetition,
 provider input/output tokens, usage completeness, tool-call count, elapsed milliseconds, terminal
 status, private answer, `correctness: null` and `adjudication: pending`.
+Adjudication is performed by a separate agent run that is blind to scenario
+identity, as defined in the protocol.
 Run status is `running`, `blocked`, or `awaiting-adjudication`; none is approval.
 Failures preserve conservative reservations; no automatic retry/resume is allowed.
 An observation with `usageComplete: false` contains only known prior-turn tokens;
@@ -29,9 +32,11 @@ the failed request's usage is missing, and its reservation remains charged.
 
 The stdout summary contains counts, usage, spend and a pilot-only extrapolated
 cost, never answers or credentials. Completed means an answer returned, not that
-it was correct. Independent human rubric review and publication approval remain
-external. Existing `DocBridgeIndexV1`, `AgentHandoffV1`, study schemas and hash
-algorithms do not change.
+it was correct. Correctness is agent-adjudicated; there is no human rubric review,
+and every published report must say so. Publication approval by the maintainer
+remains external. The model (`claude-haiku-5-5`), upper prices and pilot cap are
+decided in the protocol, not in this runner. Existing `DocBridgeIndexV1`,
+`AgentHandoffV1`, study schemas and hash algorithms do not change.
 
 Validation: `pnpm vitest run tests/study-minimal.test.ts --maxWorkers=2` covers
 mocked HTTP, budgeting, usage, tools, frozen Git reads and actual local MCP without

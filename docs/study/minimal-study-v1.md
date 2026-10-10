@@ -10,10 +10,16 @@ description: Six pinned public tasks, two paired scenarios and a budget-first pi
 For six repository questions, does access to deterministic Doc Bridge MCP tools
 change correctness, measured input/output tokens, tool calls and wall time compared
 with repository tools alone? **This protocol is preparation, not an executed study.**
-No model was run. A maintainer must supply a key, verify the selected model and
-price table, and approve a pilot budget before any execution. A full run requires
-a separate budget approval after reviewing the pilot. Publication of results and
-semantic adjudication require independent human review.
+No model was run. Maintainer decisions of 2026-10-09 fix the study model, its
+price table and the adjudication method (see below). A maintainer must supply the
+key before any execution. The pilot is approved with a cumulative cap of
+**1 USD**. The full 36-attempt run is **not approved**; it needs a new budget
+approval after the pilot reports measured cost. Publication of results requires
+maintainer approval.
+
+Semantic adjudication is performed by an **agent, not by humans**. There is no
+human review of answers. Results are therefore **agent-adjudicated evidence** and
+must be labelled that way in any published report.
 
 The machine-readable source of truth is [minimal-study-v1.json](./minimal-study-v1.json).
 It freezes public source revisions and question text. Changing any question, pin,
@@ -49,11 +55,13 @@ lists stay with adjudicators; they are never included in the model prompt.
 
 ## Scenarios and schedule
 
-One maintainer-selected pinned model ID, two scenarios, three repetitions per
-task: **6 × 2 × 3 = 36 attempts**. Each attempt starts a fresh conversation and
-a fresh local MCP process, with no shared model memory or retries. Model ID must
-be an immutable version where the provider supports one; record limitations if
-only an alias is available. Temperature is zero, with 1,024 output tokens per
+One pinned model ID, two scenarios, three repetitions per task:
+**6 × 2 × 3 = 36 attempts**. The model is **Claude Haiku 5.5, API model ID
+`claude-haiku-5-5`** (released 2026-10-07, maintainer decision 2026-10-09). Each
+attempt starts a fresh conversation and a fresh local MCP process, with no shared
+model memory or retries. Model ID must be an immutable version where the provider
+supports one; if the provider exposes only this alias, record that limitation in
+the report. The identifier was not independently re-verified by a model run. Temperature is zero, with 1,024 output tokens per
 turn and at most eight turns. An attempt may request at most 20 tools per turn.
 A five-minute elapsed deadline is checked between tools/turns and bounds paid
 request timeouts; an in-flight local tool may add up to its 30-second timeout.
@@ -78,7 +86,7 @@ counterbalances which scenario runs first but does not eliminate temporal drift.
 The pilot is the first task, both scenarios, one repetition: **two attempts**.
 Pilot observations are separate from the full run and cannot count toward its 36.
 
-## Metrics and human adjudication
+## Metrics and agent adjudication
 
 Each private observation binds task, scenario, repetition, corpus pins, protocol
 hash, runner hash, engine revision/bundle hash, model and pricing configuration.
@@ -94,11 +102,24 @@ contain only the observed prior turns, not a total for the failed attempt; the
 uncertain request retains its reservation. Known counts and elapsed time remain
 available, and incomplete usage cannot produce a pilot extrapolation.
 
-Correctness begins as `null`, adjudication `pending`. Two human reviewers compare
-the answer against every expected proposition and frozen cited source. They record
-their independent score, citation checks and reasons in a private companion record
-bound to protocol hash/task/scenario/repetition; a third reviewer settles disputes.
-Hide scenario identity when possible. Answers cannot adjudicate themselves.
+Correctness begins as `null`, adjudication `pending`. An **adjudicating agent**
+compares the answer against every expected proposition and frozen cited source,
+applies the five-outcome rubric below unchanged, and records its score, citation
+checks and reasons in a private companion record bound to protocol
+hash/task/scenario/repetition. Adjudication is not human review: no human
+reviewer, third reviewer or dispute panel is part of this protocol.
+
+The adjudicating agent must satisfy all of these rules:
+
+- It is a **different model run from the one that answered**: a separate session
+  in a fresh context, never the answering conversation or its history. The
+  adjudicator's model ID and run identifier are recorded. A different model ID
+  from `claude-haiku-5-5` is preferred and must be recorded when used.
+- It sees the answer, the expected propositions and the frozen cited sources.
+- It does **not** see the scenario label (`repository-only` or
+  `doc-bridge-mcp`), so it is blind to whether doc-bridge MCP was available. It
+  also does not see scenario order, tool logs, token counts or timing.
+- An answer cannot adjudicate itself. No run adjudicates its own answer.
 
 - **Correct (1):** all task propositions are accurate, supported by valid
   path/line citations at the pin, with no contradictory material claim.
@@ -114,6 +135,10 @@ distribution, token/tool/time distributions and total priced usage. Token or
 latency reductions alone do not establish correctness. Small-sample intervals
 are exploratory; make no general population or enterprise-readiness claim.
 
+**Declaration required in every report:** correctness is *agent-adjudicated; no
+human review was performed*. Results are evidence labelled that way, and
+maintainer publication approval is still required before publication.
+
 ## Budget, execution and privacy
 
 Use Node's built-in `fetch`; the checked dependency surface has no official
@@ -125,10 +150,39 @@ server tools, retries, redirects or additional paid services.
 `STUDY_MODEL`, `ANTHROPIC_API_KEY`, `STUDY_BUDGET_USD`,
 `STUDY_INPUT_USD_PER_MILLION`, and `STUDY_OUTPUT_USD_PER_MILLION` are required for
 execution. Prices may instead be passed using `--input-usd-per-million` and
-`--output-usd-per-million`. The two prices form the selected model's token-price
-table: supply upper rates covering its context tier, not an unverified default.
+`--output-usd-per-million`; the flags take precedence over the price variables.
+The two prices form the selected model's token-price table and are used for
+budget reservation, so they must be upper rates.
+
+**Decided values (maintainer, 2026-10-09)** for `claude-haiku-5-5`:
+
+| Context tier | Input USD / million tokens | Output USD / million tokens |
+| --- | --- | --- |
+| Prompts up to 100k tokens (public list price) | 0.10 | 0.50 |
+| Prompts above 100k tokens | 0.50 | 2.50 |
+| **Upper prices used for reservation** | **0.50** | **2.50** |
+
+The conservative upper prices are the above-100k tier. Runs pass them as
+`--input-usd-per-million 0.50 --output-usd-per-million 2.50`. The runner itself
+hardcodes no model or price; these flags and `STUDY_MODEL` are the only sources.
+
 The key comes only from the environment, rejects CR/LF, and is never printed or
 passed to child processes. No command example contains a key value.
+
+**Approved pilot budget:** cumulative cap **1 USD** (`STUDY_BUDGET_USD=1`). The
+exact pilot command, run only after the maintainer supplies `ANTHROPIC_API_KEY`
+in the environment and checkouts are prepared at the pins, is:
+
+```bash
+STUDY_MODEL=claude-haiku-5-5 STUDY_BUDGET_USD=1 \
+  node scripts/study-minimal.mjs --pilot --approve-budget \
+  --input-usd-per-million 0.50 --output-usd-per-million 2.50 \
+  --root doc-bridge=corpus/doc-bridge --output ../pilot-private.json
+```
+
+**The full 36-attempt run is not approved.** It needs a new, distinct budget
+approval after the pilot reports measured input/output tokens and priced spend.
+Approval of the pilot does not extend to the full run.
 
 Before every paid call, the runner reserves a conservative input-token ceiling
 (twice the serialized request's UTF-8 bytes plus 8,192 protocol tokens) and the
@@ -142,7 +196,7 @@ The provider may charge a request whose response is lost.
 
 Reservations and observations are persisted before/after calls in an exclusively
 created, mode-600 output outside all checkouts. Existing outputs are never
-overwritten or resumed. Raw answers remain private for human adjudication;
+overwritten or resumed. Raw answers remain private for agent adjudication;
 stdout prints only status and aggregate metrics. Review and redact all publication
 material. Neither model responses nor a ledger are automatically published.
 
@@ -158,20 +212,16 @@ pins and readable authoritative sources locally. A rootless dry-run checks only
 the matrix, not corpus/MCP readiness. Use separate pinned checkouts so answers
 cannot be read from this study protocol.
 
-After the maintainer supplies environment settings and explicitly approves the
-pilot, run with the prepared checkout arguments and an outside private output:
-
-```bash
-node scripts/study-minimal.mjs --pilot --approve-budget \
-  --root doc-bridge=corpus/doc-bridge --output ../pilot-private.json
-```
-
-The successful pilot prints measured input/output tokens and priced spend, plus
+The pilot's approval is the 1 USD cap and the exact command shown above. It
+uses the prepared checkout argument and an outside private output. The pilot
+prints measured input/output tokens and priced spend, plus
 `pilot cost × 18` as an extrapolation for 36 attempts. This is **not** an upper
 bound: one discovery task cannot predict architecture or documentation costs.
 If either pilot attempt is incomplete/blocked, extrapolation is missing.
-After a distinct full-budget approval, use `--run --approve-budget`, all three
-`--root` arguments, and a new private output. A blocked run exits nonzero.
+
+The full run requires a new, distinct budget approval after the pilot. Its
+command uses `--run --approve-budget`, all three `--root` arguments, the newly
+approved `STUDY_BUDGET_USD`, and a new private output. A blocked run exits nonzero.
 
 ## Threats to validity and reuse
 
@@ -180,8 +230,11 @@ Training contamination, author-selected expectations, different documentation
 coverage, pinned-version drift, provider nondeterminism, API latency, tool limits
 and local cache warmth can affect results. Same-model conversations are not
 independent samples of models. Zero temperature does not imply reproducibility.
-Reviewer blinding is imperfect because citations may reveal the scenario. The
-pilot cost extrapolation has strong task-selection bias. Report setup effort,
+Adjudicator blinding is imperfect because citations or answer wording may reveal
+the scenario. An agent adjudicator has no human expert review, and it may share
+biases with the answering model family, so agent-adjudicated correctness is
+weaker evidence than human-reviewed correctness would be. The pilot cost
+extrapolation has strong task-selection bias. Report setup effort,
 missing metrics, failures and limitations alongside any launch claims.
 
 The existing `src/study` protocol/task-suite contracts require four task categories
@@ -190,5 +243,5 @@ binds those plans. Reusing them would misrepresent this six-task/one-model/two-a
 design or break existing evidence. This smaller runner therefore uses a separate
 versioned manifest and ledger, preserves existing hashes, and reuses the established
 paired comparisons, provider usage labels, missing-data conventions and independent
-human adjudication. MCP uses the existing server without a second retrieval path.
+agent adjudication, which replaces human review in this protocol. MCP uses the existing server without a second retrieval path.
 The new contract is described in [minimal study runner](../spec/study-minimal-v1.md).
