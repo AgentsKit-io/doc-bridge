@@ -57,7 +57,7 @@ export async function corpusFiles(root, revision) {
 }
 // Clean export for the CLI agent's working directory: only corpusFiles, no .git, index, build output or lockfiles.
 // Files are 0444 and every directory is made 0555 once the export is complete, so the agent cannot write into the
-// corpus and nothing it creates can carry over to a later attempt. One export per repository and scenario.
+// corpus and nothing it creates can carry over to a later attempt. One fresh export per attempt.
 export async function exportCorpus(root, revision, destination) {
   const files = await corpusFiles(root, revision)
   const base = resolve(destination)
@@ -613,7 +613,7 @@ export async function main(args = process.argv.slice(2), env = process.env, prot
     repositories: protocol.repositories, transport: options.config.transport, model: options.config.model,
     ...(cli ? { cli: { cliVersion, expectedCliVersion: options.config.expectedCliVersion, attemptBudgetUsd: options.config.attemptBudgetUsd, disallowedMcpTools,
       disallowedNote: 'claude --help (2.1.296) describes --disallowedTools only as a list of tool names to deny; it does not say whether the definitions of denied tools are still sent to the model. Not verified. The init tool list is the live check: any listed tool outside the expected set makes the attempt invalid-setup.',
-      corpus: { rule: 'export of safePath regular blobs at the pin, each <= 200000 bytes; same set in each repository and scenario; files 0444, directories 0555; no .git, index, build output, hidden files or lockfiles', files: {} },
+      corpus: { rule: 'export of safePath regular blobs at the pin, each <= 200000 bytes; same file set for every attempt of a repository, in a fresh directory per attempt; files 0444, directories 0555; no .git, index, build output, hidden files or lockfiles', files: {} },
       prices: CLI_PRICES, costRule: 'list price from modelUsage; CLI estimate recorded alongside; max of both counts toward the cap' } }
       : { prices: { input: options.config.inputPrice, output: options.config.outputPrice } }),
     adjudication: { method: 'agent', humanReview: false },

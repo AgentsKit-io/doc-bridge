@@ -65,13 +65,13 @@ derives the deny list from the live `tools/list`; all checkouts must expose the 
 list. Any failure refuses to start the run with nothing charged.
 
 `runCliAttempt` spawns the configured executable with an argument array, never a
-shell string, `cwd` set to an export directory created with `mkdtemp`, one per
-repository and scenario. The export holds only the pinned corpus blobs that pass the
+shell string, `cwd` set to an export directory created with `mkdtemp` for that
+attempt alone. The export holds only the pinned corpus blobs that pass the
 public-path filter (`git ls-tree` at the pin, regular files of at most 200000 bytes,
 no dotfiles, no `node_modules`, `dist`, `build` or `coverage`, no lockfiles; `CLAUDE.md`
 and `AGENTS.md` pass the filter and are included, and whether the CLI loads them is not
 observed). Files are mode 0444 and directories 0555 after the export; the directories
-are removed after the run with their permissions restored. The export has no `.git` and no
+are removed after each attempt with their permissions restored. The export has no `.git` and no
 doc-bridge index. `stdin` is closed, the environment is an allowlist without
 `ANTHROPIC_API_KEY`, and there are a five-minute timeout and a 4 MiB stdout bound
 (truncated output is `failed`). The prompt is limited to 8 KiB. The arguments

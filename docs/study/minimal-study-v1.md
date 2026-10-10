@@ -150,14 +150,14 @@ maintainer publication approval is still required before publication.
 
 `--transport cli` runs every attempt as one fresh headless Claude Code process
 (`claude -p`), started with an argument array (never a shell string). Its `cwd` is an
-export directory created with `mkdtemp` outside the repository, one per repository and
-scenario. The export holds only the pinned Git blobs that pass the public-path filter
+export directory created with `mkdtemp` outside the repository, made for that
+attempt alone. The export holds only the pinned Git blobs that pass the public-path filter
 (`safePath`: regular blobs of at most 200000 bytes, no dotfiles, no `node_modules`,
 `dist`, `build` or `coverage`, no lockfiles, no names containing `secret`,
 `credential` or `lock`). It has no `.git` directory and no doc-bridge index. Files are
 mode 0444 and every directory is mode 0555 once the export is written, so the agent
 cannot write into its working directory. Every attempt gets its own fresh export, so
-per-directory CLI state cannot carry over between attempts or arms. The directories are removed after the run with their permissions restored.
+per-directory CLI state cannot carry over between attempts or arms. Each directory is removed after its attempt with their permissions restored.
 Writes that the CLI makes outside its working directory (for example its own state
 under `HOME`) are not controlled by the runner. The HTTP transport reads the same
 filtered corpus. Both transports send the same prompt, which must be at most 8 KiB.

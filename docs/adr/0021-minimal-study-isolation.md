@@ -130,7 +130,7 @@ not verify. The runner now fails closed as follows:
 - **Export.** The child's working directory is a fresh export, made for that attempt alone, of the pinned blobs that pass the public-path filter, including the corpus's
   own `CLAUDE.md` and `AGENTS.md`, and excluding files over 200000 bytes, dotfiles,
   lockfiles and build output. Files are mode 0444 and directories 0555 once written, so
-  the agent cannot write into the export; the directories are removed after the run.
+  the agent cannot write into the export; each directory is removed after its attempt.
 - **Denied definitions.** The `claude --help` text of 2.1.296 describes
   `--disallowedTools` only as a list of names to deny, and does not say whether denied
   tool definitions are still sent. This is not verified; the init tool list is the
