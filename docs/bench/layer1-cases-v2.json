@@ -19,6 +19,11 @@
       "id": "playbook",
       "url": "https://github.com/AgentsKit-io/agents-playbook.git",
       "sha": "11fdda977598d26ff953593bddea032937d553ee"
+    },
+    {
+      "id": "agentskit",
+      "url": "https://github.com/AgentsKit-io/agentskit.git",
+      "sha": "cff4ba9b36a393d9d226bd2b6a64152120990a95"
     }
   ],
   "notApplicable": [
@@ -39,10 +44,10 @@
     }
   ],
   "history": {
-    "limit": "Reviewed 149/115/77 first-parent commits at the three frozen pins. Twenty selected assertion cases span nine real transitions; twelve negative assertions share one package-retirement transition and README. Two positive assertions confirm stale defaults/tool vocabulary; no delayed repair is claimed. This purposive, correlated sample is not a repository-wide prevalence or independent-commit estimate.",
-    "confirmed": 20,
-    "positive": 2,
-    "negative": 18
+    "limit": "First-parent mining reviewed 149/115/77 commits at the three original immutable pins and 835 at the additional public AgentsKit pin. 39 hand-reviewed cases include stale exhaustive value/type claims, compatible additions, correctly updated documentation and retired documents. Parallel documentation sites, multiple tokens in one document and retirement controls are correlated assertion units, not independent commits. No prevalence or release-readiness estimate is claimed. Added cases with overlapping document scopes in the same transition are consolidated, so shared diagnostics cannot inflate the retained finding denominator.",
+    "confirmed": 39,
+    "positive": 7,
+    "negative": 32
   },
   "limits": "Native mutations, authored workspace fixtures and real historical transitions are separate origins. Review candidates are not confirmed semantic divergences. Scope is explicitly bounded by fact tokens and document paths; all findings within each selected document are scored. Raw gold includes policy-excluded/historical/version-pinned citations. No upstream code is installed or executed. No engine changes are included.",
   "cases": [
@@ -6256,6 +6261,2463 @@
         "reasoning": "Only the numeric spelling changes in the citing configuration block while its documented default remains 10 after the code default becomes 20. The incomplete edit remains a visible review candidate, separately grouped from pending findings; text changes do not establish semantic correctness."
       },
       "expectedDocumentationUpdate": "updated-in-this-change"
+    },
+    {
+      "id": "history-doc-bridge-8c8ec5a9-compatible-controls",
+      "repository": "doc-bridge",
+      "origin": "historical",
+      "base": "d1a42d190f564082650d63b877388cb7fae37d3e",
+      "head": "8c8ec5a9adb540b2d05e1bffbad858160d23311d",
+      "scope": {
+        "facts": [
+          {
+            "kind": "signature",
+            "names": [
+              "buildStoredDocBridgeIndex"
+            ]
+          },
+          {
+            "kind": "signature",
+            "names": [
+              "diffSnapshotsWithRead"
+            ]
+          }
+        ],
+        "documents": [
+          "docs/guides/injected-storage.md",
+          "docs/spec/change-set-v1.md",
+          "docs/spec/cli.md",
+          "docs/spec/retrieval-index-v1.md",
+          "docs/spec/service-profile-v1.md",
+          "docs/spec/storage-io-v1.md"
+        ]
+      },
+      "expected": [
+        {
+          "channel": "fact",
+          "kind": "signature",
+          "op": "changed",
+          "name": "buildStoredDocBridgeIndex",
+          "path": "src/index-builder/build-index.ts"
+        },
+        {
+          "channel": "fact",
+          "kind": "signature",
+          "op": "changed",
+          "name": "diffSnapshotsWithRead",
+          "path": "src/diff/change-set.ts"
+        }
+      ],
+      "rawExpected": [
+        {
+          "channel": "fact",
+          "kind": "signature",
+          "op": "changed",
+          "name": "buildStoredDocBridgeIndex",
+          "path": "src/index-builder/build-index.ts"
+        },
+        {
+          "channel": "fact",
+          "kind": "signature",
+          "op": "changed",
+          "name": "diffSnapshotsWithRead",
+          "path": "src/diff/change-set.ts"
+        }
+      ],
+      "citations": [
+        {
+          "path": "docs/guides/injected-storage.md",
+          "token": "buildStoredDocBridgeIndex",
+          "lines": [
+            20,
+            32
+          ]
+        },
+        {
+          "path": "docs/spec/retrieval-index-v1.md",
+          "token": "buildStoredDocBridgeIndex",
+          "lines": [
+            181
+          ]
+        },
+        {
+          "path": "docs/spec/service-profile-v1.md",
+          "token": "buildStoredDocBridgeIndex",
+          "lines": [
+            18
+          ]
+        },
+        {
+          "path": "docs/spec/storage-io-v1.md",
+          "token": "buildStoredDocBridgeIndex",
+          "lines": [
+            148
+          ]
+        },
+        {
+          "path": "docs/guides/injected-storage.md",
+          "token": "diffSnapshotsWithRead",
+          "lines": [
+            21,
+            44
+          ]
+        },
+        {
+          "path": "docs/spec/change-set-v1.md",
+          "token": "diffSnapshotsWithRead",
+          "lines": [
+            129
+          ]
+        },
+        {
+          "path": "docs/spec/cli.md",
+          "token": "diffSnapshotsWithRead",
+          "lines": [
+            185
+          ]
+        }
+      ],
+      "review": {
+        "label": "negative",
+        "reasoning": "Overlapping document scopes in this transition are measured once to avoid counting one diagnostic in multiple cases. Each fact/document review and its evidence is retained in assertions; all these cited claims remain valid after compatible additions or concurrent adequate updates.",
+        "assertions": [
+          {
+            "facts": [
+              {
+                "kind": "signature",
+                "names": [
+                  "buildStoredDocBridgeIndex"
+                ]
+              }
+            ],
+            "documents": [
+              "docs/guides/injected-storage.md",
+              "docs/spec/retrieval-index-v1.md",
+              "docs/spec/service-profile-v1.md",
+              "docs/spec/storage-io-v1.md"
+            ],
+            "reasoning": "The return adds optional metrics and allows failures without limitations. These documents describe guarded status handling and acquisition rather than asserting limitations on every failure; the guarded examples remain valid.",
+            "source": {
+              "path": "src/index-builder/build-index.ts",
+              "baseHash": "f1db7f5e558f307e9e9182c3fbd7e4ec2981c6d81055c1a5403fd945537fce04",
+              "headHash": "07aaa1e640c3c7b2fae7532e55415d25119eb779f4188eef58005b12e3c4eb19",
+              "baseSignatureProjection": "Promise < StorageResult < { index : DocBridgeIndexV1 ; limitations : readonly AvailabilityLimitation [ ] ; coverage ? : DiscoverySnapshotV1 [ 'coverage' ] ; byteHash ? : string } > | ( StorageFailure & { limitations : readonly AvailabilityLimitation [ ] } ) > | options : BuildStoredIndexOptions",
+              "headSignatureProjection": "Promise < { status : 'ok' ; value : { index : DocBridgeIndexV1 ; limitations : readonly AvailabilityLimitation [ ] ; coverage ? : DiscoverySnapshotV1 [ 'coverage' ] ; byteHash ? : string ; metrics ? : RunMetrics } } | ( StorageFailure & { limitations ? : readonly AvailabilityLimitation [ ] ; coverage ? : DiscoverySnapshotV1 [ 'coverage' ] ; metrics ? : RunMetrics } ) > | options : BuildStoredIndexOptions"
+            },
+            "documentation": [
+              {
+                "path": "docs/guides/injected-storage.md",
+                "baseLines": [
+                  20,
+                  32
+                ],
+                "baseHash": "083c8c4e10a279135d9e6dd96f8911325f08dda3e1021b8aa5d416b5368654df",
+                "headHash": "083c8c4e10a279135d9e6dd96f8911325f08dda3e1021b8aa5d416b5368654df",
+                "headCitationLines": [
+                  20,
+                  32
+                ]
+              },
+              {
+                "path": "docs/spec/retrieval-index-v1.md",
+                "baseLines": [
+                  181
+                ],
+                "baseHash": "2e0c13c888de3d90ce530d2e03cc1a94e82775537a59e75723f71240a70f26ec",
+                "headHash": "2e0c13c888de3d90ce530d2e03cc1a94e82775537a59e75723f71240a70f26ec",
+                "headCitationLines": [
+                  181
+                ]
+              },
+              {
+                "path": "docs/spec/service-profile-v1.md",
+                "baseLines": [
+                  18
+                ],
+                "baseHash": "5b1f0aeed1dc56bb6ba761dd98e65de0d78e243a2b05f23c296c1f7eab0a9c01",
+                "headHash": "5b1f0aeed1dc56bb6ba761dd98e65de0d78e243a2b05f23c296c1f7eab0a9c01",
+                "headCitationLines": [
+                  18
+                ]
+              },
+              {
+                "path": "docs/spec/storage-io-v1.md",
+                "baseLines": [
+                  148
+                ],
+                "baseHash": "dff2269c2a9d69dc193fc2f1b5097319a31701cacdd62d487cdb761d794fc345",
+                "headHash": "64968be6ece4ac4aef8a1330dd3438b01d9e5c7ca5b206c296a2efa3d002e3d8",
+                "headCitationLines": [
+                  148
+                ]
+              }
+            ]
+          },
+          {
+            "facts": [
+              {
+                "kind": "signature",
+                "names": [
+                  "diffSnapshotsWithRead"
+                ]
+              }
+            ],
+            "documents": [
+              "docs/guides/injected-storage.md",
+              "docs/spec/change-set-v1.md",
+              "docs/spec/cli.md"
+            ],
+            "reasoning": "The optional operation controls extend the prior signal/branch call. The cited calls remain supported; none claims an exhaustive option list.",
+            "source": {
+              "path": "src/diff/change-set.ts",
+              "baseHash": "25c1426f25b2cfbc607d7b82aad7b11f43e109062ef38ffdd433a23484e7226d",
+              "headHash": "22378954f2962b2ad2e43dab9d42d8fc65a84a1f43d283e34bb935ebb462cb14",
+              "baseSignatureProjection": "| base : DiscoverySnapshotV1 | head : DiscoverySnapshotV1 | read : RepositoryReadV1 | options : { signal ? : AbortSignal ; branch ? : string ; profile ? : ExecutionProfile } = { }",
+              "headSignatureProjection": "| base : DiscoverySnapshotV1 | head : DiscoverySnapshotV1 | read : RepositoryReadV1 | options : OperationOptions & { branch ? : string ; profile ? : ExecutionProfile } = { }"
+            },
+            "documentation": [
+              {
+                "path": "docs/guides/injected-storage.md",
+                "baseLines": [
+                  21,
+                  44
+                ],
+                "baseHash": "083c8c4e10a279135d9e6dd96f8911325f08dda3e1021b8aa5d416b5368654df",
+                "headHash": "083c8c4e10a279135d9e6dd96f8911325f08dda3e1021b8aa5d416b5368654df",
+                "headCitationLines": [
+                  21,
+                  44
+                ]
+              },
+              {
+                "path": "docs/spec/change-set-v1.md",
+                "baseLines": [
+                  129
+                ],
+                "baseHash": "60d10540ec2b3fb7e81ee4dacfdf38c8e7218b5045309b01201fbb1255fe9a62",
+                "headHash": "60d10540ec2b3fb7e81ee4dacfdf38c8e7218b5045309b01201fbb1255fe9a62",
+                "headCitationLines": [
+                  129
+                ]
+              },
+              {
+                "path": "docs/spec/cli.md",
+                "baseLines": [
+                  185
+                ],
+                "baseHash": "293411bc0d42af5b756ec29590b035698aa79cf04acabb8999e66714b5971b24",
+                "headHash": "5d0361c63b069e1b5e58e157df518473927b61e80816cba54931292cba455c87",
+                "headCitationLines": [
+                  185
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "history-doc-bridge-4a5fa2f2-compatible-controls",
+      "repository": "doc-bridge",
+      "origin": "historical",
+      "base": "391574255b974b2c76c7a209d575c8b160042f4a",
+      "head": "4a5fa2f285aac63aa3f28c5401d2e0674fce862b",
+      "scope": {
+        "facts": [
+          {
+            "kind": "signature",
+            "names": [
+              "createMarkdownPluginV2"
+            ]
+          },
+          {
+            "kind": "signature",
+            "names": [
+              "DiscoveryPluginV2"
+            ]
+          }
+        ],
+        "documents": [
+          "docs/guides/injected-storage.md"
+        ]
+      },
+      "expected": [
+        {
+          "channel": "fact",
+          "kind": "signature",
+          "op": "changed",
+          "name": "createMarkdownPluginV2",
+          "path": "src/discovery/plugins/markdown.ts"
+        },
+        {
+          "channel": "fact",
+          "kind": "signature",
+          "op": "changed",
+          "name": "DiscoveryPluginV2",
+          "path": "src/plugins/contract.ts"
+        }
+      ],
+      "rawExpected": [
+        {
+          "channel": "fact",
+          "kind": "signature",
+          "op": "changed",
+          "name": "createMarkdownPluginV2",
+          "path": "src/discovery/plugins/markdown.ts"
+        },
+        {
+          "channel": "fact",
+          "kind": "signature",
+          "op": "changed",
+          "name": "DiscoveryPluginV2",
+          "path": "src/plugins/contract.ts"
+        }
+      ],
+      "citations": [
+        {
+          "path": "docs/guides/injected-storage.md",
+          "token": "createMarkdownPluginV2",
+          "lines": [
+            82
+          ]
+        },
+        {
+          "path": "docs/guides/injected-storage.md",
+          "token": "DiscoveryPluginV2",
+          "lines": [
+            80
+          ]
+        }
+      ],
+      "review": {
+        "label": "negative",
+        "reasoning": "Overlapping document scopes in this transition are measured once to avoid counting one diagnostic in multiple cases. Each fact/document review and its evidence is retained in assertions; all these cited claims remain valid after compatible additions or concurrent adequate updates.",
+        "assertions": [
+          {
+            "facts": [
+              {
+                "kind": "signature",
+                "names": [
+                  "createMarkdownPluginV2"
+                ]
+              }
+            ],
+            "documents": [
+              "docs/guides/injected-storage.md"
+            ],
+            "reasoning": "The new adapter parameter is defaulted. The guide identifies the built-in factory without asserting that arguments are forbidden; existing no-argument use remains supported.",
+            "source": {
+              "path": "src/discovery/plugins/markdown.ts",
+              "baseHash": "22c771a9c4bf8b660e7a2f707e874ab3757c9acf6672ba5e0b7ae0ac1482b022",
+              "headHash": "5c83ecfa6ddf0a0bbdb5a39fbd1d67f8a3957faff3bbf34735c5b65422412ae9",
+              "baseSignatureProjection": "DiscoveryPluginV2",
+              "headSignatureProjection": "DiscoveryPluginV2 | adapters : readonly DiscoveryPluginV2 [ ] = [ createJsTsPluginV2 ( ) ]"
+            },
+            "documentation": [
+              {
+                "path": "docs/guides/injected-storage.md",
+                "baseLines": [
+                  82
+                ],
+                "baseHash": "083c8c4e10a279135d9e6dd96f8911325f08dda3e1021b8aa5d416b5368654df",
+                "headHash": "083c8c4e10a279135d9e6dd96f8911325f08dda3e1021b8aa5d416b5368654df",
+                "headCitationLines": [
+                  82
+                ]
+              }
+            ]
+          },
+          {
+            "facts": [
+              {
+                "kind": "signature",
+                "names": [
+                  "DiscoveryPluginV2"
+                ]
+              }
+            ],
+            "documents": [
+              "docs/guides/injected-storage.md"
+            ],
+            "reasoning": "The interface adds an optional normalizeRange hook. The guide describes caller-registered instances without asserting an exhaustive hook set; existing implementations remain valid.",
+            "source": {
+              "path": "src/plugins/contract.ts",
+              "baseHash": "bb1005fbc8f0c519a9405295c823e10e2488feb72a0bca66db6bed9e787b9f57",
+              "headHash": "e1051625bd8feb1deb02c293394da517112a34459ebc9e3456c75c285f6b37bb",
+              "baseSignatureProjection": "export interface DiscoveryPluginV2 { readonly manifest : DiscoveryPluginManifestV2 discover ( input : DiscoveryPluginInputV2 ) : Promise < unknown > normalizeVersion ? ( purl : string , value : string ) : Resolution < string > compareVersions ? ( purl : string , left : string , right : string ) : Resolution < - 1 | 0 | 1 > satisfiesRange ? ( purl : string , version : string , versRange : string ) : Resolution < boolean > mapRelease ? ( input : Readonly < { event : ReleaseEvent ; packages : readonly PackageFact [ ] ; read : RepositoryReadV1 ; signal : AbortSignal } > ) : Promise < Resolution < readonly { purl : string ; version : string } [ ] > > }",
+              "headSignatureProjection": "export interface DiscoveryPluginV2 { readonly manifest : DiscoveryPluginManifestV2 discover ( input : DiscoveryPluginInputV2 ) : Promise < unknown > normalizeRange ? ( purl : string , value : string ) : Resolution < string > normalizeVersion ? ( purl : string , value : string ) : Resolution < string > compareVersions ? ( purl : string , left : string , right : string ) : Resolution < - 1 | 0 | 1 > satisfiesRange ? ( purl : string , version : string , versRange : string ) : Resolution < boolean > mapRelease ? ( input : Readonly < { event : ReleaseEvent ; packages : readonly PackageFact [ ] ; read : RepositoryReadV1 ; signal : AbortSignal } > ) : Promise < Resolution < readonly { purl : string ; version : string } [ ] > > }"
+            },
+            "documentation": [
+              {
+                "path": "docs/guides/injected-storage.md",
+                "baseLines": [
+                  80
+                ],
+                "baseHash": "083c8c4e10a279135d9e6dd96f8911325f08dda3e1021b8aa5d416b5368654df",
+                "headHash": "083c8c4e10a279135d9e6dd96f8911325f08dda3e1021b8aa5d416b5368654df",
+                "headCitationLines": [
+                  80
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "history-doc-bridge-39157425-compatible-controls",
+      "repository": "doc-bridge",
+      "origin": "historical",
+      "base": "222e1e4c30c3a71a154c884d01098f978cccd098",
+      "head": "391574255b974b2c76c7a209d575c8b160042f4a",
+      "scope": {
+        "facts": [
+          {
+            "kind": "signature",
+            "names": [
+              "buildStoredDocBridgeIndex"
+            ]
+          },
+          {
+            "kind": "signature",
+            "names": [
+              "diffSnapshotsWithRead"
+            ]
+          }
+        ],
+        "documents": [
+          "docs/guides/injected-storage.md",
+          "docs/spec/change-set-v1.md",
+          "docs/spec/cli.md",
+          "docs/spec/retrieval-index-v1.md",
+          "docs/spec/storage-io-v1.md"
+        ]
+      },
+      "expected": [
+        {
+          "channel": "fact",
+          "kind": "signature",
+          "op": "changed",
+          "name": "buildStoredDocBridgeIndex",
+          "path": "src/index-builder/build-index.ts"
+        },
+        {
+          "channel": "fact",
+          "kind": "signature",
+          "op": "changed",
+          "name": "diffSnapshotsWithRead",
+          "path": "src/diff/change-set.ts"
+        }
+      ],
+      "rawExpected": [
+        {
+          "channel": "fact",
+          "kind": "signature",
+          "op": "changed",
+          "name": "buildStoredDocBridgeIndex",
+          "path": "src/index-builder/build-index.ts"
+        },
+        {
+          "channel": "fact",
+          "kind": "signature",
+          "op": "changed",
+          "name": "diffSnapshotsWithRead",
+          "path": "src/diff/change-set.ts"
+        }
+      ],
+      "citations": [
+        {
+          "path": "docs/guides/injected-storage.md",
+          "token": "buildStoredDocBridgeIndex",
+          "lines": [
+            20,
+            32
+          ]
+        },
+        {
+          "path": "docs/spec/retrieval-index-v1.md",
+          "token": "buildStoredDocBridgeIndex",
+          "lines": [
+            181
+          ]
+        },
+        {
+          "path": "docs/spec/storage-io-v1.md",
+          "token": "buildStoredDocBridgeIndex",
+          "lines": [
+            148
+          ]
+        },
+        {
+          "path": "docs/guides/injected-storage.md",
+          "token": "diffSnapshotsWithRead",
+          "lines": [
+            21,
+            44
+          ]
+        },
+        {
+          "path": "docs/spec/change-set-v1.md",
+          "token": "diffSnapshotsWithRead",
+          "lines": [
+            129
+          ]
+        },
+        {
+          "path": "docs/spec/cli.md",
+          "token": "diffSnapshotsWithRead",
+          "lines": [
+            185
+          ]
+        }
+      ],
+      "review": {
+        "label": "negative",
+        "reasoning": "Overlapping document scopes in this transition are measured once to avoid counting one diagnostic in multiple cases. Each fact/document review and its evidence is retained in assertions; all these cited claims remain valid after compatible additions or concurrent adequate updates.",
+        "assertions": [
+          {
+            "facts": [
+              {
+                "kind": "signature",
+                "names": [
+                  "buildStoredDocBridgeIndex"
+                ]
+              }
+            ],
+            "documents": [
+              "docs/guides/injected-storage.md",
+              "docs/spec/retrieval-index-v1.md",
+              "docs/spec/storage-io-v1.md"
+            ],
+            "reasoning": "Coverage is an optional return field. The cited documents and guarded examples do not assert an exhaustive return property list; prior calls remain valid.",
+            "source": {
+              "path": "src/index-builder/build-index.ts",
+              "baseHash": "fabae896ae40bc7fd566a2efd4a2c0ad7cc099550442f5176cabd50f15911ec0",
+              "headHash": "f1db7f5e558f307e9e9182c3fbd7e4ec2981c6d81055c1a5403fd945537fce04",
+              "baseSignatureProjection": "Promise < StorageResult < { index : DocBridgeIndexV1 ; limitations : readonly AvailabilityLimitation [ ] ; byteHash ? : string } > | ( StorageFailure & { limitations : readonly AvailabilityLimitation [ ] } ) > | options : BuildStoredIndexOptions",
+              "headSignatureProjection": "Promise < StorageResult < { index : DocBridgeIndexV1 ; limitations : readonly AvailabilityLimitation [ ] ; coverage ? : DiscoverySnapshotV1 [ 'coverage' ] ; byteHash ? : string } > | ( StorageFailure & { limitations : readonly AvailabilityLimitation [ ] } ) > | options : BuildStoredIndexOptions"
+            },
+            "documentation": [
+              {
+                "path": "docs/guides/injected-storage.md",
+                "baseLines": [
+                  20,
+                  32
+                ],
+                "baseHash": "083c8c4e10a279135d9e6dd96f8911325f08dda3e1021b8aa5d416b5368654df",
+                "headHash": "083c8c4e10a279135d9e6dd96f8911325f08dda3e1021b8aa5d416b5368654df",
+                "headCitationLines": [
+                  20,
+                  32
+                ]
+              },
+              {
+                "path": "docs/spec/retrieval-index-v1.md",
+                "baseLines": [
+                  181
+                ],
+                "baseHash": "e91ad4b84c5c34e26ad0940aa74f2242ee2bacccc2465ff31b56f3dbc08af63e",
+                "headHash": "e91ad4b84c5c34e26ad0940aa74f2242ee2bacccc2465ff31b56f3dbc08af63e",
+                "headCitationLines": [
+                  181
+                ]
+              },
+              {
+                "path": "docs/spec/storage-io-v1.md",
+                "baseLines": [
+                  148
+                ],
+                "baseHash": "176513782826ca248ae20d8e270c9dcbf39e69f79a2a76f897d38395ae6399b3",
+                "headHash": "dff2269c2a9d69dc193fc2f1b5097319a31701cacdd62d487cdb761d794fc345",
+                "headCitationLines": [
+                  148
+                ]
+              }
+            ]
+          },
+          {
+            "facts": [
+              {
+                "kind": "signature",
+                "names": [
+                  "diffSnapshotsWithRead"
+                ]
+              }
+            ],
+            "documents": [
+              "docs/guides/injected-storage.md",
+              "docs/spec/change-set-v1.md",
+              "docs/spec/cli.md"
+            ],
+            "reasoning": "An optional execution profile is added to defaulted options. Existing signal/branch calls remain valid; the same commit adds service-profile documentation.",
+            "source": {
+              "path": "src/diff/change-set.ts",
+              "baseHash": "d58942aacc8cfb2216ca82777ec0c061dd6cc4fa103b6ddf7524eb67db2c60a5",
+              "headHash": "4a0af2e39167fa22c90c2e59238fc710a3afc43ddfede55baf457b9032f34df3",
+              "baseSignatureProjection": "| base : DiscoverySnapshotV1 | head : DiscoverySnapshotV1 | read : RepositoryReadV1 | options : { signal ? : AbortSignal ; branch ? : string } = { }",
+              "headSignatureProjection": "| base : DiscoverySnapshotV1 | head : DiscoverySnapshotV1 | read : RepositoryReadV1 | options : { signal ? : AbortSignal ; branch ? : string ; profile ? : ExecutionProfile } = { }"
+            },
+            "documentation": [
+              {
+                "path": "docs/guides/injected-storage.md",
+                "baseLines": [
+                  21,
+                  44
+                ],
+                "baseHash": "083c8c4e10a279135d9e6dd96f8911325f08dda3e1021b8aa5d416b5368654df",
+                "headHash": "083c8c4e10a279135d9e6dd96f8911325f08dda3e1021b8aa5d416b5368654df",
+                "headCitationLines": [
+                  21,
+                  44
+                ]
+              },
+              {
+                "path": "docs/spec/change-set-v1.md",
+                "baseLines": [
+                  129
+                ],
+                "baseHash": "83657f3fd73f66933bb5fe7ebf99785c51da3a9ef48b480cda80b1c253f81d5d",
+                "headHash": "83657f3fd73f66933bb5fe7ebf99785c51da3a9ef48b480cda80b1c253f81d5d",
+                "headCitationLines": [
+                  129
+                ]
+              },
+              {
+                "path": "docs/spec/cli.md",
+                "baseLines": [
+                  185
+                ],
+                "baseHash": "49b6a1a2fecadad481a846a915b33d694732fcaa61e691bcbdeeb55792881d32",
+                "headHash": "5c09039c2ab1e356b6a820ee2e629ba336bb7498227799cac74a3820677fcdbd",
+                "headCitationLines": [
+                  185
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "history-doc-bridge-222e1e4c-markdownresolution-review",
+      "repository": "doc-bridge",
+      "origin": "historical",
+      "base": "14337aeaf83f2b66ec0cb2adf7092fdd535b1da4",
+      "head": "222e1e4c30c3a71a154c884d01098f978cccd098",
+      "scope": {
+        "facts": [
+          {
+            "kind": "signature",
+            "names": [
+              "MarkdownResolution"
+            ]
+          }
+        ],
+        "documents": [
+          "docs/spec/markdown-analyzer-v1.md"
+        ]
+      },
+      "expected": [
+        {
+          "channel": "fact",
+          "kind": "signature",
+          "op": "changed",
+          "name": "MarkdownResolution",
+          "path": "src/discovery/markdown.ts"
+        }
+      ],
+      "rawExpected": [
+        {
+          "channel": "fact",
+          "kind": "signature",
+          "op": "changed",
+          "name": "MarkdownResolution",
+          "path": "src/discovery/markdown.ts"
+        }
+      ],
+      "citations": [
+        {
+          "path": "docs/spec/markdown-analyzer-v1.md",
+          "token": "MarkdownResolution",
+          "lines": [
+            86
+          ]
+        }
+      ],
+      "review": {
+        "label": "negative",
+        "reasoning": "The resolution type adds optional packagePaths and cliPackages for configuration/CLI ownership. The analyzer specification adds the corresponding capabilities in the same commit; prior resolution callers remain supported.",
+        "source": {
+          "path": "src/discovery/markdown.ts",
+          "baseHash": "c00a6c10949d2a8444b7300ded4f2ffd622af7ddc9fee053e694d9697b8363cd",
+          "headHash": "c768959928e6eb306832c7198915c3d6168fb08051f7093ee2522e3b6fffa435",
+          "baseSignatureProjection": "export type MarkdownResolution = { readonly documents : ReadonlyMap < string , string > readonly modules : ReadonlyMap < string , string > readonly areas ? : ReadonlyMap < string , string > readonly packages : ReadonlyMap < string , string > readonly symbols : ReadonlyMap < string , readonly string [ ] > readonly facts ? : ReadonlyMap < string , readonly MarkdownFact [ ] > readonly relationCap ? : number readonly pathIndex ? : FuzzyCandidateIndex }",
+          "headSignatureProjection": "export type MarkdownResolution = { readonly documents : ReadonlyMap < string , string > readonly modules : ReadonlyMap < string , string > readonly areas ? : ReadonlyMap < string , string > readonly packages : ReadonlyMap < string , string > readonly symbols : ReadonlyMap < string , readonly string [ ] > readonly facts ? : ReadonlyMap < string , readonly MarkdownFact [ ] > readonly packagePaths ? : readonly { readonly id : string ; readonly path : string } [ ] readonly relationCap ? : number readonly pathIndex ? : FuzzyCandidateIndex }"
+        },
+        "documentation": [
+          {
+            "path": "docs/spec/markdown-analyzer-v1.md",
+            "baseLines": [
+              86
+            ],
+            "baseHash": "1a4a9f1322eabcbf1b57a9817783d61d88b7212ce5e4b8be7bc5c24d164bab6d",
+            "headHash": "64a49fdff4ae984ba14ca040915f2f3fa973590139c32392e57ddb96bd28a855",
+            "headCitationLines": [
+              92
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "history-doc-bridge-14337aea-markdownresolution-review",
+      "repository": "doc-bridge",
+      "origin": "historical",
+      "base": "20cdb31482176ce19cb7b27a4696fa1ac8389530",
+      "head": "14337aeaf83f2b66ec0cb2adf7092fdd535b1da4",
+      "scope": {
+        "facts": [
+          {
+            "kind": "signature",
+            "names": [
+              "MarkdownResolution"
+            ]
+          }
+        ],
+        "documents": [
+          "docs/spec/markdown-analyzer-v1.md"
+        ]
+      },
+      "expected": [
+        {
+          "channel": "fact",
+          "kind": "signature",
+          "op": "changed",
+          "name": "MarkdownResolution",
+          "path": "src/discovery/markdown.ts"
+        }
+      ],
+      "rawExpected": [
+        {
+          "channel": "fact",
+          "kind": "signature",
+          "op": "changed",
+          "name": "MarkdownResolution",
+          "path": "src/discovery/markdown.ts"
+        }
+      ],
+      "citations": [
+        {
+          "path": "docs/spec/markdown-analyzer-v1.md",
+          "token": "MarkdownResolution",
+          "lines": [
+            86
+          ]
+        }
+      ],
+      "review": {
+        "label": "negative",
+        "reasoning": "The resolution type adds optional fact lookup metadata. The same commit documents generic fact citations; previous path and symbol lookup remains valid.",
+        "source": {
+          "path": "src/discovery/markdown.ts",
+          "baseHash": "4a15d0eb7ea622075131b938f1e600604b898adbdfd37e4c9ea8e64f67a2dd49",
+          "headHash": "c00a6c10949d2a8444b7300ded4f2ffd622af7ddc9fee053e694d9697b8363cd",
+          "baseSignatureProjection": "export type MarkdownResolution = { readonly documents : ReadonlyMap < string , string > readonly modules : ReadonlyMap < string , string > readonly areas ? : ReadonlyMap < string , string > readonly packages : ReadonlyMap < string , string > readonly symbols : ReadonlyMap < string , readonly string [ ] > readonly relationCap ? : number readonly pathIndex ? : FuzzyCandidateIndex }",
+          "headSignatureProjection": "export type MarkdownResolution = { readonly documents : ReadonlyMap < string , string > readonly modules : ReadonlyMap < string , string > readonly areas ? : ReadonlyMap < string , string > readonly packages : ReadonlyMap < string , string > readonly symbols : ReadonlyMap < string , readonly string [ ] > readonly facts ? : ReadonlyMap < string , readonly MarkdownFact [ ] > readonly relationCap ? : number readonly pathIndex ? : FuzzyCandidateIndex }"
+        },
+        "documentation": [
+          {
+            "path": "docs/spec/markdown-analyzer-v1.md",
+            "baseLines": [
+              86
+            ],
+            "baseHash": "692d61ede64affa76a606a7b24b00f78eb386bdb412fe0da971fd5c1f91bf43f",
+            "headHash": "1a4a9f1322eabcbf1b57a9817783d61d88b7212ce5e4b8be7bc5c24d164bab6d",
+            "headCitationLines": [
+              86
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "history-chat-79d8ccac-standardcomponent-review",
+      "repository": "chat",
+      "origin": "historical",
+      "base": "1979e38375839fedbc24c5026d1e8b4f638d9535",
+      "head": "79d8ccac82370d5c3e38a3b63fd56ca8e8c826e1",
+      "scope": {
+        "facts": [
+          {
+            "kind": "signature",
+            "names": [
+              "StandardComponent"
+            ]
+          }
+        ],
+        "documents": [
+          "docs/api-reference.md",
+          "docs/for-agents/packages/ink.md",
+          "docs/for-agents/packages/react.md",
+          "docs/for-agents/packages/solid.md",
+          "docs/for-agents/packages/svelte.md",
+          "docs/for-agents/packages/vue.md"
+        ]
+      },
+      "expected": [
+        {
+          "channel": "fact",
+          "kind": "signature",
+          "op": "changed",
+          "name": "StandardComponent",
+          "path": "packages/react/src/index.tsx"
+        }
+      ],
+      "rawExpected": [
+        {
+          "channel": "fact",
+          "kind": "signature",
+          "op": "changed",
+          "name": "StandardComponent",
+          "path": "packages/react/src/index.tsx"
+        }
+      ],
+      "citations": [
+        {
+          "path": "docs/api-reference.md",
+          "token": "StandardComponent",
+          "lines": [
+            11,
+            13,
+            14,
+            15,
+            16
+          ]
+        },
+        {
+          "path": "docs/for-agents/packages/ink.md",
+          "token": "StandardComponent",
+          "lines": [
+            5
+          ]
+        },
+        {
+          "path": "docs/for-agents/packages/react.md",
+          "token": "StandardComponent",
+          "lines": [
+            5
+          ]
+        },
+        {
+          "path": "docs/for-agents/packages/solid.md",
+          "token": "StandardComponent",
+          "lines": [
+            3
+          ]
+        },
+        {
+          "path": "docs/for-agents/packages/svelte.md",
+          "token": "StandardComponent",
+          "lines": [
+            3
+          ]
+        },
+        {
+          "path": "docs/for-agents/packages/vue.md",
+          "token": "StandardComponent",
+          "lines": [
+            5
+          ]
+        }
+      ],
+      "review": {
+        "label": "negative",
+        "reasoning": "The component adds a defaulted navigation option within the same declared props type. Existing frame/manifest/onInteract calls and catalog descriptions remain valid; no cited document asserts an exhaustive destructuring pattern.",
+        "source": {
+          "path": "packages/react/src/index.tsx",
+          "baseHash": "9cee48fb3c50ead2e3ead6fa8841dcf5793dbe10e2475840b162a2cdc300f8fd",
+          "headHash": "7a581bb17d56933e3485706613a382354b03d455e112b11922ce429e46a03926",
+          "baseSignatureProjection": "ReactElement | null | { frame , manifest , onInteract , disabled = false } : StandardComponentProps",
+          "headSignatureProjection": "ReactElement | null | { frame , manifest , onInteract , disabled = false , allowNativeNavigation = false } : StandardComponentProps"
+        },
+        "documentation": [
+          {
+            "path": "docs/api-reference.md",
+            "baseLines": [
+              11,
+              13,
+              14,
+              15,
+              16
+            ],
+            "baseHash": "2090d74e9461055028c53f6273237e24dd6e6a5bcdcddb4c577c951a84380c92",
+            "headHash": "2090d74e9461055028c53f6273237e24dd6e6a5bcdcddb4c577c951a84380c92",
+            "headCitationLines": [
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17
+            ]
+          },
+          {
+            "path": "docs/for-agents/packages/ink.md",
+            "baseLines": [
+              5
+            ],
+            "baseHash": "0394ceacc313cb80ea311b3461787bdfaf4bc2c94f29ec003becf3659f65981d",
+            "headHash": "0394ceacc313cb80ea311b3461787bdfaf4bc2c94f29ec003becf3659f65981d",
+            "headCitationLines": [
+              5
+            ]
+          },
+          {
+            "path": "docs/for-agents/packages/react.md",
+            "baseLines": [
+              5
+            ],
+            "baseHash": "dbbb04b31922e6d326ea1dd4e49a5b05b30cb169fe597c315142881370b90986",
+            "headHash": "dbbb04b31922e6d326ea1dd4e49a5b05b30cb169fe597c315142881370b90986",
+            "headCitationLines": [
+              5
+            ]
+          },
+          {
+            "path": "docs/for-agents/packages/solid.md",
+            "baseLines": [
+              3
+            ],
+            "baseHash": "db0203bf1330783a3394f40545cca2a701c6a11df2ea9a3576b08518271e7720",
+            "headHash": "db0203bf1330783a3394f40545cca2a701c6a11df2ea9a3576b08518271e7720",
+            "headCitationLines": [
+              3
+            ]
+          },
+          {
+            "path": "docs/for-agents/packages/svelte.md",
+            "baseLines": [
+              3
+            ],
+            "baseHash": "c0f5f024cfa3a52f1ba467cfafe8b5b27e506ab897a35e0e72b4c0e6b4520d04",
+            "headHash": "c0f5f024cfa3a52f1ba467cfafe8b5b27e506ab897a35e0e72b4c0e6b4520d04",
+            "headCitationLines": [
+              3
+            ]
+          },
+          {
+            "path": "docs/for-agents/packages/vue.md",
+            "baseLines": [
+              5
+            ],
+            "baseHash": "ff5dc4a6e4b356c6c7668eaddcb051dc4099f82f5a2e42b09c2193afa1e19378",
+            "headHash": "ff5dc4a6e4b356c6c7668eaddcb051dc4099f82f5a2e42b09c2193afa1e19378",
+            "headCitationLines": [
+              5
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "history-chat-891be155-chatdefinition-review",
+      "repository": "chat",
+      "origin": "historical",
+      "base": "a1a44571cac6a64df798ee998348109a71082160",
+      "head": "891be1550e2844de710a2412bb723b4a6a15de21",
+      "scope": {
+        "facts": [
+          {
+            "kind": "signature",
+            "names": [
+              "ChatDefinition"
+            ]
+          }
+        ],
+        "documents": [
+          "docs/components/catalog.md",
+          "docs/for-agents/packages/chat.md",
+          "docs/theming-and-composition.md"
+        ]
+      },
+      "expected": [
+        {
+          "channel": "fact",
+          "kind": "signature",
+          "op": "changed",
+          "name": "ChatDefinition",
+          "path": "packages/chat/src/index.ts"
+        }
+      ],
+      "rawExpected": [
+        {
+          "channel": "fact",
+          "kind": "signature",
+          "op": "changed",
+          "name": "ChatDefinition",
+          "path": "packages/chat/src/index.ts"
+        }
+      ],
+      "citations": [
+        {
+          "path": "docs/components/catalog.md",
+          "token": "ChatDefinition",
+          "lines": [
+            33
+          ]
+        },
+        {
+          "path": "docs/for-agents/packages/chat.md",
+          "token": "ChatDefinition",
+          "lines": [
+            5
+          ]
+        },
+        {
+          "path": "docs/theming-and-composition.md",
+          "token": "ChatDefinition",
+          "lines": [
+            28
+          ]
+        }
+      ],
+      "review": {
+        "label": "negative",
+        "reasoning": "The definition adds an optional choiceSubmission callback. Existing definitions in the cited documents remain valid and the same commit adds reserved deterministic-answer documentation; these references do not assert that additional optional fields are forbidden.",
+        "source": {
+          "path": "packages/chat/src/index.ts",
+          "baseHash": "abb21bd6d0fa5fcb8d7569c3dc7d858c53acb4813b8e5641b8ff0166a9bdc0c5",
+          "headHash": "ace7926526cb7ea2a79fc98229b275a3fee97de325bbb0008a37f01a854e1b45",
+          "baseSignatureProjection": "export interface ChatDefinition { readonly id : string readonly revision ? : number readonly chat : ChatConfig readonly conversation ? : ConversationDefinition readonly components ? : ComponentManifest }",
+          "headSignatureProjection": "export interface ChatDefinition { readonly id : string readonly revision ? : number readonly chat : ChatConfig readonly conversation ? : ConversationDefinition readonly components ? : ComponentManifest readonly choiceSubmission ? : ( frame : ComponentRenderFrame , choiceId : string , context : { readonly sessionId : string } , ) => ChoiceSubmissionReservation | ChoiceSubmissionUnavailable | undefined }"
+        },
+        "documentation": [
+          {
+            "path": "docs/components/catalog.md",
+            "baseLines": [
+              33
+            ],
+            "baseHash": "12959c4e1e6ede77153385e273103269588a798cfd4ba2102a51f67e49f8f0e9",
+            "headHash": "12959c4e1e6ede77153385e273103269588a798cfd4ba2102a51f67e49f8f0e9",
+            "headCitationLines": [
+              33
+            ]
+          },
+          {
+            "path": "docs/for-agents/packages/chat.md",
+            "baseLines": [
+              5
+            ],
+            "baseHash": "f8eb852cfac2ea04b4ac8f2c02618cb01bc091a6091c919f327f16642ffe0cc6",
+            "headHash": "6883908725f4b49819d687b7af065cc7141b7df8653b7a1b933e366bf632c3b8",
+            "headCitationLines": [
+              5
+            ]
+          },
+          {
+            "path": "docs/theming-and-composition.md",
+            "baseLines": [
+              28
+            ],
+            "baseHash": "ff8fb505d505a79f84d0e1af763fa1def7681b70853e4991fbce8925335005b6",
+            "headHash": "ff8fb505d505a79f84d0e1af763fa1def7681b70853e4991fbce8925335005b6",
+            "headCitationLines": [
+              28
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "history-chat-0141229e-sessionstorage-review",
+      "repository": "chat",
+      "origin": "historical",
+      "base": "daa15aabf5740418046bd7d481754fb3caf5f823",
+      "head": "0141229ee414da0883e499a844502b08d11c43e4",
+      "scope": {
+        "facts": [
+          {
+            "kind": "signature",
+            "names": [
+              "SessionStorage"
+            ]
+          }
+        ],
+        "documents": [
+          "docs/sessions.md"
+        ]
+      },
+      "expected": [
+        {
+          "channel": "fact",
+          "kind": "signature",
+          "op": "changed",
+          "name": "SessionStorage",
+          "path": "packages/chat/src/index.ts"
+        }
+      ],
+      "rawExpected": [
+        {
+          "channel": "fact",
+          "kind": "signature",
+          "op": "changed",
+          "name": "SessionStorage",
+          "path": "packages/chat/src/index.ts"
+        }
+      ],
+      "citations": [
+        {
+          "path": "docs/sessions.md",
+          "token": "SessionStorage",
+          "lines": [
+            3,
+            16
+          ]
+        }
+      ],
+      "review": {
+        "label": "negative",
+        "reasoning": "Storage callbacks gain optional AbortSignal arguments. The documented two-argument CAS save and single-argument load remain valid; the atomicity requirement is unchanged.",
+        "source": {
+          "path": "packages/chat/src/index.ts",
+          "baseHash": "5d225292934d7cd61cdb86c194da0232e7c2f1c5bc9c64c84337fdd3b93d62e7",
+          "headHash": "c26cbfafa361d4353dc7b190ce6364d20c02b0c65b94ca6c87bd822efc38eceb",
+          "baseSignatureProjection": "export interface SessionStorage { readonly load : ( sessionId : string ) => unknown | Promise < unknown > readonly save : ( snapshot : SessionSnapshot , expectedCursor : number | undefined ) => boolean | Promise < boolean > readonly delete ? : ( sessionId : string ) => void | Promise < void > }",
+          "headSignatureProjection": "export interface SessionStorage { readonly load : ( sessionId : string , signal ? : AbortSignal ) => unknown | Promise < unknown > readonly save : ( snapshot : SessionSnapshot , expectedCursor : number | undefined , signal ? : AbortSignal ) => boolean | Promise < boolean > readonly delete ? : ( sessionId : string , signal ? : AbortSignal ) => void | Promise < void > }"
+        },
+        "documentation": [
+          {
+            "path": "docs/sessions.md",
+            "baseLines": [
+              3,
+              16
+            ],
+            "baseHash": "8b88bb47dcbf0ede5966dfcd6662440d6ac1a229353bdfa23dfd7a77933536d8",
+            "headHash": "8b88bb47dcbf0ede5966dfcd6662440d6ac1a229353bdfa23dfd7a77933536d8",
+            "headCitationLines": [
+              3,
+              8,
+              16
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "history-chat-daa15aab-compatible-controls",
+      "repository": "chat",
+      "origin": "historical",
+      "base": "143eefc8a939e6fe120a1172d478131bc8abcb6e",
+      "head": "daa15aabf5740418046bd7d481754fb3caf5f823",
+      "scope": {
+        "facts": [
+          {
+            "kind": "signature",
+            "names": [
+              "ChatDefinition"
+            ]
+          },
+          {
+            "kind": "signature",
+            "names": [
+              "createActionConfirmation"
+            ]
+          },
+          {
+            "kind": "signature",
+            "names": [
+              "createChatSession"
+            ]
+          }
+        ],
+        "documents": [
+          "apps/example-react/README.md",
+          "docs/components/choice-list.md",
+          "docs/conversation/routes-and-state.md",
+          "docs/for-agents/packages/chat.md",
+          "packages/chat/README.md"
+        ]
+      },
+      "expected": [
+        {
+          "channel": "fact",
+          "kind": "signature",
+          "op": "changed",
+          "name": "ChatDefinition",
+          "path": "packages/chat/src/index.ts"
+        },
+        {
+          "channel": "fact",
+          "kind": "signature",
+          "op": "changed",
+          "name": "createActionConfirmation",
+          "path": "packages/chat/src/index.ts"
+        },
+        {
+          "channel": "fact",
+          "kind": "signature",
+          "op": "changed",
+          "name": "createChatSession",
+          "path": "packages/chat/src/index.ts"
+        }
+      ],
+      "rawExpected": [
+        {
+          "channel": "fact",
+          "kind": "signature",
+          "op": "changed",
+          "name": "ChatDefinition",
+          "path": "packages/chat/src/index.ts"
+        },
+        {
+          "channel": "fact",
+          "kind": "signature",
+          "op": "changed",
+          "name": "createActionConfirmation",
+          "path": "packages/chat/src/index.ts"
+        },
+        {
+          "channel": "fact",
+          "kind": "signature",
+          "op": "changed",
+          "name": "createChatSession",
+          "path": "packages/chat/src/index.ts"
+        }
+      ],
+      "citations": [
+        {
+          "path": "apps/example-react/README.md",
+          "token": "ChatDefinition",
+          "lines": [
+            3
+          ]
+        },
+        {
+          "path": "docs/for-agents/packages/chat.md",
+          "token": "ChatDefinition",
+          "lines": [
+            5
+          ]
+        },
+        {
+          "path": "docs/components/choice-list.md",
+          "token": "createActionConfirmation",
+          "lines": [
+            9
+          ]
+        },
+        {
+          "path": "docs/for-agents/packages/chat.md",
+          "token": "createActionConfirmation",
+          "lines": [
+            25
+          ]
+        },
+        {
+          "path": "packages/chat/README.md",
+          "token": "createActionConfirmation",
+          "lines": [
+            5
+          ]
+        },
+        {
+          "path": "docs/conversation/routes-and-state.md",
+          "token": "createChatSession",
+          "lines": [
+            30
+          ]
+        },
+        {
+          "path": "docs/for-agents/packages/chat.md",
+          "token": "createChatSession",
+          "lines": [
+            19
+          ]
+        }
+      ],
+      "review": {
+        "label": "negative",
+        "reasoning": "Overlapping document scopes in this transition are measured once to avoid counting one diagnostic in multiple cases. Each fact/document review and its evidence is retained in assertions; all these cited claims remain valid after compatible additions or concurrent adequate updates.",
+        "assertions": [
+          {
+            "facts": [
+              {
+                "kind": "signature",
+                "names": [
+                  "ChatDefinition"
+                ]
+              }
+            ],
+            "documents": [
+              "apps/example-react/README.md",
+              "docs/for-agents/packages/chat.md"
+            ],
+            "reasoning": "The definition adds an optional revision field. Existing definitions remain valid; the same commit documents revision compatibility and session metadata.",
+            "source": {
+              "path": "packages/chat/src/index.ts",
+              "baseHash": "c6017df71441312a7eb9049c7763b0a7d6cc4b3efd78edfae82f4d960ace9bda",
+              "headHash": "5d225292934d7cd61cdb86c194da0232e7c2f1c5bc9c64c84337fdd3b93d62e7",
+              "baseSignatureProjection": "export interface ChatDefinition { readonly id : string readonly chat : ChatConfig readonly conversation ? : ConversationDefinition readonly components ? : ComponentManifest }",
+              "headSignatureProjection": "export interface ChatDefinition { readonly id : string readonly revision ? : number readonly chat : ChatConfig readonly conversation ? : ConversationDefinition readonly components ? : ComponentManifest }"
+            },
+            "documentation": [
+              {
+                "path": "apps/example-react/README.md",
+                "baseLines": [
+                  3
+                ],
+                "baseHash": "a153569944508183037d2533c304f1a301e0ad83a7b033f2ed7a91b6d518e420",
+                "headHash": "a153569944508183037d2533c304f1a301e0ad83a7b033f2ed7a91b6d518e420",
+                "headCitationLines": [
+                  3
+                ]
+              },
+              {
+                "path": "docs/for-agents/packages/chat.md",
+                "baseLines": [
+                  5
+                ],
+                "baseHash": "16aaafbfd523f653a1b043ca1b04eeb2758f4c31c90393627c3d19e13fe2bf1f",
+                "headHash": "a8341caf9dfb3dfe5a448cb24be517ce88bd4af9c730950435c084ba73efab8e",
+                "headCitationLines": [
+                  5
+                ]
+              }
+            ]
+          },
+          {
+            "facts": [
+              {
+                "kind": "signature",
+                "names": [
+                  "createActionConfirmation"
+                ]
+              }
+            ],
+            "documents": [
+              "docs/components/choice-list.md",
+              "docs/for-agents/packages/chat.md",
+              "packages/chat/README.md"
+            ],
+            "reasoning": "Confirmation options add defaulted initialRecords and optional persistence callbacks. Existing session/chat calls remain valid; the same commit documents durable session metadata and restored confirmation behavior.",
+            "source": {
+              "path": "packages/chat/src/index.ts",
+              "baseHash": "c6017df71441312a7eb9049c7763b0a7d6cc4b3efd78edfae82f4d960ace9bda",
+              "headHash": "5d225292934d7cd61cdb86c194da0232e7c2f1c5bc9c64c84337fdd3b93d62e7",
+              "baseSignatureProjection": "ActionConfirmationCoordinator | { sessionId , chat , ttlMs = 300_000 , now = Date . now , createId , } : ActionConfirmationOptions",
+              "headSignatureProjection": "ActionConfirmationCoordinator | { sessionId , chat , ttlMs = 300_000 , now = Date . now , createId , initialRecords = [ ] , onChange , claimStatus , } : ActionConfirmationOptions"
+            },
+            "documentation": [
+              {
+                "path": "docs/components/choice-list.md",
+                "baseLines": [
+                  9
+                ],
+                "baseHash": "e2b4451d42fce9b9a8f144937d854004b4c8848352b3bf53bf359fd90482ed48",
+                "headHash": "e2b4451d42fce9b9a8f144937d854004b4c8848352b3bf53bf359fd90482ed48",
+                "headCitationLines": [
+                  9
+                ]
+              },
+              {
+                "path": "docs/for-agents/packages/chat.md",
+                "baseLines": [
+                  25
+                ],
+                "baseHash": "16aaafbfd523f653a1b043ca1b04eeb2758f4c31c90393627c3d19e13fe2bf1f",
+                "headHash": "a8341caf9dfb3dfe5a448cb24be517ce88bd4af9c730950435c084ba73efab8e",
+                "headCitationLines": [
+                  27
+                ]
+              },
+              {
+                "path": "packages/chat/README.md",
+                "baseLines": [
+                  5
+                ],
+                "baseHash": "a8c1784fa20a669a5755f69e830558d259115b2d5f24affb72696da1af7dec07",
+                "headHash": "7b35032c4ebc7268867b3b6c0f0f5885ba6e23ef068499dd0fd2295deb98c726",
+                "headCitationLines": [
+                  5
+                ]
+              }
+            ]
+          },
+          {
+            "facts": [
+              {
+                "kind": "signature",
+                "names": [
+                  "createChatSession"
+                ]
+              }
+            ],
+            "documents": [
+              "docs/conversation/routes-and-state.md",
+              "docs/for-agents/packages/chat.md"
+            ],
+            "reasoning": "Session creation gains a defaulted options parameter. Existing single-argument calls remain valid; the same commit documents the new session metadata behavior.",
+            "source": {
+              "path": "packages/chat/src/index.ts",
+              "baseHash": "c6017df71441312a7eb9049c7763b0a7d6cc4b3efd78edfae82f4d960ace9bda",
+              "headHash": "5d225292934d7cd61cdb86c194da0232e7c2f1c5bc9c64c84337fdd3b93d62e7",
+              "baseSignatureProjection": "ChatSession | definition : ChatDefinition",
+              "headSignatureProjection": "ChatSession | definition : ChatDefinition | options : ChatSessionOptions = { }"
+            },
+            "documentation": [
+              {
+                "path": "docs/conversation/routes-and-state.md",
+                "baseLines": [
+                  30
+                ],
+                "baseHash": "c3b83c684e04cc5d96aa97b665375ce65b96582fa58f56ac7ee1966c44106a22",
+                "headHash": "c3b83c684e04cc5d96aa97b665375ce65b96582fa58f56ac7ee1966c44106a22",
+                "headCitationLines": [
+                  30
+                ]
+              },
+              {
+                "path": "docs/for-agents/packages/chat.md",
+                "baseLines": [
+                  19
+                ],
+                "baseHash": "16aaafbfd523f653a1b043ca1b04eeb2758f4c31c90393627c3d19e13fe2bf1f",
+                "headHash": "a8341caf9dfb3dfe5a448cb24be517ce88bd4af9c730950435c084ba73efab8e",
+                "headCitationLines": [
+                  19
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "history-chat-75bb10aa-compatible-controls",
+      "repository": "chat",
+      "origin": "historical",
+      "base": "69a46efa62de50ede7e82bc7c1331785853cbf53",
+      "head": "75bb10aa91ec2f8b3ad4cc96ed96645a22efede9",
+      "scope": {
+        "facts": [
+          {
+            "kind": "signature",
+            "names": [
+              "ChoiceList"
+            ]
+          },
+          {
+            "kind": "signature",
+            "names": [
+              "ChoiceListNative"
+            ]
+          }
+        ],
+        "documents": [
+          "docs/components/choice-list.md",
+          "docs/for-agents/packages/ink.md",
+          "docs/for-agents/packages/react-native.md",
+          "docs/for-agents/packages/react.md",
+          "packages/ink/README.md",
+          "packages/react-native/README.md",
+          "packages/react/README.md"
+        ]
+      },
+      "expected": [
+        {
+          "channel": "fact",
+          "kind": "signature",
+          "op": "changed",
+          "name": "ChoiceList",
+          "path": "packages/react/src/index.tsx"
+        },
+        {
+          "channel": "fact",
+          "kind": "signature",
+          "op": "changed",
+          "name": "ChoiceListNative",
+          "path": "packages/react-native/src/index.tsx"
+        }
+      ],
+      "rawExpected": [
+        {
+          "channel": "fact",
+          "kind": "signature",
+          "op": "changed",
+          "name": "ChoiceList",
+          "path": "packages/react/src/index.tsx"
+        },
+        {
+          "channel": "fact",
+          "kind": "signature",
+          "op": "changed",
+          "name": "ChoiceListNative",
+          "path": "packages/react-native/src/index.tsx"
+        }
+      ],
+      "citations": [
+        {
+          "path": "docs/components/choice-list.md",
+          "token": "ChoiceList",
+          "lines": [
+            1,
+            3,
+            39,
+            41
+          ]
+        },
+        {
+          "path": "docs/for-agents/packages/ink.md",
+          "token": "ChoiceList",
+          "lines": [
+            5
+          ]
+        },
+        {
+          "path": "docs/for-agents/packages/react-native.md",
+          "token": "ChoiceList",
+          "lines": [
+            3
+          ]
+        },
+        {
+          "path": "docs/for-agents/packages/react.md",
+          "token": "ChoiceList",
+          "lines": [
+            5
+          ]
+        },
+        {
+          "path": "packages/ink/README.md",
+          "token": "ChoiceList",
+          "lines": [
+            7
+          ]
+        },
+        {
+          "path": "packages/react/README.md",
+          "token": "ChoiceList",
+          "lines": [
+            11
+          ]
+        },
+        {
+          "path": "docs/components/choice-list.md",
+          "token": "ChoiceListNative",
+          "lines": [
+            40
+          ]
+        },
+        {
+          "path": "packages/react-native/README.md",
+          "token": "ChoiceListNative",
+          "lines": [
+            6
+          ]
+        }
+      ],
+      "review": {
+        "label": "negative",
+        "reasoning": "Overlapping document scopes in this transition are measured once to avoid counting one diagnostic in multiple cases. Each fact/document review and its evidence is retained in assertions; all these cited claims remain valid after compatible additions or concurrent adequate updates.",
+        "assertions": [
+          {
+            "facts": [
+              {
+                "kind": "signature",
+                "names": [
+                  "ChoiceList"
+                ]
+              }
+            ],
+            "documents": [
+              "docs/components/choice-list.md",
+              "docs/for-agents/packages/ink.md",
+              "docs/for-agents/packages/react-native.md",
+              "docs/for-agents/packages/react.md",
+              "packages/ink/README.md",
+              "packages/react/README.md"
+            ],
+            "reasoning": "ChoiceList adds a defaulted disabled binding in its props destructuring. Existing component usage and custom renderer descriptions remain valid; these documents do not prescribe an exhaustive destructuring pattern.",
+            "source": {
+              "path": "packages/react/src/index.tsx",
+              "baseHash": "ea0d35c4c6c3f601c8493d1aff24f242a171871b56d60724485353d5d8d59a37",
+              "headHash": "ecc7462950e0be7314a66709d76af74b33314235141ed965e087f1fff70e2a74",
+              "baseSignatureProjection": "ReactElement | null | { frame , manifest , onSelect } : ChoiceListProps",
+              "headSignatureProjection": "ReactElement | null | { frame , manifest , onSelect , disabled = false } : ChoiceListProps"
+            },
+            "documentation": [
+              {
+                "path": "docs/components/choice-list.md",
+                "baseLines": [
+                  1,
+                  3,
+                  39,
+                  41
+                ],
+                "baseHash": "0e8adb0a54e22c5153c9adb45e2966080b352337eac5fa96a5e66062ac5f92d4",
+                "headHash": "e2b4451d42fce9b9a8f144937d854004b4c8848352b3bf53bf359fd90482ed48",
+                "headCitationLines": [
+                  1,
+                  3,
+                  14,
+                  16,
+                  45,
+                  46,
+                  47
+                ]
+              },
+              {
+                "path": "docs/for-agents/packages/ink.md",
+                "baseLines": [
+                  5
+                ],
+                "baseHash": "736532b5120bdb49a713fb80b695d2390022f2c33bd1125195e1031f44a88eb2",
+                "headHash": "06e48b6302b34365f6d4b933ed744150a0b1e00a695592d92b415641a6810319",
+                "headCitationLines": [
+                  5
+                ]
+              },
+              {
+                "path": "docs/for-agents/packages/react-native.md",
+                "baseLines": [
+                  3
+                ],
+                "baseHash": "60f4c169ded361af541451f3eb2a8f4209468690c6973b01a7f34096a8111e74",
+                "headHash": "33ff775a697be9d656fa3786650fa2aa0aa4f933100e38786409f955626a1a06",
+                "headCitationLines": [
+                  3
+                ]
+              },
+              {
+                "path": "docs/for-agents/packages/react.md",
+                "baseLines": [
+                  5
+                ],
+                "baseHash": "8315c712c043d51722a2619b4a63fee2a07ad752d574ab8b00d23759356944ea",
+                "headHash": "bf8e768fd6cb5309ae0f6388d3a4b25a318567d97b72c06d0861e38b92297251",
+                "headCitationLines": [
+                  5
+                ]
+              },
+              {
+                "path": "packages/ink/README.md",
+                "baseLines": [
+                  7
+                ],
+                "baseHash": "89b4713ca3732e169db6c7c14248956a04e7d4fd3b3a1a652772e57b6df67582",
+                "headHash": "89b4713ca3732e169db6c7c14248956a04e7d4fd3b3a1a652772e57b6df67582",
+                "headCitationLines": [
+                  7
+                ]
+              },
+              {
+                "path": "packages/react/README.md",
+                "baseLines": [
+                  11
+                ],
+                "baseHash": "1cb158fb8f39a3e97c0f7096f7d5424cc66fa56391601030e4f2a626479a223f",
+                "headHash": "1cb158fb8f39a3e97c0f7096f7d5424cc66fa56391601030e4f2a626479a223f",
+                "headCitationLines": [
+                  11
+                ]
+              }
+            ]
+          },
+          {
+            "facts": [
+              {
+                "kind": "signature",
+                "names": [
+                  "ChoiceListNative"
+                ]
+              }
+            ],
+            "documents": [
+              "docs/components/choice-list.md",
+              "packages/react-native/README.md"
+            ],
+            "reasoning": "ChoiceListNative adds a defaulted disabled binding in its props destructuring. Existing frame/manifest/onSelect usage remains valid; no cited document prohibits disabled state.",
+            "source": {
+              "path": "packages/react-native/src/index.tsx",
+              "baseHash": "53a3266ac7144c1b4faf482470b27d186f0211980ab82d85d5f7253110f2072c",
+              "headHash": "95e7782bca8b5ea2156759b36ce819b3e5fa344899aaabb7bbcff1c4b5326aa2",
+              "baseSignatureProjection": "ReactElement | null | { frame , manifest , onSelect } : ChoiceListNativeProps",
+              "headSignatureProjection": "ReactElement | null | { frame , manifest , onSelect , disabled = false } : ChoiceListNativeProps"
+            },
+            "documentation": [
+              {
+                "path": "docs/components/choice-list.md",
+                "baseLines": [
+                  40
+                ],
+                "baseHash": "0e8adb0a54e22c5153c9adb45e2966080b352337eac5fa96a5e66062ac5f92d4",
+                "headHash": "e2b4451d42fce9b9a8f144937d854004b4c8848352b3bf53bf359fd90482ed48",
+                "headCitationLines": [
+                  46
+                ]
+              },
+              {
+                "path": "packages/react-native/README.md",
+                "baseLines": [
+                  6
+                ],
+                "baseHash": "fe741e46de7e636aef5fd9b1d8aa8a267ed603eb25ab6dc4e9d611cb285369f1",
+                "headHash": "fe741e46de7e636aef5fd9b1d8aa8a267ed603eb25ab6dc4e9d611cb285369f1",
+                "headCitationLines": [
+                  6
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "history-chat-69a46efa-chatdefinition-review",
+      "repository": "chat",
+      "origin": "historical",
+      "base": "e9c3d45c2036a6bf125f26220f55b328e2246f09",
+      "head": "69a46efa62de50ede7e82bc7c1331785853cbf53",
+      "scope": {
+        "facts": [
+          {
+            "kind": "signature",
+            "names": [
+              "ChatDefinition"
+            ]
+          }
+        ],
+        "documents": [
+          "apps/example-react/README.md",
+          "docs/for-agents/packages/chat.md"
+        ]
+      },
+      "expected": [
+        {
+          "channel": "fact",
+          "kind": "signature",
+          "op": "changed",
+          "name": "ChatDefinition",
+          "path": "packages/chat/src/index.ts"
+        }
+      ],
+      "rawExpected": [
+        {
+          "channel": "fact",
+          "kind": "signature",
+          "op": "changed",
+          "name": "ChatDefinition",
+          "path": "packages/chat/src/index.ts"
+        }
+      ],
+      "citations": [
+        {
+          "path": "apps/example-react/README.md",
+          "token": "ChatDefinition",
+          "lines": [
+            3
+          ]
+        },
+        {
+          "path": "docs/for-agents/packages/chat.md",
+          "token": "ChatDefinition",
+          "lines": [
+            5
+          ]
+        }
+      ],
+      "review": {
+        "label": "negative",
+        "reasoning": "The definition adds an optional component manifest. Existing definitions remain valid and the same commit documents closed component manifests; optional additive fields do not invalidate the existing examples.",
+        "source": {
+          "path": "packages/chat/src/index.ts",
+          "baseHash": "2544b2bfb0a79436855d0029dabb2688a52051072baf744e2ca230f4d72f2f52",
+          "headHash": "622013ee9131f75786d47eaee762472239f8f685a0a163ed51b7e2e12b09f238",
+          "baseSignatureProjection": "export interface ChatDefinition { readonly id : string readonly chat : ChatConfig readonly conversation ? : ConversationDefinition }",
+          "headSignatureProjection": "export interface ChatDefinition { readonly id : string readonly chat : ChatConfig readonly conversation ? : ConversationDefinition readonly components ? : ComponentManifest }"
+        },
+        "documentation": [
+          {
+            "path": "apps/example-react/README.md",
+            "baseLines": [
+              3
+            ],
+            "baseHash": "a153569944508183037d2533c304f1a301e0ad83a7b033f2ed7a91b6d518e420",
+            "headHash": "a153569944508183037d2533c304f1a301e0ad83a7b033f2ed7a91b6d518e420",
+            "headCitationLines": [
+              3
+            ]
+          },
+          {
+            "path": "docs/for-agents/packages/chat.md",
+            "baseLines": [
+              5
+            ],
+            "baseHash": "e591e526637ae0481550f6bc7d0ecdf0c40e8660d10039f1cf6a11ee577927a1",
+            "headHash": "88f403b34fd2d764d60da06f8b5fe2430948a653befb45149bb914368e3f2a33",
+            "headCitationLines": [
+              5
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "history-chat-e9c3d45c-chatdefinition-review",
+      "repository": "chat",
+      "origin": "historical",
+      "base": "b338c76c979009baa6c827345a89a7d355b6280f",
+      "head": "e9c3d45c2036a6bf125f26220f55b328e2246f09",
+      "scope": {
+        "facts": [
+          {
+            "kind": "signature",
+            "names": [
+              "ChatDefinition"
+            ]
+          }
+        ],
+        "documents": [
+          "apps/example-react/README.md",
+          "docs/for-agents/packages/chat.md"
+        ]
+      },
+      "expected": [
+        {
+          "channel": "fact",
+          "kind": "signature",
+          "op": "changed",
+          "name": "ChatDefinition",
+          "path": "packages/chat/src/index.ts"
+        }
+      ],
+      "rawExpected": [
+        {
+          "channel": "fact",
+          "kind": "signature",
+          "op": "changed",
+          "name": "ChatDefinition",
+          "path": "packages/chat/src/index.ts"
+        }
+      ],
+      "citations": [
+        {
+          "path": "apps/example-react/README.md",
+          "token": "ChatDefinition",
+          "lines": [
+            3
+          ]
+        },
+        {
+          "path": "docs/for-agents/packages/chat.md",
+          "token": "ChatDefinition",
+          "lines": [
+            5
+          ]
+        }
+      ],
+      "review": {
+        "label": "negative",
+        "reasoning": "The definition adds an optional conversation. Existing simple chat definitions remain valid; the same commit documents deterministic conversation routes.",
+        "source": {
+          "path": "packages/chat/src/index.ts",
+          "baseHash": "f461c5185e0cb3ce5fece45bb86fd0961d788cf7f0bf753b23ef903a5e362e4f",
+          "headHash": "2544b2bfb0a79436855d0029dabb2688a52051072baf744e2ca230f4d72f2f52",
+          "baseSignatureProjection": "export interface ChatDefinition { readonly id : string readonly chat : ChatConfig }",
+          "headSignatureProjection": "export interface ChatDefinition { readonly id : string readonly chat : ChatConfig readonly conversation ? : ConversationDefinition }"
+        },
+        "documentation": [
+          {
+            "path": "apps/example-react/README.md",
+            "baseLines": [
+              3
+            ],
+            "baseHash": "a153569944508183037d2533c304f1a301e0ad83a7b033f2ed7a91b6d518e420",
+            "headHash": "a153569944508183037d2533c304f1a301e0ad83a7b033f2ed7a91b6d518e420",
+            "headCitationLines": [
+              3
+            ]
+          },
+          {
+            "path": "docs/for-agents/packages/chat.md",
+            "baseLines": [
+              5
+            ],
+            "baseHash": "392a1158569233c891c30d39b8e50ccb09374cd76e9989edc906ca96a81315cc",
+            "headHash": "e591e526637ae0481550f6bc7d0ecdf0c40e8660d10039f1cf6a11ee577927a1",
+            "headCitationLines": [
+              5
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "history-agentskit-a0c1845a-streamchunk-review",
+      "repository": "agentskit",
+      "origin": "historical",
+      "base": "aea43bb3e352b1738bec7d098eb6e61652ab3aa7",
+      "head": "a0c1845a5b9ee209ce2c0daed4d53c5679e609e5",
+      "scope": {
+        "facts": [
+          {
+            "kind": "signature",
+            "names": [
+              "StreamChunk"
+            ]
+          }
+        ],
+        "documents": [
+          "apps/docs-next/content/docs/concepts/adapter.mdx"
+        ]
+      },
+      "expected": [
+        {
+          "channel": "fact",
+          "kind": "signature",
+          "op": "changed",
+          "name": "StreamChunk",
+          "path": "packages/core/src/types/stream.ts"
+        },
+        {
+          "channel": "finding",
+          "kind": "CHANGED_REFERENCE",
+          "name": "StreamChunk",
+          "path": "apps/docs-next/content/docs/concepts/adapter.mdx"
+        }
+      ],
+      "rawExpected": [
+        {
+          "channel": "fact",
+          "kind": "signature",
+          "op": "changed",
+          "name": "StreamChunk",
+          "path": "packages/core/src/types/stream.ts"
+        },
+        {
+          "channel": "finding",
+          "kind": "CHANGED_REFERENCE",
+          "name": "StreamChunk",
+          "path": "apps/docs-next/content/docs/concepts/adapter.mdx"
+        }
+      ],
+      "citations": [
+        {
+          "path": "apps/docs-next/content/docs/concepts/adapter.mdx",
+          "token": "StreamChunk",
+          "lines": [
+            13,
+            20,
+            42,
+            45,
+            67
+          ]
+        }
+      ],
+      "review": {
+        "label": "positive",
+        "reasoning": "The source adds usage to the StreamChunk discriminator union and an optional usage payload. The surviving adapter concept document still prints the complete old six-value type union without usage; its explicit type definition therefore excludes a real head discriminator. This is a stale exhaustive type claim, not merely an old text-only stream example. Other documents that mention this type without exhaustively declaring its variants are not asserted positive.",
+        "source": {
+          "path": "packages/core/src/types/stream.ts",
+          "baseHash": "b74c754e536d7301baaa7a8277692d129c4dbe096376d3a1e14180d1f3b9e3e5",
+          "headHash": "149076c8b4a2c86953d214ef7b4aba42cc19870576859f7c3a564dfc1f6a66e1",
+          "baseSignatureProjection": "export interface StreamChunk { type : 'text' | 'tool_call' | 'tool_result' | 'reasoning' | 'error' | 'done' content ? : string toolCall ? : StreamToolCallPayload metadata ? : Record < string , unknown > }",
+          "headSignatureProjection": "export interface StreamChunk { type : 'text' | 'tool_call' | 'tool_result' | 'reasoning' | 'usage' | 'error' | 'done' content ? : string toolCall ? : StreamToolCallPayload usage ? : TokenUsage metadata ? : Record < string , unknown > }"
+        },
+        "documentation": [
+          {
+            "path": "apps/docs-next/content/docs/concepts/adapter.mdx",
+            "baseHash": "c9da11dacfb3a3f81f14699bb06fa7270919940c670c8af2218f051aae356805",
+            "headHash": "c9da11dacfb3a3f81f14699bb06fa7270919940c670c8af2218f051aae356805",
+            "headCitationLines": [
+              13,
+              20,
+              42,
+              45,
+              67
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "history-agentskit-a0c1845a-chatstate-review",
+      "repository": "agentskit",
+      "origin": "historical",
+      "base": "aea43bb3e352b1738bec7d098eb6e61652ab3aa7",
+      "head": "a0c1845a5b9ee209ce2c0daed4d53c5679e609e5",
+      "scope": {
+        "facts": [
+          {
+            "kind": "signature",
+            "names": [
+              "ChatState"
+            ]
+          }
+        ],
+        "documents": [
+          "apps/docs-next/content/docs/packages/core.mdx",
+          "apps/docs/docs/packages/core.md"
+        ]
+      },
+      "expected": [
+        {
+          "channel": "fact",
+          "kind": "signature",
+          "op": "changed",
+          "name": "ChatState",
+          "path": "packages/core/src/types/chat.ts"
+        }
+      ],
+      "rawExpected": [
+        {
+          "channel": "fact",
+          "kind": "signature",
+          "op": "changed",
+          "name": "ChatState",
+          "path": "packages/core/src/types/chat.ts"
+        }
+      ],
+      "citations": [
+        {
+          "path": "apps/docs-next/content/docs/packages/core.mdx",
+          "token": "ChatState",
+          "lines": [
+            33
+          ]
+        },
+        {
+          "path": "apps/docs/docs/packages/core.md",
+          "token": "ChatState",
+          "lines": [
+            34
+          ]
+        }
+      ],
+      "review": {
+        "label": "negative",
+        "reasoning": "ChatState gains required usage output. The cited package tables only identify the exported type and link to full signatures; neither prints an old state literal or asserts an exhaustive field list. Existing consumers may need review, but these particular document claims remain true. These two parallel sites are correlated controls for one transition.",
+        "source": {
+          "path": "packages/core/src/types/chat.ts",
+          "baseHash": "87d6f014857b8fb049ce8cbb57b76043a76b39c42611a099420ac233d4ddb63f",
+          "headHash": "57952169bd04278238f6684d2dcd1e7a7c7fbdd8fc20585703fcc44892346918",
+          "baseSignatureProjection": "export interface ChatState { messages : Message [ ] status : StreamStatus input : string error : Error | null }",
+          "headSignatureProjection": "export interface ChatState { messages : Message [ ] status : StreamStatus input : string error : Error | null usage : TokenUsage }"
+        },
+        "documentation": [
+          {
+            "path": "apps/docs-next/content/docs/packages/core.mdx",
+            "baseHash": "bd0c14baf45ca7209e97d9da1fdbc8063c29860d04a4d19a51382c72fc4f982a",
+            "headHash": "bd0c14baf45ca7209e97d9da1fdbc8063c29860d04a4d19a51382c72fc4f982a",
+            "headCitationLines": [
+              33
+            ]
+          },
+          {
+            "path": "apps/docs/docs/packages/core.md",
+            "baseHash": "14041fec54667e53e9dba980352d80a09c67a6e86d6e515ce6ceab92ae7c60b8",
+            "headHash": "14041fec54667e53e9dba980352d80a09c67a6e86d6e515ce6ceab92ae7c60b8",
+            "headCitationLines": [
+              34
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "history-agentskit-81ee4e63-adapterrequest-review",
+      "repository": "agentskit",
+      "origin": "historical",
+      "base": "ae33b6cd779cfea0106b4390bdb0834b31c6a72c",
+      "head": "81ee4e631a952308cf4a7449760f45d64a3b03f4",
+      "scope": {
+        "facts": [
+          {
+            "kind": "signature",
+            "names": [
+              "AdapterRequest"
+            ]
+          }
+        ],
+        "documents": [
+          "apps/docs-next/content/docs/reference/recipes/custom-adapter.mdx"
+        ]
+      },
+      "expected": [
+        {
+          "channel": "fact",
+          "kind": "signature",
+          "op": "changed",
+          "name": "AdapterRequest",
+          "path": "packages/core/src/types/adapter.ts"
+        }
+      ],
+      "rawExpected": [
+        {
+          "channel": "fact",
+          "kind": "signature",
+          "op": "changed",
+          "name": "AdapterRequest",
+          "path": "packages/core/src/types/adapter.ts"
+        }
+      ],
+      "citations": [
+        {
+          "path": "apps/docs-next/content/docs/reference/recipes/custom-adapter.mdx",
+          "token": "AdapterRequest",
+          "lines": [
+            21,
+            31
+          ]
+        }
+      ],
+      "review": {
+        "label": "negative",
+        "reasoning": "AdapterRequest gains an optional correlation field. The custom adapter recipe reads messages and retains its annotated request argument; it does not assert that correlation is forbidden. The same commit documents propagated event identity, and the existing recipe remains valid.",
+        "source": {
+          "path": "packages/core/src/types/adapter.ts",
+          "baseHash": "2d71348092692b9c21f76a1711a9fac5d6a0e7843515e8bbfe67b82f083a4d6e",
+          "headHash": "96c49a0577471c30ac0e79904d99fe7e8549a418e9aa881e45c89fb0230d2c64",
+          "baseSignatureProjection": "export interface AdapterRequest { messages : Message [ ] context ? : AdapterContext }",
+          "headSignatureProjection": "export interface AdapterRequest { messages : Message [ ] context ? : AdapterContext correlation ? : AgentEventContext }"
+        },
+        "documentation": [
+          {
+            "path": "apps/docs-next/content/docs/reference/recipes/custom-adapter.mdx",
+            "baseHash": "dc2c24b15bdf3ac5ccf40a0be8af2fbfe5393da3350d08cbdbf3d9c9838f1d58",
+            "headHash": "dc2c24b15bdf3ac5ccf40a0be8af2fbfe5393da3350d08cbdbf3d9c9838f1d58",
+            "headCitationLines": [
+              21,
+              31
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "history-doc-bridge-548060c4-intelligence.retriever.mode-review",
+      "repository": "doc-bridge",
+      "origin": "historical",
+      "base": "665c65c30562795fa92ecb437d7850d260d45836",
+      "head": "548060c4b8bddc8f961c0e1d016b6812a8b76d54",
+      "scope": {
+        "facts": [
+          {
+            "kind": "config-key",
+            "names": [
+              "intelligence.retriever.mode"
+            ]
+          }
+        ],
+        "documents": [
+          "docs/spec/config-v1.md"
+        ]
+      },
+      "expected": [
+        {
+          "channel": "fact",
+          "kind": "config-key",
+          "op": "changed",
+          "name": "intelligence.retriever.mode",
+          "path": "src/config/schema.ts"
+        },
+        {
+          "channel": "finding",
+          "kind": "CHANGED_REFERENCE",
+          "name": "intelligence.retriever.mode",
+          "path": "docs/spec/config-v1.md"
+        },
+        {
+          "channel": "finding",
+          "kind": "CHANGED_REFERENCE",
+          "name": "surfaces.mcp.tools",
+          "path": "docs/spec/config-v1.md"
+        }
+      ],
+      "rawExpected": [
+        {
+          "channel": "fact",
+          "kind": "config-key",
+          "op": "changed",
+          "name": "intelligence.retriever.mode",
+          "path": "src/config/schema.ts"
+        },
+        {
+          "channel": "finding",
+          "kind": "CHANGED_REFERENCE",
+          "name": "intelligence.retriever.mode",
+          "path": "docs/spec/config-v1.md"
+        },
+        {
+          "channel": "finding",
+          "kind": "CHANGED_REFERENCE",
+          "name": "surfaces.mcp.tools",
+          "path": "docs/spec/config-v1.md"
+        }
+      ],
+      "citations": [
+        {
+          "path": "docs/spec/config-v1.md",
+          "token": "mode?:",
+          "lines": [
+            333
+          ]
+        }
+      ],
+      "review": {
+        "label": "positive",
+        "reasoning": "The schema adds agentskit-rag to intelligence.retriever.mode and four values to the allowed MCP tool enum. The head configuration contract still prints the old local/remote/bm25 mode union and the old five-value McpToolId union, while its GateId union is correctly updated to include docs-style. Thus the mode and tool-enum claims are positives and the simultaneously updated gate include/exclude unions are negative controls within the same document. The MCP default core set is not asserted to have changed in this transition.",
+        "source": {
+          "path": "src/config/schema.ts",
+          "baseHash": "bc2c3d5e873e94fb252c92f697a533c262eef99124f3420afbede7778d3e26da",
+          "headHash": "603e27de3f1ad44fd3c7a9f49ad9365ca470d9dd8f0714bbebb2e64a150d8fac"
+        },
+        "documentation": [
+          {
+            "path": "docs/spec/config-v1.md",
+            "baseHash": "3cad1835ae38c80df590463f6b63afc6d82763e70b871ce29089578b38e6be21",
+            "headHash": "d5e70b3b832097153e4d6ee33ff48568546a86ae6617fdbfc6cbd537667c4ef9",
+            "headCitationLines": [
+              369
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "history-agentskit-4c6d0b86-scaffoldtype",
+      "repository": "agentskit",
+      "origin": "historical",
+      "base": "9497dd1199834d5f828f4410f4d38414dd4b36d8",
+      "head": "4c6d0b86bc44c37fe4a6587ff2cb567df821c304",
+      "scope": {
+        "facts": [
+          {
+            "kind": "signature",
+            "names": [
+              "ScaffoldType"
+            ]
+          }
+        ],
+        "documents": [
+          "apps/docs-next/content/docs/reference/packages/templates.mdx"
+        ]
+      },
+      "expected": [
+        {
+          "channel": "fact",
+          "kind": "signature",
+          "op": "changed",
+          "name": "ScaffoldType",
+          "path": "packages/templates/src/scaffold.ts"
+        },
+        {
+          "channel": "finding",
+          "kind": "CHANGED_REFERENCE",
+          "name": "ScaffoldType",
+          "path": "apps/docs-next/content/docs/reference/packages/templates.mdx"
+        }
+      ],
+      "rawExpected": [
+        {
+          "channel": "fact",
+          "kind": "signature",
+          "op": "changed",
+          "name": "ScaffoldType",
+          "path": "packages/templates/src/scaffold.ts"
+        },
+        {
+          "channel": "finding",
+          "kind": "CHANGED_REFERENCE",
+          "name": "ScaffoldType",
+          "path": "apps/docs-next/content/docs/reference/packages/templates.mdx"
+        }
+      ],
+      "citations": [
+        {
+          "path": "apps/docs-next/content/docs/reference/packages/templates.mdx",
+          "token": "ScaffoldType",
+          "lines": [
+            111
+          ]
+        }
+      ],
+      "review": {
+        "label": "positive",
+        "reasoning": "The exported ScaffoldType union adds embedder and browser-adapter. The package reference still states that ScaffoldType is exactly the three-value tool/skill/adapter union. The new values are absent from that exhaustive head claim. This document remains stale across three distinct first-parent transitions; the three assertions are correlated repeated-drift evidence, not three independent documents. No delayed repair is claimed.",
+        "source": {
+          "path": "packages/templates/src/scaffold.ts",
+          "baseHash": "546eac6bc2928b2d0d5a55ebc27ef843eb8dc28b799a761d09bf5322dd06317f",
+          "headHash": "dd964c51d812bf4d0ea470657dc07625ddd72c89ff9f2486e1cb1f83dcac22b8",
+          "baseSignatureProjection": "export type ScaffoldType = | 'tool' | 'skill' | 'adapter' | 'memory-vector' | 'memory-chat' | 'flow'",
+          "headSignatureProjection": "export type ScaffoldType = | 'tool' | 'skill' | 'adapter' | 'memory-vector' | 'memory-chat' | 'flow' | 'embedder' | 'browser-adapter'"
+        },
+        "documentation": {
+          "path": "apps/docs-next/content/docs/reference/packages/templates.mdx",
+          "baseHash": "f76fd0ac7388deec52d892d558d3e1c8cfde9695c8fcea8786bace18e6ccc7c1",
+          "headHash": "f76fd0ac7388deec52d892d558d3e1c8cfde9695c8fcea8786bace18e6ccc7c1",
+          "headCitationLines": [
+            111
+          ]
+        }
+      }
+    },
+    {
+      "id": "history-agentskit-5ddb1a5d-scaffoldtype",
+      "repository": "agentskit",
+      "origin": "historical",
+      "base": "b426b766228d16f191a7048da1338f1f956524fb",
+      "head": "5ddb1a5d99e611279d7187b1d8f1760d7da0a55b",
+      "scope": {
+        "facts": [
+          {
+            "kind": "signature",
+            "names": [
+              "ScaffoldType"
+            ]
+          }
+        ],
+        "documents": [
+          "apps/docs-next/content/docs/reference/packages/templates.mdx"
+        ]
+      },
+      "expected": [
+        {
+          "channel": "fact",
+          "kind": "signature",
+          "op": "changed",
+          "name": "ScaffoldType",
+          "path": "packages/templates/src/scaffold.ts"
+        },
+        {
+          "channel": "finding",
+          "kind": "CHANGED_REFERENCE",
+          "name": "ScaffoldType",
+          "path": "apps/docs-next/content/docs/reference/packages/templates.mdx"
+        }
+      ],
+      "rawExpected": [
+        {
+          "channel": "fact",
+          "kind": "signature",
+          "op": "changed",
+          "name": "ScaffoldType",
+          "path": "packages/templates/src/scaffold.ts"
+        },
+        {
+          "channel": "finding",
+          "kind": "CHANGED_REFERENCE",
+          "name": "ScaffoldType",
+          "path": "apps/docs-next/content/docs/reference/packages/templates.mdx"
+        }
+      ],
+      "citations": [
+        {
+          "path": "apps/docs-next/content/docs/reference/packages/templates.mdx",
+          "token": "ScaffoldType",
+          "lines": [
+            111
+          ]
+        }
+      ],
+      "review": {
+        "label": "positive",
+        "reasoning": "The exported ScaffoldType union adds flow. The package reference still states that ScaffoldType is exactly the three-value tool/skill/adapter union. The new values are absent from that exhaustive head claim. This document remains stale across three distinct first-parent transitions; the three assertions are correlated repeated-drift evidence, not three independent documents. No delayed repair is claimed.",
+        "source": {
+          "path": "packages/templates/src/scaffold.ts",
+          "baseHash": "107b3c8a146d2633e86c37973bff07aee16037b0830b70f10132e7fd014cc599",
+          "headHash": "546eac6bc2928b2d0d5a55ebc27ef843eb8dc28b799a761d09bf5322dd06317f",
+          "baseSignatureProjection": "export type ScaffoldType = 'tool' | 'skill' | 'adapter' | 'memory-vector' | 'memory-chat'",
+          "headSignatureProjection": "export type ScaffoldType = | 'tool' | 'skill' | 'adapter' | 'memory-vector' | 'memory-chat' | 'flow'"
+        },
+        "documentation": {
+          "path": "apps/docs-next/content/docs/reference/packages/templates.mdx",
+          "baseHash": "f76fd0ac7388deec52d892d558d3e1c8cfde9695c8fcea8786bace18e6ccc7c1",
+          "headHash": "f76fd0ac7388deec52d892d558d3e1c8cfde9695c8fcea8786bace18e6ccc7c1",
+          "headCitationLines": [
+            111
+          ]
+        }
+      }
+    },
+    {
+      "id": "history-agentskit-c8e5f39e-scaffoldtype",
+      "repository": "agentskit",
+      "origin": "historical",
+      "base": "62c3cf627e561d02e815fb126a7bd1dfcf213aa9",
+      "head": "c8e5f39ee0d672be131888a7192603d9d755626d",
+      "scope": {
+        "facts": [
+          {
+            "kind": "signature",
+            "names": [
+              "ScaffoldType"
+            ]
+          }
+        ],
+        "documents": [
+          "apps/docs-next/content/docs/reference/packages/templates.mdx"
+        ]
+      },
+      "expected": [
+        {
+          "channel": "fact",
+          "kind": "signature",
+          "op": "changed",
+          "name": "ScaffoldType",
+          "path": "packages/templates/src/scaffold.ts"
+        },
+        {
+          "channel": "finding",
+          "kind": "CHANGED_REFERENCE",
+          "name": "ScaffoldType",
+          "path": "apps/docs-next/content/docs/reference/packages/templates.mdx"
+        }
+      ],
+      "rawExpected": [
+        {
+          "channel": "fact",
+          "kind": "signature",
+          "op": "changed",
+          "name": "ScaffoldType",
+          "path": "packages/templates/src/scaffold.ts"
+        },
+        {
+          "channel": "finding",
+          "kind": "CHANGED_REFERENCE",
+          "name": "ScaffoldType",
+          "path": "apps/docs-next/content/docs/reference/packages/templates.mdx"
+        }
+      ],
+      "citations": [
+        {
+          "path": "apps/docs-next/content/docs/reference/packages/templates.mdx",
+          "token": "ScaffoldType",
+          "lines": [
+            111
+          ]
+        }
+      ],
+      "review": {
+        "label": "positive",
+        "reasoning": "The exported ScaffoldType union adds memory-vector and memory-chat. The package reference still states that ScaffoldType is exactly the three-value tool/skill/adapter union. The new values are absent from that exhaustive head claim. This document remains stale across three distinct first-parent transitions; the three assertions are correlated repeated-drift evidence, not three independent documents. No delayed repair is claimed.",
+        "source": {
+          "path": "packages/templates/src/scaffold.ts",
+          "baseHash": "a26f508367fd8b2daf09aafbc0030128b11e6b9eb86e72c2f671507a79381529",
+          "headHash": "107b3c8a146d2633e86c37973bff07aee16037b0830b70f10132e7fd014cc599",
+          "baseSignatureProjection": "export type ScaffoldType = 'tool' | 'skill' | 'adapter'",
+          "headSignatureProjection": "export type ScaffoldType = 'tool' | 'skill' | 'adapter' | 'memory-vector' | 'memory-chat'"
+        },
+        "documentation": {
+          "path": "apps/docs-next/content/docs/reference/packages/templates.mdx",
+          "baseHash": "f76fd0ac7388deec52d892d558d3e1c8cfde9695c8fcea8786bace18e6ccc7c1",
+          "headHash": "f76fd0ac7388deec52d892d558d3e1c8cfde9695c8fcea8786bace18e6ccc7c1",
+          "headCitationLines": [
+            111
+          ]
+        }
+      }
     }
   ],
   "suiteVersion": 2

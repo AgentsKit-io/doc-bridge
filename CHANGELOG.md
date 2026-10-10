@@ -41,6 +41,10 @@
 
 ### Minor Changes
 
+- Prove schema-backed callable inputs from bounded retained syntax while keeping unsupported schemas and changed dependencies review-required.
+
+- Distinguish changed-aspect claims from bare mentions in changed-reference findings, preserving citation relations and removal diagnostics while verifying current string-enum claims against bounded snapshot-matching source.
+
 - Surface bounded indexed memory-supports evidence in deterministic why queries and typed MCP rationale tools.
 
 - Add optional bounded L2 region remediation with deterministic in-memory rechecking, key-free scripted providers and draft review previews.
@@ -104,6 +108,27 @@
 - Parse each supported lockfile once per discovery extraction, preserving package ownership, unresolved coverage and scan-to-scan freshness.
 
 - Precompute semantic hash ordering keys once per entry and bound syntax-tree retention for index-only scans and reuse parsed trees in discovery, reducing index-build cost without changing artifact bytes or hash identity.
+
+## 2.0.0-next.3
+
+### Minor Changes
+
+- 7989fa5: Distinguish changed-aspect claims from bare mentions before emitting changed-reference findings, and verify string-enum claims against bounded snapshot-matching source. Citation relations, changed facts, removal findings and surviving finding identities remain unchanged.
+- f1aa530: Retain bounded schema initializer syntax for deterministic callable input compatibility proofs, invalidating prior adapter reuse while preserving legacy readers and fail-closed unknown claims.
+
+## 2.0.0-next.2
+
+### Major Changes
+
+- e70891a: Replace CLI/MCP whole-file fix contracts with RemediationV1 region edits and
+  DecisionV1 settled rejection. Fresh findings and exact review bindings are
+  required; local human confirmation authorizes CLI decisions, while MCP cannot
+  approve or apply. Legacy index/snapshot hashes are migration guidance only:
+  regenerate indexes and analysis artifacts explicitly. Configure memory rule
+  paths with intelligence.memory.rulesDir; explicit paths never add defaults.
+  See docs/migration/1.x-to-2.0.md before upgrading consumers.
+  
+  Reject reserved session-export and bootstrap-delta memory adapters that 1.x accepted with warnings.
 
 ## 1.15.0-next.1
 

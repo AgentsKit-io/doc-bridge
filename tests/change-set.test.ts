@@ -326,7 +326,7 @@ it.each([
 ])('classifies %s through real discovery and diff', (_label, old, next, compatible) => {
   const {root} = fixture()
   write(root, 'src/api.ts', old)
-  write(root, 'docs/api.md', 'Use `run`.')
+  write(root, 'docs/api.md', 'The `run` signature specifies its parameters and return type.')
   const base = discoverRepository({root})
   write(root, 'src/api.ts', next)
   const result = scanDiff(root, base)
@@ -341,7 +341,7 @@ it.each(['added', 'removed', 'changed'])('handles %s configuration children bene
   const {root} = fixture()
   const source = (keys: string) => `import {z} from 'zod'; export const ConfigSchema = z.object({ settings: z.object({ output: z.object({ ${keys} }) }) });`
   write(root, 'src/api.ts', source('first: z.string()' + (operation === 'removed' ? ', second: z.number()' : '')))
-  write(root, 'docs/api.md', 'See `src/api.ts`; configure `settings.output`.')
+  write(root, 'docs/api.md', 'See `src/api.ts`; `settings.output` has required fields and configuration values.')
   const base = discoverRepository({root})
   write(root, 'src/api.ts', source(operation === 'added' ? 'first: z.string(), second: z.number()' : operation === 'changed' ? 'first: z.number()' : 'first: z.string()'))
   const result = scanDiff(root, base)
@@ -352,7 +352,7 @@ it('retains a parent-local modification alongside an added child', () => {
   const {root} = fixture()
   const source = (added: boolean) => `import {z} from 'zod'; export const ConfigSchema = z.object({ settings: z.object({ output: z.object({ first: z.string()${added ? ', second: z.number()' : ''} })${added ? '.optional()' : ''} }) });`
   write(root, 'src/api.ts', source(false))
-  write(root, 'docs/api.md', 'See `src/api.ts`; configure `settings.output`.')
+  write(root, 'docs/api.md', 'See `src/api.ts`; `settings.output` has required fields and configuration values.')
   const base = discoverRepository({root})
   write(root, 'src/api.ts', source(true))
   expect(scanDiff(root, base).findings).toMatchObject([{code:'CHANGED_REFERENCE'}])

@@ -511,7 +511,10 @@ const dependencyEntries = (manifest: JsonRecord): readonly { readonly name: stri
       const declared = new Set(exportedNames(sourceFile, { declaredOnly: true }))
       const reexports = exports.filter((name) => !declared.has(name))
       registerSymbols(id, exports, declared)
-      const context = signatureContext(sourceFile)
+      const dependencies = pkg?.manifest.dependencies as JsonRecord | undefined
+      const development = pkg?.manifest.devDependencies as JsonRecord | undefined
+      const schemaOutputs = typeof (dependencies?.zod ?? development?.zod) === 'string' && /^[~^]?4\.\d+\.\d+$/.test(String(dependencies?.zod ?? development?.zod))
+      const context = signatureContext(sourceFile, schemaOutputs)
       addEntity({
         id,
         kind: 'module',
@@ -524,7 +527,7 @@ const dependencyEntries = (manifest: JsonRecord): readonly { readonly name: stri
             contentHash,
           },
         ],
-        metadata: { ...(exports.length ? { exports, ...(reexports.length ? { reexports } : {}), test: TEST_MODULE_PATTERN.test(path) } : {}), signatureContext: context ?? null },
+        metadata: { ...(exports.length ? { exports, ...(reexports.length ? { reexports } : {}), test: TEST_MODULE_PATTERN.test(path) } : {}), signatureContext: context ?? null, ...(schemaOutputs ? { schemaOutputCodec: 'zod-4-output-v1' } : {}) },
       })
     }
     if (pkg) addRelation({ id: entityId('relation', `${pkg.id}:contains:${id}`), kind: 'contains', from: pkg.id, to: id, provenance: 'observed', evidence: [lineEvidence('code', root, absPath, 1)] })
@@ -655,7 +658,7 @@ const dependencyEntries = (manifest: JsonRecord): readonly { readonly name: stri
 }
 export type SourceState = ReturnType<ReturnType<typeof createJsTsExtraction>['prepare']>
 
-const baseManifest = builtInManifest('js-ts', '1.5.1', [...new Set([...SOURCE_EXTENSIONS, ...CONFIG_EXTENSIONS])].map(extension => `**/*${extension}`))
+const baseManifest = builtInManifest('js-ts', '1.6.0', [...new Set([...SOURCE_EXTENSIONS, ...CONFIG_EXTENSIONS])].map(extension => `**/*${extension}`))
 const factCapabilities = { symbol: 'symbols', 'cli-command': 'cli-commands', 'cli-flag': 'cli-flags', 'config-key': 'config-keys', signature: 'signatures' } as const
 export const jsTsManifest = { ...baseManifest, capabilities: [...new Set([...baseManifest.capabilities, 'lockfile' as const, 'versions' as const, 'release-map' as const, ...FACT_EXTRACTORS.flatMap(extractor => extractor.kinds.map(kind => factCapabilities[kind]))])] }
 export const createJsTsPluginV2 = (): DiscoveryPluginV2 => ({

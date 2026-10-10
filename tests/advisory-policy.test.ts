@@ -21,7 +21,7 @@ const fixture = () => {
 
 it('changed signatures, config defaults and flag values retain hash pairs, stable locators and review routing', () => {
   const root = fixture()
-  put(root, 'docs/guide.md', '# Guide\n\nUse `changed`, `output.mode` and `doc-bridge --brief`.\n')
+  put(root, 'docs/guide.md', '# Guide\n\nCall `changed` with a string.\n\nThe default `output.mode` is short.\n\nThe default for `doc-bridge --brief` is false.\n')
   const base = discoverRepository({ root })
   put(root, 'api.ts', 'export function removed(): void {}\nexport function changed(value: string, enabled: boolean): void {}\n')
   put(root, 'cli.ts', "import { parseArgs } from 'node:util'; parseArgs({ options: { brief: { type: 'boolean', default: true } } });\n")
@@ -36,7 +36,7 @@ it('changed signatures, config defaults and flag values retain hash pairs, stabl
     expect(diagnostic.evidence).toContainEqual(expect.objectContaining({ context: expect.stringMatching(/^Head target valueHash: [a-f0-9]{64}$/) }))
   }
   expect(result.policy.findings.every(item => FindingV1Schema.safeParse(item).success && item.routing === 'routed-to-L2')).toBe(true)
-  put(root, 'docs/guide.md', '# Guide\n\nIntroduction.\n\nUse `changed`, `output.mode` and `doc-bridge --brief`.\n')
+  put(root, 'docs/guide.md', '# Guide\n\nIntroduction.\n\nCall `changed` with a string.\n\nThe default `output.mode` is short.\n\nThe default for `doc-bridge --brief` is false.\n')
   const moved = discoverRepository({ root })
   expect(diffSnapshots(base, moved, { headRoot: root }).findings.map(item => item.id)).toEqual(result.findings.map(item => item.id))
   put(root, 'api.ts', 'export function removed(): void {}\nexport function changed(value: number): void {}\n')

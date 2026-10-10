@@ -52,7 +52,7 @@ inputs:
   package-version:
     description: Exact trusted doc-bridge npm version (kept in sync with this Action release)
     required: false
-    default: '1.15.0-next.1'
+    default: '2.0.0-next.3'
 
 outputs:
   index-report:
