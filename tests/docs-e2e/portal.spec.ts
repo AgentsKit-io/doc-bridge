@@ -89,7 +89,10 @@ test('product subheader keeps search, navigation, and the primary action reachab
 
   await searchButton.click()
   const search = page.getByRole('dialog', { name: 'Search' })
+  // The static index is fetched lazily; on a cold dev server the first fetch can take several seconds.
+  const indexLoaded = page.waitForResponse(response => response.url().includes('/api/search'))
   await search.getByPlaceholder('Search').fill('getting started')
+  await indexLoaded
   await expect(search.getByText('Getting started', { exact: false }).first()).toBeVisible()
   await page.keyboard.press('Escape')
 
@@ -193,7 +196,7 @@ test('known and ambiguous questions stay local', async ({ page }) => {
 
   await input.fill('getting-started')
   await input.press('Enter')
-  await expect(page.getByText('Install, index, query, and gate repository documentation in about 60 seconds.')).toBeVisible()
+  await expect(page.getByText('Install, index and query repository documentation without an API key.')).toBeVisible()
   expect(backendRequests).toHaveLength(0)
 
   await input.fill('mcp')

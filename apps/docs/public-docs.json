@@ -45,5 +45,12 @@
   "schemas/change-set-v1.md",
   "schemas/finding-v1.md",
   "schemas/remediation-v1.md",
-  "schemas/decision-v1.md"
+  "schemas/decision-v1.md",
+  "why-doc-bridge.md",
+  "guides/vault.md",
+  "guides/llm-remediation.md",
+  "spec/knowledge-query-v1.md",
+  "migration/1.x-to-2.0.md",
+  "bench/layer1-results-v2.md",
+  "launch/channels-2.0.md"
 ]
