@@ -1,7 +1,8 @@
 import { createHash } from 'node:crypto'
 import { runCommand, spawnNodeChild, splitLines, safeEnv } from '@agentskit/cross-platform'
-import { readFileSync, realpathSync, openSync, writeSync, ftruncateSync, fsyncSync, closeSync } from 'node:fs'
-import { basename, dirname, resolve, relative } from 'node:path'
+import { readFileSync, realpathSync, openSync, writeSync, ftruncateSync, fsyncSync, closeSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { basename, dirname, resolve, relative, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createInterface } from 'node:readline'
 import { performance } from 'node:perf_hooks'
@@ -36,18 +37,35 @@ export function planStudy(protocol, pilot = false) {
 }
 
 // Only public source/documentation blobs; no shell, checkout files, symlinks or generated index.
-const safePath = path => typeof path === 'string' && /^[a-zA-Z0-9_./-]+\.(md|mdx|json|ts|tsx|js|mjs|yaml|yml)$/.test(path) &&
+export const safePath = path => typeof path === 'string' && /^[a-zA-Z0-9_./-]+\.(md|mdx|json|ts|tsx|js|mjs|yaml|yml)$/.test(path) &&
   !path.split('/').some(part => part === '..' || part.startsWith('.')) && !/(secret|credential|lock|study\/minimal-study)/i.test(path)
 const git = async (root, args, timeoutMs = 10000) => {
   const result = await runCommand('git', ['-C', root, ...args], { timeoutMs, maxOutputBytes: 4 * 1024 * 1024, env: safeEnv() })
   if (result.code !== 0 || result.truncated) fail('Local Git read failed or exceeded bounds')
   return result.stdout
 }
-export async function repositoryTools(root, revision) {
-  const files = splitLines((await git(root, ['ls-tree', '-r', revision])).trim()).flatMap(line => {
+// The exact set of files the HTTP transport may read at a pin (regular blobs passing safePath).
+export async function corpusFiles(root, revision) {
+  return splitLines((await git(root, ['ls-tree', '-r', revision])).trim()).flatMap(line => {
     const match = /^100644 blob [a-f0-9]+\t(.+)$/.exec(line)
     return match && safePath(match[1]) ? [match[1]] : []
   })
+}
+// Clean export for the CLI agent's working directory: only corpusFiles, no .git, index, build output or lockfiles.
+export async function exportCorpus(root, revision, destination) {
+  const files = await corpusFiles(root, revision)
+  const base = resolve(destination)
+  for (const path of files) {
+    const target = resolve(base, path)
+    if (!safePath(path) || !target.startsWith(`${base}/`)) fail('Export path is not allowed')
+    const text = await git(root, ['show', `${revision}:${path}`], 10000)
+    mkdirSync(dirname(target), { recursive: true })
+    writeFileSync(target, text, { mode: 0o444 })
+  }
+  return files
+}
+export async function repositoryTools(root, revision) {
+  const files = await corpusFiles(root, revision)
   const read = async (path, deadline = Infinity) => {
     if (!files.includes(path)) fail('Source path is not allowed')
     const remainingMs = deadline - performance.now()
@@ -102,18 +120,29 @@ export function connectMcp(root, engine) {
     pending.set(id, { resolve: result => { clearTimeout(timer); resolveRequest(result) }, reject: error => { clearTimeout(timer); reject(error) } })
     child.stdin.write(`${JSON.stringify({ jsonrpc: '2.0', id, method, params })}\n`, error => { if (error) rejectAll() })
   })
+  const initialize = async () => {
+    await request('initialize', { protocolVersion: '2024-11-05', capabilities: {}, clientInfo: { name: 'minimal-study', version: '1' } })
+    child.stdin.write(`${JSON.stringify({ jsonrpc: '2.0', method: 'notifications/initialized' })}\n`)
+    return (await request('tools/list')).tools
+  }
   return {
     close: () => { rejectAll(); lines.close(); child.kill() },
+    // Every tool the server exposes; used to derive the CLI deny list so new tools cannot slip in.
+    toolNames: async () => (await initialize()).map(tool => tool.name),
     tools: async () => {
-      await request('initialize', { protocolVersion: '2024-11-05', capabilities: {}, clientInfo: { name: 'minimal-study', version: '1' } })
-      child.stdin.write(`${JSON.stringify({ jsonrpc: '2.0', method: 'notifications/initialized' })}\n`)
-      const result = await request('tools/list')
-      const allowed = ['doc.search', 'doc.get', 'handoff.resolve']
-      const tools = result.tools.filter(tool => allowed.includes(tool.name))
+      const listed = await initialize()
+      const allowed = HTTP_READ_ONLY_TOOLS
+      const tools = listed.filter(tool => allowed.includes(tool.name))
       if (tools.length !== allowed.length) fail('Required read-only MCP tools unavailable')
       return tools.map(tool => ({ name: tool.name.replaceAll('.', '_'), description: tool.description, input_schema: tool.inputSchema, call: argumentsValue => request('tools/call', { name: tool.name, arguments: argumentsValue }) }))
     },
   }
+}
+const HTTP_READ_ONLY_TOOLS = ['doc.search', 'doc.get', 'handoff.resolve']
+
+export async function probeMcpToolNames(root, engine) {
+  const client = connectMcp(root, engine)
+  try { return await client.toolNames() } finally { client.close() }
 }
 
 // Identical prompt for both transports so HTTP and CLI attempts answer the same question.
@@ -179,13 +208,26 @@ export async function runAttempt({ task, tools, config, budget, fetchImpl = fetc
 // CLI transport: one fresh headless Claude Code process per attempt, authenticated by the CLI's own login.
 // The child never receives ANTHROPIC_API_KEY. Isolation achieved and not achieved is documented in
 // docs/study/minimal-study-v1.md; keep this list in sync with that section.
+export const CLI_PINNED_VERSION = '2.1.296'
 export const CLI_BUILTIN_TOOLS = ['Read', 'Grep', 'Glob']
+export const CLI_DOC_BRIDGE_SERVER = 'doc-bridge'
+export const mcpToolName = name => `mcp__${CLI_DOC_BRIDGE_SERVER}__${name.replaceAll('.', '_')}`
+export const CLI_DOC_BRIDGE_TOOLS = HTTP_READ_ONLY_TOOLS.map(mcpToolName)
 export const CLI_DENIED_TOOLS = ['Bash', 'Edit', 'MultiEdit', 'Write', 'NotebookEdit', 'WebFetch', 'WebSearch', 'Task', 'Agent']
-export const CLI_DOC_BRIDGE_TOOLS = ['mcp__doc-bridge__doc_search', 'mcp__doc-bridge__doc_get', 'mcp__doc-bridge__handoff_resolve']
 export const CLI_ATTEMPT_TIMEOUT_MS = 300000
-export const CLI_DEFAULT_ATTEMPT_BUDGET_USD = 0.25
+// Enforced by the CLI after spend, so it is a safety net. 0.10 USD is 100 times the measured trivial reply
+// (0.00088 USD, 2026-10-10); multi-turn tool runs were not measured, so a truncation is recorded as budget-exceeded.
+export const CLI_DEFAULT_ATTEMPT_BUDGET_USD = 0.10
+// List prices in USD per million tokens (decided 2026-10-10). Tier threshold is the request prompt size.
+export const CLI_PRICES = {
+  'claude-haiku-5-5': {
+    threshold: 100000,
+    base: { input: 0.10, output: 0.50, cacheRead: 0.01, cacheWrite: 0.125 },
+    above: { input: 0.50, output: 2.50, cacheRead: 0.05, cacheWrite: 0.625 },
+  },
+}
 const CLI_MAX_PROMPT_BYTES = 8192
-const CLI_MAX_OUTPUT_BYTES = 256000
+const CLI_MAX_OUTPUT_BYTES = 4 * 1024 * 1024
 
 // Environment is rebuilt from a system allowlist (HOME is kept so the CLI can find its login);
 // the API key is removed explicitly so it can never be inherited by accident.
@@ -193,19 +235,29 @@ export const cliChildEnv = (source = process.env) => safeEnv({
   inherit: ['USER', 'LOGNAME', 'LANG', 'LC_ALL'], source, extra: { ANTHROPIC_API_KEY: undefined },
 })
 
+// Derived from the server's live tools/list: every tool except the three HTTP read-only tools is denied.
+export function cliDisallowedMcpTools(serverToolNames) {
+  if (!Array.isArray(serverToolNames) || !HTTP_READ_ONLY_TOOLS.every(name => serverToolNames.includes(name))) fail('Required read-only MCP tools unavailable')
+  const extra = serverToolNames.filter(name => !HTTP_READ_ONLY_TOOLS.includes(name))
+  if (extra.some(name => !/^[a-zA-Z0-9_.]+$/.test(name))) fail('Unexpected MCP tool name')
+  return extra.map(mcpToolName)
+}
+
 // Argument array only (never a shell string). The scenarios differ only in --mcp-config and in the
-// MCP entries appended to --allowedTools, so both arrays have the same length.
-export function cliArguments({ model, scenario, prompt, maxBudgetUsd, engine }) {
+// MCP entries appended to --allowedTools, so both arrays have the same length. The prompt is last, after
+// boolean flags only, so no variadic option can swallow it.
+export function cliArguments({ model, scenario, prompt, maxBudgetUsd, engine, checkoutRoot, disallowedMcpTools = [] }) {
   const mcp = scenario === 'doc-bridge-mcp'
+  // The server runs against the prepared checkout by explicit config path, not the agent's working directory.
   const mcpConfig = mcp
-    ? { mcpServers: { 'doc-bridge': { type: 'stdio', command: process.execPath, args: [engine, 'mcp'] } } }
+    ? { mcpServers: { [CLI_DOC_BRIDGE_SERVER]: { type: 'stdio', command: process.execPath, args: [engine, '--config', join(checkoutRoot, 'doc-bridge.config.json'), 'mcp'] } } }
     : { mcpServers: {} }
   return [
-    '-p', '--model', model, '--output-format', 'json', '--no-session-persistence', '--max-budget-usd', maxBudgetUsd,
+    '-p', '--model', model, '--output-format', 'stream-json', '--verbose', '--no-session-persistence', '--max-budget-usd', maxBudgetUsd,
     '--restricted', '--disable-slash-commands', '--permission-mode', 'dontAsk', '--permission-prompts', 'none',
     '--tools', CLI_BUILTIN_TOOLS.join(','),
     '--allowedTools', [...CLI_BUILTIN_TOOLS, ...(mcp ? CLI_DOC_BRIDGE_TOOLS : [])].join(','),
-    '--disallowedTools', CLI_DENIED_TOOLS.join(','),
+    '--disallowedTools', [...CLI_DENIED_TOOLS, ...disallowedMcpTools].join(','),
     '--mcp-config', JSON.stringify(mcpConfig), '--strict-mcp-config',
     prompt,
   ]
@@ -215,22 +267,112 @@ const isCount = value => Number.isInteger(value) && value >= 0
 // Round down so the cap given to the CLI never exceeds the remaining budget.
 const floorUsd = value => Math.floor(value * 1000000) / 1000000
 
-export async function probeCliVersion(claudeBin) {
+export async function probeCliVersion(claudeBin, expected = CLI_PINNED_VERSION) {
   const result = await runCommand(claudeBin, ['--version'], { env: cliChildEnv(), stdin: 'ignore', timeoutMs: 10000, maxOutputBytes: 4096 })
   const version = result.stdout.trim().split('\n')[0] ?? ''
   if (result.code !== 0 || result.truncated || !/^[ -~]{1,120}$/.test(version)) fail('Claude Code CLI version probe failed')
+  if (version.split(/\s/)[0] !== expected) fail('Claude Code CLI version is not the pinned version')
   return version
 }
 
-// Budget: reserve min(remaining, per-attempt limit) before spawning; settle to the CLI-reported cost on a
-// valid successful result. Any failure, timeout, non-zero exit or unparsable output is charged the full limit.
-export async function runCliAttempt({ task, scenario, config, budget, engine, root, checkpoint = () => {}, timeoutMs = CLI_ATTEMPT_TIMEOUT_MS }) {
+// Parses stream-json. Throws on any line that is not JSON, on a missing or duplicated result, or when the
+// result is not the last event. Tool calls are counted once per tool-use id; per-request usage is keyed by message id.
+export function observeCliStream(stdout, model) {
+  const events = splitLines(stdout).filter(line => line.trim() !== '').map(line => JSON.parse(line))
+  const results = events.filter(event => event?.type === 'result')
+  const inits = events.filter(event => event?.type === 'system' && event.subtype === 'init')
+  if (results.length !== 1 || events.at(-1)?.type !== 'result' || inits.length > 1) fail('Malformed stream-json transcript')
+  const toolCallsByName = {}
+  const seenToolIds = new Set()
+  const requests = new Map()
+  let foreignModel = false
+  events.forEach((event, index) => {
+    if (event?.type !== 'assistant' || !event.message) return
+    const message = event.message
+    if (typeof message.model === 'string' && message.model !== model) foreignModel = true
+    if (message.usage && typeof message.id === 'string') requests.set(message.id, message.usage)
+    for (const block of Array.isArray(message.content) ? message.content : []) {
+      if (block?.type !== 'tool_use') continue
+      const id = typeof block.id === 'string' ? block.id : `index-${index}`
+      if (seenToolIds.has(id)) continue
+      seenToolIds.add(id)
+      const name = typeof block.name === 'string' ? block.name : '<unknown>'
+      toolCallsByName[name] = (toolCallsByName[name] ?? 0) + 1
+    }
+  })
+  return { init: inits[0] ?? null, result: results[0], toolCallsByName, requests: [...requests.values()], foreignModel }
+}
+
+// Returns a reason string when the init event does not match the expected setup, otherwise null.
+export function checkCliInit(init, { scenario, model }) {
+  const mcp = scenario === 'doc-bridge-mcp'
+  const expectedTools = [...CLI_BUILTIN_TOOLS, ...(mcp ? CLI_DOC_BRIDGE_TOOLS : [])]
+  if (init.model !== model) return 'init model is not the study model'
+  if (!Array.isArray(init.tools) || init.tools.length !== expectedTools.length || !expectedTools.every(name => init.tools.includes(name))) return 'init tool list is not the expected set'
+  if (!Array.isArray(init.mcp_servers)) return 'init MCP status missing'
+  if (!mcp) return init.mcp_servers.length === 0 ? null : 'MCP server present in repository-only arm'
+  const servers = init.mcp_servers
+  if (servers.length !== 1 || servers[0]?.name !== CLI_DOC_BRIDGE_SERVER || servers[0]?.status !== 'connected') return 'doc-bridge MCP server not connected'
+  return null
+}
+
+// Returns a reason when a tool outside the allowed set was attempted, or any denial other than a built-in read tool.
+export function checkCliActivity({ toolCallsByName, denialNames, scenario }) {
+  const allowed = new Set([...CLI_BUILTIN_TOOLS, ...(scenario === 'doc-bridge-mcp' ? CLI_DOC_BRIDGE_TOOLS : [])])
+  if (Object.keys(toolCallsByName).some(name => !allowed.has(name))) return 'tool outside the allowed set was attempted'
+  if (denialNames.some(name => !CLI_BUILTIN_TOOLS.includes(name))) return 'permission denied for a tool outside the built-in read set'
+  return null
+}
+
+const tokensCost = (tokens, price) => (tokens.input * price.input + tokens.output * price.output + tokens.cacheRead * price.cacheRead + tokens.cacheWrite * price.cacheWrite) / 1000000
+
+// Independent cost from modelUsage at list price. With per-request stream usage the tier is chosen per request and
+// the per-request totals must equal modelUsage. Without it the aggregate prompt size is an upper bound for any
+// single request, so the above-100k tier is used whenever the aggregate exceeds 100k.
+export function computeCliCost({ modelUsage, model, requests = [], foreignModel = false }) {
+  const price = CLI_PRICES[model]
+  const none = problem => ({ computedCostUsd: null, basis: null, problem })
+  if (!price) return none('no list price for the study model')
+  if (foreignModel) return none('a message came from a model other than the study model')
+  if (!modelUsage || typeof modelUsage !== 'object' || Array.isArray(modelUsage)) return none('modelUsage missing')
+  const models = Object.keys(modelUsage)
+  if (models.length !== 1 || models[0] !== model) return none('modelUsage contains a model other than the study model')
+  const entry = modelUsage[model]
+  const totals = { input: entry?.inputTokens, output: entry?.outputTokens, cacheRead: entry?.cacheReadInputTokens, cacheWrite: entry?.cacheCreationInputTokens }
+  if (!Object.values(totals).every(isCount)) return none('modelUsage counts invalid')
+  const tierFor = prompt => prompt > price.threshold ? price.above : price.base
+  if (requests.length) {
+    const sum = { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }
+    let computedCostUsd = 0
+    for (const usage of requests) {
+      const tokens = { input: usage.input_tokens, output: usage.output_tokens, cacheRead: usage.cache_read_input_tokens, cacheWrite: usage.cache_creation_input_tokens }
+      if (!Object.values(tokens).every(isCount)) return none('per-request usage invalid')
+      computedCostUsd += tokensCost(tokens, tierFor(tokens.input + tokens.cacheRead + tokens.cacheWrite))
+      for (const key of Object.keys(sum)) sum[key] += tokens[key]
+    }
+    if (Object.keys(sum).some(key => sum[key] !== totals[key])) return none('per-request usage does not match modelUsage')
+    return { computedCostUsd, basis: 'per-request tier', problem: null }
+  }
+  const prompt = totals.input + totals.cacheRead + totals.cacheWrite
+  return { computedCostUsd: tokensCost(totals, tierFor(prompt)), basis: prompt > price.threshold ? 'aggregate-above-100k' : 'aggregate-base', problem: null }
+}
+
+// Two costs agree when they are equal or within a factor of 2 (both zero counts as agreement).
+const costsAgree = (reported, computed) => reported === computed || (reported > 0 && computed > 0 && Math.max(reported, computed) / Math.min(reported, computed) <= 2)
+
+// Budget: reserve min(remaining, per-attempt limit) before spawning. A completed attempt settles to
+// max(CLI-reported, computed). Any other outcome is charged max(limit, every valid cost), so a failure is never
+// charged less than a valid reported cost. The per-attempt cap is enforced by the CLI after spend.
+export async function runCliAttempt({ task, scenario, config, budget, engine, workdir, mcpRoot, checkpoint = () => {}, timeoutMs = CLI_ATTEMPT_TIMEOUT_MS }) {
   const started = performance.now()
   const prompt = studyPrompt(task)
   if (Buffer.byteLength(prompt) > CLI_MAX_PROMPT_BYTES) fail('Study prompt exceeds input bound')
-  const observation = { transport: 'cli', inputTokens: 0, outputTokens: 0, cacheCreationInputTokens: 0, cacheReadInputTokens: 0,
-    usageComplete: true, toolCalls: null, numTurns: null, wallTimeMs: 0, reportedCostUsd: null, chargedUsd: 0,
-    cliVersion: config.cliVersion ?? null, isError: null, correctness: null, adjudication: 'pending', status: 'incomplete', answer: '' }
+  const observation = { transport: 'cli', cliVersion: config.cliVersion ?? null, expectedCliVersion: config.expectedCliVersion ?? CLI_PINNED_VERSION,
+    attemptBudgetUsd: config.attemptBudgetUsd, initModel: null, initTools: null, initMcpServers: null, setupProblem: null,
+    toolCallsByName: {}, toolCalls: 0, permissionDenials: null, permissionDenialTools: null, numTurns: null, cliSubtype: null, isError: null,
+    inputTokens: 0, outputTokens: 0, cacheCreationInputTokens: 0, cacheReadInputTokens: 0, usageComplete: false,
+    cliReportedCostUsd: null, computedCostUsd: null, costBasis: null, costProblem: null, chargedUsd: 0,
+    correctness: null, adjudication: 'pending', status: 'incomplete', answer: '', wallTimeMs: 0 }
   const finish = (status, patch = {}) => ({ ...observation, ...patch, status, wallTimeMs: Math.round(performance.now() - started) })
   const remaining = budget.cap - budget.spent
   if (!(remaining > 0)) return finish('budget-exceeded')
@@ -239,26 +381,44 @@ export async function runCliAttempt({ task, scenario, config, budget, engine, ro
   budget.spent += limit
   checkpoint() // Persist the reservation BEFORE the child starts; ambiguous outcomes stay charged, never retried.
   const settle = chargedUsd => { budget.spent += chargedUsd - limit; checkpoint(); return chargedUsd }
-  const failAttempt = (status, measured = { usageComplete: false }) => finish(status, { ...measured, chargedUsd: settle(limit) })
+  const chargeFailure = (status, patch = {}) => {
+    const costs = [patch.cliReportedCostUsd, patch.computedCostUsd].filter(value => Number.isFinite(value))
+    return finish(status, { ...patch, chargedUsd: settle(Math.max(limit, ...costs)) })
+  }
   let result
   try {
-    result = await runCommand(config.claudeBin, cliArguments({ model: config.model, scenario, prompt, maxBudgetUsd: limit.toFixed(6), engine }),
-      { cwd: root, env: cliChildEnv(), stdin: 'ignore', timeoutMs, maxOutputBytes: CLI_MAX_OUTPUT_BYTES })
-  } catch { return failAttempt('failed') }
-  if (result.timedOut) return failAttempt('timed-out')
-  if (result.truncated || result.code !== 0) return failAttempt('failed')
-  let parsed
-  try { parsed = JSON.parse(result.stdout) } catch { return failAttempt('failed') }
-  const usage = parsed?.usage
-  const valid = parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed) && parsed.type === 'result' &&
-    isCount(usage?.input_tokens) && isCount(usage?.output_tokens) && isCount(usage?.cache_creation_input_tokens) && isCount(usage?.cache_read_input_tokens) &&
-    Number.isFinite(parsed.total_cost_usd) && parsed.total_cost_usd >= 0 && isCount(parsed.num_turns)
-  if (!valid) return failAttempt('failed')
-  const measured = { usageComplete: true, inputTokens: usage.input_tokens, outputTokens: usage.output_tokens,
-    cacheCreationInputTokens: usage.cache_creation_input_tokens, cacheReadInputTokens: usage.cache_read_input_tokens,
-    numTurns: parsed.num_turns, reportedCostUsd: parsed.total_cost_usd, isError: parsed.is_error === true }
-  if (parsed.is_error === true || parsed.subtype !== 'success' || typeof parsed.result !== 'string') return failAttempt('failed', measured)
-  return finish('completed', { ...measured, answer: parsed.result, chargedUsd: settle(parsed.total_cost_usd) })
+    result = await runCommand(config.claudeBin, cliArguments({ model: config.model, scenario, prompt, maxBudgetUsd: limit.toFixed(6), engine, checkoutRoot: mcpRoot, disallowedMcpTools: config.disallowedMcpTools ?? [] }),
+      { cwd: workdir, env: cliChildEnv(), stdin: 'ignore', timeoutMs, maxOutputBytes: CLI_MAX_OUTPUT_BYTES })
+  } catch { return chargeFailure('failed') }
+  if (result.timedOut) return chargeFailure('timed-out')
+  if (result.truncated || result.code !== 0) return chargeFailure('failed')
+  let observed
+  try { observed = observeCliStream(result.stdout, config.model) } catch { return chargeFailure('failed') }
+  const { init, result: final } = observed
+  const usage = final.usage
+  const valid = final !== null && typeof final === 'object' && final.type === 'result' && typeof final.is_error === 'boolean' &&
+    Array.isArray(final.permission_denials) && isCount(final.num_turns) && isCount(usage?.input_tokens) && isCount(usage?.output_tokens) &&
+    isCount(usage?.cache_creation_input_tokens) && isCount(usage?.cache_read_input_tokens)
+  if (!valid) return chargeFailure('failed')
+  const denialNames = final.permission_denials.map(entry => typeof entry?.tool_name === 'string' ? entry.tool_name : typeof entry?.name === 'string' ? entry.name : '<unknown>')
+  const cost = computeCliCost({ modelUsage: final.modelUsage, model: config.model, requests: observed.requests, foreignModel: observed.foreignModel })
+  const cliReported = Number.isFinite(final.total_cost_usd) && final.total_cost_usd >= 0 ? final.total_cost_usd : null
+  const measured = {
+    initModel: init?.model ?? null, initTools: init?.tools ?? null, initMcpServers: init?.mcp_servers ?? null,
+    toolCallsByName: observed.toolCallsByName, toolCalls: Object.values(observed.toolCallsByName).reduce((sum, count) => sum + count, 0),
+    permissionDenials: denialNames.length, permissionDenialTools: denialNames, numTurns: final.num_turns, cliSubtype: final.subtype ?? null, isError: final.is_error,
+    inputTokens: usage.input_tokens, outputTokens: usage.output_tokens, cacheCreationInputTokens: usage.cache_creation_input_tokens,
+    cacheReadInputTokens: usage.cache_read_input_tokens, usageComplete: true,
+    cliReportedCostUsd: cliReported, computedCostUsd: cost.computedCostUsd, costBasis: cost.basis,
+  }
+  const setupProblem = !init ? 'init event missing' : checkCliInit(init, { scenario, model: config.model }) ?? checkCliActivity({ toolCallsByName: observed.toolCallsByName, denialNames, scenario })
+  if (setupProblem) return chargeFailure('invalid-setup', { ...measured, setupProblem })
+  const costProblem = cost.problem ?? (cliReported === null ? 'CLI-reported cost missing' : costsAgree(cliReported, cost.computedCostUsd) ? null : 'CLI-reported and computed cost differ by more than 2x')
+  if (costProblem) return chargeFailure('invalid-cost', { ...measured, costProblem })
+  // Only a run that reports error_max_budget_usd is an overrun; the CLI checks the cap after spend, so this is recorded and the run stops.
+  if (final.subtype === 'error_max_budget_usd') return chargeFailure('budget-exceeded', measured)
+  if (final.is_error === true || final.subtype !== 'success' || typeof final.result !== 'string') return chargeFailure('failed', measured)
+  return finish('completed', { ...measured, answer: final.result, chargedUsd: settle(Math.max(cliReported, cost.computedCostUsd)) })
 }
 
 export function parseOptions(args, env) {
@@ -267,7 +427,7 @@ export function parseOptions(args, env) {
     const flag = args[index]
     if (['--dry-run', '--pilot', '--approve-budget', '--run'].includes(flag)) {
       options[{ '--dry-run': 'dryRun', '--pilot': 'pilot', '--approve-budget': 'approved', '--run': 'run' }[flag]] = true
-    } else if (['--root', '--output', '--input-usd-per-million', '--output-usd-per-million', '--transport', '--claude-bin', '--attempt-budget-usd'].includes(flag)) {
+    } else if (['--root', '--output', '--input-usd-per-million', '--output-usd-per-million', '--transport', '--claude-bin', '--attempt-budget-usd', '--cli-version'].includes(flag)) {
       const value = args[++index]
       if (!value || value.startsWith('--')) fail('Missing flag value')
       if (flag === '--root') {
@@ -277,6 +437,7 @@ export function parseOptions(args, env) {
       } else if (flag === '--transport') options.transport = value
       else if (flag === '--claude-bin') options.claudeBin = value
       else if (flag === '--attempt-budget-usd') options.attemptBudgetUsd = value
+      else if (flag === '--cli-version') options.cliVersion = value
       else options[flag.slice(2)] = value
     } else fail('Unknown study option')
   }
@@ -289,9 +450,12 @@ export function parseOptions(args, env) {
     if (!options.output) fail('Required private --output path')
     if (options.transport === 'cli') {
       // No credential is read, required or passed: the CLI uses its own login.
+      if (env.STUDY_MODEL !== 'claude-haiku-5-5') fail('CLI transport prices only claude-haiku-5-5')
       const claudeBin = options.claudeBin ?? 'claude'
       if (/[\r\n\u0000]/.test(claudeBin)) fail('Invalid Claude Code CLI path')
-      options.config = { transport: 'cli', model: env.STUDY_MODEL, claudeBin,
+      const expectedCliVersion = options.cliVersion ?? CLI_PINNED_VERSION
+      if (!/^\d+\.\d+\.\d+$/.test(expectedCliVersion)) fail('Invalid pinned Claude Code version')
+      options.config = { transport: 'cli', model: env.STUDY_MODEL, claudeBin, expectedCliVersion,
         attemptBudgetUsd: positive(options.attemptBudgetUsd ?? CLI_DEFAULT_ATTEMPT_BUDGET_USD, 'per-attempt budget') }
     } else {
       if (!env.ANTHROPIC_API_KEY || /[\r\n]/.test(env.ANTHROPIC_API_KEY)) fail('Required environment credential')
@@ -324,13 +488,18 @@ export async function main(args = process.argv.slice(2), env = process.env, prot
     if (!path.startsWith('..') && !path.startsWith('/')) fail('Private output must be outside checkouts')
   }
   const engine = resolve(directory, '../bin/ak-docs.js')
-  const cliVersion = cli ? await probeCliVersion(options.config.claudeBin) : undefined
-  const attemptConfig = cli ? { ...options.config, cliVersion } : options.config
+  const cliVersion = cli ? await probeCliVersion(options.config.claudeBin, options.config.expectedCliVersion) : undefined
+  // The deny list comes from the live server, so a newly added MCP tool is denied without a code change.
+  const mcpExecution = plan.find(item => item.scenario === 'doc-bridge-mcp')
+  const disallowedMcpTools = cli && mcpExecution ? cliDisallowedMcpTools(await probeMcpToolNames(options.roots[mcpExecution.task.repository], engine)) : []
+  const attemptConfig = cli ? { ...options.config, cliVersion, disallowedMcpTools } : options.config
   const budget = { cap: options.cap, spent: 0 }
   const ledger = { version: protocol.version, protocolHash: hash(JSON.stringify(protocol)), runnerHash: hash(readFileSync(fileURLToPath(import.meta.url))),
     engineRevision: (await git(resolve(directory, '..'), ['rev-parse', 'HEAD'])).trim(), engineBundleHash: hash(readFileSync(resolve(directory, '../dist/cli/program.js'))),
     repositories: protocol.repositories, transport: options.config.transport, model: options.config.model,
-    ...(cli ? { cli: { cliVersion, attemptBudgetUsd: options.config.attemptBudgetUsd, prices: 'CLI-reported cost; no supplied prices' } }
+    ...(cli ? { cli: { cliVersion, expectedCliVersion: options.config.expectedCliVersion, attemptBudgetUsd: options.config.attemptBudgetUsd, disallowedMcpTools,
+      disallowedNote: 'Listed names are denied by the CLI; if they still appear in the init tool list the attempt is invalid-setup. Whether the definitions are still sent was not verified.',
+      prices: CLI_PRICES, costRule: 'list price from modelUsage; CLI estimate recorded alongside; max of both counts toward the cap' } }
       : { prices: { input: options.config.inputPrice, output: options.config.outputPrice } }),
     adjudication: { method: 'agent', humanReview: false },
     mode: options.pilot ? 'pilot' : 'full', budget, observations: [], status: 'running' }
@@ -343,13 +512,24 @@ export async function main(args = process.argv.slice(2), env = process.env, prot
     ftruncateSync(fd, encoded.length)
     fsyncSync(fd)
   }
+  const scratch = []
   try {
     save()
+    // CLI agents run in a clean export of exactly the HTTP-readable files at the pin; one read-only directory per repository.
+    const corpora = {}
+    if (cli) {
+      for (const repository of new Set(plan.map(item => item.task.repository))) {
+        const directoryPath = mkdtempSync(join(tmpdir(), 'study-corpus-'))
+        scratch.push(directoryPath)
+        corpora[repository] = directoryPath
+        await exportCorpus(options.roots[repository], protocol.repositories[repository], directoryPath)
+      }
+    }
     for (const execution of plan) {
       const root = options.roots[execution.task.repository]
       if (cli) {
-        // One fresh child per attempt; the CLI starts its own MCP server for doc-bridge-mcp.
-        const result = await runCliAttempt({ task: execution.task, scenario: execution.scenario, config: attemptConfig, budget, engine, root, checkpoint: save })
+        // One fresh child per attempt; the CLI starts its own MCP server for doc-bridge-mcp against the checkout.
+        const result = await runCliAttempt({ task: execution.task, scenario: execution.scenario, config: attemptConfig, budget, engine, workdir: corpora[execution.task.repository], mcpRoot: root, checkpoint: save })
         ledger.observations.push({ taskId: execution.task.id, scenario: execution.scenario, repetition: execution.repetition, ...result })
         save()
         if (result.status !== 'completed') break
@@ -376,7 +556,10 @@ export async function main(args = process.argv.slice(2), env = process.env, prot
       extrapolatedFullRunUsd: pilotComplete ? budget.spent * 18 : null, extrapolation: pilotComplete ? '36 attempts / 2 pilot attempts; not an upper bound' : 'not applicable' }))
     if (ledger.status === 'blocked') process.exitCode = 1
   } catch { ledger.status = 'blocked'; save(); fail('Study blocked; private ledger preserves spend; do not retry without budget review') }
-  finally { closeSync(fd) }
+  finally {
+    closeSync(fd)
+    for (const dir of scratch) rmSync(dir, { recursive: true, force: true })
+  }
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

@@ -46,7 +46,8 @@ protocol with pinned public questions and a budget-first pilot for
 `claude-haiku-5-5`. No model was run for that protocol. The pilot runs through the
 Claude Code CLI in headless mode with the CLI's own login (no API key; the Messages
 API transport remains an option). It is approved with a 1 USD cumulative cap on the
-CLI-reported cost. The full 36-attempt run is not approved. The CLI cost is an
+charged spend, which is the larger of the CLI-reported cost and the list-price
+computation per attempt. The CLI must be the pinned version 2.1.296. The full 36-attempt run is not approved. The CLI cost is an
 estimate, not a billed amount on a subscription login. Results describe a coding
 agent with and without the doc-bridge MCP server, not the bare model. Correctness
 will be adjudicated by an agent, not by humans, so any published result is

@@ -41,7 +41,7 @@ allowlisted environment, a timeout and an output bound. It uses read and search
 tools only, through `--tools`, `--allowedTools` and `--disallowedTools`, and
 non-interactive permissions (`--permission-mode dontAsk`, `--permission-prompts
 none`). Scenarios differ only in `--mcp-config` and the doc-bridge tool allowance.
-The cap applies to the CLI-reported cost; each attempt is capped by
+The cap applies to the charged spend (the larger of the CLI-reported and computed cost); each attempt is capped by
 `min(remaining, per-attempt limit)` through `--max-budget-usd`. A failed attempt is
 charged the full per-attempt limit.
 
@@ -50,8 +50,9 @@ environment-only key, upper prices and built-in `fetch`, and it is tested as bef
 
 Rules reused from [ADR 0009](0009-study-provider-cli-adapter.md): an executable plus
 an argument array (never a shell string), an allowlisted environment, bounded input,
-output and runtime, a single JSON object on stdout, and fail-closed handling of
-non-zero exit, timeout and malformed JSON. The runner does not import
+output and runtime, and fail-closed handling of non-zero exit, timeout and malformed
+output. The output is a stream of stream-json events, one per line, that ends with a
+single `result` event. The runner rejects any transcript that does not have that shape. The runner does not import
 `src/study/provider-cli.ts`. That module provides configuration, hashing and pricing
 helpers, but no process invocation. The optional `.mjs` runner therefore carries
 its own short implementation of the same rules.
@@ -77,3 +78,39 @@ estimate and is not a billed amount on a subscription login. Isolation is partia
 reachable by read tools. See [minimal-study-v1 Transport](../study/minimal-study-v1.md#transport-claude-code-cli-pilot-transport)
 for the full list. No flag was verified against a live run, and this ADR does not
 approve a result.
+
+## Amendment 2026-10-10: pinned version, stream-json and fail-closed checks
+
+Review of the first CLI runner found that the earlier design accepted results it could
+not verify. The runner now fails closed as follows:
+
+- **Pinned CLI version.** `claude --version` must report `2.1.296` before any attempt.
+  The version is recorded in the ledger. Flag behaviour was read from the locally
+  installed 2.1.288 help output and is not yet re-read against 2.1.296.
+- **stream-json transcript.** The runner uses `--output-format stream-json --verbose`
+  instead of a single JSON object. It reads the init event to check the model, the
+  exact tool set and MCP server status. It counts tool calls by id, rejects any tool
+  outside the allowed set, and rejects any denial other than a built-in read tool.
+  Failing any check is `invalid-setup`.
+- **Cost cross-check.** The runner computes a list-price cost from `modelUsage`
+  using the runner's `CLI_PRICES` table. Per-request tiering is used when per-message
+  usage is present, and an aggregate upper bound otherwise. The CLI-reported cost must
+  agree within a factor of two, or the attempt is `invalid-cost`.
+- **Charging.** A completed attempt settles to the larger of the reported and computed
+  cost. Any other outcome is charged at least the reservation, and at least every
+  valid cost. The earlier rule of charging only the reservation is withdrawn.
+- **Narrower surface.** The disallowed tool list also covers every other tool the
+  doc-bridge server lists in its live `tools/list`. Derivation happens once per run,
+  and the list is passed to both arms.
+- **Output bound.** The stdout bound is 4 MiB, not the 256,000 bytes stated before.
+- **Default attempt limit.** The default is 0.10 USD, not 0.25. This follows one
+  maintainer measurement on 2026-10-10: a trivial reply cost 0.00088 USD on the CLI's
+  own estimate. Multi-turn tool runs were not measured, so a cap truncation is recorded
+  as `budget-exceeded`.
+
+Tool calls are now recorded as counts from the stream, not as `null`. The cache rates
+in the 2026-10-10 price table are not part of the 2026-10-09 decision and need
+maintainer confirmation. The isolation limits in
+[minimal-study-v1 Transport](../study/minimal-study-v1.md#transport-claude-code-cli-pilot-transport)
+(`CLAUDE.md` and memory not excluded, `.git` reachable, system prompt included) still
+apply. Nothing in this amendment approves a result or the full run.

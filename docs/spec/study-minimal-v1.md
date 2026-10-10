@@ -23,7 +23,10 @@ outside-checkout output path.
   headless Claude Code child per attempt, authenticated by the CLI's own login. The
   child never receives `ANTHROPIC_API_KEY`, and the runner never reads or requires it.
   Requires `STUDY_MODEL` and `STUDY_BUDGET_USD`; optional `--claude-bin` (default
-  `claude`) and `--attempt-budget-usd` (default `0.25`). Prices are not needed.
+  `claude`), `--attempt-budget-usd` (default `0.10`) and `--cli-version` (expected
+  version, default `2.1.296`). The probed `claude --version` must match before any
+  attempt. Prices are not flags; the runner's `CLI_PRICES` table is used for the
+  list-price cross-check.
 - `http` (option, kept and tested): Messages API over built-in `fetch`. Requires the
   environment-only `ANTHROPIC_API_KEY`, positive upper input/output prices, and the
   cumulative cap.
@@ -56,32 +59,50 @@ decided in the protocol, not in this runner. Existing `DocBridgeIndexV1`,
 
 `runCliAttempt` spawns the configured executable with an argument array, never a
 shell string, `cwd` set to the frozen checkout, `stdin` closed, an allowlisted
-environment without `ANTHROPIC_API_KEY`, a five-minute timeout and a 256,000-byte stdout
-bound. The prompt is limited to 8 KiB. The arguments are built by `cliArguments`:
-they are the same for both scenarios except the `--mcp-config` value and the three
-`mcp__doc-bridge__*` names appended to `--allowedTools`. The flag-by-flag list and
-the isolation that was and was not achieved are in
+environment without `ANTHROPIC_API_KEY`, a five-minute timeout and a 4 MiB stdout
+bound (truncated output is `failed`). The prompt is limited to 8 KiB. The arguments
+are built by `cliArguments` with `--output-format stream-json --verbose`, the prompt
+last after boolean flags only. They are the same for both scenarios except the
+`--mcp-config` value and the three `mcp__doc-bridge__*` names appended to
+`--allowedTools`. `--disallowedTools` also carries every other tool the doc-bridge
+server lists in its live `tools/list`, probed once per run for both arms. The
+flag-by-flag list and the isolation that was and was not achieved are in
 [minimal-study-v1 Transport](../study/minimal-study-v1.md#transport-claude-code-cli-pilot-transport).
 
-Each attempt records `transport: "cli"`, the answer, `inputTokens`, `outputTokens`,
-`cacheCreationInputTokens`, `cacheReadInputTokens`, `numTurns`, `wallTimeMs`,
-`reportedCostUsd` (the CLI's `total_cost_usd`, or `null` when unavailable),
-`chargedUsd`, `cliVersion`, `isError`, `usageComplete`, `toolCalls` (`null`, because
-the result shape relied on does not report it), `status`, and `correctness: null` with
-`adjudication: "pending"`. `status` is `completed`, `failed`, `timed-out`,
-or `budget-exceeded`. Only `completed` is treated as a successful
-attempt, and any other status stops the run.
+Setup is checked from the stream-json transcript before a result is accepted: the
+init event's model, exact tool set and MCP server status (one `doc-bridge` server,
+`connected`, in the doc-bridge arm; none in the repository-only arm), every tool call
+inside the allowed set, and every permission denial a built-in read tool. Any other
+result is `invalid-setup`.
+
+Each attempt records `transport: "cli"`, `cliVersion`, `expectedCliVersion`,
+`attemptBudgetUsd`, the init `model`, `tools` and `mcp_servers`, `toolCallsByName`,
+`toolCalls` (every `tool_use` counted once by id, including refused calls),
+`permissionDenials`, `inputTokens`, `outputTokens`, `cacheCreationInputTokens`,
+`cacheReadInputTokens`, `numTurns`, `cliSubtype`, `isError`, `usageComplete`,
+`cliReportedCostUsd` (the CLI's `total_cost_usd`, or `null`), `computedCostUsd` and
+`costBasis` (the list-price computation from `modelUsage`), any `setupProblem` or
+`costProblem`, `chargedUsd`, `wallTimeMs`, `status`, the private answer, and
+`correctness: null` with `adjudication: "pending"`. `status` is `completed`, `failed`,
+`timed-out`, `budget-exceeded`, `invalid-setup` or `invalid-cost`. Only `completed` is
+treated as a successful attempt, and any other status stops the run.
+
+Cost: the computed cost uses the `CLI_PRICES` table, with per-request tiering when
+the stream carries per-message usage and an aggregate upper bound otherwise. A
+computed cost that differs from the CLI-reported cost by more than a factor of two,
+or a missing or invalid cost, is `invalid-cost`.
 
 Budget: before each attempt, a non-positive remaining cap refuses the attempt. The
-CLI reservation is `min(remaining, per-attempt limit)`, passed as `--max-budget-usd`.
-A valid successful result settles to `total_cost_usd`. A non-zero exit, timeout,
-truncated output, unparsable JSON, missing usage or cost, or `is_error: true` is
-charged the full reservation. Nothing is retried or resumed.
+CLI reservation is `min(remaining, per-attempt limit)`, rounded down to 6 decimals and
+passed as `--max-budget-usd`. A `completed` attempt settles to the larger of
+`total_cost_usd` and the computed cost. Any other outcome is charged
+`max(reservation, every valid cost)`. Nothing is retried or resumed.
 
 Validation: `pnpm vitest run tests/study-minimal.test.ts --maxWorkers=2` covers
-mocked HTTP, budgeting, usage, tools, frozen Git reads and actual local MCP without
-a model. The CLI tests use a fake executable in a temporary directory. It records its
-arguments and whether it received an API key, then prints a canned JSON result, exits
-non-zero, sleeps or prints malformed output. No real `claude` process runs.
-`node scripts/study-minimal.mjs --dry-run --transport cli` exercises the shipped
-command and reports zero Claude processes.
+mocked HTTP, budgeting, usage, tools, frozen Git reads, the export of the corpus
+without the answer key, and actual local MCP without a model. The CLI tests use a
+fake executable in a temporary directory. It reads a behaviour file, writes a
+`records.json` with its argv and whether it received an API key, then emits canned
+stream-json events, exits non-zero, sleeps or prints malformed output. No real
+`claude` process runs. `node scripts/study-minimal.mjs --dry-run --transport cli`
+exercises the shipped command and reports zero Claude processes and zero network calls.

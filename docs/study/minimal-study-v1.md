@@ -16,7 +16,8 @@ Claude Code CLI in headless mode** (`--transport cli`), authenticated by the CLI
 own login: no API key is read, required or passed to it (see
 [Transport](#transport-claude-code-cli-pilot-transport)). The Messages API
 transport (`--transport http`) stays available and tested as an option. The pilot
-is approved with a cumulative cap of **1 USD**, applied to the CLI-reported cost. The full 36-attempt run is **not approved**; it needs a new budget
+is approved with a cumulative cap of **1 USD**, applied to the charged spend per
+attempt (the larger of the CLI-reported cost and the list-price computation). The full 36-attempt run is **not approved**; it needs a new budget
 approval after the pilot reports measured cost. Publication of results requires
 maintainer approval.
 
@@ -148,41 +149,107 @@ maintainer publication approval is still required before publication.
 ## Transport: Claude Code CLI (pilot transport)
 
 `--transport cli` runs every attempt as one fresh headless Claude Code process
-(`claude -p`), started with an argument array (never a shell string) from the
-frozen checkout of the task's repository at its pin. The same frozen corpus is
-read by the HTTP transport. Both transports send the same prompt.
+(`claude -p`), started with an argument array (never a shell string) and `cwd` set
+to the frozen checkout of the task's repository at its pin. The same frozen corpus
+is read by the HTTP transport. Both transports send the same prompt, which must be
+at most 8 KiB.
 
-Arguments, with what each does in the installed CLI (`claude --help` was read in full;
-flags below appear there):
+**Pinned version.** Before any attempt, the runner runs `claude --version` once and
+refuses to start unless its first token is exactly `2.1.296`. The probed version is
+recorded in the ledger. `--cli-version` exists only to name a different pin for a
+separately reviewed change; it does not accept an unknown build. The flags below were
+read from `claude --help` of the locally installed 2.1.288 build. They were not
+re-read against 2.1.296, so that check is still open.
+
+**Arguments.** `cliArguments` builds the array in this order. The prompt is last,
+after boolean flags only, so no variadic option can consume it.
 
 | Flag | Effect |
 | --- | --- |
-| `-p` | Print mode: one prompt, one answer, then exit. |
-| `--model claude-haiku-5-5` | Study model. |
-| `--output-format json` | Single JSON object on stdout with usage, turns, cost and result. |
+| `-p --model claude-haiku-5-5` | Print mode: one prompt, one answer, then exit. Study model. |
+| `--output-format stream-json --verbose` | One JSON event per stdout line: a `system` init event, `assistant` events, and a final `result` event. |
 | `--no-session-persistence` | No session saved to disk, so attempts cannot resume each other. |
-| `--max-budget-usd <n>` | CLI-side spend limit: `min(remaining cap, per-attempt limit)`. |
+| `--max-budget-usd <limit>` | Per-attempt reservation `min(remaining cap, --attempt-budget-usd)`, rounded down to 6 decimals. The CLI enforces it after spend. |
 | `--restricted` | Ignores user, project and local settings files; removes Bash and WebFetch; confines file tools to the working directory; refuses `bypassPermissions`. |
 | `--disable-slash-commands` | Disables skills. |
-| `--permission-mode dontAsk` | Anything not explicitly allowed is refused, so nothing waits for a prompt. |
-| `--permission-prompts none` | With print mode, nobody answers prompts; anything that would prompt is denied. |
-| `--tools Read,Grep,Glob` | The only built-in tools available: file read and search. |
-| `--allowedTools <list>` | Pre-approves the same read-only tools; the doc-bridge scenario also lists its three MCP tools. |
-| `--disallowedTools <list>` | Denies Bash, Edit, MultiEdit, Write, NotebookEdit, WebFetch, WebSearch and the subagent tools (Task, Agent). |
-| `--mcp-config <json>` | Repository-only: `{"mcpServers":{}}`. Doc-bridge: one stdio server, `node <engine> mcp`, launched from the checkout. |
-| `--strict-mcp-config` | Only the servers in `--mcp-config` are used; project and user MCP servers are ignored. |
+| `--permission-mode dontAsk`, `--permission-prompts none` | Anything not explicitly allowed is refused, and nothing waits for a prompt. |
+| `--tools Read,Grep,Glob` | The only built-in tools available. |
+| `--allowedTools` | `Read,Grep,Glob`. The doc-bridge scenario also lists `mcp__doc-bridge__doc_search`, `mcp__doc-bridge__doc_get` and `mcp__doc-bridge__handoff_resolve`. |
+| `--disallowedTools` | `Bash,Edit,MultiEdit,Write,NotebookEdit,WebFetch,WebSearch,Task,Agent`, plus every other tool the doc-bridge server lists in its live `tools/list`. The list is probed once per run and passed to both arms. |
+| `--mcp-config <json>` | Repository-only: `{"mcpServers":{}}`. Doc-bridge: one stdio server named `doc-bridge`, running `node <engine> --config <checkout>/doc-bridge.config.json mcp`. |
+| `--strict-mcp-config` | Only the servers in `--mcp-config` are used. Project and user MCP servers are ignored. |
 
 The two scenarios differ **only** in the `--mcp-config` value and the three
-`mcp__doc-bridge__*` entries appended to `--allowedTools`. Everything else is identical.
-Tests check this by comparing the two argument arrays.
+`mcp__doc-bridge__*` entries in `--allowedTools`. The tests compare the two argument
+arrays to check this. The MCP tool name maps each dotted name to underscores
+(`doc.search` becomes `mcp__doc-bridge__doc_search`). That naming was not checked
+against a live run.
+
+**Checks before a result is accepted.** The stream-json transcript must contain at
+most one init event and must end with exactly one `result` event. Then:
+
+- **Setup** (`invalid-setup`): the init event's `model` is the study model. Its
+  `tools` set is exactly the expected set: `Read`, `Grep`, `Glob`, plus the three
+  doc-bridge tools in the doc-bridge arm. In the repository-only arm `mcp_servers`
+  is empty. In the doc-bridge arm there is exactly one server, `doc-bridge`, with status
+  `connected`. Every tool call must name a tool in the allowed set. Every permission
+  denial must be a built-in read tool. Any other denial, such as a refused MCP call,
+  fails the attempt.
+- **Cost** (`invalid-cost`): the reported and computed costs must agree, as described
+  in the Cost paragraph below.
+
+Setup is checked before cost. Then `error_max_budget_usd` gives `budget-exceeded`,
+any other error or non-success subtype gives `failed`, and a clean `success` gives
+`completed`.
+
+**Cost.** The runner computes a list-price cost from `modelUsage` and checks it against
+the CLI-reported `total_cost_usd`. The table is `CLI_PRICES` in the runner, in USD per
+million tokens:
+
+| Tier | Input | Output | Cache read | Cache write |
+| --- | --- | --- | --- | --- |
+| Prompt up to 100k tokens | 0.10 | 0.50 | 0.01 | 0.125 |
+| Prompt above 100k tokens | 0.50 | 2.50 | 0.05 | 0.625 |
+
+The input and output rates are the 2026-10-09 decision. The cache rates are **not**
+part of that decision. The runner adds them in its 2026-10-10 table and the maintainer
+must confirm them before the report.
+
+Tiering works in two ways. If stream events carry per-request usage keyed by message
+id, each request is tiered by its own prompt size (input plus cache read and write),
+and the per-request sums must equal the `modelUsage` totals. Otherwise the aggregate
+prompt size selects one tier for the whole attempt, which is an upper bound for any
+single request. A model other than the study model, in `modelUsage` or in any message,
+is `invalid-cost`. So are missing or invalid counts. The CLI-reported and computed
+costs must be equal or within a factor of two. Both zero counts as agreement.
+
+**Metrics recorded per attempt.** `transport: "cli"`, `cliVersion`,
+`expectedCliVersion`, `attemptBudgetUsd`, the init event's `model`, `tools` and
+`mcp_servers`, `toolCallsByName` and `toolCalls` (every `tool_use` block counted once
+by id, including refused calls), `permissionDenials` (count and tool names), `numTurns`,
+the CLI `subtype`, `isError`, `inputTokens` (`usage.input_tokens`),
+`outputTokens`, `cacheCreationInputTokens`, `cacheReadInputTokens`, `usageComplete`,
+`cliReportedCostUsd`, `computedCostUsd`, `costBasis`, any `setupProblem` or
+`costProblem`, `chargedUsd`, `status`, `wallTimeMs`, and the private `answer`.
+`correctness` is `null` and `adjudication` is `pending`. The ledger's `cli` block
+records `cliVersion`, `expectedCliVersion`, `attemptBudgetUsd`, `disallowedMcpTools`,
+`prices` and the cost rule. Absolute input tokens are the sum of `inputTokens`,
+`cacheCreationInputTokens` and `cacheReadInputTokens`. Cache tokens are reported
+separately.
+
+**Status values.** `completed`, `failed`, `timed-out`, `budget-exceeded`,
+`invalid-setup`, `invalid-cost`. Only `completed` is a successful attempt. Any other
+status stops the run, and nothing is retried or resumed.
 
 **Isolation achieved:** user and project settings files are ignored (`--restricted`,
 per its help text; hooks and plugins configured only in those files should therefore
-not load, which was not observed in a run); skills are disabled; no project `.mcp.json` or user MCP server is used (`--strict-mcp-config`);
-the only tools are read and search tools plus, in the MCP scenario, the three
-read-only doc-bridge tools; no session is persisted; the child environment is an
-allowlist (system variables and `HOME` so the CLI can find its login, plus
-`USER`, `LOGNAME`, `LANG` and `LC_ALL`).
+not load, which was not observed in a run). Skills are disabled. No project `.mcp.json`
+or user MCP server is used (`--strict-mcp-config`). The only tools are read and search
+tools plus, in the MCP scenario, the three read-only doc-bridge tools. The tool surface
+is checked against the init event, and any other tool use or denial fails the attempt.
+No session is persisted. The child environment is an allowlist: system variables and
+`HOME` so the CLI can find its login, plus `USER`, `LOGNAME`, `LANG` and `LC_ALL`.
+`ANTHROPIC_API_KEY` is removed explicitly.
 
 **Isolation not achieved:**
 
@@ -203,39 +270,32 @@ allowlist (system variables and `HOME` so the CLI can find its login, plus
 - The workspace trust dialog is skipped in print mode.
 - Sampling temperature is not controlled by any flag. The HTTP transport's
   `temperature: 0` does not apply.
+- Whether the disallowed MCP tool definitions are still sent to the model is not
+  known. They are denied at call time, and the setup check fails any attempt that
+  tries one.
+- The per-message usage fields and `message.id` that the runner relies on for
+  per-request tiering were not confirmed against a live stream. Without them the
+  aggregate bound is used.
 
 **Credential handling.** The CLI transport never reads, requires or passes
 `ANTHROPIC_API_KEY`. The variable is removed from the child's environment, and the
-CLI authenticates with its own login. `STUDY_MODEL`, `STUDY_BUDGET_USD` and
-optionally `--claude-bin` and `--attempt-budget-usd` are the only inputs needed.
+CLI authenticates with its own login. `STUDY_MODEL` and `STUDY_BUDGET_USD` are required,
+and `--claude-bin` and `--attempt-budget-usd` are optional. No price flag is needed.
 
-**Metrics and cost.** The ledger records, per attempt, the answer text, `usage` as
-reported (`input_tokens`, `output_tokens`, `cache_creation_input_tokens`,
-`cache_read_input_tokens`), `num_turns`, wall time, the CLI-reported
-`total_cost_usd`, the CLI version (`claude --version`, probed once per run), and
-`isError`. It also records `transport: "cli"`. Tool-call counts are recorded as
-`null` because the JSON result shape relied on here does not report them.
-Absolute input tokens must be read as the sum of the three input fields. Cache
-tokens are reported separately and are not in `input_tokens`.
-
-Limits of this transport, stated plainly:
+**Limits of this transport, stated plainly:**
 
 - The Claude Code system prompt and harness are part of every attempt in both
   scenarios. Absolute token counts are therefore higher than a bare API call would
   show. They are comparable only between the two scenarios.
-- The reported cost is the CLI's own estimate. On a subscription login it is **not
-  a billed amount**.
+- The charged spend is the larger of the CLI's estimate and the list-price computation.
+  On a subscription login neither is a **billed amount**.
 - Results describe a **coding agent with and without the doc-bridge MCP server**,
   not the bare model.
-
-**Unverified in this preparation:** the JSON result field names
-(`total_cost_usd`, `num_turns`, `subtype`, `is_error`, `usage`), the built-in tool
-names (`Glob`, `Grep`, `MultiEdit`, `Task`, `Agent`), the MCP tool naming
-`mcp__doc-bridge__doc_search` and the child working directory of a stdio MCP server
-were not checked against a live run. No real `claude` process was executed with a
-prompt, and no model request was made. The first real attempt must be read before
-its numbers are trusted: confirm the JSON fields and whether doc-bridge tools were
-used in the doc-bridge scenario.
+- Each attempt is capped at 5 minutes and stdout at 4 MiB. Truncated output is a
+  `failed` attempt.
+- The 0.10 USD default per-attempt limit comes from one maintainer measurement on
+  2026-10-10: a trivial reply cost 0.00088 USD. Multi-turn tool runs were not
+  measured, so a truncation by the cap is recorded as `budget-exceeded`.
 
 ## Budget, execution and privacy
 
@@ -255,8 +315,11 @@ budget reservation, so they must be upper rates.
 
 **CLI transport (pilot, `--transport cli`).** Requires `STUDY_MODEL` and
 `STUDY_BUDGET_USD`. `--claude-bin` (default `claude`, resolved on `PATH`) selects the
-executable. `--attempt-budget-usd` (default `0.25`) is the per-attempt limit. No
-prices are needed, because the CLI reports cost.
+executable. `--attempt-budget-usd` (default `0.10`) is the per-attempt limit. The
+CLI must be the pinned version `2.1.296`, checked before any attempt. No prices are
+needed as flags: the list prices are the runner's `CLI_PRICES` table (see
+[Transport](#transport-claude-code-cli-pilot-transport)), and the reported cost is
+checked against them.
 
 **Decided values (maintainer, 2026-10-09)** for `claude-haiku-5-5`:
 
@@ -276,24 +339,26 @@ passed to child processes. The CLI transport never reads, requires or passes it.
 No command example contains a key value.
 
 **Approved pilot budget:** cumulative cap **1 USD** (`STUDY_BUDGET_USD=1`), applied
-to the CLI-reported cost. The exact pilot command, run only after checkouts are
+to the charged spend. The exact pilot command, run only after checkouts are
 prepared at the pins and the maintainer has approved the run, is:
 
 ```bash
 STUDY_MODEL=claude-haiku-5-5 STUDY_BUDGET_USD=1 \
   node scripts/study-minimal.mjs --transport cli --pilot --approve-budget \
-  --attempt-budget-usd 0.25 \
+  --attempt-budget-usd 0.10 \
   --root doc-bridge=corpus/doc-bridge --output ../pilot-private.json
 ```
 
 Before each attempt the CLI transport refuses to start if the remaining budget is
 not positive. Otherwise it reserves `min(remaining, --attempt-budget-usd)` and passes
-that value as `--max-budget-usd`. A valid successful result is settled to the
-CLI-reported `total_cost_usd`. A non-zero exit, timeout, unparsable output, invalid
-usage or a result with `is_error` is charged the full per-attempt limit, with no
-retry or resume. The CLI-reported figure is the CLI's own estimate and, on a
-subscription login, not a billed amount. The `× 18` extrapolation applies to that
-charged spend.
+that value as `--max-budget-usd`. A completed attempt is settled to the larger of the
+CLI-reported `total_cost_usd` and the list-price computation from `modelUsage`. Any
+other outcome (`failed`, `timed-out`, `budget-exceeded`, `invalid-setup`,
+`invalid-cost`) is charged `max(reservation, every valid cost)`, so a failure is never
+charged less than a valid cost the CLI reported. No attempt is retried or resumed, and
+any non-`completed` status stops the run. The CLI-reported figure is the CLI's own
+estimate and, on a subscription login, not a billed amount. The `× 18` extrapolation
+is printed only when both pilot attempts complete, and it applies to that charged spend.
 
 The HTTP transport (`--transport http`) keeps its upper-price behaviour: the runner
 computes reported spend and the full-run extrapolation at the supplied upper prices (0.50 USD input and 2.50 USD output per million tokens), so for prompts under 100k tokens the reported spend is about five times the list-price cost (0.10 / 0.50). That reported spend is an upper bound, not the billed amount; the `× 18` extrapolation is not an upper bound either (see below), so whoever approves the full run should read both figures that way.
