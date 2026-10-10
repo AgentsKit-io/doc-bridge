@@ -11,9 +11,12 @@ For six repository questions, does access to deterministic Doc Bridge MCP tools
 change correctness, measured input/output tokens, tool calls and wall time compared
 with repository tools alone? **This protocol is preparation, not an executed study.**
 No model was run. Maintainer decisions of 2026-10-09 fix the study model, its
-price table and the adjudication method (see below). A maintainer must supply the
-key before any execution. The pilot is approved with a cumulative cap of
-**1 USD**. The full 36-attempt run is **not approved**; it needs a new budget
+price table and the adjudication method (see below). **The pilot transport is the
+Claude Code CLI in headless mode** (`--transport cli`), authenticated by the CLI's
+own login: no API key is read, required or passed to it (see
+[Transport](#transport-claude-code-cli-pilot-transport)). The Messages API
+transport (`--transport http`) stays available and tested as an option. The pilot
+is approved with a cumulative cap of **1 USD**, applied to the CLI-reported cost. The full 36-attempt run is **not approved**; it needs a new budget
 approval after the pilot reports measured cost. Publication of results requires
 maintainer approval.
 
@@ -61,8 +64,11 @@ One pinned model ID, two scenarios, three repetitions per task:
 attempt starts a fresh conversation and a fresh local MCP process, with no shared
 model memory or retries. Model ID must be an immutable version where the provider
 supports one; if the provider exposes only this alias, record that limitation in
-the report. The identifier was not independently re-verified by a model run. Temperature is zero, with 1,024 output tokens per
-turn and at most eight turns. An attempt may request at most 20 tools per turn.
+the report. The identifier was not independently re-verified by a model run. HTTP transport:
+temperature is zero, with 1,024 output tokens per turn and at most eight turns. CLI
+transport: the runner does not pass the eight-turn or 1,024-token limits and cannot
+set temperature; the CLI's own defaults apply (see
+[Transport](#transport-claude-code-cli-pilot-transport)). An attempt may request at most 20 tools per turn.
 A five-minute elapsed deadline is checked between tools/turns and bounds paid
 request timeouts; an in-flight local tool may add up to its 30-second timeout.
 
@@ -139,20 +145,118 @@ are exploratory; make no general population or enterprise-readiness claim.
 human review was performed*. Results are evidence labelled that way, and
 maintainer publication approval is still required before publication.
 
+## Transport: Claude Code CLI (pilot transport)
+
+`--transport cli` runs every attempt as one fresh headless Claude Code process
+(`claude -p`), started with an argument array (never a shell string) from the
+frozen checkout of the task's repository at its pin. The same frozen corpus is
+read by the HTTP transport. Both transports send the same prompt.
+
+Arguments, with what each does in the installed CLI (`claude --help` was read in full;
+flags below appear there):
+
+| Flag | Effect |
+| --- | --- |
+| `-p` | Print mode: one prompt, one answer, then exit. |
+| `--model claude-haiku-5-5` | Study model. |
+| `--output-format json` | Single JSON object on stdout with usage, turns, cost and result. |
+| `--no-session-persistence` | No session saved to disk, so attempts cannot resume each other. |
+| `--max-budget-usd <n>` | CLI-side spend limit: `min(remaining cap, per-attempt limit)`. |
+| `--restricted` | Ignores user, project and local settings files; removes Bash and WebFetch; confines file tools to the working directory; refuses `bypassPermissions`. |
+| `--disable-slash-commands` | Disables skills. |
+| `--permission-mode dontAsk` | Anything not explicitly allowed is refused, so nothing waits for a prompt. |
+| `--permission-prompts none` | With print mode, nobody answers prompts; anything that would prompt is denied. |
+| `--tools Read,Grep,Glob` | The only built-in tools available: file read and search. |
+| `--allowedTools <list>` | Pre-approves the same read-only tools; the doc-bridge scenario also lists its three MCP tools. |
+| `--disallowedTools <list>` | Denies Bash, Edit, MultiEdit, Write, NotebookEdit, WebFetch, WebSearch and the subagent tools (Task, Agent). |
+| `--mcp-config <json>` | Repository-only: `{"mcpServers":{}}`. Doc-bridge: one stdio server, `node <engine> mcp`, launched from the checkout. |
+| `--strict-mcp-config` | Only the servers in `--mcp-config` are used; project and user MCP servers are ignored. |
+
+The two scenarios differ **only** in the `--mcp-config` value and the three
+`mcp__doc-bridge__*` entries appended to `--allowedTools`. Everything else is identical.
+Tests check this by comparing the two argument arrays.
+
+**Isolation achieved:** user and project settings files are ignored (`--restricted`,
+per its help text; hooks and plugins configured only in those files should therefore
+not load, which was not observed in a run); skills are disabled; no project `.mcp.json` or user MCP server is used (`--strict-mcp-config`);
+the only tools are read and search tools plus, in the MCP scenario, the three
+read-only doc-bridge tools; no session is persisted; the child environment is an
+allowlist (system variables and `HOME` so the CLI can find its login, plus
+`USER`, `LOGNAME`, `LANG` and `LC_ALL`).
+
+**Isolation not achieved:**
+
+- `CLAUDE.md` memory is **not** excluded. The user's global `CLAUDE.md` and the
+  pinned checkout's own `CLAUDE.md`/`AGENTS.md` may load into context, in both
+  scenarios. `--bare` would exclude them, but its help text says Anthropic auth is
+  then strictly `ANTHROPIC_API_KEY` or `apiKeyHelper`, so OAuth and keychain login
+  stop working; it was therefore not used. `--safe-mode` also excludes `CLAUDE.md`,
+  but its help lists MCP servers among the disabled customizations, and no run can
+  verify that the explicit `--mcp-config` server survives it. It was not used.
+- Automatic memory is not disabled by any flag used here.
+- The Claude Code system prompt and tool harness are part of every attempt in both
+  scenarios.
+- The checkout's `.git` directory is inside the working directory. Read/Grep can
+  reach git object files there, which can include other history of the same public
+  repository. The corpus does not contain the answer key, which lives only on the
+  study branch.
+- The workspace trust dialog is skipped in print mode.
+- Sampling temperature is not controlled by any flag. The HTTP transport's
+  `temperature: 0` does not apply.
+
+**Credential handling.** The CLI transport never reads, requires or passes
+`ANTHROPIC_API_KEY`. The variable is removed from the child's environment, and the
+CLI authenticates with its own login. `STUDY_MODEL`, `STUDY_BUDGET_USD` and
+optionally `--claude-bin` and `--attempt-budget-usd` are the only inputs needed.
+
+**Metrics and cost.** The ledger records, per attempt, the answer text, `usage` as
+reported (`input_tokens`, `output_tokens`, `cache_creation_input_tokens`,
+`cache_read_input_tokens`), `num_turns`, wall time, the CLI-reported
+`total_cost_usd`, the CLI version (`claude --version`, probed once per run), and
+`isError`. It also records `transport: "cli"`. Tool-call counts are recorded as
+`null` because the JSON result shape relied on here does not report them.
+Absolute input tokens must be read as the sum of the three input fields. Cache
+tokens are reported separately and are not in `input_tokens`.
+
+Limits of this transport, stated plainly:
+
+- The Claude Code system prompt and harness are part of every attempt in both
+  scenarios. Absolute token counts are therefore higher than a bare API call would
+  show. They are comparable only between the two scenarios.
+- The reported cost is the CLI's own estimate. On a subscription login it is **not
+  a billed amount**.
+- Results describe a **coding agent with and without the doc-bridge MCP server**,
+  not the bare model.
+
+**Unverified in this preparation:** the JSON result field names
+(`total_cost_usd`, `num_turns`, `subtype`, `is_error`, `usage`), the built-in tool
+names (`Glob`, `Grep`, `MultiEdit`, `Task`, `Agent`), the MCP tool naming
+`mcp__doc-bridge__doc_search` and the child working directory of a stdio MCP server
+were not checked against a live run. No real `claude` process was executed with a
+prompt, and no model request was made. The first real attempt must be read before
+its numbers are trusted: confirm the JSON fields and whether doc-bridge tools were
+used in the doc-bridge scenario.
+
 ## Budget, execution and privacy
 
-Use Node's built-in `fetch`; the checked dependency surface has no official
-Messages SDK. No dependency or Layer 0 command changes are needed. The runner
-uses the [Messages API](https://platform.claude.com/docs/en/api/messages/create)
-with client-side read-only tools. It does not enable caching, extended thinking,
-server tools, retries, redirects or additional paid services.
+**HTTP transport (option, `--transport http`).** Uses Node's built-in `fetch`; the
+checked dependency surface has no official Messages SDK. No dependency or Layer 0
+command changes are needed. The runner uses the
+[Messages API](https://platform.claude.com/docs/en/api/messages/create) with
+client-side read-only tools. It does not enable caching, extended thinking, server
+tools, retries, redirects or additional paid services.
 
-`STUDY_MODEL`, `ANTHROPIC_API_KEY`, `STUDY_BUDGET_USD`,
-`STUDY_INPUT_USD_PER_MILLION`, and `STUDY_OUTPUT_USD_PER_MILLION` are required for
-execution. Prices may instead be passed using `--input-usd-per-million` and
+For HTTP execution, `STUDY_MODEL`, `ANTHROPIC_API_KEY`, `STUDY_BUDGET_USD`,
+`STUDY_INPUT_USD_PER_MILLION`, and `STUDY_OUTPUT_USD_PER_MILLION` are required.
+Prices may instead be passed using `--input-usd-per-million` and
 `--output-usd-per-million`; the flags take precedence over the price variables.
 The two prices form the selected model's token-price table and are used for
 budget reservation, so they must be upper rates.
+
+**CLI transport (pilot, `--transport cli`).** Requires `STUDY_MODEL` and
+`STUDY_BUDGET_USD`. `--claude-bin` (default `claude`, resolved on `PATH`) selects the
+executable. `--attempt-budget-usd` (default `0.25`) is the per-attempt limit. No
+prices are needed, because the CLI reports cost.
 
 **Decided values (maintainer, 2026-10-09)** for `claude-haiku-5-5`:
 
@@ -162,31 +266,43 @@ budget reservation, so they must be upper rates.
 | Prompts above 100k tokens | 0.50 | 2.50 |
 | **Upper prices used for reservation** | **0.50** | **2.50** |
 
-The conservative upper prices are the above-100k tier. Runs pass them as
-`--input-usd-per-million 0.50 --output-usd-per-million 2.50`. The runner itself
-hardcodes no model or price; these flags and `STUDY_MODEL` are the only sources.
+HTTP transport only: the conservative upper prices are the above-100k tier. HTTP
+runs pass them as `--input-usd-per-million 0.50 --output-usd-per-million 2.50`. The
+runner itself hardcodes no model or price; these flags and `STUDY_MODEL` are the
+only sources. The CLI transport needs no prices.
 
-The key comes only from the environment, rejects CR/LF, and is never printed or
-passed to child processes. No command example contains a key value.
+The HTTP key comes only from the environment, rejects CR/LF, and is never printed or
+passed to child processes. The CLI transport never reads, requires or passes it.
+No command example contains a key value.
 
-**Approved pilot budget:** cumulative cap **1 USD** (`STUDY_BUDGET_USD=1`). The
-exact pilot command, run only after the maintainer supplies `ANTHROPIC_API_KEY`
-in the environment and checkouts are prepared at the pins, is:
+**Approved pilot budget:** cumulative cap **1 USD** (`STUDY_BUDGET_USD=1`), applied
+to the CLI-reported cost. The exact pilot command, run only after checkouts are
+prepared at the pins and the maintainer has approved the run, is:
 
 ```bash
 STUDY_MODEL=claude-haiku-5-5 STUDY_BUDGET_USD=1 \
-  node scripts/study-minimal.mjs --pilot --approve-budget \
-  --input-usd-per-million 0.50 --output-usd-per-million 2.50 \
+  node scripts/study-minimal.mjs --transport cli --pilot --approve-budget \
+  --attempt-budget-usd 0.25 \
   --root doc-bridge=corpus/doc-bridge --output ../pilot-private.json
 ```
 
-The runner computes reported spend and the full-run extrapolation at the supplied upper prices (0.50 USD input and 2.50 USD output per million tokens), so for prompts under 100k tokens the reported spend is about five times the list-price cost (0.10 / 0.50). That reported spend is an upper bound, not the billed amount; the `× 18` extrapolation is not an upper bound either (see below), so whoever approves the full run should read both figures that way.
+Before each attempt the CLI transport refuses to start if the remaining budget is
+not positive. Otherwise it reserves `min(remaining, --attempt-budget-usd)` and passes
+that value as `--max-budget-usd`. A valid successful result is settled to the
+CLI-reported `total_cost_usd`. A non-zero exit, timeout, unparsable output, invalid
+usage or a result with `is_error` is charged the full per-attempt limit, with no
+retry or resume. The CLI-reported figure is the CLI's own estimate and, on a
+subscription login, not a billed amount. The `× 18` extrapolation applies to that
+charged spend.
+
+The HTTP transport (`--transport http`) keeps its upper-price behaviour: the runner
+computes reported spend and the full-run extrapolation at the supplied upper prices (0.50 USD input and 2.50 USD output per million tokens), so for prompts under 100k tokens the reported spend is about five times the list-price cost (0.10 / 0.50). That reported spend is an upper bound, not the billed amount; the `× 18` extrapolation is not an upper bound either (see below), so whoever approves the full run should read both figures that way.
 
 **The full 36-attempt run is not approved.** It needs a new, distinct budget
 approval after the pilot reports measured input/output tokens and priced spend.
 Approval of the pilot does not extend to the full run.
 
-Before every paid call, the runner reserves a conservative input-token ceiling
+HTTP transport: before every paid call, the runner reserves a conservative input-token ceiling
 (twice the serialized request's UTF-8 bytes plus 8,192 protocol tokens) and the
 maximum 1,024 output tokens, at supplied rates. A call whose reservation would
 exceed the cumulative cap is refused. Actual measured usage releases unused
@@ -202,12 +318,18 @@ overwritten or resumed. Raw answers remain private for agent adjudication;
 stdout prints only status and aggregate metrics. Review and redact all publication
 material. Neither model responses nor a ledger are automatically published.
 
-Validate the matrix without a model, key or network:
+Validate the matrix without a model, key, network or Claude process:
 
 ```bash
+node scripts/study-minimal.mjs --dry-run --transport cli
+node scripts/study-minimal.mjs --dry-run --transport cli --pilot
 node scripts/study-minimal.mjs --dry-run
 node scripts/study-minimal.mjs --dry-run --pilot
 ```
+
+The dry run reports `networkCalls: 0` and `claudeProcesses: 0`, and 36 full or 2
+pilot attempts. A rootless dry run starts no process at all. With `--root`, it runs
+only local `git` reads.
 
 Add `--root repository=checkout` for each prepared corpus to verify clean HEAD
 pins and readable authoritative sources locally. A rootless dry-run checks only
@@ -216,10 +338,15 @@ cannot be read from this study protocol.
 
 The pilot's approval is the 1 USD cap and the exact command shown above. It
 uses the prepared checkout argument and an outside private output. The pilot
-prints measured input/output tokens and priced spend, plus
+prints measured input/output tokens and charged spend, plus
 `pilot cost × 18` as an extrapolation for 36 attempts. This is **not** an upper
 bound: one discovery task cannot predict architecture or documentation costs.
 If either pilot attempt is incomplete/blocked, extrapolation is missing.
+
+**The pilot cost must be reported before the full run is considered.** The report
+gives the pilot's charged spend, per-attempt `total_cost_usd`, token counts including
+cache fields, and the CLI version. It also states the MCP check described in
+[Transport](#transport-claude-code-cli-pilot-transport).
 
 The full run requires a new, distinct budget approval after the pilot. Its
 command uses `--run --approve-budget`, all three `--root` arguments, the newly
