@@ -321,7 +321,7 @@ const floorUsd = value => Math.floor(value * 1000000) / 1000000
 
 export async function probeCliVersion(claudeBin, expected = CLI_PINNED_VERSION) {
   const result = await runCommand(claudeBin, ['--version'], { env: cliChildEnv(), stdin: 'ignore', timeoutMs: 10000, maxOutputBytes: 4096 })
-  const version = result.stdout.trim().split('\n')[0] ?? ''
+  const version = splitLines(result.stdout.trim())[0] ?? ''
   if (result.code !== 0 || result.truncated || !/^[ -~]{1,120}$/.test(version)) fail('Claude Code CLI version probe failed')
   if (version.split(/\s/)[0] !== expected) fail('Claude Code CLI version is not the pinned version')
   return version
