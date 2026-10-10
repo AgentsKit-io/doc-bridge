@@ -180,6 +180,8 @@ STUDY_MODEL=claude-haiku-5-5 STUDY_BUDGET_USD=1 \
   --root doc-bridge=corpus/doc-bridge --output ../pilot-private.json
 ```
 
+The runner computes reported spend and the full-run extrapolation at the supplied upper prices (0.50 USD input and 2.50 USD output per million tokens), so for prompts under 100k tokens the reported spend is about five times the list-price cost (0.10 / 0.50). That reported spend is an upper bound, not the billed amount; the `× 18` extrapolation is not an upper bound either (see below), so whoever approves the full run should read both figures that way.
+
 **The full 36-attempt run is not approved.** It needs a new, distinct budget
 approval after the pilot reports measured input/output tokens and priced spend.
 Approval of the pilot does not extend to the full run.
