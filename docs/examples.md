@@ -20,6 +20,23 @@ Config sketches under [`examples/`](../examples/):
 | `fumadocs-with-chat.config.ts` | Standard + intelligence (AgentsKit peers) |
 | `docusaurus-with-memory.config.ts` | Assisted memory promotion path |
 
+## Choose your configuration
+
+| Repository shape / goal | Start here | Add only when needed |
+| --- | --- | --- |
+| One package with Markdown | `minimal-plain-markdown.config.ts` | Explicit ownership below |
+| pnpm workspaces | `pnpm-monorepo.config.ts` | Human adapter matching your site |
+| Existing Fumadocs site | `fumadocs-only.config.ts` | Ownership or workspace routing |
+| Existing Docusaurus site | `docusaurus-only.config.ts` | Ownership or workspace routing |
+| Committed Obsidian notes | [Vault config](./guides/vault.md) | Ignored generated export; `vault diff` review |
+| Decisions / concepts / changes | Existing config + `index.knowledgeEntities.enabled: true` | [CLI why and MCP rationale](./spec/knowledge-query-v1.md) |
+| Local agent memory | Existing config + memory paths | [Memory pipeline](./guides/memory-pipeline.md); no provider needed for ingest/classify |
+| Optional region rewrite | Existing config + scripted responses first | [Fake-provider guide](./guides/llm-remediation.md); real providers via intelligence config |
+
+Examples are config sketches, not assertions that the example paths exist in
+your repo. Replace roots, package IDs and checks, then index and query your real
+package. Core ownership, query and handoff require no optional peers.
+
 ## Ownership without monorepo
 
 ```json

@@ -41,6 +41,16 @@ existing current exports. Tracked exports and a stale committed index are never
 repaired by CI-built: run `ak-docs index`, review and commit regeneration when
 committed freshness blocks.
 
+## Claims and mentions
+
+`CHANGED_REFERENCE` is emitted when a cited region claims something about the
+changed aspect: a signature, parameter, return, enum/union member, configuration
+value or usage exercising that aspect. A bare import or symbol mention does not
+assert an incompatible change. Positively proved compatible optional additions
+can be omitted; unknown syntax, opaque returns and unsupported shapes remain
+review candidates. This is bounded deterministic classification, not semantic
+validation of prose. See [the claim/mention decision](../adr/0023-changed-reference-claims.md).
+
 ## Limits and permissions
 
 Default to `pull_request`. Keep analysis unprivileged with `contents: read`;
