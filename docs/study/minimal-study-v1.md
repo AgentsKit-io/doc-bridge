@@ -156,8 +156,8 @@ scenario. The export holds only the pinned Git blobs that pass the public-path f
 `dist`, `build` or `coverage`, no lockfiles, no names containing `secret`,
 `credential` or `lock`). It has no `.git` directory and no doc-bridge index. Files are
 mode 0444 and every directory is mode 0555 once the export is written, so the agent
-cannot write into its working directory, and nothing it creates can reach another
-attempt. The directories are removed after the run with their permissions restored.
+cannot write into its working directory. Every attempt gets its own fresh export, so
+per-directory CLI state cannot carry over between attempts or arms. The directories are removed after the run with their permissions restored.
 Writes that the CLI makes outside its working directory (for example its own state
 under `HOME`) are not controlled by the runner. The HTTP transport reads the same
 filtered corpus. Both transports send the same prompt, which must be at most 8 KiB.
@@ -193,7 +193,7 @@ after boolean flags only, so no variadic option can consume it.
 | `-p --model claude-haiku-5-5` | Print mode: one prompt, one answer, then exit. Study model. |
 | `--output-format stream-json --verbose` | One JSON event per stdout line: a `system` init event, `assistant` events, and a final `result` event. |
 | `--no-session-persistence` | No session saved to disk, so attempts cannot resume each other. |
-| `--max-budget-usd <limit>` | Per-attempt reservation `min(remaining cap, --attempt-budget-usd)`, rounded down to 6 decimals. **A safety net, enforced by the CLI after spend**: one turn can finish above the limit before the CLI stops. |
+| `--max-budget-usd <limit>` | Per-attempt reservation `--attempt-budget-usd`, rounded down to 6 decimals; an attempt starts only if it fits under the remaining cap. **A safety net, enforced by the CLI after spend**: one turn can finish above the limit before the CLI stops. |
 | `--restricted` | Per its help text (Claude Code 2.1.296): removes Bash, PowerShell, REPL and the other code-running tools, and WebFetch, unless `--tools` names them; ignores user, project and local settings files; confines the file tools to the working directories (`--add-dir` included); refuses `bypassPermissions`. |
 | `--disable-slash-commands` | Disables skills. |
 | `--permission-mode dontAsk`, `--permission-prompts none` | Anything not explicitly allowed is refused, and nothing waits for a prompt. |
@@ -433,9 +433,9 @@ STUDY_MODEL=claude-haiku-5-5 STUDY_BUDGET_USD=1 \
 `--claude-bin` the runner uses `claude` from `PATH`, and it refuses to start unless
 that binary reports exactly 2.1.296.
 
-Before each attempt the CLI transport refuses to start if the remaining budget is
-not positive. Otherwise it reserves `min(remaining, --attempt-budget-usd)` and passes
-that value as `--max-budget-usd`. The CLI checks that cap only after spend, so one
+Before each attempt the CLI transport refuses to start unless the full
+`--attempt-budget-usd` still fits under the remaining cap. It then reserves that limit and passes
+it as `--max-budget-usd`. The CLI checks that cap only after spend, so one
 turn can overshoot the reservation. A completed attempt is settled to the larger of the
 CLI-reported `total_cost_usd` and the list-price computation from `modelUsage`. A
 success that costs more than its reservation, or an `error_max_budget_usd` result, is

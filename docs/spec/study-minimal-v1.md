@@ -130,8 +130,8 @@ missing or invalid count, or a computed cost that differs from the CLI-reported 
 more than a factor of two is `invalid-cost`. Both zero counts as agreement. The cap is
 charged with the larger of the two costs.
 
-Budget: before each attempt, a non-positive remaining cap refuses the attempt. The
-CLI reservation is `min(remaining, per-attempt limit)`, rounded down to 6 decimals and
+Budget: before each attempt, the attempt is refused unless the full per-attempt limit
+fits under the remaining cap. The CLI reservation is that limit, rounded down to 6 decimals and
 passed as `--max-budget-usd`. The CLI checks that cap only after spend, so one turn
 can overshoot the reservation. A `completed` attempt settles to the larger of
 `total_cost_usd` and the computed cost. Any other outcome is charged

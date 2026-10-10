@@ -583,14 +583,17 @@ describe('CLI transport: headless Claude Code without an API key', () => {
     } finally { rmSync(fake.dir, { recursive: true, force: true }) }
   })
 
-  it('refuses to start when the cap is reached and passes min(remaining, per-attempt limit)', async () => {
+  it('starts only when a full per-attempt limit fits under the cap and passes that limit', async () => {
     const fake = cliFake()
     try {
       const refused = await runCli(fake, 'repository-only', { budget: { cap: 1, spent: 1 } })
       expect(refused.status).toBe('budget-exceeded')
       expect(fake.ran()).toBe(false)
-      await runCli(fake, 'repository-only', { budget: { cap: 1, spent: 0.7 } })
-      expect(fake.record().argv[fake.record().argv.indexOf('--max-budget-usd') + 1]).toBe('0.300000')
+      const short = await runCli(fake, 'repository-only', { budget: { cap: 1, spent: 0.7 } })
+      expect(short.status).toBe('budget-exceeded')
+      expect(fake.ran()).toBe(false)
+      await runCli(fake, 'repository-only', { budget: { cap: 1, spent: 0.5 } })
+      expect(fake.record().argv[fake.record().argv.indexOf('--max-budget-usd') + 1]).toBe('0.500000')
     } finally { rmSync(fake.dir, { recursive: true, force: true }) }
   })
 
@@ -616,6 +619,13 @@ describe('CLI transport: headless Claude Code without an API key', () => {
       const incomplete = { cap: 1, spent: 0 }
       expect(await runCli(fake, 'repository-only', { budget: incomplete })).toMatchObject({ status: 'failed', chargedUsd: 0.5 })
       expect(incomplete.spent).toBeCloseTo(0.5)
+
+      // Incomplete result (num_turns missing, no reported cost) whose modelUsage is worth 0.70 USD at list price.
+      const { num_turns: _turns, total_cost_usd: _cost, ...looseResult } = overCost
+      fake.setBehavior({ mode: 'ok', events: [], result: looseResult })
+      const priced = { cap: 2, spent: 0 }
+      expect(await runCli(fake, 'repository-only', { budget: priced })).toMatchObject({ status: 'failed', computedCostUsd: 0.7, chargedUsd: 0.7 })
+      expect(priced.spent).toBeCloseTo(0.7)
 
       fake.setBehavior({ mode: 'ok', events: okEvents, result: { ...okResult, is_error: true, subtype: 'error_during_execution', total_cost_usd: 0.0002825 } })
       expect(await runCli(fake, 'repository-only')).toMatchObject({ status: 'failed', isError: true, cliReportedCostUsd: 0.0002825, chargedUsd: 0.5 })

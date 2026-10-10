@@ -439,7 +439,7 @@ export function computeCliCost({ modelUsage, model, requests = [], foreignModel 
 // Two costs agree when they are equal or within a factor of 2 (both zero counts as agreement).
 const costsAgree = (reported, computed) => reported === computed || (reported > 0 && computed > 0 && Math.max(reported, computed) / Math.min(reported, computed) <= 2)
 
-// Budget: reserve min(remaining, per-attempt limit) before spawning. A completed attempt settles to
+// Budget: reserve the full per-attempt limit before spawning, and only if it fits under the cap. A completed attempt settles to
 // max(CLI-reported, computed). Every other outcome is charged max(reservation, every valid cost), so a failure is
 // never charged less than a valid reported cost. The CLI checks --max-budget-usd only after spend, so one turn can
 // overshoot the reservation; such an attempt is budget-exceeded, and an overshoot of the cumulative cap is flagged.
@@ -456,10 +456,11 @@ export async function runCliAttempt({ task, scenario, config, budget, engine, wo
     cliReportedCostUsd: null, computedCostUsd: null, costBasis: null, costProblem: null, chargedUsd: 0, cumulativeCapExceeded: false,
     correctness: null, adjudication: 'pending', status: 'incomplete', answer: '', wallTimeMs: 0 }
   const finish = (status, patch = {}) => ({ ...observation, ...patch, status, wallTimeMs: Math.round(performance.now() - started) })
+  // The CLI checks --max-budget-usd only after spend, so an attempt starts only when a full per-attempt limit fits
+  // under the cap; a smaller remainder would let one turn overshoot the cap.
   const remaining = budget.cap - budget.spent
-  if (!(remaining > 0)) return finish('budget-exceeded')
-  const limit = floorUsd(Math.min(remaining, config.attemptBudgetUsd))
-  if (!(limit > 0)) return finish('budget-exceeded')
+  const limit = floorUsd(config.attemptBudgetUsd)
+  if (!(limit > 0) || remaining + 1e-12 < limit) return finish('budget-exceeded')
   budget.spent += limit
   checkpoint() // Persist the reservation BEFORE the child starts; ambiguous outcomes stay charged, never retried.
   const settle = chargedUsd => { budget.spent += chargedUsd - limit; checkpoint(); return chargedUsd }
@@ -489,7 +490,9 @@ export async function runCliAttempt({ task, scenario, config, budget, engine, wo
     isCount(usage?.cache_creation_input_tokens) && isCount(usage?.cache_read_input_tokens)
   if (!valid) {
     const looseCost = Number.isFinite(final.total_cost_usd) && final.total_cost_usd >= 0 ? final.total_cost_usd : null
-    return charge(ended, { ...base, cliReportedCostUsd: looseCost })
+    // A well-formed modelUsage is still priced, so an incomplete result is never charged below its computed cost.
+    const looseComputed = computeCliCost({ modelUsage: final.modelUsage, model: config.model, requests: observed.requests, foreignModel: observed.foreignModel }).computedCostUsd
+    return charge(ended, { ...base, cliReportedCostUsd: looseCost, computedCostUsd: looseComputed })
   }
   const denialNames = final.permission_denials.map(entry => typeof entry?.tool_name === 'string' ? entry.tool_name : typeof entry?.name === 'string' ? entry.name : '<unknown>')
   const cost = computeCliCost({ modelUsage: final.modelUsage, model: config.model, requests: observed.requests, foreignModel: observed.foreignModel })
@@ -627,25 +630,24 @@ export async function main(args = process.argv.slice(2), env = process.env, prot
   const scratch = []
   try {
     save()
-    // CLI agents run in a clean, read-only export of exactly the HTTP-readable files at the pin: one directory per
-    // repository and scenario, so no attempt can see or leave anything in another arm's working directory.
-    const corpora = {}
-    if (cli) {
-      for (const execution of plan) {
-        const key = `${execution.task.repository}:${execution.scenario}`
-        if (corpora[key]) continue
-        const directoryPath = mkdtempSync(join(tmpdir(), 'study-corpus-'))
-        scratch.push(directoryPath)
-        corpora[key] = directoryPath
-        const exported = await exportCorpus(options.roots[execution.task.repository], protocol.repositories[execution.task.repository], directoryPath)
-        ledger.cli.corpus.files[key] = exported.length
-      }
+    // CLI agents run in a clean, read-only export of exactly the HTTP-readable files at the pin. Each attempt gets its
+    // own fresh export, so the CLI's per-directory state cannot carry over between attempts or arms.
+    const exportFor = async execution => {
+      const directoryPath = mkdtempSync(join(tmpdir(), 'study-corpus-'))
+      scratch.push(directoryPath)
+      const exported = await exportCorpus(options.roots[execution.task.repository], protocol.repositories[execution.task.repository], directoryPath)
+      ledger.cli.corpus.files[`${execution.task.repository}:${execution.scenario}`] = exported.length
+      return directoryPath
     }
     for (const execution of plan) {
       const root = options.roots[execution.task.repository]
       if (cli) {
         // One fresh child per attempt; the CLI starts its own MCP server for doc-bridge-mcp against the checkout.
-        const result = await runCliAttempt({ task: execution.task, scenario: execution.scenario, config: attemptConfig, budget, engine, workdir: corpora[`${execution.task.repository}:${execution.scenario}`], mcpRoot: root, checkpoint: save })
+        const workdir = await exportFor(execution)
+        let result
+        try {
+          result = await runCliAttempt({ task: execution.task, scenario: execution.scenario, config: attemptConfig, budget, engine, workdir, mcpRoot: root, checkpoint: save })
+        } finally { removeCorpus(workdir); scratch.splice(scratch.indexOf(workdir), 1) }
         ledger.observations.push({ taskId: execution.task.id, scenario: execution.scenario, repetition: execution.repetition, ...result })
         save()
         if (result.status !== 'completed') break

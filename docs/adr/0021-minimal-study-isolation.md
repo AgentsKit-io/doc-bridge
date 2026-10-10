@@ -37,14 +37,14 @@ The pilot runs through the Claude Code CLI in headless mode (`--transport cli`),
 authenticated by the CLI's own login. The runner never reads, requires or passes
 `ANTHROPIC_API_KEY`, and removes it from the child environment. Each attempt is a
 fresh `claude -p` child with an argument array, a `cwd` at a fresh export of the
-pinned corpus made per repository and scenario, with files mode 0444 and directories
+pinned corpus made for that attempt alone, with files mode 0444 and directories
 mode 0555 (the 2026-10-10 amendment replaces the earlier frozen-checkout `cwd`), an
 allowlisted environment, a timeout and an output bound. It uses read and search
 tools only, through `--tools`, `--allowedTools` and `--disallowedTools`, and
 non-interactive permissions (`--permission-mode dontAsk`, `--permission-prompts
 none`). Scenarios differ only in `--mcp-config` and the doc-bridge tool allowance.
-The cap applies to the charged spend (the larger of the CLI-reported and computed cost); each attempt is reserved
-`min(remaining, per-attempt limit)` and passed as `--max-budget-usd`, a safety net that the CLI enforces after
+The cap applies to the charged spend (the larger of the CLI-reported and computed cost); an attempt starts only if the full
+per-attempt limit fits under the remaining cap; that limit is reserved and passed as `--max-budget-usd`, a safety net that the CLI enforces after
 spend. A completed attempt is charged the larger of its reported and computed cost. Any other attempt is charged
 the larger of its reservation and every valid cost it reported or that was computed, so a failure is never
 charged less than a valid reported cost.
@@ -127,8 +127,7 @@ not verify. The runner now fails closed as follows:
   server must answer `doc.search` at the pin from a fresh index, and the tool lists must
   agree. An attempt in which every doc-bridge tool call returned an error is
   `invalid-setup`. Partial errors are kept per tool name.
-- **Export.** The child's working directory is a fresh export, one per repository and
-  scenario, of the pinned blobs that pass the public-path filter, including the corpus's
+- **Export.** The child's working directory is a fresh export, made for that attempt alone, of the pinned blobs that pass the public-path filter, including the corpus's
   own `CLAUDE.md` and `AGENTS.md`, and excluding files over 200000 bytes, dotfiles,
   lockfiles and build output. Files are mode 0444 and directories 0555 once written, so
   the agent cannot write into the export; the directories are removed after the run.
