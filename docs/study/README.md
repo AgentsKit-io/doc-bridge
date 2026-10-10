@@ -41,6 +41,24 @@ artifacts. They remain open validation work for a future adjudicated corpus.
 
 ## Published artifacts
 
+The [minimal six-task study](./minimal-study-v1.md) is a separate preparation
+protocol with pinned public questions and a budget-first pilot for
+`claude-haiku-5-5`. No model was run for that protocol. The pilot runs through the
+Claude Code CLI in headless mode with the CLI's own login (no API key; the Messages
+API transport remains an option). It is approved with a 1 USD cumulative cap on the
+charged spend, which is the larger of the CLI-reported cost and the list-price
+computation per attempt. The CLI must be the pinned version 2.1.296, passed with
+`--claude-bin` to a local install of that exact version. Each attempt's init event is
+checked (model, tool set, MCP status) before its result is accepted, and costs are computed at list
+price with the CLI's own estimate recorded alongside. Each attempt's CLI cap is
+applied after spend, so an attempt can overshoot its reservation; any such overrun
+is recorded as `budget-exceeded`. The full 36-attempt run is not approved. The CLI
+cost is an estimate, not a billed amount on a subscription login. Results describe a coding
+agent with and without the doc-bridge MCP server, not the bare model. Correctness
+will be adjudicated by an agent, not by humans, so any published result is
+agent-adjudicated evidence with no human review and needs maintainer publication
+approval.
+
 | Artifact | Purpose |
 | --- | --- |
 | [Protocol](./protocol-v1.json) | Metric definitions, scenarios, privacy boundary, and stopping rules. |

@@ -1,0 +1,154 @@
+---
+title: Separate minimal study execution
+status: proposed
+date: 2026-10-09
+---
+
+# Separate minimal study execution
+
+The existing controlled-study schemas bind four categories per repository, two
+models and three scenarios. The minimal study needs six questions, one pinned
+model and two scenarios. Changing existing validators would invalidate historical
+plans or relax their evidence contracts.
+
+Use a separate versioned public task manifest and optional research script. Reuse
+the real local MCP server, paired comparisons, provider metric labeling and
+pending agent adjudication; preserve existing core schemas and hashes. Adjudication
+is performed by a separate agent run, not by humans. The adjudicating agent is a
+different model run from the answering run, is blind to scenario identity and
+applies the existing five-outcome rubric. Results are agent-adjudicated evidence
+with no human review.
+Built-in fetch avoids adding an SDK dependency. Expected answers stay out of
+prompts. Environment-only credentials and per-call conservative reservations
+bound optional execution; no Layer 0 operation invokes a provider.
+
+The alternative of fitting the reduced design into a larger plan would publish
+misleading population/model/scenario counts. The consequence of separation is
+that its private ledger is not accepted by existing `study ledger` commands;
+agent adjudication and any later import must explicitly reconcile the different
+contracts. This proposal does not approve a result or baseline. The maintainer's
+2026-10-09 decisions approve only a pilot with a 1 USD cumulative cap for
+`claude-haiku-5-5`; the full 36-attempt run needs a new budget approval after the
+pilot reports measured cost.
+
+## Transport for the pilot (2026-10-09)
+
+The pilot runs through the Claude Code CLI in headless mode (`--transport cli`),
+authenticated by the CLI's own login. The runner never reads, requires or passes
+`ANTHROPIC_API_KEY`, and removes it from the child environment. Each attempt is a
+fresh `claude -p` child with an argument array, a `cwd` at a fresh export of the
+pinned corpus made for that attempt alone, with files mode 0444 and directories
+mode 0555 (the 2026-10-10 amendment replaces the earlier frozen-checkout `cwd`), an
+allowlisted environment, a timeout and an output bound. It uses read and search
+tools only, through `--tools`, `--allowedTools` and `--disallowedTools`, and
+non-interactive permissions (`--permission-mode dontAsk`, `--permission-prompts
+none`). Scenarios differ only in `--mcp-config` and the doc-bridge tool allowance.
+The cap applies to the charged spend (the larger of the CLI-reported and computed cost); an attempt starts only if the full
+per-attempt limit fits under the remaining cap; that limit is reserved and passed as `--max-budget-usd`, a safety net that the CLI enforces after
+spend. A completed attempt is charged the larger of its reported and computed cost. Any other attempt is charged
+the larger of its reservation and every valid cost it reported or that was computed, so a failure is never
+charged less than a valid reported cost.
+
+The Messages API transport (`--transport http`) remains as an option. It keeps its
+environment-only key, upper prices and built-in `fetch`, and it is tested as before.
+
+Rules reused from [ADR 0009](0009-study-provider-cli-adapter.md): an executable plus
+an argument array (never a shell string), an allowlisted environment, bounded input,
+output and runtime, and fail-closed handling of non-zero exit, timeout and malformed
+output. The output is a stream of stream-json events, one per line, that ends with a
+single `result` event. A transcript that does not have that shape is `invalid-setup`, and its last result is still charged. The runner does not import
+`src/study/provider-cli.ts`. That module provides configuration, hashing and pricing
+helpers, but no process invocation. The optional `.mjs` runner therefore carries
+its own short implementation of the same rules.
+
+Alternatives rejected:
+
+- `--bare` excludes `CLAUDE.md`, hooks, plugins and auto-memory more completely, but
+  its help text states that Anthropic auth becomes strictly `ANTHROPIC_API_KEY` or
+  `apiKeyHelper`. That would reintroduce a key, so it was rejected.
+- `--safe-mode` excludes `CLAUDE.md` and customizations, but its help lists MCP
+  servers as disabled. The doc-bridge arm would then depend on an untested
+  interaction with the explicit `--mcp-config`, which could silently remove the
+  treatment. It was not used.
+- Replacing the system prompt with a minimal one (`--system-prompt`) would change the
+  agent being measured. The default Claude Code system prompt is kept in both
+  scenarios.
+
+Consequences: the CLI's login must be present on the machine that runs the pilot.
+Absolute token counts include the Claude Code system prompt and harness, so they are
+comparable only between the two scenarios. The reported cost is the CLI's own
+estimate and is not a billed amount on a subscription login. Isolation is partial:
+`CLAUDE.md` and automatic memory are not excluded. The export directory has no `.git`. See [minimal-study-v1 Transport](../study/minimal-study-v1.md#transport-claude-code-cli-pilot-transport)
+for the full list. No flag was verified against a live run, and this ADR does not
+approve a result.
+
+## Amendment 2026-10-10: pinned version, stream-json and fail-closed checks
+
+Review of the first CLI runner found that the earlier design accepted results it could
+not verify. The runner now fails closed as follows:
+
+- **Pinned CLI version.** `claude --version` must report `2.1.296` before any attempt.
+  The version is recorded in the ledger. The flags in the runner were checked against
+  `claude --help` of 2.1.296, installed with `npx -y @anthropic-ai/claude-code@2.1.296`.
+  Dated measurements that shaped this amendment, all on 2026-10-10:
+  - On 2.1.288, the init event listed the built-in tools `Glob`, `Grep` and `Read`.
+  - On 2.1.288, `--tools Read,Grep,Glob` loaded tools named exactly `Glob`, `Grep` and
+    `Read` (stream-json init event `tools`), so those names are used.
+  - On 2.1.288, a run emitted an `unrecognized_model` warning and cost 0.057 USD,
+    about 60 times the list-price estimate. `modelUsage` contained an auxiliary
+    `claude-haiku-4-5` entry next to the study model. This is why a foreign model
+    in `modelUsage` is `invalid-cost`.
+  - On 2.1.296, a trivial reply with `claude-haiku-5-5` cost 0.00088 USD, with a
+    single model in `modelUsage`.
+  - On 2.1.296, a run with `--max-budget-usd 0.02` ended with the subtype
+    `error_max_budget_usd`, which the runner records as `budget-exceeded`.
+  Multi-turn tool runs and per-message usage fields in a live stream were not
+  measured, so the aggregate-bound tiering proxy is still in use.
+- **stream-json transcript.** The runner uses `--output-format stream-json --verbose`
+  instead of a single JSON object. It reads the init event to check the model, the
+  exact tool set and MCP server status. It counts tool calls by id, rejects any tool
+  outside the allowed set, and rejects any denial other than a built-in read tool
+  (a denied built-in read is recorded and accepted; a refused doc-bridge call is not).
+  Failing any check is `invalid-setup`. A malformed stream line is recorded as a setup
+  problem, and the last `result` event is still read so that its cost is charged.
+- **Cost cross-check.** The runner computes a list-price cost from `modelUsage`
+  using the runner's `CLI_PRICES` table. Per-request tiering is used when per-message
+  usage is present, and the per-request sums must equal `modelUsage` exactly; an
+  aggregate prompt above 100k selects the above-100k tier otherwise. The CLI-reported
+  cost must agree within a factor of two, or the attempt is `invalid-cost`.
+- **Charging.** A completed attempt settles to the larger of the reported and computed
+  cost. Any other outcome is charged at least the reservation, and at least every
+  valid cost. A valid result is read even after a non-zero exit, a timeout or a
+  malformed line. The earlier rule of charging only the reservation is withdrawn. The
+  CLI checks `--max-budget-usd` only after spend, so a success above its reservation is
+  `budget-exceeded`, and `cumulativeCapExceeded` is set if the cap is passed.
+- **Preflight and tool errors.** Before any reservation, and for every checkout that a
+  doc-bridge attempt uses, the config must resolve in the server's discovery order, the
+  server must answer `doc.search` at the pin from a fresh index, and the tool lists must
+  agree. An attempt in which every doc-bridge tool call returned an error is
+  `invalid-setup`. Partial errors are kept per tool name.
+- **Export.** The child's working directory is a fresh export, made for that attempt alone, of the pinned blobs that pass the public-path filter, including the corpus's
+  own `CLAUDE.md` and `AGENTS.md`, and excluding files over 200000 bytes, dotfiles,
+  lockfiles and build output. Files are mode 0444 and directories 0555 once written, so
+  the agent cannot write into the export; each directory is removed after its attempt.
+- **Denied definitions.** The `claude --help` text of 2.1.296 describes
+  `--disallowedTools` only as a list of names to deny, and does not say whether denied
+  tool definitions are still sent. This is not verified; the init tool list is the
+  live check.
+- **Narrower surface.** The disallowed tool list also covers every other tool the
+  doc-bridge server lists in its live `tools/list`. Derivation happens once per run,
+  and the list is passed to both arms.
+- **Output bound.** The stdout bound is 4 MiB, not the 256,000 bytes stated before.
+- **Default attempt limit.** The default is 0.10 USD, not 0.25. This follows one
+  maintainer measurement on 2026-10-10: a trivial reply cost 0.00088 USD on the CLI's
+  own estimate. Multi-turn tool runs were not measured, so a cap truncation is recorded
+  as `budget-exceeded`.
+
+Tool calls are now recorded as counts from the stream, not as `null`. The cache read
+and write rates in the 2026-10-10 price table are list prices for the same tiers and
+are used by the runner; the maintainer confirms them before any report. The isolation
+limits in
+[minimal-study-v1 Transport](../study/minimal-study-v1.md#transport-claude-code-cli-pilot-transport)
+(`CLAUDE.md` and memory not excluded, system prompt included, live tool-definition
+handling unverified) still apply. Nothing in this amendment approves a result or the
+full run.

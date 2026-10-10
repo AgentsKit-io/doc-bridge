@@ -10,6 +10,8 @@
 
 ### Patch Changes
 
+- Prepare a separate pinned six-task agent-efficiency protocol and optional budget-capped pilot runner with offline validation, a headless Claude Code CLI pilot transport that uses the CLI's own login without an API key, a tested Messages API option, and pending agent adjudication with no human review; no model was run.
+
 - Refresh bounded public Studio samples with manifest package labels and current engine provenance.
 
 - Use manifest names with directory-name fallback for package labels, keeping documentation titles and purpose text separate from package identity.
