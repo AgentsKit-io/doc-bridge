@@ -22,4 +22,4 @@ reviewable proposals; humans still judge intent and correctness.
 
 The core is local and deterministic, without an API key. See
 [positioning](./POSITIONING.md), [measurement and limits](./bench/layer1-results-v2.md)
-and [migration](./migration/1.x-to-2.0.md). Studio is coming with its final design.
+and [migration](./migration/1.x-to-2.0.md). The Studio UI is planned for 2.1, not 2.0.

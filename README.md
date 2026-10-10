@@ -130,7 +130,7 @@ Reports never approve documentation corrections.
 - **Rationale:** enable `index.knowledgeEntities.enabled`, index decisions/concepts/changes, then run `ak-docs why <path|symbol|concept>`. MCP exposes `knowledge.decision`, `knowledge.concept` and `knowledge.whyChanged`. Evidence is observed rationale, not inferred causality. [Knowledge query contract](docs/spec/knowledge-query-v1.md).
 - **Remediation:** optional `ak-docs fix --llm` uses scripted fake-provider responses in the [key-free guide](docs/guides/llm-remediation.md); real providers use explicit intelligence configuration. Proposals require deterministic rechecking and human review.
 - **Advisory:** `CHANGED_REFERENCE` concerns a claim about the changed aspect; bare mentions do not trigger it. Unknown syntax remains review-required uncertainty. [Action advisory](docs/guides/action-advisory.md).
-- **Upgrade:** follow the [1.x → 2.0 migration guide](docs/migration/1.x-to-2.0.md). Studio is coming with its final design; it is not a shipped 2.0 interface.
+- **Upgrade:** follow the [1.x → 2.0 migration guide](docs/migration/1.x-to-2.0.md). The Studio UI is planned for 2.1 and is not part of 2.0.
 
 The latest [Layer-1 benchmark and method](docs/bench/layer1-results-v2.md) report native findings at **100% precision** (15 TP, 0 FP, 0 FN), historical changed-reference findings at **83.3% precision** (10 TP, 2 FP, 0 FN), and **6.25% false-positive rate on historical negative cases** (2/32). These purposive controls measure different denominators; they do not establish general semantic accuracy or release readiness.
 

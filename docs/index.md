@@ -27,7 +27,7 @@ Doc Bridge provides deterministic proof of documentation drift and keeps **one r
 | Upgrade existing configurations and artifacts | [1.x → 2.0 migration](./migration/1.x-to-2.0.md) |
 | Inspect measured precision and false positives | [Benchmark results and method](./bench/layer1-results-v2.md) |
 
-Studio is coming with its final design; this launch does not ship its interface.
+The Studio UI is planned for 2.1; the 2.0 launch does not include it.
 
 ## Build workflows
 

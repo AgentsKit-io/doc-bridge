@@ -168,7 +168,7 @@ Optional chat/RAG setup remains in [chat and RAG](./chat-and-rag.md).
 ## Upgrade and measured limits
 
 Read [1.x → 2.0 migration](./migration/1.x-to-2.0.md) before regenerating old
-artifacts. Studio is coming with its final design; it is not shipped here.
+artifacts. The Studio UI is planned for 2.1 and is not part of this release.
 The [latest benchmark and method](./bench/layer1-results-v2.md) report native
 precision 100% (15/15 findings), historical precision 83.3% (10/12 findings),
 and historical negative-case false-positive rate 6.25% (2/32 cases).

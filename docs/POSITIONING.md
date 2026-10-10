@@ -102,5 +102,5 @@ AgentsKit is the **foundation library** (not a “JavaScript framework” in mar
 
 ## 2.0 interface boundary
 
-Studio is coming with its final design; do not describe it as a shipped interface.
+The Studio UI is planned for 2.1; do not describe it as part of 2.0.
 See the [launch plan](./launch/channels-2.0.md) for draft channel copy and claims limits.
