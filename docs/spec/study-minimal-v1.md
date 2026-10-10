@@ -57,10 +57,18 @@ decided in the protocol, not in this runner. Existing `DocBridgeIndexV1`,
 
 ## CLI transport contract
 
+Before any paid attempt the runner probes `claude --version` (must equal the
+expected version) and the doc-bridge server's `doc.search` at the pin (the index
+must be fresh at that pin; otherwise the run refuses to start).
+
 `runCliAttempt` spawns the configured executable with an argument array, never a
-shell string, `cwd` set to the frozen checkout, `stdin` closed, an allowlisted
-environment without `ANTHROPIC_API_KEY`, a five-minute timeout and a 4 MiB stdout
-bound (truncated output is `failed`). The prompt is limited to 8 KiB. The arguments
+shell string, `cwd` set to a fresh read-only export directory containing only the
+pinned corpus blobs that pass the public-path filter (`git ls-tree` at the pin,
+regular files of at most 200000 bytes, no dotfiles, no `node_modules`, `dist`,
+`build` or `coverage`; `CLAUDE.md` and `AGENTS.md` are included because the CLI
+loads them), `stdin` closed, an allowlisted environment without `ANTHROPIC_API_KEY`,
+a five-minute timeout and a 4 MiB stdout bound (truncated output is `failed`). The
+export directory has no `.git`. The prompt is limited to 8 KiB. The arguments
 are built by `cliArguments` with `--output-format stream-json --verbose`, the prompt
 last after boolean flags only. They are the same for both scenarios except the
 `--mcp-config` value and the three `mcp__doc-bridge__*` names appended to
@@ -72,7 +80,10 @@ flag-by-flag list and the isolation that was and was not achieved are in
 Setup is checked from the stream-json transcript before a result is accepted: the
 init event's model, exact tool set and MCP server status (one `doc-bridge` server,
 `connected`, in the doc-bridge arm; none in the repository-only arm), every tool call
-inside the allowed set, and every permission denial a built-in read tool. Any other
+inside the allowed set, and every permission denial a built-in read tool. In the
+doc-bridge arm, if every doc-bridge tool call returned a `tool_result` with
+`is_error: true`, the attempt is `invalid-setup` (the treatment was lost); partial
+errors are recorded in `toolErrorsByName` keyed by the full tool name. Any other
 result is `invalid-setup`.
 
 Each attempt records `transport: "cli"`, `cliVersion`, `expectedCliVersion`,
@@ -80,27 +91,35 @@ Each attempt records `transport: "cli"`, `cliVersion`, `expectedCliVersion`,
 `toolCalls` (every `tool_use` counted once by id, including refused calls),
 `permissionDenials`, `inputTokens`, `outputTokens`, `cacheCreationInputTokens`,
 `cacheReadInputTokens`, `numTurns`, `cliSubtype`, `isError`, `usageComplete`,
-`cliReportedCostUsd` (the CLI's `total_cost_usd`, or `null`), `computedCostUsd` and
+`toolErrorsByName`, `cliReportedCostUsd` (the CLI's `total_cost_usd`, or `null`), `computedCostUsd` and
 `costBasis` (the list-price computation from `modelUsage`), any `setupProblem` or
 `costProblem`, `chargedUsd`, `wallTimeMs`, `status`, the private answer, and
 `correctness: null` with `adjudication: "pending"`. `status` is `completed`, `failed`,
 `timed-out`, `budget-exceeded`, `invalid-setup` or `invalid-cost`. Only `completed` is
 treated as a successful attempt, and any other status stops the run.
 
-Cost: the computed cost uses the `CLI_PRICES` table, with per-request tiering when
-the stream carries per-message usage and an aggregate upper bound otherwise. A
-computed cost that differs from the CLI-reported cost by more than a factor of two,
-or a missing or invalid cost, is `invalid-cost`.
+Cost: the computed cost uses the `CLI_PRICES` table. The aggregate `modelUsage`
+is used as an upper bound for the above-100k tier: the tier is chosen by the
+aggregate prompt size, which is at least the largest single request, so this is a
+conservative proxy when per-request sizes are not in the stream. A computed cost
+that differs from the CLI-reported cost by more than a factor of two, or a missing
+or invalid cost, is `invalid-cost`.
 
 Budget: before each attempt, a non-positive remaining cap refuses the attempt. The
 CLI reservation is `min(remaining, per-attempt limit)`, rounded down to 6 decimals and
-passed as `--max-budget-usd`. A `completed` attempt settles to the larger of
+passed as `--max-budget-usd`. The CLI checks that cap only after spend, so one turn
+can overshoot the reservation. A `completed` attempt settles to the larger of
 `total_cost_usd` and the computed cost. Any other outcome is charged
-`max(reservation, every valid cost)`. Nothing is retried or resumed.
+`max(reservation, every valid cost)`, and a valid result is read even after a
+non-zero exit or a timeout. A success whose charged cost exceeds its reservation,
+or an `error_max_budget_usd` subtype, is `budget-exceeded`; if the cumulative spend
+passes the cap, `cumulativeCapExceeded` is `true` and the run stops. Nothing is
+retried or resumed.
 
 Validation: `pnpm vitest run tests/study-minimal.test.ts --maxWorkers=2` covers
-mocked HTTP, budgeting, usage, tools, frozen Git reads, the export of the corpus
-without the answer key, and actual local MCP without a model. The CLI tests use a
+mocked HTTP, budgeting, usage, tools, Git blob reads, the export of the corpus
+without the answer key or oversized and build-output files, the readiness probe,
+all-error and partial-error tool results, and actual local MCP without a model. The CLI tests use a
 fake executable in a temporary directory. It reads a behaviour file, writes a
 `records.json` with its argv and whether it received an API key, then emits canned
 stream-json events, exits non-zero, sleeps or prints malformed output. No real

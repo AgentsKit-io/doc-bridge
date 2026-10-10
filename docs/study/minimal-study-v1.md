@@ -149,17 +149,22 @@ maintainer publication approval is still required before publication.
 ## Transport: Claude Code CLI (pilot transport)
 
 `--transport cli` runs every attempt as one fresh headless Claude Code process
-(`claude -p`), started with an argument array (never a shell string) and `cwd` set
-to the frozen checkout of the task's repository at its pin. The same frozen corpus
-is read by the HTTP transport. Both transports send the same prompt, which must be
-at most 8 KiB.
+(`claude -p`), started with an argument array (never a shell string). Its `cwd` is a
+fresh export directory, created per run with `mkdtemp` outside the repository. The
+export holds only the pinned Git blobs that pass the public-path filter (regular
+files of at most 200000 bytes, no dotfiles, no `node_modules`, `dist`, `build` or
+`coverage`). It has no `.git` directory and is read-only. The HTTP transport reads
+the same filtered corpus. Both transports send the same prompt, which must be at
+most 8 KiB.
 
 **Pinned version.** Before any attempt, the runner runs `claude --version` once and
 refuses to start unless its first token is exactly `2.1.296`. The probed version is
 recorded in the ledger. `--cli-version` exists only to name a different pin for a
 separately reviewed change; it does not accept an unknown build. The flags below were
-read from `claude --help` of the locally installed 2.1.288 build. They were not
-re-read against 2.1.296, so that check is still open.
+checked against `claude --help` of Claude Code 2.1.296 (installed with
+`npx -y @anthropic-ai/claude-code@2.1.296`). The 2.1.288 help that was read earlier
+is superseded. The runner passes `--tools` (`Read`, `Grep`, `Glob`) and
+`--permission-mode dontAsk`; the init event of a live run must confirm the tool set.
 
 **Arguments.** `cliArguments` builds the array in this order. The prompt is last,
 after boolean flags only, so no variadic option can consume it.
@@ -211,9 +216,10 @@ million tokens:
 | Prompt up to 100k tokens | 0.10 | 0.50 | 0.01 | 0.125 |
 | Prompt above 100k tokens | 0.50 | 2.50 | 0.05 | 0.625 |
 
-The input and output rates are the 2026-10-09 decision. The cache rates are **not**
-part of that decision. The runner adds them in its 2026-10-10 table and the maintainer
-must confirm them before the report.
+The input and output rates are the 2026-10-09 decision. The cache read and cache write
+rates in the same table were added on 2026-10-10 as list prices for the same tiers.
+They are part of the `CLI_PRICES` table the runner uses, and the maintainer confirms
+them before any report is published.
 
 Tiering works in two ways. If stream events carry per-request usage keyed by message
 id, each request is tiered by its own prompt size (input plus cache read and write),
@@ -253,9 +259,10 @@ No session is persisted. The child environment is an allowlist: system variables
 
 **Isolation not achieved:**
 
-- `CLAUDE.md` memory is **not** excluded. The user's global `CLAUDE.md` and the
-  pinned checkout's own `CLAUDE.md`/`AGENTS.md` may load into context, in both
-  scenarios. `--bare` would exclude them, but its help text says Anthropic auth is
+- `CLAUDE.md` memory is **not** excluded. The user's global `CLAUDE.md` loads into
+  context in both scenarios. The export directory contains the pinned corpus's own
+  `CLAUDE.md` and `AGENTS.md`, which the CLI also loads in both scenarios, so the
+  two arms share the same repository instructions. `--bare` would exclude them, but its help text says Anthropic auth is
   then strictly `ANTHROPIC_API_KEY` or `apiKeyHelper`, so OAuth and keychain login
   stop working; it was therefore not used. `--safe-mode` also excludes `CLAUDE.md`,
   but its help lists MCP servers among the disabled customizations, and no run can
@@ -263,10 +270,10 @@ No session is persisted. The child environment is an allowlist: system variables
 - Automatic memory is not disabled by any flag used here.
 - The Claude Code system prompt and tool harness are part of every attempt in both
   scenarios.
-- The checkout's `.git` directory is inside the working directory. Read/Grep can
-  reach git object files there, which can include other history of the same public
-  repository. The corpus does not contain the answer key, which lives only on the
-  study branch.
+- The export directory has no `.git` directory, and the corpus is read from pinned
+  blobs only, so Read/Grep cannot reach git history from the working directory. The
+  corpus does not contain the answer key, which lives only on the study branch.
+  Reads outside the export directory are not verified in a live run.
 - The workspace trust dialog is skipped in print mode.
 - Sampling temperature is not controlled by any flag. The HTTP transport's
   `temperature: 0` does not apply.
@@ -343,20 +350,38 @@ to the charged spend. The exact pilot command, run only after checkouts are
 prepared at the pins and the maintainer has approved the run, is:
 
 ```bash
+# Install the pinned CLI once, outside the repository (this runs no prompt):
+npm install --prefix <CLI_PREFIX> @anthropic-ai/claude-code@2.1.296
+
 STUDY_MODEL=claude-haiku-5-5 STUDY_BUDGET_USD=1 \
   node scripts/study-minimal.mjs --transport cli --pilot --approve-budget \
+  --claude-bin <CLI_PREFIX>/node_modules/.bin/claude \
   --attempt-budget-usd 0.10 \
   --root doc-bridge=corpus/doc-bridge --output ../pilot-private.json
 ```
 
+`<CLI_PREFIX>` is a private directory outside the repository. Without
+`--claude-bin` the runner uses `claude` from `PATH`, and it refuses to start unless
+that binary reports exactly 2.1.296.
+
 Before each attempt the CLI transport refuses to start if the remaining budget is
 not positive. Otherwise it reserves `min(remaining, --attempt-budget-usd)` and passes
-that value as `--max-budget-usd`. A completed attempt is settled to the larger of the
-CLI-reported `total_cost_usd` and the list-price computation from `modelUsage`. Any
-other outcome (`failed`, `timed-out`, `budget-exceeded`, `invalid-setup`,
-`invalid-cost`) is charged `max(reservation, every valid cost)`, so a failure is never
-charged less than a valid cost the CLI reported. No attempt is retried or resumed, and
-any non-`completed` status stops the run. The CLI-reported figure is the CLI's own
+that value as `--max-budget-usd`. The CLI checks that cap only after spend, so one
+turn can overshoot the reservation. A completed attempt is settled to the larger of the
+CLI-reported `total_cost_usd` and the list-price computation from `modelUsage`. A
+success that costs more than its reservation, or an `error_max_budget_usd` result, is
+`budget-exceeded`; if the cumulative spend passes the 1 USD cap, the summary sets
+`cumulativeCapExceeded`. Any other outcome (`failed`, `timed-out`, `budget-exceeded`,
+`invalid-setup`, `invalid-cost`) is charged `max(reservation, every valid cost)`, so a
+failure is never charged less than a valid cost the CLI reported. A valid result is
+read even after a non-zero exit or a timeout. No attempt is retried or resumed, and
+any non-`completed` status stops the run.
+
+Before the first attempt, the runner checks that the doc-bridge arm is ready: the MCP
+server must answer `doc.search` at the pin from a fresh index. If it does not, the
+run stops before any paid attempt. An attempt in which every doc-bridge tool call
+returned an error is `invalid-setup`; a partial error is recorded per tool name in
+`toolErrorsByName`. The CLI-reported figure is the CLI's own
 estimate and, on a subscription login, not a billed amount. The `× 18` extrapolation
 is printed only when both pilot attempts complete, and it applies to that charged spend.
 

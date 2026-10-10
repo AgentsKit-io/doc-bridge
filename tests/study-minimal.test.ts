@@ -5,7 +5,7 @@ import { resolve, join, relative } from 'node:path'
 import { execFileSync } from 'node:child_process'
 import { performance } from 'node:perf_hooks'
 import { loadProtocol, planStudy, parseOptions, runAttempt, repositoryTools, connectMcp, probeMcpToolNames, main, runCliAttempt, cliArguments, cliChildEnv, studyPrompt, probeCliVersion,
-  safePath, exportCorpus, corpusFiles, cliDisallowedMcpTools, computeCliCost, checkCliInit, checkCliActivity, observeCliStream,
+  safePath, exportCorpus, corpusFiles, cliDisallowedMcpTools, computeCliCost, checkCliInit, checkCliActivity, observeCliStream, probeDocBridgeReadiness,
   CLI_DOC_BRIDGE_TOOLS, CLI_DEFAULT_ATTEMPT_BUDGET_USD, CLI_PINNED_VERSION, CLI_PRICES } from '../scripts/study-minimal.mjs'
 import { MCP_TOOLS } from '../src/mcp/server.js'
 
@@ -144,14 +144,15 @@ describe('minimal study without network or a real credential', () => {
     try {
       execFileSync('git', ['init', '--quiet', root], { stdio: 'ignore' })
       const files = { 'README.md': 'public', 'doc-bridge.config.json': '{}', 'docs/guide.md': 'guide', 'src/index.ts': 'export {}', '.env': 'no',
-        '.github/ci.yml': 'no', 'pnpm-lock.yaml': 'no', 'docs/credentials.md': 'no', 'logo.png': 'no', 'docs/study/minimal-study-x.md': 'no' }
+        '.github/ci.yml': 'no', 'pnpm-lock.yaml': 'no', 'docs/credentials.md': 'no', 'logo.png': 'no', 'docs/study/minimal-study-x.md': 'no',
+        'CLAUDE.md': 'project rules', 'AGENTS.md': 'agent rules', 'docs/huge.md': 'x'.repeat(200001), 'dist/built.js': 'no' }
       for (const [path, text] of Object.entries(files)) { mkdirSync(join(root, path, '..'), { recursive: true }); writeFileSync(join(root, path), text) }
       symlinkSync('README.md', join(root, 'link.md'))
       execFileSync('git', ['-C', root, 'add', '-A'])
       execFileSync('git', ['-C', root, '-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.test', 'commit', '-m', 'fixture'], { stdio: 'ignore' })
       const pin = execFileSync('git', ['-C', root, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim()
       const exported = await exportCorpus(root, pin, destination)
-      const expected = ['README.md', 'doc-bridge.config.json', 'docs/guide.md', 'src/index.ts']
+      const expected = ['AGENTS.md', 'CLAUDE.md', 'README.md', 'doc-bridge.config.json', 'docs/guide.md', 'src/index.ts']
       expect(exported.sort()).toEqual(expected)
       expect(await corpusFiles(root, pin)).toEqual(exported)
       const found = []
@@ -234,6 +235,10 @@ else {
     mcp_servers: mcp ? [{ name: 'doc-bridge', status: 'connected' }] : [], ...behavior.init }
   const lines = [init, ...behavior.events, behavior.result]
   process.stdout.write(lines.map(line => JSON.stringify(line)).join('\\n') + '\\n')
+  // result-then-sleep: the transcript is complete but the process hangs, as a timed-out CLI would.
+  if (behavior.mode === 'result-then-sleep') setTimeout(() => {}, 60000)
+  // The 2.1.296 bundle exits with is_error ? 1 : 0 in print mode, so the fixture can exit non-zero after a result.
+  else process.exitCode = behavior.exitCode ?? 0
 }
 `
 const CLI_VERSION = '2.1.296 (Claude Code)'
@@ -244,6 +249,10 @@ const okResult = { type: 'result', subtype: 'success', is_error: false, result: 
   usage: okUsage, modelUsage: okModelUsage, permission_denials: [] }
 const okEvents = [{ type: 'assistant', message: { id: 'm1', model: 'claude-haiku-5-5', usage: okUsage, content: [{ type: 'text', text: 'Answer with source:1' }] } }]
 const toolUse = (id: string, name: string) => ({ type: 'assistant', message: { id: `msg-${id}`, model: 'claude-haiku-5-5', content: [{ type: 'tool_use', id, name, input: {} }] } })
+const toolResult = (tool_use_id: string, is_error: boolean) => ({ type: 'user', message: { role: 'user', content: [{ type: 'tool_result', tool_use_id, is_error, content: is_error ? 'error' : 'ok' }] } })
+// A success whose charged cost is 0.7 USD at list price (1,400,000 output tokens at 0.50 per million).
+const overCost = { ...okResult, total_cost_usd: 0.7, usage: { input_tokens: 0, output_tokens: 1400000, cache_creation_input_tokens: 0, cache_read_input_tokens: 0 },
+  modelUsage: { 'claude-haiku-5-5': { inputTokens: 0, outputTokens: 1400000, cacheReadInputTokens: 0, cacheCreationInputTokens: 0, costUSD: 0.7 } } }
 const fakeClaude = (behavior: Record<string, unknown>, version = `${CLI_VERSION}\n`) => {
   const dir = mkdtempSync(join(tmpdir(), 'study-claude-'))
   const bin = join(dir, 'claude')
@@ -410,6 +419,31 @@ describe('CLI transport: headless Claude Code without an API key', () => {
     } finally { rmSync(readDenied.dir, { recursive: true, force: true }) }
   })
 
+  it('records MCP tool_result errors by tool name and fails the doc-bridge attempt when every MCP call errored', async () => {
+    const search = 'mcp__doc-bridge__doc_search'
+    const allFailed = cliFake({ events: [toolUse('m1', search), toolResult('m1', true), toolUse('m2', 'mcp__doc-bridge__doc_get'), toolResult('m2', true), ...okEvents] })
+    const partlyFailed = cliFake({ events: [toolUse('m1', search), toolResult('m1', true), toolUse('m2', 'mcp__doc-bridge__doc_get'), toolResult('m2', false), ...okEvents] })
+    try {
+      const failed = await runCli(allFailed, 'doc-bridge-mcp')
+      expect(failed).toMatchObject({ status: 'invalid-setup', toolErrorsByName: { [search]: 1, 'mcp__doc-bridge__doc_get': 1 }, chargedUsd: 0.5 })
+      expect(failed.setupProblem).toMatch(/every doc-bridge tool call returned an error/)
+      const partial = await runCli(partlyFailed, 'doc-bridge-mcp')
+      expect(partial).toMatchObject({ status: 'completed', toolErrorsByName: { [search]: 1 }, toolCalls: 2 })
+    } finally { rmSync(allFailed.dir, { recursive: true, force: true }); rmSync(partlyFailed.dir, { recursive: true, force: true }) }
+  })
+
+  it('refuses the doc-bridge arm before any paid attempt when the server does not answer from an index at the pin', async () => {
+    const root = mkdtempSync(join(tmpdir(), 'study-ready-'))
+    try {
+      mkdirSync(join(root, 'docs'))
+      writeFileSync(join(root, 'docs', 'guide.md'), '# Evidence\nA public fixture guide.')
+      writeFileSync(join(root, 'doc-bridge.config.json'), JSON.stringify({ schemaVersion: 1, corpus: { agent: { root: 'docs' }, human: { plugin: 'plain-markdown', options: { root: 'docs' } } } }))
+      await expect(probeDocBridgeReadiness(root, engine)).rejects.toThrow('fresh index')
+      execFileSync(process.execPath, [engine, 'index'], { cwd: root, stdio: 'pipe', timeout: 30000 })
+      await expect(probeDocBridgeReadiness(root, engine)).resolves.toBeUndefined()
+    } finally { rmSync(root, { recursive: true, force: true }) }
+  }, 60000)
+
   it('computes cost at list price per request, applies the above-100k tier, and flags any non-study model or a 2x disagreement', () => {
     const price = CLI_PRICES['claude-haiku-5-5']
     expect(price.threshold).toBe(100000)
@@ -451,6 +485,41 @@ describe('CLI transport: headless Claude Code without an API key', () => {
       const result = await runCli(fake, 'repository-only', { budget })
       expect(result).toMatchObject({ status: 'budget-exceeded', cliSubtype: 'error_max_budget_usd', cliReportedCostUsd: 0.7, computedCostUsd: 0.7, chargedUsd: 0.7 })
       expect(budget.spent).toBeCloseTo(0.7)
+    } finally { rmSync(fake.dir, { recursive: true, force: true }) }
+  })
+
+  it('keeps the valid result of a non-zero exit and charges its reported cost, not only the reservation', async () => {
+    // Reproduces the measured 2.1.296 pattern: error_max_budget_usd printed on stdout with exit code 1.
+    const overrun = { ...okResult, subtype: 'error_max_budget_usd', is_error: true, total_cost_usd: 0.03,
+      usage: { input_tokens: 0, output_tokens: 60000, cache_creation_input_tokens: 0, cache_read_input_tokens: 0 },
+      modelUsage: { 'claude-haiku-5-5': { inputTokens: 0, outputTokens: 60000, cacheReadInputTokens: 0, cacheCreationInputTokens: 0, costUSD: 0.03 } } }
+    const fake = cliFake({ events: [], result: overrun, exitCode: 1 })
+    try {
+      const budget = { cap: 1, spent: 0 }
+      const result = await runCli(fake, 'repository-only', { budget, config: { attemptBudgetUsd: 0.02 } })
+      expect(result).toMatchObject({ status: 'budget-exceeded', exitCode: 1, cliSubtype: 'error_max_budget_usd', cliReportedCostUsd: 0.03 })
+      expect(result.chargedUsd).toBeCloseTo(0.03, 12)
+      expect(budget.spent).toBeCloseTo(0.03, 12)
+    } finally { rmSync(fake.dir, { recursive: true, force: true }) }
+  })
+
+  it('reads the valid result of a timed-out process, so its reported cost is charged', async () => {
+    const fake = cliFake({ mode: 'result-then-sleep', events: [], result: overCost })
+    try {
+      const budget = { cap: 1, spent: 0 }
+      const result = await runCli(fake, 'repository-only', { budget, timeoutMs: 1500 })
+      expect(result).toMatchObject({ status: 'budget-exceeded', timedOut: true, cliReportedCostUsd: 0.7, chargedUsd: 0.7 })
+      expect(budget.spent).toBeCloseTo(0.7, 12)
+    } finally { rmSync(fake.dir, { recursive: true, force: true }) }
+  }, 20000)
+
+  it('marks a success that costs more than its reservation as budget-exceeded and flags a cumulative cap overrun', async () => {
+    const fake = cliFake({ events: [], result: overCost })
+    try {
+      const budget = { cap: 0.6, spent: 0 }
+      const result = await runCli(fake, 'repository-only', { budget, config: { attemptBudgetUsd: 0.5 } })
+      expect(result).toMatchObject({ status: 'budget-exceeded', cumulativeCapExceeded: true, chargedUsd: 0.7 })
+      expect(budget.spent).toBeCloseTo(0.7, 12)
     } finally { rmSync(fake.dir, { recursive: true, force: true }) }
   })
 

@@ -36,7 +36,8 @@ pilot reports measured cost.
 The pilot runs through the Claude Code CLI in headless mode (`--transport cli`),
 authenticated by the CLI's own login. The runner never reads, requires or passes
 `ANTHROPIC_API_KEY`, and removes it from the child environment. Each attempt is a
-fresh `claude -p` child with an argument array, a `cwd` at the frozen checkout, an
+fresh `claude -p` child with an argument array, a `cwd` at a read-only export of the
+pinned corpus (the 2026-10-10 amendment replaces the earlier frozen-checkout `cwd`), an
 allowlisted environment, a timeout and an output bound. It uses read and search
 tools only, through `--tools`, `--allowedTools` and `--disallowedTools`, and
 non-interactive permissions (`--permission-mode dontAsk`, `--permission-prompts
@@ -74,8 +75,7 @@ Consequences: the CLI's login must be present on the machine that runs the pilot
 Absolute token counts include the Claude Code system prompt and harness, so they are
 comparable only between the two scenarios. The reported cost is the CLI's own
 estimate and is not a billed amount on a subscription login. Isolation is partial:
-`CLAUDE.md` and automatic memory are not excluded, and the checkout's `.git` is
-reachable by read tools. See [minimal-study-v1 Transport](../study/minimal-study-v1.md#transport-claude-code-cli-pilot-transport)
+`CLAUDE.md` and automatic memory are not excluded. The export directory has no `.git`. See [minimal-study-v1 Transport](../study/minimal-study-v1.md#transport-claude-code-cli-pilot-transport)
 for the full list. No flag was verified against a live run, and this ADR does not
 approve a result.
 
@@ -85,8 +85,20 @@ Review of the first CLI runner found that the earlier design accepted results it
 not verify. The runner now fails closed as follows:
 
 - **Pinned CLI version.** `claude --version` must report `2.1.296` before any attempt.
-  The version is recorded in the ledger. Flag behaviour was read from the locally
-  installed 2.1.288 help output and is not yet re-read against 2.1.296.
+  The version is recorded in the ledger. The flags in the runner were checked against
+  `claude --help` of 2.1.296, installed with `npx -y @anthropic-ai/claude-code@2.1.296`.
+  Dated measurements that shaped this amendment, all on 2026-10-10:
+  - On 2.1.288, the init event listed the built-in tools `Glob`, `Grep` and `Read`.
+  - On 2.1.288, a run emitted an `unrecognized_model` warning and cost 0.057 USD,
+    about 60 times the list-price estimate. `modelUsage` contained an auxiliary
+    `claude-haiku-4-5` entry next to the study model. This is why a foreign model
+    in `modelUsage` is `invalid-cost`.
+  - On 2.1.296, a trivial reply with `claude-haiku-5-5` cost 0.00088 USD, with a
+    single model in `modelUsage`.
+  - On 2.1.296, a run with `--max-budget-usd 0.02` ended with the subtype
+    `error_max_budget_usd`, which the runner records as `budget-exceeded`.
+  Multi-turn tool runs and per-message usage fields in a live stream were not
+  measured, so the aggregate-bound tiering proxy is still in use.
 - **stream-json transcript.** The runner uses `--output-format stream-json --verbose`
   instead of a single JSON object. It reads the init event to check the model, the
   exact tool set and MCP server status. It counts tool calls by id, rejects any tool
@@ -98,7 +110,17 @@ not verify. The runner now fails closed as follows:
   agree within a factor of two, or the attempt is `invalid-cost`.
 - **Charging.** A completed attempt settles to the larger of the reported and computed
   cost. Any other outcome is charged at least the reservation, and at least every
-  valid cost. The earlier rule of charging only the reservation is withdrawn.
+  valid cost. A valid result is read even after a non-zero exit or a timeout. The
+  earlier rule of charging only the reservation is withdrawn. The CLI checks
+  `--max-budget-usd` only after spend, so a success above its reservation is
+  `budget-exceeded`, and `cumulativeCapExceeded` is set if the cap is passed.
+- **Readiness and tool errors.** Before the first attempt, the doc-bridge arm must
+  answer `doc.search` at the pin from a fresh index. An attempt in which every
+  doc-bridge tool call returned an error is `invalid-setup`. Partial errors are kept
+  per tool name.
+- **Export.** The child's working directory is a fresh read-only export of the pinned
+  blobs that pass the public-path filter, including the corpus's own `CLAUDE.md` and
+  `AGENTS.md`, and excluding files over 200000 bytes, dotfiles and build output.
 - **Narrower surface.** The disallowed tool list also covers every other tool the
   doc-bridge server lists in its live `tools/list`. Derivation happens once per run,
   and the list is passed to both arms.
@@ -108,9 +130,11 @@ not verify. The runner now fails closed as follows:
   own estimate. Multi-turn tool runs were not measured, so a cap truncation is recorded
   as `budget-exceeded`.
 
-Tool calls are now recorded as counts from the stream, not as `null`. The cache rates
-in the 2026-10-10 price table are not part of the 2026-10-09 decision and need
-maintainer confirmation. The isolation limits in
+Tool calls are now recorded as counts from the stream, not as `null`. The cache read
+and write rates in the 2026-10-10 price table are list prices for the same tiers and
+are used by the runner; the maintainer confirms them before any report. The isolation
+limits in
 [minimal-study-v1 Transport](../study/minimal-study-v1.md#transport-claude-code-cli-pilot-transport)
-(`CLAUDE.md` and memory not excluded, `.git` reachable, system prompt included) still
-apply. Nothing in this amendment approves a result or the full run.
+(`CLAUDE.md` and memory not excluded, system prompt included, live tool-definition
+handling unverified) still apply. Nothing in this amendment approves a result or the
+full run.
