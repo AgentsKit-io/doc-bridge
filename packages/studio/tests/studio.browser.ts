@@ -9,7 +9,9 @@ import { serveStudio } from '../dist/server.js'
 
 const sourceTree = execFileSync('git', ['write-tree'], { encoding: 'utf8' }).trim()
 const sourceRevision = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim()
-const evidenceDir = process.env.STUDIO_EVIDENCE_DIR ?? join(tmpdir(), 'docbridge-studio-evidence')
+const ownsEvidenceDir = process.env.STUDIO_EVIDENCE_DIR === undefined
+const evidenceDir = process.env.STUDIO_EVIDENCE_DIR ?? mkdtempSync(join(tmpdir(), 'docbridge-studio-evidence-'))
+if (ownsEvidenceDir) process.on('exit', () => rmSync(evidenceDir, { recursive: true, force: true }))
 async function capture(page: Page, name: string) {
   mkdirSync(evidenceDir, { recursive: true }); const path = join(evidenceDir, name + '.png')
   await page.screenshot({ path, fullPage: true })
