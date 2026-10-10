@@ -9,7 +9,7 @@ Source of truth for README, issues, RFCs, and external posts.
 
 ## One-liner
 
-**Human↔agent documentation bridge for any repo** — deterministic handoffs, doc-site links, memory→docs promotion, optional AgentsKit RAG/chat.
+**Deterministic proof of documentation drift** — bounded revision evidence, repository handoffs, doc-site links and reviewable memory promotion.
 
 ## What we are
 
@@ -33,7 +33,6 @@ Source of truth for README, issues, RFCs, and external posts.
 ## What we are not
 
 - Not a replacement for your human documentation site
-- Not a hosted doc chat SaaS
 - Not an AgentsKit brochure in the hero
 - Not “just AGENTS.md” (we *compose* with it)
 
@@ -100,3 +99,8 @@ optional:  Playbook / Registry federation
 | **Promise** | Human↔agent documentation bridge — deterministic handoffs for any repo |
 
 AgentsKit is the **foundation library** (not a “JavaScript framework” in marketing cards). Chat is the **experience** layer. Doc Bridge stays the **understanding** product.
+
+## 2.0 interface boundary
+
+The Studio UI is planned for 2.1; do not describe it as part of 2.0.
+See the [launch plan](./launch/channels-2.0.md) for draft channel copy and claims limits.

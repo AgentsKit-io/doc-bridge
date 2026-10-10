@@ -14,16 +14,16 @@
 
 **Compatibility:** node >=22 · TypeScript 5.8+ · pnpm, npm, or yarn consumers
 
-**Turn your docs into executable handoffs for coding agents.**
+**Deterministic proof of documentation drift, with evidence-linked handoffs for coding agents.**
 
-doc-bridge reads your repo docs, ownership map, and human documentation site, then gives humans and agents the same evidence-linked starting point:
+Turn your docs into executable handoffs: doc-bridge reads your repo docs, ownership map, and human documentation site, then gives humans and agents the same evidence-linked starting point:
 
 - where to start reading
 - which files/packages it may edit
 - which checks prove the change
 - which human docs explain the feature
 
-It is not a wiki or hosted RAG. The core works **without any LLM or API key**; the documentation portal dogfoods AgentsKit Chat as an optional surface over that deterministic layer.
+The core works **without any LLM or API key**; the documentation portal dogfoods AgentsKit Chat as an optional surface over that deterministic layer.
 
 ![doc-bridge maps human docs into structured agent handoffs](docs/landing/assets/doc-bridge-hero.webp)
 
@@ -124,6 +124,16 @@ Capture each revision independently for a real delta. See
 [Action advisory mode](docs/guides/action-advisory.md) for bounded PR reports.
 Reports never approve documentation corrections.
 
+## 2.0 workflows
+
+- **Vault:** opt-in Obsidian discovery reads wikilinks, aliases and tags; `ak-docs vault export` generates ignored navigation notes and `vault diff` turns edited generated notes into pending proposals. [Vault guide](docs/guides/vault.md).
+- **Rationale:** enable `index.knowledgeEntities.enabled`, index decisions/concepts/changes, then run `ak-docs why <path|symbol|concept>`. MCP exposes `knowledge.decision`, `knowledge.concept` and `knowledge.whyChanged`. Evidence is observed rationale, not inferred causality. [Knowledge query contract](docs/spec/knowledge-query-v1.md).
+- **Remediation:** optional `ak-docs fix --llm` uses scripted fake-provider responses in the [key-free guide](docs/guides/llm-remediation.md); real providers use explicit intelligence configuration. Proposals require deterministic rechecking and human review.
+- **Advisory:** `CHANGED_REFERENCE` concerns a claim about the changed aspect; bare mentions do not trigger it. Unknown syntax remains review-required uncertainty. [Action advisory](docs/guides/action-advisory.md).
+- **Upgrade:** follow the [1.x → 2.0 migration guide](docs/migration/1.x-to-2.0.md). The Studio UI is planned for 2.1 and is not part of 2.0.
+
+The latest [Layer-1 benchmark and method](docs/bench/layer1-results-v2.md) report native findings at **100% precision** (15 TP, 0 FP, 0 FN), historical changed-reference findings at **83.3% precision** (10 TP, 2 FP, 0 FN), and **6.25% false-positive rate on historical negative cases** (2/32). These purposive controls measure different denominators; they do not establish general semantic accuracy or release readiness.
+
 ## 60-second proof
 
 This README owns the one-command proof; the [Getting started guide](docs/getting-started.md)
@@ -191,7 +201,7 @@ See the [surface map](docs/landing/assets/doc-bridge-surfaces.webp) for a visual
 | **Memory pipeline** | Turn agent notes into reviewable documentation drafts | `memory ingest`, `classify`, `promote --pr` |
 | **Optional RAG/chat** | Ground chat in the same handoff-first index | `@agentskit/rag`, `@agentskit/ink`, `ak-docs chat` |
 
-See [docs/getting-started.md](docs/getting-started.md), [docs/mcp.md](docs/mcp.md), and [docs/examples.md](docs/examples.md).
+See [Getting started](docs/getting-started.md), [MCP](docs/mcp.md), [Examples](docs/examples.md), and [Why doc-bridge](docs/why-doc-bridge.md).
 
 ### Cursor plugin
 

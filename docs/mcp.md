@@ -103,3 +103,14 @@ Before editing a package:
 Rationale tools include bounded indexed `memory-supports` relations with exact
 `id`, `alias`, or `path` evidence in JSON and text, following
 [knowledge query v1](spec/knowledge-query-v1.md). Relations only target returned entities, including under service restrictions.
+
+## 2.0 rationale tools
+
+Enable `index.knowledgeEntities.enabled: true` and rebuild the local index to
+query decisions, concepts and changes. Read-only `knowledge.decision`,
+`knowledge.concept` and `knowledge.whyChanged` accept an exact `target`, optional
+`limit`, `budgetTokens` and `format`. Explicit tool allowlists remain restrictive:
+add these tools only if intended. The same evidence is available through
+`ak-docs why <path|symbol|concept>`. Empty observations are not proof of absent
+rationale; service queries omit commit history and report that coverage.
+See [knowledge query](./spec/knowledge-query-v1.md).
