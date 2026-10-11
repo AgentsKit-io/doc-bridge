@@ -109,6 +109,16 @@
 
 - Precompute semantic hash ordering keys once per entry and bound syntax-tree retention for index-only scans and reuse parsed trees in discovery, reducing index-build cost without changing artifact bytes or hash identity.
 
+## 2.0.0-next.4
+
+### Patch Changes
+
+- 2ec2a74: Agent search (`ak-docs search --agent` and MCP `doc.search` with `agent: true`) no longer fails when the caller declares no budget. The default budget rises from 32 to 128 tokens, and an oversized default result is returned as its minimum grounded form (one match with type, id and path, no summary, no next commands) marked `truncated`. A declared `contextBudgetTokens` / `--context-budget` that cannot fit one grounded match still fails closed.
+- 43e8a5f: Stop bare lowercase words such as `main` in prose from resolving to a script's exported `main()`: an entrypoint script is only cited by a bare word when the same citation region also cites its path or package, so a second script exporting `main` no longer produces `AMBIGUOUS_REFERENCE` findings for a branch name.
+- 9e4d5c5: Return MCP `instructions` on `initialize`, built only from the tools the configuration enables, and rewrite the `doc.search`, `doc.get` and `handoff.resolve` descriptions and input property descriptions to say when to use each tool and what it returns. Deterministic and key-free; no change in agent behaviour is claimed until the study is re-run.
+- 4168b58: Prepare a separate six-task agent-efficiency protocol and optional budget-capped study runner with offline validation, a headless Claude Code CLI pilot transport that uses the CLI's own login without an API key, a tested Messages API option, and pending agent adjudication with no human review. No model results are claimed.
+- a00fd4d: Price minimal-study CLI attempts from the authoritative `modelUsage` totals with TTL-aware cache-write rates, using per-message stream usage only to select the price tier, so a valid attempt is no longer rejected as `invalid-cost`.
+
 ## 2.0.0-next.3
 
 ### Minor Changes
