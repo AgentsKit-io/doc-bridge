@@ -132,12 +132,15 @@ export const resolutionFingerprint = (input: {
   readonly documentPaths: readonly string[]
   readonly areaPaths: readonly string[]
   readonly symbols: ReadonlyMap<string, readonly string[]>
+  /** Entrypoint script module ids; omitted from the hash when empty so snapshots without any stay comparable. */
+  readonly entrypoints?: readonly string[]
 }): string =>
   sha256NormalizedV1({
     moduleUniverse: input.moduleUniverse,
     documents: [...input.documentPaths].sort(),
     areas: [...input.areaPaths].sort(),
     symbols: [...input.symbols.entries()].map(([name, owners]) => [name, [...owners].sort()]).sort(([a], [b]) => String(a).localeCompare(String(b))),
+    ...(input.entrypoints?.length ? { entrypoints: [...input.entrypoints].sort() } : {}),
   })
 
 /**
@@ -232,6 +235,7 @@ export const indexPriorSnapshot = (previous: PreviousSnapshot, compilerOptions: 
       documentPaths: [...documents.keys()],
       areaPaths: previous.entities.filter((entity) => entity.kind === 'area').map((entity) => entity.path ?? ''),
       symbols,
+      entrypoints: previous.entities.filter((entity) => entity.kind === 'module' && entity.metadata?.entrypoint === true).map((entity) => entity.id),
     }),
     entities: new Map(previous.entities.map((entity) => [entity.id, entity])),
   }

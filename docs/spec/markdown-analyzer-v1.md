@@ -13,7 +13,7 @@ line the claim was made on.
 | --- | --- | --- |
 | `links-to` | document → document | a relative link that resolves to a scanned document |
 | `mentions` | document → module or package | inline code or link text equal to a scanned path or a package name |
-| `mentions-symbol` | document → module | inline code or an exact fenced identifier equal to an exported name of exactly one module |
+| `mentions-symbol` | document → module | inline code or an exact fenced identifier equal to an exported name of exactly one module; a bare lowercase word resolves to an entrypoint script only when the same citation region also cites it (see *Bare words and entrypoint scripts*) |
 | `covers` | document → anything | a `docbridge` declaration, unchanged |
 
 A symbol resolves to the module that **declares** it, never to a barrel that re-exports it. When
@@ -33,6 +33,24 @@ Each cited symbol has a distinct relation identified by
 `relationId(documentId, 'mentions-symbol', moduleId, symbol)`, with the cited name in
 `metadata.symbol`. Repeated citations accumulate at most eight evidence locations on that
 symbol's relation. Unresolved tokens produce no dangling relation and do not prove removal.
+
+Bare words and entrypoint scripts. An inline-code or link-text span that is a bare lowercase
+word (`/^[a-z]+$/`, the whole span) is common prose: `main` names a branch as often as a
+function. Such a span does not resolve to a candidate module that is an entrypoint script unless
+that module is anchored. A module is anchored when its path, or the name of its package, is cited
+by a code token or a link in the same citation region (a paragraph, heading, table row or code
+block); a citation outside any region anchors only on the same line. Owners that are not
+entrypoint scripts are unaffected, and fenced syntactic citations are never filtered. After
+filtering, resolution is as above: one owner records `mentions-symbol`, several record ambiguity
+metadata, and none records nothing.
+
+A module is an entrypoint script when its source starts with a shebang (`#!`), or contains on one
+line an ESM guard comparing `import.meta.url` with `process.argv[1]` using `==` or `===` in either
+order, or `require.main === module` (or `module === require.main`). The fact is recorded on the
+module entity as `metadata.entrypoint: true` and is absent otherwise. It is part of the resolution
+fingerprint, so changing it invalidates document reuse. A library that only mentions
+`import.meta.url` or `process.argv` is not an entrypoint. The decision is recorded in
+[ADR 0024](../adr/0024-entrypoint-bare-word-citations.md).
 
 Ambiguous symbols also appear on the document entity in `metadata.ambiguousSymbolReferences`:
 a symbol-sorted array of `{ symbol, candidateModuleIds, candidateCount, lines }`. Names are
@@ -294,4 +312,6 @@ source order does not let broad parent citations displace specific descendants.
 Repeated citations retain up to eight locations. Legacy entity references retain
 their existing separate cap. Exceeding the fact cap sets
 `factReferencesTruncated` and emits explicit partial coverage; truncation never
-means complete analysis. Analyzer version 1.6.0 invalidates prior citation caches.
+means complete analysis. Analyzer version 1.7.0 invalidates prior citation caches; it adds the
+entrypoint filter for bare words and the `entrypoint` module fact, recorded by the `js-ts` adapter
+(version 1.7.0).

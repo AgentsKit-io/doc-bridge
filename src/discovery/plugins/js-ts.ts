@@ -18,6 +18,7 @@ import { sha256NormalizedV1 } from '../../index-builder/content-hash.js'
 import { entityId } from '../identity.js'
 import { emptyLedger, exportsOf, declaredExportsOf, fileContentHash, indexPriorSnapshot, moduleUniverseFingerprint, reuseRefusal, type PriorFile } from '../incremental.js'
 import { SOURCE_EXTENSIONS, exportedNames, scriptKind } from '../inputs.js'
+import { isEntrypointScript } from '../entrypoint.js'
 import type { DiscoverySnapshotV1, Evidence, KnowledgeEntity, KnowledgeRelation } from '../../schemas/knowledge.js'
 import type { AreaModule } from '../areas.js'
 export type JsonRecord = Record<string, unknown>
@@ -515,6 +516,8 @@ const dependencyEntries = (manifest: JsonRecord): readonly { readonly name: stri
       const development = pkg?.manifest.devDependencies as JsonRecord | undefined
       const schemaOutputs = typeof (dependencies?.zod ?? development?.zod) === 'string' && /^[~^]?4\.\d+\.\d+$/.test(String(dependencies?.zod ?? development?.zod))
       const context = signatureContext(sourceFile, schemaOutputs)
+      // A boolean module fact, recorded only when true: markdown citations of bare words resolve around scripts.
+      const entrypoint = isEntrypointScript(text)
       addEntity({
         id,
         kind: 'module',
@@ -527,7 +530,7 @@ const dependencyEntries = (manifest: JsonRecord): readonly { readonly name: stri
             contentHash,
           },
         ],
-        metadata: { ...(exports.length ? { exports, ...(reexports.length ? { reexports } : {}), test: TEST_MODULE_PATTERN.test(path) } : {}), signatureContext: context ?? null, ...(schemaOutputs ? { schemaOutputCodec: 'zod-4-output-v1' } : {}) },
+        metadata: { ...(exports.length ? { exports, ...(reexports.length ? { reexports } : {}), test: TEST_MODULE_PATTERN.test(path) } : {}), signatureContext: context ?? null, ...(schemaOutputs ? { schemaOutputCodec: 'zod-4-output-v1' } : {}), ...(entrypoint ? { entrypoint: true } : {}) },
       })
     }
     if (pkg) addRelation({ id: entityId('relation', `${pkg.id}:contains:${id}`), kind: 'contains', from: pkg.id, to: id, provenance: 'observed', evidence: [lineEvidence('code', root, absPath, 1)] })
@@ -658,7 +661,7 @@ const dependencyEntries = (manifest: JsonRecord): readonly { readonly name: stri
 }
 export type SourceState = ReturnType<ReturnType<typeof createJsTsExtraction>['prepare']>
 
-const baseManifest = builtInManifest('js-ts', '1.6.0', [...new Set([...SOURCE_EXTENSIONS, ...CONFIG_EXTENSIONS])].map(extension => `**/*${extension}`))
+const baseManifest = builtInManifest('js-ts', '1.7.0', [...new Set([...SOURCE_EXTENSIONS, ...CONFIG_EXTENSIONS])].map(extension => `**/*${extension}`))
 const factCapabilities = { symbol: 'symbols', 'cli-command': 'cli-commands', 'cli-flag': 'cli-flags', 'config-key': 'config-keys', signature: 'signatures' } as const
 export const jsTsManifest = { ...baseManifest, capabilities: [...new Set([...baseManifest.capabilities, 'lockfile' as const, 'versions' as const, 'release-map' as const, ...FACT_EXTRACTORS.flatMap(extractor => extractor.kinds.map(kind => factCapabilities[kind]))])] }
 export const createJsTsPluginV2 = (): DiscoveryPluginV2 => ({

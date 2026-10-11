@@ -145,7 +145,8 @@ const resolutionFor = (base: SnapshotForChanges): MarkdownResolution => {
   for (const [symbol, owners] of forwarding) if (!symbols.has(symbol)) symbols.set(symbol, owners)
   const facts = new Map<string, SurfaceFact[]>()
   for (const fact of factsOf(base)) facts.set(fact.name, [...(facts.get(fact.name) ?? []), fact])
-  const resolution = { documents: paths('document'), modules: paths('module'), areas: paths('area'), packages: new Map(base.entities.filter((entity) => entity.kind === 'package').map((entity) => [entity.name, entity.id])), symbols, facts, packagePaths: base.entities.filter(entity => entity.kind === 'package' && entity.path).map(entity => ({id:entity.id,path:entity.path!})), cliPackages: base.entities.filter(entity => entity.kind === 'package').map(entity => ({ name: entity.name, bin: entity.metadata?.cliBin })) }
+  const entrypoints = new Set(base.entities.filter((entity) => entity.kind === 'module' && entity.metadata?.entrypoint === true).map((entity) => entity.id))
+  const resolution = { entrypoints, documents: paths('document'), modules: paths('module'), areas: paths('area'), packages: new Map(base.entities.filter((entity) => entity.kind === 'package').map((entity) => [entity.name, entity.id])), symbols, facts, packagePaths: base.entities.filter(entity => entity.kind === 'package' && entity.path).map(entity => ({id:entity.id,path:entity.path!})), cliPackages: base.entities.filter(entity => entity.kind === 'package').map(entity => ({ name: entity.name, bin: entity.metadata?.cliBin })) }
   return { ...resolution, pathIndex: markdownPathCandidateIndex(resolution) }
 }
 
