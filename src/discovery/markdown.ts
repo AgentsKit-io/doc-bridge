@@ -31,7 +31,7 @@ import { surfaceFactEntityId } from '../storage/facts.js'
  * is inferred from a near-match unless the near-match is unambiguous.
  */
 
-export const MARKDOWN_ANALYZER_VERSION = '1.6.0'
+export const MARKDOWN_ANALYZER_VERSION = '1.7.0'
 
 /** Headings deeper than this are structure, not subject matter. */
 const MAX_HEADING_DEPTH = 3
@@ -512,6 +512,8 @@ export type MarkdownResolution = {
   readonly cliPackages?: readonly { readonly name: string; readonly bin: unknown }[]
   /** Exported symbol to the entity ids of every module exporting it. */
   readonly symbols: ReadonlyMap<string, readonly string[]>
+  /** Module entity ids of entrypoint scripts (see `isEntrypointScript`); bare words do not resolve to them unless anchored. */
+  readonly entrypoints?: ReadonlySet<string>
   readonly facts?: ReadonlyMap<string, readonly MarkdownFact[]>
   readonly packagePaths?: readonly { readonly id: string; readonly path: string }[]
   readonly relationCap?: number
@@ -639,6 +641,14 @@ const resolveRelative = (from: string, target: string): string | undefined => {
 /** A token that could be a repository path, as opposed to prose or a symbol. */
 const pathShaped = (value: string): boolean => /[/.]/.test(value) && !/\s/.test(value)
 
+/**
+ * A bare lowercase word such as `main`: the whole citation span, with no separator or capital.
+ *
+ * Such a word is usually prose (a branch name, a verb) but it is also a legitimate name for a
+ * library function. Only entrypoint scripts are filtered out of its candidates (see `citableOwners`).
+ */
+const BARE_WORD = /^[a-z]+$/
+
 export const analyzeMarkdownDocument = (
   document: MarkdownDocumentV1,
   documentId: string,
@@ -649,6 +659,8 @@ export const analyzeMarkdownDocument = (
   const relations = new Map<string, KnowledgeRelation>()
   const notes: MarkdownNote[] = []
   const ambiguous = new Map<string, Evidence[]>()
+  /** Owners that survived citable filtering at each ambiguous line, unioned per symbol. */
+  const ambiguousOwners = new Map<string, Set<string>>()
   const ambiguousFacts = new Map<string, AmbiguousFactReference>()
   let truncated = false
   let factsTruncated = false
@@ -690,6 +702,47 @@ export const analyzeMarkdownDocument = (
 
   const areas = resolution.areas ?? new Map<string, string>()
   const pathCandidates = resolution.pathIndex ?? markdownPathCandidateIndex(resolution)
+
+  /*
+   * An entrypoint script owns names such as `main` that prose uses for other things. A bare word
+   * may resolve to one only when the same citation region also cites that script's path or its
+   * package name, which is the same anchor rule configuration keys use. Elsewhere the script is
+   * filtered out before resolution, so one owner resolves and several owners are reported only
+   * among owners that could plausibly be meant.
+   */
+  const entrypoints = resolution.entrypoints ?? new Set<string>()
+  const modulePathById = new Map([...resolution.modules].map(([path, id]) => [id, path]))
+  const packagePaths = [...(resolution.packagePaths ?? [])].sort((a, b) => b.path.length - a.path.length)
+  const citedAround = new Map<string, Set<string>>()
+  const citedNear = (line: number): Set<string> => {
+    const region = (document.citationRegions ?? []).filter(item => item.lineStart <= line && item.lineEnd >= line).sort((a, b) => (a.lineEnd - a.lineStart) - (b.lineEnd - b.lineStart))[0]
+    const key = region ? `${region.lineStart}:${region.lineEnd}` : `line:${line}`
+    const memo = citedAround.get(key)
+    if (memo) return memo
+    const inScope = (cited: number) => region ? cited >= region.lineStart && cited <= region.lineEnd : cited === line
+    const cited = new Set<string>()
+    for (const token of document.codeTokens) if (inScope(token.line)) cited.add(token.value.replace(/^\.\//, ''))
+    for (const link of document.links) if (inScope(link.line)) {
+      cited.add(link.value.replace(/^\.\//, ''))
+      const resolved = resolveRelative(document.path, link.value)
+      if (resolved) cited.add(resolved)
+    }
+    citedAround.set(key, cited)
+    return cited
+  }
+  const anchoredOwner = (ownerId: string, line: number): boolean => {
+    const cited = citedNear(line)
+    const path = modulePathById.get(ownerId)
+    if (path === undefined) return false
+    if (cited.has(path)) return true
+    const pkg = packagePaths.find(item => item.path === '.' || path.startsWith(`${item.path}/`))
+    return !!pkg && [...resolution.packages.entries()].some(([name, id]) => id === pkg.id && cited.has(name))
+  }
+  /** Owners a bare-word citation may resolve to; every other span is returned unchanged. */
+  const citableOwners = (owners: readonly string[], value: string, line: number, exempt: boolean): readonly string[] => {
+    if (exempt || !BARE_WORD.test(value) || !owners.some(id => entrypoints.has(id))) return owners
+    return owners.filter(id => !entrypoints.has(id) || anchoredOwner(id, line))
+  }
 
   /** A path-shaped reference: a document link, a module mention, or an unambiguous near-miss. */
   const resolvePath = (candidate: string, line: number, linkKind: 'links-to' | 'mentions'): boolean => {
@@ -739,7 +792,7 @@ export const analyzeMarkdownDocument = (
 
   // Signature facts reuse a uniquely resolved symbol citation, preserving its legacy edge.
   function resolveSignatureSymbol(value: string, line: number, codeFence: boolean): boolean {
-    const owners = [...new Set(resolution.symbols.get(value) ?? [])]
+    const owners = [...new Set(citableOwners(resolution.symbols.get(value) ?? [], value, line, codeFence))]
     if (owners.length !== 1) return false
     const signature = resolution.facts?.get(value)?.find(fact => fact.kind === 'signature' && fact.ownerId === owners[0])
     if (!signature) return false
@@ -768,7 +821,8 @@ export const analyzeMarkdownDocument = (
 
     const signatureSymbol = !cliKind && resolveSignatureSymbol(value, line, exactOnly)
     const candidates = resolution.facts?.get(value)?.filter(fact => !ownerIds || ownerIds.includes(fact.ownerId))
-    const facts = [...(candidates ?? []).filter(fact => fact.kind !== 'config-key'), ...(cliKind && cliKind !== 'config-key' ? [] : (value.includes('.') || configReference?.configExample ? configKeys.get(configCitationKey(configReference ?? {value,line})) : undefined) ?? [])].filter(fact => (cliKind ? fact.kind === cliKind : fact.kind !== 'cli-command' && fact.kind !== 'cli-flag') && (fact.kind !== 'signature' || (!resolution.symbols.has(value) && !resolution.symbols.has(value.split('.')[0]!))))
+    const citable = new Set(citableOwners(candidates?.map(fact => fact.ownerId) ?? [], value, line, exactOnly || !!cliKind))
+    const facts = [...(candidates ?? []).filter(fact => citable.has(fact.ownerId) && fact.kind !== 'config-key'), ...(cliKind && cliKind !== 'config-key' ? [] : (value.includes('.') || configReference?.configExample ? configKeys.get(configCitationKey(configReference ?? {value,line})) : undefined) ?? [])].filter(fact => (cliKind ? fact.kind === cliKind : fact.kind !== 'cli-command' && fact.kind !== 'cli-flag') && (fact.kind !== 'signature' || (!resolution.symbols.has(value) && !resolution.symbols.has(value.split('.')[0]!))))
     if (facts?.length) {
       for (const kind of [...new Set(facts.map(fact => fact.kind))].sort()) {
         const candidates = facts.filter(fact => fact.kind === kind)
@@ -794,7 +848,9 @@ export const analyzeMarkdownDocument = (
       return
     }
 
-    const modules = resolution.symbols.get(value)
+    const declared = resolution.symbols.get(value)
+    const modules = declared && citableOwners(declared, value, line, exactOnly)
+    if (declared?.length && !modules?.length) return
     if (modules?.length === 1 && modules[0]) {
       add('mentions-symbol', modules[0], line, undefined, value, undefined, exactOnly)
       return
@@ -803,6 +859,7 @@ export const analyzeMarkdownDocument = (
       const evidence = ambiguous.get(value) ?? []
       if (evidence.length < 8) evidence.push(documentEvidence(document.path, line))
       ambiguous.set(value, evidence)
+      ambiguousOwners.set(value, new Set([...(ambiguousOwners.get(value) ?? []), ...modules]))
       return
     }
 
@@ -819,7 +876,7 @@ export const analyzeMarkdownDocument = (
   for (const [token, evidence] of [...ambiguous.entries()].sort(([a], [b]) => a.localeCompare(b))) {
     notes.push({
       scope: `mentions-symbol:${document.path}:${token}`,
-      reason: `"${token}" is exported by ${resolution.symbols.get(token)?.length ?? 0} modules; the reference is ambiguous and produced no relation.`,
+      reason: `"${token}" is exported by ${ambiguousOwners.get(token)?.size ?? 0} modules; the reference is ambiguous and produced no relation.`,
       evidence,
     })
   }
@@ -845,7 +902,7 @@ export const analyzeMarkdownDocument = (
     .sort(([a], [b]) => a.localeCompare(b))
     .slice(0, 64)
     .map(([symbol, evidence]) => {
-      const candidates = [...new Set(resolution.symbols.get(symbol) ?? [])].sort()
+      const candidates = [...(ambiguousOwners.get(symbol) ?? [])].sort()
       return { symbol, candidateModuleIds: candidates.slice(0, 32), candidateCount: candidates.length,
         lines: [...new Set(evidence.map((item) => item.lineStart as number))].sort((a, b) => a - b) }
     })

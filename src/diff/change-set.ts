@@ -145,7 +145,8 @@ const resolutionFor = (base: SnapshotForChanges): MarkdownResolution => {
   for (const [symbol, owners] of forwarding) if (!symbols.has(symbol)) symbols.set(symbol, owners)
   const facts = new Map<string, SurfaceFact[]>()
   for (const fact of factsOf(base)) facts.set(fact.name, [...(facts.get(fact.name) ?? []), fact])
-  const resolution = { documents: paths('document'), modules: paths('module'), areas: paths('area'), packages: new Map(base.entities.filter((entity) => entity.kind === 'package').map((entity) => [entity.name, entity.id])), symbols, facts, packagePaths: base.entities.filter(entity => entity.kind === 'package' && entity.path).map(entity => ({id:entity.id,path:entity.path!})), cliPackages: base.entities.filter(entity => entity.kind === 'package').map(entity => ({ name: entity.name, bin: entity.metadata?.cliBin })) }
+  const entrypoints = new Set(base.entities.filter((entity) => entity.kind === 'module' && entity.metadata?.entrypoint === true).map((entity) => entity.id))
+  const resolution = { entrypoints, documents: paths('document'), modules: paths('module'), areas: paths('area'), packages: new Map(base.entities.filter((entity) => entity.kind === 'package').map((entity) => [entity.name, entity.id])), symbols, facts, packagePaths: base.entities.filter(entity => entity.kind === 'package' && entity.path).map(entity => ({id:entity.id,path:entity.path!})), cliPackages: base.entities.filter(entity => entity.kind === 'package').map(entity => ({ name: entity.name, bin: entity.metadata?.cliBin })) }
   return { ...resolution, pathIndex: markdownPathCandidateIndex(resolution) }
 }
 
@@ -399,8 +400,17 @@ const diffWithDocuments = (base: DiscoverySnapshotV1, head: DiscoverySnapshotV1,
     const factName = symbol ?? relation.metadata?.factName
     if (typeof factName === 'string' && (factKind === 'package' ? factIds.has(relation.to) : SurfaceFactKindSchema.safeParse(factKind).success && factIds.has(surfaceFactEntityId(factKind as SurfaceFact['kind'], relation.to, factName)))) continue
     const removed = removals.get(symbol ? entityId('symbol', `${relation.to}:${symbol}`) : relation.to)
-    const ambiguous = !removed && symbol && resolution.symbols.get(symbol)?.length === 1 && Array.isArray(doc.metadata?.ambiguousSymbolReferences)
+    // Base owners as the bare-word entrypoint filter sees them: the relation's own owner plus non-script owners, so a unique base relation stays protected when a head owner is added.
+    const baseOwners = symbol ? [...new Set(resolution.symbols.get(symbol) ?? [])].filter(id => id === relation.to || !resolution.entrypoints?.has(id)) : []
+    const headAmbiguity = !removed && symbol && baseOwners.length === 1 && Array.isArray(doc.metadata?.ambiguousSymbolReferences)
       ? doc.metadata.ambiguousSymbolReferences.find((item) => item && typeof item === 'object' && item.symbol === symbol) : undefined
+    // A document can cite the same word both as a unique bare mention and, on an anchored or fenced line, as an
+    // already-ambiguous symbol. Only a candidate the base document did not already list makes the citation newly ambiguous.
+    const baseAmbiguity = symbol && Array.isArray(before.get(relation.from)?.metadata?.ambiguousSymbolReferences)
+      ? (before.get(relation.from)!.metadata!.ambiguousSymbolReferences as unknown[]).find((item) => !!item && typeof item === 'object' && (item as { symbol?: unknown }).symbol === symbol) as { candidateModuleIds?: unknown } | undefined : undefined
+    const baseCandidates = new Set(Array.isArray(baseAmbiguity?.candidateModuleIds) ? baseAmbiguity.candidateModuleIds.filter((id): id is string => typeof id === 'string') : [])
+    const ambiguous = headAmbiguity && (!baseAmbiguity || !Array.isArray(headAmbiguity.candidateModuleIds) ||
+      headAmbiguity.candidateModuleIds.some((id: unknown) => typeof id === 'string' && !baseCandidates.has(id))) ? headAmbiguity : undefined
     if (!removed && !ambiguous) continue
     if (!citations.has(doc.id)) citations.set(doc.id, options.headRoot ? citationsInHead(doc, base, options.headRoot, resolution) : texts.has(doc.id) ? citationsFromText(doc, base, texts.get(doc.id)!, resolution) : undefined)
     const currentCitations = citations.get(doc.id)

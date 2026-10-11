@@ -76,11 +76,13 @@ export const createMarkdownExtraction = (io: ScanIO, adapters: readonly Discover
    * — a symbol that moved from one module to another changes where a mention points without
    * changing a single byte of the document that mentions it.
    */
+  const entrypoints = new Set([...entities.values()].filter((entity) => entity.kind === 'module' && entity.metadata?.entrypoint === true).map((entity) => entity.id))
   const resolution = resolutionFingerprint({
     moduleUniverse,
     documentPaths: [...documentFiles.keys()],
     areaPaths: areas.map((area) => area.path),
     symbols: symbolModules,
+    entrypoints: [...entrypoints],
   })
   const packageUniverse = canonicalJsonV1([...entities.values()].filter(entity => entity.kind === 'package').sort((a,b) => a.id.localeCompare(b.id)).map(entity => entity.metadata))
   const oldPackageUniverse = canonicalJsonV1(opts.previous?.entities.filter(entity => entity.kind === 'package').sort((a,b) => a.id.localeCompare(b.id)).map(entity => entity.metadata) ?? [])
@@ -143,6 +145,7 @@ export const createMarkdownExtraction = (io: ScanIO, adapters: readonly Discover
     packages: packageNames,
     cliPackages: packageResult.packages.map(pkg => ({ name: pkg.name ?? '', bin: pkg.manifest.bin })),
     symbols: symbolModules,
+    entrypoints,
     ...(facts ? { facts } : {}),
     // One index for the whole run: the analyzer used to rebuild this per document.
     pathIndex: markdownPathCandidateIndex({ documents: documentsByPath, modules: modulesByPath, areas: areasByPath }),
