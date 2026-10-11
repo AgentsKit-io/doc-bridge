@@ -46,7 +46,8 @@ metadata, and none records nothing.
 
 A module is an entrypoint script when its source starts with a shebang (`#!`), or contains on one
 line an ESM guard comparing `import.meta.url` with `process.argv[1]` using `==` or `===` in either
-order, or `require.main === module` (or `module === require.main`). The fact is recorded on the
+order, or `require.main === module` (or `module === require.main`). Guards are matched only in code:
+comments and string or template literal contents are ignored. The fact is recorded on the
 module entity as `metadata.entrypoint: true` and is absent otherwise. It is part of the resolution
 fingerprint, so changing it invalidates document reuse. A library that only mentions
 `import.meta.url` or `process.argv` is not an entrypoint. The decision is recorded in

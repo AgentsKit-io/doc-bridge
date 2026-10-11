@@ -400,7 +400,9 @@ const diffWithDocuments = (base: DiscoverySnapshotV1, head: DiscoverySnapshotV1,
     const factName = symbol ?? relation.metadata?.factName
     if (typeof factName === 'string' && (factKind === 'package' ? factIds.has(relation.to) : SurfaceFactKindSchema.safeParse(factKind).success && factIds.has(surfaceFactEntityId(factKind as SurfaceFact['kind'], relation.to, factName)))) continue
     const removed = removals.get(symbol ? entityId('symbol', `${relation.to}:${symbol}`) : relation.to)
-    const ambiguous = !removed && symbol && resolution.symbols.get(symbol)?.length === 1 && Array.isArray(doc.metadata?.ambiguousSymbolReferences)
+    // Base owners as the bare-word entrypoint filter sees them: the relation's own owner plus non-script owners, so a unique base relation stays protected when a head owner is added.
+    const baseOwners = symbol ? [...new Set(resolution.symbols.get(symbol) ?? [])].filter(id => id === relation.to || !resolution.entrypoints?.has(id)) : []
+    const ambiguous = !removed && symbol && baseOwners.length === 1 && Array.isArray(doc.metadata?.ambiguousSymbolReferences)
       ? doc.metadata.ambiguousSymbolReferences.find((item) => item && typeof item === 'object' && item.symbol === symbol) : undefined
     if (!removed && !ambiguous) continue
     if (!citations.has(doc.id)) citations.set(doc.id, options.headRoot ? citationsInHead(doc, base, options.headRoot, resolution) : texts.has(doc.id) ? citationsFromText(doc, base, texts.get(doc.id)!, resolution) : undefined)

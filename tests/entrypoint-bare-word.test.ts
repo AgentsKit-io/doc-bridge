@@ -71,3 +71,66 @@ it('still reports a bare word exported by two library modules as ambiguous', () 
   const document = base.entities.find(entity => entity.kind === 'document')!
   expect((document.metadata?.ambiguousSymbolReferences as { symbol: string }[] | undefined)?.map(item => item.symbol)).toEqual(['make'])
 })
+
+const scriptVerify = 'export function verify() { return 2 }\nif (import.meta.url === `file://${process.argv[1]}`) verify()\n'
+const ambiguityOf = (snapshot: ReturnType<typeof flow>['base'], symbol: string) => {
+  const document = snapshot.entities.find(entity => entity.kind === 'document')!
+  return (document.metadata?.ambiguousSymbolReferences as { symbol: string; candidateModuleIds: string[]; candidateCount: number }[] | undefined)?.find(item => item.symbol === symbol)
+}
+
+it('anchors a bare word through the package name cited in the same paragraph', () => {
+  const { base } = flow({ 'scripts/verify.mjs': entrypoint('verify') }, {}, '# Guide\n\nRun `entrypoint-fixture` to check the `main` flow.\n')
+  expect(mentionsOf(base, 'main').map(item => item.to)).toEqual([moduleId(base, 'scripts/verify.mjs')])
+})
+
+it('keeps a fenced exact citation of a script symbol without the bare-word filter', () => {
+  const { base } = flow({ 'scripts/verify.mjs': entrypoint('verify') }, {}, '# Guide\n\n```ts\nmain()\n```\n')
+  expect(mentionsOf(base, 'main').map(item => item.to)).toEqual([moduleId(base, 'scripts/verify.mjs')])
+})
+
+it('resolves a bare word shared by a library and a script to the library, with no ambiguity', () => {
+  const { base, result } = flow({ 'lib/verify.ts': 'export function verify() { return 1 }\n', 'scripts/verify.mjs': scriptVerify }, {}, '# Guide\n\nCall `verify` to check it.\n')
+  expect(mentionsOf(base, 'verify').map(item => item.to)).toEqual([moduleId(base, 'lib/verify.ts')])
+  expect(result.findings.filter(item => item.code === 'AMBIGUOUS_REFERENCE')).toEqual([])
+})
+
+it('leaves an unanchored script out of the ambiguity candidates and the note of a bare word', () => {
+  const { base } = flow(
+    { 'lib/a.ts': 'export function verify() { return 1 }\n', 'lib/b.ts': 'export function verify() { return 3 }\n', 'scripts/verify.mjs': scriptVerify },
+    {},
+    '# Guide\n\nCall `verify` to check it.\n',
+  )
+  expect(ambiguityOf(base, 'verify')?.candidateModuleIds).toEqual([moduleId(base, 'lib/a.ts'), moduleId(base, 'lib/b.ts')].sort())
+  expect(ambiguityOf(base, 'verify')?.candidateCount).toBe(2)
+  expect(base.coverage.find(entry => entry.scope === 'mentions-symbol:docs/guide.md:verify')?.reason).toContain('exported by 2 modules')
+})
+
+it('reports AMBIGUOUS_REFERENCE when a head library joins a base library and an unanchored script that share a bare word', () => {
+  const { base, result } = flow(
+    { 'scripts/verify.mjs': entrypoint('verify'), 'lib/x.ts': 'export function main() { return 1 }\n' },
+    { 'lib/y.ts': 'export function main() { return 2 }\n' },
+    '# Guide\n\nUse `main` to start.\n',
+  )
+  expect(mentionsOf(base, 'main').map(item => item.to)).toEqual([moduleId(base, 'lib/x.ts')])
+  expect(result.findings.filter(item => item.code === 'AMBIGUOUS_REFERENCE')).toHaveLength(1)
+})
+
+it('re-analyses a document when a module it cites starts or stops being an entrypoint script', () => {
+  const root = mkdtempSync(join(tmpdir(), 'doc-bridge-entrypoint-flip-')); roots.push(root)
+  mkdirSync(join(root, 'docs'))
+  mkdirSync(join(root, 'scripts'))
+  writeFileSync(join(root, 'package.json'), JSON.stringify({ name: 'entrypoint-flip', version: '1.0.0' }))
+  writeFileSync(join(root, 'scripts/verify.mjs'), 'export function main() { return 1 }\n')
+  writeFileSync(join(root, 'docs/guide.md'), '# Guide\n\nCall `main` to start.\n')
+  const cold = discoverRepository({ root })
+  expect(mentionsOf(cold, 'main').map(item => item.to)).toEqual([moduleId(cold, 'scripts/verify.mjs')])
+
+  writeFileSync(join(root, 'scripts/verify.mjs'), entrypoint('verify'))
+  const started = discoverRepository({ root, previous: cold })
+  expect(mentionsOf(started, 'main')).toEqual(mentionsOf(discoverRepository({ root }), 'main'))
+  expect(mentionsOf(started, 'main')).toEqual([])
+
+  writeFileSync(join(root, 'scripts/verify.mjs'), 'export function main() { return 1 }\n')
+  const stopped = discoverRepository({ root, previous: started })
+  expect(mentionsOf(stopped, 'main').map(item => item.to)).toEqual([moduleId(stopped, 'scripts/verify.mjs')])
+})

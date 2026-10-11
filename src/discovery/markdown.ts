@@ -659,6 +659,8 @@ export const analyzeMarkdownDocument = (
   const relations = new Map<string, KnowledgeRelation>()
   const notes: MarkdownNote[] = []
   const ambiguous = new Map<string, Evidence[]>()
+  /** Owners that survived citable filtering at each ambiguous line, unioned per symbol. */
+  const ambiguousOwners = new Map<string, Set<string>>()
   const ambiguousFacts = new Map<string, AmbiguousFactReference>()
   let truncated = false
   let factsTruncated = false
@@ -857,6 +859,7 @@ export const analyzeMarkdownDocument = (
       const evidence = ambiguous.get(value) ?? []
       if (evidence.length < 8) evidence.push(documentEvidence(document.path, line))
       ambiguous.set(value, evidence)
+      ambiguousOwners.set(value, new Set([...(ambiguousOwners.get(value) ?? []), ...modules]))
       return
     }
 
@@ -873,7 +876,7 @@ export const analyzeMarkdownDocument = (
   for (const [token, evidence] of [...ambiguous.entries()].sort(([a], [b]) => a.localeCompare(b))) {
     notes.push({
       scope: `mentions-symbol:${document.path}:${token}`,
-      reason: `"${token}" is exported by ${resolution.symbols.get(token)?.length ?? 0} modules; the reference is ambiguous and produced no relation.`,
+      reason: `"${token}" is exported by ${ambiguousOwners.get(token)?.size ?? 0} modules; the reference is ambiguous and produced no relation.`,
       evidence,
     })
   }
@@ -899,7 +902,7 @@ export const analyzeMarkdownDocument = (
     .sort(([a], [b]) => a.localeCompare(b))
     .slice(0, 64)
     .map(([symbol, evidence]) => {
-      const candidates = [...new Set(resolution.symbols.get(symbol) ?? [])].sort()
+      const candidates = [...(ambiguousOwners.get(symbol) ?? [])].sort()
       return { symbol, candidateModuleIds: candidates.slice(0, 32), candidateCount: candidates.length,
         lines: [...new Set(evidence.map((item) => item.lineStart as number))].sort((a, b) => a - b) }
     })
