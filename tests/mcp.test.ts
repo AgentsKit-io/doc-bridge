@@ -86,6 +86,56 @@ describe('MCP tools', () => {
     expect(() => handleMcpRequest(ctx, { method: 'tools/call', params: { name: 'gate.status', arguments: {} } })).toThrow('disabled by configuration')
   })
 
+  it('returns initialize instructions that name only the enabled tools', () => {
+    const config = loadFixtureConfig()
+    const initialized = handleMcpRequest({ root: fixtureRoot, config }, { method: 'initialize' }) as { instructions?: string }
+    expect(typeof initialized.instructions).toBe('string')
+    const instructions = initialized.instructions ?? ''
+    expect(instructions.length).toBeGreaterThan(0)
+    expect(instructions).toContain('doc.search')
+    expect(instructions).toContain('doc.get')
+    expect(instructions).toContain('handoff.resolve')
+    for (const tool of MCP_TOOLS) {
+      if (!['doc.search', 'doc.get', 'handoff.resolve'].includes(tool.name)) expect(instructions).not.toContain(tool.name)
+    }
+  })
+
+  it('builds instructions only from the tools a configuration enables', () => {
+    const narrow = applyConfigDefaults(DocBridgeConfigV1Schema.parse({
+      schemaVersion: 1,
+      corpus: { agent: { root: 'docs' } },
+      surfaces: { mcp: { tools: ['doc.search'] } },
+    }))
+    const narrowInstructions = (handleMcpRequest({ root: fixtureRoot, config: narrow }, { method: 'initialize' }) as { instructions?: string }).instructions ?? ''
+    expect(narrowInstructions).toContain('doc.search')
+    expect(narrowInstructions).not.toContain('doc.get')
+    expect(narrowInstructions).not.toContain('handoff.resolve')
+    for (const tool of MCP_TOOLS) {
+      if (tool.name !== 'doc.search') expect(narrowInstructions).not.toContain(tool.name)
+    }
+
+    const unguided = applyConfigDefaults(DocBridgeConfigV1Schema.parse({
+      schemaVersion: 1,
+      corpus: { agent: { root: 'docs' } },
+      surfaces: { mcp: { tools: ['gate.status'] } },
+    }))
+    expect(handleMcpRequest({ root: fixtureRoot, config: unguided }, { method: 'initialize' })).not.toHaveProperty('instructions')
+  })
+
+  it('describes when to use the guided tools and what they return', () => {
+    const tools = MCP_TOOLS as readonly { name: string; description: string; inputSchema: { properties?: Record<string, { description?: string }> } }[]
+    for (const name of ['doc.search', 'doc.get', 'handoff.resolve']) {
+      const tool = tools.find((candidate) => candidate.name === name)
+      expect(tool?.description, name).toMatch(/\bUse\b/)
+      expect(tool?.description.length, name).toBeLessThanOrEqual(300)
+    }
+    const search = tools.find((tool) => tool.name === 'doc.search')
+    expect(search?.inputSchema.properties?.term?.description).toMatch(/search term/)
+    for (const tool of tools) {
+      expect(tool.description.trim().length, tool.name).toBeGreaterThan(0)
+    }
+  })
+
   it('awaits asynchronous tool failures before writing an MCP response', async () => {
     const config = applyConfigDefaults(DocBridgeConfigV1Schema.parse({
       schemaVersion: 1,

@@ -76,6 +76,10 @@ The stdio server accepts the newline-delimited JSON transport used by current MC
 
 Budgets, the drop order and the lookup shape are specified in [MCP knowledge tools v1](./spec/mcp-knowledge-tools-v1.md).
 
+## Server instructions
+
+On `initialize`, the server returns an `instructions` string (the MCP `InitializeResult.instructions` field). It describes what the local index covers, when to call `doc.search` before broad grep, when to call `doc.get` or `handoff.resolve`, and that results cite ids and paths and are pointers to verify by reading the files. It is built only from the tools your `surfaces.mcp.tools` allowlist enables, so a disabled tool is never recommended, and it is omitted if none of `doc.search`, `doc.get` or `handoff.resolve` is enabled. It is deterministic and needs no API key. Each tool's `description` in `tools/list` says when to use it and what it returns. The contract is in [MCP knowledge tools v1](./spec/mcp-knowledge-tools-v1.md#server-instructions-and-tool-descriptions).
+
 The rationale tools are read-only; [knowledge query v1](./spec/knowledge-query-v1.md) defines their contract and enablement guidance.
 Retrieval tools are annotated read-only and never publish a memory promotion.
 `docbridge.proposals` may save review artifacts and retains separate enrichment

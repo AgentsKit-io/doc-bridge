@@ -197,3 +197,21 @@ enablement guidance and service history ceiling.
 Rationale tools include bounded indexed `memory-supports` relations with exact
 `id`, `alias`, or `path` evidence in JSON and text, following
 [knowledge query v1](knowledge-query-v1.md). Relations only target returned entities, including under service restrictions.
+
+## Server instructions and tool descriptions
+
+`initialize` returns an `instructions` string, the optional `InitializeResult.instructions`
+field of the MCP protocol (revision `2024-11-05`, the revision this server reports). It is
+built only from the tools the configuration enables (`surfaces.mcp.tools`), and under the
+service profile only from the tools that `tools/list` advertises there. It is omitted when
+none of `doc.search`, `doc.get` or `handoff.resolve` is enabled. The text states what the
+index covers, when to call `doc.search` before broad grep, when to call `doc.get` and
+`handoff.resolve`, what the results cite, and that results are pointers to verify by reading
+the cited files. It makes no claim about speed, token savings or agent outcomes, and it
+requires no API key.
+
+Tool descriptions say when to use each tool and what it returns, in one or two sentences.
+`doc.search`, `doc.get` and `handoff.resolve` open with `Use …`. Input property descriptions
+state the expected value; `doc.search`'s `term` is a search term in the repository's own
+words. Descriptions and input schemas are advertised by `tools/list` and are mirrored in
+`mcpb/manifest.json`.
