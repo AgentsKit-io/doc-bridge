@@ -4,7 +4,7 @@
   "scenarios": ["repository-only", "doc-bridge-mcp"],
   "repositories": {
     "doc-bridge": "948e8b2211c367f36581c503dcb7280bdd3b1028",
-    "agentskit-chat": "7f7388bcc60b7259d4148c0a0fb1142b8629dfff",
+    "agentskit-chat": "9c431e98f70cfee178a3cf6265eea5e2dd898ac3",
     "agents-playbook": "c922b52249605c3e2437897364e722b76de67224"
   },
   "tasks": [
