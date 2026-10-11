@@ -188,7 +188,7 @@ describe('query + search', () => {
     if ('nextCommands' in result) {
       expect(result.nextCommands).toEqual([...new Set(result.nextCommands)])
       expect(result.telemetry).toMatchObject({ tokenMethod: 'estimate' })
-      expect(result.telemetry?.contextBudgetTokens).toBe(32)
+      expect(result.telemetry?.contextBudgetTokens).toBe(128)
       expect(result.telemetry?.estimatedTokens).toBeGreaterThan(0)
       expect(result.matches[0]).not.toHaveProperty('score')
     }
@@ -234,6 +234,26 @@ describe('query + search', () => {
       expect(result.bestMatch?.id).toBe('os-core')
     }
     expect(() => runQuery(index, config, { kind: 'search', term: 'schema', agent: true, contextBudgetTokens: 8 })).toThrow('too small for the minimum grounded result')
+  })
+
+  it('returns the minimum grounded result for a long path under the default budget, and still fails closed when the budget is explicit', () => {
+    const config = loadFixtureConfig()
+    const index = buildDocBridgeIndex({ root: fixtureRoot, config, write: false }).index
+    const base = runQuery(index, config, { kind: 'search', term: 'schema', agent: true, contextBudgetTokens: 256 })
+    if (!('telemetry' in base) || !base.bestMatch) throw new Error('Expected a match for schema')
+    const longPath = `docs/${'deep-'.repeat(120)}schema.md`
+    const longIndex = JSON.parse(JSON.stringify(index).split(base.bestMatch.path).join(longPath)) as typeof index
+
+    const result = runQuery(longIndex, config, { kind: 'search', term: 'schema', agent: true })
+    if (!('telemetry' in result) || !result.telemetry) throw new Error('Missing telemetry for the default budget')
+    expect(result.matches).toHaveLength(1)
+    expect(result.matches[0]).toMatchObject({ path: longPath })
+    expect(result.matches[0]).not.toHaveProperty('summary')
+    expect(result.nextCommands).toEqual([])
+    expect(result.telemetry).toMatchObject({ contextBudgetTokens: 128, truncated: true })
+    expect(result.telemetry.contextBytes).toBeGreaterThan(128 * 4)
+
+    expect(() => runQuery(longIndex, config, { kind: 'search', term: 'schema', agent: true, contextBudgetTokens: 32 })).toThrow('too small for the minimum grounded result')
   })
 
   it('measures correctly grounded tasks separately from retrieval hits', () => {

@@ -53,13 +53,23 @@ ak-docs search "authentication" --agent --mode=editing --context-budget=128
 Supported modes are `discovery`, `editing`, `debugging`, and `documentation`.
 `context-budget` is measured in estimated tokens for the selected matches and
 next commands. Summaries and follow-up commands are removed before matches are
-dropped. If even the minimum grounded result does not fit, the command fails
+dropped. When the caller declares `--context-budget` (or `contextBudgetTokens`
+over MCP) and even the minimum grounded result does not fit, the command fails
 closed instead of exceeding the budget. The response telemetry reports
 `contextBudgetTokens`, `mode`, and `truncated` so a benchmark can distinguish
 an intentionally bounded result from a complete result.
 
-Agent searches default to a compact 32-token budget. Increase it explicitly
-when the task requires additional alternatives or follow-up commands.
+Agent searches without a declared budget default to a compact 128-token budget
+(512 bytes). The default never fails on size: if the minimum grounded result
+(one match with its type, id and path, no summary, no next commands) is still
+larger than the default, that result is returned with `truncated: true` and
+`telemetry.contextBytes` above the budget. Increase the budget explicitly when
+the task requires additional alternatives or follow-up commands.
+
+The 128-token default was chosen from the retrieval suite
+(`docs/bench/retrieval-suite-v1.json`, 60 cases, default `discovery` mode, repository
+index). Median matches per search were 1 at 32 tokens (17 cases failed closed under the old
+fail-closed rule), 1 at 64, 2 at 96 and 4 at 128, with no case failing closed at 128.
 
 The agent shape omits ranking scores because they are diagnostic, not routing
 instructions. `telemetry.contextBytes` and `telemetry.estimatedTokens` measure

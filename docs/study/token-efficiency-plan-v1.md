@@ -159,7 +159,7 @@ preserve correctness and safety.
 The deterministic agent-search path now accepts a task mode and an explicit
 context-token budget. It removes summaries and follow-up commands before
 dropping grounded matches, reports whether truncation occurred, and fails
-closed when the minimum grounded result cannot fit. The fixture benchmark keeps
+closed when the minimum grounded result cannot fit a declared budget (the default budget now truncates instead; see [query](../query.md)). The fixture benchmark keeps
 the same four expected matches while reducing estimated context from 51 to 28
 tokens at a 32-token budget (45.1% on that fixture only). This is a bounded
 engineering signal, not a repository-wide or provider-token claim.

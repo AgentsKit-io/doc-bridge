@@ -79,7 +79,7 @@ export const MCP_TOOLS = [
         limit: { type: 'number', description: 'Maximum number of results for the plain search, 1 to 100. Defaults to 20.' },
         agent: { type: 'boolean', description: 'Return the bounded agent-context form, with next commands, instead of the plain list.' },
         mode: { type: 'string', enum: ['discovery', 'editing', 'debugging', 'documentation'], description: 'Agent-context detail level; each mode sets its own limits on matches and next commands. Defaults to discovery.' },
-        contextBudgetTokens: { type: 'number', description: 'Approximate token budget for the agent-context form when agent is true.' },
+        contextBudgetTokens: { type: 'number', description: 'Approximate token budget for the agent-context form when agent is true. Defaults to 128. A declared budget is a hard limit: the call fails if even one grounded match does not fit; without it, an oversized result is returned as one match marked truncated.' },
       },
       required: ['term'],
     },

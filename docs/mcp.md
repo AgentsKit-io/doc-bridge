@@ -62,7 +62,7 @@ The stdio server accepts the newline-delimited JSON transport used by current MC
 | Tool | Purpose |
 |------|---------|
 | `handoff.resolve` | Package/ownership → AgentHandoff |
-| `doc.search` | Deterministic index search; set `agent: true` with `mode` and `contextBudgetTokens` for bounded agent context |
+| `doc.search` | Deterministic index search; set `agent: true` with `mode` and `contextBudgetTokens` for bounded agent context. Without `contextBudgetTokens` the default is 128 tokens and an oversized result is returned as one truncated match; a declared budget that cannot fit one grounded match fails |
 | `doc.get` | Read an indexed agent doc |
 | `gate.status` | Freshness / configured gates |
 | `retriever.query` | Local retriever chunks |

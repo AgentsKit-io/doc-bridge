@@ -94,7 +94,7 @@ for limits, metrics, status and search/why shapes, and the
 | `ak-docs index` | Build `DocBridgeIndex` + optional `llms.txt` |
 | `ak-docs index --watch` | Debounced rebuild on agent/human doc changes |
 | `ak-docs query <target> [--agent] [--text]` | Resolve package/area/module/document/intent/change → handoff JSON or text |
-| `ak-docs search <term> [--agent] [--explain] [--mode=<mode>] [--context-budget=<tokens>] [--text]` | Ranked search over the retrieval projection; `--explain` names every scoring component and the matched terms, and agent mode bounds the context it returns to a task-specific budget |
+| `ak-docs search <term> [--agent] [--explain] [--mode=<mode>] [--context-budget=<tokens>] [--text]` | Ranked search over the retrieval projection; `--explain` names every scoring component and the matched terms, and agent mode bounds the context it returns to a task-specific budget (default 128 tokens; an oversized default result is returned truncated, while a declared budget that cannot fit one grounded match fails) |
 | `ak-docs ask <question>` | Human-readable local consult mode: search + best match + next handoff commands; no LLM |
 | `ak-docs ask` | Interactive local REPL in a TTY; commands: `search <term>`, `read <id-or-path>`, `open <id-or-path>`, `resolve <id>`, `gate [id]`, `exit` |
 | `ak-docs retrieve <query>` | Hybrid local/federated retriever chunks; deterministic local first |
