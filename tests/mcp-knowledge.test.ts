@@ -44,6 +44,7 @@ describe('MCP knowledge parity', () => {
     expect(call(ctx, 'docbridge.run')).toMatchObject({ runId: result.run.runId, state: result.run.state })
     expect(call(ctx, 'docbridge.proposals')).toEqual({ runId: result.run.runId, proposals: [] })
     expect(call(ctx, 'doc.search', { term: 'guide', agent: true, mode: 'documentation', contextBudgetTokens: 64 })).toMatchObject({ type: 'agent-search', telemetry: { mode: 'documentation', contextBudgetTokens: 64 } })
+    expect(call(ctx, 'doc.search', { term: 'Markdown symbol citations owner', agent: true, mode: 'discovery' })).toMatchObject({ type: 'agent-search', telemetry: { mode: 'discovery', contextBudgetTokens: 128 } })
   })
 
   it('fails closed for missing artifacts, invalid arguments and approval shortcuts', () => {

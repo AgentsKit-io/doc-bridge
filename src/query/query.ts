@@ -31,7 +31,13 @@ export type QueryResult =
   | AgentHandoffV1
   | AgentSearchV1
 
-export const DEFAULT_AGENT_CONTEXT_BUDGET_TOKENS = 32
+/**
+ * The budget an agent search uses when the caller declares none. Measured over the 60 cases of
+ * docs/bench/retrieval-suite-v1.json on the repository index: at 32 tokens the median search keeps
+ * 1 match and 17 cases fail closed; at 64 it keeps 1; at 96 it keeps 2; at 128 it keeps 4 (mean 3.08)
+ * and no case fails closed. 128 is the smallest round value that keeps at least 3 matches at the median.
+ */
+export const DEFAULT_AGENT_CONTEXT_BUDGET_TOKENS = 128
 
 const modeLimits: Record<AgentQueryMode, { readonly matches: number; readonly nextCommands: number }> = {
   discovery: { matches: 8, nextCommands: 5 },
@@ -44,6 +50,7 @@ const boundedAgentContext = (
   matches: readonly AgentSearchV1['matches'][number][],
   nextCommands: readonly string[],
   contextBudgetTokens: number,
+  explicitBudget: boolean,
 ): { readonly matches: AgentSearchV1['matches']; readonly nextCommands: string[]; readonly contextBytes: number; readonly truncated: boolean } => {
   if (!Number.isInteger(contextBudgetTokens) || contextBudgetTokens < 1 || contextBudgetTokens > 1_000_000) throw new Error('contextBudgetTokens must be an integer between 1 and 1000000.')
   const maxBytes = contextBudgetTokens * 4
@@ -80,7 +87,13 @@ const boundedAgentContext = (
     break
   }
   const finalContextBytes = contextBytes()
-  if (finalContextBytes > maxBytes) throw new Error(`contextBudgetTokens ${contextBudgetTokens} is too small for the minimum grounded result.`)
+  if (finalContextBytes > maxBytes) {
+    // A declared budget is a contract and fails closed. The default is a preference: the loop above has
+    // already reduced the result to its minimum grounded form (one match, no summary, no next commands),
+    // so that form is returned, marked truncated, even though it exceeds the default.
+    if (explicitBudget) throw new Error(`contextBudgetTokens ${contextBudgetTokens} is too small for the minimum grounded result.`)
+    truncated = true
+  }
   return { matches: boundedMatches, nextCommands: boundedCommands, contextBytes: finalContextBytes, truncated }
 }
 
@@ -116,7 +129,7 @@ export const runQuery = (
           : 'ak-docs list knowledge --text',
       ))]
       const budget = req.contextBudgetTokens ?? DEFAULT_AGENT_CONTEXT_BUDGET_TOKENS
-      const bounded = boundedAgentContext(agentMatches, nextCommands, budget)
+      const bounded = boundedAgentContext(agentMatches, nextCommands, budget, req.contextBudgetTokens !== undefined)
       const payload: AgentSearchV1 = {
         type: 'agent-search',
         schemaVersion: 1,
