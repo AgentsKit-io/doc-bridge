@@ -219,7 +219,9 @@ against a live run.
 **Preflight, before any reservation.** For every checkout that a doc-bridge attempt
 uses, the runner (1) resolves the config file as above, (2) checks that the server
 answers `doc.search` from a fresh index at the pin, and (3) reads the server's live
-`tools/list` to derive the deny list. All checkouts must expose the same tool list.
+`tools/list` to derive the deny list. Checkouts may register different optional tools
+because their configs differ, so the deny list is the sorted union of every non-allowed
+tool across checkouts; the init check still requires exactly the allowed tools.
 Any failure stops the run before a paid attempt, with nothing charged.
 
 **Checks before a result is accepted.** The runner reads stdout line by line. A line
