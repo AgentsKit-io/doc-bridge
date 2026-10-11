@@ -43,7 +43,7 @@ Amendment 2026-10-10: the agentskit-chat pin moved from `7f7388bcc60b7259d4148c0
 to its direct child `9c431e98f70cfee178a3cf6265eea5e2dd898ac3`, before any full-run attempt. The
 earlier pin's `doc-bridge.config.json` lists the reserved `session-export` memory adapter, which the
 2.0 engine rejects, so the doc-bridge MCP arm could not index that corpus. The child commit changes
-only that config line and the advisory workflow pin; none of the chat tasks' authoritative sources
+only that config line and the CI advisory pin; none of the chat tasks' authoritative sources
 changed, so questions and expected propositions are unchanged.
 
 These are public repositories in the AgentsKit organization. Prepare separate
