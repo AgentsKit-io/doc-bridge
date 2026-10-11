@@ -402,8 +402,15 @@ const diffWithDocuments = (base: DiscoverySnapshotV1, head: DiscoverySnapshotV1,
     const removed = removals.get(symbol ? entityId('symbol', `${relation.to}:${symbol}`) : relation.to)
     // Base owners as the bare-word entrypoint filter sees them: the relation's own owner plus non-script owners, so a unique base relation stays protected when a head owner is added.
     const baseOwners = symbol ? [...new Set(resolution.symbols.get(symbol) ?? [])].filter(id => id === relation.to || !resolution.entrypoints?.has(id)) : []
-    const ambiguous = !removed && symbol && baseOwners.length === 1 && Array.isArray(doc.metadata?.ambiguousSymbolReferences)
+    const headAmbiguity = !removed && symbol && baseOwners.length === 1 && Array.isArray(doc.metadata?.ambiguousSymbolReferences)
       ? doc.metadata.ambiguousSymbolReferences.find((item) => item && typeof item === 'object' && item.symbol === symbol) : undefined
+    // A document can cite the same word both as a unique bare mention and, on an anchored or fenced line, as an
+    // already-ambiguous symbol. Only a candidate the base document did not already list makes the citation newly ambiguous.
+    const baseAmbiguity = symbol && Array.isArray(before.get(relation.from)?.metadata?.ambiguousSymbolReferences)
+      ? (before.get(relation.from)!.metadata!.ambiguousSymbolReferences as unknown[]).find((item) => !!item && typeof item === 'object' && (item as { symbol?: unknown }).symbol === symbol) as { candidateModuleIds?: unknown } | undefined : undefined
+    const baseCandidates = new Set(Array.isArray(baseAmbiguity?.candidateModuleIds) ? baseAmbiguity.candidateModuleIds.filter((id): id is string => typeof id === 'string') : [])
+    const ambiguous = headAmbiguity && (!baseAmbiguity || !Array.isArray(headAmbiguity.candidateModuleIds) ||
+      headAmbiguity.candidateModuleIds.some((id: unknown) => typeof id === 'string' && !baseCandidates.has(id))) ? headAmbiguity : undefined
     if (!removed && !ambiguous) continue
     if (!citations.has(doc.id)) citations.set(doc.id, options.headRoot ? citationsInHead(doc, base, options.headRoot, resolution) : texts.has(doc.id) ? citationsFromText(doc, base, texts.get(doc.id)!, resolution) : undefined)
     const currentCitations = citations.get(doc.id)

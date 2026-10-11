@@ -54,3 +54,15 @@ it('still recognizes a guard that follows a comment or a string on other lines',
   expect(isEntrypointScript('// the entry point\nif (require.main === module) main()\n')).toBe(true)
   expect(isEntrypointScript('const usage = "run it"\n/* see docs */\nif (import.meta.url === `file://${process.argv[1]}`) main()\n')).toBe(true)
 })
+
+it('keeps a real guard after a regular expression literal that contains comment markers, quotes or a backtick', () => {
+  expect(isEntrypointScript("const trim = (s) => s.replace(/\\/*$/, '')\nif (require.main === module) main()\n")).toBe(true)
+  expect(isEntrypointScript('const tick = /`/\nif (require.main === module) main()\n')).toBe(true)
+  expect(isEntrypointScript('const q = /"/.test(x)\nif (import.meta.url === `file://${process.argv[1]}`) main()\n')).toBe(true)
+  expect(isEntrypointScript('const r = x.split(/[/"]/)\nif (require.main === module) main()\n')).toBe(true)
+})
+
+it('still treats a division as code and a guard inside a regular expression as text', () => {
+  expect(isEntrypointScript('const half = total / 2; const guard = /require.main === module/\n')).toBe(false)
+  expect(isEntrypointScript('const ratio = a / b / c\nif (require.main === module) main()\n')).toBe(true)
+})

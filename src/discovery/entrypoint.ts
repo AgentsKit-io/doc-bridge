@@ -31,12 +31,44 @@ type Frame = { kind: 'code'; braces: number } | { kind: 'string'; quote: string 
 
 const blankOut = (text: string): string => text.replace(/[^\n]/g, ' ')
 
+const REGEX_PRECEDERS = new Set(['(', ',', '=', ':', '[', '!', '&', '|', '?', '{', '}', ';', '+', '-', '*', '%', '<', '>', '~', '^'])
+const REGEX_KEYWORDS = new Set(['return', 'typeof', 'case', 'do', 'else', 'in', 'of', 'new', 'delete', 'void', 'throw', 'yield', 'await', 'instanceof'])
+
+/** Whether a `/` at this point of the emitted code starts a regular expression rather than a division. */
+const regexMayStart = (code: string): boolean => {
+  let j = code.length - 1
+  while (j >= 0 && /\s/.test(code[j]!)) j--
+  if (j < 0) return true
+  const last = code[j]!
+  if (REGEX_PRECEDERS.has(last)) return true
+  if (!/[A-Za-z_$]/.test(last)) return false
+  let k = j
+  while (k >= 0 && /[A-Za-z0-9_$]/.test(code[k]!)) k--
+  return REGEX_KEYWORDS.has(code.slice(k + 1, j + 1))
+}
+
+/** Index just past a regular expression literal starting at `start`, ending at its closing `/` or the line break. */
+const regexEnd = (text: string, start: number): number => {
+  let inClass = false
+  for (let i = start + 1; i < text.length; i++) {
+    const ch = text[i]!
+    if (ch === '\n') return i
+    if (ch === '\\') { i++; continue }
+    if (ch === '[') inClass = true
+    else if (ch === ']') inClass = false
+    else if (ch === '/' && !inClass) return i + 1
+  }
+  return text.length
+}
+
 /**
  * The source with comments and string or template contents replaced by spaces, newlines kept so
  * that line-bounded patterns keep their meaning. A small scanner: it tracks string, template and
- * interpolation nesting, and ends an unterminated single-line string at the line break. A regular
- * expression literal that contains a quote or a comment marker can still confuse it, which only
- * blanks the rest of that line or template.
+ * interpolation nesting, and ends an unterminated single-line string at the line break. A `/` where
+ * an expression may start (after an operator, an opening bracket, a separator, a keyword such as
+ * `return`, or at the start of the text) begins a regular expression literal, which is blanked up
+ * to its closing `/` (outside a character class) or the end of the line, so quotes, backticks and
+ * comment markers inside it cannot open a string, template or comment.
  */
 export const codeOnly = (text: string): string => {
   const stack: Frame[] = [{ kind: 'code', braces: 0 }]
@@ -56,6 +88,10 @@ export const codeOnly = (text: string): string => {
         const end = text.indexOf('*/', i + 2)
         const stop = end < 0 ? text.length : end + 2
         out += blankOut(text.slice(i, stop))
+        i = stop
+      } else if (ch === '/' && regexMayStart(out)) {
+        const stop = regexEnd(text, i)
+        out += '/' + blankOut(text.slice(i + 1, stop))
         i = stop
       } else if (ch === '"' || ch === "'") {
         stack.push({ kind: 'string', quote: ch })

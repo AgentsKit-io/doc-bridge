@@ -134,3 +134,20 @@ it('re-analyses a document when a module it cites starts or stops being an entry
   const stopped = discoverRepository({ root, previous: started })
   expect(mentionsOf(stopped, 'main').map(item => item.to)).toEqual([moduleId(stopped, 'scripts/verify.mjs')])
 })
+
+it('does not report ambiguity when an unchanged document already lists the same candidates on an anchored or fenced line', () => {
+  const lib = 'export function main() { return 1 }\n'
+  const fenced = '# Guide\n\nCI enforces on `main`.\n\n```js\nmain()\n```\n'
+  const anchored = '# Guide\n\nCI enforces on `main`.\n\nThe `entrypoint-fixture` package and `main` are related.\n'
+  for (const document of [fenced, anchored]) {
+    const { result } = flow({ 'lib/x.ts': lib, 'scripts/verify.mjs': entrypoint('verify') }, {}, document)
+    expect(result.findings.filter(item => item.code === 'AMBIGUOUS_REFERENCE')).toEqual([])
+  }
+})
+
+it('reports ambiguity when a head owner joins a symbol the base document already listed as ambiguous', () => {
+  const lib = 'export function main() { return 1 }\n'
+  const document = '# Guide\n\nCI enforces on `main`.\n\n```js\nmain()\n```\n'
+  const { result } = flow({ 'lib/x.ts': lib, 'scripts/verify.mjs': entrypoint('verify') }, { 'lib/y.ts': lib }, document)
+  expect(result.findings.filter(item => item.code === 'AMBIGUOUS_REFERENCE').length).toBeGreaterThan(0)
+})
