@@ -34,15 +34,15 @@
   "tools": [
     {
       "name": "handoff.resolve",
-      "description": "Resolve a package or ownership id to its deterministic AgentHandoff."
+      "description": "Use when changing a package or handing off its ownership: returns the deterministic AgentHandoff for a package id or an ownership id, with start-here documents, edit roots and checks."
     },
     {
       "name": "doc.search",
-      "description": "Search the deterministic Doc Bridge index for repository documentation."
+      "description": "Use first for questions about how the repository works, its contracts, architecture, decisions or ownership, before broad grep. Returns ranked indexed documents and entities with their ids, types and paths."
     },
     {
       "name": "doc.get",
-      "description": "Read one indexed agent documentation file by id or indexed path."
+      "description": "Use after doc.search or handoff.resolve to read one cited document in full, by its indexed id or path. Fails for ids or paths that are not in the index."
     },
     {
       "name": "gate.status",

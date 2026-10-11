@@ -55,33 +55,46 @@ export const MCP_TOOLS = [
   {
     name: 'handoff.resolve',
     title: 'Resolve repository handoff',
-    description: 'Resolve a package or ownership id to its deterministic AgentHandoff.',
+    description: 'Use when changing a package or handing off its ownership: returns the deterministic AgentHandoff for a package id or an ownership id, with start-here documents, edit roots and checks.',
     annotations: { readOnlyHint: true },
     inputSchema: {
       type: 'object',
-      properties: { id: { type: 'string' }, kind: { type: 'string', enum: ['package', 'ownership'] }, budgetTokens: { type: 'number' } },
+      properties: {
+        id: { type: 'string', description: 'A package id (for example the npm package name) or an ownership id, as listed by "ak-docs list packages".' },
+        kind: { type: 'string', enum: ['package', 'ownership'], description: 'Whether id names a package or an ownership record. Defaults to ownership.' },
+        budgetTokens: { type: 'number', description: 'Optional token budget. When set, the handoff may drop related entries and the summary note to fit.' },
+      },
       required: ['id'],
     },
   },
   {
     name: 'doc.search',
     title: 'Search repository documentation',
-    description: 'Search the deterministic Doc Bridge index for repository documentation.',
+    description: 'Use first for questions about how the repository works, its contracts, architecture, decisions or ownership, before broad grep. Returns ranked indexed documents and entities with their ids, types and paths.',
     annotations: { readOnlyHint: true },
     inputSchema: {
       type: 'object',
-      properties: { term: { type: 'string' }, limit: { type: 'number' }, agent: { type: 'boolean' }, mode: { type: 'string', enum: ['discovery', 'editing', 'debugging', 'documentation'] }, contextBudgetTokens: { type: 'number' } },
+      properties: {
+        term: { type: 'string', description: 'The search term: a package name, symbol, concept, decision or document title, in the repository\'s own words. Use a few specific words rather than a whole question.' },
+        limit: { type: 'number', description: 'Maximum number of results for the plain search, 1 to 100. Defaults to 20.' },
+        agent: { type: 'boolean', description: 'Return the bounded agent-context form, with next commands, instead of the plain list.' },
+        mode: { type: 'string', enum: ['discovery', 'editing', 'debugging', 'documentation'], description: 'Agent-context detail level; each mode sets its own limits on matches and next commands. Defaults to discovery.' },
+        contextBudgetTokens: { type: 'number', description: 'Approximate token budget for the agent-context form when agent is true.' },
+      },
       required: ['term'],
     },
   },
   {
     name: 'doc.get',
     title: 'Read indexed documentation',
-    description: 'Read one indexed agent documentation file by id or indexed path.',
+    description: 'Use after doc.search or handoff.resolve to read one cited document in full, by its indexed id or path. Fails for ids or paths that are not in the index.',
     annotations: { readOnlyHint: true },
     inputSchema: {
       type: 'object',
-      properties: { id: { type: 'string' }, path: { type: 'string' } },
+      properties: {
+        id: { type: 'string', description: 'The indexed document id, as cited by doc.search or handoff.resolve. Give either id or path.' },
+        path: { type: 'string', description: 'The indexed repository-relative path of the document, as cited by doc.search. Give either id or path.' },
+      },
     },
   },
   {
@@ -333,6 +346,31 @@ const enabledMcpTools = (ctx: McpContext) => {
   return MCP_TOOLS.filter((tool) => configured.includes(tool.name as typeof configured[number]))
 }
 
+/** The tools a service-profile caller may list and call; everything else is refused. */
+const SERVICE_MCP_TOOL_NAMES: readonly string[] = ['knowledge.decision', 'knowledge.concept', 'knowledge.whyChanged', 'knowledge.search', 'knowledge.lookup', 'handoff.resolve', 'doc.search', 'doc.get', 'retriever.query', 'playbook.pattern.get', 'registry.topology']
+
+/** Tools advertised by tools/list for this context: the configured set, narrowed for the service profile. */
+const advertisedMcpTools = (ctx: McpContext, service: boolean) => service ? enabledMcpTools(ctx).filter((tool) => SERVICE_MCP_TOOL_NAMES.includes(tool.name)) : enabledMcpTools(ctx)
+
+/**
+ * InitializeResult.instructions: a short, factual guide built only from the tools this server advertises.
+ * Returns undefined when none of the guided tools is enabled, so the field is omitted rather than pointing at absent tools.
+ */
+export const buildMcpInstructions = (tools: readonly { readonly name: string }[]): string | undefined => {
+  const names = new Set(tools.map((tool) => tool.name))
+  if (!['doc.search', 'doc.get', 'handoff.resolve'].some((name) => names.has(name))) return undefined
+  const sentences = [
+    'Doc Bridge indexes this repository\'s configured documentation (agent and human docs, specifications and ADRs) and its package ownership handoffs.',
+    'Results come from a deterministic local index; no API key or model call is involved.',
+    'Each result cites ids, paths and, where the source records them, line ranges.',
+    'Treat results as pointers and verify facts by reading the cited files.',
+  ]
+  if (names.has('doc.search')) sentences.push('For questions about how the repository works, its contracts, architecture, decisions or ownership, call doc.search before broad grep.')
+  if (names.has('doc.get')) sentences.push('Call doc.get with an id or path from a search or handoff result to read that document in full.')
+  if (names.has('handoff.resolve')) sentences.push('For a package or an owner, call handoff.resolve to get its start-here documents, edit roots and checks.')
+  return sentences.join(' ')
+}
+
 const assertMcpToolEnabled = (ctx: McpContext, name: string): void => {
   if (!MCP_TOOLS.some((tool) => tool.name === name)) throw new Error(`Unknown tool "${name}"`)
   if (!enabledMcpTools(ctx).some((tool) => tool.name === name)) throw new Error(`MCP tool "${name}" is disabled by configuration.`)
@@ -348,21 +386,23 @@ export const handleMcpRequest = (ctx: McpContext, request: JsonRpcRequest): unkn
     return { ...response, _meta: { serviceProfile: { diagnostics, coverage: serviceCoverage(diagnostics) } } }
   }
   if (request.method === 'initialize') {
+    const instructions = buildMcpInstructions(advertisedMcpTools(ctx, service))
     return {
       protocolVersion: '2024-11-05',
       capabilities: { tools: {} },
       serverInfo: { name: 'ak-docs', version: PACKAGE_VERSION },
+      ...(instructions === undefined ? {} : { instructions }),
     }
   }
 
-  if (request.method === 'tools/list') return { tools: service ? enabledMcpTools(ctx).filter(tool => ['knowledge.decision', 'knowledge.concept', 'knowledge.whyChanged', 'knowledge.search', 'knowledge.lookup', 'handoff.resolve', 'doc.search', 'doc.get', 'retriever.query', 'playbook.pattern.get', 'registry.topology'].includes(tool.name)) : enabledMcpTools(ctx) }
+  if (request.method === 'tools/list') return { tools: advertisedMcpTools(ctx, service) }
 
   if (request.method === 'tools/call') {
     const params = asRecord(request.params)
     const name = params.name
     const args = asRecord(params.arguments)
     if (typeof name !== 'string') throw new Error('MCP tools/call requires a tool name.')
-    if (service && (!['knowledge.decision', 'knowledge.concept', 'knowledge.whyChanged', 'knowledge.search', 'knowledge.lookup', 'handoff.resolve', 'doc.search', 'doc.get', 'retriever.query', 'playbook.pattern.get', 'registry.topology'].includes(name) || !ctx.loadIndex || (name === 'doc.get' && !ctx.readDocument))) throw new Error('not-analyzed: service profile requires injected reads and refuses mutating/agent or filesystem tools')
+    if (service && (!SERVICE_MCP_TOOL_NAMES.includes(name) ||!ctx.loadIndex || (name === 'doc.get' && !ctx.readDocument))) throw new Error('not-analyzed: service profile requires injected reads and refuses mutating/agent or filesystem tools')
     assertMcpToolEnabled(ctx, name)
     const index = () => ctx.loadIndex?.() ?? loadFreshDocBridgeIndex(ctx.root, ctx.config)
 
