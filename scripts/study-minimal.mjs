@@ -522,20 +522,20 @@ export async function runCliAttempt({ task, scenario, config, budget, engine, wo
 }
 
 // Runs for every repository with a doc-bridge-mcp attempt, before any reservation: the config must resolve, the server
-// must answer from a fresh index, and every checkout must expose the same MCP tool list. Returns the deny list.
+// must answer from a fresh index. Checkouts may register different optional tools (their configs differ), so the deny
+// list is the sorted union of every non-allowed tool across checkouts; denying a tool a checkout lacks is harmless,
+// and the init check still requires exactly the allowed tools to remain visible.
 export async function preflightCliMcp(plan, roots, engine) {
   const repositories = [...new Set(plan.filter(item => item.scenario === 'doc-bridge-mcp').map(item => item.task.repository))]
-  let disallowed = null
+  const disallowed = new Set()
   for (const repository of repositories) {
     const root = roots[repository]
     if (!root) fail('Missing repository root')
     checkoutConfigPath(root)
     await probeDocBridgeReadiness(root, engine)
-    const denied = cliDisallowedMcpTools(await probeMcpToolNames(root, engine))
-    if (disallowed && JSON.stringify(denied) !== JSON.stringify(disallowed)) fail('doc-bridge MCP tool lists differ between checkouts')
-    disallowed = denied
+    for (const name of cliDisallowedMcpTools(await probeMcpToolNames(root, engine))) disallowed.add(name)
   }
-  return disallowed ?? []
+  return [...disallowed].sort()
 }
 
 export function parseOptions(args, env) {

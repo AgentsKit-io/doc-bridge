@@ -463,6 +463,28 @@ describe('CLI transport: headless Claude Code without an API key', () => {
     } finally { rmSync(indexed, { recursive: true, force: true }); rmSync(bare, { recursive: true, force: true }) }
   }, 90000)
 
+  it('denies the union of non-allowed tools when checkouts register different MCP tool sets', async () => {
+    const full = mkdtempSync(join(tmpdir(), 'study-union-a-'))
+    const narrow = mkdtempSync(join(tmpdir(), 'study-union-b-'))
+    try {
+      const allowed = ['doc.search', 'doc.get', 'handoff.resolve']
+      for (const [root, tools] of [[full, undefined], [narrow, [...allowed, 'gate.status']]] as const) {
+        mkdirSync(join(root, 'docs'))
+        writeFileSync(join(root, 'docs', 'guide.md'), '# Evidence\nA public fixture guide.')
+        writeFileSync(join(root, 'doc-bridge.config.json'), JSON.stringify({ schemaVersion: 1, corpus: { agent: { root: 'docs' }, human: { plugin: 'plain-markdown', options: { root: 'docs' } } },
+          ...(tools ? { surfaces: { mcp: { tools } } } : {}) }))
+        execFileSync(process.execPath, [engine, 'index'], { cwd: root, stdio: 'pipe', timeout: 30000 })
+      }
+      const plan = [{ task: { repository: 'agentskit-chat' }, scenario: 'doc-bridge-mcp' }, { task: { repository: 'agents-playbook' }, scenario: 'doc-bridge-mcp' }]
+      const fullOnly = await preflightCliMcp(plan.slice(0, 1), { 'agentskit-chat': full }, engine)
+      const narrowOnly = await preflightCliMcp(plan.slice(1), { 'agents-playbook': narrow }, engine)
+      expect(narrowOnly).toEqual(['mcp__doc-bridge__gate_status'])
+      const union = await preflightCliMcp(plan, { 'agentskit-chat': full, 'agents-playbook': narrow }, engine)
+      expect(union).toEqual([...new Set([...fullOnly, ...narrowOnly])].sort())
+      expect(union).not.toContain('mcp__doc-bridge__doc_search')
+    } finally { rmSync(full, { recursive: true, force: true }); rmSync(narrow, { recursive: true, force: true }) }
+  }, 90000)
+
   it('resolves the checkout config like the server does and refuses a checkout without one', () => {
     const root = mkdtempSync(join(tmpdir(), 'study-config-'))
     try {
