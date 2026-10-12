@@ -245,3 +245,42 @@ test('a real miss calls the backend and only marks success after a completed str
   await expect(page.locator('[data-answer-path="backend"]')).toBeVisible()
   expect(calls).toBe(1)
 })
+
+test('2.0 section and measured-with-agents block show their limits and links', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('theme', 'light'))
+  await page.goto('/')
+  await expect(page.getByRole('heading', { name: 'A deterministic index, drift you can see, and an MCP server for agents.' })).toBeVisible()
+  await expect(page.getByText('npm i -D @agentskit/doc-bridge', { exact: false }).first()).toBeAttached()
+  await expect(page.getByText('npx ak-docs query package example --agent', { exact: false }).first()).toBeAttached()
+  await expect(page.getByRole('link', { name: 'Read the getting-started guide' })).toHaveAttribute('href', /\/docs\/getting-started\/?$/)
+  await expect(page.getByRole('heading', { name: 'A minimal agent-efficiency study, with its limits stated.' })).toBeVisible()
+  await expect(page.getByText('18/18')).toBeVisible()
+  await expect(page.getByText('Limits: small sample')).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Read the full study report' })).toHaveAttribute(
+    'href',
+    'https://github.com/AgentsKit-io/doc-bridge/blob/main/docs/study/minimal-study-results-v1.md',
+  )
+})
+
+test('early-access waitlist is hidden without NEXT_PUBLIC_WAITLIST_URL', async ({ page }) => {
+  test.skip(Boolean(process.env.NEXT_PUBLIC_WAITLIST_URL), 'the waitlist variable is set for this run')
+  await page.goto('/')
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('The context your agents need.')
+  await expect(page.getByRole('form', { name: 'Early access waitlist' })).toHaveCount(0)
+  await expect(page.locator('#early-access')).toHaveCount(0)
+  await expect(page.getByText('Hosted documentation maintenance from AgentsKit')).toHaveCount(0)
+})
+
+test('early-access waitlist renders accessible fields when NEXT_PUBLIC_WAITLIST_URL is set', async ({ page }) => {
+  test.skip(!process.env.NEXT_PUBLIC_WAITLIST_URL, 'the waitlist variable is not set for this run')
+  await page.goto('/')
+  const form = page.getByRole('form', { name: 'Early access waitlist' })
+  await expect(form).toBeVisible()
+  await expect(form.getByLabel('Email')).toHaveAttribute('type', 'email')
+  await expect(form.getByLabel('Repository URL')).toHaveAttribute('type', 'url')
+  await expect(form.getByLabel('I agree to be contacted about early access.')).toHaveAttribute('type', 'checkbox')
+  await expect(form.getByText('Emails are used only to contact you about early access and are deleted on request.')).toBeVisible()
+  await form.getByRole('button', { name: 'Join the waitlist' }).click()
+  await expect(form.getByText('Enter a valid email address.')).toBeVisible()
+  await expect(form.getByText('Consent is required to join the waitlist.')).toBeVisible()
+})
