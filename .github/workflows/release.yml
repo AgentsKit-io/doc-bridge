@@ -78,7 +78,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: npm
     permissions:
-      contents: write
+      contents: read
       id-token: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -111,9 +111,7 @@ jobs:
           else
             npm publish "$artifact" --access public --provenance
           fi
-      - name: Verify package and prepare GitHub release draft
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - name: Verify package is visible on the npm registry
         run: |
           name=$(node -p "require('./package.json').name")
           version=$(node -p "require('./package.json').version")
@@ -127,6 +125,24 @@ jobs:
             sleep 5
           done
           test "$published" = true
+
+  # Only this job holds contents: write. It never checks out or installs repository code: it
+  # receives the tarball that the verify job built and gated, and passes it to the GitHub CLI.
+  github-release:
+    needs: [verify, publish]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: package-${{ env.RELEASE_TAG }}
+          path: artifacts
+      - name: Prepare GitHub release draft
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          test -n "$(find artifacts -maxdepth 1 -name '*.tgz' -type f -print -quit)"
           gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 || gh release create "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --verify-tag --generate-notes --draft
-          gh release upload "$RELEASE_TAG" artifacts/* --repo "$GITHUB_REPOSITORY" --clobber
+          gh release upload "$RELEASE_TAG" artifacts/*.tgz --repo "$GITHUB_REPOSITORY" --clobber
           echo "GitHub release draft is ready. Complete the Marketplace fields in the release UI, then publish it."
