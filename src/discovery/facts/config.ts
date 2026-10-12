@@ -12,7 +12,15 @@ const MAX_KEYS = 4096
 const MAX_DEPTH = 32
 const JSON_SCHEMA_KEYS = new Set(['$schema', '$id', '$anchor', '$comment', '$defs', 'definitions', 'title', 'description', 'examples', 'deprecated', 'readOnly', 'writeOnly', 'type', 'properties', 'required', 'items', 'additionalProperties', 'enum', 'const', 'default', 'format', 'pattern', 'minimum', 'maximum', 'exclusiveMinimum', 'exclusiveMaximum', 'multipleOf', 'minLength', 'maxLength', 'minItems', 'maxItems', 'uniqueItems', 'minProperties', 'maxProperties'])
 const JSON_SCHEMA_TYPES = new Set(['object', 'array', 'string', 'number', 'integer', 'boolean', 'null'])
-const configFile = (path: string) => /config[^/]*schema|schema[^/]*config|(?:^|\/)config\/schema\.[cm]?[jt]s$/i.test(path)
+// The segment tests run per path segment with a single leftmost search and a slice, so a
+// long adversarial path costs linear time (a `config[^/]*schema` regex backtracks quadratically).
+const segmentNamesConfigSchema = (segment: string): boolean => {
+  const config = /config/i.exec(segment)
+  if (config && /schema/i.test(segment.slice(config.index + config[0].length))) return true
+  const schema = /schema/i.exec(segment)
+  return schema !== null && /config/i.test(segment.slice(schema.index + schema[0].length))
+}
+export const configFile = (path: string): boolean => path.split('/').some(segmentNamesConfigSchema) || /(?:^|\/)config\/schema\.[cm]?[jt]s$/i.test(path)
 type Shape = { type: string; optional: boolean; default?: unknown; enum?: unknown[]; properties?: Map<string, Shape>; items?: Shape; variants?: Shape[]; lines?: { lineStart: number; lineEnd: number } }
 type Result = { facts: SurfaceFact[]; coverage: DiscoverySnapshotV1['coverage'] }
 const record = (value: unknown): value is Record<string, unknown> => value !== null && typeof value === 'object' && !Array.isArray(value)
