@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The doc-bridge assembly line</title>
+<style>
+  :root { --ink: #e6edf3; --mute: #8b98a6; --card: #111820; --rule: #26313d; --accent: #6ee7b7; --warn: #f5a524; --btn: #1b2630; }
+  :root.light { --ink: #1b1f24; --mute: #5d6671; --card: #fffefb; --rule: #d3d9e0; --accent: #0b7a57; --warn: #b26a00; --btn: #eef1f4; }
+  html, body { margin: 0; height: 100%; background: transparent; }
+  body { font: 13px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: var(--ink); box-sizing: border-box; padding: 8px; }
+  .live { height: 100%; box-sizing: border-box; border: 1px solid var(--rule); border-radius: 10px; background: var(--card); padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+  .top { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+  .tag { color: var(--mute); letter-spacing: .08em; text-transform: uppercase; font-size: 11px; }
+  svg { width: 100%; height: auto; display: block; }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  button { font: inherit; color: var(--ink); background: var(--btn); border: 1px solid var(--rule); border-radius: 999px; padding: 6px 12px; cursor: pointer; }
+  button[aria-pressed="true"] { border-color: var(--warn); color: var(--warn); }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .hint { color: var(--mute); font-size: 12px; }
+  .readout { display: grid; gap: 3px; margin: 0; }
+  .readout div { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+  .readout dt { color: var(--mute); }
+  .readout dd { margin: 0; text-align: right; }
+  .paper { border: 1px dashed var(--rule); border-radius: 6px; padding: 8px 10px; white-space: pre-wrap; font-size: 12px; margin: 0; }
+  .paper[hidden] { display: none; }
+  .facts { color: var(--mute); font-size: 12px; margin: 0; }
+  .static { display: none; max-width: 100%; height: auto; }
+</style>
+<noscript><style>.live { display: none !important; } .static { display: block !important; }</style></noscript>
+</head>
+<body>
+<div class="live" id="card">
+  <div class="top">
+    <span class="tag">Fig 1</span>
+    <span class="tag">The doc-bridge assembly line</span>
+  </div>
+  <svg id="scene" viewBox="0 0 640 420" role="img" aria-labelledby="scene-title scene-desc">
+    <title id="scene-title">Isometric assembly line</title>
+    <desc id="scene-desc">Code and documents enter on a belt, a loom weaves the index, a sensor gate compares a changed signature with the documents that claim it, and a stamp prints an advisory comment.</desc>
+    <g id="world"></g>
+  </svg>
+  <div class="controls">
+    <button type="button" id="toggle" aria-pressed="false">Change parse(input) to parse(input, strict)</button>
+    <span class="hint">Press the button, or Space or Enter, to toggle the change.</span>
+  </div>
+  <dl class="readout" aria-live="polite">
+    <div><dt>Index (model)</dt><dd id="r-index"></dd></div>
+    <div><dt>Change</dt><dd id="r-change"></dd></div>
+    <div><dt>Sensor</dt><dd id="r-sensor"></dd></div>
+    <div><dt>Findings</dt><dd id="r-findings"></dd></div>
+  </dl>
+  <pre class="paper" id="paper" hidden></pre>
+  <p class="facts">Published: retrieval hit@3 88.3%. Layer-1 fixture and native finding precision 100%. Historical CHANGED_REFERENCE precision 83.33% (10 TP / 2 FP). Study run 2: 2 doc-bridge tools used in 18/18 attempts.</p>
+</div>
+<picture>
+  <source media="(prefers-color-scheme: light)" srcset="/figures/assembly-line-fallback-light.png">
+  <img class="static" src="/figures/assembly-line-fallback-dark.png" alt="The doc-bridge assembly line in its unchanged state: code and documents on a belt, a loom, a sensor gate and a stamp.">
+</picture>
+<script>
+(function () {
+  'use strict';
+  var reduceQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+  var schemeQuery = window.matchMedia('(prefers-color-scheme: light)');
+  var world = document.getElementById('world');
+  var toggle = document.getElementById('toggle');
+  var S = 14, OX = 320, OY = 230, COS = 0.8660254, SIN = 0.5;
+  var ZONE_X = -6; // sensor gate position on the belt
+
+  // The figure's own small model. Documents claim symbols; the change is one signature.
+  var MODEL = {
+    documents: ['guide/parsing.md', 'guide/cli.md', 'api/index.md'],
+    modules: 2,
+    symbols: ['parse', 'run', 'format'],
+    claims: [['guide/parsing.md', 'parse'], ['guide/cli.md', 'run'], ['guide/cli.md', 'format']],
+    changedSymbol: 'parse',
+    claimedSignature: 'parse(input)',
+    newSignature: 'parse(input, strict)',
+    claimingDoc: 'guide/parsing.md'
+  };
+
+  var reduced = reduceQuery.matches;
+  var state = { change: false, sensed: false, parseXs: [], t: 0, prong: 0, flag: 0, press: 0, mark: 0 };
+  var last = null, visible = true, rafId = 0, lastSnapshot = '';
+  var pal = null;
+
+  function isLight() {
+    try {
+      var parentWindow = window.parent;
+      var stored = parentWindow.localStorage.getItem('theme');
+      if (stored === 'light') return true;
+      if (stored === 'dark') return false;
+      var html = parentWindow.document.documentElement;
+      if (html.classList.contains('dark')) return false;
+      if (html.classList.contains('light')) return true;
+    } catch (error) { /* standalone page: fall through to the system scheme */ }
+    return schemeQuery.matches;
+  }
+
+  function palette(light) {
+    return light ? {
+      edge: '#3b4450',
+      lo: ['#d5dae0', '#bcc3cb', '#a7afb8'],
+      mid: ['#c0c8d0', '#a3adb8', '#8f9aa6'],
+      hi: ['#9aa6b2', '#7e8a97', '#6a7682'],
+      doc: ['#ffffff', '#dfe4ea', '#c8d0d9'],
+      code: ['#5b7d91', '#46667a', '#385468'],
+      lit: ['#0b0d10', '#2a3038', '#1a1e24'],
+      warn: ['#f7b84a', '#d8962a', '#b3761a']
+    } : {
+      edge: '#0a0f15',
+      lo: ['#2b3744', '#202b36', '#18222c'],
+      mid: ['#3f4f5f', '#2e3a47', '#232e3a'],
+      hi: ['#66798c', '#4d5e6f', '#3b4a59'],
+      doc: ['#e9eef3', '#c3ccd6', '#aab5c1'],
+      code: ['#3c5a6e', '#2b4456', '#20323f'],
+      lit: ['#ffffff', '#d4dde6', '#b5c1cd'],
+      warn: ['#ffd27a', '#e0a94a', '#b7842f']
+    };
+  }
+
+  function P(x, y, z) {
+    return [OX + (x - y) * S * COS, OY + (x + y) * S * SIN - z * S];
+  }
+  function poly(list, fill) {
+    var text = list.map(function (p) {
+      var q = P(p[0], p[1], p[2]);
+      return q[0].toFixed(1) + ',' + q[1].toFixed(1);
+    }).join(' ');
+    return '<polygon points="' + text + '" fill="' + fill + '" stroke="' + pal.edge + '" stroke-width="0.6" stroke-linejoin="round"/>';
+  }
+  // A box shows three faces: x-max (right), y-max (left) and the top. Lighter tones face up.
+  function boxSvg(x0, x1, y0, y1, z0, z1, tone) {
+    var c = pal[tone];
+    return poly([[x1, y0, z0], [x1, y1, z0], [x1, y1, z1], [x1, y0, z1]], c[2]) +
+      poly([[x0, y1, z0], [x1, y1, z0], [x1, y1, z1], [x0, y1, z1]], c[1]) +
+      poly([[x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1]], c[0]);
+  }
+  function lineSvg(a, b, color, width) {
+    var p = P(a[0], a[1], a[2]), q = P(b[0], b[1], b[2]);
+    return '<line x1="' + p[0].toFixed(1) + '" y1="' + p[1].toFixed(1) + '" x2="' + q[0].toFixed(1) + '" y2="' + q[1].toFixed(1) +
+      '" stroke="' + color + '" stroke-width="' + width + '" stroke-linecap="round"/>';
+  }
+  function clamp(v, a, b) { return v < a ? a : (v > b ? b : v); }
+  function ease(v, target, k, dt) {
+    if (reduced) return target;
+    return v + (target - v) * (1 - Math.exp(-k * dt));
+  }
+
+  // Painter order: slabs first (layer 0), then solids sorted by the depth of their centre (x + y + z).
+  function scene() {
+    var t = state.t;
+    var base = [];
+    var solids = [];
+    function slab(x0, x1, y0, y1, z0, z1, tone) { base.push(boxSvg(x0, x1, y0, y1, z0, z1, tone)); }
+    function solid(x0, x1, y0, y1, z0, z1, tone) {
+      solids.push({ d: (x0 + x1 + y0 + y1) / 2 + (z0 + z1) / 2, svg: boxSvg(x0, x1, y0, y1, z0, z1, tone) });
+    }
+    function push(d, svg) { solids.push({ d: d, svg: svg }); }
+
+    // Layer 0: base plate, feet, belt, rollers, weave plane and the stamp sheet.
+    slab(-15, 12.5, -12, 12, -1.2, 0, 'lo');
+    slab(-16, -15.4, -12, -11.4, -1.2, 0, 'lo');
+    slab(11.8, 12.5, 10.6, 11.2, -1.2, 0, 'lo');
+    slab(-13, -1, -3, 3, 0, 1.0, 'mid');
+    slab(-13.4, -12.6, -3.8, 3.8, 0, 1.2, 'lo');
+    slab(-1.4, -0.6, -3.8, 3.8, 0, 1.2, 'lo');
+    slab(0.3, 3.9, -4.2, 4.2, 3.0, 3.1, 'lo');
+    slab(7, 10.5, -7.5, 7.5, 0, 1.6, 'mid');
+    slab(-11.5, -8.0, 6.0, 9.5, 0, 0.3, 'doc');
+
+    // Loom: back frame (behind the weave), then the weave, then the front frame.
+    solid(-0.2, 0.2, -5.4, -4.6, 0, 6, 'mid');
+    solid(3.8, 4.2, -5.4, -4.6, 0, 6, 'mid');
+    solid(-0.2, 4.2, -5.4, -4.6, 5.8, 6, 'mid');
+    solid(-0.2, 0.2, -5.4, 5.4, 5.8, 6, 'mid');
+
+    var cols = [0.9, 2.0, 3.1], rows = [-3.3, -1.1, 1.1, 3.3];
+    var threads = '';
+    cols.forEach(function (cx, ci) {
+      rows.forEach(function (cy, ri) {
+        if (ci < cols.length - 1) threads += lineSvg([cx, cy, 3.45], [cols[ci + 1], cy, 3.45], pal.mid[1], 0.8);
+        if (ri < rows.length - 1) threads += lineSvg([cx, cy, 3.45], [cx, rows[ri + 1], 3.45], pal.mid[1], 0.8);
+      });
+    });
+    base.push(threads);
+    var active = reduced ? 0 : Math.floor(t * 8) % 12;
+    var index = 0;
+    cols.forEach(function (cx, ci) {
+      rows.forEach(function (cy, ri) {
+        var tone = index === active ? 'lit' : ((ci + ri) % 2 ? 'doc' : 'hi');
+        solid(cx - 0.25, cx + 0.25, cy - 0.25, cy + 0.25, 3.1, 3.6, tone);
+        index += 1;
+      });
+    });
+
+    // Loom: front frame and the shuttle that runs above the weave.
+    solid(3.8, 4.2, 4.6, 5.4, 0, 6, 'mid');
+    solid(-0.2, 4.2, 4.6, 5.4, 5.8, 6, 'mid');
+    solid(3.8, 4.2, -5.4, 5.4, 5.8, 6, 'mid');
+    var shuttleY = reduced ? 0 : 3.6 * Math.sin(t * 1.3);
+    solid(1.2, 2.8, shuttleY - 0.5, shuttleY + 0.5, 3.9, 4.3, 'lit');
+
+    // Belt: four items moving left to right; the parse() module passes the sensor gate.
+    var items = [{ k: 'parse', off: 6 }, { k: 'parse', off: 8.75 }, { k: 'parse', off: 11.5 }, { k: 'doc', off: 14.25 }];
+    state.parseXs = [];
+    items.forEach(function (item) {
+      var x = -12 + ((t * 1.2 + item.off) % 11);
+      var alpha = clamp((x + 12.6) / 1.2, 0, 1) * clamp((-1.2 - x) / 1.2, 0, 1);
+      var svg;
+      if (item.k === 'doc') {
+        svg = boxSvg(x - 0.9, x + 0.9, -1.1, 1.1, 1.0, 1.3, 'doc');
+      } else {
+        svg = boxSvg(x - 0.8, x + 0.8, -1.0, 1.0, 1.0, item.k === 'parse' ? 2.6 : 2.2, 'code');
+      }
+      if (item.k === 'parse') {
+        state.parseXs.push(x);
+        if (state.prong > 0.01) svg += boxSvg(x - 0.25, x + 0.25, -0.25, 0.25, 2.6, 2.6 + 0.9 * state.prong, 'warn');
+      }
+      push(x + (item.k === 'doc' ? 1.15 : 1.6), '<g opacity="' + alpha.toFixed(3) + '">' + svg + '</g>');
+    });
+
+    // Sensor gate: two legs, a beam and a lamp that turns amber once the change is sensed.
+    solid(-6.6, -5.4, -4.5, -3.5, 0, 4.6, 'mid');
+    solid(-6.6, -5.4, 3.5, 4.5, 0, 4.6, 'mid');
+    solid(-6.6, -5.4, -4.5, 4.5, 4.2, 4.6, 'mid');
+    solid(-6.25, -5.75, -0.5, 0.5, 3.4, 3.9, state.sensed ? 'warn' : 'lit');
+
+    // Documentation shelf: three cards; the claiming card gets a flag when sensed.
+    [-5, 0, 5].forEach(function (y) { solid(7.4, 10.1, y - 1.4, y + 1.4, 1.6, 3.4, 'doc'); });
+    if (state.flag > 0.01) {
+      solid(7.4, 10.1, -6.5, -3.5, 3.4, 3.45, 'warn');
+      solid(7.6, 7.9, -6.4, -6.1, 1.6, 1.6 + 3.6 * state.flag, 'mid');
+      solid(7.9, 8.9, -6.45, -6.05, 1.6 + 3.6 * state.flag - 0.9, 1.6 + 3.6 * state.flag, 'warn');
+    }
+
+    // Stamp: column and press head. The head comes down and marks the sheet.
+    solid(-10.6, -9.4, 7.2, 7.9, 0.3, 3.2, 'mid');
+    solid(-11.2, -8.8, 6.6, 8.5, 2.6 - 0.9 * state.press, 3.2 - 0.9 * state.press, 'hi');
+    if (state.mark > 0.02) solid(-10.1, -9.3, 7.6, 8.4, 0.3, 0.3 + 0.1 * state.mark, 'warn');
+
+    solids.sort(function (a, b) { return a.d - b.d; });
+    return base.join('') + solids.map(function (item) { return item.svg; }).join('');
+  }
+
+  function update(dt) {
+    if (!reduced) state.t += dt;
+    // The sensor latches once the parse() module passes the gate while the change is on.
+    if (!state.change) {
+      state.sensed = false;
+    }
+    state.prong = ease(state.prong, state.change ? 1 : 0, 8, dt);
+    state.flag = ease(state.flag, state.sensed ? 1 : 0, 6, dt);
+    state.press = ease(state.press, state.sensed ? 1 : 0, 7, dt);
+    state.mark = ease(state.mark, state.sensed ? 1 : 0, 7, dt);
+  }
+
+  // The gate reads after the scene is laid out: the parse() module's x decides whether it is in the zone.
+  function sense() {
+    if (state.change && !state.sensed && state.parseXs.some(function (x) { return Math.abs(x - ZONE_X) < 0.9; })) {
+      state.sensed = true;
+    }
+  }
+
+  function render() {
+    var light = isLight();
+    document.documentElement.classList.toggle('light', light);
+    pal = palette(light);
+    world.innerHTML = scene();
+    document.getElementById('scene').style.color = pal.edge;
+  }
+
+  function writeReadout() {
+    var m = MODEL;
+    var data = {
+      index: 'documents ' + m.documents.length + ' · modules ' + m.modules + ' · symbols ' + m.symbols.length + ' · relations ' + m.claims.length,
+      change: state.change ? m.changedSymbol + ' gains a required parameter: ' + m.claimedSignature + ' → ' + m.newSignature : 'none',
+      sensor: !state.change ? 'idle' : (state.sensed ? 'flagged ' + m.changedSymbol + ' at the gate' : 'waiting for ' + m.changedSymbol + ' to pass the gate'),
+      findings: state.sensed ? '1 advisory: ' + m.claimingDoc : '0',
+      paper: state.sensed
+        ? 'doc-bridge advisory (not a gate)\n' + m.claimingDoc + ' claims ' + m.claimedSignature + '.\nRegion fix: update the claimed signature to ' + m.newSignature + '.'
+        : ''
+    };
+    var key = JSON.stringify(data);
+    toggle.setAttribute('aria-pressed', state.change ? 'true' : 'false');
+    if (key === lastSnapshot) return;
+    lastSnapshot = key;
+    document.getElementById('r-index').textContent = data.index;
+    document.getElementById('r-change').textContent = data.change;
+    document.getElementById('r-sensor').textContent = data.sensor;
+    document.getElementById('r-findings').textContent = data.findings;
+    var paper = document.getElementById('paper');
+    paper.hidden = !data.paper;
+    paper.textContent = data.paper;
+  }
+
+  function step(dt) {
+    sense();
+    update(dt);
+    render();
+    writeReadout();
+  }
+
+  function frame(now) {
+    rafId = 0;
+    if (last === null) last = now;
+    var dt = Math.min(0.05, (now - last) / 1000);
+    last = now;
+    step(dt);
+    if (!reduced && visible && !document.hidden) rafId = requestAnimationFrame(frame);
+    else last = null;
+  }
+
+  function kick() {
+    if (reduced) { step(0); return; }
+    if (!rafId && visible && !document.hidden) rafId = requestAnimationFrame(frame);
+  }
+
+  toggle.addEventListener('click', function () {
+    state.change = !state.change;
+    if (reduced) { step(0); } else { kick(); }
+  });
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver(function (entries) {
+      visible = entries[0].isIntersecting;
+      kick();
+    }).observe(document.getElementById('card'));
+  }
+  document.addEventListener('visibilitychange', kick);
+  reduceQuery.addEventListener('change', function (event) { reduced = event.matches; kick(); });
+  schemeQuery.addEventListener('change', function () { step(0); });
+  try {
+    new MutationObserver(function () { step(0); }).observe(window.parent.document.documentElement, { attributes: true, attributeFilter: ['class'] });
+  } catch (error) { /* standalone page: no parent to follow */ }
+
+  step(0);
+  kick();
+})();
+</script>
+</body>
+</html>

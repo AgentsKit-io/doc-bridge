@@ -83,7 +83,10 @@ function descriptionOf(markdown) {
 
 // The ecosystem bar, tour, footer, and aurora come from the hosted AgentsKit shell
 // (`{NEXT_PUBLIC_AGENTSKIT_SHELL_ORIGIN}/shell/v1.*`); nothing shell-related is self-hosted here.
-await rm(publicRoot, { recursive: true, force: true })
+// Rebuild the generated artifacts only: hand-made figures under public/figures are kept.
+for (const entry of await readdir(publicRoot).catch(() => [])) {
+  if (entry !== 'figures') await rm(join(publicRoot, entry), { recursive: true, force: true })
+}
 await mkdir(join(publicRoot, 'raw'), { recursive: true })
 await mkdir(join(publicRoot, 'deterministic'), { recursive: true })
 
