@@ -109,6 +109,58 @@
 
 - Precompute semantic hash ordering keys once per entry and bound syntax-tree retention for index-only scans and reuse parsed trees in discovery, reducing index-build cost without changing artifact bytes or hash identity.
 
+## 2.0.0
+
+### Major Changes
+
+- e70891a: Replace CLI/MCP whole-file fix contracts with RemediationV1 region edits and
+  DecisionV1 settled rejection. Fresh findings and exact review bindings are
+  required; local human confirmation authorizes CLI decisions, while MCP cannot
+  approve or apply. Legacy index/snapshot hashes are migration guidance only:
+  regenerate indexes and analysis artifacts explicitly. Configure memory rule
+  paths with intelligence.memory.rulesDir; explicit paths never add defaults.
+  See docs/migration/1.x-to-2.0.md before upgrading consumers.
+  
+  Reject reserved session-export and bootstrap-delta memory adapters that 1.x accepted with warnings.
+
+### Minor Changes
+
+- 91c20de: Add a bounded deterministic StudioGraphV1 contract, local JSON export command,
+  search/why payloads, public sample graphs and a local studio design brief.
+- 7989fa5: Distinguish changed-aspect claims from bare mentions before emitting changed-reference findings, and verify string-enum claims against bounded snapshot-matching source. Citation relations, changed facts, removal findings and surviving finding identities remain unchanged.
+- 150eccb: Record provably compatible callable signature changes without documentation findings, omit additive-only configuration parent findings, and prioritize specific fact citations within a 256-reference bound.
+- 7263365: Honor configured memory directories and deterministic adapters, reject unsupported adapters explicitly, and link safe classified memories to opt-in knowledge entities with exact typed evidence. Promotion remains draft-only.
+- c42c527: Add deterministic vault export with configurable templates, source bindings, wikilinks and manifest-scoped cleanup that preserves human notes.
+- 10b5efd: Add deterministic why queries and typed, budgeted read-only MCP entity rationale tools with explicit evidence, coverage and enablement guidance.
+- 5b80003: Prove changed callable compatibility across bounded relative and local workspace type imports using each snapshot's retained syntax. External and unsupported dependencies remain review candidates, except a labeled direct-interface heritage proof that assumes the head compiles; indexing remains syntax-only.
+- 1249758: Add opt-in bounded L2 region proposals with deterministic in-memory rechecking,
+  scripted key-free providers, machine-readable rejection reasons and review previews.
+- cfa03a4: Attribute nested configuration changes to specific citations and retain edited citation regions in a separate review group with optional contract metadata.
+- 57da536: Add opt-in deterministic decision, concept and change entities with a versioned
+  evidence contract, bounded local history and exact symbol aliases. Existing
+  index and handoff output stays unchanged when disabled.
+- f1aa530: Retain bounded schema initializer syntax for deterministic callable input compatibility proofs, invalidating prior adapter reuse while preserving legacy readers and fail-closed unknown claims.
+- 9c3db9c: Add deterministic vault diff with human-reviewed enrichment edit proposals and a local draft preview, preserving source documents.
+- 9c3db9c: Export opt-in decision, concept and change notes with source evidence and stable knowledge links.
+- 321efbd: Add opt-in vault Markdown discovery with deterministic wikilinks, embeds, aliases, tags, and visible exclusion diagnostics.
+- c113930: Surface bounded indexed memory-supports evidence in why queries and typed MCP rationale tools.
+
+### Patch Changes
+
+- 83dcd66: Retrieval ranking: canonicality is now measured above the corpus PageRank floor, so a record nothing links to earns no bonus for being a document, and a new aboutness prior rewards records whose title, headings or path cover the query. Retrieval benchmark hit@3 stays at 88.3% with the minimal study results report added to `docs/study/`, instead of falling to 83.3%. The `search --explain --text` view prints the multiplicative `prior` and `aboutness` components as factors (`×1.2`) and skips them when neutral.
+- 2ec2a74: Agent search (`ak-docs search --agent` and MCP `doc.search` with `agent: true`) no longer fails when the caller declares no budget. The default budget rises from 32 to 128 tokens, and an oversized default result is returned as its minimum grounded form (one match with type, id and path, no summary, no next commands) marked `truncated`. A declared `contextBudgetTokens` / `--context-budget` that cannot fit one grounded match still fails closed.
+- bee2bd2: Bound large-repository discovery coverage with deterministic counted summaries,
+  capped evidence samples and explicit truncation. Preserve small snapshot bytes
+  and rescan sampled snapshots instead of replaying incomplete per-file diagnostics.
+- 43e8a5f: Stop bare lowercase words such as `main` in prose from resolving to a script's exported `main()`: an entrypoint script is only cited by a bare word when the same citation region also cites its path or package, so a second script exporting `main` no longer produces `AMBIGUOUS_REFERENCE` findings for a branch name.
+- 9e4d5c5: Return MCP `instructions` on `initialize`, built only from the tools the configuration enables, and rewrite the `doc.search`, `doc.get` and `handoff.resolve` descriptions and input property descriptions to say when to use each tool and what it returns. Deterministic and key-free; no change in agent behaviour is claimed until the study is re-run.
+- 8f86194: Accept the reserved `session-export` and `bootstrap-delta` memory adapters again in 1.x and ignore them with a warning instead of failing config validation, restoring compatibility for existing configurations.
+- 4168b58: Prepare a separate six-task agent-efficiency protocol and optional budget-capped study runner with offline validation, a headless Claude Code CLI pilot transport that uses the CLI's own login without an API key, a tested Messages API option, and pending agent adjudication with no human review. No model results are claimed.
+- 2fa7b96: Add a versioned Layer-1 benchmark with reviewed public historical transitions, workspace-owned fixtures and separate raw-policy gold, preserving frozen v1 cases.
+- 293acf6: Refresh bounded public Studio samples with manifest package labels and current engine provenance.
+- a00fd4d: Price minimal-study CLI attempts from the authoritative `modelUsage` totals with TTL-aware cache-write rates, using per-message stream usage only to select the price tier, so a valid attempt is no longer rejected as `invalid-cost`.
+- 65184e8: Use manifest names with directory-name fallback for package labels in discovery, indexes, Studio exports and vault notes. Preserve package IDs and keep documentation titles and purpose text separate from package identity.
+
 ## 2.0.0-next.4
 
 ### Patch Changes
