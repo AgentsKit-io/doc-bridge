@@ -1,0 +1,186 @@
+{
+  "protocol": "docs/study/minimal-study-v1.md",
+  "model": "claude-haiku-5-5",
+  "transport": "Claude Code CLI 2.1.296 headless",
+  "adjudication": "scenario-blind agent adjudication (Claude Opus 5.5, different model from the answering one), five-outcome rubric, no human review",
+  "runs": [
+    {
+      "label": "run-1",
+      "engine": "engine 2.0.0-next.3 + study runner; MCP server without initialize instructions",
+      "status": "awaiting-adjudication",
+      "attempts": 36,
+      "scenarios": {
+        "repository-only": {
+          "attempts": 18,
+          "outcomes": {
+            "Partial": 8,
+            "Correct": 9,
+            "Incorrect": 1
+          },
+          "meanScore": 0.722,
+          "attemptsUsingDocBridgeTools": 0,
+          "turns": {
+            "total": 243,
+            "median": 12.0
+          },
+          "outputTokens": 96376,
+          "contextTokens": 2332494,
+          "wallSeconds": 515.4,
+          "costUsd": 0.1497,
+          "toolCalls": {
+            "Grep": 73,
+            "Glob": 24,
+            "Read": 128
+          }
+        },
+        "doc-bridge-mcp": {
+          "attempts": 18,
+          "outcomes": {
+            "Partial": 12,
+            "Correct": 5,
+            "Incorrect": 1
+          },
+          "meanScore": 0.611,
+          "attemptsUsingDocBridgeTools": 0,
+          "turns": {
+            "total": 236,
+            "median": 11.5
+          },
+          "outputTokens": 93041,
+          "contextTokens": 2527238,
+          "wallSeconds": 506.8,
+          "costUsd": 0.1526,
+          "toolCalls": {
+            "Grep": 75,
+            "Read": 125,
+            "Glob": 18
+          }
+        }
+      },
+      "perTaskMeanScore": {
+        "bridge-architecture": {
+          "doc-bridge-mcp": 0.5,
+          "repository-only": 0.833
+        },
+        "bridge-discovery": {
+          "doc-bridge-mcp": 0.667,
+          "repository-only": 0.667
+        },
+        "chat-architecture": {
+          "doc-bridge-mcp": 0.333,
+          "repository-only": 0.667
+        },
+        "chat-discovery": {
+          "repository-only": 0.667,
+          "doc-bridge-mcp": 0.5
+        },
+        "playbook-architecture": {
+          "doc-bridge-mcp": 0.667,
+          "repository-only": 0.5
+        },
+        "playbook-documentation": {
+          "repository-only": 1.0,
+          "doc-bridge-mcp": 1.0
+        }
+      }
+    },
+    {
+      "label": "run-2",
+      "engine": "engine at main after #343, #344 (MCP initialize instructions and tool descriptions), #345 (agent search default budget 128)",
+      "status": "awaiting-adjudication",
+      "attempts": 36,
+      "scenarios": {
+        "repository-only": {
+          "attempts": 18,
+          "outcomes": {
+            "Partial": 14,
+            "Correct": 4
+          },
+          "meanScore": 0.611,
+          "attemptsUsingDocBridgeTools": 0,
+          "turns": {
+            "total": 233,
+            "median": 12.0
+          },
+          "outputTokens": 99963,
+          "contextTokens": 2048557,
+          "wallSeconds": 521.9,
+          "costUsd": 0.1424,
+          "toolCalls": {
+            "Grep": 70,
+            "Glob": 17,
+            "Read": 128
+          }
+        },
+        "doc-bridge-mcp": {
+          "attempts": 18,
+          "outcomes": {
+            "Correct": 12,
+            "Partial": 6
+          },
+          "meanScore": 0.833,
+          "attemptsUsingDocBridgeTools": 18,
+          "turns": {
+            "total": 204,
+            "median": 11.5
+          },
+          "outputTokens": 80415,
+          "contextTokens": 2056777,
+          "wallSeconds": 448.9,
+          "costUsd": 0.1291,
+          "toolCalls": {
+            "doc-bridge:doc_search": 18,
+            "Grep": 72,
+            "Read": 91,
+            "Glob": 2,
+            "doc-bridge:doc_get": 3
+          }
+        }
+      },
+      "perTaskMeanScore": {
+        "bridge-architecture": {
+          "repository-only": 0.5,
+          "doc-bridge-mcp": 1.0
+        },
+        "bridge-discovery": {
+          "doc-bridge-mcp": 0.833,
+          "repository-only": 0.5
+        },
+        "chat-architecture": {
+          "doc-bridge-mcp": 1.0,
+          "repository-only": 0.667
+        },
+        "chat-discovery": {
+          "doc-bridge-mcp": 1.0,
+          "repository-only": 0.5
+        },
+        "playbook-architecture": {
+          "doc-bridge-mcp": 0.5,
+          "repository-only": 0.5
+        },
+        "playbook-documentation": {
+          "repository-only": 1.0,
+          "doc-bridge-mcp": 0.667
+        }
+      }
+    }
+  ],
+  "blockedOrInvalidAttempts": [
+    {
+      "when": "pilot attempt 1",
+      "status": "invalid-cost",
+      "cause": "runner cost-accounting bug (fixed in #340)"
+    },
+    {
+      "when": "run-2 first start",
+      "status": "invalid-cost",
+      "cause": "CLI returned a non-model error message, probably the account session limit; no tokens used"
+    },
+    {
+      "when": "run-2 second start",
+      "status": "invalid-setup",
+      "cause": "the only doc-bridge tool call failed with the 32-token default agent budget (product bug fixed in #345)"
+    }
+  ],
+  "chargedUsdTotal": 0.9132
+}

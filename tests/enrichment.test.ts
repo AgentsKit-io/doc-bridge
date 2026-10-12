@@ -500,7 +500,8 @@ describe('bounded influence and the projection', () => {
     expect(withSignal.entries.find((entry) => entry.id === 'document:docs/ranking.md')?.agentSignal).toBe(1)
     // The signal only ever reorders: every other component is identical with and without it.
     const unboosted = rankRetrieval(plain, 'query', { floor: 0 }).find((item) => item.entry.id === 'document:docs/ranking.md')
-    expect(unboosted && boostedEntry && boostedEntry.score - unboosted.score).toBe(30)
+    // Scores are rounded to six decimals, so the difference of two rounded sums is 30 up to float error.
+    expect(unboosted && boostedEntry ? boostedEntry.score - unboosted.score : NaN).toBeCloseTo(30, 6)
   })
 
   it('ranks identically without an overlay: no signals, no weight, byte for byte', () => {

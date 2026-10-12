@@ -1,6 +1,6 @@
 ---
 title: Minimal agent-efficiency study v1
-description: Six pinned public tasks, two paired scenarios and a budget-first pilot; no model results yet.
+description: Six pinned public tasks, two paired scenarios and a budget-first pilot; executed in two runs, results linked below.
 ---
 
 # Minimal agent-efficiency study v1
@@ -9,17 +9,19 @@ description: Six pinned public tasks, two paired scenarios and a budget-first pi
 
 For six repository questions, does access to deterministic Doc Bridge MCP tools
 change correctness, measured input/output tokens, tool calls and wall time compared
-with repository tools alone? **This protocol is preparation, not an executed study.**
-No model was run. Maintainer decisions of 2026-10-09 fix the study model, its
+with repository tools alone? **This protocol was executed on 2026-10-10 and 2026-10-11 in
+two full runs; see the results report linked below.** Maintainer decisions of 2026-10-09 fix the study model, its
 price table and the adjudication method (see below). **The pilot transport is the
 Claude Code CLI in headless mode** (`--transport cli`), authenticated by the CLI's
 own login: no API key is read, required or passed to it (see
 [Transport](#transport-claude-code-cli-pilot-transport)). The Messages API
 transport (`--transport http`) stays available and tested as an option. The pilot
 is approved with a cumulative cap of **1 USD**, applied to the charged spend per
-attempt (the larger of the CLI-reported cost and the list-price computation). The full 36-attempt run is **not approved**; it needs a new budget
-approval after the pilot reports measured cost. Publication of results requires
+attempt (the larger of the CLI-reported cost and the list-price computation). After the pilot, the maintainer approved the full 36-attempt run within the 1 USD cap, and
+on 2026-10-11 approved a further 1 USD for iteration (cumulative cap 2 USD). Publication of results requires
 maintainer approval.
+
+Results of the two 18-attempt-per-scenario runs are in the [results report](./minimal-study-results-v1.md) (agent-adjudicated, with limits).
 
 Semantic adjudication is performed by an **agent, not by humans**. There is no
 human review of answers. Results are therefore **agent-adjudicated evidence** and
@@ -467,7 +469,7 @@ is printed only when both pilot attempts complete, and it applies to that charge
 The HTTP transport (`--transport http`) keeps its upper-price behaviour: the runner
 computes reported spend and the full-run extrapolation at the supplied upper prices (0.50 USD input and 2.50 USD output per million tokens), so for prompts under 100k tokens the reported spend is about five times the list-price cost (0.10 / 0.50). That reported spend is an upper bound, not the billed amount; the `× 18` extrapolation is not an upper bound either (see below), so whoever approves the full run should read both figures that way.
 
-**The full 36-attempt run is not approved.** It needs a new, distinct budget
+**Amendment 2026-10-11:** the full run was approved after the pilot (see the status section). Originally: the full 36-attempt run needed a new, distinct budget
 approval after the pilot reports measured input/output tokens and priced spend.
 Approval of the pilot does not extend to the full run.
 
