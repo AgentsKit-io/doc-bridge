@@ -293,6 +293,20 @@ describe('knowledge.search', () => {
     const mcpExplained = call(ctx, 'knowledge.search', { query: 'ranking bm25', explain: true }) as ReturnType<typeof knowledgeSearch>
     expect(mcpExplained.results.map(({ title: _title, excerpt: _excerpt, ...match }) => match)).toEqual((JSON.parse(explained.out) as { matches: unknown[] }).matches)
   })
+
+  it('prints multiplicative priors as factors and skips neutral ones in the text explain view', () => {
+    const { root } = prepared()
+    process.chdir(root)
+    const text = captureStdout(() => runCli(['search', 'ranking', 'bm25', '--explain', '--text']))
+    expect(text.code).toBe(0)
+    const whyLines = text.out.split('\n').filter(line => line.includes('why: '))
+    expect(whyLines.length).toBeGreaterThan(0)
+    for (const line of whyLines) {
+      expect(line).not.toMatch(/aboutness=1(?!\d|\.)/)
+      expect(line).not.toMatch(/\bprior=1(?!\d|\.)/)
+      expect(line).not.toMatch(/\b(aboutness|prior)=(?!×)/)
+    }
+  })
 })
 
 describe('existing MCP tools', () => {
