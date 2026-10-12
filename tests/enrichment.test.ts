@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto'
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
+import { closeSync, existsSync, fstatSync, mkdirSync, mkdtempSync, openSync, readFileSync, rmSync, writeFileSync, writeSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 
@@ -359,18 +359,26 @@ describe('the overlay', () => {
     const root = temp('doc-bridge-overlay-read-')
     const overlay = overlayFor(snapshot, { accepted: [accepted(fixtures.summarize.valid as never)] })
     const path = writeEnrichmentOverlay(root, overlay)
-    const before = readFileSync(path, 'utf8')
-    const stamp = statSync(path).mtimeMs
+    // Bytes and stamp come from one open descriptor, and writes go through one, so no
+    // check-then-use pair of path lookups can observe a different file in between.
+    const snapshotFile = (target: string): { text: string; mtimeMs: number } => {
+      const fd = openSync(target, 'r')
+      try { return { text: readFileSync(fd, 'utf8'), mtimeMs: fstatSync(fd).mtimeMs } } finally { closeSync(fd) }
+    }
+    const overwriteFile = (target: string, text: string): void => {
+      const fd = openSync(target, 'w')
+      try { writeSync(fd, text) } finally { closeSync(fd) }
+    }
+    const before = snapshotFile(path)
     const read = readEnrichmentOverlay(root)
     expect(read?.contentHash).toBe(overlay.contentHash)
     projectEnrichmentOverlay(read, { entities: [] })
     effectiveEnrichment(read as EnrichmentOverlayV1, { entities: [] })
-    expect(readFileSync(path, 'utf8')).toBe(before)
-    expect(statSync(path).mtimeMs).toBe(stamp)
+    expect(snapshotFile(path)).toEqual(before)
     // A corrupt file is no overlay, not an error.
-    writeFileSync(path, '{"type":"enrichment-overlay"', 'utf8')
+    overwriteFile(path, '{"type":"enrichment-overlay"')
     expect(readEnrichmentOverlay(root)).toBeUndefined()
-    writeFileSync(path, JSON.stringify({ ...overlay, contentHash: 'a'.repeat(64) }), 'utf8')
+    overwriteFile(path, JSON.stringify({ ...overlay, contentHash: 'a'.repeat(64) }))
     expect(readEnrichmentOverlay(root)).toBeUndefined()
   })
 
