@@ -33,7 +33,7 @@ export function AgentStudySection() {
           </div>
           <div className="bridge-study-run">
             <p className="bridge-eyebrow">RUN 1 · BEFORE THAT CHANGE</p>
-            <p className="bridge-study-note">The model never called doc-bridge tools and showed no gain (0.61 vs 0.72).</p>
+            <p className="bridge-study-note">The model never called doc-bridge tools and showed no gain (mean correctness 0.61 with doc-bridge vs 0.72 repository-only).</p>
           </div>
         </div>
         <p className="bridge-study-limits">
