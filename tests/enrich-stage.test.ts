@@ -470,7 +470,7 @@ describe('entity content hashes', () => {
  */
 describe('ak-docs enrich --retrieval-delta', () => {
   it('reports the delta, the cost and the stability of the run, in both output modes', async () => {
-    const { root, config, configPath } = repository()
+    const { root, configPath } = repository()
     write(root, 'docs/bench/retrieval-suite-v1.json', JSON.stringify({
       evalFormatVersion: EVAL_FORMAT_VERSION,
       name: 'enrich-delta-fixture',

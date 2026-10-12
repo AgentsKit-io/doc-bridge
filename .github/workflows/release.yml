@@ -78,7 +78,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: npm
     permissions:
-      contents: write
+      contents: read
       id-token: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -86,16 +86,16 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
           ref: ${{ env.RELEASE_TAG }}
-      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413
-        with:
-          version: 11.19.0
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 24
           package-manager-cache: false
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm build
-      - run: mkdir -p artifacts && npm pack --pack-destination artifacts
+      # Publish the exact tarball the verify job built and gated, so npm and the GitHub release
+      # carry byte-identical packages. The checkout only provides package.json for name and version.
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: package-${{ env.RELEASE_TAG }}
+          path: artifacts
       - name: Publish npm package with provenance
         env:
           NPM_CONFIG_PROVENANCE: true
@@ -111,9 +111,7 @@ jobs:
           else
             npm publish "$artifact" --access public --provenance
           fi
-      - name: Verify package and prepare GitHub release draft
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - name: Verify package is visible on the npm registry
         run: |
           name=$(node -p "require('./package.json').name")
           version=$(node -p "require('./package.json').version")
@@ -127,6 +125,24 @@ jobs:
             sleep 5
           done
           test "$published" = true
+
+  # Only this job holds contents: write. It never checks out or installs repository code: it
+  # receives the tarball that the verify job built and gated, and passes it to the GitHub CLI.
+  github-release:
+    needs: [verify, publish]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: package-${{ env.RELEASE_TAG }}
+          path: artifacts
+      - name: Prepare GitHub release draft
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          test -n "$(find artifacts -maxdepth 1 -name '*.tgz' -type f -print -quit)"
           gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 || gh release create "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --verify-tag --generate-notes --draft
-          gh release upload "$RELEASE_TAG" artifacts/* --repo "$GITHUB_REPOSITORY" --clobber
+          gh release upload "$RELEASE_TAG" artifacts/*.tgz --repo "$GITHUB_REPOSITORY" --clobber
           echo "GitHub release draft is ready. Complete the Marketplace fields in the release UI, then publish it."

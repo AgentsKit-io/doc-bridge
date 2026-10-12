@@ -10,7 +10,7 @@ import { samePartition, StorageFailureCodeSchema, type ArtifactIOV1, type Reposi
 import { repositoryInputsFromFiles } from './project-corpus.js'
 export type { SnapshotReadBinding } from './repository-io.js'
 import { parseEnrichmentOverlay } from '../enrich/overlay.js'
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join, posix } from 'node:path'
 
 import type { DocBridgeConfigV1 } from '../config/schema.js'
