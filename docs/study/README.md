@@ -54,7 +54,7 @@ computation per attempt. The CLI must be the pinned version 2.1.296, passed with
 checked (model, tool set, MCP status) before its result is accepted, and costs are computed at list
 price with the CLI's own estimate recorded alongside. Each attempt's CLI cap is
 applied after spend, so an attempt can overshoot its reservation; any such overrun
-is recorded as `budget-exceeded`. The full 36-attempt run is not approved. The CLI
+is recorded as `budget-exceeded`. The full 36-attempt run was later approved and executed twice (cumulative cap 2 USD); see the results report. The CLI
 cost is an estimate, not a billed amount on a subscription login. Results describe a coding
 agent with and without the doc-bridge MCP server, not the bare model. Correctness
 will be adjudicated by an agent, not by humans, so any published result is

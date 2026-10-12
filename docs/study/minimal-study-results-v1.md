@@ -35,10 +35,11 @@ from the study runner's public summary export with only local paths removed.
 - **Transport and model:** Claude Code CLI 2.1.296 in headless mode, model `claude-haiku-5-5`.
 - **Tools:** read-only.
 - **Corpus:** a clean export for each attempt, from the pinned revisions, created outside the repository.
-- **Tool names:** the summary records the repository-arm calls as `Grep`, `Glob` and `Read`,
-  and the MCP-arm doc-bridge calls as `doc_search` and `doc_get`. The protocol names the
-  repository tools `repo_list`, `repo_read` and `repo_search`. The summary does not map
-  one set to the other, so this difference is unresolved.
+- **Tool names:** these runs used the Claude Code CLI transport, which exposes the built-in
+  read-only tools `Read`, `Grep` and `Glob` in both scenarios and, in the doc-bridge scenario,
+  the MCP tools `doc_search`, `doc_get` and `handoff_resolve` (see the protocol's transport
+  section). The `repo_list`, `repo_read` and `repo_search` names belong to the Messages API
+  transport, which was not used for these runs.
 
 ## 2. Results
 
@@ -123,10 +124,14 @@ change. Run 1 did not meet the first condition, because no doc-bridge tool was c
 | Run 2, first start | invalid-cost | The CLI returned a non-model error message. The summary says it was probably the account session limit. No tokens were used. |
 | Run 2, second start | invalid-setup | The only doc-bridge tool call failed with the 32-token default agent budget. Fixed in #345. |
 
-**Spend:** the total charged spend is **0.9132 USD** against the **2 USD cap**
-(1 USD approved, plus 1 USD for iteration). The scored attempts account for 0.3023 USD in run 1
-and 0.2715 USD in run 2. The summary does not itemize the remaining 0.3394 USD, which is the
-difference between the total and the scored attempts. It is not broken down further.
+**Spend:** the total charged spend is **0.9132 USD** against a cumulative cap of **2 USD**
+(1 USD approved for the study, plus 1 USD approved on 2026-10-11 for iteration; see the protocol).
+The scored attempts account for 0.3023 USD in run 1 and 0.2715 USD in run 2. The remaining
+0.3394 USD is conservative charging of attempts that did not produce a scored result: the first
+pilot attempt (0.10, charged at its full reservation), the two-attempt pilot (0.0235), the first
+run-2 start (0.10, full reservation, no tokens used) and the second run-2 start (0.1160: one
+completed attempt at 0.0160 plus one invalid attempt charged its 0.10 reservation). Charged spend
+is an upper bound; list-price cost of the unscored attempts was lower.
 
 **Status:** the summary file records both runs with the status `awaiting-adjudication`, even
 though outcome counts are present. The adjudication status is not confirmed by the export itself,
