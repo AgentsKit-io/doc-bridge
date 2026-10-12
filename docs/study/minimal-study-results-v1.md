@@ -133,16 +133,16 @@ run-2 start (0.10, full reservation, no tokens used) and the second run-2 start 
 completed attempt at 0.0160 plus one invalid attempt charged its 0.10 reservation). Charged spend
 is an upper bound; list-price cost of the unscored attempts was lower.
 
-**Status:** the summary file records both runs with the status `awaiting-adjudication`, even
-though outcome counts are present. The adjudication status is not confirmed by the export itself,
-so treat these outcome counts as provisional until that status is resolved.
+**Status:** the runner's ledgers end at `awaiting-adjudication`, the last state the runner itself
+sets. Adjudication was then performed outside the runner, as the protocol specifies: a separate,
+scenario-blind agent run graded all 36 answers of each run, and the outcome counts above are its
+verdicts. No human reviewed them.
 
 ## 6. Limits
 
 - **n = 18 attempts per scenario per run.** Two runs. Small numbers, with wide uncertainty.
 - **One model:** `claude-haiku-5-5`.
 - **Agent adjudication with no human review.** Adjudicator: Claude Opus 5.5, scenario-blind.
-  The summary status is still `awaiting-adjudication` (section 5).
 - **Noise:** the repository-only arm moved from 0.722 to 0.611 between runs with the same setup.
   Differences around 0.1 are within observed noise.
 - **Product change between runs.** Run 2 is not a controlled comparison with run 1 (section 3).

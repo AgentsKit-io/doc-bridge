@@ -127,7 +127,7 @@ Hosted documentation maintenance from AgentsKit (early access): join the waitlis
    `doc.search`, `doc.get` and `gate.status`. The agent gets the handoff before it edits.
 7. **What the evidence shows, with limits.** Include the minimal study numbers from
    draft 1, with the same limits: 18 attempts per scenario per run, one model,
-   agent adjudication with no human review, a product change between runs, and
+   scenario-blind agent adjudication with no human review with no human review, a product change between runs, and
    run 1 showing no gain. Link the full results.
 8. **What it does not do.** No natural-language correctness judgement, no automatic
    approval or edits, and any optional LLM remediation is human-reviewed. Unsupported
@@ -172,8 +172,9 @@ Commands, from an empty directory with Node 22 or newer:
 The starter handoff only shows the wiring. The useful part is pointing it at your own
 edit roots and checks.
 
-What it does not do: it does not judge whether prose is correct, it does not edit files,
-and it runs without an LLM or API key. Prose analysis stays marked as not analyzed.
+What it does not do: it does not judge whether prose is correct, it never rewrites your docs
+on its own (commands that write, such as `init`, `fix` or `vault export`, say so and produce
+reviewable output), and the deterministic layer runs without an LLM or API key. Prose analysis stays marked as not analyzed.
 
 Questions for the sub: how do you keep documentation claims current? Do you
 check them in CI, by review, or not at all? I am happy to share the method and
