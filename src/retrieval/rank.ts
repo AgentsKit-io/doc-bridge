@@ -1,6 +1,6 @@
 import { foldAccents, hasSearchToken, searchTokens } from '../query/text.js'
 import type { Confidence, RetrievalEdge, RetrievalEntry, RetrievalIndexV1 } from '../schemas/retrieval-index.js'
-import { buildBm25Index, bm25Search, type Bm25Hit, type Bm25Index } from './bm25.js'
+import { bm25Idf, buildBm25Index, bm25Search, type Bm25Hit, type Bm25Index } from './bm25.js'
 import { weakerConfidence } from './project.js'
 
 /**
@@ -42,11 +42,26 @@ const PROXIMITY_ONE_HOP = 30
 const PROXIMITY_TWO_HOPS = 12
 
 /**
- * Canonicality: log-scaled PageRank, so a page every document links to earns a bounded bonus and
- * the long tail of leaf pages earns close to nothing. Scaled by the corpus size, because a
- * PageRank is a share of one and only means something relative to the uniform 1/N.
+ * Canonicality: log-scaled PageRank above the corpus floor, so a page other pages link to earns a
+ * bounded bonus and a page nothing links to earns nothing. The floor is the smallest positive
+ * PageRank in the index: every node in a link graph gets at least the teleport share, and that
+ * share is not evidence of anything. Scaled by the corpus size, because a PageRank is a share of
+ * one and only means something relative to the uniform 1/N.
  */
 const CANONICALITY_SCALE = 4
+
+/**
+ * Aboutness: a record whose name fields cover the query is about it; body coverage alone is not.
+ *
+ * BM25F adds field weights into term frequency before saturation, so a title or heading match is
+ * capped at the term's IDF, and a long body that repeats every query term can reach most of the
+ * same ceiling. The prior multiplies the lexical evidence by 1 + ABOUT_FACTOR times the IDF share
+ * of the query terms found in the title, headings or path. Above about 0.3 a directory whose name
+ * shares a word with the query (`docs/`) outranks the record it is about, so the value stays in 0.15-0.25.
+ */
+export const ABOUT_FACTOR = 0.2
+/** The fields a record's name is read from. Body text is deliberately absent. */
+const NAME_FIELDS = ['title', 'headings', 'path'] as const
 
 /** The `--agent` prior: documentation written for an agent answers an agent's question first. */
 const AUDIENCE_FIT = 25
@@ -87,6 +102,8 @@ export type ScoreComponents = {
   readonly exactSymbol: number
   readonly graphProximity: number
   readonly canonicality: number
+  /** Multiplier from the name fields: 1 when nothing in the title, headings or path matched. */
+  readonly aboutness: number
   readonly audienceFit: number
   readonly acceptedAgentSignals: number
 }
@@ -229,6 +246,8 @@ type Prepared = {
   /** Undirected one-hop neighbourhood over documentation and import edges, by entry id. */
   readonly neighbours: ReadonlyMap<string, readonly RetrievalEdge[]>
   readonly entryCount: number
+  /** The smallest positive PageRank in the index: the share every linked-to-nothing node gets. */
+  readonly pagerankFloor: number
 }
 
 const prepared = new WeakMap<RetrievalIndexV1, Prepared>()
@@ -251,11 +270,16 @@ const prepare = (index: RetrievalIndexV1): Prepared => {
     for (const edge of entry.graph.inbound) link(entry.id, edge)
     for (const edge of entry.graph.outbound) link(entry.id, edge)
   }
+  let pagerankFloor = Number.POSITIVE_INFINITY
+  for (const entry of index.entries) {
+    if (entry.graph.pagerank > 0 && entry.graph.pagerank < pagerankFloor) pagerankFloor = entry.graph.pagerank
+  }
   const value: Prepared = {
     byId: new Map(index.entries.map((entry) => [entry.id, entry])),
     bm25: buildBm25Index(index.entries.map((entry) => ({ ref: entry.id, fields: entry.fields })), index.weights, index.params),
     neighbours,
     entryCount: index.entries.length,
+    pagerankFloor: Number.isFinite(pagerankFloor) ? pagerankFloor : 0,
   }
   prepared.set(index, value)
   return value
@@ -292,8 +316,26 @@ const reachable = (ready: Prepared, anchors: readonly Bm25Hit[]): ReadonlyMap<st
   return reach
 }
 
-const canonicalityBoost = (pagerank: number, entryCount: number): number =>
-  pagerank > 0 && entryCount > 0 ? CANONICALITY_SCALE * Math.log1p(pagerank * entryCount) : 0
+/** Canonicality above the floor: a node no page links to sits at the floor and earns nothing. */
+const canonicalityBoost = (pagerank: number, floor: number, entryCount: number): number => {
+  const excess = Math.max(0, pagerank - floor)
+  return excess > 0 && entryCount > 0 ? CANONICALITY_SCALE * Math.log1p(excess * entryCount) : 0
+}
+
+/**
+ * The share of the query's IDF mass that the record's name fields cover, as a multiplier. Only a
+ * lexical hit has a name to cover; a record surfaced by proximity alone gets no prior.
+ */
+const aboutnessFactor = (ready: Prepared, hit: Bm25Hit | undefined, tokens: readonly string[]): number => {
+  if (!hit) return 1
+  const idf = (token: string): number => bm25Idf(ready.entryCount, ready.bm25.documentFrequency.get(token) ?? 0)
+  const unique = [...new Set(tokens)]
+  const total = unique.reduce((sum, token) => sum + idf(token), 0)
+  if (total <= 0) return 1
+  const named = new Set(NAME_FIELDS.flatMap((field) => hit.matched[field] ?? []))
+  const covered = [...named].reduce((sum, token) => sum + idf(token), 0)
+  return round(1 + ABOUT_FACTOR * (covered / total))
+}
 
 /**
  * Rank the projection against a query.
@@ -324,9 +366,10 @@ export const rankRetrieval = (index: RetrievalIndexV1, term: string, options: Ra
     const near = reach.get(id)
     const lexical = round((hit?.score ?? 0) * BM25_SCALE)
     const prior = round(priorFactor(entry, tokens, term, wantOwnership))
+    const aboutness = aboutnessFactor(ready, hit, tokens)
     const identity = identityBoost(entry, tokens, term)
     const graphProximity = near ? round((near.hops === 1 ? PROXIMITY_ONE_HOP : PROXIMITY_TWO_HOPS) * near.anchorShare) : 0
-    const canonicality = round(canonicalityBoost(entry.graph.pagerank, ready.entryCount))
+    const canonicality = round(canonicalityBoost(entry.graph.pagerank, ready.pagerankFloor, ready.entryCount))
     const audienceFit = options.agent && (entry.audience === 'agent' || entry.audience === 'human-and-agent') ? AUDIENCE_FIT : 0
     const signal = Math.min(1, Math.max(0, options.signals?.get(id) ?? entry.agentSignal ?? 0))
     const acceptedAgentSignals = round(signal * ACCEPTED_SIGNALS_WEIGHT)
@@ -336,7 +379,7 @@ export const rankRetrieval = (index: RetrievalIndexV1, term: string, options: Ra
      * and nothing else: the query did not name it, and canonicality is a tie-breaker among
      * answers, not an answer. Everything else scales from the lexical evidence.
      */
-    const evidence = hit ? lexical * prior + identity.exactId + identity.exactPath + identity.exactSymbol : 0
+    const evidence = hit ? lexical * prior * aboutness + identity.exactId + identity.exactPath + identity.exactSymbol : 0
     const score = round(evidence + graphProximity + (hit ? canonicality + audienceFit + acceptedAgentSignals : 0))
     if (score <= 0) continue
 
@@ -348,6 +391,7 @@ export const rankRetrieval = (index: RetrievalIndexV1, term: string, options: Ra
       exactSymbol: hit ? identity.exactSymbol : 0,
       graphProximity,
       canonicality: hit ? canonicality : 0,
+      aboutness,
       audienceFit: hit ? audienceFit : 0,
       acceptedAgentSignals: hit ? acceptedAgentSignals : 0,
     }
