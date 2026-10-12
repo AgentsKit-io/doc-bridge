@@ -102,5 +102,5 @@ AgentsKit is the **foundation library** (not a “JavaScript framework” in mar
 
 ## 2.0 interface boundary
 
-The Studio UI is planned for 2.1; do not describe it as part of 2.0.
+This package ships no Studio UI, and none is planned here. The deterministic graph export is the supported integration point.
 See the [launch plan](./launch/channels-2.0.md) for draft channel copy and claims limits.

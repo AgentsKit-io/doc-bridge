@@ -2,7 +2,7 @@
 title: Local studio design brief
 description: Graph, drift inbox and evidence navigation for maintainers and agents' humans.
 owner: maintainers
-lifecycle: active
+lifecycle: archived
 sourceOfTruth: docs/schemas/studio-graph-v1.md
 validationPath: pnpm vitest run tests/studio.test.ts --maxWorkers=2
 ---
@@ -83,11 +83,12 @@ compact typography and clear separation between navigation, evidence and actions
 Avoid ornamental motion, oversized cards and neon graphs. Dense tables can
 carry the inbox; whitespace and hierarchy should help scanning.
 
-The optional studio binds only to 127.0.0.1 with a random session token. The
-core package stays free of UI dependencies. Actions call existing CLI commands;
-PR creation is draft-only. The design does not add a hosted service or mutate
-repository state directly. The current export command only creates JSON;
-the interactive server and action transport belong to a subsequent implementation.
+This brief describes how an external consumer could present the StudioGraphV1
+export: such a consumer would bind only to 127.0.0.1 with a random session token.
+The core package stays free of UI dependencies. Any actions would call existing
+CLI commands; PR creation would be draft-only. The design does not add a hosted
+service or mutate repository state directly. The package ships no studio server
+or UI, and none is planned here. The export command only creates JSON.
 
 ## Using samples
 

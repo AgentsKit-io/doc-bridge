@@ -76,8 +76,8 @@ an array of StudioProposalV1 records with kind `vault-diff`. Each input file is
 bounded at 16 MB; collections are validated before the output is created.
 Only reference findings enter this inbox. Absent artifacts remain not-analyzed.
 No proposal is approved or applied. See [StudioGraphV1](../schemas/studio-graph-v1.md)
-for limits, metrics, status and search/why shapes, and the
-[design brief](../design/studio-brief.md) for the separate UI consumer.
+for limits, metrics, status and search/why shapes. This package ships no UI;
+the [local design brief](../design/studio-brief.md) is reference material for external consumers.
 
 ## Commands (v1)
 
