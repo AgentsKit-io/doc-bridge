@@ -60,3 +60,20 @@ test.describe('without JavaScript', () => {
     await expect(section.locator('iframe.bridge-assembly-frame')).toBeHidden()
   })
 })
+
+test.describe('on a phone-width viewport', () => {
+  test.use({ viewport: { width: 390, height: 844 } })
+
+  test('the figure page does not scroll sideways and opens at the intake', async ({ page }) => {
+    await page.goto('/figures/assembly-line.html')
+    await expect(page.locator('#r-findings')).toHaveText('0', { timeout: 15_000 })
+    const widths = await page.evaluate(() => ({
+      scroll: document.documentElement.scrollWidth,
+      client: document.documentElement.clientWidth,
+    }))
+    expect(widths.scroll).toBeLessThanOrEqual(widths.client)
+    // The drawing is wider than the card on a phone; the first view starts at the left (intake) end.
+    const transform = await page.locator('.al-scroll .iso-svg').evaluate((svg) => (svg as SVGElement).style.transform)
+    expect(['', 'translateX(0px)']).toContain(transform)
+  })
+})

@@ -408,18 +408,21 @@ if ("ResizeObserver" in window) new ResizeObserver(reportHeight).observe(card);
 
 // On a narrow screen the drawing is wider than the card: pan it to keep the stations that matter in view.
 const scroller = document.querySelector(".al-scroll");
-let pan = 0.55;
+// The first view starts at the intake, so a phone visitor reads the line from its start.
+let pan = 0;
 function follow(share) {
   pan = Math.max(0, Math.min(1, share));
   const room = svg.getBoundingClientRect().width - scroller.clientWidth;
   svg.style.transform = room > 1 ? `translateX(${-Math.round(room * pan)}px)` : "";
 }
-let followed = 0.55;
+// Pan only when the line changes phase, so a visitor's own drag is kept while nothing happens.
+const PHASE_PAN = { idle: 0, rush: 0.3, finding: 0.62, slip: 0.84 };
+let phase = "idle";
 function followAction() {
-  const want = state.slipFor ? 0.84 : state.findings.size ? 0.62 : state.rush ? 0.3 : followed;
-  if (want !== followed) {
-    followed = want;
-    follow(want);
+  const want = state.slipFor ? "slip" : state.findings.size ? "finding" : state.rush ? "rush" : "idle";
+  if (want !== phase) {
+    phase = want;
+    follow(PHASE_PAN[want]);
   }
 }
 if ("ResizeObserver" in window) new ResizeObserver(() => follow(pan)).observe(scroller);
@@ -467,5 +470,5 @@ queue = (() => {
 state.heddle = [1, 0];
 state.speed = still.matches ? 0 : M.speed;
 draw();
-follow(followed);
+follow(PHASE_PAN[phase]);
 reportHeight();

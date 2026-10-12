@@ -3,7 +3,7 @@ html.iso{--al-amber:#f0a630;--al-amber-ink:#f5b84a;--al-amber-soft:#f0a63033;--a
 html.iso[data-theme="light"]{--al-amber:#d98a06;--al-amber-ink:#b86f00;--al-amber-soft:#d98a0626;--al-hole:#9a9aa0;--al-slot:#5c5c62}
 html,body{margin:0;background:transparent}
 .al-body{color:var(--anatomy-text);font:14px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
-.al-page{width:100%;max-width:1120px;margin:0 auto;padding:2px}
+.al-page{box-sizing:border-box;width:100%;max-width:1120px;margin:0 auto;padding:2px}
 .al-figure{margin:0}
 .al-plate{padding:46px 20px 18px}
 .al-corners{position:absolute;inset:16px 20px auto;display:flex;justify-content:space-between;gap:12px;pointer-events:none}
