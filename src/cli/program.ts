@@ -337,8 +337,13 @@ const formatSearchMatch = (match: {
   const lines = [`  [${match.type}] ${match.id}${score}${confidence}`, `    ${match.path}`, ...(summary ? [`    ${summary}`] : [])]
   if (match.explain) {
     // Every component with a contribution, so a wrong ranking is reportable with numbers.
-    const parts = Object.entries(match.explain.components).filter(([name, value]) => value !== 0 && name !== 'prior').map(([name, value]) => `${name}=${value}`)
-    if (match.explain.components.prior !== undefined && match.explain.components.prior !== 1) parts.push(`prior=×${match.explain.components.prior}`)
+    // Multiplicative priors (prior, aboutness) are shown as factors and skipped when neutral (1).
+    const multipliers = ['prior', 'aboutness'] as const
+    const parts = Object.entries(match.explain.components).filter(([name, value]) => value !== 0 && !(multipliers as readonly string[]).includes(name)).map(([name, value]) => `${name}=${value}`)
+    for (const name of multipliers) {
+      const factor = match.explain.components[name]
+      if (factor !== undefined && factor !== 1) parts.push(`${name}=×${factor}`)
+    }
     const matched = Object.entries(match.explain.matched).map(([field, terms]) => `${field}: ${terms.join(', ')}`)
     lines.push(`    why: ${parts.join(' ') || 'no scoring component'}`)
     if (matched.length) lines.push(`    matched: ${matched.join(' | ')}`)

@@ -104,7 +104,7 @@ on disk now.
 has named parts:
 
 ```
-score = lexical × prior
+score = lexical × prior × aboutness
       + exactId + exactPath + exactSymbol
       + graphProximity + canonicality + audienceFit + acceptedAgentSignals
 ```
@@ -114,15 +114,20 @@ score = lexical × prior
 - **prior** — the query-shape heuristics, as a multiplier: a curated (agent-audience) document, an
   ownership record for a routing question, an intent or change route whose title covers the query,
   a module for a symbol- or path-shaped query. A prior can only amplify evidence that exists.
+- **aboutness** — a record whose name fields cover the query is about it; body coverage alone is
+  not. The share of the query's IDF mass found in the title, headings or path sets a multiplier of
+  `1 + 0.2 × share`, so a title match keeps the advantage BM25F's term-frequency saturation would
+  otherwise take away. The factor is 1 for a record with no lexical hit.
 - **exactId / exactPath / exactSymbol** — the query names the thing: an alias or id, a path or
   filename, an exported symbol. Per-token identity applies to queries of at most two tokens; a
   sentence does not name a thing by containing one of its tokens.
 - **graphProximity** — within two hops of one of the ten strongest lexical hits, over covers,
   mentions, links and imports. Scaled by the anchor's share of the best score, so a hub page that
   barely matched cannot lift everything it links to.
-- **canonicality** — log-scaled PageRank over `links-to` and `covers`: the page other pages point
-  at outranks the leaf that mentions the same thing. A tie-breaker among answers, never an answer:
-  it applies only to lexical hits.
+- **canonicality** — log-scaled PageRank over `links-to` and `covers`, measured above the corpus
+  floor (the smallest positive PageRank in the index): the page other pages point at outranks the
+  leaf that mentions the same thing, and a record nothing links to earns nothing for being a
+  document. A tie-breaker among answers, never an answer: it applies only to lexical hits.
 - **audienceFit** — the `--agent` prior for documentation written for an agent.
 - **acceptedAgentSignals** — the overlay hook, carried at zero weight until the overlay workstream
   lands, so the code path and the explain view already exist.

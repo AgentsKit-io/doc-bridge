@@ -16,7 +16,7 @@ import { toPosix } from '../src/lib/paths.js'
 import { runQuery } from '../src/query/query.js'
 import { searchIndex } from '../src/query/search.js'
 import { projectRetrievalIndex, snapshotObservationHash, weakerConfidence } from '../src/retrieval/project.js'
-import { rankRetrieval } from '../src/retrieval/rank.js'
+import { ABOUT_FACTOR, rankRetrieval } from '../src/retrieval/rank.js'
 import { createDocBridgeRetriever, retrieveDocBridgeDocuments, type Retriever } from '../src/retriever/doc-bridge-retriever.js'
 import { AgentHandoffV1Schema, normalizeAgentHandoff } from '../src/schemas/agent-handoff.js'
 import { DocBridgeIndexV1Schema, type DocBridgeIndexV1 } from '../src/schemas/doc-bridge-index.js'
@@ -469,5 +469,37 @@ describe('freshness and boundaries', () => {
     const reached = [...seen].map((file) => toPosix(file.slice(repositoryRoot.length + 1)))
     expect(reached.filter((file) => file.startsWith('src/agents/'))).toEqual([])
     expect(reached).toContain('src/retrieval/bm25.ts')
+  })
+})
+
+describe('ranking priors', () => {
+  it('pins the aboutness factor inside the range where a directory cannot outrank its module', () => {
+    expect(ABOUT_FACTOR).toBe(0.2)
+    expect(ABOUT_FACTOR).toBeGreaterThanOrEqual(0.15)
+    expect(ABOUT_FACTOR).toBeLessThanOrEqual(0.25)
+  })
+
+  it('rewards a record whose name covers the query, and gives no aboutness to body-only matches', () => {
+    const projection = repositoryIndex().projection
+    if (!projection) throw new Error('the repository index carries a projection')
+    const ranked = rankRetrieval(projection, 'mcp server', { limit: 50 })
+    const named = ranked.find((item) => item.entry.path === 'src/mcp/server.ts')
+    expect(named?.explanation.components.aboutness).toBeGreaterThan(1)
+    for (const item of ranked) {
+      const { aboutness } = item.explanation.components
+      expect(aboutness).toBeGreaterThanOrEqual(1)
+      expect(aboutness).toBeLessThanOrEqual(1 + ABOUT_FACTOR)
+    }
+  })
+
+  it('gives nothing for being a document: canonicality is measured above the corpus floor', () => {
+    const projection = repositoryIndex().projection
+    if (!projection) throw new Error('the repository index carries a projection')
+    const floor = Math.min(...projection.entries.map((entry) => entry.graph.pagerank).filter((pagerank) => pagerank > 0))
+    const ranked = rankRetrieval(projection, 'documentation audit', { limit: 50 })
+    const atFloor = ranked.filter((item) => item.entry.graph.pagerank <= floor)
+    expect(atFloor.length).toBeGreaterThan(0)
+    for (const item of atFloor) expect(item.explanation.components.canonicality).toBe(0)
+    expect(ranked.some((item) => item.explanation.components.canonicality > 0)).toBe(true)
   })
 })
