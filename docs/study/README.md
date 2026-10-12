@@ -43,7 +43,9 @@ artifacts. They remain open validation work for a future adjudicated corpus.
 
 The [minimal six-task study](./minimal-study-v1.md) is a separate preparation
 protocol with pinned public questions and a budget-first pilot for
-`claude-haiku-5-5`. No model was run for that protocol. The pilot runs through the
+`claude-haiku-5-5`. Its results are reported in
+[minimal study results v1](./minimal-study-results-v1.md) (agent-adjudicated;
+n = 18 per scenario per run; two runs with a product change between them). The pilot runs through the
 Claude Code CLI in headless mode with the CLI's own login (no API key; the Messages
 API transport remains an option). It is approved with a 1 USD cumulative cap on the
 charged spend, which is the larger of the CLI-reported cost and the list-price
@@ -68,6 +70,7 @@ approval.
 | [Phase 4 public pilot plan](./phase4-public-pilot-run-plan-v1.json) | Hashed 16-observation pairwise pilot using the two configured Codex model slots. |
 | [Phase 4 public pilot ledger](./phase4-public-pilot-ledger-v1.json) | Bounded structured observations with hashes, statuses, provider usage, evidence IDs, and automated adjudication. |
 | [Phase 4 public pilot result](./phase4-public-pilot-result-v1.json) | Anonymized execution counts, paired token/latency measurements, failed preparation runs, and limitations. |
+| [Minimal study results v1](./minimal-study-results-v1.md) | Agent-adjudicated results of the six-task study (two runs, claude-haiku-5-5), with limits and the pre-registered run-2 criterion. Summary data: [JSON](./minimal-study-results-v1.json). |
 | [Publication gate v1](./publication-gate-v1.md) | Evidence and claim-boundary checks required before publishing study results. |
 | [A/B baseline result](./ab-baseline-result-v1.json) | Controlled repository-only versus deterministic Doc Bridge measurements. |
 | [A/B baseline analysis](./ab-baseline-analysis-v1.md) | Human-readable interpretation of the controlled baseline. |

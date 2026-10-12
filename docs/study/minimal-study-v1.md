@@ -21,6 +21,8 @@ attempt (the larger of the CLI-reported cost and the list-price computation). Th
 approval after the pilot reports measured cost. Publication of results requires
 maintainer approval.
 
+Results of the two 18-attempt-per-scenario runs are in the [results report](./minimal-study-results-v1.md) (agent-adjudicated, with limits).
+
 Semantic adjudication is performed by an **agent, not by humans**. There is no
 human review of answers. Results are therefore **agent-adjudicated evidence** and
 must be labelled that way in any published report.
