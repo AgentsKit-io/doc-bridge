@@ -160,7 +160,7 @@ facts. Then sort the results:
 
 - a removed export that a doc cites needs removal evidence before it is called broken;
 - a changed signature that a doc cites is a changed reference, which asks for review;
-- a bare mention of a name, with no claim about the changed aspect, stays valid.
+- a bare mention of a name, with no claim about the changed aspect, does not raise a changed-reference finding.
 
 Commands, from an empty directory with Node 22 or newer:
 
@@ -180,6 +180,8 @@ check them in CI, by review, or not at all? I am happy to share the method and
 the limits of the small agent study we ran on this tool.
 
 Repository: https://github.com/AgentsKit-io/doc-bridge
+Landing: https://doc-bridge.agentskit.io
+Hosted documentation maintenance from AgentsKit (early access): join the waitlist on the landing page.
 
 ## Draft 4: awesome-list entries
 
