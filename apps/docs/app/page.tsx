@@ -6,6 +6,9 @@ import { resolve } from 'node:path'
 import { HandoffProof } from '@/components/home/handoff-proof'
 import { InstallCommandTabs } from '@/components/home/install-command-tabs'
 import { ProofTerminal } from '@/components/home/proof-terminal'
+import { Release2Section } from '@/components/home/release-2-0'
+import { AgentStudySection } from '@/components/home/agent-study'
+import { WaitlistForm } from '@/components/home/waitlist-form'
 import { EcosystemShowcase } from '@/components/ecosystem'
 import { ProductSubheader } from '@/components/product-subheader'
 import { SiteFooter } from '@/components/site-footer'
@@ -19,6 +22,10 @@ const principles = [
   [Bot, 'One handoff, every surface', 'MCP and CLI share the same repository-backed context.'],
   [GitBranch, 'Knowledge returns to docs', 'Agent findings become reviewable drafts, never silent edits.'],
 ] as const
+
+// Build-time switch: the waitlist block is omitted entirely unless the variable is an https URL.
+const waitlistEndpoint = process.env.NEXT_PUBLIC_WAITLIST_URL?.trim() ?? ''
+const waitlistEnabled = /^https:\/\//u.test(waitlistEndpoint)
 
 const sourceCount = readdirSync(resolve(process.cwd(), '../../docs'), { recursive: true })
   .filter((path) => typeof path === 'string' && path.endsWith('.md') && !String(path).includes('DOGFOOD') && !String(path).startsWith('landing') && !String(path).startsWith('agent-corpus')).length
@@ -64,6 +71,10 @@ export default function HomePage() {
             ))}
           </div>
         </section>
+
+        <Release2Section />
+
+        <AgentStudySection />
 
         <section id="proof" className="bridge-proof-section">
           <div className="bridge-proof-inner">
@@ -111,6 +122,8 @@ export default function HomePage() {
           </div>
           <Link href="/docs/getting-started" prefetch={false} className="bridge-button bridge-button-primary">Add Doc Bridge to your repo <ArrowRight aria-hidden className="size-4" /></Link>
         </section>
+        {waitlistEnabled ? <WaitlistForm endpoint={waitlistEndpoint} /> : null}
+
         <EcosystemShowcase />
       </main>
       <SiteFooter />
