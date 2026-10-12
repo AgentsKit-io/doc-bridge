@@ -127,7 +127,7 @@ Hosted documentation maintenance from AgentsKit (early access): join the waitlis
    `doc.search`, `doc.get` and `gate.status`. The agent gets the handoff before it edits.
 7. **What the evidence shows, with limits.** Include the minimal study numbers from
    draft 1, with the same limits: 18 attempts per scenario per run, one model,
-   scenario-blind agent adjudication with no human review with no human review, a product change between runs, and
+   scenario-blind agent adjudication with no human review, a product change between runs, and
    run 1 showing no gain. Link the full results.
 8. **What it does not do.** No natural-language correctness judgement, no automatic
    approval or edits, and any optional LLM remediation is human-reviewed. Unsupported
