@@ -7,17 +7,23 @@
 <style>
   :root { --ink: #e6edf3; --mute: #8b98a6; --card: #111820; --rule: #26313d; --accent: #6ee7b7; --warn: #f5a524; --btn: #1b2630; }
   :root.light { --ink: #1b1f24; --mute: #5d6671; --card: #fffefb; --rule: #d3d9e0; --accent: #0b7a57; --warn: #b26a00; --btn: #eef1f4; }
-  html, body { margin: 0; height: 100%; background: transparent; }
+  html, body { margin: 0; background: transparent; }
   body { font: 13px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: var(--ink); box-sizing: border-box; padding: 8px; }
-  .live { height: 100%; box-sizing: border-box; border: 1px solid var(--rule); border-radius: 10px; background: var(--card); padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+  .live { box-sizing: border-box; border: 1px solid var(--rule); border-radius: 10px; background: var(--card); padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
   .top { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
   .tag { color: var(--mute); letter-spacing: .08em; text-transform: uppercase; font-size: 11px; }
   svg { width: 100%; height: auto; display: block; }
+  .badge circle { fill: var(--card); stroke: var(--ink); stroke-width: 1; }
+  .badge text { fill: var(--ink); font: 600 11px ui-monospace, Menlo, Consolas, monospace; text-anchor: middle; dominant-baseline: central; }
+  .lead { stroke: var(--ink); stroke-width: 0.8; fill: none; opacity: .7; }
+  .lead-dot { fill: var(--ink); }
   .controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
   button { font: inherit; color: var(--ink); background: var(--btn); border: 1px solid var(--rule); border-radius: 999px; padding: 6px 12px; cursor: pointer; }
   button[aria-pressed="true"] { border-color: var(--warn); color: var(--warn); }
   button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .hint { color: var(--mute); font-size: 12px; }
+  .legend { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 3px 16px; list-style: none; margin: 0; padding: 0; font-size: 12px; color: var(--mute); }
+  .legend b { color: var(--ink); font-weight: 600; margin-right: 4px; }
   .readout { display: grid; gap: 3px; margin: 0; }
   .readout div { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
   .readout dt { color: var(--mute); }
@@ -35,15 +41,34 @@
     <span class="tag">Fig 1</span>
     <span class="tag">The doc-bridge assembly line</span>
   </div>
-  <svg id="scene" viewBox="0 0 640 420" role="img" aria-labelledby="scene-title scene-desc">
+  <svg id="scene" viewBox="30 20 570 330" role="img" aria-labelledby="scene-title scene-desc">
     <title id="scene-title">Isometric assembly line</title>
-    <desc id="scene-desc">Code and documents enter on a belt, a loom weaves the index, a sensor gate compares a changed signature with the documents that claim it, and a stamp prints an advisory comment.</desc>
+    <desc id="scene-desc">Code and documents enter on a conveyor, a loom weaves the index, a sensor gate compares a changed signature with the documents that claim it, a stamp prints an advisory comment, and a doc shelf holds the claiming documents.</desc>
     <g id="world"></g>
+    <g id="callouts" aria-hidden="true">
+      <line class="lead" x1="241" y1="206" x2="78" y2="296"/><circle class="lead-dot" cx="241" cy="206" r="2"/>
+      <g class="badge" transform="translate(60 300)"><circle r="9"/><text>1</text></g>
+      <line class="lead" x1="344" y1="160" x2="392" y2="52"/><circle class="lead-dot" cx="344" cy="160" r="2"/>
+      <g class="badge" transform="translate(400 40)"><circle r="9"/><text>2</text></g>
+      <line class="lead" x1="247" y1="124" x2="130" y2="66"/><circle class="lead-dot" cx="247" cy="124" r="2"/>
+      <g class="badge" transform="translate(120 60)"><circle r="9"/><text>3</text></g>
+      <line class="lead" x1="108" y1="168" x2="52" y2="168"/><circle class="lead-dot" cx="108" cy="168" r="2"/>
+      <g class="badge" transform="translate(40 168)"><circle r="9"/><text>4</text></g>
+      <line class="lead" x1="429" y1="245" x2="548" y2="252"/><circle class="lead-dot" cx="429" cy="245" r="2"/>
+      <g class="badge" transform="translate(560 252)"><circle r="9"/><text>5</text></g>
+    </g>
   </svg>
   <div class="controls">
     <button type="button" id="toggle" aria-pressed="false">Change parse(input) to parse(input, strict)</button>
     <span class="hint">Press the button, or Space or Enter, to toggle the change.</span>
   </div>
+  <ol class="legend" aria-label="Numbered parts of the machine">
+    <li><b>1</b>Conveyor: code and docs enter</li>
+    <li><b>2</b>Loom: weaves the index</li>
+    <li><b>3</b>Sensor gate: compares signatures</li>
+    <li><b>4</b>Stamp: prints the advisory</li>
+    <li><b>5</b>Doc shelf: claiming docs</li>
+  </ol>
   <dl class="readout" aria-live="polite">
     <div><dt>Index (model)</dt><dd id="r-index"></dd></div>
     <div><dt>Change</dt><dd id="r-change"></dd></div>
@@ -53,10 +78,7 @@
   <pre class="paper" id="paper" hidden></pre>
   <p class="facts">Published: retrieval hit@3 88.3%. Layer-1 fixture and native finding precision 100%. Historical CHANGED_REFERENCE precision 83.33% (10 TP / 2 FP). Study run 2: 2 doc-bridge tools used in 18/18 attempts.</p>
 </div>
-<picture>
-  <source media="(prefers-color-scheme: light)" srcset="/figures/assembly-line-fallback-light.png">
-  <img class="static" src="/figures/assembly-line-fallback-dark.png" alt="The doc-bridge assembly line in its unchanged state: code and documents on a belt, a loom, a sensor gate and a stamp.">
-</picture>
+<img class="static" src="/figures/assembly-line-fallback-dark.png" alt="The doc-bridge assembly line in its unchanged state: code and documents on a conveyor, a loom weaving the index, a sensor gate, a stamp and a doc shelf.">
 <script>
 (function () {
   'use strict';
@@ -68,9 +90,10 @@
   var ZONE_X = -6; // sensor gate position on the belt
 
   // The figure's own small model. Documents claim symbols; the change is one signature.
+  // The belt carries the three code modules (parse, run, format) and one doc, as drawn below.
   var MODEL = {
     documents: ['guide/parsing.md', 'guide/cli.md', 'api/index.md'],
-    modules: 2,
+    modules: 3,
     symbols: ['parse', 'run', 'format'],
     claims: [['guide/parsing.md', 'parse'], ['guide/cli.md', 'run'], ['guide/cli.md', 'format']],
     changedSymbol: 'parse',
@@ -79,8 +102,16 @@
     claimingDoc: 'guide/parsing.md'
   };
 
+  // Belt items. Only the parse() module carries the changed signature. `still` is its resting x under reduced motion.
+  var ITEMS = [
+    { k: 'code', name: 'parse', changed: true, off: 6, still: -6 },
+    { k: 'code', name: 'run', changed: false, off: 8.75, still: -9.4 },
+    { k: 'code', name: 'format', changed: false, off: 11.5, still: -2.6 },
+    { k: 'doc', name: 'guide/parsing.md', changed: false, off: 14.25, still: -11.4 }
+  ];
+
   var reduced = reduceQuery.matches;
-  var state = { change: false, sensed: false, parseXs: [], t: 0, prong: 0, flag: 0, press: 0, mark: 0 };
+  var state = { change: false, sensed: false, changedXs: [], t: 0, prong: 0, flag: 0, press: 0, mark: 0 };
   var last = null, visible = true, rafId = 0, lastSnapshot = '';
   var pal = null;
 
@@ -158,7 +189,7 @@
     }
     function push(d, svg) { solids.push({ d: d, svg: svg }); }
 
-    // Layer 0: base plate, feet, belt, rollers, weave plane and the stamp sheet.
+    // Conveyor: base plate, feet, belt, rollers and the stamp sheet.
     slab(-15, 12.5, -12, 12, -1.2, 0, 'lo');
     slab(-16, -15.4, -12, -11.4, -1.2, 0, 'lo');
     slab(11.8, 12.5, 10.6, 11.2, -1.2, 0, 'lo');
@@ -201,21 +232,20 @@
     var shuttleY = reduced ? 0 : 3.6 * Math.sin(t * 1.3);
     solid(1.2, 2.8, shuttleY - 0.5, shuttleY + 0.5, 3.9, 4.3, 'lit');
 
-    // Belt: four items moving left to right; the parse() module passes the sensor gate.
-    var items = [{ k: 'parse', off: 6 }, { k: 'parse', off: 8.75 }, { k: 'parse', off: 11.5 }, { k: 'doc', off: 14.25 }];
-    state.parseXs = [];
-    items.forEach(function (item) {
-      var x = -12 + ((t * 1.2 + item.off) % 11);
+    // Conveyor items: three code modules and one doc move left to right; the changed parse() module passes the sensor gate.
+    state.changedXs = [];
+    ITEMS.forEach(function (item) {
+      var x = reduced ? item.still : -12 + ((t * 1.2 + item.off) % 11);
       var alpha = clamp((x + 12.6) / 1.2, 0, 1) * clamp((-1.2 - x) / 1.2, 0, 1);
       var svg;
       if (item.k === 'doc') {
         svg = boxSvg(x - 0.9, x + 0.9, -1.1, 1.1, 1.0, 1.3, 'doc');
       } else {
-        svg = boxSvg(x - 0.8, x + 0.8, -1.0, 1.0, 1.0, item.k === 'parse' ? 2.6 : 2.2, 'code');
+        svg = boxSvg(x - 0.8, x + 0.8, -1.0, 1.0, 1.0, 2.4, 'code');
       }
-      if (item.k === 'parse') {
-        state.parseXs.push(x);
-        if (state.prong > 0.01) svg += boxSvg(x - 0.25, x + 0.25, -0.25, 0.25, 2.6, 2.6 + 0.9 * state.prong, 'warn');
+      if (item.changed) {
+        state.changedXs.push(x);
+        if (state.prong > 0.01) svg += boxSvg(x - 0.25, x + 0.25, -0.25, 0.25, 2.4, 2.4 + 0.9 * state.prong, 'warn');
       }
       push(x + (item.k === 'doc' ? 1.15 : 1.6), '<g opacity="' + alpha.toFixed(3) + '">' + svg + '</g>');
     });
@@ -245,7 +275,7 @@
 
   function update(dt) {
     if (!reduced) state.t += dt;
-    // The sensor latches once the parse() module passes the gate while the change is on.
+    // The sensor latches once the changed parse() module passes the gate while the change is on.
     if (!state.change) {
       state.sensed = false;
     }
@@ -255,9 +285,9 @@
     state.mark = ease(state.mark, state.sensed ? 1 : 0, 7, dt);
   }
 
-  // The gate reads after the scene is laid out: the parse() module's x decides whether it is in the zone.
+  // The gate reads after the scene is laid out: the changed module's x decides whether it is in the zone.
   function sense() {
-    if (state.change && !state.sensed && state.parseXs.some(function (x) { return Math.abs(x - ZONE_X) < 0.9; })) {
+    if (state.change && !state.sensed && state.changedXs.some(function (x) { return Math.abs(x - ZONE_X) < 0.9; })) {
       state.sensed = true;
     }
   }
@@ -316,6 +346,14 @@
     if (!rafId && visible && !document.hidden) rafId = requestAnimationFrame(frame);
   }
 
+  // Tell the host page how tall the card is, so the iframe fits the content at every width.
+  var card = document.getElementById('card');
+  function reportHeight() {
+    if (window.parent === window) return;
+    var height = Math.ceil(card.getBoundingClientRect().height + 16);
+    try { window.parent.postMessage({ type: 'doc-bridge-assembly-height', height: height }, window.location.origin); } catch (error) { /* no host */ }
+  }
+
   toggle.addEventListener('click', function () {
     state.change = !state.change;
     if (reduced) { step(0); } else { kick(); }
@@ -324,7 +362,7 @@
     new IntersectionObserver(function (entries) {
       visible = entries[0].isIntersecting;
       kick();
-    }).observe(document.getElementById('card'));
+    }).observe(card);
   }
   document.addEventListener('visibilitychange', kick);
   reduceQuery.addEventListener('change', function (event) { reduced = event.matches; kick(); });
@@ -332,9 +370,11 @@
   try {
     new MutationObserver(function () { step(0); }).observe(window.parent.document.documentElement, { attributes: true, attributeFilter: ['class'] });
   } catch (error) { /* standalone page: no parent to follow */ }
+  if ('ResizeObserver' in window) new ResizeObserver(reportHeight).observe(card);
 
   step(0);
   kick();
+  reportHeight();
 })();
 </script>
 </body>

@@ -264,20 +264,16 @@ agentskit-footer, agentskit-ecosystem { display: block; }
   .bridge-waitlist-submit { width: 100%; justify-self: stretch; }
 }
 
-/* Assembly-line figure: interactive iframe with a static fallback. */
+/* Assembly-line figure: interactive iframe, sized by the figure's own height report. */
 .bridge-assembly { border-top: 1px solid var(--bridge-home-border); padding-block: clamp(3.5rem, 6vw, 5.5rem); }
 .bridge-assembly-inner { width: min(100% - 3rem, 80rem); margin-inline: auto; }
 .bridge-assembly-figure { margin: 2.5rem 0 0; }
-.bridge-assembly-stage { position: relative; width: 100%; max-width: 68rem; height: 48rem; margin-inline: auto; }
-.bridge-assembly-frame { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: transparent; }
-.bridge-assembly-static { display: none; position: absolute; inset: 0; }
-.bridge-assembly-static img { width: 100%; height: 100%; object-fit: contain; }
+.bridge-assembly-stage { width: 100%; max-width: 68rem; margin-inline: auto; }
+.bridge-assembly-frame { display: block; width: 100%; height: 36rem; border: 0; border-radius: 12px; background: transparent; }
+.bridge-assembly-frame:focus-visible { outline: 2px solid var(--bridge-home-blue); outline-offset: 2px; }
+.bridge-assembly-static { display: block; width: 100%; height: auto; border-radius: 12px; }
 .bridge-assembly-caption { margin-top: 1rem; max-width: 60ch; font-size: .875rem; color: var(--bridge-home-fg); }
 @media (max-width: 600px) {
   .bridge-assembly-inner { width: min(100% - 2rem, 80rem); }
-  .bridge-assembly-stage { height: 58rem; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .bridge-assembly-frame { display: none; }
-  .bridge-assembly-static { display: block; }
+  .bridge-assembly-frame { height: 30rem; }
 }
