@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { BASE_PATH } from '@/lib/site'
 
 const MIN_HEIGHT = 200
@@ -11,6 +11,29 @@ const FALLBACK_DARK = `${BASE_PATH}/figures/assembly-line-fallback-dark.png`
 
 export function AssemblyFigureSection() {
   const frameRef = useRef<HTMLIFrameElement>(null)
+  // The figure runs its own animation; load it only when the section nears the viewport, so it does
+  // not compete with the hero during the first paint (native lazy loading starts it far too early).
+  const [src, setSrc] = useState<string | undefined>(undefined)
+
+  useEffect(() => {
+    const frame = frameRef.current
+    if (!frame) return
+    if (!('IntersectionObserver' in window)) {
+      setSrc(FIGURE_SRC)
+      return
+    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          setSrc(FIGURE_SRC)
+          observer.disconnect()
+        }
+      },
+      { rootMargin: '300px 0px' },
+    )
+    observer.observe(frame)
+    return () => observer.disconnect()
+  }, [])
 
   useEffect(() => {
     // The figure reports its card height so the frame fits the content at every width.
@@ -39,7 +62,7 @@ export function AssemblyFigureSection() {
             <iframe
               ref={frameRef}
               className="bridge-assembly-frame"
-              src={FIGURE_SRC}
+              src={src}
               title="Interactive isometric figure of the doc-bridge assembly line: change the parse() signature and watch the changed file travel through the loom, the sensor gate flag the document that claims the old signature, and the stamp print an advisory slip."
               loading="lazy"
             />

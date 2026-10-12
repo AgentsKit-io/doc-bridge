@@ -7,6 +7,9 @@ test('home page renders the assembly figure with a lazy iframe and a static fall
   await expect(section.getByRole('heading', { level: 2 })).toBeVisible()
 
   const frame = section.locator('iframe.bridge-assembly-frame')
+  // The figure loads only when its section nears the viewport, never during the hero's first paint.
+  await expect(frame).not.toHaveAttribute('src', /.+/)
+  await frame.scrollIntoViewIfNeeded()
   await expect(frame).toHaveAttribute('src', '/figures/assembly-line.html')
   await expect(frame).toHaveAttribute('loading', 'lazy')
   await expect(frame).toHaveAttribute('title', /interactive/i)
