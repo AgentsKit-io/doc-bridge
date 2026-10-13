@@ -69,7 +69,6 @@ const P = k.fitProjection(
   H,
   { pad: 22, azimuth: AZIMUTH },
 );
-const V = G.viewOf(P);
 const KS = G.scaleOf(P);
 const at = (p) => k.iso(p, P);
 const S = (paths, style) => k.solidSvg(paths, style);

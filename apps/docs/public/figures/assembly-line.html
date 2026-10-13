@@ -1094,7 +1094,7 @@ function draw() {
   lamp[1].setAttribute("opacity", (0.55 * level).toFixed(3));
   lamp[2].setAttribute("opacity", (0.9 * level).toFixed(3));
   readout();
-  if (typeof followAction === "function") followAction();
+  followAction();
 }
 state.pins = [0, 0];
 state.ram = 0;
