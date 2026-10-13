@@ -205,7 +205,7 @@ See [Getting started](docs/getting-started.md), [MCP](docs/mcp.md), [Examples](d
 
 ### Cursor plugin
 
-This repository also contains a Cursor plugin that pairs the Doc Bridge MCP server (read-only except for the explicit proposal tool) with a handoff skill. It resolves `startHere`, `readBeforeEditing`, `editRoots`, and `checks` before Cursor edits a routed repository. The plugin does not request credentials or write project files through MCP.
+This repository also contains a Cursor plugin that pairs the Doc Bridge MCP server (read-only except for the explicit proposal tool) with a handoff skill. It resolves `startHere`, `readBeforeEditing`, `editRoots`, and `checks` before Cursor edits a routed repository. The plugin does not request credentials. Its MCP tools are read-only except `docbridge.proposals`, which can save a review artifact under `.doc-bridge/` and record enrichment approve/reject decisions; no MCP tool edits documentation or source files or applies remediations.
 
 ### GitHub Copilot plugin
 
@@ -443,7 +443,7 @@ pnpm smoke:ollama    # optional — skips if Ollama/peers unavailable
 
 ## Privacy Policy
 
-The local MCP server reads only the project selected through `doc-bridge.config.json`. It does not require an API key, send project data to AgentsKit, collect telemetry, or write project files through its MCP tools. See the complete [Privacy Policy](PRIVACY.md) for accessed paths, use, storage, sharing, retention, optional integrations, and contact information.
+The local MCP server reads only the project selected through `doc-bridge.config.json`. It does not require an API key, send project data to AgentsKit, or collect telemetry. Its MCP tools are read-only except `docbridge.proposals`, which can save a review artifact under `.doc-bridge/` and record enrichment approve/reject decisions; no MCP tool edits documentation or source files or applies remediations. See the complete [Privacy Policy](PRIVACY.md) for accessed paths, use, storage, sharing, retention, optional integrations, and contact information.
 
 ## Contributing
 
