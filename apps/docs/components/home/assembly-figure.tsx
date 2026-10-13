@@ -75,8 +75,8 @@ export function AssemblyFigureSection() {
                   className="bridge-assembly-static"
                   src={FALLBACK_DARK}
                   alt="Static view of the doc-bridge assembly line: an intake tunnel feeds code files and documents onto one conveyor, a loom weaves them into an index sheet that winds onto a spool, a sensor gate with a lamp reads each document against the index, and a stamp with a slip printer marks flagged documents."
-                  width={1608}
-                  height={654}
+                  width={1644}
+                  height={592}
                 />
               </picture>
             </noscript>

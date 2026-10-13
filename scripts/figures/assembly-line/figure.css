@@ -61,3 +61,37 @@ html.iso[data-theme="light"] .al-lamp-core{fill:#ffe2a3}
   .al-legend{font-size:12.5px}
 }
 @media (prefers-reduced-motion:reduce){.al-scroll .iso-svg{transition:none}}
+/* Woven index lanes: one restrained material per entity kind (documents, modules, symbols, relations). */
+html.iso{--al-lane-0:#5a7ea8;--al-lane-1:#5e8a6c;--al-lane-2:#8470a6;--al-lane-3:#a6765b;--al-weave-ink:#0000004d;--al-tint-mix:#000}
+html.iso[data-theme="light"]{--al-lane-0:#86a9d4;--al-lane-1:#8dbb9a;--al-lane-2:#ad9bd4;--al-lane-3:#d8a586;--al-weave-ink:#1a1a2a29;--al-tint-mix:#3a3a46}
+.al-lane0{--al-t:var(--al-lane-0)}.al-lane1{--al-t:var(--al-lane-1)}.al-lane2{--al-t:var(--al-lane-2)}.al-lane3{--al-t:var(--al-lane-3)}
+.al-lane-fill{fill:var(--al-t);stroke:none}
+.al-weave{fill:var(--al-weave-ink)}
+.al-tint>.iso-fill,.al-tint>.iso-top{fill:var(--al-t)}
+.al-tint>.iso-shade[data-shade="0"]{fill:color-mix(in srgb,var(--al-t) 60%,var(--al-tint-mix))}
+.al-tint>.iso-shade[data-shade="1"]{fill:color-mix(in srgb,var(--al-t) 70%,var(--al-tint-mix))}
+.al-tint>.iso-shade[data-shade="2"]{fill:color-mix(in srgb,var(--al-t) 80%,var(--al-tint-mix))}
+.al-tint>.iso-shade[data-shade="3"]{fill:color-mix(in srgb,var(--al-t) 90%,var(--al-tint-mix))}
+.al-tint[data-seamless]>.iso-top{stroke:var(--al-t)}
+.al-tint[data-seamless]>.iso-shade[data-shade="0"]{stroke:color-mix(in srgb,var(--al-t) 60%,var(--al-tint-mix))}
+.al-tint[data-seamless]>.iso-shade[data-shade="1"]{stroke:color-mix(in srgb,var(--al-t) 70%,var(--al-tint-mix))}
+.al-tint[data-seamless]>.iso-shade[data-shade="2"]{stroke:color-mix(in srgb,var(--al-t) 80%,var(--al-tint-mix))}
+.al-tint[data-seamless]>.iso-shade[data-shade="3"]{stroke:color-mix(in srgb,var(--al-t) 90%,var(--al-tint-mix))}
+.al-lane-key{flex-wrap:wrap;gap:4px 7px}
+.al-lane-chip{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.al-lane-swatch{display:inline-block;width:12px;height:8px;border-radius:2px;background:var(--al-t);box-shadow:inset 0 0 0 1px #0000002a}
+/* The advisory slip's band. */
+.al-band{fill:var(--al-amber);stroke:var(--al-amber-ink);stroke-width:.6;vector-effect:non-scaling-stroke}
+/* Light theme: deeper four-tone shading, and a slate accent material on the stations' key parts. */
+html.iso[data-theme="light"]{--anatomy-shade-0:#b9b9b5;--anatomy-shade-1:#c9c9c5;--anatomy-shade-2:#d9d9d5;--anatomy-shade-3:#e6e6e2;--anatomy-lit-shade:#dcdcd8;--anatomy-mid:#7a7a80;--anatomy-lo:#a4a4a9;--al-accent:#c4cfdd;--al-accent-top:#e8edf4;--al-accent-edge:#3e4b5f}
+html.iso[data-theme="light"] .al-accent .iso-solid>.iso-fill,html.iso[data-theme="light"] .al-accent .iso-solid>.iso-top{fill:var(--al-accent-top)}
+html.iso[data-theme="light"] .al-accent .iso-solid>.iso-shade[data-shade="0"]{fill:color-mix(in srgb,var(--al-accent) 66%,#26303e)}
+html.iso[data-theme="light"] .al-accent .iso-solid>.iso-shade[data-shade="1"]{fill:color-mix(in srgb,var(--al-accent) 78%,#26303e)}
+html.iso[data-theme="light"] .al-accent .iso-solid>.iso-shade[data-shade="2"]{fill:color-mix(in srgb,var(--al-accent) 90%,#26303e)}
+html.iso[data-theme="light"] .al-accent .iso-solid>.iso-shade[data-shade="3"]{fill:var(--al-accent)}
+html.iso[data-theme="light"] .al-accent .iso-solid[data-seamless]>.iso-top{stroke:var(--al-accent-top)}
+html.iso[data-theme="light"] .al-accent .iso-solid[data-seamless]>.iso-shade[data-shade="0"]{stroke:color-mix(in srgb,var(--al-accent) 66%,#26303e)}
+html.iso[data-theme="light"] .al-accent .iso-solid[data-seamless]>.iso-shade[data-shade="1"]{stroke:color-mix(in srgb,var(--al-accent) 78%,#26303e)}
+html.iso[data-theme="light"] .al-accent .iso-solid[data-seamless]>.iso-shade[data-shade="2"]{stroke:color-mix(in srgb,var(--al-accent) 90%,#26303e)}
+html.iso[data-theme="light"] .al-accent .iso-solid[data-seamless]>.iso-shade[data-shade="3"]{stroke:var(--al-accent)}
+html.iso[data-theme="light"] .al-accent .iso-solid>.iso-edge{stroke:var(--al-accent-edge)}

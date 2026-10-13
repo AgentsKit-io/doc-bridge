@@ -50,7 +50,12 @@ const STAMP = { gland: 70, tip: 24 };
 const RAM_STROKE = 38.5 - DOC_TOP; // pad face travels down onto the document
 const PIN = { z0: 50, len: 17, stroke: 7.4 };
 const HEDDLE_STROKE = 4;
-const SLIP = { x0: SX - 8, x1: SX + 8, y0: 20, y1: 40, out: 18, z: 21 };
+// The advisory slip: built inside the printer and slid out of the slot on its +x face, past the printer.
+const PRINTER = { x0: SX - 12, x1: SX + 12, y0: 22, y1: 40, z1: 30 };
+const SLIP = { y0: 24.5, y1: 37.5, x1: PRINTER.x1, len: 34, out: 34, z: 21 };
+SLIP.x0 = SLIP.x1 - SLIP.len;
+const SLOT = { y0: SLIP.y0 - 1, y1: SLIP.y1 + 1, z0: 20.4, z1: 22.2 };
+const TRAY = { x0: PRINTER.x1, x1: PRINTER.x1 + SLIP.out + 4, y0: SLIP.y0 - 1.5, y1: SLIP.y1 + 1.5, z0: 19, z1: SLIP.z };
 
 const P = k.fitProjection(
   [
@@ -212,7 +217,8 @@ for (const item of R.items) {
 // Warp beam: the unwoven threads come off it.
 {
   const F = alongY(-218, 31.4);
-  turned("warp.beam", F, -60, -36, 5, { tone: "mid" }, { inner: Ln([0.25, 0.5, 0.75].map((t) => G.arcOf(F, -60 + 24 * t, 5, P)).join(""), { tone: "faint" }) });
+  // One coloured end cap per lane: the threads of each entity kind come off their own section of the beam.
+  LANES.forEach((lane, i) => turned(`warp.beam.${lane}`, F, CLOTH.y0 + LANE_W * i, CLOTH.y0 + LANE_W * (i + 1), 5, { tone: "mid", className: `al-tint al-lane${i}` }));
   turned("warp.flange.back", F, -62, -60, 7, { tone: "mid" });
   turned("warp.flange.front", F, -36, -34, 7, { tone: "mid" }, { extra: Dots(G.dotsOf(F, -34, 5.4, 6, P, { all: true }), { size: 0.4, tone: "mid" }) });
   turned("warp.axle.back", F, -68, -62, 1.5, { tone: "lo" });
@@ -225,9 +231,19 @@ const warpLines = [];
 for (let i = 0; i <= 16; i++) {
   const y = CLOTH.y0 + (i * (CLOTH.y1 - CLOTH.y0)) / 16;
   if (i === 0 || i === 16) continue;
-  warpLines.push({ d: path3([[CLOTH.x0, y, CLOTH.top], [CLOTH.x1, y, CLOTH.top]]), lane: i % 4 === 0 });
+  // Lane borders run the whole sheet; the other warp threads show only where the sheet is not woven yet.
+  const lane = i % 4 === 0;
+  warpLines.push({ d: path3([[CLOTH.x0, y, CLOTH.top], [lane ? CLOTH.x1 : FELL, y, CLOTH.top]]), lane });
 }
 const bandClip = path3([[FELL, CLOTH.y0, CLOTH.top], [SPOOL_X, CLOTH.y0, CLOTH.top], [SPOOL_X, CLOTH.y1, CLOTH.top], [FELL, CLOTH.y1, CLOTH.top]], true);
+// The woven sheet: one tinted lane per entity kind, with a weave texture laid in the plane of the cloth.
+const laneFills = LANES.map((_, i) => {
+  const y0 = CLOTH.y0 + LANE_W * i;
+  const d = path3([[FELL, y0, CLOTH.top], [SPOOL_X, y0, CLOTH.top], [SPOOL_X, y0 + LANE_W, CLOTH.top], [FELL, y0 + LANE_W, CLOTH.top]], true);
+  return `<path class="al-lane-fill al-lane${i}" d="${d}"/>`;
+}).join("");
+const WEAVE = { x: 3, y: LANE_W / 2 };
+const weavePattern = `<pattern id="al-weave" patternUnits="userSpaceOnUse" width="${WEAVE.x * 2}" height="${r2(WEAVE.y * 2)}" patternTransform="${k.topMatrix([0, 0], CLOTH.top, P, "x")}"><rect class="al-weave" x="0" y="0" width="${WEAVE.x}" height="${r2(WEAVE.y)}"/><rect class="al-weave" x="${WEAVE.x}" y="${r2(WEAVE.y)}" width="${WEAVE.x}" height="${r2(WEAVE.y)}"/></pattern>`;
 {
   const { plan, z0, h } = planOf([CLOTH.x0, CLOTH.y0, CLOTH.z], [CLOTH.x1, CLOTH.y1, CLOTH.top], 0.2);
   const shape = record(A.slab(plan, z0, h, { name: "cloth" }, 2));
@@ -235,6 +251,9 @@ const bandClip = path3([[FELL, CLOTH.y0, CLOTH.top], [SPOOL_X, CLOTH.y0, CLOTH.t
     "cloth",
     [-70, -48, CLOTH.top],
     S(k.slabOf(plan, z0, h, P, 2), { tone: "lo", crease: "none" }) +
+      weavePattern +
+      laneFills +
+      `<path class="al-weave-cover" d="${bandClip}" fill="url(#al-weave)"/>` +
       Ln(warpLines.filter((l) => !l.lane).map((l) => l.d).join(""), { tone: "faint" }) +
       Ln(warpLines.filter((l) => l.lane).map((l) => l.d).join(""), { tone: "lo" }) +
       `<clipPath id="al-cloth"><path d="${bandClip}"/></clipPath><g clip-path="url(#al-cloth)" data-part="bands"></g>`,
@@ -244,7 +263,8 @@ const bandClip = path3([[FELL, CLOTH.y0, CLOTH.top], [SPOOL_X, CLOTH.y0, CLOTH.t
 // Index spool after the gate: the woven index winds onto it.
 {
   const F = alongY(SPOOL_X, CLOTH.top - 9.5);
-  turned("spool.core", F, -60, -36, 9.5, { tone: "hi" }, { inner: Ln([0.2, 0.4, 0.6, 0.8].map((t) => G.arcOf(F, -60 + 24 * t, 9.5, P)).join(""), { tone: "faint" }) });
+  // The wound index: each lane winds onto its own tinted band of the core, so the four kinds read at both ends.
+  LANES.forEach((lane, i) => turned(`spool.core.${lane}`, F, CLOTH.y0 + LANE_W * i, CLOTH.y0 + LANE_W * (i + 1), 9.5, { tone: "hi", className: `al-tint al-lane${i}` }));
   turned("spool.flange.back", F, -62, -60, 12, { tone: "mid" });
   turned("spool.flange.front", F, -36, -34, 12, { tone: "mid" }, { extra: Dots(G.dotsOf(F, -34, 9.6, 8, P, { all: true }), { size: 0.45, tone: "mid" }) + Ln(G.circleOf(F, -34, 3.2, P), { tone: "lo" }) });
   turned("spool.axle.back", F, -68, -62, 2, { tone: "lo" });
@@ -387,37 +407,43 @@ post("stamp.gland", SX, 0, 4.5, 70, 74, { tone: "mid" }, { steps: 28 });
     `</g>`;
   put("stamp.ram", [SX, 0, 44], svg, shapes);
 }
-box("stamp.printer", [SX - 12, 22, 0], [SX + 12, 40, 30], {}, {
-  r: 1.5,
-  bevel: 0.6,
-  inner: (plan) => sideSeam(plan, 8),
-  extra:
-    `<path class="al-slot" d="${path3([[SLIP.x0 - 1, 40, 20.4], [SLIP.x1 + 1, 40, 20.4], [SLIP.x1 + 1, 40, 22.2], [SLIP.x0 - 1, 40, 22.2]], true)}"/>` +
-    Ln(path3([[SLIP.x0 - 1, 40, 20.4], [SLIP.x1 + 1, 40, 20.4], [SLIP.x1 + 1, 40, 22.2], [SLIP.x0 - 1, 40, 22.2]], true), { tone: "lo" }) +
-    screwDots([[SX - 9.5, 24.5], [SX + 9.5, 24.5], [SX - 9.5, 37.5], [SX + 9.5, 37.5]], 30, 0.45),
-});
+{
+  const slot = path3([[PRINTER.x1, SLOT.y0, SLOT.z0], [PRINTER.x1, SLOT.y1, SLOT.z0], [PRINTER.x1, SLOT.y1, SLOT.z1], [PRINTER.x1, SLOT.y0, SLOT.z1]], true);
+  box("stamp.printer", [PRINTER.x0, PRINTER.y0, 0], [PRINTER.x1, PRINTER.y1, PRINTER.z1], {}, {
+    r: 1.5,
+    bevel: 0.6,
+    inner: (plan) => sideSeam(plan, 8),
+    extra: `<path class="al-slot" d="${slot}"/>` + Ln(slot, { tone: "lo" }) + screwDots([[SX - 9.5, 24.5], [SX + 9.5, 24.5], [SX - 9.5, 37.5], [SX + 9.5, 37.5]], PRINTER.z1, 0.45),
+  });
+}
 box("stamp.cheek.left", [SX - 10, 27, 30], [SX - 7, 35, 38.5], {}, { r: 0.6 });
 box("stamp.cheek.right", [SX + 7, 27, 30], [SX + 10, 35, 38.5], {}, { r: 0.6 });
 {
   const F = alongX(31, 34.6);
   turned("stamp.roll", G.frameOf([0, 31, 34.6], [1, 0, 0], [0, 1, 0], [0, 0, 1]), SX - 7, SX + 7, 4, { tone: "hi" }, { inner: Ln([SX - 3.5, SX, SX + 3.5].map((s) => G.arcOf(F, s, 4, P)).join(""), { tone: "faint" }) });
 }
-box("stamp.tray", [SX - 11, 40, 19], [SX + 11, 60, 21], { tone: "lo" }, { r: 1, bevel: 0.3 });
-box("stamp.tray.lip", [SX - 11, 58.4, 21], [SX + 11, 60, 22.4], { tone: "lo" }, { r: 0.4, steps: 2 });
-// The slip: built inside the printer, slid out along +y by live code; clipped at the slot face.
+// Output tray off the printer's slot face, on a leg at its far end.
+box("stamp.tray", [TRAY.x0, TRAY.y0, TRAY.z0], [TRAY.x1, TRAY.y1, TRAY.z1], { tone: "lo" }, { r: 1, bevel: 0.3 });
+box("stamp.tray.lip", [TRAY.x1 - 1.6, TRAY.y0, TRAY.z1], [TRAY.x1, TRAY.y1, TRAY.z1 + 1.4], { tone: "lo" }, { r: 0.4, steps: 2 });
+box("stamp.tray.leg", [TRAY.x1 - 7, 28, 0], [TRAY.x1 - 2, 34, TRAY.z0], {}, { r: 0.6 });
+// The slip: built inside the printer, slid out along +x by live code; clipped at the slot face so only what has left
+// the printer shows. A bold amber band across its leading end marks it as an advisory.
 {
-  const plan = { x: SLIP.x0, y: SLIP.y0, w: SLIP.x1 - SLIP.x0, d: SLIP.y1 - SLIP.y0, r: 0.3 };
-  const shape = record(A.slab({ ...plan, y: 40, d: SLIP.out }, SLIP.z, 0.3, { name: "stamp.slip" }, 2));
+  const plan = { x: SLIP.x0, y: SLIP.y0, w: SLIP.len, d: SLIP.y1 - SLIP.y0, r: 0.3 };
+  const shape = record(A.slab({ ...plan, x: PRINTER.x1, w: SLIP.out }, SLIP.z, 0.3, { name: "stamp.slip" }, 2));
   const zt = SLIP.z + 0.3;
+  const band = { x: SLIP.x1 - 9, y: SLIP.y0, w: 5, d: SLIP.y1 - SLIP.y0 };
   const rules = [
-    [SLIP.y0 + 4, 0.8], [SLIP.y0 + 6.5, 0.55], [SLIP.y0 + 9, 0.7], [SLIP.y0 + 11.5, 0.45], [SLIP.y0 + 14, 0.62],
-  ].map(([y, w]) => k.lineOnTop([SLIP.x0 + 2.5, y], [SLIP.x0 + 2.5 + (SLIP.x1 - SLIP.x0 - 5) * w, y], zt, P)).join("");
-  const mark = k.planOutline({ x: SLIP.x1 - 6, y: SLIP.y0 + 2.2, w: 3.6, d: 3.6, r: 0.6 }, zt, P, 3);
-  const clip = path3([[SLIP.x0 - 1, 40, SLIP.z], [SLIP.x1 + 1, 40, SLIP.z], [SLIP.x1 + 1, 60, SLIP.z], [SLIP.x0 - 1, 60, SLIP.z], [SLIP.x0 - 1, 60, SLIP.z + 3], [SLIP.x0 - 1, 40, SLIP.z + 3]], true);
+    [SLIP.y0 + 2.6, 0.9], [SLIP.y0 + 4.8, 0.6], [SLIP.y0 + 7, 0.78], [SLIP.y0 + 9.2, 0.5], [SLIP.y0 + 11.2, 0.7],
+  ].map(([y, w]) => k.lineOnTop([SLIP.x1 - 31, y], [SLIP.x1 - 31 + 19 * w, y], zt, P)).join("");
+  const box3 = [];
+  for (const x of [PRINTER.x1, PRINTER.x1 + SLIP.out + 6]) for (const y of [SLOT.y0, SLOT.y1]) for (const z of [SLOT.z0, SLOT.z1]) box3.push(at([x, y, z]));
+  const clip = k.pathOf(G.hullOf(box3), true);
+  const bandPath = path3([[band.x, band.y, zt], [band.x + band.w, band.y, zt], [band.x + band.w, band.y + band.d, zt], [band.x, band.y + band.d, zt]], true);
   put(
     "stamp.slip",
-    [SX, 49, SLIP.z],
-    `<clipPath id="al-slip"><path d="${clip}"/></clipPath><g clip-path="url(#al-slip)"><g data-part="slip">${S(k.slabOf(plan, SLIP.z, 0.3, P, 2), { tone: "hi", crease: "none" })}${Ln(rules, { tone: "mid", free: true })}<path class="al-mark" d="${mark}"/></g></g>`,
+    [PRINTER.x1 + SLIP.out / 2, (SLIP.y0 + SLIP.y1) / 2, SLIP.z],
+    `<clipPath id="al-slip"><path d="${clip}"/></clipPath><g clip-path="url(#al-slip)"><g data-part="slip">${S(k.slabOf(plan, SLIP.z, 0.3, P, 2), { tone: "hi", crease: "none" })}${Ln(rules, { tone: "mid", free: true })}<path class="al-band" d="${bandPath}"/></g></g>`,
     [shape],
   );
 }
@@ -504,11 +530,61 @@ for (const card of MODEL.cards) {
 // ---------------------------------------------------------------- settle the painter's order and write the page
 A.settle(R, P);
 R.items.sort((a, b) => a.key - b.key);
-const groups = R.items.map((item) => `<g class="it" data-name="${item.name}">${item.svg}</g>`);
+// The stations' key parts take the accent material (the light theme gives it a slate tint; see figure.css).
+const ACCENT = /^(gate\.(housing|head|column|lamp\.collar|post|header|beam|hanger|arm)|stamp\.(ram|gland|arm)|spool\.(flange|gearbox|axle))/;
+const groups = R.items.map((item) => `<g class="it${ACCENT.test(item.name) ? " al-accent" : ""}" data-name="${item.name}">${item.svg}</g>`);
+
+// Crop the view box to the drawing, so the stage holds no dead band. Every static path is a polyline (M/L/Z only);
+// clip paths and the soft halo under the plate are left out, the halo gets a fixed margin below.
+const polylines = [];
+for (const chunk of [...back, ...groups]) {
+  const drawn = chunk.replace(/<clipPath[^]*?<\/clipPath>/g, "").replace(/<path class="iso-halo"[^>]*>/g, "");
+  for (const [, d] of drawn.matchAll(/ d="([^"]*)"/g)) {
+    for (const sub of d.split("M").filter(Boolean)) {
+      const numbers = (sub.match(/-?\d+(?:\.\d+)?/g) ?? []).map(Number);
+      const points = [];
+      for (let i = 0; i + 1 < numbers.length; i += 2) points.push([numbers[i], numbers[i + 1]]);
+      if (points.length) polylines.push(points);
+    }
+  }
+}
+const inkPoints = polylines.flat();
+const ink = {
+  x0: Math.min(...inkPoints.map((p) => p[0])),
+  x1: Math.max(...inkPoints.map((p) => p[0])),
+  y0: Math.min(...inkPoints.map((p) => p[1])),
+  y1: Math.max(...inkPoints.map((p) => p[1])),
+};
+const CROP = { pad: 4, halo: 9 };
+const VIEW = { x: Math.floor(ink.x0 - CROP.pad), y: Math.floor(ink.y0 - CROP.pad), w: 0, h: 0 };
+VIEW.w = Math.ceil(ink.x1 + CROP.pad) - VIEW.x;
+VIEW.h = Math.ceil(ink.y1 + CROP.halo) - VIEW.y;
+// Silhouette profile for the phone view: for every PROFILE_STEP view-box units across, the highest and lowest ink
+// of any drawn segment in that column, as [top, bottom]. Live code uses it to fit the stage to the visible window.
+const PROFILE_STEP = 5;
+const columns = Math.ceil(VIEW.w / PROFILE_STEP) + 1;
+const tops = Array(columns).fill(Infinity);
+const bottoms = Array(columns).fill(-Infinity);
+for (const points of polylines) {
+  for (let i = 0; i + 1 < points.length; i++) {
+    const [a, b] = [points[i], points[i + 1]].map(([x, y]) => [x - VIEW.x, y - VIEW.y]);
+    const c0 = Math.max(0, Math.ceil(Math.min(a[0], b[0]) / PROFILE_STEP));
+    const c1 = Math.min(columns - 1, Math.floor(Math.max(a[0], b[0]) / PROFILE_STEP));
+    for (let c = c0; c <= c1; c++) {
+      const x = c * PROFILE_STEP;
+      const y = a[0] === b[0] ? null : a[1] + ((b[1] - a[1]) * (x - a[0])) / (b[0] - a[0]);
+      tops[c] = Math.min(tops[c], y ?? Math.min(a[1], b[1]));
+      bottoms[c] = Math.max(bottoms[c], y ?? Math.max(a[1], b[1]));
+    }
+  }
+}
+const profile = tops.map((top, c) => [r2(Number.isFinite(top) ? top : VIEW.h), r2(Number.isFinite(bottoms[c]) ? bottoms[c] : 0)]);
 
 const LABEL_TEXT =
   "An isometric assembly line on one long conveyor. From left to right: code files and markdown documents come out of an intake tunnel onto the belt; a loom over the belt weaves every card into a woven index sheet that runs along a back shelf onto a spool; a sensor gate drops probe pins into each document's claim holes and reads the woven index with a feeler on the spool, and its lamp turns amber when a document claims a signature the code no longer has; a stamp then marks that document and its printer slides out an advisory slip.";
-const svg = k.figureSvg({ width: W, height: H, label: LABEL_TEXT, body: [...back, ...groups] });
+const svg = k
+  .figureSvg({ width: VIEW.w, height: VIEW.h, label: LABEL_TEXT, body: [...back, ...groups] })
+  .replace(`viewBox="0 0 ${VIEW.w} ${VIEW.h}"`, `viewBox="${VIEW.x} ${VIEW.y} ${VIEW.w} ${VIEW.h}"`);
 
 const DATA = {
   P,
@@ -522,6 +598,7 @@ const DATA = {
   shuttle: SHUTTLE_TRAVEL,
   slip: SLIP.out,
   cleat: CLEAT,
+  view: { w: VIEW.w, h: VIEW.h, step: PROFILE_STEP, profile },
 };
 
 const CSS = readFileSync(join(HERE, "figure.css"), "utf8");
@@ -557,7 +634,7 @@ const body = `
   <figcaption class="iso-legend al-legend">
     <span class="iso-keys">
       <span class="iso-key"><svg class="iso-swatch" data-mark="lit" viewBox="0 0 16 10" aria-hidden="true"><path d="M2 4.5 8 1.5 14 4.5 14 6 8 9 2 6Z"/></svg>The changed code file: one tooth per parameter</span>
-      <span class="iso-key"><svg class="iso-swatch" viewBox="0 0 16 10" aria-hidden="true"><path d="M1.5 5h13"/></svg>Woven index lanes: documents, modules, symbols, relations</span>
+      <span class="iso-key al-lane-key">Woven index lanes:${LANES.map((lane, i) => ` <span class="al-lane-chip"><span class="al-lane-swatch al-lane${i}" aria-hidden="true"></span>${lane}${i < LANES.length - 1 ? "," : ""}</span>`).join("")}</span>
       <span class="iso-key"><span class="al-amber-key" aria-hidden="true"></span>Gate lamp and stamp: an advisory finding</span>
     </span>
     <span class="iso-caption">The figure runs its own small model: three code files, three documents and the claims between them. Published results from the repository reports:</span>

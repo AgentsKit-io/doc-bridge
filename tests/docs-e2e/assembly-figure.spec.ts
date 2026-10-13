@@ -77,6 +77,12 @@ test.describe('on a phone-width viewport', () => {
     expect(widths.scroll).toBeLessThanOrEqual(widths.client)
     // The drawing is wider than the card on a phone; the first view starts at the left (intake) end.
     const transform = await page.locator('.al-scroll .iso-svg').evaluate((svg) => (svg as SVGElement).style.transform)
-    expect(['', 'translateX(0px)']).toContain(transform)
+    expect(transform).toMatch(/^translate\(0px, -?\d+px\)$/)
+    // The stage is cropped to the first view, so it is shorter than the whole drawing and holds no empty band.
+    const heights = await page.evaluate(() => ({
+      stage: document.querySelector('.al-scroll')!.getBoundingClientRect().height,
+      drawing: document.querySelector('.al-scroll .iso-svg')!.getBoundingClientRect().height,
+    }))
+    expect(heights.stage).toBeLessThan(heights.drawing * 0.85)
   })
 })

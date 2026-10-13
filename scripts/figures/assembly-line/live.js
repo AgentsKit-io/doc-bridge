@@ -172,7 +172,7 @@ function draw() {
   const press = -D.ram * state.ram;
   ram.setAttribute("transform", translateAlong(P, [0, 0, press]));
   holdStill(ram, axisVector(P, [0, 0, press]));
-  slipPart.setAttribute("transform", translateAlong(P, [0, D.slip * ease(clamp01(state.slip)), 0]));
+  slipPart.setAttribute("transform", translateAlong(P, [D.slip * ease(clamp01(state.slip)), 0, 0]));
   const angle = D.knob.angles[0] + (D.knob.angles[1] - D.knob.angles[0]) * state.knob;
   const [kx, ky] = D.knob.at;
   pointer.setAttribute("d", lineOnTop([kx - Math.sin(angle) * 1.5, ky + Math.cos(angle) * 1.5], [kx + Math.sin(angle) * 5.2, ky - Math.cos(angle) * 5.2], D.knob.z, P));
@@ -410,10 +410,49 @@ if ("ResizeObserver" in window) new ResizeObserver(reportHeight).observe(card);
 const scroller = document.querySelector(".al-scroll");
 // The first view starts at the intake, so a phone visitor reads the line from its start.
 let pan = 0;
+// The drawing slopes down to the right, so a narrow window onto it needs much less height than the whole plate.
+// The stage is cropped to the tallest window and the drawing is lifted so the window's own silhouette fills it.
+const VIEW = D.view;
+const MARGIN = 6;
+function windowOf(share, wide, narrow) {
+  const start = (share * (wide - narrow)) / (wide / VIEW.w);
+  const end = start + narrow / (wide / VIEW.w);
+  let top = Infinity;
+  let bottom = -Infinity;
+  const first = Math.max(0, Math.floor(start / VIEW.step));
+  const last = Math.min(VIEW.profile.length - 1, Math.ceil(end / VIEW.step));
+  for (let i = first; i <= last; i++) {
+    top = Math.min(top, VIEW.profile[i][0]);
+    bottom = Math.max(bottom, VIEW.profile[i][1]);
+  }
+  return { top, bottom };
+}
+let crop = null;
+function measure() {
+  const wide = svg.getBoundingClientRect().width;
+  const narrow = scroller.clientWidth;
+  if (wide - narrow <= 1) {
+    crop = null;
+    scroller.style.height = "";
+    return;
+  }
+  // The stage fits the first view (the intake end) exactly; further along, the plate's front edge may run below it.
+  const first = windowOf(0, wide, narrow);
+  const units = Math.min(VIEW.h, first.bottom - first.top + MARGIN * 2);
+  crop = { wide, narrow, units, scale: wide / VIEW.w };
+  scroller.style.height = `${Math.round(units * crop.scale)}px`;
+}
 function follow(share) {
   pan = Math.max(0, Math.min(1, share));
-  const room = svg.getBoundingClientRect().width - scroller.clientWidth;
-  svg.style.transform = room > 1 ? `translateX(${-Math.round(room * pan)}px)` : "";
+  if (!crop) {
+    svg.style.transform = "";
+    return;
+  }
+  // Where the window's silhouette is taller than the stage, trim the overflow evenly from the top and the bottom.
+  const { top, bottom } = windowOf(pan, crop.wide, crop.narrow);
+  const overflow = Math.max(0, bottom - top + MARGIN * 2 - crop.units);
+  const lift = Math.max(0, Math.min(VIEW.h - crop.units, top - MARGIN + overflow / 2));
+  svg.style.transform = `translate(${-Math.round((crop.wide - crop.narrow) * pan)}px, ${-Math.round(lift * crop.scale)}px)`;
 }
 // Pan only when the line changes phase, so a visitor's own drag is kept while nothing happens.
 const PHASE_PAN = { idle: 0, rush: 0.3, finding: 0.62, slip: 0.84 };
@@ -425,7 +464,12 @@ function followAction() {
     follow(PHASE_PAN[want]);
   }
 }
-if ("ResizeObserver" in window) new ResizeObserver(() => follow(pan)).observe(scroller);
+if ("ResizeObserver" in window) {
+  new ResizeObserver(() => {
+    measure();
+    follow(pan);
+  }).observe(scroller);
+}
 let drag = null;
 scroller.addEventListener("pointerdown", (event) => {
   const room = svg.getBoundingClientRect().width - scroller.clientWidth;
@@ -470,5 +514,6 @@ queue = (() => {
 state.heddle = [1, 0];
 state.speed = still.matches ? 0 : M.speed;
 draw();
+measure();
 follow(PHASE_PAN[phase]);
 reportHeight();
