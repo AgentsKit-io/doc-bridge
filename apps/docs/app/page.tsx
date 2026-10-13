@@ -6,6 +6,7 @@ import { resolve } from 'node:path'
 import { HandoffProof } from '@/components/home/handoff-proof'
 import { InstallCommandTabs } from '@/components/home/install-command-tabs'
 import { ProofTerminal } from '@/components/home/proof-terminal'
+import { AssemblyFigureSection } from '@/components/home/assembly-figure'
 import { Release2Section } from '@/components/home/release-2-0'
 import { AgentStudySection } from '@/components/home/agent-study'
 import { WaitlistForm } from '@/components/home/waitlist-form'
@@ -54,6 +55,8 @@ export default function HomePage() {
             </div>
           </div>
         </section>
+
+        <AssemblyFigureSection />
 
         <section className="bridge-principles" aria-labelledby="principles-title">
           <div className="bridge-section-heading">

@@ -16,7 +16,8 @@ llms.txt
 apps/docs/.next/
 apps/docs/.source/
 apps/docs/out/
-apps/docs/public/
+apps/docs/public/*
+!apps/docs/public/figures/
 playwright-report/
 test-results/
 .lighthouseci/
@@ -35,3 +36,4 @@ node_modules
 loop.config.yaml
 loop.config.local.yaml
 .codex/loop/
+.claude/figure-shots/
