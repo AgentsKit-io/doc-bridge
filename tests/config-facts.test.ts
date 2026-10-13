@@ -3,7 +3,7 @@ import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } f
 import { join, relative } from 'node:path'
 import { tmpdir } from 'node:os'
 import { afterEach, describe, expect, it } from 'vitest'
-import { configFactsFromSource, configFactsFromJsonSchema } from '../src/discovery/facts/config.js'
+import { configFactsFromSource, configFactsFromJsonSchema, configFile } from '../src/discovery/facts/config.js'
 import { analyzeMarkdownDocument, parseMarkdownDocument } from '../src/discovery/markdown.js'
 import { discoverRepository, discoverRepositoryWithRead } from '../src/discovery/repository.js'
 import { diffSnapshots } from '../src/diff/change-set.js'
@@ -395,5 +395,23 @@ describe('static configuration facts', () => {
     const path = join(root,'storage.config-schema.json')
     writeFileSync(path,readFileSync(path,'utf8').replace('"default":"memory"','"default":"disk"'))
     expect(()=>loadFreshDocBridgeIndex(root,config)).toThrow(IndexStaleError)
+  })
+})
+
+describe('config file paths', () => {
+  it('recognises config schema paths by segment, as the regex did', () => {
+    for (const path of ['src/config/schema.ts', 'app.config-schema.json', 'schema-config.json', 'x/config/schema.mjs', 'my-config-SCHEMA.yaml'])
+      expect(configFile(path), path).toBe(true)
+    for (const path of ['src/settings.ts', 'config/a/schema.ts', 'configs/schema', 'schema/other/config', 'src/config.ts'])
+      expect(configFile(path), path).toBe(false)
+  })
+
+  it('classifies a long adversarial path in linear time', () => {
+    const hostile = `${'config-'.repeat(20000)}schema`
+    const started = performance.now()
+    expect(configFile(hostile)).toBe(true)
+    expect(configFile(`${'config-'.repeat(20000)}/schema-free`)).toBe(false)
+    expect(configFile(`${'config-'.repeat(20000)}/${'schema-'.repeat(20000)}`)).toBe(false)
+    expect(performance.now() - started).toBeLessThan(2000)
   })
 })

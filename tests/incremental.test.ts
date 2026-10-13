@@ -68,7 +68,7 @@ const fixture = (): string => {
   write(root, 'src/index.ts', "export { search } from './query/search.js'\n")
   write(root, 'src/query/search.ts', "import { rank } from '../ranking/bm25.js'\nimport { z } from 'zod'\nexport const search = (): number => rank() + Number(Boolean(z))\n")
   write(root, 'src/ranking/bm25.ts', 'export const rank = (): number => 2\n')
-  write(root, 'packages/tool/package.json', JSON.stringify({ name: '@fixture/tool', version: '0.0.0' }), 'utf8')
+  write(root, 'packages/tool/package.json', JSON.stringify({ name: '@fixture/tool', version: '0.0.0' }))
   write(root, 'packages/tool/src/run.ts', 'export const run = (): number => 3\n')
   write(root, 'docs/query.md', '# Query\n\nThe `search` entry point lives in `src/query/search.ts` and reads [ranking](../src/ranking/bm25.ts).\n')
   write(root, 'docs/overview.md', '# Overview\n\nSee [query](./query.md) and the `rank` helper.\n')
