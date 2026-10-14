@@ -336,4 +336,17 @@ describe('reference-findings publication gate', () => {
     expect(await cli('index', '--progress')).toBe(1)
     expect(errors()).toContain('BROKEN_REFERENCE docs/guide.md:3 → removed')
   })
+
+  it('runs the gate inside the bounded operation, so --max-duration stops it', async () => {
+    const { configure, cli, errors, output, directory, snapshotBase, breakReference } = fixture()
+    const base = join(directory, 'base-snapshot.json')
+    configure({ include: ['reference-findings'], referenceFindings: { base } })
+    await snapshotBase()
+    breakReference()
+    // Before discovery even starts the budget is spent: the gate must not run past it.
+    expect(await cli('index', '--progress', '--max-duration', '1')).toBe(2)
+    expect(errors()).toContain('TIME_LIMIT')
+    expect(errors()).not.toContain('Publication blocked')
+    expect(output()).not.toContain('blockedBy')
+  })
 })
