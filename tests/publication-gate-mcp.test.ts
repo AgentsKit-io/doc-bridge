@@ -31,17 +31,21 @@ const project = (gates: Record<string, unknown>) => {
   return { configPath, errors: () => stderr.mock.calls.map((call) => String(call[0])).join('') }
 }
 
-it('warns on stderr when the gate fails, and still starts the server', () => {
+it('starts the server first, then warns on stderr when the gate fails', async () => {
   const { configPath, errors } = project({ include: ['reference-findings'] })
   expect(runCli(['mcp', '--config', configPath])).toBeUndefined()
   expect(started).toHaveBeenCalledTimes(1)
+  // The check (a full discovery and diff) must not delay the server: it runs on a later turn.
+  expect(errors()).not.toContain('reference-findings')
+  await new Promise((resolve) => setImmediate(resolve))
   expect(errors()).toContain('reference-findings gate fails')
   expect(errors()).toContain('gates.referenceFindings.base')
 })
 
-it('says nothing when the gate is not configured', () => {
+it('says nothing when the gate is not configured', async () => {
   const { configPath, errors } = project({ preset: 'minimal' })
   expect(runCli(['mcp', '--config', configPath])).toBeUndefined()
   expect(started).toHaveBeenCalledTimes(1)
+  await new Promise((resolve) => setImmediate(resolve))
   expect(errors()).not.toContain('reference-findings')
 })

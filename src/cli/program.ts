@@ -2055,12 +2055,21 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
 
     try {
       const { config, root } = loadProject(configPath)
-      // The server only reads the index already published, so a failing gate warns and never blocks.
-      if (referenceFindingsGateEnabled(config)) {
-        const gate = runGate(root, config, 'reference-findings')
-        if (!gate.ok) process.stderr.write(`[ak-docs] warning: reference-findings gate fails; agents read the last published index.\n${gate.message}\n`)
-      }
       startMcpStdioServer({ root, config })
+      /*
+       * The server only reads the index already published, so a failing gate warns and never
+       * blocks. The check (a full discovery and diff) runs after the server is listening.
+       */
+      if (referenceFindingsGateEnabled(config)) {
+        setImmediate(() => {
+          try {
+            const gate = runGate(root, config, 'reference-findings')
+            if (!gate.ok) process.stderr.write(`[ak-docs] warning: reference-findings gate fails; agents read the last published index.\n${gate.message}\n`)
+          } catch (error) {
+            process.stderr.write(`[ak-docs] warning: reference-findings gate could not run: ${error instanceof Error ? error.message : String(error)}\n`)
+          }
+        })
+      }
       return undefined
     } catch (error) {
       process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`)
