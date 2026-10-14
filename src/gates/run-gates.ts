@@ -1,6 +1,6 @@
 import { LEGACY_HASH_ALGORITHM, sameHashIdentity } from '../index-builder/content-hash.js'
 import { readFileSync } from 'node:fs'
-import { splitFrontmatter, splitLines } from '@agentskit/cross-platform'
+import { splitFrontmatter } from '@agentskit/cross-platform'
 
 import type { DocBridgeConfigV1 } from '../config/schema.js'
 import type { IndexPublication } from '../schemas/doc-bridge-index.js'
@@ -17,6 +17,8 @@ import {
   checkReferenceFindings,
   formatPendingReferenceFindings,
   type PendingReferenceFinding,
+  type ReferenceFindingsCheck,
+  type ReferenceFindingsReason,
 } from './reference-findings.js'
 
 export type GateId =
@@ -39,6 +41,8 @@ export type GateResult = {
   readonly details?: DocumentationConformanceReportV1
   /** `reference-findings` only: the advisory `pendingCount` and every pending finding, complete. */
   readonly pendingCount?: number
+  /** `reference-findings` only: why it failed, as a stable code (`pending` when findings are pending). */
+  readonly reasonCode?: ReferenceFindingsReason
   readonly baseRevision?: string
   readonly findings?: readonly PendingReferenceFinding[]
 }
@@ -144,12 +148,18 @@ export const runGate = (
  * Opt-in, and in no preset (ADR 0025): the advisory stays advisory unless a maintainer names this
  * gate in `gates.include`. Once named it fails closed, so a missing base never reads as a pass.
  */
-const runReferenceFindingsGate = (root: string, config: DocBridgeConfigV1): GateResult => {
-  const check = checkReferenceFindings(root, config)
+const runReferenceFindingsGate = (root: string, config: DocBridgeConfigV1): GateResult => referenceFindingsGateResult(checkReferenceFindings(root, config))
+
+/**
+ * The gate result for a completed check. The underlying error text goes to stderr only: it can
+ * name local paths, so it never reaches the JSON result, an Action report or the index.
+ */
+export const referenceFindingsGateResult = (check: ReferenceFindingsCheck): GateResult => {
   const expected = 'no pending reference findings since the base snapshot'
   if (check.ok) {
     return { id: 'reference-findings', ok: true, message: `No pending reference findings since base ${check.baseRevision}`, expected, actual: '0 pending', pendingCount: 0, baseRevision: check.baseRevision, findings: [] }
   }
+  if (check.detail) process.stderr.write(`[ak-docs] reference-findings (${check.reasonCode}): ${check.detail}\n`)
   const findings = check.findings ?? []
   return {
     id: 'reference-findings',
@@ -161,6 +171,7 @@ const runReferenceFindingsGate = (root: string, config: DocBridgeConfigV1): Gate
     ].join('\n'),
     expected,
     actual: check.findings ? `${findings.length} pending` : 'not analyzed',
+    reasonCode: check.reasonCode,
     ...(check.baseRevision ? { baseRevision: check.baseRevision } : {}),
     ...(check.findings ? { pendingCount: findings.length, findings } : {}),
   }
@@ -183,21 +194,22 @@ export const publicationDecision = (
   root: string,
   config: DocBridgeConfigV1,
   options: { readonly allowPendingFindings?: boolean } = {},
-): PublicationDecision => {
-  if (!referenceFindingsGateEnabled(config)) return { allowed: true }
-  const gate = runGate(root, config, 'reference-findings')
+): PublicationDecision => (referenceFindingsGateEnabled(config) ? decidePublication(runGate(root, config, 'reference-findings'), options) : { allowed: true })
+
+/** Applies the override policy to a `reference-findings` gate result that is already computed. */
+export const decidePublication = (gate: GateResult, options: { readonly allowPendingFindings?: boolean } = {}): PublicationDecision => {
   if (gate.ok) return { allowed: true, gate }
   if (!options.allowPendingFindings) return { allowed: false, gate }
-  const reason = (splitLines(gate.message)[0] ?? gate.message).replace(/^Publication blocked: /, '').slice(0, 2_048)
   return {
     allowed: true,
     gate,
     publication: {
       pendingReferenceFindings: {
         override: 'allow-pending-findings',
+        // A code, never the message: the message can be anything a check reported.
+        reason: gate.reasonCode ?? 'diff-unavailable',
         ...(gate.pendingCount === undefined ? {} : { pendingCount: gate.pendingCount }),
         ...(gate.baseRevision ? { baseRevision: gate.baseRevision.slice(0, 128) } : {}),
-        reason,
       },
     },
   }

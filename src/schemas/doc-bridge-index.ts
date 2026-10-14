@@ -121,6 +121,9 @@ export const RetrievalMetadataSchema = z
   })
   .strict()
 
+/** Why a `reference-findings` gate failed; ADR 0025. */
+export const REFERENCE_FINDINGS_REASONS = ['no-base', 'base-unreadable', 'base-invalid', 'diff-unavailable', 'pending'] as const
+
 export const IndexPublicationSchema = z
   .object({
     pendingReferenceFindings: z
@@ -129,7 +132,8 @@ export const IndexPublicationSchema = z
         /** Absent when the gate failed before it could count, for example without a base. */
         pendingCount: z.number().int().nonnegative().optional(),
         baseRevision: z.string().min(1).max(128).optional(),
-        reason: z.string().min(1).max(2_048),
+        /** Why the gate failed, as a code; free text stays on stderr so no local path is published. */
+        reason: z.enum(REFERENCE_FINDINGS_REASONS),
       })
       .strict(),
   })
