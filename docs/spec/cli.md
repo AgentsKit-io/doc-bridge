@@ -93,6 +93,7 @@ the [local design brief](../design/studio-brief.md) is reference material for ex
 | `ak-docs doctor [--text] [--badge] [--write-badge]` | Coverage score, gaps, gates, shields.io badge |
 | `ak-docs index` | Build `DocBridgeIndex` + optional `llms.txt` |
 | `ak-docs index --watch` | Debounced rebuild on agent/human doc changes |
+| `ak-docs index --allow-pending-findings` | Publish even though the opt-in `reference-findings` gate fails; the index and capabilities record the override. See [Publication gate](#publication-gate) |
 | `ak-docs query <target> [--agent] [--text]` | Resolve package/area/module/document/intent/change → handoff JSON or text |
 | `ak-docs search <term> [--agent] [--explain] [--mode=<mode>] [--context-budget=<tokens>] [--text]` | Ranked search over the retrieval projection; `--explain` names every scoring component and the matched terms, and agent mode bounds the context it returns to a task-specific budget (default 128 tokens; an oversized default result is returned truncated, while a declared budget that cannot fit one grounded match fails) |
 | `ak-docs ask <question>` | Human-readable local consult mode: search + best match + next handoff commands; no LLM |
@@ -116,7 +117,7 @@ the [local design brief](../design/studio-brief.md) is reference material for ex
 | `ak-docs playbook draft` | Build a draft Playbook feedback payload from local memory candidates |
 | `ak-docs playbook pattern [--text]` | Export published Doc Bridge Playbook pattern (OKF markdown / JSON) |
 | `ak-docs list <kind> [--text]` | List packages, apps, intents, … |
-| `ak-docs gate run [gate-id]` | Run resolved configured documentation gates; an optional id narrows the run to one gate |
+| `ak-docs gate run [gate-id]` | Run resolved configured documentation gates; an optional id narrows the run to one gate. Exits 0 when every gate passes, 1 otherwise |
 | `ak-docs conformance run documentation-standard-v1 [--text\|--json]` | Run the stable ecosystem documentation profile with evidence and remediation |
 | `ak-docs audit documentation [--text\|--json]` | Measure documentation quality and compare documentation claims with the observed project graph |
 | `ak-docs parity [--claims <file>] [--json\|--text]` | Check the public claim registry against what the repository can prove: stale, missing, contradictory and not-analyzed claims, each with an owner, an exact source and a remediation. Exits 1 on a blocking finding |
@@ -302,6 +303,33 @@ Invalid inputs, unavailable reads or invalid artifacts return 2. Action-level
 analysis unavailability is separately reported with an explanation and does not
 change blocking results; publisher errors also fall back without changing gates.
 The publisher is separate from the CLI and does not execute the source checkout.
+
+## Publication gate
+
+`reference-findings` is an opt-in gate (no preset selects it) that stops
+`ak-docs index` from publishing agent context while reference findings are
+pending ([ADR 0025](../adr/0025-opt-in-publication-gate.md)). It is selected with
+`gates.include: ["reference-findings"]` and reads its base from
+`gates.referenceFindings.base` ([config](./config-v1.md#gates)).
+
+The gate discovers the head, runs the snapshot diff against the base and keeps
+the findings `--fail-on-findings` counts: `BROKEN_REFERENCE`,
+`AMBIGUOUS_REFERENCE` and `CHANGED_REFERENCE`, except the ones grouped as
+`updated-in-this-change`. It fails while that `pendingCount` is above zero. It
+also fails closed when no base is configured, when the base cannot be read or
+is not a discovery snapshot, or when the diff cannot run.
+
+| Surface | When the gate is selected and fails |
+| --- | --- |
+| `ak-docs gate run [reference-findings]` | Exits 1. Stderr gets one line per finding (`CODE document:line → target`). The JSON result carries `pendingCount`, `baseRevision` and `findings[]`, each with `code`, `document`, `line`, `target` and the complete `diagnostic` |
+| `ak-docs index` (also with `--progress` / `--max-duration`) | Writes nothing: the index, `llms.txt` and the capabilities file are left as they were. Exits 1, explains the failure on stderr and prints `{ ok: false, blockedBy, gate }` |
+| `ak-docs index --allow-pending-findings` | Publishes and records `publication.pendingReferenceFindings` (`override`, `pendingCount`, `baseRevision`, `reason`) in the index and in the capabilities file. The record is outside `contentHash`. It lasts for that run only |
+| `ak-docs index --watch` | Skips each rebuild while the gate fails, and says so on stderr |
+| `ak-docs mcp` | Warns on stderr at start and serves the last published index. Never blocks |
+
+When the gate is not selected, none of these commands changes behaviour. The
+[publication gate guide](../guides/publication-gate.md) walks through a full
+example.
 
 ## Long-operation controls
 
