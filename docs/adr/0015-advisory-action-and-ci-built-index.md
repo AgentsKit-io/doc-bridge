@@ -6,10 +6,6 @@ date: 2026-10-06
 
 # Advisory Action and CI-built index
 
-Amended by [ADR 0025](0025-opt-in-publication-gate.md): a maintainer can opt into a
-`reference-findings` gate that blocks publication on pending reference findings. The advisory
-itself stays advisory.
-
 ## Context
 
 The Marketplace contract verifies a committed index without rebuilding first and tells users to commit regeneration when stale (`docs/MARKETPLACE.md:8`, `docs/MARKETPLACE.md:29`). The composite Action exposes config-path/gate/node-version/package-version inputs, runs gates and emits optional doctor annotations (`action.yml:7–23`, `action.yml:51–82`). Its documented workflow requests `contents: read` (`docs/MARKETPLACE.md:16–17`). A CI-produced index and deterministic PR advisory need explicit modes without silently repairing committed-index drift.
@@ -38,3 +34,8 @@ Deduplicate comments with a stable engine-owned marker scoped to repository/PR/a
 Required follow-up contracts: evolve `action.yml`, `docs/MARKETPLACE.md`, `docs/guides/gate-ci.md`, `docs/spec/cli.md`, `docs/spec/config-v1.md`, `docs/spec/public-parity-v1.md`, Marketplace contract tests in `scripts/marketplace-contract.test.mjs` and ADR 0010's proposed delta/advisory spec. Document endpoint-specific permissions, event matrix, revision acquisition and artifact retention. No Action implementation or live comment is authorized by this documentation task.
 
 Implementation acceptance must run real PR workflows for fresh/stale committed indexes, absent/present committed indexes in CI-built mode, drift preserved alongside generated output, exact base/head advisory findings, trusted versus fork/untrusted PR inputs, no-write fallback, comment create/update/deduplication, uncertain retry and stale-run prevention. Verify configured blocking results independently from comment delivery. Local contract tests support these flows but cannot substitute for live Action/permission evidence. These proposed workflows are UNVERIFIED until implemented and exercised.
+
+## Amendments
+
+- [ADR 0025](0025-opt-in-publication-gate.md) lets a maintainer opt into blocking publication on
+  pending reference findings. The advisory itself stays advisory.
