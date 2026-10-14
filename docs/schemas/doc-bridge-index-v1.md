@@ -175,14 +175,17 @@ publishes past a failing `reference-findings` gate
       "override": "allow-pending-findings",
       "pendingCount": 1,
       "baseRevision": "<base snapshot sourceRevision>",
-      "reason": "1 pending reference finding(s) since base <revision>."
+      "reason": "pending"
     }
   }
 }
 ```
 
-`pendingCount` and `baseRevision` are absent when the gate failed before it could count, for
-example without a base. The capabilities file carries the same `publication` object.
+`reason` is a code: `pending` (findings were pending), `no-base`, `base-unreadable`,
+`base-invalid` or `diff-unavailable`. It never carries free text, so no local path or base file
+content reaches the index. `pendingCount` is absent when the gate failed before it could count,
+and `baseRevision` when no base was read. The index schema is strict, so doc-bridge releases that
+predate `publication` reject an index carrying it. The capabilities file carries the same `publication` object.
 `publication` is provenance, not content: it is outside the hash, so `index-freshness` still
 compares content only. A later publication without the override drops it.
 

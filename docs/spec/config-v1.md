@@ -411,8 +411,13 @@ reference is not accepted. To compare against a revision, snapshot it first.
 
 Once selected, the gate discovers the head, diffs it against the base and fails while any
 `BROKEN_REFERENCE`, `AMBIGUOUS_REFERENCE` or `CHANGED_REFERENCE` finding is pending. That is the
-`pendingCount` the Action's `fail-on-findings` uses. It fails closed: no `base`, an unreadable
-file, an invalid snapshot or a diff that cannot run is a failure, never a pass. While it fails,
+`pendingCount` the Action's `fail-on-findings` uses, computed over the local working tree rather
+than the committed head. It fails closed: no `base`, an unreadable file, an invalid snapshot, a
+base with no document entities or no citation relations, a base or head cut short by a `limits:*`
+coverage entry, a base whose project identity, `configurationHash` or `analyzerVersions` differ
+from the head, or a diff that cannot run is a failure, never a pass. A base from `ak-docs action
+snapshot` is compared with a head discovered under the same service configuration selection; a
+base from `ak-docs discover --json` must be taken with the head's whole configuration. While it fails,
 `ak-docs index` publishes nothing unless `--allow-pending-findings` is passed
 ([CLI](./cli.md#publication-gate)).
 

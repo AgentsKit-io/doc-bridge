@@ -120,4 +120,7 @@ They remain visible but do not count as pending for `fail-on-findings`.
 
 To make pending reference findings a repository policy instead, so that `ak-docs index`
 refuses to publish `llms.txt` and the index while they exist, opt into the
-`reference-findings` gate: see [Publication gate](./publication-gate.md).
+`reference-findings` gate: see [Publication gate](./publication-gate.md). Once the
+gate is selected, the Action fails until the job provides the base snapshot at the
+configured path; the guide's [CI recipe](./publication-gate.md#ci) creates it from
+the PR base revision.

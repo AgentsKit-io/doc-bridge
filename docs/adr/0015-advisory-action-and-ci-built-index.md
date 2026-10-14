@@ -6,6 +6,10 @@ date: 2026-10-06
 
 # Advisory Action and CI-built index
 
+Amended by [ADR 0025](0025-opt-in-publication-gate.md): a maintainer can opt into a
+`reference-findings` gate that blocks publication on pending reference findings. The advisory
+itself stays advisory.
+
 ## Context
 
 The Marketplace contract verifies a committed index without rebuilding first and tells users to commit regeneration when stale (`docs/MARKETPLACE.md:8`, `docs/MARKETPLACE.md:29`). The composite Action exposes config-path/gate/node-version/package-version inputs, runs gates and emits optional doctor annotations (`action.yml:7–23`, `action.yml:51–82`). Its documented workflow requests `contents: read` (`docs/MARKETPLACE.md:16–17`). A CI-produced index and deterministic PR advisory need explicit modes without silently repairing committed-index drift.
