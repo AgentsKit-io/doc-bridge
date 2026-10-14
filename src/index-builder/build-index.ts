@@ -18,7 +18,7 @@ import { applyDocumentationDeclarations } from '../discovery/documentation.js'
 import { discoverRepositoryForIndex } from '../discovery/repository.js'
 import { readBoundedText, type TextReadBudget } from '../lib/bounded-text.js'
 import { toPosix } from '../lib/paths.js'
-import { DocBridgeIndexV1Schema, type DocBridgeIndexV1, type KnowledgeEntry } from '../schemas/doc-bridge-index.js'
+import { DocBridgeIndexV1Schema, type DocBridgeIndexV1, type IndexPublication, type KnowledgeEntry } from '../schemas/doc-bridge-index.js'
 import { RETRIEVAL_MAX_ENTRIES } from '../schemas/retrieval-index.js'
 import type { DiscoverySnapshotV1 } from '../schemas/knowledge.js'
 import type { RetrievalIndexV1 } from '../schemas/retrieval-index.js'
@@ -64,6 +64,8 @@ export type BuildIndexOptions = {
    * overlay and without it, rather than comparing two different repositories.
    */
   readonly overlay?: EnrichmentOverlayV1 | 'ignore'
+  /** Publication provenance recorded on the index and capabilities, outside `contentHash`. */
+  readonly publication?: IndexPublication
 }
 
 export type BuildIndexResult = {
@@ -256,6 +258,7 @@ const buildIndex = (opts: BuildIndexOptions, files?: RepositoryFiles, fallbackPr
   index.contentHash = contentHashForIndex(index)
   if (executionContext().profile === 'service') bindServiceCapability(index)
   index.generatedAt = (files ? undefined : existingGeneratedAt(indexPath, index.contentHash)) ?? index.generatedAt
+  if (opts.publication) index.publication = opts.publication
 
   /*
    * An artifact its own parser refuses is not an artifact. The bound on `knowledge[]` used to be

@@ -16,6 +16,7 @@ import { renderLlmsTxt } from '../index-builder/llms-txt.js'
 import { renderCapabilitiesJson } from '../index-builder/capabilities.js'
 import { sha256NormalizedV1 } from '../index-builder/content-hash.js'
 import { diffSnapshotsWithRead } from '../diff/change-set.js'
+import { publicationDecision } from '../gates/run-gates.js'
 import { parseDiscoverySnapshot } from '../validate.js'
 import { toPosix } from '../lib/paths.js'
 import type { ArtifactIOV1 } from '../storage/contract.js'
@@ -50,6 +51,13 @@ export const runOperationCli = async (argv: readonly string[], command: string):
       config = loaded.config
       if (!value('--root')) root = projectRootFromConfigPath(loaded.path, config.project?.root)
     } catch (error) { if (!(error instanceof ConfigNotFoundError) || value('--config') || command === 'index') throw error }
+    const decision = command === 'index' ? publicationDecision(root, config!, { allowPendingFindings: argv.includes('--allow-pending-findings') }) : undefined
+    if (decision && !decision.allowed) {
+      process.stderr.write(`${decision.gate.message}\nNothing was written: the index and llms.txt stay as they were.\n`)
+      process.stdout.write(JSON.stringify({ ok: false, blockedBy: decision.gate.id, gate: decision.gate }, null, 2) + '\n')
+      return 1
+    }
+    if (decision?.publication) process.stderr.write(`${decision.gate?.message ?? ''}\nPublishing anyway (--allow-pending-findings); the index records the override.\n`)
     const limits = { ...markdownManifest.resourceLimits }
     for (const key of Object.keys(limits) as (keyof typeof limits)[]) limits[key] = Math.min(limits[key], (key === 'maxFileBytes' ? undefined : config?.safety?.[key]) ?? limits[key])
     const listing = safeWalkFiles(root, { ...safeWalkOptions(config), ...limits })
@@ -100,6 +108,7 @@ export const runOperationCli = async (argv: readonly string[], command: string):
     if (built.value.metrics) process.stderr.write(`metrics: ${JSON.stringify(built.value.metrics)}\n`)
     if (built.value.limitations.length) throw new Error('Incomplete index acquisition')
     const index = built.value.index
+    if (decision?.publication) index.publication = decision.publication
     const out = config!.index?.outFile ?? '.doc-bridge/index.json'
     const indexPath = join(root, out)
     try {

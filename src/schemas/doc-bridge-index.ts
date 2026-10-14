@@ -121,6 +121,20 @@ export const RetrievalMetadataSchema = z
   })
   .strict()
 
+export const IndexPublicationSchema = z
+  .object({
+    pendingReferenceFindings: z
+      .object({
+        override: z.literal('allow-pending-findings'),
+        /** Absent when the gate failed before it could count, for example without a base. */
+        pendingCount: z.number().int().nonnegative().optional(),
+        baseRevision: z.string().min(1).max(128).optional(),
+        reason: z.string().min(1).max(2_048),
+      })
+      .strict(),
+  })
+  .strict()
+
 export const DocBridgeIndexV1Schema = z
   .object({
     schemaVersion: z.literal(INDEX_SCHEMA_VERSION),
@@ -153,11 +167,17 @@ export const DocBridgeIndexV1Schema = z
      * reader that predates it, and the two describe the same entries.
      */
     projection: RetrievalIndexV1Schema.optional(),
+    /**
+     * Publication provenance, outside `contentHash`. Present only when `ak-docs index
+     * --allow-pending-findings` published past a failing `reference-findings` gate.
+     */
+    publication: IndexPublicationSchema.optional(),
   })
   .strict()
   .refine(index => !index.knowledgeEntities || index.contentHashAlgo === 'sha256-semantic-v1', 'Knowledge entities require sha256-semantic-v1; disable entities for legacy index readers.')
 
 export type DocBridgeIndexV1 = z.infer<typeof DocBridgeIndexV1Schema>
+export type IndexPublication = z.infer<typeof IndexPublicationSchema>
 export type KnowledgeEntry = z.infer<typeof KnowledgeEntrySchema>
 export type RepositoryInputs = z.infer<typeof RepositoryInputsSchema>
 export type RetrievalMetadata = z.infer<typeof RetrievalMetadataSchema>
