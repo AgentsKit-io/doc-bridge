@@ -1,6 +1,6 @@
 import { LEGACY_HASH_ALGORITHM, sameHashIdentity } from '../index-builder/content-hash.js'
 import { readFileSync } from 'node:fs'
-import { splitFrontmatter } from '@agentskit/cross-platform'
+import { splitFrontmatter, splitLines } from '@agentskit/cross-platform'
 
 import type { DocBridgeConfigV1 } from '../config/schema.js'
 import type { IndexPublication } from '../schemas/doc-bridge-index.js'
@@ -188,7 +188,7 @@ export const publicationDecision = (
   const gate = runGate(root, config, 'reference-findings')
   if (gate.ok) return { allowed: true, gate }
   if (!options.allowPendingFindings) return { allowed: false, gate }
-  const reason = (gate.message.split('\n')[0] ?? gate.message).replace(/^Publication blocked: /, '').slice(0, 2_048)
+  const reason = (splitLines(gate.message)[0] ?? gate.message).replace(/^Publication blocked: /, '').slice(0, 2_048)
   return {
     allowed: true,
     gate,
