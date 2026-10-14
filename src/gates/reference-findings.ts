@@ -14,7 +14,7 @@ export const REFERENCE_FINDING_CODES: ReadonlySet<string> = new Set(['BROKEN_REF
  * Splits diff findings the way the advisory does: a reference finding is pending until the change
  * also updates the citing documentation. `pending.length` is the advisory's `pendingCount`.
  */
-export const referenceFindingGroups = <T extends { readonly code: string; readonly documentationUpdate?: string }>(findings: readonly T[]) => {
+export const referenceFindingGroups = <T extends { readonly code: string; readonly documentationUpdate?: string | undefined }>(findings: readonly T[]) => {
   const all = findings.filter((finding) => REFERENCE_FINDING_CODES.has(finding.code))
   return { all, pending: all.filter((finding) => !finding.documentationUpdate), updated: all.filter((finding) => finding.documentationUpdate) }
 }
