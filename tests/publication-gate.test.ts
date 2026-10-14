@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { execFileSync } from 'node:child_process'
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
@@ -24,7 +24,8 @@ const BASE_CONFIG = {
 } as const
 
 const fixture = () => {
-  const directory = mkdtempSync(join(tmpdir(), 'doc-bridge-publication-'))
+  // Real path: on macOS the temporary directory is a symlink, which the service read root rejects.
+  const directory = realpathSync(mkdtempSync(join(tmpdir(), 'doc-bridge-publication-')))
   roots.push(directory)
   const root = join(directory, 'repository')
   mkdirSync(join(root, 'docs'), { recursive: true })
