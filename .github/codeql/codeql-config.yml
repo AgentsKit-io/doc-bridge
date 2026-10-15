@@ -1,0 +1,6 @@
+name: doc-bridge CodeQL config
+# Generated build output is analysed through its sources instead:
+# apps/docs/public/figures/*.html is built by scripts/figures/** (which stays in scope)
+# and inlines a vendored drawing kit, so findings there duplicate or come from vendored code.
+paths-ignore:
+  - apps/docs/public/figures/**
