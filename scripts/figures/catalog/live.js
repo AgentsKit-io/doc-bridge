@@ -81,7 +81,7 @@ function setState(next, { announce = false } = {}) {
   card.dataset.phase = v.phase;
   hots.drawer.setAttribute("aria-label", v.phase === "drift" ? "Fix the sending-notifications guide" : "Ask for the sending-notifications guide");
   hots.code.setAttribute("aria-label", `Change the signature of send to ${VERSIONS[(st.code + 1) % VERSIONS.length]}`);
-  if (announce) status.textContent = describe();
+  if (announce) status.textContent = st.code !== before.code && v.published ? `Code changed back to ${VERSIONS[st.code]}. The guide already cites it: no findings; published.` : describe();
   run();
 }
 function describe() {
