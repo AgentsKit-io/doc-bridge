@@ -4,7 +4,7 @@
       "command": "npx",
       "args": [
         "-y",
-        "@agentskit/doc-bridge@2.0.0",
+        "@agentskit/doc-bridge@2.1.0",
         "mcp"
       ]
     }
