@@ -143,7 +143,7 @@ fail with a diagnostic to install a compatible doc-bridge and explicitly regener
 The v1 field shape is retained, including embedded legacy handoffs. Old strict readers reject
 the new algorithm with a schema error: upgrade readers before explicitly regenerating.
 
-For `sha256-semantic-v1`, hash the entire index except `contentHash` and `generatedAt`, including
+For `sha256-semantic-v1`, hash the entire index except `contentHash`, `generatedAt` and `publication`, including
 its algorithm, project identity, full retrieval projection and repository input fingerprint.
 The projection includes a semantic snapshot identity; revisions and reuse statistics do not reach
 this seal. Index array ordering remains the writer's deterministic reading order.
@@ -161,6 +161,33 @@ The hash input is deterministic JSON containing only:
 - `projection.contentHash` (when present)
 
 `generatedAt` is not part of the hash input. When the hash is unchanged, `ak-docs index` preserves the existing `generatedAt` so regenerated `index.json` bytes stay stable.
+
+## Publication provenance
+
+`publication` is optional and is written only when `ak-docs index --allow-pending-findings`
+publishes past a failing `reference-findings` gate
+([ADR 0025](../adr/0025-opt-in-publication-gate.md)):
+
+```json
+{
+  "publication": {
+    "pendingReferenceFindings": {
+      "override": "allow-pending-findings",
+      "pendingCount": 1,
+      "baseRevision": "<base snapshot sourceRevision>",
+      "reason": "pending"
+    }
+  }
+}
+```
+
+`reason` is a code: `pending` (findings were pending), `no-base`, `base-unreadable`,
+`base-invalid` or `diff-unavailable`. It never carries free text, so no local path or base file
+content reaches the index. `pendingCount` is absent when the gate failed before it could count,
+and `baseRevision` when no base was read. The index schema is strict, so doc-bridge releases that
+predate `publication` reject an index carrying it. The capabilities file carries the same `publication` object.
+`publication` is provenance, not content: it is outside the hash, so `index-freshness` still
+compares content only. A later publication without the override drops it.
 
 ## Validation
 

@@ -16,6 +16,9 @@ import { renderLlmsTxt } from '../index-builder/llms-txt.js'
 import { renderCapabilitiesJson } from '../index-builder/capabilities.js'
 import { sha256NormalizedV1 } from '../index-builder/content-hash.js'
 import { diffSnapshotsWithRead } from '../diff/change-set.js'
+import { decidePublication, referenceFindingsGateEnabled, referenceFindingsGateResult } from '../gates/run-gates.js'
+import type { IndexPublication } from '../schemas/doc-bridge-index.js'
+import { isServiceSnapshot, loadReferenceBase, pendingReferenceFindings, referenceComparabilityFailure, referenceHeadConfig, type ReferenceFindingsCheck } from '../gates/reference-findings.js'
 import { parseDiscoverySnapshot } from '../validate.js'
 import { toPosix } from '../lib/paths.js'
 import type { ArtifactIOV1 } from '../storage/contract.js'
@@ -50,6 +53,28 @@ export const runOperationCli = async (argv: readonly string[], command: string):
       config = loaded.config
       if (!value('--root')) root = projectRootFromConfigPath(loaded.path, config.project?.root)
     } catch (error) { if (!(error instanceof ConfigNotFoundError) || value('--config') || command === 'index') throw error }
+    /*
+     * The publication gate runs inside this bounded operation: its head discovery and diff share the
+     * operation's signal and --max-duration budget, so SIGINT or the time limit stop it like any
+     * other stage. Only reading the base happens before discovery, so a missing base fails fast.
+     */
+    const allowPendingFindings = argv.includes('--allow-pending-findings')
+    const referenceBase = command === 'index' && config && referenceFindingsGateEnabled(config) ? loadReferenceBase(root, config) : undefined
+    let publication: IndexPublication | undefined
+    const decide = (check: ReferenceFindingsCheck): number | undefined => {
+      const decision = decidePublication(referenceFindingsGateResult(check), { allowPendingFindings })
+      if (!decision.allowed) {
+        process.stderr.write(`${decision.gate.message}\nNothing was written: the index and llms.txt stay as they were.\n`)
+        process.stdout.write(JSON.stringify({ ok: false, blockedBy: decision.gate.id, gate: decision.gate }, null, 2) + '\n')
+        return 1
+      }
+      if (decision.publication) {
+        publication = decision.publication
+        process.stderr.write(`${decision.gate?.message ?? ''}\nPublishing anyway (--allow-pending-findings); the index records the override.\n`)
+      }
+      return undefined
+    }
+    if (referenceBase && !referenceBase.ok) { const blocked = decide(referenceBase); if (blocked !== undefined) return blocked }
     const limits = { ...markdownManifest.resourceLimits }
     for (const key of Object.keys(limits) as (keyof typeof limits)[]) limits[key] = Math.min(limits[key], (key === 'maxFileBytes' ? undefined : config?.safety?.[key]) ?? limits[key])
     const listing = safeWalkFiles(root, { ...safeWalkOptions(config), ...limits })
@@ -73,6 +98,25 @@ export const runOperationCli = async (argv: readonly string[], command: string):
     if (captured?.metrics) process.stderr.write(`metrics: ${JSON.stringify(captured.metrics)}\n`)
     if (captured?.status) { const { metrics: _metrics, ...partial } = captured; process.stdout.write(JSON.stringify(partial) + '\n'); return 2 }
     const snapshot = head ?? captured!.snapshot
+    if (referenceBase?.ok) {
+      const base = referenceBase.base
+      // A base from `action snapshot` is compared with a head discovered under the same selection.
+      const selected = isServiceSnapshot(base) ? await discoverRepositoryWithRead(repository, { root, config: referenceHeadConfig(base, config!), ...controls() }) : undefined
+      await check()
+      if (selected?.status) { const { metrics: _metrics, ...partial } = selected; process.stdout.write(JSON.stringify(partial) + '\n'); return 2 }
+      const gateHead = selected?.snapshot ?? snapshot
+      const incomparable = referenceComparabilityFailure(base, gateHead)
+      let result: ReferenceFindingsCheck
+      if (incomparable) result = incomparable
+      else {
+        const diff = await diffSnapshotsWithRead(base, gateHead, repository, controls())
+        await check()
+        if (diff.status) { process.stdout.write(JSON.stringify({ status: diff.status, coverage: diff.changeSet.coverage }) + '\n'); return 2 }
+        result = pendingReferenceFindings(base, diff)
+      }
+      const blocked = decide(result)
+      if (blocked !== undefined) return blocked
+    }
     if (command === 'discover') {
       process.stdout.write(argv.includes('--text') ? `Project: ${snapshot.project.name}\nEntities: ${snapshot.entities.length}\nRelations: ${snapshot.relations.length}\nSource revision: ${snapshot.sourceRevision}\n` : JSON.stringify({ ok: true, snapshot }, null, 2) + '\n')
       return 0
@@ -100,6 +144,7 @@ export const runOperationCli = async (argv: readonly string[], command: string):
     if (built.value.metrics) process.stderr.write(`metrics: ${JSON.stringify(built.value.metrics)}\n`)
     if (built.value.limitations.length) throw new Error('Incomplete index acquisition')
     const index = built.value.index
+    if (publication) index.publication = publication
     const out = config!.index?.outFile ?? '.doc-bridge/index.json'
     const indexPath = join(root, out)
     try {

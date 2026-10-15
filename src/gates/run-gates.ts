@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs'
 import { splitFrontmatter } from '@agentskit/cross-platform'
 
 import type { DocBridgeConfigV1 } from '../config/schema.js'
+import type { IndexPublication } from '../schemas/doc-bridge-index.js'
 import {
   runDocumentationStandardV1,
   type DocumentationConformanceReportV1,
@@ -12,6 +13,13 @@ import { scanAgentCorpus } from '../index-builder/scan-corpus.js'
 import { scanHumanDocRecords } from '../index-builder/human-adapters/index.js'
 import { IndexNotFoundError, loadDocBridgeIndex } from '../query/load-index.js'
 import { checkIndexReproducibility } from '../discovery/reproducibility.js'
+import {
+  checkReferenceFindings,
+  formatPendingReferenceFindings,
+  type PendingReferenceFinding,
+  type ReferenceFindingsCheck,
+  type ReferenceFindingsReason,
+} from './reference-findings.js'
 
 export type GateId =
   | 'index-freshness'
@@ -20,6 +28,7 @@ export type GateId =
   | 'okf-type'
   | 'docs-style'
   | 'documentation-standard-v1'
+  | 'reference-findings'
 
 const RESERVED_GATE_IDS = new Set(['link-rot', 'routing-currency', 'bootstrap-size'])
 
@@ -30,6 +39,12 @@ export type GateResult = {
   readonly expected?: string
   readonly actual?: string
   readonly details?: DocumentationConformanceReportV1
+  /** `reference-findings` only: the advisory `pendingCount` and every pending finding, complete. */
+  readonly pendingCount?: number
+  /** `reference-findings` only: why it failed, as a stable code (`pending` when findings are pending). */
+  readonly reasonCode?: ReferenceFindingsReason
+  readonly baseRevision?: string
+  readonly findings?: readonly PendingReferenceFinding[]
 }
 
 export type GateRunResult = {
@@ -55,6 +70,7 @@ export const runGate = (
       details,
     }
   }
+  if (id === 'reference-findings') return runReferenceFindingsGate(root, config)
   if (id === 'human-guide-links') return runHumanGuideLinksGate(root, config)
   if (id === 'okf-type') return runOkfTypeGate(root, config)
   if (id === 'docs-style') return runDocsStyleGate(root, config)
@@ -126,6 +142,77 @@ export const runGate = (
   }
 
   return { id, ok: true, message: 'Index is fresh', expected: next.contentHash, actual: current.contentHash }
+}
+
+/*
+ * Opt-in, and in no preset (ADR 0025): the advisory stays advisory unless a maintainer names this
+ * gate in `gates.include`. Once named it fails closed, so a missing base never reads as a pass.
+ */
+const runReferenceFindingsGate = (root: string, config: DocBridgeConfigV1): GateResult => referenceFindingsGateResult(checkReferenceFindings(root, config))
+
+/**
+ * The gate result for a completed check. The underlying error text goes to stderr only: it can
+ * name local paths, so it never reaches the JSON result, an Action report or the index.
+ */
+export const referenceFindingsGateResult = (check: ReferenceFindingsCheck): GateResult => {
+  const expected = 'no pending reference findings since the base snapshot'
+  if (check.ok) {
+    return { id: 'reference-findings', ok: true, message: `No pending reference findings since base ${check.baseRevision}`, expected, actual: '0 pending', pendingCount: 0, baseRevision: check.baseRevision, findings: [] }
+  }
+  if (check.detail) process.stderr.write(`[ak-docs] reference-findings (${check.reasonCode}): ${check.detail}\n`)
+  const findings = check.findings ?? []
+  return {
+    id: 'reference-findings',
+    ok: false,
+    message: [
+      `Publication blocked: ${check.reason}`,
+      ...formatPendingReferenceFindings(findings),
+      ...(findings.length ? ['Fix the cited documentation, or publish anyway with ak-docs index --allow-pending-findings.'] : []),
+    ].join('\n'),
+    expected,
+    actual: check.findings ? `${findings.length} pending` : 'not analyzed',
+    reasonCode: check.reasonCode,
+    ...(check.baseRevision ? { baseRevision: check.baseRevision } : {}),
+    ...(check.findings ? { pendingCount: findings.length, findings } : {}),
+  }
+}
+
+/** True when the configuration selects the `reference-findings` gate. */
+export const referenceFindingsGateEnabled = (config: DocBridgeConfigV1): boolean =>
+  Boolean(config.gates?.include?.includes('reference-findings')) && !config.gates?.exclude?.includes('reference-findings')
+
+export type PublicationDecision =
+  | { readonly allowed: true; readonly gate?: GateResult; readonly publication?: IndexPublication }
+  | { readonly allowed: false; readonly gate: GateResult }
+
+/**
+ * Whether `ak-docs index` may publish. Without the gate configured nothing is checked. With it, a
+ * failing gate blocks unless the operator passed `--allow-pending-findings`, and then the index
+ * records that it was published past the gate.
+ */
+export const publicationDecision = (
+  root: string,
+  config: DocBridgeConfigV1,
+  options: { readonly allowPendingFindings?: boolean } = {},
+): PublicationDecision => (referenceFindingsGateEnabled(config) ? decidePublication(runGate(root, config, 'reference-findings'), options) : { allowed: true })
+
+/** Applies the override policy to a `reference-findings` gate result that is already computed. */
+export const decidePublication = (gate: GateResult, options: { readonly allowPendingFindings?: boolean } = {}): PublicationDecision => {
+  if (gate.ok) return { allowed: true, gate }
+  if (!options.allowPendingFindings) return { allowed: false, gate }
+  return {
+    allowed: true,
+    gate,
+    publication: {
+      pendingReferenceFindings: {
+        override: 'allow-pending-findings',
+        // A code, never the message: the message can be anything a check reported.
+        reason: gate.reasonCode ?? 'diff-unavailable',
+        ...(gate.pendingCount === undefined ? {} : { pendingCount: gate.pendingCount }),
+        ...(gate.baseRevision ? { baseRevision: gate.baseRevision.slice(0, 128) } : {}),
+      },
+    },
+  }
 }
 
 const runHumanGuideLinksGate = (root: string, config: DocBridgeConfigV1): GateResult => {

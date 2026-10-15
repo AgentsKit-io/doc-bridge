@@ -39,7 +39,7 @@ export type HashAlgorithm = z.infer<typeof VersionedHashAlgorithmSchema>
 export const contentHashForVersionedArtifact = <T extends { readonly contentHash: string; readonly contentHashAlgo: string }>(artifact: T): string => {
   const algorithm = VersionedHashAlgorithmSchema.parse(artifact.contentHashAlgo)
   if (algorithm === LEGACY_HASH_ALGORITHM) return contentHashForArtifactV1(artifact)
-  const { contentHash: _hash, sourceRevision: _revision, sourceRevisionKind: _kind, generatedAt: _generated, ...payload } = artifact as Record<string, unknown>
+  const { contentHash: _hash, sourceRevision: _revision, sourceRevisionKind: _kind, generatedAt: _generated, publication: _publication, ...payload } = artifact as Record<string, unknown>
   const hash = createHash('sha256')
   // JSON object ordering puts integer keys first, even after lexical insertion.
   const keys = Object.keys(Object.fromEntries(Object.keys(payload).sort().map(key => [key, null])))

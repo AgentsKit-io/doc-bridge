@@ -12,7 +12,7 @@ Core (no API key):
   ak-docs init [--demo] [--scaffold-workspaces]
   ak-docs demo [--fixture example|monorepo] [--text] [--in-project]
   ak-docs doctor [--text] [--badge] [--write-badge]
-  ak-docs index [--watch]
+  ak-docs index [--watch] [--allow-pending-findings]
   ak-docs action index|snapshot --revision <sha> --root <checkout> --output <outside-artifact>
   ak-docs diff --advisory --base <snapshot> --head <snapshot> --root <checkout> --repository <owner/repo> --pr <number> --output <artifact>
   ak-docs discover [--text|--json]

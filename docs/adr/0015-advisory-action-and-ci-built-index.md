@@ -34,3 +34,8 @@ Deduplicate comments with a stable engine-owned marker scoped to repository/PR/a
 Required follow-up contracts: evolve `action.yml`, `docs/MARKETPLACE.md`, `docs/guides/gate-ci.md`, `docs/spec/cli.md`, `docs/spec/config-v1.md`, `docs/spec/public-parity-v1.md`, Marketplace contract tests in `scripts/marketplace-contract.test.mjs` and ADR 0010's proposed delta/advisory spec. Document endpoint-specific permissions, event matrix, revision acquisition and artifact retention. No Action implementation or live comment is authorized by this documentation task.
 
 Implementation acceptance must run real PR workflows for fresh/stale committed indexes, absent/present committed indexes in CI-built mode, drift preserved alongside generated output, exact base/head advisory findings, trusted versus fork/untrusted PR inputs, no-write fallback, comment create/update/deduplication, uncertain retry and stale-run prevention. Verify configured blocking results independently from comment delivery. Local contract tests support these flows but cannot substitute for live Action/permission evidence. These proposed workflows are UNVERIFIED until implemented and exercised.
+
+## Amendments
+
+- [ADR 0025](0025-opt-in-publication-gate.md) lets a maintainer opt into blocking publication on
+  pending reference findings. The advisory itself stays advisory.
