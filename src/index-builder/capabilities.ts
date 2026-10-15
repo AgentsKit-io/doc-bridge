@@ -14,6 +14,7 @@ export const renderCapabilitiesJson = (
     version: PACKAGE_VERSION,
     project: index.project,
     contentHash: index.contentHash,
+    ...(index.publication ? { publication: index.publication } : {}),
     artifacts: {
       index: paths.index,
       ...(paths.llmsTxt ? { llmsTxt: paths.llmsTxt } : {}),

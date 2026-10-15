@@ -360,13 +360,22 @@ export {
   type HumanDocRecord,
 } from './index-builder/plugins/human-markdown.js'
 export {
+  publicationDecision,
+  referenceFindingsGateEnabled,
   resolveGateIds,
   runGate,
   runGates,
   type GateId,
   type GateResult,
   type GateRunResult,
+  type PublicationDecision,
 } from './gates/run-gates.js'
+export {
+  checkReferenceFindings,
+  referenceFindingGroups,
+  type PendingReferenceFinding,
+  type ReferenceFindingsCheck,
+} from './gates/reference-findings.js'
 export {
   DOCUMENTATION_STANDARD_V1_ID,
   DOCUMENTATION_STANDARD_V1_STATUS,

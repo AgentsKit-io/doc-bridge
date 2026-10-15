@@ -3,6 +3,7 @@ import { existsSync, watch } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 
 import type { DocBridgeConfigV1 } from '../config/schema.js'
+import { publicationDecision } from '../gates/run-gates.js'
 import { buildDocBridgeIndex } from './build-index.js'
 
 export type WatchIndexOptions = {
@@ -10,6 +11,8 @@ export type WatchIndexOptions = {
   readonly config: DocBridgeConfigV1
   readonly configPath?: string
   readonly debounceMs?: number
+  /** Publish past a failing `reference-findings` gate, recording the override. */
+  readonly allowPendingFindings?: boolean
   readonly onRebuild?: (summary: { knowledgeCount: number; handoffCount: number; hash: string }) => void
 }
 
@@ -47,7 +50,12 @@ export const watchDocBridgeIndex = (opts: WatchIndexOptions): Promise<number> =>
       if (running) return
       running = true
       try {
-        const result = buildDocBridgeIndex({ root: opts.root, config: opts.config })
+        const decision = publicationDecision(opts.root, opts.config, { allowPendingFindings: opts.allowPendingFindings ?? false })
+        if (!decision.allowed) {
+          process.stderr.write(`[ak-docs] index not written: ${decision.gate.message}\n`)
+          return
+        }
+        const result = buildDocBridgeIndex({ root: opts.root, config: opts.config, ...(decision.publication ? { publication: decision.publication } : {}) })
         const handoffCount = Object.keys(result.index.handoffs ?? {}).length
         const summary = {
           knowledgeCount: result.index.knowledge.length,

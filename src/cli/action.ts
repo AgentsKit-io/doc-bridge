@@ -11,6 +11,7 @@ import { renderCapabilitiesJson } from '../index-builder/capabilities.js'
 import { renderLlmsTxt } from '../index-builder/llms-txt.js'
 import { sameHashIdentity } from '../index-builder/content-hash.js'
 import { runGate, runGates, resolveGateIds, type GateId } from '../gates/run-gates.js'
+import { referenceFindingGroups } from '../gates/reference-findings.js'
 import { denyServiceOperation, withExecutionProfile } from '../execution/profile.js'
 import { serviceConfig } from '../execution/config.js'
 import { readBoundedText } from '../lib/bounded-text.js'
@@ -161,12 +162,10 @@ export const runAdvisoryDiff = async (argv: readonly string[]): Promise<number> 
     const read = await capture(root, head.sourceRevision, config)
     const diff = await diffSnapshotsWithRead(base, head, read, { profile: 'service', policy: !argv.includes('--no-policy') })
     await exactHead(root, head.sourceRevision)
-    const findings = diff.findings.filter(finding => ['BROKEN_REFERENCE', 'AMBIGUOUS_REFERENCE', 'CHANGED_REFERENCE'].includes(finding.code))
+    const { all: findings, pending, updated } = referenceFindingGroups(diff.findings)
     const marker = `<!-- doc-bridge:advisory:v1:${repository}:${pr} -->`
     const binding = `<!-- doc-bridge:revisions:${base.sourceRevision}:${head.sourceRevision}:${source} -->`
     const lines = [marker, binding, '## Doc Bridge advisory (Layer 1)', '', `Repository: ${repository}; PR: ${pr}.`, `Base: ${base.sourceRevision}; head: ${head.sourceRevision}; index source: ${source}.`, '', 'Advisory only. Blocking gates are reported independently; interpretation and acceptance remain human-owned.', '', `Findings: ${findings.length}.`]
-    const pending = findings.filter(finding => !finding.documentationUpdate)
-    const updated = findings.filter(finding => finding.documentationUpdate)
     lines.push(`Pending: ${pending.length}; updated-in-this-change: ${updated.length}.`)
     for (const [label, group] of [['Pending', pending], ['Updated in this change — confirm the update', updated]] as const) {
       lines.push('', `### ${label}`, '')

@@ -27,7 +27,7 @@ import { diffSnapshots, diffSnapshotsWithRead } from '../diff/change-set.js'
 import { discoverPnpmPackages } from '../index-builder/plugins/pnpm-monorepo.js'
 import { scanHumanDocRecords } from '../index-builder/human-adapters/index.js'
 import { retrieveHybridChunks } from '../federation/llms.js'
-import { runGates, type GateId } from '../gates/run-gates.js'
+import { publicationDecision, referenceFindingsGateEnabled, runGate, runGates, type GateId } from '../gates/run-gates.js'
 import { evaluateRules, parseRuleId, parseRuleSeverity, type RuleMode } from '../rules/engine.js'
 import { centrality } from '../graph/build.js'
 import { runChatOnce, startInkChat } from '../intelligence/chat.js'
@@ -171,6 +171,7 @@ const GATE_IDS = new Set<GateId>([
   'okf-type',
   'docs-style',
   'documentation-standard-v1',
+  'reference-findings',
 ])
 
 const parseArgs = (argv: readonly string[]) => {
@@ -1935,18 +1936,30 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
   if (command === 'index') {
     try {
       const { config, root, configPath: loadedConfigPath } = loadProject(configPath)
+      const allowPendingFindings = flags.has('--allow-pending-findings')
       if (flags.has('--watch')) {
         return watchDocBridgeIndex({
           root,
           config,
           configPath: loadedConfigPath,
+          allowPendingFindings,
         })
       }
-      const result = buildDocBridgeIndex({ root, config })
+      const decision = publicationDecision(root, config, { allowPendingFindings })
+      if (!decision.allowed) {
+        process.stderr.write(`${decision.gate.message}\nNothing was written: the index and llms.txt stay as they were.\n`)
+        writeJson({ ok: false, blockedBy: decision.gate.id, gate: decision.gate })
+        return 1
+      }
+      if (decision.publication) {
+        process.stderr.write(`${decision.gate?.message ?? ''}\nPublishing anyway (--allow-pending-findings); the index records the override.\n`)
+      }
+      const result = buildDocBridgeIndex({ root, config, ...(decision.publication ? { publication: decision.publication } : {}) })
       const diagnostics = indexDiagnostics(root, config, result)
       const handoffCount = Object.keys(result.index.handoffs ?? {}).length
       writeJson({
         ok: true,
+        ...(result.index.publication ? { publication: result.index.publication } : {}),
         indexPath: result.indexPath,
         ...(result.llmsTxtPath ? { llmsTxtPath: result.llmsTxtPath } : {}),
         ...(result.capabilitiesPath ? { capabilitiesPath: result.capabilitiesPath } : {}),
@@ -1980,6 +1993,8 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
     try {
       const { config, root } = loadProject(configPath)
       const result = runGates(root, config, gateId ? [gateId] : undefined)
+      // The JSON carries every finding; the terminal gets the short list.
+      for (const gate of result.results) if (gate.id === 'reference-findings' && !gate.ok) process.stderr.write(`${gate.message}\n`)
       writeJson(result)
       return result.ok ? 0 : 1
     } catch (error) {
@@ -2041,6 +2056,20 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
     try {
       const { config, root } = loadProject(configPath)
       startMcpStdioServer({ root, config })
+      /*
+       * The server only reads the index already published, so a failing gate warns and never
+       * blocks. The check (a full discovery and diff) runs after the server is listening.
+       */
+      if (referenceFindingsGateEnabled(config)) {
+        setImmediate(() => {
+          try {
+            const gate = runGate(root, config, 'reference-findings')
+            if (!gate.ok) process.stderr.write(`[ak-docs] warning: reference-findings gate fails; agents read the last published index.\n${gate.message}\n`)
+          } catch (error) {
+            process.stderr.write(`[ak-docs] warning: reference-findings gate could not run: ${error instanceof Error ? error.message : String(error)}\n`)
+          }
+        })
+      }
       return undefined
     } catch (error) {
       process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`)
