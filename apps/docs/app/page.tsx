@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import { JetBrains_Mono } from 'next/font/google'
 import { ArrowRight, Bot, GitBranch, ShieldCheck, Terminal, Zap } from 'lucide-react'
 import { readdirSync } from 'node:fs'
 import { resolve } from 'node:path'
@@ -14,8 +13,6 @@ import { EcosystemShowcase } from '@/components/ecosystem'
 import { ProductSubheader } from '@/components/product-subheader'
 import { SiteFooter } from '@/components/site-footer'
 import './home.css'
-
-const jetbrains = JetBrains_Mono({ subsets: ['latin'], variable: '--font-jetbrains', display: 'swap' })
 
 const principles = [
   [Zap, 'Deterministic by default', 'Known questions stay local. Every answer keeps its source.'],
@@ -33,7 +30,7 @@ const sourceCount = readdirSync(resolve(process.cwd(), '../../docs'), { recursiv
 
 export default function HomePage() {
   return (
-    <div className={`bridge-home ${jetbrains.variable}`}>
+    <div className="bridge-home">
       <agentskit-aurora aria-hidden="true" />
       <ProductSubheader />
       <main className="bridge-home-content">
