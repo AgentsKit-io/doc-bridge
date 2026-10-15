@@ -1,0 +1,104 @@
+/* Card catalog figure. Dark is a blue-black card that matches the AgentsKit sibling cards; light is paper. */
+html.iso{
+  --anatomy-page:transparent;--anatomy-card:#0e1219;--anatomy-paper:#0e1219;--anatomy-face:#161c25;--anatomy-top:#171e27;
+  --anatomy-shade-0:#0a0d12;--anatomy-shade-1:#0d1117;--anatomy-shade-2:#10151c;--anatomy-shade-3:#131922;
+  --anatomy-lit-top:#1e2733;--anatomy-lit-shade:#18202b;
+  --anatomy-hi:#dbe3ec;--anatomy-mid:#7c8794;--anatomy-lo:#4b5562;--anatomy-faint:#2a323d;--anatomy-lit:#ffffff;
+  --anatomy-text:#a8b1bb;--anatomy-strong:#e6edf3;--anatomy-muted:#7d8792;--anatomy-dot:#e6edf3;
+  --anatomy-halo:#000000;--anatomy-halo-opacity:.85;
+  --anatomy-mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --cc-border:#30363d;--cc-radius:20px;
+  --cc-on:#22d3ee;--cc-on-core:#a5f3fc;--cc-on-glow:#06b6d4;--cc-on-face:#12667a;--cc-on-shade:#0d4a59;
+  --cc-amber:#f0a630;--cc-amber-core:#ffe0a8;--cc-amber-face:#8a5a12;--cc-amber-shade:#66420c;
+  --cc-brass-top:#3d3a30;--cc-brass:#2c2a23;--cc-on-deep:#0e7490;
+  --cc-glass:#060a0e;--cc-hole:#040608;--cc-sign:#0a0e13;
+}
+html.iso[data-theme="light"]{
+  --anatomy-card:#fbfcfd;--anatomy-paper:#fbfcfd;--anatomy-face:#ffffff;--anatomy-top:#ffffff;
+  --anatomy-shade-0:#c9d0d7;--anatomy-shade-1:#d6dce2;--anatomy-shade-2:#e2e7ec;--anatomy-shade-3:#edf0f3;
+  --anatomy-lit-top:#ffffff;--anatomy-lit-shade:#e9edf1;
+  --anatomy-hi:#1f2328;--anatomy-mid:#7a8590;--anatomy-lo:#a9b2bc;--anatomy-faint:#d3d9df;--anatomy-lit:#000000;
+  --anatomy-text:#57606a;--anatomy-strong:#0d1117;--anatomy-muted:#6e7781;--anatomy-dot:#2b3036;
+  --anatomy-halo:#6b7682;--anatomy-halo-opacity:.3;
+  --cc-border:#d0d7de;
+  --cc-on:#0891b2;--cc-on-core:#cffafe;--cc-on-glow:#22d3ee;--cc-on-face:#a5e7f3;--cc-on-shade:#7fd3e4;
+  --cc-amber:#d98a06;--cc-amber-core:#fff1d1;--cc-amber-face:#f7d38d;--cc-amber-shade:#e8b55a;
+  --cc-brass-top:#f1ede1;--cc-brass:#ddd6c2;--cc-on-deep:#155e75;
+  --cc-glass:#0b1418;--cc-hole:#5d6670;--cc-sign:#f3f5f7;
+}
+html,body{margin:0;background:transparent}
+.cc-body{color:var(--anatomy-text);font:14px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+.cc-page{box-sizing:border-box;width:100%;max-width:880px;margin:0 auto;padding:2px}
+.cc-figure{margin:0}
+.cc-plate{display:flex;flex-direction:column;gap:6px;padding:18px 22px 16px;border-radius:var(--cc-radius);background:var(--anatomy-card);box-shadow:0 0 0 1px var(--cc-border);overflow:hidden}
+.cc-top,.cc-bottom{display:flex;justify-content:space-between;align-items:center;gap:8px 16px;min-height:26px}
+.cc-left{display:flex;align-items:center;gap:12px;min-width:0}
+.cc-corner{color:var(--anatomy-muted);font-family:var(--anatomy-mono);font-size:11.5px;line-height:1.35;letter-spacing:.06em}
+.cc-corner[data-corner="fig"]{color:var(--anatomy-strong)}
+.cc-corner[data-corner="title"],.cc-corner[data-corner="hint"]{text-transform:uppercase;letter-spacing:.14em}
+.cc-corner[data-corner="readout"]{color:var(--anatomy-strong);font-variant-numeric:tabular-nums;text-align:right;letter-spacing:.02em}
+.cc-stage{position:relative;margin:0 -6px}
+.cc-stage .iso-svg{width:100%}
+.cc-hots{position:absolute;inset:0;pointer-events:none}
+.cc-hot{position:absolute;pointer-events:auto;margin:0;padding:0;border:0;border-radius:8px;background:transparent;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.cc-hot:focus-visible{outline:2px solid var(--cc-on);outline-offset:2px}
+.cc-pause{display:inline-flex;align-items:center;gap:7px;flex:none;min-height:28px;padding:4px 11px 4px 9px;border:1px solid var(--cc-border);border-radius:999px;background:transparent;color:var(--anatomy-text);font-family:var(--anatomy-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
+.cc-pause:hover{color:var(--anatomy-strong);border-color:var(--anatomy-mid)}
+.cc-pause:focus-visible{outline:2px solid var(--cc-on);outline-offset:2px}
+.cc-pause-icon{position:relative;width:8px;height:9px}
+.cc-pause-icon::before,.cc-pause-icon::after{content:"";position:absolute;top:0;width:2.5px;height:9px;border-radius:1px;background:currentColor}
+.cc-pause-icon::before{left:0}.cc-pause-icon::after{right:0}
+.cc-plate[data-paused] .cc-pause-icon::before{left:1px;width:0;height:0;border-radius:0;background:none;border-style:solid;border-width:4.5px 0 4.5px 7.5px;border-color:transparent transparent transparent currentColor}
+.cc-plate[data-paused] .cc-pause-icon::after{display:none}
+[hidden]{display:none!important}
+.cc-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* Glow means on: the label cards of indexed documents, the PUBLISH lamp, the terminal's screen. */
+.cc-glow{fill:var(--cc-on-glow);stroke:var(--cc-on-glow);stroke-width:2.6;stroke-linejoin:round;opacity:.55;filter:blur(2.2px)}
+html.iso[data-theme="light"] .cc-glow{opacity:.45;filter:blur(2px)}
+path.cc-label{fill:var(--cc-on);stroke:var(--cc-on-core);stroke-width:.35;vector-effect:non-scaling-stroke}
+path.cc-label.cc-stale{fill:var(--cc-amber);stroke:var(--cc-amber-core)}
+.cc-glow.cc-stale{fill:var(--cc-amber);stroke:var(--cc-amber)}
+.cc-brass>.iso-top,.cc-brass>.iso-fill{fill:var(--cc-brass-top)}
+.cc-brass>.iso-shade{fill:var(--cc-brass)}
+.cc-hole{fill:var(--cc-hole)}
+.cc-lamp{fill:url(#cc-lamp-grad)}
+.cc-lamp-core{fill:var(--cc-on-core)}
+.cc-lamp-halo{fill:var(--cc-on-glow);filter:blur(7px)}
+.cc-index .iso-fill,.cc-index .iso-top{transition:fill .35s ease}
+.cc-index.cc-on .iso-top,.cc-index.cc-on .iso-fill{fill:var(--cc-on-face)}
+.cc-index.cc-on .iso-shade{fill:var(--cc-on-shade)}
+.cc-index.cc-on .iso-edge{stroke:var(--cc-on)}
+.cc-index.cc-stale .iso-top,.cc-index.cc-stale .iso-fill{fill:var(--cc-amber-face)}
+.cc-index.cc-stale .iso-shade{fill:var(--cc-amber-shade)}
+.cc-index.cc-stale .iso-edge{stroke:var(--cc-amber)}
+.cc-index.cc-on,.cc-index.cc-stale{filter:drop-shadow(0 0 3px var(--cc-glowc,transparent))}
+.cc-index.cc-on{--cc-glowc:color-mix(in srgb,var(--cc-on-glow) 70%,transparent)}
+.cc-index.cc-stale{--cc-glowc:color-mix(in srgb,var(--cc-amber) 70%,transparent)}
+.cc-lever{stroke-width:1.5px}
+.cc-capsule{fill:none;stroke:var(--cc-on-core);stroke-width:4px;stroke-linecap:round;vector-effect:non-scaling-stroke}
+.cc-capsule-glow{fill:none;stroke:var(--cc-on-glow);stroke-width:11px;stroke-linecap:round;vector-effect:non-scaling-stroke;filter:blur(3.5px)}
+.cc-glass{fill:var(--cc-glass)}
+.cc-well{fill:var(--anatomy-shade-1)}
+.cc-screen-glow{fill:var(--cc-on-glow);filter:blur(2.5px)}
+.cc-text{fill:var(--cc-on-core);font-family:var(--anatomy-mono);letter-spacing:.01em}
+.cc-text.cc-dim{fill:#5f6b78}
+.cc-slip-rule{fill:none;stroke:var(--cc-on);stroke-width:.5px;vector-effect:non-scaling-stroke;opacity:.7}
+.cc-led{fill:var(--cc-on)}
+.cc-sign-face{fill:var(--cc-sign)}
+.cc-code{fill:var(--anatomy-hi);font-family:var(--anatomy-mono)}
+/* Hover or focus on an in-figure button outlines the part it acts on. */
+.cc-plate[data-hover="drawer"] [data-name="cab.guide"] .iso-edge,
+.cc-plate[data-hover="terminal"] [data-name="term.case"] .iso-edge,
+.cc-plate[data-hover="code"] [data-name="sign.tab"] .iso-edge{stroke:var(--cc-on)}
+@media (max-width:560px){
+  .cc-plate{padding:14px 12px 12px;gap:4px}
+  .cc-stage{margin:0 -4px;overflow:hidden}
+  .cc-stage .iso-svg{width:114%;margin-left:-7%}
+  .cc-hots{left:-7%;right:auto;width:114%}
+  .cc-bottom{flex-direction:column;align-items:stretch;gap:8px}
+  .cc-corner[data-corner="readout"]{text-align:left}
+  .cc-corner{font-size:11px}
+}
+@media (prefers-reduced-motion:reduce){.cc-index .iso-fill,.cc-index .iso-top{transition:none}}
+html.iso[data-theme="light"] .cc-capsule{stroke:var(--cc-on)}
