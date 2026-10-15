@@ -93,6 +93,7 @@ the [local design brief](../design/studio-brief.md) is reference material for ex
 | `ak-docs doctor [--text] [--badge] [--write-badge]` | Coverage score, gaps, gates, shields.io badge |
 | `ak-docs index` | Build `DocBridgeIndex` + optional `llms.txt` |
 | `ak-docs index --watch` | Debounced rebuild on agent/human doc changes |
+| `ak-docs index --allow-pending-findings` | Publish even though the opt-in `reference-findings` gate fails; the index and capabilities record the override. See [Publication gate](#publication-gate) |
 | `ak-docs query <target> [--agent] [--text]` | Resolve package/area/module/document/intent/change → handoff JSON or text |
 | `ak-docs search <term> [--agent] [--explain] [--mode=<mode>] [--context-budget=<tokens>] [--text]` | Ranked search over the retrieval projection; `--explain` names every scoring component and the matched terms, and agent mode bounds the context it returns to a task-specific budget (default 128 tokens; an oversized default result is returned truncated, while a declared budget that cannot fit one grounded match fails) |
 | `ak-docs ask <question>` | Human-readable local consult mode: search + best match + next handoff commands; no LLM |
@@ -116,7 +117,7 @@ the [local design brief](../design/studio-brief.md) is reference material for ex
 | `ak-docs playbook draft` | Build a draft Playbook feedback payload from local memory candidates |
 | `ak-docs playbook pattern [--text]` | Export published Doc Bridge Playbook pattern (OKF markdown / JSON) |
 | `ak-docs list <kind> [--text]` | List packages, apps, intents, … |
-| `ak-docs gate run [gate-id]` | Run resolved configured documentation gates; an optional id narrows the run to one gate |
+| `ak-docs gate run [gate-id]` | Run resolved configured documentation gates; an optional id narrows the run to one gate. Exits 0 when every gate passes, 1 otherwise |
 | `ak-docs conformance run documentation-standard-v1 [--text\|--json]` | Run the stable ecosystem documentation profile with evidence and remediation |
 | `ak-docs audit documentation [--text\|--json]` | Measure documentation quality and compare documentation claims with the observed project graph |
 | `ak-docs parity [--claims <file>] [--json\|--text]` | Check the public claim registry against what the repository can prove: stale, missing, contradictory and not-analyzed claims, each with an owner, an exact source and a remediation. Exits 1 on a blocking finding |
@@ -302,6 +303,45 @@ Invalid inputs, unavailable reads or invalid artifacts return 2. Action-level
 analysis unavailability is separately reported with an explanation and does not
 change blocking results; publisher errors also fall back without changing gates.
 The publisher is separate from the CLI and does not execute the source checkout.
+
+## Publication gate
+
+`reference-findings` is an opt-in gate (no preset selects it) that stops
+`ak-docs index` from publishing agent context while reference findings are
+pending ([ADR 0025](../adr/0025-opt-in-publication-gate.md)). It is selected with
+`gates.include: ["reference-findings"]` and reads its base from
+`gates.referenceFindings.base` ([config](./config-v1.md#gates)).
+
+The gate discovers the local working tree as the head, runs the snapshot diff
+against the base and keeps the findings `--fail-on-findings` counts:
+`BROKEN_REFERENCE`, `AMBIGUOUS_REFERENCE` and `CHANGED_REFERENCE`, except the
+ones grouped as `updated-in-this-change`. It fails while that `pendingCount` is
+above zero. Same selection and same diff as the advisory, over the local working
+tree: the advisory diffs the committed head, so an uncommitted documentation fix
+clears the gate but not the advisory. A base from `ak-docs action snapshot` is
+compared with a head discovered under the same service configuration selection.
+
+It also fails closed (`reasonCode` in the JSON result) when no base is
+configured (`no-base`), the base cannot be read (`base-unreadable`), the base is
+not a discovery snapshot, has no document entities or citation relations, or was
+cut short by a `limits:*` coverage entry (`base-invalid`), or when the head was
+cut short by a limit, the project identity, `configurationHash` or
+`analyzerVersions` differ, or the diff cannot run (`diff-unavailable`). Error
+text that can name local paths is written to stderr only.
+
+| Surface | When the gate is selected and fails |
+| --- | --- |
+| `ak-docs gate run [reference-findings]` | Exits 1. Stderr gets one line per finding (`CODE document:line → target`). The JSON result carries `pendingCount`, `baseRevision` and `findings[]`, each with `code`, `document`, `line`, `target` and the complete `diagnostic` |
+| `ak-docs index` (also with `--progress` / `--max-duration`) | Writes nothing: the index, `llms.txt` and the capabilities file are left as they were. Exits 1, explains the failure on stderr and prints `{ ok: false, blockedBy, gate }`. With `--progress` or `--max-duration` the gate's discovery and diff run inside the bounded operation, so Ctrl-C or the time limit stops them (exit 2, nothing written) |
+| `ak-docs index --allow-pending-findings` | Publishes and records `publication.pendingReferenceFindings` (`override`, `pendingCount`, `baseRevision`, and `reason` as a code: `pending`, `no-base`, `base-unreadable`, `base-invalid` or `diff-unavailable`) in the index and in the capabilities file. The record is outside `contentHash`. It lasts for that run only. Doc-bridge releases older than the gate reject an index carrying it |
+| `ak-docs index --watch` | Skips each rebuild while the gate fails, and says so on stderr |
+| `ak-docs mcp` | Starts serving the last published index, then runs the gate and warns on stderr. Never blocks. The `gate.status` tool runs it, at the cost of a full discovery and diff, on every call |
+| `ak-docs doctor`, `ak-docs fix apply` | Run it with the other selected gates; `fix apply` rolls an edit back while any reference finding stays pending |
+| `ak-docs action index` | Runs it with the other selected gates and fails until CI provides the base snapshot at the configured path |
+
+When the gate is not selected, none of these commands changes behaviour. The
+[publication gate guide](../guides/publication-gate.md) walks through a full
+example.
 
 ## Long-operation controls
 

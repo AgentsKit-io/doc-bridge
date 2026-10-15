@@ -120,43 +120,37 @@ export const RoutingConfigSchema = z
   })
   .strict()
 
+export const GateIdSchema = z.enum([
+  'index-freshness',
+  'index-reproducible',
+  'human-guide-links',
+  'link-rot',
+  'okf-type',
+  'docs-style',
+  'routing-currency',
+  'bootstrap-size',
+  'documentation-standard-v1',
+  'reference-findings',
+])
+
 export const GatesConfigSchema = z
   .object({
     /** minimal: freshness · standard: + human links · strict: + okf-type · playbook: freshness + okf soft style */
     preset: z.enum(['minimal', 'standard', 'strict', 'playbook']).optional(),
-    include: z
-      .array(
-        z.enum([
-          'index-freshness',
-          'index-reproducible',
-          'human-guide-links',
-          'link-rot',
-          'okf-type',
-          'docs-style',
-          'routing-currency',
-          'bootstrap-size',
-          'documentation-standard-v1',
-        ]),
-      )
-      .max(16)
-      .optional(),
-    exclude: z
-      .array(
-        z.enum([
-          'index-freshness',
-          'index-reproducible',
-          'human-guide-links',
-          'link-rot',
-          'okf-type',
-          'docs-style',
-          'routing-currency',
-          'bootstrap-size',
-          'documentation-standard-v1',
-        ]),
-      )
-      .max(16)
-      .optional(),
+    include: z.array(GateIdSchema).max(16).optional(),
+    exclude: z.array(GateIdSchema).max(16).optional(),
     options: z.record(z.string(), z.unknown()).optional(),
+    /**
+     * The `reference-findings` publication gate. It runs only when `include` names it; this block
+     * alone enables nothing. `base` is a discovery snapshot file (`ak-docs action snapshot`),
+     * relative to the project root or absolute. Without it the gate fails closed.
+     */
+    referenceFindings: z
+      .object({
+        base: z.string().min(1).max(1_024).optional(),
+      })
+      .strict()
+      .optional(),
   })
   .strict()
 

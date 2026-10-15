@@ -26,7 +26,8 @@ const FACT_CAPABILITIES = { symbol: 'symbols', 'cli-command': 'cli-commands', 'c
 const factsOf = (snapshot: SnapshotForChanges) => snapshot.entities.filter(entity => entity.metadata?.factCodecVersion === 1 && SurfaceFactKindSchema.safeParse(entity.kind).success).map(surfaceFactFromEntity)
 const packagesOf = (snapshot: SnapshotForChanges) => snapshot.entities.filter(entity => entity.kind === 'package' && entity.metadata?.factCodecVersion === 1).map(packageFactFromEntity)
 const factIdentity = (fact: SurfaceFact) => ({ id: fact.id, ownerId: fact.ownerId, name: fact.name, valueHash: fact.valueHash, evidence: fact.evidence })
-const DOCUMENT_RELATIONS = new Set(['covers', 'mentions', 'mentions-symbol', 'links-to'])
+/** Relation kinds through which a document cites code; the diff checks findings along these. */
+export const DOCUMENT_RELATIONS: ReadonlySet<string> = new Set(['covers', 'mentions', 'mentions-symbol', 'links-to'])
 const hashOf = (entity: KnowledgeEntity) => entity.evidence.find((item) => item.contentHash)?.contentHash
 const uniqueEvidence = (items: Evidence[]): Evidence[] => [...new Map(items.map(item => [canonicalJsonV1(item), item])).values()]
 const identity = (entity: KnowledgeEntity) => ({ id: entity.id, name: entity.name, evidence: entity.evidence })

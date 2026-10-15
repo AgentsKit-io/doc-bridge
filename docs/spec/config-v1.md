@@ -351,6 +351,11 @@ type GatesConfig = {
       >
     }
   }
+  /** The `reference-findings` gate; enables nothing unless `include` names the gate */
+  referenceFindings?: {
+    /** Base discovery snapshot file, relative to the project root or absolute */
+    base?: string
+  }
 }
 
 type GateId =
@@ -363,6 +368,7 @@ type GateId =
   | 'routing-currency'            // reserved; emits a diagnostic and is not executed
   | 'bootstrap-size'              // reserved; emits a diagnostic and is not executed
   | 'documentation-standard-v1'    // opt-in ecosystem documentation profile
+  | 'reference-findings'           // opt-in publication gate; in no preset
 ```
 
 | Preset | Gates |
@@ -371,7 +377,7 @@ type GateId =
 | `standard` | + `human-guide-links` in v1 |
 | `strict` | + `okf-type` in v1 |
 
-Implemented gates include `index-freshness`, `human-guide-links`, `okf-type`, `docs-style`, and the opt-in `index-reproducible` and `documentation-standard-v1`. For v1 compatibility, `link-rot`, `routing-currency`, and `bootstrap-size` remain accepted as reserved IDs; including one emits `AK_DOCS_RESERVED_GATE` and does not claim that the gate ran. Unknown IDs are rejected.
+Implemented gates include `index-freshness`, `human-guide-links`, `okf-type`, `docs-style`, and the opt-in `index-reproducible`, `documentation-standard-v1` and `reference-findings`. For v1 compatibility, `link-rot`, `routing-currency`, and `bootstrap-size` remain accepted as reserved IDs; including one emits `AK_DOCS_RESERVED_GATE` and does not claim that the gate ran. Unknown IDs are rejected.
 
 ### Structural vs style validation
 
@@ -384,6 +390,36 @@ These gates are deterministic lint checks, not editorial grading:
 | `human-guide-links` | structural | Local `humanDoc` links resolve through configured human-doc adapters |
 | `okf-type` | OKF lint | Agent docs have required `type:` frontmatter when strict/required |
 | `docs-style` | style lint | Opt-in deterministic profile checks for title, purpose, audience, examples, owner/source, task orientation, and stale wording |
+| `reference-findings` | publication | No reference finding is pending between the configured base snapshot and the current head |
+
+### `reference-findings`: opt-in publication gate
+
+```json
+{
+  "gates": {
+    "include": ["reference-findings"],
+    "referenceFindings": { "base": "../artifacts/base-snapshot.json" }
+  }
+}
+```
+
+The gate is in no preset, and a `referenceFindings` block without the `include` entry turns
+nothing on ([ADR 0025](../adr/0025-opt-in-publication-gate.md)). `base` names a discovery snapshot
+file: the output of `ak-docs action snapshot`, or the `snapshot` of `ak-docs discover --json`
+(the enclosing response is accepted too). A relative path resolves against the project root. A Git
+reference is not accepted. To compare against a revision, snapshot it first.
+
+Once selected, the gate discovers the head, diffs it against the base and fails while any
+`BROKEN_REFERENCE`, `AMBIGUOUS_REFERENCE` or `CHANGED_REFERENCE` finding is pending. That is the
+`pendingCount` the Action's `fail-on-findings` uses, computed over the local working tree rather
+than the committed head. It fails closed: no `base`, an unreadable file, an invalid snapshot, a
+base with no document entities or no citation relations, a base or head cut short by a `limits:*`
+coverage entry, a base whose project identity, `configurationHash` or `analyzerVersions` differ
+from the head, or a diff that cannot run is a failure, never a pass. A base from `ak-docs action
+snapshot` is compared with a head discovered under the same service configuration selection; a
+base from `ak-docs discover --json` must be taken with the head's whole configuration. While it fails,
+`ak-docs index` publishes nothing unless `--allow-pending-findings` is passed
+([CLI](./cli.md#publication-gate)).
 
 ### Why `index-reproducible` is opt-in
 
