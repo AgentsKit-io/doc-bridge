@@ -11,7 +11,7 @@ html.iso{
   --bc-on:#22d3ee;--bc-on-core:#a5f3fc;--bc-on-glow:#06b6d4;--bc-on-face:#12667a;--bc-on-shade:#0d4a59;--bc-on-deep:#0e7490;
   --bc-amber:#f0a630;--bc-amber-core:#ffe0a8;--bc-amber-face:#8a5a12;--bc-amber-shade:#66420c;--bc-amber-deep:#9a5b06;
   --bc-brass-top:#3d3a30;--bc-brass:#2c2a23;
-  --bc-glass:#060a0e;--bc-hole:#040608;--bc-sign:#0a0e13;--bc-water:#0b1118;--bc-stripe:#dbe3ec;--bc-card-top:#1d2530;
+  --bc-glass:#060a0e;--bc-hole:#040608;--bc-sign:#0a0e13;--bc-water:#0d1c27;--bc-stripe:#dbe3ec;--bc-card-top:#1d2530;
 }
 html.iso[data-theme="light"]{
   --anatomy-card:#fbfcfd;--anatomy-paper:#fbfcfd;--anatomy-face:#ffffff;--anatomy-top:#ffffff;
@@ -24,7 +24,7 @@ html.iso[data-theme="light"]{
   --bc-on:#0891b2;--bc-on-core:#cffafe;--bc-on-glow:#22d3ee;--bc-on-face:#a5e7f3;--bc-on-shade:#7fd3e4;--bc-on-deep:#155e75;
   --bc-amber:#d98a06;--bc-amber-core:#fff1d1;--bc-amber-face:#f7d38d;--bc-amber-shade:#e8b55a;--bc-amber-deep:#b45309;
   --bc-brass-top:#f1ede1;--bc-brass:#ddd6c2;
-  --bc-glass:#0b1418;--bc-hole:#5d6670;--bc-sign:#f3f5f7;--bc-water:#e7eef3;--bc-stripe:#1f2328;--bc-card-top:#ffffff;
+  --bc-glass:#0b1418;--bc-hole:#5d6670;--bc-sign:#f3f5f7;--bc-water:#dce9f1;--bc-stripe:#1f2328;--bc-card-top:#ffffff;
 }
 html,body{margin:0;background:transparent}
 .bc-body{color:var(--anatomy-text);font:14px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
@@ -57,7 +57,8 @@ html,body{margin:0;background:transparent}
 
 /* The river and the belt. */
 .bc-water>.iso-fill,.bc-water>.iso-top{fill:var(--bc-water)}
-.bc-flow{opacity:.9}
+.bc-flow{opacity:.85}
+.bc-water>.iso-shade{fill:color-mix(in srgb,var(--bc-water) 80%,#000)}
 .bc-belt>.iso-top,.bc-belt>.iso-fill{fill:var(--anatomy-shade-1)}
 .bc-hole{fill:var(--bc-hole)}
 .bc-brass>.iso-top,.bc-brass>.iso-fill{fill:var(--bc-brass-top)}

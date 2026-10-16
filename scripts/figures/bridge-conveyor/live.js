@@ -25,7 +25,7 @@ const lampEls = ["lamp.globe", "lamp.globe-core", "lamp-halo"].map((name) => q(`
 const cleats = q('[data-part="cleats"]');
 const cards = [...svg.querySelectorAll("[data-card]")];
 const cardBodies = cards.map((el) => el.querySelector(".bc-card"));
-const bar = q('[data-part="bar"]');
+const boomEl = q('[data-part="boom"]');
 const flag = q('[data-part="flag"]');
 const feed = q('[data-part="feed"]');
 const screenGlow = q('[data-part="screen-glow"]');
@@ -111,17 +111,9 @@ function targets() {
     drawer: open ? 1 : 0,
     lift: open && motion.drawer > 0.82 ? 1 : 0,
     lamp: v.published ? 1 : 0,
-    bar: v.published ? 0 : barClear() ? 1 : motion.bar,
+    bar: v.published ? 0 : 1,
     flag: flagged ? 1 : 0,
   };
-}
-function barClear() {
-  if (motion.bar > 0.05) return true;
-  for (let i = 0; i < N; i++) {
-    const s = posOf(i);
-    if (i !== heldCard && Math.abs(s - (B.stop + 11)) < 13) return false;
-  }
-  return true;
 }
 let holdU = 0;
 function setState(next, { announce = false } = {}) {
@@ -222,8 +214,7 @@ function draw() {
   lampEls[0].style.opacity = (0.92 * motion.lamp).toFixed(3);
   lampEls[1].style.opacity = (0.95 * motion.lamp).toFixed(3);
   lampEls[2].style.opacity = (0.55 * motion.lamp).toFixed(3);
-  const drop = smooth(motion.bar) * (DATA.barrier.down - DATA.barrier.up);
-  bar.setAttribute("transform", `translate(${(Z1[0] * drop).toFixed(2)} ${(Z1[1] * drop).toFixed(2)})`);
+  drawBoom(motion.bar);
   const rise = (smooth(motion.flag) - 1) * DATA.flag.rise;
   flag.setAttribute("transform", `translate(${(Z1[0] * rise).toFixed(2)} ${(Z1[1] * rise).toFixed(2)})`);
   card.toggleAttribute("data-flag", flagged);
@@ -237,6 +228,99 @@ function draw() {
   screenGlow.style.opacity = (screenMode === "slip" ? 0.32 + 0.4 * motion.glow : screenMode === "blocked" ? 0.05 : 0.14).toFixed(3);
   led.style.opacity = v.published ? (0.55 + 0.45 * motion.glow).toFixed(3) : "0.12";
   card.dataset.screen = screenMode;
+}
+
+
+// ---------------------------------------------------------------- the boom: an oriented box turning about x
+const BM = DATA.boom;
+const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+const add = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
+const mul = (a, s) => [a[0] * s, a[1] * s, a[2] * s];
+const pt = (p) => iso(p, P);
+const pathD = (pts, closed = true) => "M" + pts.map((p) => p[0].toFixed(2) + " " + p[1].toFixed(2)).join("L") + (closed ? "Z" : "");
+function hull2(points) {
+  const pts = [...points].sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  const cross = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+  const lower = [];
+  for (const p of pts) {
+    while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], p) <= 0) lower.pop();
+    lower.push(p);
+  }
+  const upper = [];
+  for (const p of pts.reverse()) {
+    while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], p) <= 0) upper.pop();
+    upper.push(p);
+  }
+  return lower.slice(0, -1).concat(upper.slice(0, -1));
+}
+const bandOfScore = (s) => {
+  let t = 0;
+  while (t < BM.bands.length && s >= BM.bands[t]) t++;
+  return t;
+};
+const boomParts = (() => {
+  const make = (cls, extra = "") => {
+    const el = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    el.setAttribute("class", cls);
+    for (const [k2, val] of Object.entries(extra)) el.setAttribute(k2, val);
+    return el;
+  };
+  const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+  g.setAttribute("class", "iso-solid");
+  const parts = { fill: make("iso-fill"), shades: [0, 1, 2, 3].map((i) => make("iso-shade", { "data-shade": String(i) })), top: make("iso-top"), stripe: make("bc-stripe"), crease: make("iso-line iso-crease", { "data-tone": "faint" }), edge: make("iso-line iso-edge", { "data-tone": "hi" }) };
+  g.append(parts.fill, ...parts.shades, parts.top, parts.stripe, parts.crease, parts.edge);
+  boomEl.append(g);
+  return parts;
+})();
+function drawBoom(down) {
+  const theta = (Math.PI / 2) * (1 - smooth(down));
+  const d = [0, -Math.cos(theta), Math.sin(theta)];
+  const n = [0, Math.sin(theta), Math.cos(theta)];
+  const e = [1, 0, 0];
+  const s0 = -BM.stub;
+  const s1 = BM.length;
+  const at3 = (s, a, b) => add(add(add(BM.pivot, mul(d, s)), mul(n, a)), mul(e, b));
+  const corners = [];
+  for (const s of [s0, s1]) for (const a of [-BM.t, BM.t]) for (const b of [-BM.half, BM.half]) corners.push(pt(at3(s, a, b)));
+  const hull = hull2(corners);
+  // Faces along the arm: (normal, a-sign, b-sign) spans; end caps by s.
+  const faces = [
+    { nrm: n, quad: (sa, sb) => [at3(sa, BM.t, -BM.half), at3(sb, BM.t, -BM.half), at3(sb, BM.t, BM.half), at3(sa, BM.t, BM.half)] },
+    { nrm: mul(n, -1), quad: (sa, sb) => [at3(sa, -BM.t, -BM.half), at3(sb, -BM.t, -BM.half), at3(sb, -BM.t, BM.half), at3(sa, -BM.t, BM.half)] },
+    { nrm: e, quad: (sa, sb) => [at3(sa, -BM.t, BM.half), at3(sb, -BM.t, BM.half), at3(sb, BM.t, BM.half), at3(sa, BM.t, BM.half)] },
+    { nrm: mul(e, -1), quad: (sa, sb) => [at3(sa, -BM.t, -BM.half), at3(sb, -BM.t, -BM.half), at3(sb, BM.t, -BM.half), at3(sa, BM.t, -BM.half)] },
+  ];
+  const caps = [
+    { nrm: d, pts: [at3(s1, -BM.t, -BM.half), at3(s1, BM.t, -BM.half), at3(s1, BM.t, BM.half), at3(s1, -BM.t, BM.half)] },
+    { nrm: mul(d, -1), pts: [at3(s0, -BM.t, -BM.half), at3(s0, BM.t, -BM.half), at3(s0, BM.t, BM.half), at3(s0, -BM.t, BM.half)] },
+  ];
+  const buckets = [[], [], [], [], []];
+  const stripes = [];
+  const creases = [];
+  const seen = [];
+  for (const f of faces) {
+    if (dot(f.nrm, BM.view) <= 1e-6) continue;
+    seen.push(f);
+    const q = f.quad(s0, s1).map(pt);
+    buckets[bandOfScore(dot(f.nrm, BM.light))].push(pathD(q));
+    // Warning bands, painted across the arm every 6 units from its tip.
+    for (let s = s1 - 3; s > s0 + 2; s -= 6) stripes.push(pathD(f.quad(Math.max(s0 + 3.2, s - 3), s).map(pt)));
+  }
+  for (const c of caps) if (dot(c.nrm, BM.view) > 1e-6) buckets[bandOfScore(dot(c.nrm, BM.light))].push(pathD(c.pts.map(pt)));
+  // Creases where two visible long faces meet.
+  if (seen.length === 2) {
+    const [f, g] = seen;
+    const qa = f.quad(s0, s1);
+    const qb = g.quad(s0, s1);
+    const shared = qa.filter((p) => qb.some((r) => Math.hypot(p[0] - r[0], p[1] - r[1], p[2] - r[2]) < 1e-6));
+    if (shared.length === 2) creases.push(pathD(shared.map(pt), false));
+  }
+  boomParts.fill.setAttribute("d", pathD(hull));
+  boomParts.shades.forEach((el, i) => el.setAttribute("d", buckets[i].join("")));
+  boomParts.top.setAttribute("d", buckets[4].join(""));
+  boomParts.stripe.setAttribute("d", stripes.join(""));
+  boomParts.crease.setAttribute("d", creases.join(""));
+  boomParts.edge.setAttribute("d", pathD(hull));
 }
 
 // ---------------------------------------------------------------- the loop
