@@ -1,6 +1,6 @@
 // Builds apps/docs/public/figures/bridge-conveyor.html: an isometric bridge with a conveyor that carries
 // loose pages across a river as neat index cards and files them into a card catalog (the doc-bridge
-// index), with an inspection arch, a barrier and a PUBLISH lamp that stand for the opt-in publication
+// index), with an inspection arch, a drop gate and a PUBLISH lamp that stand for the opt-in publication
 // gate. Drawn with the "anatomy" figure kit (MIT). The kit is not vendored here: point ANATOMY_DIR at a
 // checkout of the skill (default: ~/.claude/skills/anatomy). The page it writes is self-contained: no
 // network, no third-party scripts.
@@ -55,9 +55,10 @@ const HOOD = { x0: -176, x1: -152, y: 12, z0: STRINGER.z1, z1: 54 };
 const HOPPER = { x0: -172, x1: -156, y: 9, z0: HOOD.z1, z1: 63 };
 // The inspection arch at mid-span: a portal over the belt with a scanner under its beam.
 const ARCH = { x: 0, post: { w: 10, d: 4.5, y: 12 }, z1: 61, beam: { w: 26, y: 18, z1: 71 } };
-// The barrier at the entrance to the agent bank: a boom that swings down across the belt.
-const BARRIER = { x: 92, post: { w: 6, y0: 11, y1: 16, z1: 47 }, pivot: [85.8, 13.5, 44.5], arm: { half: 1.6, t: 1.5, length: 30, stub: 3 }, rest: { y: -14, z1: 42.9 } };
-const STOP_X = BARRIER.pivot[0] - BARRIER.arm.half - 3 - 8; // the centre of a card held at the barrier
+// The drop gate at the entrance to the agent bank: a frame of two posts and a lintel across the belt, and a
+// panel that hangs inside the lintel while publication is open and slides down onto the belt when it is blocked.
+const GATE = { x: 92, post: { w: 8, y0: 11, y1: 16 }, lintel: { z0: 54, z1: 64 }, panel: { t: 5, h: 12, rise: 14 } };
+const GATE_PANEL = { x0: GATE.x - GATE.panel.t / 2, x1: GATE.x + GATE.panel.t / 2, y: GATE.post.y0, z0: STRINGER.z1, z1: STRINGER.z1 + GATE.panel.h };
 const LID = { z0: CAB.z1, z1: CAB.z1 + 3.6, grow: 2.4 };
 const GRID = { x0: 148, z1: 89, cell: { w: 18, h: 15 }, gap: { x: 2.5, z: 2.5 } };
 const PROUD = 1.6;
@@ -75,6 +76,7 @@ const LAMP = { x: 155, y: -8, base: 4.6, collar: 3, globe: 4.2 };
 const TERM = { x0: 214, x1: 246, y0: -16, y1: 4, z0: BANK_TOP, z1: 60 };
 const SIGN = { x0: -228, x1: -186, y: 47, z0: BANK_TOP + 6, z1: BANK_TOP + 22, t: 1.4 };
 const CARD = { l: 16, w: 11, t: 0.8 };
+const STOP_X = GATE_PANEL.x0 - 3 - CARD.l / 2; // the centre of a card held at the gate
 
 const P = k.fitProjection(
   [
@@ -82,7 +84,7 @@ const P = k.fitProjection(
     [CAB.x0 - LID.grow, CAB.y0 - LID.grow, LID.z1 + 12],
     [CAB.x1 + LID.grow, CAB.y1 + LID.grow, LID.z1],
     [ARCH.x, 0, ARCH.beam.z1 + 12],
-    [BARRIER.pivot[0], BARRIER.pivot[1], BARRIER.pivot[2] + 32],
+    [GATE.x, 0, GATE.lintel.z1 + 12],
   ],
   W,
   H,
@@ -391,35 +393,55 @@ globe("arch.lamp", AGLOBE_C, ALAMP.globe, ACOLLAR, "bc-alamp", true);
 // The light curtain from the scanner down to the belt, in the plane of the arch.
 const CURTAIN = path3([[ARCH.x, -BELT.half, ARCH.z1 - 3.5], [ARCH.x, BELT.half, ARCH.z1 - 3.5], [ARCH.x, BELT.half, BELT.top + 0.2], [ARCH.x, -BELT.half, BELT.top + 0.2]], true);
 
-// ---------------------------------------------------------------- the barrier at the entrance to the agent bank
+// ---------------------------------------------------------------- the drop gate at the entrance to the agent bank
 {
-  const { x, post: bp, pivot } = BARRIER;
-  box("barrier.post", [x - bp.w / 2, bp.y0, BANK_TOP + 2.4], [x + bp.w / 2, bp.y1, bp.z1], {}, {
+  const { x, post: gp, lintel } = GATE;
+  const x0 = x - gp.w / 2;
+  const x1 = x + gp.w / 2;
+  for (const [side, y0] of [["far", -gp.y1], ["near", gp.y0]]) {
+    const y1 = y0 + (gp.y1 - gp.y0);
+    const face = side === "near";
+    box(`gate.post.${side}`, [x0, y0, BANK_TOP + 2.4], [x1, y1, lintel.z0], {}, {
+      r: 0.6,
+      bevel: 0.4,
+      front: face,
+      inner: (p) => sideSeam(p, BANK_TOP + 6, 3),
+      extra: face ? `<g transform="${planeY(y1)}">${Ln(flat(x0 + 2, BANK_TOP + 8, x1 - 2, lintel.z0 - 8, 0.6, 3), { tone: "faint" })}</g>` : "",
+    });
+    box(`gate.foot.${side}`, [x0 - 1.5, y0 - 1, BANK_TOP], [x1 + 1.5, y1 + 1, BANK_TOP + 2.4], { tone: "lo" }, {
+      r: 0.6,
+      front: face,
+      bias: 0.2,
+      extra: screwDots([[x0 - 0.6, (y0 + y1) / 2], [x1 + 0.6, (y0 + y1) / 2]], BANK_TOP + 2.4, 0.36),
+    });
+  }
+  box("gate.lintel", [x0, -gp.y1, lintel.z0], [x1, gp.y1, lintel.z1], {}, {
     r: 0.8,
-    bevel: 0.4,
+    steps: 3,
+    bevel: 0.5,
     front: true,
-    inner: (p) => sideSeam(p, BANK_TOP + 6, 3) + sideSeam(p, bp.z1 - 5, 3),
-    extra: `<g transform="${planeY(bp.y1)}">${Ln(flat(x - 1.6, BANK_TOP + 8, x + 1.6, bp.z1 - 9, 0.6, 3), { tone: "faint" })}</g>`,
+    inner: (p) => sideSeam(p, lintel.z0 + 1, 3) + sideSeam(p, lintel.z1 - 1.4, 3),
+    extra: screwDots([[x0 + 1.8, -gp.y1 + 1.8], [x0 + 1.8, gp.y1 - 1.8], [x1 - 1.8, -gp.y1 + 1.8], [x1 - 1.8, gp.y1 - 1.8]], lintel.z1, 0.4),
   });
-  box("barrier.foot", [x - bp.w / 2 - 1.5, bp.y0 - 1, BANK_TOP], [x + bp.w / 2 + 1.5, bp.y1 + 1, BANK_TOP + 2.4], { tone: "lo" }, {
-    r: 0.6,
-    front: true,
-    bias: 0.2,
-    extra: screwDots([[x - bp.w / 2 - 0.6, (bp.y0 + bp.y1) / 2], [x + bp.w / 2 + 0.6, (bp.y0 + bp.y1) / 2]], BANK_TOP + 2.4, 0.36),
-  });
-  // The pivot hub on the post's upstream face, and the rest the boom lies on when it is down.
-  const HUB = G.frameOf([x - bp.w / 2, pivot[1], pivot[2]], [-1, 0, 0], [0, 1, 0], [0, 0, 1]);
-  turned("barrier.hub", HUB, 0, x - bp.w / 2 - (pivot[0] + BARRIER.arm.half), 2.6, { tone: "mid" }, { front: true, bias: 0.6 });
-  const { rest } = BARRIER;
-  box("barrier.rest", [pivot[0] - 1.8, rest.y - 1.8, BANK_TOP], [pivot[0] + 1.8, rest.y + 1.8, rest.z1], {}, {
-    r: 0.6,
-    inner: (p) => sideSeam(p, BANK_TOP + 4, 3),
-    extra: screwDots([[pivot[0], rest.y]], rest.z1, 0.38),
-  });
-  // The boom is drawn by live code (it turns about x); this item holds its place in the order.
-  const arm = BARRIER.arm;
-  const boomShape = record(A.box([pivot[0] - arm.half, pivot[1] - arm.length, pivot[2] - arm.t], [pivot[0] + arm.half, pivot[1] + arm.stub, pivot[2] + arm.t], { name: "barrier.boom" }));
-  put("barrier.boom", [pivot[0], pivot[1] - 8, pivot[2] + 8], `<g data-part="boom"></g>`, [boomShape], { front: true, bias: 1 });
+  // The panel is built down, on the belt's stringers between the posts; live code lifts it into the lintel.
+  // Amber hazard stripes on its top and upstream face show only while it is down.
+  const pn = GATE_PANEL;
+  const plan = { x: pn.x0, y: -pn.y, w: pn.x1 - pn.x0, d: pn.y * 2, r: 0.4 };
+  const stripes = [];
+  const bands = [];
+  for (let y = -pn.y; y < pn.y - 4; y += 5.5) {
+    stripes.push(path3([[pn.x0, y, pn.z1], [pn.x1, y + 1.5, pn.z1], [pn.x1, y + 4.25, pn.z1], [pn.x0, y + 2.75, pn.z1]], true));
+  }
+  for (let y = -pn.y - 4; y < pn.y; y += 5.5) bands.push(`M${r2(y)} ${-pn.z0}L${r2(y + 2.75)} ${-pn.z0}L${r2(y + 6.75)} ${-pn.z1}L${r2(y + 4)} ${-pn.z1}Z`);
+  const faceRect = flat(-pn.y, pn.z0, pn.y, pn.z1, 0, 1);
+  const hazard =
+    `<g data-part="gate-hazard" style="opacity:0">` +
+    `<path class="bc-hazard" d="${stripes.join("")}"/>` +
+    `<path class="bc-hazard-edge" d="${path3([[pn.x0, -pn.y, pn.z1], [pn.x1, -pn.y, pn.z1], [pn.x1, pn.y, pn.z1], [pn.x0, pn.y, pn.z1]], true)}"/>` +
+    `<g transform="${planeX(pn.x0)}"><clipPath id="bc-gate-clip"><path d="${faceRect}"/></clipPath><g clip-path="url(#bc-gate-clip)"><path class="bc-hazard" d="${bands.join("")}"/></g><path class="bc-hazard-edge" d="${faceRect}"/></g>` +
+    `</g>`;
+  const shape = record(A.slab(plan, pn.z0, pn.z1 - pn.z0, { name: "gate.panel" }, 2));
+  put("gate.panel", [x, 0, (pn.z0 + pn.z1) / 2], `<g data-part="gate">${S(k.slabOf(plan, pn.z0, pn.z1 - pn.z0, P, 2, 0.3), { tone: "hi" })}${hazard}</g>`, [shape]);
 }
 
 // ---------------------------------------------------------------- the catalog on the right bank
@@ -742,7 +764,7 @@ for (const [i, x] of [SIGN.x0 + 1.9, SIGN.x1 - 1.9].entries()) post(`sign.post${
 
 // ---------------------------------------------------------------- settle the painter's order
 A.settle(R, P);
-// Items in front of the belt's cards (near railing, arch, barrier, intake, open drawer) form the front layer.
+// Items in front of the belt's cards (near railing, arch, gate frame, intake, open drawer) form the front layer.
 const FRONT_LIFT = 10000;
 for (const item of R.items) if (FRONT.has(item.name)) item.key += FRONT_LIFT;
 R.items.sort((a, b) => a.key - b.key);
@@ -807,8 +829,8 @@ function frameAround(box, aspect, fill) {
   return { x: Math.round((box.x0 + box.x1) / 2 - vw / 2), y: Math.round((box.y0 + box.y1) / 2 - vh / 2), w: Math.round(vw), h: Math.round(vh) };
 }
 const WIDE = frameAround(ink, 2.4, 0.96);
-// The phone crop: the bridge span from the first pier to the barrier, the arch at its heart.
-const cropPoints = [[-60, -24, 0], [-60, 30, 0], [118, -24, 0], [118, 30, 0], [0, 0, ARCH.beam.z1 + 14], [BARRIER.pivot[0], BARRIER.pivot[1], BARRIER.pivot[2] + 34], [-60, 30, -6]].map(at);
+// The phone crop: the bridge span from the first pier to the gate, the arch at its heart.
+const cropPoints = [[-60, -24, 0], [-60, 30, 0], [118, -24, 0], [118, 30, 0], [0, 0, ARCH.beam.z1 + 14], [GATE.x, 0, GATE.lintel.z1 + 10], [-60, 30, -6]].map(at);
 const CROP = frameAround({ x0: Math.min(...cropPoints.map((p) => p[0])), x1: Math.max(...cropPoints.map((p) => p[0])), y0: Math.min(...cropPoints.map((p) => p[1])), y1: Math.max(...cropPoints.map((p) => p[1])) }, 4 / 3, 0.98);
 
 // Hit areas for the in-figure buttons, in view-box units (live code turns them into percentages per frame).
@@ -830,7 +852,7 @@ const HOTS = {
 };
 
 const LABEL_TEXT =
-  "An isometric bridge over a river. On the left bank lies a messy pile of loose pages, markdown files and code printouts, with a code sheet that shows the signature of send. A conveyor belt carries the pages across the bridge one by one as neat index cards, through an inspection arch at mid-span that checks each card against the code, and past a barrier into a card catalog on the right bank, where the cards are filed into drawers with glowing label plates under a lit PUBLISH lamp. An agent terminal beside the catalog pulls the sending-notifications card and shows docs/guides/sending-notifications.md line 8. When the code changes, the arch raises an amber flag, the card for the guide turns amber, the barrier drops and the belt holds, and the lamp goes out: one CHANGED_REFERENCE finding blocks publication until the guide is fixed.";
+  "An isometric bridge over a river. On the left bank lies a messy pile of loose pages, markdown files and code printouts, with a code sheet that shows the signature of send. A conveyor belt carries the pages across the bridge one by one as neat index cards, through an inspection arch at mid-span that checks each card against the code, and under a drop gate into a card catalog on the right bank, where the cards are filed into drawers with glowing label plates under a lit PUBLISH lamp. An agent terminal beside the catalog pulls the sending-notifications card and shows docs/guides/sending-notifications.md line 8. When the code changes, the arch raises an amber flag, the card for the guide turns amber, the gate drops onto the belt and the belt holds, and the lamp goes out: one CHANGED_REFERENCE finding blocks publication until the guide is fixed.";
 const svg = k
   .figureSvg({ width: WIDE.w, height: WIDE.h, label: LABEL_TEXT, body: [...back, ...backItems, cardsSvg, ...frontItems, curtainSvg, feedPage] })
   .replace(`viewBox="0 0 ${WIDE.w} ${WIDE.h}"`, `viewBox="${WIDE.x} ${WIDE.y} ${WIDE.w} ${WIDE.h}"`);
@@ -841,10 +863,10 @@ const DATA = {
   start: verdict(initial()),
   frames: { wide: WIDE, crop: CROP },
   hots: HOTS,
-  belt: { x0: BELT.x0, x1: BELT.x1, cleat: CLEAT, spawn: HOOD.x0 + 4, slot: SLOT.x + CARD.l / 2 + 1, arch: ARCH.x, stop: STOP_X, pitch: 54, speed: 21 },
+  belt: { x0: BELT.x0, x1: BELT.x1, cleat: CLEAT, spawn: HOOD.x0 + 4, slot: SLOT.x + CARD.l / 2 + 1, arch: ARCH.x, stop: STOP_X, half: CARD.l / 2, pitch: 54, speed: 21 },
   cards: CARD_COUNT,
   drawer: { travel: TRAVEL, lift: LIFT },
-  boom: { pivot: BARRIER.pivot, ...BARRIER.arm, light: G.lightOf(P), view: V, bands: [0, 0.2, 0.42, 0.62] },
+  gate: { rise: GATE.panel.rise, x0: GATE_PANEL.x0, x1: GATE_PANEL.x1 },
   flag: { rise: FLAG.rise },
   feed: { sink: 12, axis: G.unit3([-FEED.lean, 0, 1]) },
   labels: DRAWERS.length,
@@ -901,4 +923,4 @@ if (previewAt > 0) {
 }
 const solids = R.solids.length;
 console.log("wrote", OUT.replace(ROOT + "/", ""), `${(page(null).length / 1024).toFixed(0)} KB`, `${R.items.length} items`, `${solids} recorded solids`, `scale ${KS.toFixed(3)}`, `wide ${WIDE.w}x${WIDE.h}`, `crop ${CROP.w}x${CROP.h}`);
-A.auditOrExit(R, P, { cover: ["cab.guide", "arch.flag", "barrier.boom"] });
+A.auditOrExit(R, P, { cover: ["cab.guide", "arch.flag", "gate.panel"] });
