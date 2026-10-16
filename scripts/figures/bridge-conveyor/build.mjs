@@ -1,6 +1,6 @@
 // Builds apps/docs/public/figures/bridge-conveyor.html: an isometric bridge with a conveyor that carries
 // loose pages across a river as neat index cards and files them into a card catalog (the doc-bridge
-// index), with an inspection arch, a drop gate and a PUBLISH lamp that stand for the opt-in publication
+// index), with an inspection arch, a drawbridge leaf and a PUBLISH lamp that stand for the opt-in publication
 // gate. Drawn with the "anatomy" figure kit (MIT). The kit is not vendored here: point ANATOMY_DIR at a
 // checkout of the skill (default: ~/.claude/skills/anatomy). The page it writes is self-contained: no
 // network, no third-party scripts.
@@ -23,6 +23,7 @@ const G = await load("kit/lathe.mjs");
 const A = await load("kit/audit.mjs");
 const { kitScript } = await load("scripts/inline-kit.mjs");
 const { MODEL, verdict, initial } = await import(pathToFileURL(join(HERE, "model.mjs")).href);
+const { leafSvg, leafPose } = await import(pathToFileURL(join(HERE, "leaf.mjs")).href);
 
 const W = 1200;
 const H = 500;
@@ -43,7 +44,14 @@ const WATER_TOP = 2.5;
 const DECK = { x: -112, y: -22, w: 224, d: 44, r: 0.5, z0: 24 };
 const GIRDER = { z0: 18, y: 18, t: 4 };
 const PIERS = [-44, 44];
-const RAIL = { y: 20, z0: BANK_TOP, z1: 38.6, posts: [-96, -80, -64, -48, -32, -16, 16, 32, 48, 64, 80, 96], newel: 110 };
+// The drawbridge leaf: the last span, from the hinge on the second pier to just short of the right bank. It
+// turns about a world-y axis at belt height, so the belt and rails on it swing clear of the fixed belt, and
+// its end stays inside the bank's reach at every angle (the lowest corner sweeps a circle about the axis).
+const HINGE = { x: 50, z: 37, gap: 0.2, end: 108, block: { x0: 44, x1: 56, y0: 22.4, y1: 27.2, z1: 41.2 } };
+const LEAF_X0 = HINGE.x + HINGE.gap;
+const LEAF_RAISED = (65 * Math.PI) / 180;
+const swing = ([x, y, z], t) => [HINGE.x + (x - HINGE.x) * Math.cos(t) - (z - HINGE.z) * Math.sin(t), y, HINGE.z + (x - HINGE.x) * Math.sin(t) + (z - HINGE.z) * Math.cos(t)];
+const RAIL = { y: 20, z0: BANK_TOP, z1: 38.6, posts: [-96, -80, -64, -48, -32, -16, 16, 32], newels: [-110, 40], leafPosts: [62, 78, 94] };
 // The cabinet first: the belt ends at the feed slot in its upstream side.
 const CAB = { x0: 145, x1: 210, y0: -32, y1: 6, z0: BANK_TOP, z1: 92 };
 const FRONT_Y = CAB.y1;
@@ -51,15 +59,15 @@ const FRONT_Y = CAB.y1;
 const BELT = { x0: -168, x1: CAB.x0 - 8, half: 7.6, z0: 35.6, top: 37 };
 const STRINGER = { z0: 32, z1: 37.6, t: 2 };
 const DRUM_R = BELT.top - 34.2;
-const STANDS = [-160, -122, -84, -46, -8, 30, 68, 130];
+// Fixed stands carry the belt before the hinge and over the bank; the leaf carries its own (LEAF_STANDS).
+const STANDS = [-160, -122, -84, -46, -8, 30, 120, 132];
+const LEAF_STANDS = [68, 98];
+const BELT_A_END = HINGE.x - 0.6; // the fixed belt ends short of the hinge, the bank belt starts past the leaf
+const BELT_C_START = HINGE.end + 0.6;
 const HOOD = { x0: -176, x1: -152, y: 12, z0: STRINGER.z1, z1: 54 };
 const HOPPER = { x0: -172, x1: -156, y: 9, z0: HOOD.z1, z1: 63 };
 // The inspection arch at mid-span: a portal over the belt with a scanner under its beam.
 const ARCH = { x: 0, post: { w: 10, d: 4.5, y: 12 }, z1: 61, beam: { w: 26, y: 18, z1: 71 } };
-// The drop gate at the entrance to the agent bank: a frame of two posts and a lintel across the belt, and a
-// panel that hangs inside the lintel while publication is open and slides down onto the belt when it is blocked.
-const GATE = { x: 92, post: { w: 8, y0: 11, y1: 16 }, lintel: { z0: 54, z1: 64 }, panel: { t: 5, h: 12, rise: 14 } };
-const GATE_PANEL = { x0: GATE.x - GATE.panel.t / 2, x1: GATE.x + GATE.panel.t / 2, y: GATE.post.y0, z0: STRINGER.z1, z1: STRINGER.z1 + GATE.panel.h };
 const LID = { z0: CAB.z1, z1: CAB.z1 + 3.6, grow: 2.4 };
 const GRID = { x0: 148, z1: 89, cell: { w: 18, h: 15 }, gap: { x: 2.5, z: 2.5 } };
 const PROUD = 1.6;
@@ -77,7 +85,8 @@ const LAMP = { x: 155, y: -8, base: 4.6, collar: 3, globe: 4.2 };
 const TERM = { x0: 214, x1: 246, y0: -16, y1: 4, z0: BANK_TOP, z1: 60 };
 const SIGN = { x0: -228, x1: -186, y: 47, z0: BANK_TOP + 6, z1: BANK_TOP + 22, t: 1.4 };
 const CARD = { l: 16, w: 11, t: 0.8 };
-const STOP_X = GATE_PANEL.x0 - 3 - CARD.l / 2; // the centre of a card held at the gate
+const STOP_X = HINGE.x - 4 - CARD.l / 2; // the centre of a card held on the deck just before the hinge
+const LEAF_TIP = swing([HINGE.end, 0, HINGE.block.z1], LEAF_RAISED);
 
 const P = k.fitProjection(
   [
@@ -85,7 +94,7 @@ const P = k.fitProjection(
     [CAB.x0 - LID.grow, CAB.y0 - LID.grow, LID.z1 + 12],
     [CAB.x1 + LID.grow, CAB.y1 + LID.grow, LID.z1],
     [ARCH.x, 0, ARCH.beam.z1 + 12],
-    [GATE.x, 0, GATE.lintel.z1 + 12],
+    [LEAF_TIP[0], 0, LEAF_TIP[2] + 4],
   ],
   W,
   H,
@@ -209,64 +218,73 @@ for (const [side, y0] of [["far", -DECK.d / 2], ["near", GIRDER.y]]) {
   const y1 = y0 + GIRDER.t;
   const face = y1;
   const stiff = [];
-  for (let x = -104; x <= 104; x += 16) stiff.push(k.segment([x, face, GIRDER.z0], [x, face, DECK.z0], P));
+  for (let x = -104; x <= 40; x += 16) stiff.push(k.segment([x, face, GIRDER.z0], [x, face, DECK.z0], P));
   const rivets = [];
-  for (let x = -108; x <= 108; x += 4) rivets.push(at([x, face, DECK.z0 - 1.2]));
-  box(`girder.${side}`, [DECK.x, y0, GIRDER.z0], [DECK.x + DECK.w, y1, DECK.z0], {}, {
+  for (let x = -108; x <= 46; x += 4) rivets.push(at([x, face, DECK.z0 - 1.2]));
+  box(`girder.${side}`, [DECK.x, y0, GIRDER.z0], [HINGE.x, y1, DECK.z0], {}, {
     r: 0.3,
     steps: 2,
     inner: (p) => sideSeam(p, GIRDER.z0 + 1.4, 2) + Ln(stiff.join(""), { tone: "faint" }),
     extra: side === "near" ? Dots(rivets, { size: 0.3, tone: "lo" }) : "",
   });
 }
-box("deck", [DECK.x, DECK.y, DECK.z0], [DECK.x + DECK.w, DECK.y + DECK.d, BANK_TOP], {}, {
+box("deck", [DECK.x, DECK.y, DECK.z0], [HINGE.x, DECK.y + DECK.d, BANK_TOP], {}, {
   r: 0.5,
   steps: 2,
   bevel: 0.5,
   inner: (p) => sideSeam(p, DECK.z0 + 3, 2),
   // Deck plates: joints across the deck, edge to edge, and a kerb line along each side.
-  extra: Ln([-80, -48, -16, 16, 48, 80].map((x) => k.lineOnTop([x, DECK.y], [x, DECK.y + DECK.d], BANK_TOP, P)).join(""), { tone: "faint" }),
+  extra: Ln([-80, -48, -16, 16, 48].map((x) => k.lineOnTop([x, DECK.y], [x, DECK.y + DECK.d], BANK_TOP, P)).join(""), { tone: "faint" }),
 });
 for (const [side, sy] of [["far", -RAIL.y], ["near", RAIL.y]]) {
   const front = side === "near";
   for (const x of RAIL.posts) post(`rail.${side}.post${x}`, x, sy, 0.9, RAIL.z0, RAIL.z1, { tone: "mid" }, { steps: 14, front });
-  for (const x of [-RAIL.newel, RAIL.newel]) {
+  for (const x of RAIL.newels) {
     box(`rail.${side}.newel${x}`, [x - 1.6, sy - 1.6, RAIL.z0], [x + 1.6, sy + 1.6, RAIL.z1 + 2.6], {}, { r: 0.4, bevel: 0.3, front, extra: screwDots([[x, sy]], RAIL.z1 + 2.6, 0.4) });
   }
-  box(`rail.${side}.top`, [-RAIL.newel + 1.6, sy - 1, RAIL.z1], [RAIL.newel - 1.6, sy + 1, RAIL.z1 + 1.4], { tone: "hi" }, { r: 0.4, front });
+  box(`rail.${side}.top`, [RAIL.newels[0] + 1.6, sy - 1, RAIL.z1], [RAIL.newels[1] - 1.6, sy + 1, RAIL.z1 + 1.4], { tone: "hi" }, { r: 0.4, front });
 }
 
 // ---------------------------------------------------------------- the conveyor
 for (const x of STANDS) {
   box(`belt.stand${x}`, [x - 2.5, -BELT.half - STRINGER.t - 1, BANK_TOP], [x + 2.5, BELT.half + STRINGER.t + 1, STRINGER.z0], { tone: "lo" }, { r: 0.6, extra: screwDots([[x, -BELT.half - STRINGER.t], [x, BELT.half + STRINGER.t]], STRINGER.z0, 0.36) });
 }
+// The fixed belt runs in two pieces, before the hinge (A) and over the bank (C); the leaf carries the piece
+// between them.
+const BELT_SPANS = [
+  ["a", BELT.x0, BELT_A_END],
+  ["c", BELT_C_START, BELT.x1],
+];
 for (const [side, y0] of [["far", -BELT.half - STRINGER.t], ["near", BELT.half]]) {
   const y1 = y0 + STRINGER.t;
-  const bolts = STANDS.map((x) => at([x, y1, STRINGER.z0 + 1.6]));
-  box(`belt.stringer.${side}`, [BELT.x0 - 3, y0, STRINGER.z0], [BELT.x1 + 3, y1, STRINGER.z1], {}, {
-    r: 0.4,
-    steps: 2,
-    inner: (p) => sideSeam(p, STRINGER.z1 - 1.2, 2),
-    extra: side === "near" ? Dots(bolts, { size: 0.4, tone: "mid" }) : "",
-  });
+  for (const [part, x0, x1] of BELT_SPANS) {
+    const bolts = STANDS.filter((x) => x > x0 && x < x1).map((x) => at([x, y1, STRINGER.z0 + 1.6]));
+    box(`belt.stringer.${side}.${part}`, [part === "a" ? x0 - 3 : x0, y0, STRINGER.z0], [part === "c" ? x1 + 3 : x1, y1, STRINGER.z1], {}, {
+      r: 0.4,
+      steps: 2,
+      inner: (p) => sideSeam(p, STRINGER.z1 - 1.2, 2),
+      extra: side === "near" ? Dots(bolts, { size: 0.4, tone: "mid" }) : "",
+    });
+  }
 }
-// The belt: a static slab; its cleats ride a clipped group that live code slides along x.
+// The belt: static slabs; their cleats ride a clipped group that live code slides along x.
 const CLEAT = 9;
 {
-  const top = path3([[BELT.x0, -BELT.half, BELT.top], [BELT.x1, -BELT.half, BELT.top], [BELT.x1, BELT.half, BELT.top], [BELT.x0, BELT.half, BELT.top]], true);
+  const slabs = BELT_SPANS.map(([, x0, x1]) => ({ x: x0 + (x0 === BELT.x0 ? DRUM_R : 0), y: -BELT.half, w: x1 - x0 - (x0 === BELT.x0 ? DRUM_R : 0) - (x1 === BELT.x1 ? DRUM_R : 0), d: BELT.half * 2, r: 0 }));
+  const top = slabs.map(({ x, w }) => path3([[x, -BELT.half, BELT.top], [x + w, -BELT.half, BELT.top], [x + w, BELT.half, BELT.top], [x, BELT.half, BELT.top]], true)).join("");
   const cleats = [];
   for (let x = BELT.x0 - CLEAT; x <= BELT.x1; x += CLEAT) cleats.push(k.lineOnTop([x, -BELT.half], [x, BELT.half], BELT.top, P));
   // The arch's scan line across the belt: light on the belt where the curtain meets it.
   const scan = k.lineOnTop([ARCH.x, -BELT.half], [ARCH.x, BELT.half], BELT.top, P);
-  const shape = record(A.slab({ x: BELT.x0 + DRUM_R, y: -BELT.half, w: BELT.x1 - BELT.x0 - 2 * DRUM_R, d: BELT.half * 2, r: 0 }, BELT.z0, BELT.top - BELT.z0, { name: "belt" }, 1));
+  const shapes = slabs.map((plan, index) => record(A.slab(plan, BELT.z0, BELT.top - BELT.z0, { name: `belt.${index}` }, 1)));
   put(
     "belt",
     [0, 0, (BELT.z0 + BELT.top) / 2],
-    S(k.slabOf({ x: BELT.x0 + DRUM_R, y: -BELT.half, w: BELT.x1 - BELT.x0 - 2 * DRUM_R, d: BELT.half * 2, r: 0 }, BELT.z0, BELT.top - BELT.z0, P, 1), { tone: "lo", className: "bc-belt" }) +
+    slabs.map((plan) => S(k.slabOf(plan, BELT.z0, BELT.top - BELT.z0, P, 1), { tone: "lo", className: "bc-belt" })).join("") +
       `<clipPath id="bc-belt-clip"><path d="${top}"/></clipPath>` +
       `<g clip-path="url(#bc-belt-clip)"><g data-part="cleats">${Ln(cleats.join(""), { tone: "mid", className: "bc-cleat" })}</g></g>` +
       `<path class="bc-scanline" data-part="scanline" d="${scan}"/>`,
-    [shape],
+    shapes,
   );
 }
 // End drums, on axles along y between the stringers.
@@ -394,55 +412,63 @@ globe("arch.lamp", AGLOBE_C, ALAMP.globe, ACOLLAR, "bc-alamp", true);
 // The light curtain from the scanner down to the belt, in the plane of the arch.
 const CURTAIN = path3([[ARCH.x, -BELT.half, ARCH.z1 - 3.5], [ARCH.x, BELT.half, ARCH.z1 - 3.5], [ARCH.x, BELT.half, BELT.top + 0.2], [ARCH.x, -BELT.half, BELT.top + 0.2]], true);
 
-// ---------------------------------------------------------------- the drop gate at the entrance to the agent bank
+// ---------------------------------------------------------------- the drawbridge: hinge blocks, warning lamp and the leaf
+// Two hinge blocks on the second pier flank the leaf, with a trunnion boss on the near one and an amber
+// warning lamp on top of it that lights only while the leaf is raised.
 {
-  const { x, post: gp, lintel } = GATE;
-  const x0 = x - gp.w / 2;
-  const x1 = x + gp.w / 2;
-  for (const [side, y0] of [["far", -gp.y1], ["near", gp.y0]]) {
-    const y1 = y0 + (gp.y1 - gp.y0);
-    const face = side === "near";
-    box(`gate.post.${side}`, [x0, y0, BANK_TOP + 2.4], [x1, y1, lintel.z0], {}, {
-      r: 0.6,
+  const b = HINGE.block;
+  for (const [side, y0, y1] of [["far", -b.y1, -b.y0], ["near", b.y0, b.y1]]) {
+    const near = side === "near";
+    box(`hinge.block.${side}`, [b.x0, y0, GIRDER.z0], [b.x1, y1, b.z1], {}, {
+      r: 0.8,
+      steps: 3,
       bevel: 0.4,
-      front: face,
-      inner: (p) => sideSeam(p, BANK_TOP + 6, 3),
-      extra: face ? `<g transform="${planeY(y1)}">${Ln(flat(x0 + 2, BANK_TOP + 8, x1 - 2, lintel.z0 - 8, 0.6, 3), { tone: "faint" })}</g>` : "",
-    });
-    box(`gate.foot.${side}`, [x0 - 1.5, y0 - 1, BANK_TOP], [x1 + 1.5, y1 + 1, BANK_TOP + 2.4], { tone: "lo" }, {
-      r: 0.6,
-      front: face,
-      bias: 0.2,
-      extra: screwDots([[x0 - 0.6, (y0 + y1) / 2], [x1 + 0.6, (y0 + y1) / 2]], BANK_TOP + 2.4, 0.36),
+      front: near,
+      inner: (p) => sideSeam(p, GIRDER.z0 + 5, 3),
+      extra: near ? Dots([[b.x0 + 2.2, y1, GIRDER.z0 + 4], [b.x1 - 2.2, y1, GIRDER.z0 + 4]].map(at), { size: 0.4, tone: "mid" }) : "",
     });
   }
-  box("gate.lintel", [x0, -gp.y1, lintel.z0], [x1, gp.y1, lintel.z1], {}, {
-    r: 0.8,
-    steps: 3,
-    bevel: 0.5,
-    front: true,
-    inner: (p) => sideSeam(p, lintel.z0 + 1, 3) + sideSeam(p, lintel.z1 - 1.4, 3),
-    extra: screwDots([[x0 + 1.8, -gp.y1 + 1.8], [x0 + 1.8, gp.y1 - 1.8], [x1 - 1.8, -gp.y1 + 1.8], [x1 - 1.8, gp.y1 - 1.8]], lintel.z1, 0.4),
-  });
-  // The panel is built down, on the belt's stringers between the posts; live code lifts it into the lintel.
-  // Amber hazard stripes on its top and upstream face show only while it is down.
-  const pn = GATE_PANEL;
-  const plan = { x: pn.x0, y: -pn.y, w: pn.x1 - pn.x0, d: pn.y * 2, r: 0.4 };
-  const stripes = [];
-  const bands = [];
-  for (let y = -pn.y; y < pn.y - 4; y += 5.5) {
-    stripes.push(path3([[pn.x0, y, pn.z1], [pn.x1, y + 1.5, pn.z1], [pn.x1, y + 4.25, pn.z1], [pn.x0, y + 2.75, pn.z1]], true));
-  }
-  for (let y = -pn.y - 4; y < pn.y; y += 5.5) bands.push(`M${r2(y)} ${-pn.z0}L${r2(y + 2.75)} ${-pn.z0}L${r2(y + 6.75)} ${-pn.z1}L${r2(y + 4)} ${-pn.z1}Z`);
-  const faceRect = flat(-pn.y, pn.z0, pn.y, pn.z1, 0, 1);
-  const hazard =
-    `<g data-part="gate-hazard" style="opacity:0">` +
-    `<path class="bc-hazard" d="${stripes.join("")}"/>` +
-    `<path class="bc-hazard-edge" d="${path3([[pn.x0, -pn.y, pn.z1], [pn.x1, -pn.y, pn.z1], [pn.x1, pn.y, pn.z1], [pn.x0, pn.y, pn.z1]], true)}"/>` +
-    `<g transform="${planeX(pn.x0)}"><clipPath id="bc-gate-clip"><path d="${faceRect}"/></clipPath><g clip-path="url(#bc-gate-clip)"><path class="bc-hazard" d="${bands.join("")}"/></g><path class="bc-hazard-edge" d="${faceRect}"/></g>` +
-    `</g>`;
-  const shape = record(A.slab(plan, pn.z0, pn.z1 - pn.z0, { name: "gate.panel" }, 2));
-  put("gate.panel", [x, 0, (pn.z0 + pn.z1) / 2], `<g data-part="gate">${S(k.slabOf(plan, pn.z0, pn.z1 - pn.z0, P, 2, 0.3), { tone: "hi" })}${hazard}</g>`, [shape]);
+  const axle = G.frameOf([HINGE.x, 0, HINGE.z], [0, 1, 0], [1, 0, 0], [0, 0, 1]);
+  turned("hinge.boss", axle, b.y1, b.y1 + 1.8, 3.4, { tone: "hi" }, { front: true });
+  const lamp = { x: HINGE.x, y: (b.y0 + b.y1) / 2, base: 2.3, collar: 1.8, globe: 2.6 };
+  post("hinge.lamp.base", lamp.x, lamp.y, lamp.base, b.z1, b.z1 + 1.2, { tone: "lo" }, { steps: 24, front: true });
+  const hcollar = post("hinge.lamp.collar", lamp.x, lamp.y, lamp.collar, b.z1 + 1.2, b.z1 + 2.4, { tone: "mid" }, { steps: 20, front: true });
+  globe("hinge.lamp", [lamp.x, lamp.y, b.z1 + 2.4 + Math.sqrt(lamp.globe ** 2 - lamp.collar ** 2)], lamp.globe, hcollar, "bc-hlamp", true);
+}
+
+// The leaf, in its down pose: deck slab and girders, rails, the belt on its own stands and stringers, and amber
+// bands on its free end. leaf.mjs turns it about the hinge; the same markup is drawn here and rebuilt per frame.
+const LEAF = { hinge: { x: HINGE.x, z: HINGE.z }, hazard: { end: HINGE.end, y: DECK.d / 2, z0: DECK.z0, z1: BANK_TOP, band: 5.5, reach: 7 }, parts: [] };
+{
+  const L0 = LEAF_X0;
+  const L1 = HINGE.end;
+  const shapes = { back: [], front: [] };
+  const part = (name, layer, min, max, style = {}) => {
+    LEAF.parts.push({ kind: "box", layer, min, max, ...style });
+    shapes[layer].push(record(A.box(min, max, { name })));
+  };
+  const standHalf = BELT.half + STRINGER.t + 1;
+  part("leaf.girder.far", "back", [L0, -DECK.d / 2, GIRDER.z0], [L1, -DECK.d / 2 + GIRDER.t, DECK.z0]);
+  part("leaf.deck", "back", [L0, DECK.y, DECK.z0], [L1, DECK.y + DECK.d, BANK_TOP]);
+  LEAF.parts.push({ kind: "lines", layer: "back", lines: [[[80, DECK.y, BANK_TOP], [80, DECK.y + DECK.d, BANK_TOP]]], tone: "faint" });
+  LEAF.parts.push({ kind: "hazard", layer: "back" });
+  const rail = (side, sy, layer) => {
+    for (const x of RAIL.leafPosts) part(`leaf.rail.${side}.post${x}`, layer, [x - 0.9, sy - 0.9, RAIL.z0], [x + 0.9, sy + 0.9, RAIL.z1]);
+    for (const [i, x] of [L0 + 2.4, L1 - 2.4].entries()) part(`leaf.rail.${side}.newel${i}`, layer, [x - 1.6, sy - 1.6, RAIL.z0], [x + 1.6, sy + 1.6, RAIL.z1 + 2.6]);
+    part(`leaf.rail.${side}.top`, layer, [L0 + 4, sy - 1, RAIL.z1], [L1 - 4, sy + 1, RAIL.z1 + 1.4], { tone: "hi" });
+  };
+  rail("far", -RAIL.y, "back");
+  for (const x of LEAF_STANDS) part(`leaf.stand${x}`, "back", [x - 2.5, -standHalf, BANK_TOP], [x + 2.5, standHalf, STRINGER.z0], { tone: "lo" });
+  part("leaf.stringer.far", "back", [L0, -BELT.half - STRINGER.t, STRINGER.z0], [L1, -BELT.half, STRINGER.z1]);
+  part("leaf.belt", "back", [L0, -BELT.half, BELT.z0], [L1, BELT.half, BELT.top], { tone: "lo", className: "bc-belt" });
+  LEAF.parts.push({ kind: "cleats", layer: "back", origin: BELT.x0 - CLEAT, x0: L0, x1: L1, step: CLEAT, half: BELT.half, top: BELT.top });
+  part("leaf.stringer.near", "back", [L0, BELT.half, STRINGER.z0], [L1, BELT.half + STRINGER.t, STRINGER.z1]);
+  part("leaf.girder.near", "back", [L0, GIRDER.y, GIRDER.z0], [L1, GIRDER.y + GIRDER.t, DECK.z0]);
+  rail("near", RAIL.y, "front");
+  const hazardOff = (svg) => svg.replace('data-part="leaf-hazard"', 'data-part="leaf-hazard" style="opacity:0"');
+  const centre = (L0 + L1) / 2;
+  put("leaf.back", [centre, 0, 27], `<g data-part="leaf-back">${hazardOff(leafSvg(LEAF, 0, P, "back"))}</g>`, shapes.back);
+  put("leaf.front", [centre, RAIL.y, 34], `<g data-part="leaf-front">${leafSvg(LEAF, 0, P, "front")}</g>`, shapes.front, { front: true });
 }
 
 // ---------------------------------------------------------------- the catalog on the right bank
@@ -789,7 +815,10 @@ function beltCard() {
     `</g>`
   );
 }
-const CARD_COUNT = 7;
+// Cards are spaced wider than the leaf and a card together (leaf 58 + card 16), so a card held at the hinge
+// always has the leaf clear ahead of it: nothing is ever on the leaf while it is raised.
+const CARD_PITCH = 84;
+const CARD_COUNT = 4;
 const trackClip = hull([BELT.x0 - 40, -CARD.w, BELT.top - 0.2], [SLOT.x, CARD.w, BELT.top + CARD.t + 0.6]);
 const cardsSvg =
   `<clipPath id="bc-track-clip"><path d="${trackClip}"/></clipPath>` +
@@ -830,8 +859,8 @@ function frameAround(box, aspect, fill) {
   return { x: Math.round((box.x0 + box.x1) / 2 - vw / 2), y: Math.round((box.y0 + box.y1) / 2 - vh / 2), w: Math.round(vw), h: Math.round(vh) };
 }
 const WIDE = frameAround(ink, 2.4, 0.96);
-// The phone crop: the bridge span from the first pier to the gate, the arch at its heart.
-const cropPoints = [[-60, -24, 0], [-60, 30, 0], [118, -24, 0], [118, 30, 0], [0, 0, ARCH.beam.z1 + 14], [GATE.x, 0, GATE.lintel.z1 + 10], [-60, 30, -6]].map(at);
+// The phone crop: the bridge span from the first pier to the bank, the arch at its heart, the held card and the raised leaf.
+const cropPoints = [[-60, -24, 0], [-60, 30, 0], [118, -24, 0], [118, 30, 0], [0, 0, ARCH.beam.z1 + 14], [LEAF_TIP[0], 0, LEAF_TIP[2] + 6], [-60, 30, -6]].map(at);
 const CROP = frameAround({ x0: Math.min(...cropPoints.map((p) => p[0])), x1: Math.max(...cropPoints.map((p) => p[0])), y0: Math.min(...cropPoints.map((p) => p[1])), y1: Math.max(...cropPoints.map((p) => p[1])) }, 4 / 3, 0.98);
 
 // Hit areas for the in-figure buttons, in view-box units (live code turns them into percentages per frame).
@@ -853,7 +882,7 @@ const HOTS = {
 };
 
 const LABEL_TEXT =
-  "An isometric bridge over a river. On the left bank lies a messy pile of loose pages, markdown files and code printouts, with a code sheet that shows the signature of send. A conveyor belt carries the pages across the bridge one by one as neat index cards, through an inspection arch at mid-span that checks each card against the code, and under a drop gate into a card catalog on the right bank, where the cards are filed into drawers with glowing label plates under a lit PUBLISH lamp. An agent terminal beside the catalog pulls the sending-notifications card and shows docs/guides/sending-notifications.md line 8. When the code changes, the arch raises an amber flag, the card for the guide turns amber, the gate drops onto the belt and the belt holds, and the lamp goes out: one CHANGED_REFERENCE finding blocks publication until the guide is fixed.";
+  "An isometric bridge over a river. On the left bank lies a messy pile of loose pages, markdown files and code printouts, with a code sheet that shows the signature of send. A conveyor belt carries the pages across the bridge one by one as neat index cards, through an inspection arch at mid-span that checks each card against the code, and over the last span of the bridge, a drawbridge leaf, into a card catalog on the right bank, where the cards are filed into drawers with glowing label plates under a lit PUBLISH lamp. An agent terminal beside the catalog pulls the sending-notifications card and shows docs/guides/sending-notifications.md line 8. When the code changes, the arch raises an amber flag, the card for the guide turns amber, the drawbridge rises on its hinge with an amber warning lamp lit and amber bands on its end, the belt holds the amber card just before the hinge, and the PUBLISH lamp goes out: one CHANGED_REFERENCE finding blocks publication until the guide is fixed, and then the drawbridge lowers.";
 const svg = k
   .figureSvg({ width: WIDE.w, height: WIDE.h, label: LABEL_TEXT, body: [...back, ...backItems, cardsSvg, ...frontItems, curtainSvg, feedPage] })
   .replace(`viewBox="0 0 ${WIDE.w} ${WIDE.h}"`, `viewBox="${WIDE.x} ${WIDE.y} ${WIDE.w} ${WIDE.h}"`);
@@ -864,10 +893,10 @@ const DATA = {
   start: verdict(initial()),
   frames: { wide: WIDE, crop: CROP },
   hots: HOTS,
-  belt: { x0: BELT.x0, x1: BELT.x1, cleat: CLEAT, spawn: HOOD.x0 + 4, slot: SLOT.x + CARD.l / 2 + 1, arch: ARCH.x, stop: STOP_X, half: CARD.l / 2, pitch: 54, speed: 21 },
+  belt: { x0: BELT.x0, x1: BELT.x1, cleat: CLEAT, spawn: HOOD.x0 + 4, slot: SLOT.x + CARD.l / 2 + 1, arch: ARCH.x, stop: STOP_X, half: CARD.l / 2, pitch: CARD_PITCH, speed: 21 },
   cards: CARD_COUNT,
   drawer: { travel: TRAVEL, lift: LIFT },
-  gate: { rise: GATE.panel.rise, x0: GATE_PANEL.x0, x1: GATE_PANEL.x1 },
+  leaf: { spec: LEAF, raised: LEAF_RAISED, x0: LEAF_X0, x1: HINGE.end },
   flag: { rise: FLAG.rise },
   feed: { sink: 12, axis: G.unit3([-FEED.lean, 0, 1]) },
   labels: DRAWERS.length,
@@ -875,7 +904,8 @@ const DATA = {
 
 const CSS = readFileSync(join(HERE, "figure.css"), "utf8");
 const MODEL_SRC = readFileSync(join(HERE, "model.mjs"), "utf8").replace(/^export /gm, "");
-const LIVE = MODEL_SRC + readFileSync(join(HERE, "live.js"), "utf8").replace("__DATA__", JSON.stringify(DATA));
+const LEAF_SRC = readFileSync(join(HERE, "leaf.mjs"), "utf8").replace(/^export /gm, "");
+const LIVE = MODEL_SRC + LEAF_SRC + readFileSync(join(HERE, "live.js"), "utf8").replace("__DATA__", JSON.stringify(DATA));
 const hot = (key, label) => `<button type="button" class="bc-hot" data-hot="${key}" aria-label="${label}"></button>`;
 const body = `
 <figure class="iso-figure bc-figure">
@@ -898,7 +928,7 @@ const body = `
     <div class="bc-bottom">
       <div class="bc-left">
         <button type="button" class="bc-pause" data-pause aria-pressed="false"><span class="bc-pause-icon" aria-hidden="true"></span><span data-pause-label>Pause</span></button>
-        <span class="bc-corner" data-corner="hint"><span class="bc-wide-only">Click the code · fix the amber card</span><span class="bc-crop-only">Tap the arch · tap the amber card</span></span>
+        <span class="bc-corner" data-corner="hint"><span class="bc-wide-only">Click the code · fix the amber card to lower the drawbridge</span><span class="bc-crop-only">Tap the arch · tap the amber card</span></span>
       </div>
       <span class="bc-corner" data-corner="readout" data-readout>${DATA.start.readout}</span>
     </div>
@@ -924,4 +954,41 @@ if (previewAt > 0) {
 }
 const solids = R.solids.length;
 console.log("wrote", OUT.replace(ROOT + "/", ""), `${(page(null).length / 1024).toFixed(0)} KB`, `${R.items.length} items`, `${solids} recorded solids`, `scale ${KS.toFixed(3)}`, `wide ${WIDE.w}x${WIDE.h}`, `crop ${CROP.w}x${CROP.h}`);
-A.auditOrExit(R, P, { cover: ["cab.guide", "arch.flag", "gate.panel"] });
+// The leaf moves, so the recorder holds its down pose only: sweep it through every angle up to the raised
+// pose against everything else that is fixed, and fail on any solid it passes through.
+if (process.argv.includes("--audit")) {
+  const leafNames = new Set(R.solids.filter((shape) => shape.name?.startsWith("leaf.")).map((shape) => shape.name));
+  const fixed = R.solids.filter((shape) => !leafNames.has(shape.name));
+  const down = R.solids.filter((shape) => leafNames.has(shape.name));
+  const worst = new Map();
+  const step = 0.5;
+  const sunk = 0.5;
+  for (let degrees = 1; degrees <= 65; degrees += 1) {
+    const t = (degrees * Math.PI) / 180;
+    const axes = [[Math.cos(t), 0, Math.sin(t)], [0, 1, 0], [-Math.sin(t), 0, Math.cos(t)]];
+    for (const shape of down) {
+      const turned = A.orientedBox(swing(shape.o, t), axes, shape.half, { name: shape.name });
+      const bounds = A.boundsOf(turned);
+      for (const other of fixed) {
+        const ob = A.boundsOf(other);
+        const lo = [0, 1, 2].map((i) => Math.max(bounds.min[i], ob.min[i]));
+        const hi = [0, 1, 2].map((i) => Math.min(bounds.max[i], ob.max[i]));
+        if (lo.some((v, i) => v > hi[i] - sunk)) continue;
+        let depth = 0;
+        for (let x = lo[0]; x <= hi[0]; x += step)
+          for (let y = lo[1]; y <= hi[1]; y += step)
+            for (let z = lo[2]; z <= hi[2]; z += step) {
+              const p = [x, y, z];
+              depth = Math.max(depth, Math.min(-A.sdf(turned, p), -A.sdf(other, p)));
+            }
+        if (depth <= sunk) continue;
+        const key = `${shape.name}|${other.name}`;
+        if (!worst.has(key) || worst.get(key).depth < depth) worst.set(key, { leaf: shape.name, other: other.name, depth, degrees });
+      }
+    }
+  }
+  console.log(`leaf sweep: ${worst.size} problem${worst.size === 1 ? "" : "s"} (1 to 65 degrees against ${fixed.length} fixed solids)`);
+  for (const hit of worst.values()) console.log(`  solid   ${hit.leaf}  ×  ${hit.other}   sunk ${hit.depth.toFixed(2)} deep at ${hit.degrees}°`);
+  if (worst.size) process.exitCode = 1;
+}
+A.auditOrExit(R, P, { cover: ["cab.guide", "arch.flag"] });

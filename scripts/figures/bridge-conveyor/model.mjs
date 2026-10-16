@@ -2,10 +2,10 @@
 //
 // A conveyor carries loose pages across a bridge as neat index cards and files them into a card
 // catalog: the doc-bridge index. An inspection arch at mid-span checks each card against the code.
-// The barrier at the far end and the PUBLISH lamp are the opt-in `reference-findings` gate
+// The drawbridge leaf on the last span and the PUBLISH lamp are the opt-in `reference-findings` gate
 // (docs/guides/publication-gate.md, ADR 0025): while a CHANGED_REFERENCE finding is pending,
-// `ak-docs index` refuses to write llms.txt, the index and the capabilities file, so the barrier is
-// down, the belt holds and the lamp is out.
+// `ak-docs index` refuses to write llms.txt, the index and the capabilities file, so the drawbridge is
+// raised (`barrier: "down"` in the verdict), the belt holds and the lamp is out.
 //
 // The names and values come from the small demo repository used in talks: the guide
 // docs/guides/sending-notifications.md cites `send` on line 8, and the code change is

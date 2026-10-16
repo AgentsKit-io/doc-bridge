@@ -27,8 +27,9 @@ const scanline = q('[data-part="scanline"]');
 const curtain = q('[data-part="curtain"]');
 const cards = [...svg.querySelectorAll("[data-card]")];
 const cardBodies = cards.map((el) => el.querySelector(".bc-card"));
-const gateEl = q('[data-part="gate"]');
-const gateHazard = q('[data-part="gate-hazard"]');
+const leafBack = q('[data-part="leaf-back"]');
+const leafFront = q('[data-part="leaf-front"]');
+const hingeLampEls = ["hinge.lamp", "hinge.lamp-core"].map((name) => q(`[data-part="${name}"]`));
 const flag = q('[data-part="flag"]');
 const feed = q('[data-part="feed"]');
 const screenGlow = q('[data-part="screen-glow"]');
@@ -96,7 +97,7 @@ const flashes = new Map(); // label index -> seconds left
 const posOf = (i, at = u) => B.spawn + ((((at - i * B.pitch) % CYCLE) + CYCLE) % CYCLE);
 
 function heldTarget() {
-  // The card that will stop in front of the gate: the nearest one upstream of the stop point.
+  // The card that will stop on the deck before the hinge: the nearest one upstream of the stop point.
   let best = -1;
   let bestS = -Infinity;
   for (let i = 0; i < N; i++) {
@@ -114,7 +115,7 @@ function targets() {
     drawer: open ? 1 : 0,
     lift: open && motion.drawer > 0.82 ? 1 : 0,
     lamp: v.published ? 1 : 0,
-    bar: v.published || underGate() ? 0 : 1,
+    bar: v.published || onLeaf() ? 0 : 1,
     flag: flagged ? 1 : 0,
   };
 }
@@ -149,9 +150,9 @@ function setState(next, { announce = false } = {}) {
   run();
 }
 function describe() {
-  if (v.phase === "drift") return `Code changed to ${VERSIONS[st.code]}. The guide still cites ${VERSIONS[st.doc]}: one ${M.finding} finding. The arch flags the guide's card, the gate drops onto the belt and publication is blocked.`;
+  if (v.phase === "drift") return `Code changed to ${VERSIONS[st.code]}. The guide still cites ${VERSIONS[st.doc]}: one ${M.finding} finding. The arch flags the guide's card, the drawbridge rises and publication is blocked.`;
   if (v.delivered) return `The agent asked about send. The catalog gave it ${SLIP}.`;
-  if (v.phase === "fixed") return `The guide now cites ${VERSIONS[st.doc]}. No findings; the gate lifts and the index is published.`;
+  if (v.phase === "fixed") return `The guide now cites ${VERSIONS[st.doc]}. No findings; the drawbridge lowers and the index is published.`;
   return "The belt files every page into the index, and the index is published.";
 }
 function showCode(index) {
@@ -178,6 +179,7 @@ const signHinge = signBox.y;
 function draw() {
   // Belt and cards.
   const c = ((u % B.cleat) + B.cleat) % B.cleat;
+  drawLeaf(motion.bar, c);
   cleats.setAttribute("transform", `translate(${(X1[0] * c).toFixed(2)} ${(X1[1] * c).toFixed(2)})`);
   // The arch's scan brightens as a card passes under it.
   let pass = 0;
@@ -223,11 +225,12 @@ function draw() {
     const left = flashes.get(el.dataset.label) || 0;
     el.classList.toggle("bc-flash", left > 0);
   }
-  // Lamp, gate, flag.
+  // Lamps, flag. The hinge lamp is amber and lit only while the drawbridge is raised.
   lampEls[0].style.opacity = (0.92 * motion.lamp).toFixed(3);
   lampEls[1].style.opacity = (0.95 * motion.lamp).toFixed(3);
   lampEls[2].style.opacity = (0.55 * motion.lamp).toFixed(3);
-  drawGate(motion.bar);
+  hingeLampEls[0].style.opacity = (0.95 * smooth(motion.bar)).toFixed(3);
+  hingeLampEls[1].style.opacity = smooth(motion.bar).toFixed(3);
   const rise = (smooth(motion.flag) - 1) * DATA.flag.rise;
   flag.setAttribute("transform", `translate(${(Z1[0] * rise).toFixed(2)} ${(Z1[1] * rise).toFixed(2)})`);
   card.toggleAttribute("data-flag", flagged);
@@ -244,18 +247,26 @@ function draw() {
 }
 
 
-// ---------------------------------------------------------------- the drop gate: the panel slides along z
-// It is built down on the belt; motion.bar (0 up, 1 down) lowers it from its rest inside the lintel, and its
-// amber hazard stripes fade in as it closes.
-function drawGate(down) {
-  const lift = (1 - smooth(down)) * DATA.gate.rise;
-  gateEl.setAttribute("transform", `translate(${(Z1[0] * lift).toFixed(2)} ${(Z1[1] * lift).toFixed(2)})`);
-  gateHazard.style.opacity = smooth(down).toFixed(3);
+// ---------------------------------------------------------------- the drawbridge leaf: boxes turning about the hinge
+// leaf.mjs rebuilds the leaf's shaded boxes (back layer and the near rail in the front layer) at the angle
+// motion.bar sets (0 down and flush, 1 raised); its amber bands on the free end fade in as it rises.
+const LF = DATA.leaf;
+let leafDrawn = "";
+function drawLeaf(up, phase) {
+  const lift = smooth(up);
+  const key = `${lift.toFixed(4)}|${phase.toFixed(2)}`;
+  if (key === leafDrawn) return;
+  leafDrawn = key;
+  const theta = lift * LF.raised;
+  leafBack.innerHTML = leafSvg(LF.spec, theta, P, "back", phase);
+  leafFront.innerHTML = leafSvg(LF.spec, theta, P, "front", phase);
+  const hazard = leafBack.querySelector('[data-part="leaf-hazard"]');
+  if (hazard) hazard.style.opacity = lift.toFixed(3);
 }
-// A card under the frame holds the gate up until it has passed.
-const underGate = () => cards.some((el, i) => {
+// A card on the leaf keeps it down: it only rises once the leaf is clear.
+const onLeaf = () => cards.some((el, i) => {
   const s = posOf(i);
-  return s <= B.slot && s + B.half > DATA.gate.x0 && s - B.half < DATA.gate.x1;
+  return s <= B.slot && s + B.half > LF.x0 && s - B.half < LF.x1;
 });
 
 // ---------------------------------------------------------------- the loop
@@ -284,8 +295,8 @@ function tick(now) {
       setState(tourStep(st));
     }
   }
-  // The belt runs while publication is allowed and the gate is up; a finding holds it with the guide's
-  // card in front of the gate.
+  // The belt runs while publication is allowed; a finding holds it with the guide's card on the deck just
+  // before the hinge, and the drawbridge rises once no card is on the leaf.
   const before = u;
   if (heldCard >= 0) {
     if (v.phase === "drift") {
@@ -295,7 +306,7 @@ function tick(now) {
       if (calm) u = holdU;
       else u = Math.min(holdU, u + (beltLive() ? speed : 0) * dt);
       if (posOf(heldCard) > B.arch + 2 || calm) flagged = true;
-    } else if (motion.bar < 0.2) {
+    } else if (motion.bar < 0.04) {
       heldCard = -1;
     }
   } else if (!calm) {
