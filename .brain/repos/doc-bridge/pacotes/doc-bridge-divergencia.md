@@ -6,8 +6,8 @@ npm: "@agentskit/doc-bridge"
 visibilidade: publico
 verificado-em: 2026-10-16
 commits:
-  "doc-bridge": fd1e421
-metodo: "análise estática do código; índice doc-bridge gerado localmente e handoff `ak-docs query package doc-bridge-fixes --agent` usados como evidência de edit root, checks e relações (src/diff não tem ownership próprio); testes não executados"
+  "doc-bridge": f8824f1
+metodo: "análise estática do código; índice doc-bridge gerado localmente e handoff `ak-docs query package doc-bridge-fixes --agent` usados como evidência de edit root, checks e relações (src/diff não tem ownership próprio); testes não executados; auditado em 2026-10-16 (auditoria v2: referências e afirmações reconferidas contra o código)"
 fontes:
   - src/diff/change-set.ts
   - src/diff/version-routing.ts
@@ -95,7 +95,7 @@ expect(applied.status).toBe('in-review')
 |---|---|---|
 | Lê | Dois snapshots JSON; textos do head até 1 MB cada, só usados se o hash bate com o snapshot | `src/diff/change-set.ts:303-315` |
 | Executa | `remediationWorkflow` roda descoberta completa do head local | `src/fixes/workflow.ts:16-17` |
-| Grava | `applyRemediation` substitui arquivos de forma atômica por arquivo dentro de `allowedRoots`, depois roda `verify` | `src/fixes/regions.ts:120-136` |
+| Grava | `applyRemediation` substitui arquivos de forma atômica por arquivo dentro de `allowedRoots`, e roda `verify`; se algo falha, restaura os originais (o arquivo de backup `*.docbridge-<uuid>.original` só permanece se a própria restauração falhar) | `src/fixes/regions.ts:120-136`, `src/fixes/write.ts:10-45` |
 | Bloqueia | Edição que cruza região gerada/protegida, sobreposta, fora da raiz ou com hash de região divergente | `src/fixes/regions.ts:65-96` |
 | Env | `GITHUB_ACTIONS=true` proíbe `fix approve/apply/reject` | `src/cli/program.ts:1085` |
 | Rede (opt-in) | `fix --llm` sem `--responses` resolve o provedor de [[doc-bridge-inteligencia]] (chaves por variável de ambiente) | `src/fixes/llm-cli.ts:27-30` |

@@ -6,8 +6,8 @@ npm: "@agentskit/doc-bridge"
 visibilidade: publico
 verificado-em: 2026-10-16
 commits:
-  "doc-bridge": fd1e421
-metodo: "análise estática do código; índice doc-bridge gerado localmente usado para relações (`area:src/execution` aparece como dependência de query, mcp e fixes); nenhum backend externo foi exercitado; testes não executados"
+  "doc-bridge": f8824f1
+metodo: "análise estática do código; índice doc-bridge gerado localmente usado para relações (`area:src/execution` aparece como dependência de query, mcp e fixes); nenhum backend externo foi exercitado; testes não executados; auditado em 2026-10-16 (auditoria v2: referências e afirmações reconferidas contra o código)"
 fontes:
   - src/storage/contract.ts
   - src/storage/local.ts

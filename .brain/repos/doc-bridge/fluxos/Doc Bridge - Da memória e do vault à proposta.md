@@ -5,8 +5,8 @@ camada: ferramenta
 visibilidade: publico
 verificado-em: 2026-10-16
 commits:
-  "doc-bridge": fd1e421
-metodo: "análise estática do código e dos ADRs 0019 e 0020; nada foi executado"
+  "doc-bridge": f8824f1
+metodo: "análise estática do código e dos ADRs 0019 e 0020; nada foi executado; auditado em 2026-10-16 (auditoria v2: referências e afirmações reconferidas contra o código)"
 fontes:
   - src/memory/ingest.ts
   - src/memory/pipeline.ts

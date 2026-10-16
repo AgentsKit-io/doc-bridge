@@ -5,8 +5,8 @@ camada: ferramenta
 visibilidade: publico
 verificado-em: 2026-10-16
 commits:
-  "doc-bridge": fd1e421
-metodo: "derivado de AGENTS.md, CONTRIBUTING.md, package.json, doc-bridge.config.json e ci.yml; `pnpm install` e `node bin/ak-docs.js index`/`query` executados localmente; a suíte de testes não foi executada"
+  "doc-bridge": f8824f1
+metodo: "derivado de AGENTS.md, CONTRIBUTING.md, package.json, doc-bridge.config.json e ci.yml; `pnpm install` e `node bin/ak-docs.js index`/`query` executados localmente; a suíte de testes não foi executada; auditado em 2026-10-16 (auditoria v2: referências e afirmações reconferidas contra o código)"
 fontes:
   - AGENTS.md
   - CONTRIBUTING.md

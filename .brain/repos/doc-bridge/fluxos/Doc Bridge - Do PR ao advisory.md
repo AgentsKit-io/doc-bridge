@@ -5,8 +5,8 @@ camada: ferramenta
 visibilidade: publico
 verificado-em: 2026-10-16
 commits:
-  "doc-bridge": fd1e421
-metodo: "análise estática de action.yml, scripts/action-runner.mjs, src/cli/action.ts e ADRs 0015/0025; nenhuma Action foi executada"
+  "doc-bridge": f8824f1
+metodo: "análise estática de action.yml, scripts/action-runner.mjs, src/cli/action.ts e ADRs 0015/0025; nenhuma Action foi executada; auditado em 2026-10-16 (auditoria v2: referências e afirmações reconferidas contra o código)"
 fontes:
   - action.yml
   - scripts/action-runner.mjs

@@ -5,8 +5,8 @@ camada: ferramenta
 visibilidade: publico
 verificado-em: 2026-10-16
 commits:
-  "doc-bridge": fd1e421
-metodo: "leitura dos 25 arquivos em docs/adr/ e conferência estática das implementações citadas em cada nota de ADR"
+  "doc-bridge": f8824f1
+metodo: "leitura dos 25 arquivos em docs/adr/ e conferência estática das implementações citadas em cada nota de ADR; auditado em 2026-10-16 (auditoria v2: referências e afirmações reconferidas contra o código)"
 fontes:
   - docs/adr/0001-enterprise-verification-contract.md
   - docs/adr/0002-documentation-audit-boundary.md

@@ -6,8 +6,8 @@ npm: "@agentskit/doc-bridge"
 visibilidade: publico
 verificado-em: 2026-10-16
 commits:
-  "doc-bridge": fd1e421
-metodo: "análise estática do código; índice doc-bridge gerado localmente e handoffs `ak-docs query package doc-bridge-gates|doc-bridge-audit --agent` usados como evidência de edit roots, checks e relações; testes não executados"
+  "doc-bridge": f8824f1
+metodo: "análise estática do código; índice doc-bridge gerado localmente e handoffs `ak-docs query package doc-bridge-gates|doc-bridge-audit --agent` usados como evidência de edit roots, checks e relações; testes não executados; auditado em 2026-10-16 (auditoria v2: referências e afirmações reconferidas contra o código)"
 fontes:
   - src/gates/run-gates.ts
   - src/gates/reference-findings.ts
@@ -64,7 +64,7 @@ Existe para que "a documentação está boa" seja **mensurável e reprodutível 
 | `runDoctor(root, config)` | função | `DoctorReport` com nota, issues e badge | `src/doctor/run-doctor.ts:384` |
 | `checkPublicParity(options)` | função | `PublicParityReportV1` | `src/parity/check.ts:143` |
 | `evaluateRules(...)` | função | Achados de regras com severidade | `src/rules/engine.ts:136` |
-| CLI `gate run [id]`, `conformance run documentation-standard-v1`, `audit documentation`, `doctor [--badge\|--write-badge]`, `parity`, `rules run` | comando | Superfície humana/CI | `src/cli/program.ts:2080-2095` (doctor) |
+| CLI `gate run [id]`, `conformance run documentation-standard-v1`, `audit documentation`, `doctor [--badge\|--write-badge]`, `parity`, `rules run` | comando | Superfície humana/CI | `src/cli/program.ts:1980` (`gate`), `src/cli/program.ts:2008` (`conformance`), `src/cli/program.ts:1719` (`audit`), `src/cli/program.ts:1720` (`parity`), `src/cli/program.ts:2006` (`rules`), `src/cli/program.ts:2080-2095` (`doctor`) |
 
 Exemplo real (teste):
 

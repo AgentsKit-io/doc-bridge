@@ -5,8 +5,8 @@ camada: ferramenta
 visibilidade: publico
 verificado-em: 2026-10-16
 commits:
-  "doc-bridge": fd1e421
-metodo: "análise estática; fluxo reproduzido localmente com `node bin/ak-docs.js index` e `ak-docs query package doc-bridge-index --agent` neste repo"
+  "doc-bridge": f8824f1
+metodo: "análise estática; fluxo reproduzido localmente com `node bin/ak-docs.js index` e `ak-docs query package doc-bridge-index --agent` neste repo; auditado em 2026-10-16 (auditoria v2: referências e afirmações reconferidas contra o código)"
 fontes:
   - src/cli/program.ts
   - src/config/load-config.ts
@@ -38,12 +38,12 @@ Entrada: um repositório com `doc-bridge.config.json` (ou `.ts/.mjs`, lido estat
 | 3. Gate de publicação (opt-in) | Se `reference-findings` estiver selecionado e falhar, nada é gravado, salvo `--allow-pending-findings` | [[doc-bridge-gates-qualidade]] |
 | 4. Build | Corpus + ownership → `lookup`/`handoffs`; projeção de recuperação; grava índice, `llms.txt`, capabilities (`src/index-builder/build-index.ts:171-320`) | [[doc-bridge-indexacao]] |
 | 5. Frescor | Cada consulta recarrega e confere hash dos inputs, léxico e métricas; índice velho → `IndexStaleError` "Run: ak-docs index" (`src/query/load-index.ts:28-33`, `src/query/load-index.ts:73-103`) | [[doc-bridge-consulta-mcp]] |
-| 6. Resolução | `ak-docs query … --agent` ou MCP `handoff.resolve` → `runQuery` → handoff (ownership → alias → caminho) (`src/query/handoff.ts:84-90`, `src/mcp/server.ts:409-419`) | [[doc-bridge-consulta-mcp]] |
+| 6. Resolução | `ak-docs query … --agent` ou MCP `handoff.resolve` → `runQuery` → handoff (a entrada é resolvida por id da entidade → id de ownership → alias → caminho de área/pacote → qualquer caminho) (`src/query/handoff.ts:84-92`, `src/mcp/server.ts:409-419`) | [[doc-bridge-consulta-mcp]] |
 | 7. Execução das checks | Responsabilidade do consumidor (agente ou CI); o motor não executa `checks` | consumidor |
 
 Exemplo real (este repo, `ak-docs query package doc-bridge-index --agent`): `startHere: docs/agent-corpus/INDEX.md`, `editRoots: [src/index-builder]`, `checks: [pnpm test, pnpm typecheck, node bin/ak-docs.js index]` — os mesmos valores declarados em `doc-bridge.config.json:47-52`.
 
-**Erros e recuperação**: sem config → `ConfigNotFoundError` ("run ak-docs init"); sem índice → `IndexNotFoundError`; índice com hash inválido → regenerar; índice acima de `RETRIEVAL_MAX_ENTRIES` → estreitar `corpus.*.include/exclude` (`src/index-builder/build-index.ts:270-275`).
+**Erros e recuperação**: sem config → `ConfigNotFoundError` ("run ak-docs init"); sem índice → `IndexNotFoundError` (`src/query/load-index.ts:21-26`, `src/query/load-index.ts:43`); índice com hash inválido → "Run: ak-docs index" (`src/query/load-index.ts:55-56`); índice acima de `RETRIEVAL_MAX_ENTRIES` → estreitar `corpus.*.include/exclude` (`src/index-builder/build-index.ts:270-275`).
 
 > [!info]- Detalhe técnico
 > - Despacho da CLI: `src/cli/program.ts:1565-1577`.

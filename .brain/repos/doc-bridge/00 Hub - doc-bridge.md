@@ -6,8 +6,8 @@ npm: "@agentskit/doc-bridge"
 visibilidade: publico
 verificado-em: 2026-10-16
 commits:
-  "doc-bridge": fd1e421
-metodo: "análise estática do código; índice doc-bridge gerado localmente com `node bin/ak-docs.js index` (30 entidades, 640 entradas) e handoffs `ak-docs query package <id> --agent` usados como evidência de edit roots, checks e relações; testes e deploy não executados"
+  "doc-bridge": f8824f1
+metodo: "análise estática do código; índice doc-bridge gerado localmente com `node bin/ak-docs.js index` (30 entidades, 640 entradas) e handoffs `ak-docs query package <id> --agent` usados como evidência de edit roots, checks e relações; testes e deploy não executados; auditado em 2026-10-16 (auditoria v2: referências e afirmações reconferidas contra o código)"
 fontes:
   - package.json
   - pnpm-workspace.yaml

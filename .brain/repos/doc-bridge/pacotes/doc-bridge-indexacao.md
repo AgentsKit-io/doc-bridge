@@ -6,8 +6,8 @@ npm: "@agentskit/doc-bridge"
 visibilidade: publico
 verificado-em: 2026-10-16
 commits:
-  "doc-bridge": fd1e421
-metodo: "análise estática do código; índice doc-bridge gerado localmente (`node bin/ak-docs.js index`) e handoff `ak-docs query package doc-bridge-index --agent` usados como evidência de edit root, checks e relações; testes não executados"
+  "doc-bridge": f8824f1
+metodo: "análise estática do código; índice doc-bridge gerado localmente (`node bin/ak-docs.js index`) e handoff `ak-docs query package doc-bridge-index --agent` usados como evidência de edit root, checks e relações; testes não executados; auditado em 2026-10-16 (auditoria v2: referências e afirmações reconferidas contra o código)"
 fontes:
   - src/index-builder/build-index.ts
   - src/index-builder/build-handoffs.ts
@@ -60,7 +60,7 @@ Existe para que consulta, MCP, gates e diff trabalhem sobre **um artefato reprod
 | `collectPackages`, `buildLookup` | função | Pacotes + tabela de ownership/handoffs | `src/index-builder/build-handoffs.ts:54`, `src/index-builder/build-handoffs.ts:137` |
 | `contentHashForIndex`, `SEMANTIC_HASH_ALGORITHM`, `LEGACY_HASH_ALGORITHM` | função/const | Hash do índice; `sha256-semantic-v1` atual, `sha256-normalized-v1` só para migração | `src/index-builder/content-hash.ts:31-32`, `src/index-builder/content-hash.ts:67` |
 | `deriveAreas`, `DEFAULT_AREA_ROOTS` | função/const | Áreas por convenção (`src`, `lib`, `app`, `packages`, `apps`…) e ownership | `src/discovery/areas.ts:28`, `src/discovery/areas.ts:133` |
-| `extractKnowledgeEntities` | função | Seção opt-in `knowledgeEntities` (decisões, conceitos, mudanças) com histórico git limitado | `src/entities/extract.ts:222`, `src/index.ts:1127` |
+| `extractKnowledgeEntities` | função | Seção opt-in `knowledgeEntities` (decisões, conceitos, mudanças) com histórico git limitado | `src/entities/extract.ts:35`, `src/index.ts:1127` |
 | `DocBridgeIndexV1Schema`, `INDEX_SCHEMA_VERSION` | schema Zod | Contrato estrito do índice | `src/index.ts:51-61` |
 | CLI `ak-docs index [--watch] [--allow-pending-findings]`, `ak-docs discover` | comando | Superfície humana/CI | `src/cli/program.ts:1565-1577` |
 
@@ -83,7 +83,7 @@ expect(result.index.lookup?.ownership?.['os-core']?.path).toBe('packages/os-core
 | Consumidor | [[doc-bridge-divergencia]] — snapshots base/head vêm de `discoverRepository*` |
 | Consumidor | [[doc-bridge-memoria-vault]] — `exportVault` roda descoberta; o build liga memórias a entidades (`src/index-builder/build-index.ts:148-150`) |
 | Consumidor externo | [[engine-runner]] em [[00 Hub - alexandria]] (API pública) |
-| Índice doc-bridge | `area:src/index-builder` importa `src/lib` (21), `src/config` (12), `src/schemas` (12); é importado por `tests` (67), `src/cli` (16), `src/discovery` (15) |
+| Índice doc-bridge | `area:src/index-builder` importa `src/lib` (21), `src/config` (12), `src/schemas` (12); é importado por `tests` (67), `src/cli` (16), `src/discovery` (15) — contagens do índice local; recontagem de `import` estático na auditoria deu `src/lib` 21, `src/config` 12, `src/schemas` 13, `tests` 65, `src/cli` 16, `src/discovery` 15 (ordem de grandeza confirmada, ±2) |
 | Depende de | [[doc-bridge-armazenamento-servico]] (perfil e IO), [[doc-bridge-enriquecimento]] (overlay aceito) |
 | Externas | `typescript` (parser), `unified`/`remark-*`, `graphology*`, `minimatch`, `ignore`, `zod` (`package.json:134-159`) |
 

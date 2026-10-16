@@ -5,8 +5,8 @@ camada: ferramenta
 visibilidade: publico
 verificado-em: 2026-10-16
 commits:
-  "doc-bridge": fd1e421
-metodo: "análise estática de apps/docs, scripts de artefatos e workflows; o portal não foi construído nem implantado nesta verificação"
+  "doc-bridge": f8824f1
+metodo: "análise estática de apps/docs, scripts de artefatos e workflows; o portal não foi construído nem implantado nesta verificação; auditado em 2026-10-16 (auditoria v2: referências e afirmações reconferidas contra o código)"
 fontes:
   - apps/docs/next.config.mjs
   - apps/docs/source.config.ts
@@ -76,7 +76,7 @@ const answer = createDiscoveryAdapter({
 
 | Efeito | Detalhe | Evidência |
 |---|---|---|
-| Grava (build) | `apps/docs/out`, `apps/docs/public/*` (gerados, ignorados pelo git) | `.gitignore:18-19`, `wrangler.toml:9` |
+| Grava (build) | `apps/docs/out` e `apps/docs/public/*` (gerados e ignorados pelo git, exceto `apps/docs/public/figures/`, que é versionada) | `.gitignore:18-20`, `wrangler.toml:9` |
 | Env (nomes) | `NEXT_PUBLIC_SITE_URL`, `DOCS_BASE_PATH`/`NEXT_PUBLIC_BASE_PATH`, `NEXT_PUBLIC_ASK_ENDPOINT`, `NEXT_PUBLIC_WAITLIST_URL`, `NEXT_PUBLIC_AGENTSKIT_SHELL_ORIGIN`, `SOURCE_DATE_EPOCH` (build); `CLOUDFLARE_API_TOKEN`/`CLOUDFLARE_ACCOUNT_ID` no deploy manual | `apps/docs/next.config.mjs:6-18`, `apps/docs/lib/site.ts:2-5`, `apps/docs/lib/shell.ts:7`, `scripts/build-docs-artifacts.mjs:55-58`, `wrangler.toml:3` |
 | Rede (navegador) | Backend Ask quando o artefato local não responde; endpoint da lista de espera | `apps/docs/components/chat-widget.tsx:30`, `apps/docs/components/home/waitlist-form.tsx:46` |
 | Dados pessoais | O formulário envia e-mail ao endpoint configurado; destino e retenção estão fora deste repo | `apps/docs/components/home/waitlist-form.tsx:52` |
@@ -84,7 +84,7 @@ const answer = createDiscoveryAdapter({
 
 ## Como mexer (para agentes)
 
-- **Comece por** `apps/docs/app/layout.tsx`, `apps/docs/source.config.ts` e `scripts/build-docs-artifacts.mjs`. `apps/docs/AGENTS.md` é gerado pelo `next dev` e avisa que esta versão do Next difere do treinamento (`apps/docs/AGENTS.md:1-9`); o config o marca como gerado (`doc-bridge.config.json:25-29`).
+- **Comece por** `apps/docs/app/layout.tsx`, `apps/docs/source.config.ts` e `scripts/build-docs-artifacts.mjs`. `apps/docs/AGENTS.md` é um bloco `nextjs-agent-rules` que avisa que esta versão do Next difere do treinamento (`apps/docs/AGENTS.md:1-9`); o config o trata como caminho gerado (`doc-bridge.config.json:25-29`) — quem o gera não está no repo, então não edite à mão.
 - **Invariantes**: só `@agentskit/chat` 0.4.x — nunca `@agentskit/chat-protocol`/`chat-react` (`CONTRIBUTING.md:49`, `pnpm check:no-legacy-chat-imports`); domínio na raiz, sem `basePath` em produção (`apps/docs/next.config.mjs:4-6`, `.github/workflows/pages.yml:38-45`).
 - **Testes**: `tests/docs-e2e/portal.spec.ts`, `tests/docs-e2e/assembly-figure.spec.ts` (Playwright), `scripts/docs-artifacts-contract.test.mjs`, `scripts/aliases.test.mjs`, Lighthouse (`lighthouserc.json`).
 - **Validação**: `pnpm docs:typecheck && pnpm docs:build && pnpm test:docs-artifacts`; navegador: `pnpm exec playwright install --with-deps chromium && pnpm docs:e2e` (igual ao job `docs` da CI, `.github/workflows/ci.yml:95-122`).

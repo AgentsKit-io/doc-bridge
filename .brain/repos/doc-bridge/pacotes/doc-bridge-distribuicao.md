@@ -6,8 +6,8 @@ npm: "@agentskit/doc-bridge"
 visibilidade: publico
 verificado-em: 2026-10-16
 commits:
-  "doc-bridge": fd1e421
-metodo: "análise estática de action.yml, scripts de Action/empacotamento, manifestos MCPB/plugins e workflows; nenhuma Action, publicação ou empacotamento foi executado"
+  "doc-bridge": f8824f1
+metodo: "análise estática de action.yml, scripts de Action/empacotamento, manifestos MCPB/plugins e workflows; nenhuma Action, publicação ou empacotamento foi executado; auditado em 2026-10-16 (auditoria v2: referências e afirmações reconferidas contra o código)"
 fontes:
   - action.yml
   - scripts/action-runner.mjs
@@ -81,7 +81,7 @@ Exemplo real (uso da Action neste repo):
 |---|---|
 | Depende de | [[doc-bridge-gates-qualidade]] (gates), [[doc-bridge-divergencia]] (`diffSnapshotsWithRead`), [[doc-bridge-armazenamento-servico]] (snapshot sob service), [[doc-bridge-consulta-mcp]] (servidor MCP) |
 | Depende de | [[00 Hub - harness]] (`ak-verify`), `@agentskit/cross-platform` resolvido da instalação confiável, não do PR (`scripts/action-runner.mjs:12-13`) |
-| Consumidores | Repositórios que usam a Action (ex.: [[00 Hub - agents-playbook]] segundo o hub v1); clientes MCP; [[00 Hub - ecosystem-distribution-ops]] publica o MCP em registries externos |
+| Consumidores | Este próprio repo (`.github/workflows/doc-bridge-advisory.yml:20`, `.github/workflows/ci.yml:84-90`); clientes MCP; outros repositórios que usem a Action não são verificáveis a partir deste código (o hub v1 citava [[00 Hub - agents-playbook]], sem evidência aqui); [[00 Hub - ecosystem-distribution-ops]] publica o MCP em registries externos |
 
 ## Dados e efeitos
 

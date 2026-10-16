@@ -5,8 +5,8 @@ camada: ferramenta
 visibilidade: publico
 verificado-em: 2026-10-16
 commits:
-  "doc-bridge": fd1e421
-metodo: "derivado de CONTRIBUTING.md, package.json, scripts/sync-version.mjs e dos workflows changesets.yml/release.yml; nenhuma publicação executada"
+  "doc-bridge": f8824f1
+metodo: "derivado de CONTRIBUTING.md, package.json, scripts/sync-version.mjs e dos workflows changesets.yml/release.yml; nenhuma publicação executada; auditado em 2026-10-16 (auditoria v2: referências e afirmações reconferidas contra o código)"
 fontes:
   - CONTRIBUTING.md
   - package.json
@@ -37,7 +37,7 @@ Mudança de comportamento que precisa chegar a consumidores.
 
 1. No PR: `pnpm changeset` (`CONTRIBUTING.md:81-83`).
 2. Após merge na `main`, `changesets.yml` audita prod, roda typecheck, upstream, testes e build, e então abre o PR "chore: version packages" ou publica (`.github/workflows/changesets.yml:47-71`).
-3. O PR de versão roda `pnpm version-packages` = `changeset version` + `scripts/sync-version.mjs` + `ak-docs index` (`package.json:80`). O sync propaga a versão para `src/version.ts`, default de `action.yml`, `mcpb/manifest.json`, manifestos de plugin, `mcp.json`/`.mcp.json`, resolver da skill e README (`scripts/sync-version.mjs:7-70`).
+3. O PR de versão roda `pnpm version-packages` = `changeset version` + `scripts/sync-version.mjs` + `ak-docs index` (`package.json:80`). O sync propaga a versão para `src/version.ts`, default de `action.yml`, `mcpb/manifest.json`, manifestos de plugin, `mcp.json`/`.mcp.json`, resolver da skill e README (`scripts/sync-version.mjs:7-70`), e ressela os `sourceHash` de `readme-standard-v1.json` (`scripts/sync-version.mjs:72-83`).
 4. Ao mesclar o PR de versão, o mesmo workflow roda `pnpm release` = `build` + `test` + `changeset publish` com provenance (`package.json:81`, `.github/workflows/changesets.yml:61-71`).
 5. Caminho por tag (recuperação guardada; ver `docs/RELEASE.md:46-49`): push de `vX.Y.Z` dispara `release.yml`, que verifica tag = versão do `package.json` e ancestral de `main`, audita, testa, empacota, publica o tarball verificado (pula se já publicado), confere propagação no npm e cria **rascunho** de release no GitHub (`.github/workflows/release.yml:43-49`, `.github/workflows/release.yml:99-148`).
 6. Publicar o rascunho de release manualmente após completar os campos do Marketplace (`.github/workflows/release.yml:148`).
@@ -50,7 +50,7 @@ Mudança de comportamento que precisa chegar a consumidores.
 
 - `release.yml` ignora tags com `-` (pré-release) (`.github/workflows/release.yml:25`).
 - `sync-version.mjs` falha se não achar o padrão de versão na Action, no resolver da skill ou no README (`scripts/sync-version.mjs:15-17`, `scripts/sync-version.mjs:54-59`, `scripts/sync-version.mjs:67-69`).
-- PRs abertos por `GITHUB_TOKEN` não disparam workflows de PR (mesma observação do sync do ecossistema, `CONTRIBUTING.md:37-40`).
+- O PR de versão é aberto com `github.token` (`.github/workflows/changesets.yml:68`); o repo só documenta que PRs criados por `GITHUB_TOKEN` não disparam workflows de PR para o PR do sync do ecossistema (`CONTRIBUTING.md:37-40`) — se isso vale também para o PR de versão não está documentado aqui.
 
 - Confundir os dois caminhos: o rotineiro é Changesets; `release.yml` é o caminho **guardado de recuperação** para uma tag semver imutável, também por Trusted Publishing; nunca mover ou recriar tag (`docs/RELEASE.md:41-49`, `docs/RELEASE.md:60-64`).
 - `docs/RELEASE.md` ainda diz "Current track: `1.7.45` stable" e usa exemplos 1.x, enquanto o pacote está em 2.1.0 (`docs/RELEASE.md:35`, `package.json:3`) — use os números atuais.

@@ -5,8 +5,8 @@ camada: ferramenta
 visibilidade: publico
 verificado-em: 2026-10-16
 commits:
-  "doc-bridge": fd1e421
-metodo: "derivado de CONTRIBUTING.md, package.json e ecosystem-sync.yml; scripts não executados"
+  "doc-bridge": f8824f1
+metodo: "derivado de CONTRIBUTING.md, package.json e ecosystem-sync.yml; scripts não executados; auditado em 2026-10-16 (auditoria v2: referências e afirmações reconferidas contra o código)"
 fontes:
   - CONTRIBUTING.md
   - package.json

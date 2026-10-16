@@ -5,8 +5,8 @@ camada: ferramenta
 visibilidade: publico
 verificado-em: 2026-10-16
 commits:
-  "doc-bridge": fd1e421
-metodo: "derivado de package.json, wrangler.toml, pages.yml e ci.yml; portal não construído nesta verificação"
+  "doc-bridge": f8824f1
+metodo: "derivado de package.json, wrangler.toml, pages.yml e ci.yml; portal não construído nesta verificação; auditado em 2026-10-16 (auditoria v2: referências e afirmações reconferidas contra o código)"
 fontes:
   - package.json
   - wrangler.toml

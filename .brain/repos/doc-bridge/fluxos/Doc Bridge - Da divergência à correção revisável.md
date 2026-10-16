@@ -5,8 +5,8 @@ camada: ferramenta
 visibilidade: publico
 verificado-em: 2026-10-16
 commits:
-  "doc-bridge": fd1e421
-metodo: "análise estática do código e dos ADRs 0010, 0011, 0022, 0023; nada foi executado"
+  "doc-bridge": f8824f1
+metodo: "análise estática do código e dos ADRs 0010, 0011, 0022, 0023; nada foi executado; auditado em 2026-10-16 (auditoria v2: referências e afirmações reconferidas contra o código)"
 fontes:
   - src/diff/change-set.ts
   - src/fixes/workflow.ts
@@ -37,7 +37,7 @@ Entrada: snapshot base (`ak-docs discover --json` ou `ak-docs action snapshot`) 
 | 4. Proposta | Humano/agente escreve as edições; ou `ak-docs fix --llm` gera propostas L2 só aceitas se o finding some na reanálise em memória (`src/fixes/llm-cli.ts:17-36`) | [[doc-bridge-divergencia]], [[doc-bridge-inteligencia]] |
 | 5. Preparar/revalidar | CLI `fix propose|revalidate` ou MCP `docbridge.proposals`: recalcula findings do head, valida regiões e **limpa aprovação anterior** (`src/fixes/workflow.ts:14-33`, `src/fixes/regions.ts:99-109`) | [[doc-bridge-consulta-mcp]] |
 | 6. Aprovar | Só pela CLI local, com `--by` e confirmação TTY/`--yes`; proibido em `GITHUB_ACTIONS` e no MCP (`src/cli/program.ts:1084-1093`, `src/mcp/server.ts:540`) | pessoa |
-| 7. Aplicar | Troca atômica por arquivo dentro de `--allowed-root`, depois gates pós-apply; falha reverte (`src/fixes/regions.ts:120-136`) | [[doc-bridge-gates-qualidade]] |
+| 7. Aplicar | Troca atômica por arquivo dentro de `--allowed-root`, depois gates pós-apply; falha reverte (`src/fixes/regions.ts:120-136`, backup + restauração em `src/fixes/write.ts:10-45`) | [[doc-bridge-gates-qualidade]] |
 | 8. Encerrar | `mergeRemediation` exige humano autenticado e verificação da revisão mesclada; não há fechamento automático (`src/fixes/regions.ts:137-143`) | pessoa / consumidor da biblioteca |
 
 **Erros e recuperação**: região mudou → "Stale region" e nova proposta; revisão mudou → revalidar e reaprovar; rejeitar um finding suprime a mesma evidência até ela mudar; rejeitar uma remediação mantém o finding ([[doc-bridge ADR-0011 - Findings e remediação por região]]).

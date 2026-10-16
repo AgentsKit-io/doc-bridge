@@ -6,8 +6,8 @@ visibilidade: publico
 status: proposto
 verificado-em: 2026-10-16
 commits:
-  "doc-bridge": fd1e421
-metodo: "leitura do ADR e conferência estática da implementação citada; nada foi executado"
+  "doc-bridge": f8824f1
+metodo: "leitura do ADR e conferência estática da implementação citada; nada foi executado; auditado em 2026-10-16 (auditoria v2: referências e afirmações reconferidas contra o código)"
 fontes:
   - docs/adr/0019-memory-entity-evidence.md
   - src/memory/ingest.ts

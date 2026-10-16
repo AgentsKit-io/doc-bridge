@@ -6,8 +6,8 @@ visibilidade: publico
 status: proposto
 verificado-em: 2026-10-16
 commits:
-  "doc-bridge": fd1e421
-metodo: "leitura do ADR e conferência estática do script citado; nenhuma execução do estudo"
+  "doc-bridge": f8824f1
+metodo: "leitura do ADR e conferência estática do script citado; nenhuma execução do estudo; auditado em 2026-10-16 (auditoria v2: referências e afirmações reconferidas contra o código)"
 fontes:
   - docs/adr/0021-minimal-study-isolation.md
   - scripts/study-minimal.mjs

@@ -6,8 +6,8 @@ npm: "@agentskit/doc-bridge"
 visibilidade: publico
 verificado-em: 2026-10-16
 commits:
-  "doc-bridge": fd1e421
-metodo: "análise estática do código; índice doc-bridge gerado localmente e handoff `ak-docs query package doc-bridge-memory --agent` usados como evidência de edit root, checks e relações (src/vault não tem ownership próprio); testes não executados"
+  "doc-bridge": f8824f1
+metodo: "análise estática do código; índice doc-bridge gerado localmente e handoff `ak-docs query package doc-bridge-memory --agent` usados como evidência de edit root, checks e relações (src/vault não tem ownership próprio); testes não executados; auditado em 2026-10-16 (auditoria v2: referências e afirmações reconferidas contra o código)"
 fontes:
   - src/memory/ingest.ts
   - src/memory/pipeline.ts

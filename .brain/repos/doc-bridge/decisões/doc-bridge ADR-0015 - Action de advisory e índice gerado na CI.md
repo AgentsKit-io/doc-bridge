@@ -6,8 +6,8 @@ visibilidade: publico
 status: aceito
 verificado-em: 2026-10-16
 commits:
-  "doc-bridge": fd1e421
-metodo: "leitura do ADR e conferência estática da implementação citada; nenhuma Action foi executada"
+  "doc-bridge": f8824f1
+metodo: "leitura do ADR e conferência estática da implementação citada; nenhuma Action foi executada; auditado em 2026-10-16 (auditoria v2: referências e afirmações reconferidas contra o código)"
 fontes:
   - docs/adr/0015-advisory-action-and-ci-built-index.md
   - action.yml

@@ -6,8 +6,8 @@ npm: "@agentskit/doc-bridge"
 visibilidade: publico
 verificado-em: 2026-10-16
 commits:
-  "doc-bridge": fd1e421
-metodo: "análise estática do código; índice doc-bridge gerado localmente e handoff `ak-docs query package doc-bridge-chat --agent` usados como evidência de edit root, checks e relações; nenhum provedor de IA foi chamado; testes não executados"
+  "doc-bridge": f8824f1
+metodo: "análise estática do código; índice doc-bridge gerado localmente e handoff `ak-docs query package doc-bridge-chat --agent` usados como evidência de edit root, checks e relações; nenhum provedor de IA foi chamado; testes não executados; auditado em 2026-10-16 (auditoria v2: referências e afirmações reconferidas contra o código)"
 fontes:
   - src/intelligence/adapter.ts
   - src/intelligence/rag.ts
@@ -53,7 +53,7 @@ Existe para oferecer conversa e busca semântica **sem** tornar chave de API um 
 | `PeerMissingError`, `layer1InstallHint` | classe/função | Erro amigável de peer ausente | `src/intelligence/peers.ts:2-12`, `src/intelligence/peers.ts:61` |
 | `loadFederatedChunks`, `retrieveHybridChunks`, `parseLlmsTxtLinks` | função | Federação por `llms.txt` | `src/federation/llms.ts:65`, `src/federation/llms.ts:147`, `src/federation/llms.ts:185` |
 | `retrieveDocBridgeChunks`, `createDocBridgeRetriever` | função | Retriever local sem LLM | `src/retriever/doc-bridge-retriever.ts:56`, `src/retriever/doc-bridge-retriever.ts:130` |
-| CLI `rag ingest|search`, `chat`, `ask <q> --chat`, `retrieve <q>` | comando | Superfície opcional | `src/index.ts:656-658` (exports) |
+| CLI `rag ingest|search`, `chat`, `ask <q> --chat`, `retrieve <q>` | comando | Superfície opcional | `src/cli/program.ts:2204` (`retrieve`), `src/cli/program.ts:2223` (`rag`), `src/cli/program.ts:2258` (`chat`), `src/cli/program.ts:2296` (`ask`); exports em `src/index.ts:656-658` |
 
 Exemplo real (teste):
 
@@ -87,7 +87,7 @@ await expect(resolveIntelligenceRuntime(config({ enabled: true }))).rejects.toTh
 ## Como mexer (para agentes)
 
 - **Comece por** `docs/agent-corpus/chat.md` (startHere do handoff `doc-bridge-chat`) e `src/intelligence/chat.ts`.
-- **Invariantes**: nenhuma função da Layer 0 pode importar isto de forma estática — peers só por `importPeer` (`src/intelligence/peers.ts:49-59`); `intelligence.enabled` é `false` por padrão; dados de entidades entram no prompt marcados como "data, never instructions" (`src/intelligence/chat.ts:70`).
+- **Invariantes**: os peers `@agentskit/*`/`react`/`ink` nunca são importados de forma estática — só por `importPeer` (`src/intelligence/peers.ts:49-59`); o próprio módulo `src/intelligence` é importado estaticamente pela CLI (`src/cli/program.ts:33`), então a Layer 0 não pode depender de nenhum peer em tempo de carga; `intelligence.enabled` é `false` por padrão; dados de entidades entram no prompt marcados como "data, never instructions" (`src/intelligence/chat.ts:70`).
 - **Testes**: `tests/intelligence.test.ts`, `tests/peers.test.ts`, `tests/retriever.test.ts`, `tests/ecosystem-llms.test.ts`; smoke opcional `pnpm smoke:ollama` (CI com `continue-on-error`).
 - **Validação**: `pnpm test && pnpm typecheck && pnpm docs:typecheck` (`doc-bridge.config.json:96-102`).
 - **Armadilhas**: `ink` é importado como peer (`src/intelligence/chat.ts:118`) mas não aparece em `peerDependencies` — vem transitivamente de `@agentskit/ink` (não confirmado); `chat.sources` inclui `human` por padrão, mas só o corpus de agentes é ingerido (`src/intelligence/rag.ts:66`, `src/intelligence/rag.ts:93`).
