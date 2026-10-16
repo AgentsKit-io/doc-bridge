@@ -275,12 +275,14 @@ let last = 0;
 let visible = false;
 let paused = false;
 let held = false; // hover or focus
+let acting = false; // a click or hook runs the loop until the scene settles, even while paused
 let idleUntil = 0;
 let tourClock = 0;
 let clock = 0; // seconds the figure has been running, for the labels' slow breathing
 const DWELL = { baseline: 6, asked: 4.2, drift: 5.2, fixed: 3.2 };
 const touring = () => !still.matches && !paused && !held && performance.now() > idleUntil;
-const beltLive = () => !still.matches && !paused;
+const beltLive = () => !still.matches && (!paused || acting);
+const isSettled = () => motion.drawer === targets().drawer && motion.bar === targets().bar && motion.flag === targets().flag && (v.phase !== "drift" || Math.abs(u - holdU) < 0.05);
 
 function tick(now) {
   const dt = last ? Math.min((now - last) / 1000, 1 / 30) : 1 / 60;
@@ -349,6 +351,7 @@ function tick(now) {
     }
   }
   motion.glow = follow(motion.glow, 0, dt, 0.9, calm);
+  if (acting && isSettled()) acting = false;
   draw();
   const moving =
     beltLive() ||
@@ -388,6 +391,7 @@ const QUIET = 6000;
 function act(next) {
   idleUntil = performance.now() + QUIET;
   tourClock = 0;
+  acting = true;
   setState(next, { announce: true });
 }
 const toggle = () => act(toggleCode(st));
@@ -485,5 +489,5 @@ window.__bridge = {
   fix: () => act(fixDoc(st)),
   reset: () => act(initial()),
   pause: (value = true) => setPaused(value),
-  settled: () => motion.drawer === targets().drawer && motion.bar === targets().bar && motion.flag === targets().flag && (v.phase !== "drift" || Math.abs(u - holdU) < 0.05),
+  settled: isSettled,
 };
