@@ -63,9 +63,11 @@ html,body{margin:0;background:transparent}
 .bc-hole{fill:var(--bc-hole)}
 .bc-brass>.iso-top,.bc-brass>.iso-fill{fill:var(--bc-brass-top)}
 .bc-brass>.iso-shade{fill:var(--bc-brass)}
-/* The drop gate's hazard stripes and lit edge: amber, and only while the gate is down (opacity is live). */
+/* The drawbridge's amber bands on the leaf's free end, and the warning lamp on the hinge block: amber, and only
+   while the leaf is raised (opacity is live). */
 .bc-hazard{fill:var(--bc-amber);stroke:none;opacity:.9}
-.bc-hazard-edge{fill:none;stroke:var(--bc-amber);stroke-width:1.1px;vector-effect:non-scaling-stroke;stroke-linejoin:round;filter:drop-shadow(0 0 2px color-mix(in srgb,var(--bc-amber) 70%,transparent))}
+.bc-hlamp{fill:var(--bc-amber);filter:drop-shadow(0 0 3px color-mix(in srgb,var(--bc-amber) 80%,transparent))}
+.bc-hlamp-core{fill:var(--bc-amber-core)}
 .bc-clip{fill:var(--anatomy-shade-2)}
 .bc-sign-face,.bc-plate-face{fill:var(--bc-sign)}
 .bc-code{fill:var(--anatomy-hi);font-family:var(--anatomy-mono)}
