@@ -8,14 +8,15 @@
 //   node scripts/figures/bridge-conveyor/build.mjs                  write the page
 //   node scripts/figures/bridge-conveyor/build.mjs --audit          write it, then run the kit's geometry audit
 //   node scripts/figures/bridge-conveyor/build.mjs --preview <dir>  also write <dir>/bridge-conveyor-{light,dark}.html
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, "..", "..", "..");
-const KIT_DIR = resolve(process.env.ANATOMY_DIR ?? join(homedir(), ".claude", "skills", "anatomy"));
+const VENDORED_KIT = join(ROOT, ".fleet-vendor", "anatomy");
+const KIT_DIR = resolve(process.env.ANATOMY_DIR ?? (existsSync(VENDORED_KIT) ? VENDORED_KIT : join(homedir(), ".claude", "skills", "anatomy")));
 const load = (file) => import(pathToFileURL(join(KIT_DIR, file)).href);
 const k = await load("kit/iso-kit.mjs");
 const G = await load("kit/lathe.mjs");
