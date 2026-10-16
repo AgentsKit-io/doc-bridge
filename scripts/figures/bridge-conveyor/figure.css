@@ -1,0 +1,128 @@
+/* Bridge-conveyor figure. Dark is a blue-black card that matches the AgentsKit sibling cards; light is paper. */
+html.iso{
+  --anatomy-page:transparent;--anatomy-card:#0e1219;--anatomy-paper:#0e1219;--anatomy-face:#161c25;--anatomy-top:#171e27;
+  --anatomy-shade-0:#0a0d12;--anatomy-shade-1:#0d1117;--anatomy-shade-2:#10151c;--anatomy-shade-3:#131922;
+  --anatomy-lit-top:#1e2733;--anatomy-lit-shade:#18202b;
+  --anatomy-hi:#dbe3ec;--anatomy-mid:#7c8794;--anatomy-lo:#4b5562;--anatomy-faint:#2a323d;--anatomy-lit:#ffffff;
+  --anatomy-text:#a8b1bb;--anatomy-strong:#e6edf3;--anatomy-muted:#7d8792;--anatomy-dot:#e6edf3;
+  --anatomy-halo:#000000;--anatomy-halo-opacity:.85;
+  --anatomy-mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --bc-border:#30363d;--bc-radius:20px;
+  --bc-on:#22d3ee;--bc-on-core:#a5f3fc;--bc-on-glow:#06b6d4;--bc-on-face:#12667a;--bc-on-shade:#0d4a59;--bc-on-deep:#0e7490;
+  --bc-amber:#f0a630;--bc-amber-core:#ffe0a8;--bc-amber-face:#8a5a12;--bc-amber-shade:#66420c;--bc-amber-deep:#9a5b06;
+  --bc-brass-top:#3d3a30;--bc-brass:#2c2a23;
+  --bc-glass:#060a0e;--bc-hole:#040608;--bc-sign:#0a0e13;--bc-water:#0b1118;--bc-stripe:#dbe3ec;--bc-card-top:#1d2530;
+}
+html.iso[data-theme="light"]{
+  --anatomy-card:#fbfcfd;--anatomy-paper:#fbfcfd;--anatomy-face:#ffffff;--anatomy-top:#ffffff;
+  --anatomy-shade-0:#c9d0d7;--anatomy-shade-1:#d6dce2;--anatomy-shade-2:#e2e7ec;--anatomy-shade-3:#edf0f3;
+  --anatomy-lit-top:#ffffff;--anatomy-lit-shade:#e9edf1;
+  --anatomy-hi:#1f2328;--anatomy-mid:#7a8590;--anatomy-lo:#a9b2bc;--anatomy-faint:#d3d9df;--anatomy-lit:#000000;
+  --anatomy-text:#57606a;--anatomy-strong:#0d1117;--anatomy-muted:#6e7781;--anatomy-dot:#2b3036;
+  --anatomy-halo:#6b7682;--anatomy-halo-opacity:.3;
+  --bc-border:#d0d7de;
+  --bc-on:#0891b2;--bc-on-core:#cffafe;--bc-on-glow:#22d3ee;--bc-on-face:#a5e7f3;--bc-on-shade:#7fd3e4;--bc-on-deep:#155e75;
+  --bc-amber:#d98a06;--bc-amber-core:#fff1d1;--bc-amber-face:#f7d38d;--bc-amber-shade:#e8b55a;--bc-amber-deep:#b45309;
+  --bc-brass-top:#f1ede1;--bc-brass:#ddd6c2;
+  --bc-glass:#0b1418;--bc-hole:#5d6670;--bc-sign:#f3f5f7;--bc-water:#e7eef3;--bc-stripe:#1f2328;--bc-card-top:#ffffff;
+}
+html,body{margin:0;background:transparent}
+.bc-body{color:var(--anatomy-text);font:14px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+.bc-page{box-sizing:border-box;width:100%;margin:0 auto;padding:2px}
+.bc-figure{margin:0}
+.bc-plate{display:flex;flex-direction:column;gap:6px;padding:18px 22px 16px;border-radius:var(--bc-radius);background:var(--anatomy-card);box-shadow:0 0 0 1px var(--bc-border);overflow:hidden}
+.bc-top,.bc-bottom{display:flex;justify-content:space-between;align-items:center;gap:8px 16px;min-height:26px}
+.bc-left{display:flex;align-items:center;gap:12px;min-width:0}
+.bc-corner{color:var(--anatomy-muted);font-family:var(--anatomy-mono);font-size:11.5px;line-height:1.35;letter-spacing:.06em}
+.bc-corner[data-corner="fig"]{color:var(--anatomy-strong)}
+.bc-corner[data-corner="title"],.bc-corner[data-corner="hint"]{text-transform:uppercase;letter-spacing:.14em}
+.bc-corner[data-corner="readout"]{color:var(--anatomy-strong);font-variant-numeric:tabular-nums;text-align:right;letter-spacing:.02em}
+.bc-plate[data-phase="drift"] .bc-corner[data-corner="readout"]{color:var(--bc-amber)}
+.bc-crop-only{display:none}
+.bc-stage{position:relative;margin:0 -6px}
+.bc-stage .iso-svg{width:100%;display:block}
+.bc-hots{position:absolute;inset:0;pointer-events:none}
+.bc-hot{position:absolute;pointer-events:auto;margin:0;padding:0;border:0;border-radius:8px;background:transparent;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.bc-hot:focus-visible{outline:2px solid var(--bc-on);outline-offset:2px}
+.bc-pause{display:inline-flex;align-items:center;gap:7px;flex:none;min-height:28px;padding:4px 11px 4px 9px;border:1px solid var(--bc-border);border-radius:999px;background:transparent;color:var(--anatomy-text);font-family:var(--anatomy-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
+.bc-pause:hover{color:var(--anatomy-strong);border-color:var(--anatomy-mid)}
+.bc-pause:focus-visible{outline:2px solid var(--bc-on);outline-offset:2px}
+.bc-pause-icon{position:relative;width:8px;height:9px}
+.bc-pause-icon::before,.bc-pause-icon::after{content:"";position:absolute;top:0;width:2.5px;height:9px;border-radius:1px;background:currentColor}
+.bc-pause-icon::before{left:0}.bc-pause-icon::after{right:0}
+.bc-plate[data-paused] .bc-pause-icon::before{left:1px;width:0;height:0;border-radius:0;background:none;border-style:solid;border-width:4.5px 0 4.5px 7.5px;border-color:transparent transparent transparent currentColor}
+.bc-plate[data-paused] .bc-pause-icon::after{display:none}
+[hidden]{display:none!important}
+.bc-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* The river and the belt. */
+.bc-water>.iso-fill,.bc-water>.iso-top{fill:var(--bc-water)}
+.bc-flow{opacity:.9}
+.bc-belt>.iso-top,.bc-belt>.iso-fill{fill:var(--anatomy-shade-1)}
+.bc-hole{fill:var(--bc-hole)}
+.bc-brass>.iso-top,.bc-brass>.iso-fill{fill:var(--bc-brass-top)}
+.bc-brass>.iso-shade{fill:var(--bc-brass)}
+.bc-stripe{fill:var(--bc-stripe);opacity:.62}
+.bc-clip{fill:var(--anatomy-shade-2)}
+.bc-sign-face,.bc-plate-face{fill:var(--bc-sign)}
+.bc-code{fill:var(--anatomy-hi);font-family:var(--anatomy-mono)}
+
+/* Glow means on: label plates of indexed documents, the cards on the belt, the scan curtain, the lamps. */
+.bc-glow{fill:var(--bc-on-glow);stroke:var(--bc-on-glow);stroke-width:2.6;stroke-linejoin:round;opacity:.55;filter:blur(2.2px);transition:opacity .4s ease}
+html.iso[data-theme="light"] .bc-glow{opacity:.45;filter:blur(2px)}
+.bc-glow.bc-flash{opacity:1}
+path.bc-label{fill:var(--bc-on);stroke:var(--bc-on-core);stroke-width:.35;vector-effect:non-scaling-stroke}
+path.bc-label.bc-stale{fill:var(--bc-amber);stroke:var(--bc-amber-core)}
+.bc-glow.bc-stale{fill:var(--bc-amber);stroke:var(--bc-amber)}
+.bc-card>.iso-solid>.iso-top,.bc-card .iso-top{fill:var(--bc-card-top)}
+.bc-card-label{fill:var(--bc-on);stroke:var(--bc-on-core);stroke-width:.3;vector-effect:non-scaling-stroke}
+.bc-card-glow{fill:var(--bc-on-glow);stroke:var(--bc-on-glow);stroke-width:2;opacity:.5;filter:blur(1.6px)}
+.bc-card.bc-stale .iso-top{fill:var(--bc-amber-face)}
+.bc-card.bc-stale .iso-shade{fill:var(--bc-amber-shade)}
+.bc-card.bc-stale .iso-edge{stroke:var(--bc-amber)}
+.bc-card.bc-stale .bc-card-label{fill:var(--bc-amber);stroke:var(--bc-amber-core)}
+.bc-card.bc-stale .bc-card-glow{fill:var(--bc-amber);stroke:var(--bc-amber);opacity:.7}
+.bc-card.bc-stale{filter:drop-shadow(0 0 3px color-mix(in srgb,var(--bc-amber) 70%,transparent))}
+.bc-curtain{fill:var(--bc-on-glow);opacity:.16;transition:fill .4s ease}
+html.iso[data-theme="light"] .bc-curtain{opacity:.2}
+.bc-plate[data-flag] .bc-curtain{fill:var(--bc-amber)}
+.bc-scanline{fill:none;stroke:var(--bc-on);stroke-width:1.3px;vector-effect:non-scaling-stroke;stroke-linecap:round}
+.bc-plate[data-flag] .bc-scanline{stroke:var(--bc-amber)}
+.bc-pennant{fill:var(--bc-amber);stroke:var(--bc-amber-deep);stroke-width:.5px;vector-effect:non-scaling-stroke;stroke-linejoin:round}
+.bc-lamp,.bc-alamp{fill:var(--bc-on)}
+.bc-lamp-core,.bc-alamp-core{fill:var(--bc-on-core)}
+.bc-plate[data-flag] .bc-alamp{fill:var(--bc-amber)}
+.bc-plate[data-flag] .bc-alamp-core{fill:var(--bc-amber-core)}
+.bc-alamp,.bc-alamp-core{transition:fill .35s ease}
+.bc-lamp-halo{fill:var(--bc-on-glow);filter:blur(7px)}
+.bc-led{fill:var(--bc-on)}
+.bc-index .iso-fill,.bc-index .iso-top{transition:fill .35s ease}
+.bc-index.bc-on .iso-top,.bc-index.bc-on .iso-fill{fill:var(--bc-on-face)}
+.bc-index.bc-on .iso-shade{fill:var(--bc-on-shade)}
+.bc-index.bc-on .iso-edge{stroke:var(--bc-on)}
+.bc-index.bc-stale .iso-top,.bc-index.bc-stale .iso-fill{fill:var(--bc-amber-face)}
+.bc-index.bc-stale .iso-shade{fill:var(--bc-amber-shade)}
+.bc-index.bc-stale .iso-edge{stroke:var(--bc-amber)}
+.bc-glass{fill:var(--bc-glass)}
+.bc-well{fill:var(--anatomy-shade-1)}
+.bc-screen-glow{fill:var(--bc-on-glow);filter:blur(2.5px)}
+.bc-text{fill:var(--bc-on-core);font-family:var(--anatomy-mono);letter-spacing:.01em}
+.bc-text.bc-dim{fill:#5f6b78}
+.bc-slip-rule{fill:none;stroke:var(--bc-on);stroke-width:.5px;vector-effect:non-scaling-stroke;opacity:.7}
+/* Hover or focus on an in-figure button outlines the part it acts on. */
+.bc-plate[data-hover="code"] [data-name="sign.tab"] .iso-edge,
+.bc-plate[data-hover="archcode"] [data-name="arch.plate"] .iso-edge,
+.bc-plate[data-hover="guide"] [data-name="cab.guide"] .iso-edge,
+.bc-plate[data-hover="page"] [data-name="pile.guide"] .iso-edge,
+.bc-plate[data-hover="terminal"] [data-name="term.case"] .iso-edge,
+.bc-plate[data-hover="held"] .bc-card.bc-stale .iso-edge{stroke:var(--bc-on)}
+@media (max-width:480px){
+  .bc-plate{padding:14px 12px 12px;gap:4px}
+  .bc-stage{margin:0 -4px}
+  .bc-bottom{flex-direction:column;align-items:stretch;gap:8px}
+  .bc-corner[data-corner="readout"]{text-align:left}
+  .bc-corner{font-size:11px}
+  .bc-wide-only{display:none}
+  .bc-crop-only{display:inline}
+}
+@media (prefers-reduced-motion:reduce){.bc-index .iso-fill,.bc-index .iso-top,.bc-glow,.bc-curtain,.bc-alamp,.bc-alamp-core{transition:none}}
