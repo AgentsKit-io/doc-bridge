@@ -845,6 +845,9 @@ for (const chunk of [...back, ...backItems, ...frontItems]) {
     for (let i = 0; i + 1 < numbers.length; i += 2) inkPoints.push([numbers[i], numbers[i + 1]]);
   }
 }
+// The drawing is clipped to its frame, so the raised leaf and the flag must fit inside the wide frame too.
+for (const x of [HINGE.x, HINGE.end]) for (const y of [-DECK.d / 2, DECK.d / 2]) for (const z of [GIRDER.z0, RAIL.z1 + 3]) inkPoints.push(at(swing([x, y, z], LEAF_RAISED)));
+inkPoints.push(at([FLAG.x + 10, FLAG.y, ARCH.beam.z1 + 12]));
 const ink = {
   x0: Math.min(...inkPoints.map((p) => p[0])),
   x1: Math.max(...inkPoints.map((p) => p[0])),
@@ -859,9 +862,91 @@ function frameAround(box, aspect, fill) {
   return { x: Math.round((box.x0 + box.x1) / 2 - vw / 2), y: Math.round((box.y0 + box.y1) / 2 - vh / 2), w: Math.round(vw), h: Math.round(vh) };
 }
 const WIDE = frameAround(ink, 2.4, 0.96);
-// The phone crop: the bridge span from the first pier to the bank, the arch at its heart, the held card and the raised leaf.
-const cropPoints = [[-60, -24, 0], [-60, 30, 0], [118, -24, 0], [118, 30, 0], [0, 0, ARCH.beam.z1 + 14], [LEAF_TIP[0], 0, LEAF_TIP[2] + 6], [-60, 30, -6]].map(at);
-const CROP = frameAround({ x0: Math.min(...cropPoints.map((p) => p[0])), x1: Math.max(...cropPoints.map((p) => p[0])), y0: Math.min(...cropPoints.map((p) => p[1])), y1: Math.max(...cropPoints.map((p) => p[1])) }, 4 / 3, 0.98);
+// The phone crop (4:3): the inspection arch with its flag and lamp, the held card, the hinge and the whole leaf in
+// its raised pose, and the near edge of the right bank. The bottom edge sits on the plinth's side fill, between its
+// top edge and its seam; the right edge is a small margin past the bank's near corner.
+const CROP = (() => {
+  const raised = [];
+  for (const x of [HINGE.x, HINGE.end]) for (const y of [-DECK.d / 2 - 1, DECK.d / 2 + 1]) for (const z of [GIRDER.z0, RAIL.z1 + 5]) raised.push(swing([x, y, z], LEAF_RAISED));
+  const content = [
+    ...raised,
+    [HINGE.block.x0, -HINGE.block.y1, GIRDER.z0],
+    [HINGE.block.x1, HINGE.block.y1, HINGE.block.z1 + 8],
+    [ARCH.x - ARCH.beam.w / 2, -ARCH.beam.y, BANK_TOP],
+    [ARCH.x + ARCH.beam.w / 2, ARCH.beam.y, BANK_TOP],
+    [FLAG.x + 10, FLAG.y, ARCH.beam.z1 + 12],
+    [STOP_X - CARD.l / 2, -CARD.w / 2, BELT.top],
+    [STOP_X + CARD.l / 2, CARD.w / 2, BELT.top + 4],
+  ].map(at);
+  const MARGIN = 8;
+  const bankCorner = at([RIGHT_BANK.x, RIGHT_BANK.y + RIGHT_BANK.d, 0]);
+  const right = bankCorner[0] + MARGIN;
+  const bottom = at([RIGHT_BANK.x, PLINTH.y + PLINTH.d, 0])[1] + 1.5;
+  const left = Math.min(...content.map((p) => p[0])) - MARGIN;
+  const top = Math.min(...content.map((p) => p[1])) - MARGIN;
+  const w = Math.max(((bottom - top) * 4) / 3, right - left);
+  const h = (w * 3) / 4;
+  return { x: Math.round(right - w), y: Math.round(bottom - h), w: Math.round(w), h: Math.round((Math.round(w) * 3) / 4) };
+})();
+
+// Texture lines the crop rectangle would cut get a crop-only twin that fades out toward the cut instead of
+// stopping dead; the whole line stays for the wide frame (`data-frame` on the card picks which copy shows).
+const FADE_CUT = 8;
+const cropClip = (points) => {
+  const { x, y, w, h } = CROP;
+  const pieces = [];
+  let run = null;
+  for (let i = 0; i + 1 < points.length; i++) {
+    const [ax, ay] = points[i];
+    const [bx, by] = points[i + 1];
+    let t0 = 0;
+    let t1 = 1;
+    for (const [p, q] of [[-(bx - ax), ax - x], [bx - ax, x + w - ax], [-(by - ay), ay - y], [by - ay, y + h - ay]]) {
+      if (p === 0) {
+        if (q < 0) t1 = -1;
+      } else if (p < 0) t0 = Math.max(t0, q / p);
+      else t1 = Math.min(t1, q / p);
+    }
+    if (t0 > t1) {
+      run = null;
+      continue;
+    }
+    const from = [ax + (bx - ax) * t0, ay + (by - ay) * t0];
+    const to = [ax + (bx - ax) * t1, ay + (by - ay) * t1];
+    if (!run || t0 > 0) {
+      run = { points: [from], cutStart: t0 > 0, cutEnd: false };
+      pieces.push(run);
+    }
+    run.points.push(to);
+    run.cutEnd = t1 < 1;
+  }
+  return pieces;
+};
+const LINE_RE = /<path class="iso-line((?: [\w-]+)*)"((?: data-[\w-]+(?:="[^"]*")?)*) d="([^"]*)"\/>/g;
+function cropTwins(svg) {
+  return svg.replace(LINE_RE, (whole, classes, attrs, d) => {
+    if (/iso-(edge|crease|bevel)/.test(classes) || /data-(free|dotted|dashed|flow)/.test(attrs) || /[^ML\d\s.\-]/.test(d)) return whole;
+    const subs = d.split("M").filter(Boolean).map((s) => s.split("L").map((pair) => pair.split(" ").map(Number)));
+    const inside = (p) => p[0] >= CROP.x && p[0] <= CROP.x + CROP.w && p[1] >= CROP.y && p[1] <= CROP.y + CROP.h;
+    const keep = [];
+    const cut = [];
+    for (const sub of subs) {
+      const ins = sub.filter(inside).length;
+      (ins > 0 && ins < sub.length ? cut : keep).push(sub);
+    }
+    if (!cut.length) return whole;
+    const tone = /data-tone="(\w+)"/.exec(attrs)?.[1] ?? "lo";
+    const className = classes.trim().replace(/^iso-line\s*/, "") || undefined;
+    const text = (subList) => subList.map((sub) => k.pathOf(sub)).join("");
+    const twin = cut
+      .flatMap(cropClip)
+      .filter((piece) => piece.points.length > 1)
+      .map((piece) => k.fadeLineSvg(piece.points, { fade: [piece.cutStart ? FADE_CUT : 0, piece.cutEnd ? FADE_CUT : 0], tone, className }))
+      .join("");
+    const line = (list) => `<path class="iso-line${classes}"${attrs} d="${text(list)}"/>`;
+    return (keep.length ? line(keep) : "") + `<g class="bc-frame-wide">${line(cut)}</g><g class="bc-frame-crop">${twin}</g>`;
+  });
+}
 
 // Hit areas for the in-figure buttons, in view-box units (live code turns them into percentages per frame).
 const boxOf = (min, max) => {
@@ -883,8 +968,10 @@ const HOTS = {
 
 const LABEL_TEXT =
   "An isometric bridge over a river. On the left bank lies a messy pile of loose pages, markdown files and code printouts, with a code sheet that shows the signature of send. A conveyor belt carries the pages across the bridge one by one as neat index cards, through an inspection arch at mid-span that checks each card against the code, and over the last span of the bridge, a drawbridge leaf, into a card catalog on the right bank, where the cards are filed into drawers with glowing label plates under a lit PUBLISH lamp. An agent terminal beside the catalog pulls the sending-notifications card and shows docs/guides/sending-notifications.md line 8. When the code changes, the arch raises an amber flag, the card for the guide turns amber, the drawbridge rises on its hinge with an amber warning lamp lit and amber bands on its end, the belt holds the amber card just before the hinge, and the PUBLISH lamp goes out: one CHANGED_REFERENCE finding blocks publication until the guide is fixed, and then the drawbridge lowers.";
+// Parts that live code moves or rebuilds (data-part) keep their own lines; they sit inside both frames.
+const still = (chunk) => (chunk.includes("data-part=") ? chunk : cropTwins(chunk));
 const svg = k
-  .figureSvg({ width: WIDE.w, height: WIDE.h, label: LABEL_TEXT, body: [...back, ...backItems, cardsSvg, ...frontItems, curtainSvg, feedPage] })
+  .figureSvg({ width: WIDE.w, height: WIDE.h, label: LABEL_TEXT, body: [...[...back, ...backItems].map(still), cardsSvg, ...frontItems.map(still), curtainSvg, feedPage] })
   .replace(`viewBox="0 0 ${WIDE.w} ${WIDE.h}"`, `viewBox="${WIDE.x} ${WIDE.y} ${WIDE.w} ${WIDE.h}"`);
 
 const DATA = {
@@ -928,7 +1015,7 @@ const body = `
     <div class="bc-bottom">
       <div class="bc-left">
         <button type="button" class="bc-pause" data-pause aria-pressed="false"><span class="bc-pause-icon" aria-hidden="true"></span><span data-pause-label>Pause</span></button>
-        <span class="bc-corner" data-corner="hint"><span class="bc-wide-only">Click the code · fix the amber card to lower the drawbridge</span><span class="bc-crop-only">Tap the arch · tap the amber card</span></span>
+        <span class="bc-corner" data-corner="hint"><span class="bc-wide-only">Click the code · fix the amber card to lower the drawbridge</span><span class="bc-crop-only">Tap arch · tap amber card</span></span>
       </div>
       <span class="bc-corner" data-corner="readout" data-readout>${DATA.start.readout}</span>
     </div>
@@ -953,7 +1040,12 @@ if (previewAt > 0) {
   writeFileSync(join(dir, "bridge-conveyor-light.html"), page("light"));
 }
 const solids = R.solids.length;
-console.log("wrote", OUT.replace(ROOT + "/", ""), `${(page(null).length / 1024).toFixed(0)} KB`, `${R.items.length} items`, `${solids} recorded solids`, `scale ${KS.toFixed(3)}`, `wide ${WIDE.w}x${WIDE.h}`, `crop ${CROP.w}x${CROP.h}`);
+console.log("wrote", OUT.replace(ROOT + "/", ""), `${(page(null).length / 1024).toFixed(0)} KB`, `${R.items.length} items`, `${solids} recorded solids`, `scale ${KS.toFixed(3)}`, `wide ${WIDE.w}x${WIDE.h}`, `crop ${CROP.w}x${CROP.h} at ${CROP.x},${CROP.y}`);
+if (process.argv.includes("--probe")) {
+  const rel = (p) => `${r2(p[0] - CROP.x)},${r2(p[1] - CROP.y)}`;
+  console.log("probe (relative to crop, w", CROP.w, "h", CROP.h, ")");
+  for (const [name, p] of [["arch top", [0, 0, ARCH.beam.z1 + 12]], ["arch left", [-13, -18, BANK_TOP]], ["held card", [STOP_X, 0, BELT.top]], ["hinge", [HINGE.x, 0, HINGE.z]], ["leaf tip raised", LEAF_TIP], ["bank corner", [RIGHT_BANK.x, 58, 0]], ["bank top corner", [RIGHT_BANK.x, 58, BANK_TOP]], ["pier0", [-44, 0, 5]]]) console.log(" ", name, rel(at(p)));
+}
 // The leaf moves, so the recorder holds its down pose only: sweep it through every angle up to the raised
 // pose against everything else that is fixed, and fail on any solid it passes through.
 if (process.argv.includes("--audit")) {

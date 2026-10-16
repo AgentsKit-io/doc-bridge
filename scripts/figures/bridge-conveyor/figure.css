@@ -39,8 +39,10 @@ html,body{margin:0;background:transparent}
 .bc-corner[data-corner="readout"]{color:var(--anatomy-strong);font-variant-numeric:tabular-nums;text-align:right;letter-spacing:.02em}
 .bc-plate[data-phase="drift"] .bc-corner[data-corner="readout"]{color:var(--bc-amber)}
 .bc-crop-only{display:none}
-.bc-stage{position:relative;margin:0 -6px}
-.bc-stage .iso-svg{width:100%;display:block}
+.bc-stage{position:relative;margin:0 -6px;overflow:hidden}
+.bc-stage .iso-svg{width:100%;display:block;overflow:hidden}
+/* Lines the phone crop would cut have a faded twin; each frame shows its own copy. */
+.bc-plate[data-frame="crop"] .bc-frame-wide,.bc-plate:not([data-frame="crop"]) .bc-frame-crop{display:none}
 .bc-hots{position:absolute;inset:0;pointer-events:none}
 .bc-hot{position:absolute;pointer-events:auto;margin:0;padding:0;border:0;border-radius:8px;background:transparent;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .bc-hot:focus-visible{outline:2px solid var(--bc-on);outline-offset:2px}
@@ -132,6 +134,6 @@ html.iso[data-theme="light"] .bc-curtain{opacity:.2}
   .bc-corner[data-corner="readout"]{text-align:left}
   .bc-corner{font-size:11px}
   .bc-wide-only{display:none}
-  .bc-crop-only{display:inline}
+  .bc-crop-only{display:inline;white-space:nowrap}
 }
 @media (prefers-reduced-motion:reduce){.bc-index .iso-fill,.bc-index .iso-top,.bc-glow,.bc-curtain,.bc-alamp,.bc-alamp-core{transition:none}}
