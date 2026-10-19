@@ -24,13 +24,10 @@ export function BridgeFigure() {
     <figure className="bridge-figure">
       <div className="bridge-figure-stage">
         <iframe ref={frameRef} className="bridge-figure-frame" src={src} title="Interactive isometric illustration of documentation and code moving through doc-bridge to produce cited context and drift findings." loading="lazy" />
-        <noscript>
-          <style>{'.bridge-figure-frame { display: none; }'}</style>
-          <picture>
-            <source srcSet={FALLBACK_LIGHT} media="(prefers-color-scheme: light)" />
-            <img className="bridge-figure-static" src={FALLBACK_DARK} alt="Isometric illustration of documentation and code moving through doc-bridge to produce cited context and drift findings." width={1644} height={592} />
-          </picture>
-        </noscript>
+        <picture className="bridge-figure-fallback">
+          <source srcSet={FALLBACK_LIGHT} media="(prefers-color-scheme: light)" />
+          <img className="bridge-figure-static" src={FALLBACK_DARK} alt="Isometric illustration of documentation and code moving through doc-bridge to produce cited context and drift findings." width={2552} height={1234} />
+        </picture>
       </div>
     </figure>
   )

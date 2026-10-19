@@ -58,7 +58,6 @@ export default function HomePage() {
         <Measured />
         <section className="bridge-final-cta">
           <div>
-            <p className="bridge-eyebrow">ONE REPOSITORY · TWO AUDIENCES</p>
             <h2>Give your agents the line.<br />Catch the doc before they read it.</h2>
           </div>
           <div className="bridge-hero-actions">

@@ -11,4 +11,6 @@ test('home page renders the bridge figure with a lazy iframe and both static fal
   await expect(frame).toHaveAttribute('title', /.+/)
   await expect(figure.locator('picture source')).toHaveAttribute('srcset', '/figures/bridge-conveyor-fallback-light.png')
   await expect(figure.locator('picture img')).toHaveAttribute('src', '/figures/bridge-conveyor-fallback-dark.png')
+  await expect(figure.locator('picture img')).toHaveAttribute('width', '2552')
+  await expect(figure.locator('picture img')).toHaveAttribute('height', '1234')
 })

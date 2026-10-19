@@ -21,11 +21,11 @@ ak-docs search "How do I send a notification?" --agent
 ak-docs list knowledge --text`,
 }
 
-export const drift = `before: export async function send(to: string, text: string): Promise<SendResult> {
-after: export type Channel = "email" | "sms" | "push";
-interface SendInput { to: string; text: string; channel: Channel; }
-export async function send({ to, text, channel }: SendInput): Promise<SendResult> {
-Guides were NOT updated.`
+export const drift = {
+  before: 'export async function send(to: string, text: string): Promise<SendResult> {',
+  after: 'export type Channel = "email" | "sms" | "push";\ninterface SendInput { to: string; text: string; channel: Channel; }\nexport async function send({ to, text, channel }: SendInput): Promise<SendResult> {',
+  file: 'packages/notify/src/send.ts',
+} as const
 
 export const blocked: DemoRecording = {
   command: 'ak-docs index',
@@ -45,11 +45,21 @@ export const gateBlocked: DemoRecording = {
 }
 
 export const fixed = {
-  gate: { command: 'ak-docs gate run reference-findings', exitCode: 0, output: 'gate: 0 pending' },
-  index: { command: 'ak-docs index', exitCode: 0, output: 'ok: knowledgeCount=3 contentHash=5d34049412ff' },
+  gate: { command: 'ak-docs gate run reference-findings', exitCode: 0, output: 'json: ok=true gate=0 pending' },
+  index: { command: 'ak-docs index', exitCode: 0, output: 'json: ok=true knowledgeCount=3 contentHash=5d34049412ff' },
 } satisfies { gate: DemoRecording; index: DemoRecording }
 
 export const guideBefore = `import { send } from "@demo/notify";\n\nawait send("ana@example.com", "Your order has shipped");`
 export const guideAfter = `import { send } from "@demo/notify";\n\nawait send({\n  to: "ana@example.com",\n  text: "Your order has shipped",\n  channel: "email",\n});`
-export const agentAnswerStale = `claude-haiku-5-5 answered: await send("ana@example.com", "Your order has shipped"); and stated "send(to, text)" takes two arguments, citing docs/guides/sending-notifications.md:8.`
-export const agentAnswerFixed = `claude-haiku-5-5 answered with:\n${guideAfter}\n\n"channel": one of "email", "sms", or "push", citing docs/guides/sending-notifications.md:8 and :23.`
+export const agentAnswerStale = {
+  model: 'claude-haiku-5-5',
+  code: 'await send("ana@example.com", "Your order has shipped");',
+  note: '`send(to, text)` takes two arguments',
+  citations: ['docs/guides/sending-notifications.md:8'],
+}
+export const agentAnswerFixed = {
+  model: 'claude-haiku-5-5',
+  code: guideAfter.split('\n').slice(2).join('\n'),
+  note: '`channel`: one of "email", "sms", or "push"',
+  citations: ['docs/guides/sending-notifications.md:8', 'docs/guides/sending-notifications.md:23'],
+}
