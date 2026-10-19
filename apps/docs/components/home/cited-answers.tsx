@@ -16,7 +16,7 @@ export function CitedAnswers() {
           <div className="bridge-agent-answer">
             <p className="bridge-eyebrow">AGENT ANSWER · {agentAnswerFixed.model}</p>
             <pre><code>{agentAnswerFixed.code}</code></pre>
-            <p>{agentAnswerFixed.note} · <a href="/docs/guides/sending-notifications#send">{agentAnswerFixed.citations[0]}</a></p>
+            <p>{agentAnswerFixed.note} · <code>{agentAnswerFixed.citations[0]}</code></p>
           </div>
         </div>
       </div>

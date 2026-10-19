@@ -11,11 +11,11 @@ const steps = [
 ]
 
 export function HeroTerminal() {
-  const [step, setStep] = useState(2)
-  const [paused, setPaused] = useState(true)
+  const [step, setStep] = useState(0)
+  const [paused, setPaused] = useState(false)
   useEffect(() => {
     const query = window.matchMedia('(prefers-reduced-motion: reduce)')
-    const update = () => { setPaused(query.matches); if (!query.matches) setStep(0) }
+    const update = () => { setPaused(query.matches); if (query.matches) setStep(steps.length - 1); else setStep(0) }
     update()
     query.addEventListener('change', update)
     return () => query.removeEventListener('change', update)
