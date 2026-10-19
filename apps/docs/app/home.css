@@ -46,7 +46,7 @@ agentskit-footer, agentskit-ecosystem { display: block; }
 }
 
 .bridge-home-hero { border-bottom: 1px solid color-mix(in srgb, var(--bridge-home-border) 68%, transparent); }
-.bridge-home-hero-inner, .bridge-principles, .bridge-proof-inner, .bridge-knowledge-inner, .bridge-final-cta {
+.bridge-home-hero-inner, .bridge-final-cta, .bridge-how-inner {
   width: min(100% - 3rem, 80rem);
   margin-inline: auto;
 }
