@@ -32,8 +32,8 @@ const clip = (text: string): string => {
 const plain = (text: string): string => text
   .replace(/!?\[\[([^\]|]*)(?:\|([^\]]*))?\]\]/g, (_, target: string, label?: string) => label ?? target)
   .replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1')
-  .replace(/<[^>]*>/g, '')
-  .replace(/[\[\]]/g, '')
+  // Angle brackets are dropped outright, so no HTML element can survive in a note.
+  .replace(/[<>\[\]]/g, '')
 
 /** The declared description, else the first prose paragraph after the title. */
 export const documentSummary = (markdown: string): string | undefined => {

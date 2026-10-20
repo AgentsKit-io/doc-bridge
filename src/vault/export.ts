@@ -1,6 +1,6 @@
 import { runCommand } from '@agentskit/cross-platform'
 import { createHash } from 'node:crypto'
-import { existsSync, lstatSync, mkdirSync, readFileSync, realpathSync, unlinkSync, writeFileSync } from 'node:fs'
+import { closeSync, constants, existsSync, fstatSync, lstatSync, mkdirSync, openSync, readFileSync, realpathSync, unlinkSync, writeFileSync } from 'node:fs'
 import { dirname, isAbsolute, relative, resolve, sep } from 'node:path'
 import { stringify } from 'yaml'
 import { z } from 'zod'
@@ -155,9 +155,13 @@ export const renderVault = (root: string, output: string, config: DocBridgeConfi
   const nameOf = (id: string): string => (snapshot.entities.find(entity => entity.id === id)?.name ?? id).replace(/[\[\]|\r\n`]/g, ' ').trim()
   // Summary notes link only to other notes; an end without a note (excluded or not exported) is plain text.
   const noteLink = (id: string): string => filenames.has(id) ? link(id) : nameOf(id)
+  // Open once (refusing symlinks) and check the opened descriptor, so the file read is the file checked.
   const readSource = (path: string): string | undefined => {
-    const target = safePath(root, path)
-    return existsSync(target) && lstatSync(target).isFile() ? readFileSync(target, 'utf8') : undefined
+    let fd: number | undefined
+    try {
+      fd = openSync(safePath(root, path), constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0))
+      return fstatSync(fd).isFile() ? readFileSync(fd, 'utf8') : undefined
+    } catch { return undefined } finally { if (fd !== undefined) closeSync(fd) }
   }
   const templates = new Map(Object.entries({ ...VAULT_NOTE_TYPES, ...(knowledge ? { symbol: '{{ body }}', module: '{{ body }}' } : {}) }).filter(([kind]) => knowledge || !['decision', 'concept', 'change'].includes(kind)).map(([kind, bundled]) => {
     const override = config.vault?.templates?.[kind]
