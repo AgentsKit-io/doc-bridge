@@ -66,6 +66,12 @@ symbol, package, module and area tags by type. Open the export directory as a
 vault and use Graph view; the preset hides `index`, `graph-signals` and commit (`changes/`) notes from the
 graph search. Obsidian settings already present or edited by a person are kept.
 
+For notes a person can read, set `vault.content: 'summary'`. Each note starts with a short
+summary (a document's description or first paragraph, a module's leading comment, a
+package's description) and lists its relations under headings like "Documented by" and
+"Imported by". Use `vault.exclude` (for example `["**/test/**", "talks/**"]`) to keep tests,
+configuration or meta documents out of the graph.
+
 Enable `index.knowledgeEntities.enabled` to include decision, concept and change
 notes with source-region or local commit evidence and links to observed facts.
 These notes use the same stable IDs and template registry. See the

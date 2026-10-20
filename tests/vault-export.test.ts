@@ -183,3 +183,34 @@ it('tags drifted documents, links the module that owns the changed symbol, and c
   expect(fixed).not.toContain('drift/')
   expect(fixed).not.toContain('## Findings')
 })
+
+it('writes summaries and readable relation sections, and leaves excluded files out of the vault', () => {
+  const { root, config, output } = fixture()
+  writeFileSync(join(root, 'src/core/a.ts'), "/** Entry point that wires the core modules. */\nimport './b.js'\nexport const a = 1\n")
+  writeFileSync(join(root, 'docs/notes/other.md'), '---\ndescription: The other guide, used to test summaries.\n---\n# Other\n\nIgnored body.\n')
+  const summary = { ...config, vault: { fileNames: 'readable' as const, indexBacklinks: false, content: 'summary' as const, exclude: ['src/core/c.ts'] } } as typeof config
+  const snapshot = discoverRepository({ root, config: summary })
+  const pages = renderVault(root, output, summary, snapshot)
+  const page = (id: string) => Object.values(pages).find(content => content.includes(`id: ${id}\n`))
+  const other = page('document:docs/notes/other.md')!
+  expect(other).toContain('The other guide, used to test summaries.')
+  expect(other).toContain('Documentation: `docs/notes/other.md`')
+  expect(other).toContain('## Linked from')
+  expect(other).not.toContain('observed links-to:')
+  const human = page('document:docs/notes/human.md')!
+  expect(human).toContain('Text that must never be copied')
+  expect(page('module:src/core/c.ts')).toBeUndefined()
+  expect(Object.values(pages).some(content => content.includes('c.ts'))).toBe(false)
+  const defaults = renderVault(root, output, config, discoverRepository({ root, config }))
+  expect(Object.values(defaults).some(content => content.includes('## Linked from'))).toBe(false)
+})
+
+it('summarises documents from their description or first paragraph and modules from their leading comment', async () => {
+  const { documentSummary, moduleSummary } = await import('../src/vault/content.js')
+  expect(documentSummary('---\ndescription: "Short."\n---\n# T\n\nBody.')).toBe('Short.')
+  expect(documentSummary('# T\n\n```ts\ncode\n```\n\nFirst [link](x) and [[wiki|label]].\nSecond line.\n\nNext.')).toBe('First link and label. Second line.')
+  expect(documentSummary('# Only a title\n')).toBeUndefined()
+  expect(moduleSummary('#!/usr/bin/env node\n/**\n * Sends things.\n * @param x\n */\nexport const a = 1')).toBe('Sends things.')
+  expect(moduleSummary('// One line\n// two\nexport {}')).toBe('One line two')
+  expect(moduleSummary('export const a = 1')).toBeUndefined()
+})

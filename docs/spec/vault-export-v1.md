@@ -69,6 +69,24 @@ tags and a Findings section; resolved findings disappear on re-export.
 settings are kept and reported. The graph preset colors drift and entity-type
 tags and filters the navigation index, the graph-signals note and commit (`changes/`) notes. A finding links the closest exported note: its target, or the module that owns the changed symbol.
 
+`vault.content: summary` replaces the `## Relations` list with readable sections. A note
+opens with at most two short lines that say what the entity is:
+- a document's declared `description`, or else its first prose paragraph, flattened to
+  plain text and capped at 240 characters;
+- a module's leading comment;
+- a package's `package.json` description;
+- a one-line fact summary (path, counts of imports, documents and members).
+
+Relations follow, grouped under headings seen from the note's side, deduplicated, with each
+other end linked: Contains / Part of, Imports / Imported by, Depends on / Depended on by,
+Links to / Linked from, Mentions code / Documented by, Mentions / Mentioned by, and
+Re-exports / Re-exported by. An end without a note is written as plain text. The default
+`links` layout is unchanged.
+
+`vault.exclude` takes globs matched against source paths. A matching entity, and any entity
+without a path whose evidence all comes from excluded files, gets no note. It is also left
+out of every other note's relations and of `graph-signals`.
+
 ## Frontmatter and source binding
 
 Required frontmatter is generated independently of the presentation template:
