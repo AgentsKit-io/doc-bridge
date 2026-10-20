@@ -103,7 +103,7 @@ agentskit-footer, agentskit-ecosystem { display: block; }
 .bridge-proof-terminal-state:focus-visible, .bridge-install-tabs button:focus-visible { outline: 2px solid var(--bridge-home-blue); outline-offset: 2px; }
 .bridge-proof-terminal-state i { width: .38rem; height: .38rem; border-radius: 50%; background: var(--bridge-home-green); }
 .bridge-proof-terminal[data-paused='true'] .bridge-proof-terminal-state i { background: var(--bridge-home-muted); }
-.bridge-proof-terminal-body { display: grid; height: 16rem; gap: .25rem; overflow: auto; padding: .85rem; font-family: var(--ak-font-mono); font-size: .74rem; line-height: 1.8; }
+.bridge-proof-terminal-body { display: grid; height: 16rem; gap: .25rem; overflow: auto; padding: .85rem; font-family: var(--ak-font-mono); font-size: .75rem; line-height: 1.8; }
 .bridge-terminal-step { min-width: 0; overflow-wrap: anywhere; border-left: 1px solid transparent; padding: .2rem .65rem; color: var(--bridge-home-copy); transition: background 180ms ease, border-color 180ms ease; }
 .bridge-terminal-step p { margin: 0; }
 .bridge-terminal-step[data-active='true'] { border-color: var(--bridge-home-green); background: color-mix(in srgb, var(--bridge-home-green) 8%, transparent); }
@@ -115,7 +115,7 @@ agentskit-footer, agentskit-ecosystem { display: block; }
 .bridge-terminal-muted { color: var(--bridge-home-muted); }
 .bridge-terminal-copy { margin: .5rem .85rem .85rem auto; }
 .bridge-install-tabs { display: flex; flex-wrap: wrap; align-items: center; gap: .25rem; border-radius: .8rem .8rem 0 0; padding: .3rem; background: color-mix(in srgb, var(--bridge-home-surface) 54%, transparent); }
-.bridge-install-tabs button { min-height: 2.5rem; border: 0; border-radius: .55rem; background: transparent; padding: .55rem .8rem; color: var(--bridge-home-muted); font-family: var(--ak-font-mono); font-size: .67rem; text-transform: uppercase; letter-spacing: .08em; cursor: pointer; }
+.bridge-install-tabs button { min-height: 2.5rem; border: 0; border-radius: .55rem; background: transparent; padding: .55rem .8rem; color: var(--bridge-home-muted); font-family: var(--ak-font-mono); font-size: .75rem; text-transform: uppercase; letter-spacing: .08em; cursor: pointer; }
 .bridge-install-tabs button[aria-selected='true'] { background: color-mix(in srgb, var(--bridge-home-surface) 95%, transparent); color: var(--bridge-home-fg); }
 .bridge-install-tabs + [data-copy-code] { border-top-left-radius: 0; border-top-right-radius: 0; }
 .bridge-proof-terminal-footer { display: flex; align-items: center; justify-content: space-between; gap: .75rem; border-top: 1px solid var(--bridge-home-border); padding: .45rem .75rem; }
@@ -168,7 +168,7 @@ agentskit-footer, agentskit-ecosystem { display: block; }
 
 /* Typed terminal */
 .bridge-term-tabs { border-bottom: 1px solid var(--bridge-home-border); padding: .25rem .5rem; }
-.bridge-term-body { display: grid; align-content: start; gap: .1rem; min-height: 14rem; overflow-x: auto; padding: .9rem 1rem; font-family: var(--ak-font-mono); font-size: .74rem; line-height: 1.75; }
+.bridge-term-body { display: grid; align-content: start; gap: .1rem; min-height: 14rem; overflow-x: auto; padding: .9rem 1rem; font-family: var(--ak-font-mono); font-size: .75rem; line-height: 1.75; }
 .bridge-term-entry + .bridge-term-entry { margin-top: .6rem; }
 .bridge-term-command { color: var(--bridge-home-fg); overflow-wrap: anywhere; }
 .bridge-term-line { white-space: pre-wrap; overflow-wrap: anywhere; color: var(--bridge-home-copy); animation: bridge-line-in 240ms cubic-bezier(.25, 1, .5, 1) both; }
@@ -224,7 +224,7 @@ agentskit-footer, agentskit-ecosystem { display: block; }
 .bridge-split-footer { display: grid; gap: .6rem; border-top: 1px solid var(--bridge-home-border); padding: .85rem 1.1rem; color: var(--bridge-home-copy); font-size: .8rem; }
 .bridge-agent-details summary { width: fit-content; color: var(--bridge-home-fg); cursor: pointer; }
 .bridge-agent-details summary:focus-visible { outline: 2px solid var(--bridge-home-blue); outline-offset: 2px; }
-.bridge-agent-details pre { margin-top: .6rem; overflow-x: auto; color: var(--bridge-home-fg); font: .74rem/1.7 var(--ak-font-mono); }
+.bridge-agent-details pre { margin-top: .6rem; overflow-x: auto; color: var(--bridge-home-fg); font: .75rem/1.7 var(--ak-font-mono); }
 .bridge-agent-details > p { margin-top: .5rem; }
 .bridge-model-label { color: var(--bridge-home-muted); font-size: .76rem; }
 
