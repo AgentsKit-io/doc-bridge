@@ -1,6 +1,6 @@
 import { runCommand } from '@agentskit/cross-platform'
 import { createHash } from 'node:crypto'
-import { existsSync, lstatSync, mkdirSync, readFileSync, realpathSync, unlinkSync, writeFileSync } from 'node:fs'
+import { closeSync, constants, existsSync, fstatSync, lstatSync, mkdirSync, openSync, readFileSync, realpathSync, unlinkSync, writeFileSync } from 'node:fs'
 import { dirname, isAbsolute, relative, resolve, sep } from 'node:path'
 import { stringify } from 'yaml'
 import { z } from 'zod'
@@ -16,6 +16,7 @@ import { toPosix } from '../lib/paths.js'
 import { compileTemplate, renderCompiledTemplate } from '../render/engine.js'
 import type { DiscoverySnapshotV1 } from '../schemas/knowledge.js'
 import type { PendingReferenceFinding } from '../gates/reference-findings.js'
+import { entitySummary, excludedFromVault, relationSections } from './content.js'
 
 export const hash = (value: string | Buffer): string => createHash('sha256').update(value).digest('hex')
 export const MANIFEST = '.doc-bridge-vault.json'
@@ -120,7 +121,9 @@ export const renderVault = (root: string, output: string, config: DocBridgeConfi
   const knowledgeById = new Map(knowledge?.entities.map(entity => [entity.id, entity]))
   if (knowledge) snapshot = { ...snapshot, entities: [...snapshot.entities, ...knowledge.entities.map(entity => ({ id: entity.id, kind: entity.kind, name: entity.name, aliases: entity.aliases, provenance: 'observed' as const, evidence: entity.evidence.flatMap(item => item.kind === 'document-region' ? [{ source: 'documentation' as const, path: item.path, lineStart: item.lineStart, lineEnd: item.lineEnd, contentHash: item.regionHash }] : []) }))], coverage: [...snapshot.coverage, ...knowledge.coverage] }
 
-  const entities = snapshot.entities.filter(entity => entity.kind !== 'index' && entity.kind !== 'graph-signals' && (knowledge || !['decision', 'concept', 'change'].includes(entity.kind)) && (Object.hasOwn(VAULT_NOTE_TYPES, entity.kind) || (knowledge && ['symbol', 'module'].includes(entity.kind)))).sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0)
+  const excluded = config.vault?.exclude ?? []
+  const excludedIds = new Set(snapshot.entities.filter(entity => excludedFromVault(entity, excluded)).map(entity => entity.id))
+  const entities = snapshot.entities.filter(entity => !excludedIds.has(entity.id) && entity.kind !== 'index' && entity.kind !== 'graph-signals' && (knowledge || !['decision', 'concept', 'change'].includes(entity.kind)) && (Object.hasOwn(VAULT_NOTE_TYPES, entity.kind) || (knowledge && ['symbol', 'module'].includes(entity.kind)))).sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0)
   const readable = config.vault?.fileNames === 'readable'
   const stems = new Map<string, number>()
   if (readable) for (const entity of entities) { const key = `${folders[entity.kind] ?? 'docs'}/${readableSlug(entity.name)}`; stems.set(key, (stems.get(key) ?? 0) + 1) }
@@ -148,6 +151,17 @@ export const renderVault = (root: string, output: string, config: DocBridgeConfi
     const filename = filenames.get(id)
     const label = (entities.find(entity => entity.id === id)?.name ?? id).replace(/[\[\]|\r\n]/g, ' ').trim()
     return filename ? readable ? `[[${filename.slice(0, -3)}|${label}]]` : `[[${filename.slice(0, -3)}]]` : `\`${id.replace(/`/g, '')}\``
+  }
+  const nameOf = (id: string): string => (snapshot.entities.find(entity => entity.id === id)?.name ?? id).replace(/[\[\]|\r\n`]/g, ' ').trim()
+  // Summary notes link only to other notes; an end without a note (excluded or not exported) is plain text.
+  const noteLink = (id: string): string => filenames.has(id) ? link(id) : nameOf(id)
+  // Open once (refusing symlinks) and check the opened descriptor, so the file read is the file checked.
+  const readSource = (path: string): string | undefined => {
+    let fd: number | undefined
+    try {
+      fd = openSync(safePath(root, path), constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0))
+      return fstatSync(fd).isFile() ? readFileSync(fd, 'utf8') : undefined
+    } catch { return undefined } finally { if (fd !== undefined) closeSync(fd) }
   }
   const templates = new Map(Object.entries({ ...VAULT_NOTE_TYPES, ...(knowledge ? { symbol: '{{ body }}', module: '{{ body }}' } : {}) }).filter(([kind]) => knowledge || !['decision', 'concept', 'change'].includes(kind)).map(([kind, bundled]) => {
     const override = config.vault?.templates?.[kind]
@@ -193,15 +207,25 @@ export const renderVault = (root: string, output: string, config: DocBridgeConfi
       const target = findingTarget(finding.target)
       return `- ${finding.line ?? '?'} → ${finding.target} (${finding.code})${target ? ` — ${link(target)}` : ''}`
     })
-    const body = [`# ${entity.name.replace(/[\r\n]/g, ' ')}`, '', ...sourceLinks, '', '## Relations', '', ...relations.map(relation => `- ${relation.provenance} ${relation.kind}: ${link(relation.from)} → ${link(relation.to)}`), ...(observed ? ['', '## Evidence', '', ...evidenceLinks, '', '## Knowledge links', '', ...knowledgeLinks] : []), ...(findingLines.length ? ['', '## Findings', '', ...findingLines] : []), ...(config.vault?.indexBacklinks === false ? [] : ['', '[[index]]'])].join('\n')
+    const summary = config.vault?.content === 'summary'
+    const visible = relations.filter(relation => !excludedIds.has(relation.from) && !excludedIds.has(relation.to))
+    const body = summary ? [
+      `# ${entity.name.replace(/[\r\n]/g, ' ')}`, '', ...entitySummary(root, entity, visible, readSource), '', ...sourceLinks,
+      ...relationSections(entity, visible, noteLink, nameOf),
+      ...(observed ? ['', '## Evidence', '', ...evidenceLinks, '', '## Knowledge links', '', ...knowledgeLinks] : []),
+      ...(findingLines.length ? ['', '## Findings', '', ...findingLines] : []),
+      ...(config.vault?.indexBacklinks === false ? [] : ['', '[[index]]']),
+    ].join('\n') : [`# ${entity.name.replace(/[\r\n]/g, ' ')}`, '', ...sourceLinks, '', '## Relations', '', ...relations.map(relation => `- ${relation.provenance} ${relation.kind}: ${link(relation.from)} → ${link(relation.to)}`), ...(observed ? ['', '## Evidence', '', ...evidenceLinks, '', '## Knowledge links', '', ...knowledgeLinks] : []), ...(findingLines.length ? ['', '## Findings', '', ...findingLines] : []), ...(config.vault?.indexBacklinks === false ? [] : ['', '[[index]]'])].join('\n')
     render(filenames.get(entity.id)!, entity.kind, { id: entity.id, sourcePath: entity.path ?? null, sources: sourceBindings, aliases: [...new Set(entity.aliases ?? [])].sort(), tags, ...(observed ? { evidence: observed.evidence } : {}) }, body)
   }
   const scores = (signal: ReadonlyMap<string, number>): string[] => [...signal].map(([id, score]) => `- ${link(id)}: ${score}`)
   const signalLink = (id: string): string => config.vault?.indexBacklinks === false ? (entities.find(entity => entity.id === id)?.name ?? id) : link(id)
+  // Excluded entities stay out of the vault entirely, signals included.
+  const kept = <T,>(items: Iterable<[string, T]>): [string, T][] => [...items].filter(([id]) => !excludedIds.has(id))
   render('graph-signals.md', 'graph-signals', { id: 'vault:graph-signals', aliases: [], tags: [] }, [
-    '# Graph signals', '', '## Canonicality', '', ...[...canonicality(snapshot)].map(([id, score]) => `- ${signalLink(id)}: ${score}`), '', '## Centrality', '', ...[...centrality(snapshot)].map(([id, score]) => `- ${signalLink(id)}: ${score}`), '',
-    '## Import cycles', '', ...importCycles(snapshot).map(cycle => `- ${cycle.nodes.map(signalLink).join(' → ')}`), '',
-    '## Area suggestions', '', ...areaSuggestions(snapshot).map(area => `- ${area.label}: ${area.members.map(signalLink).join(', ')}`), '', ...(config.vault?.indexBacklinks === false ? [] : ['[[index]]']),
+    '# Graph signals', '', '## Canonicality', '', ...kept(canonicality(snapshot)).map(([id, score]) => `- ${signalLink(id)}: ${score}`), '', '## Centrality', '', ...kept(centrality(snapshot)).map(([id, score]) => `- ${signalLink(id)}: ${score}`), '',
+    '## Import cycles', '', ...importCycles(snapshot).filter(cycle => !cycle.nodes.some(id => excludedIds.has(id))).map(cycle => `- ${cycle.nodes.map(signalLink).join(' → ')}`), '',
+    '## Area suggestions', '', ...areaSuggestions(snapshot).map(area => `- ${area.label}: ${area.members.filter(id => !excludedIds.has(id)).map(signalLink).join(', ')}`), '', ...(config.vault?.indexBacklinks === false ? [] : ['[[index]]']),
   ].join('\n'))
   render('index.md', 'index', { id: 'vault:index', aliases: [], tags: [] }, ['# Knowledge map', '', ...entities.map(entity => `- ${entity.kind}: ${link(entity.id)}`), '', '[[graph-signals]]', '', 'Generated navigation links to source documents; it does not copy their contents.', '', 'Coverage:', ...snapshot.coverage.map(item => `- ${item.analyzer}: ${item.scope} — ${item.status}${item.reason ? ` (${item.reason})` : ''}`)].join('\n'))
 

@@ -640,6 +640,8 @@ export const DocBridgeConfigV1Schema = z
       indexBacklinks: z.boolean().optional(),
       findings: z.boolean().optional(),
       obsidian: z.boolean().optional(),
+      content: z.enum(['links', 'summary']).optional(),
+      exclude: z.array(z.string().min(1).max(256)).max(64).optional(),
     }).strict().optional(),
   })
   .strict()
