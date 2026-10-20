@@ -109,6 +109,16 @@
 
 - Precompute semantic hash ordering keys once per entry and bound syntax-tree retention for index-only scans and reuse parsed trees in discovery, reducing index-build cost without changing artifact bytes or hash identity.
 
+## 2.2.0
+
+### Minor Changes
+
+- f1d782b: Add readable Obsidian vault exports, graph styling, optional index backlink suppression, and pending reference drift findings.
+
+### Patch Changes
+
+- f1d782b: `ak-docs doctor` no longer reports 100% reachability (and an A grade) when a document is missing from a large retrieval projection; partial coverage now tops out at 99%.
+
 ## 2.1.0
 
 ### Minor Changes
