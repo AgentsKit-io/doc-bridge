@@ -1,6 +1,6 @@
 ---
 title: For agents
-description: Resolve ownership, read compact context, and run the repository's own checks before editing.
+description: Resolve ownership and run the repository's own checks before editing.
 ---
 
 # For agents

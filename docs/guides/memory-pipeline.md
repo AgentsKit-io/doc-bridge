@@ -1,6 +1,6 @@
 ---
 title: Memory pipeline
-description: Digest agent notes, classify them, and promote reviewable documentation drafts — never silent auto-merge.
+description: Digest agent notes, classify them, and promote reviewable drafts; never auto-merge.
 ---
 
 # Memory pipeline

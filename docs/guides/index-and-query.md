@@ -1,6 +1,6 @@
 ---
 title: Index and query
-description: Build a deterministic index and resolve ownership handoffs without calling a model.
+description: Build a deterministic index and resolve ownership without calling a model.
 ---
 
 # Index and query

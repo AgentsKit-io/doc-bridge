@@ -1,6 +1,6 @@
 ---
 title: Chat and RAG
-description: Add optional AgentsKit retrieval and chat after deterministic documentation resolution.
+description: Add optional AgentsKit retrieval and chat after deterministic lookup.
 ---
 
 # Chat and RAG (Layer 1)
