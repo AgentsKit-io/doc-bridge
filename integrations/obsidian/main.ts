@@ -76,7 +76,8 @@ export default class DocBridgePlugin extends Plugin {
       if (!this.settings.repositoryRoot) throw new Error('Set the repository root in Doc Bridge settings')
       const command = splitCommand(this.settings.command)
       const env = { ...process.env, PATH: childPath(process.env.PATH, this.settings.extraPath, process.platform === 'win32' ? ';' : ':') }
-      await execFileAsync(command[0], [...command.slice(1), 'index'], { cwd: this.settings.repositoryRoot, env, windowsHide: true })
+      // Only the vault export: it discovers the repository itself, and `ak-docs index` deliberately fails
+      // while the publication gate blocks drift, which is exactly when the graph must show it.
       const args = [...command.slice(1), 'vault', 'export', ...(this.settings.findings ? ['--findings'] : []), '--json']
       const result = await execFileAsync(command[0], args, { cwd: this.settings.repositoryRoot, env, windowsHide: true, maxBuffer: 10 * 1024 * 1024 })
       const parsed = parseExportJson(result.stdout)
