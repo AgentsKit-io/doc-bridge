@@ -1,6 +1,6 @@
 ---
 title: Publication gate
-description: Stop ak-docs index from publishing llms.txt and the index while documentation still cites code that changed.
+description: Stop ak-docs index from publishing while documentation cites code that changed.
 ---
 
 # Publication gate

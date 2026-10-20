@@ -1,32 +1,18 @@
 import Link from 'next/link'
-import { ArrowRight, Bot, GitBranch, ShieldCheck, Terminal, Zap } from 'lucide-react'
-import { readdirSync } from 'node:fs'
-import { resolve } from 'node:path'
-import { HandoffProof } from '@/components/home/handoff-proof'
+import { ArrowRight } from 'lucide-react'
+import { HeroTerminal } from '@/components/home/hero-terminal'
 import { InstallCommandTabs } from '@/components/home/install-command-tabs'
-import { ProofTerminal } from '@/components/home/proof-terminal'
-import { AssemblyFigureSection } from '@/components/home/assembly-figure'
-import { Release2Section } from '@/components/home/release-2-0'
-import { AgentStudySection } from '@/components/home/agent-study'
-import { WaitlistForm } from '@/components/home/waitlist-form'
+import { BridgeFigure } from '@/components/home/bridge-figure'
+import { BrandMark, TOOLS } from '@/components/home/brand-mark'
+import { CitedAnswers } from '@/components/home/cited-answers'
+import { DriftFindings } from '@/components/home/drift-findings'
+import { PublicationGate } from '@/components/home/publication-gate'
+import { Surfaces } from '@/components/home/surfaces'
+import { Measured } from '@/components/home/measured'
 import { EcosystemShowcase } from '@/components/ecosystem'
 import { ProductSubheader } from '@/components/product-subheader'
 import { SiteFooter } from '@/components/site-footer'
 import './home.css'
-
-const principles = [
-  [Zap, 'Deterministic by default', 'Known questions stay local. Every answer keeps its source.'],
-  [ShieldCheck, 'Freshness you can enforce', 'CI catches drift before stale context reaches an agent.'],
-  [Bot, 'One handoff, every surface', 'MCP and CLI share the same repository-backed context.'],
-  [GitBranch, 'Knowledge returns to docs', 'Agent findings become reviewable drafts, never silent edits.'],
-] as const
-
-// Build-time switch: the waitlist block is omitted entirely unless the variable is an https URL.
-const waitlistEndpoint = process.env.NEXT_PUBLIC_WAITLIST_URL?.trim() ?? ''
-const waitlistEnabled = /^https:\/\//u.test(waitlistEndpoint)
-
-const sourceCount = readdirSync(resolve(process.cwd(), '../../docs'), { recursive: true })
-  .filter((path) => typeof path === 'string' && path.endsWith('.md') && !String(path).includes('DOGFOOD') && !String(path).startsWith('landing') && !String(path).startsWith('agent-corpus')).length
 
 export default function HomePage() {
   return (
@@ -37,15 +23,15 @@ export default function HomePage() {
         <section className="bridge-home-hero">
           <div className="bridge-home-hero-inner">
             <div className="bridge-hero-copy">
-              <p className="bridge-eyebrow"><span className="bridge-eyebrow-line" />ONE REPOSITORY · TWO AUDIENCES</p>
-              <h1>The docs your team reads.<br /><span>The context your agents need.</span></h1>
-              <p className="bridge-hero-description">Connect Fumadocs, Docusaurus, and Markdown to repository-backed MCP and CLI handoffs. Return agent memory as reviewable documentation.</p>
+              <p className="bridge-eyebrow"><span className="bridge-eyebrow-line" />DETERMINISTIC · CITED · DRIFT-AWARE</p>
+              <h1>Docs your team reads.<br /><span>Context your agents can cite.</span></h1>
+              <p className="bridge-hero-description">doc-bridge indexes your repository&apos;s docs, hands agents answers with <code>path:line</code> citations over CLI and MCP, and flags the doc the moment the code moves away from it.</p>
               <div className="bridge-hero-actions">
-                <Link href="/docs/getting-started" prefetch={false} className="bridge-button bridge-button-primary">Generate your first handoff <ArrowRight aria-hidden className="size-4" /></Link>
-                <a href="#proof" className="bridge-button bridge-button-secondary">See the handoff</a>
+                <Link href="/docs/getting-started" prefetch={false} className="bridge-button bridge-button-primary">Add to your repo <ArrowRight aria-hidden className="size-4" /></Link>
+                <a href="#finding" className="bridge-button bridge-button-secondary">See a finding</a>
               </div>
             </div>
-            <HandoffProof />
+            <HeroTerminal />
             <div className="bridge-install">
               <span className="bridge-eyebrow">ADD TO YOUR REPOSITORY</span>
               <InstallCommandTabs />
@@ -53,77 +39,33 @@ export default function HomePage() {
           </div>
         </section>
 
-        <AssemblyFigureSection />
-
-        <section className="bridge-principles" aria-labelledby="principles-title">
-          <div className="bridge-section-heading">
-            <p className="bridge-eyebrow">THE BRIDGE CONTRACT</p>
-            <h2 id="principles-title">One source of truth. A useful handoff.</h2>
-          </div>
-          <div className="bridge-principle-list">
-            {principles.map(([Icon, title, copy], index) => (
-              <article className="bridge-principle" key={title}>
-                <span className="bridge-principle-index">0{index + 1}</span>
-                <Icon aria-hidden className="bridge-principle-icon" />
-                <h3>{title}</h3>
-                <p>{copy}</p>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        <Release2Section />
-
-        <AgentStudySection />
-
-        <section id="proof" className="bridge-proof-section">
-          <div className="bridge-proof-inner">
-            <div className="bridge-proof-intro">
-              <p className="bridge-eyebrow">THE PROOF</p>
-              <h2>Useful before AI enters the loop.</h2>
-              <p>Known questions stay local and fast. Ambiguity surfaces with provenance. Only an unresolved miss earns a backend call.</p>
-              <Link href="/docs/guides/cli-map" prefetch={false} className="bridge-text-link">Explore the CLI <ArrowRight aria-hidden className="size-4" /></Link>
-              <p className="bridge-proof-count">{sourceCount} indexed knowledge sources</p>
-            </div>
-            <div className="bridge-proof-code"><ProofTerminal sourceCount={sourceCount} /></div>
-          </div>
-        </section>
-
-        <section id="knowledge-flow" className="bridge-knowledge-flow">
-          <div className="bridge-knowledge-inner">
+        <section id="how" className="bridge-how" aria-labelledby="how-title">
+          <div className="bridge-how-inner">
             <div className="bridge-section-heading">
-              <p className="bridge-eyebrow">HUMAN ↔ AGENT LOOP</p>
-              <h2>A feedback system, grounded in your repository.</h2>
-              <p>Documentation stays readable for people and structured enough for agents to use responsibly.</p>
+              <p className="bridge-eyebrow">HOW IT WORKS</p>
+              <h2 id="how-title">Loose docs in.<br />Cited context out.</h2>
             </div>
-            <div className="bridge-flow-list">
-              {([
-                [Terminal, 'People document intent', 'Explain the decisions, systems, and workflows that matter.'],
-                [ShieldCheck, 'Doc Bridge resolves context', 'Map ownership, starting points, edit roots, and checks.'],
-                [Bot, 'Agents act within scope', 'Provide compact, deterministic context through CLI or MCP.'],
-                [GitBranch, 'Knowledge comes back for review', 'Promote durable agent findings as human-owned drafts.'],
-              ] as const).map(([Icon, title, copy], index) => (
-                <article key={title}>
-                  <span className="bridge-flow-number">0{index + 1}</span>
-                  <Icon aria-hidden className="bridge-flow-icon" />
-                  <div><h3>{title}</h3><p>{copy}</p></div>
-                  {index < 3 ? <ArrowRight aria-hidden className="bridge-flow-arrow" /> : null}
-                </article>
-              ))}
+            <BridgeFigure />
+            <div className="bridge-works-with" aria-label="Works with">
+              <span className="bridge-eyebrow">WORKS WITH</span>
+              <ul>{Object.values(TOOLS).map((tool) => <li key={tool.label}><BrandMark slug={'slug' in tool ? tool.slug : undefined} label={tool.label} />{tool.label}</li>)}</ul>
             </div>
           </div>
         </section>
-
+        <CitedAnswers />
+        <DriftFindings />
+        <PublicationGate />
+        <Surfaces />
+        <Measured />
         <section className="bridge-final-cta">
           <div>
-            <p className="bridge-eyebrow">ONE REPOSITORY · TWO AUDIENCES</p>
-            <h2>Make your repository clear to the people and agents working in it.</h2>
-            <p>Start with the docs you have. Add structure where it gives your team a better handoff.</p>
+            <h2>Give your agents the line.<br />Catch the doc before they read it.</h2>
           </div>
-          <Link href="/docs/getting-started" prefetch={false} className="bridge-button bridge-button-primary">Add Doc Bridge to your repo <ArrowRight aria-hidden className="size-4" /></Link>
+          <div className="bridge-hero-actions">
+            <Link href="/docs/getting-started" prefetch={false} className="bridge-button bridge-button-primary">Add to your repo <ArrowRight aria-hidden className="size-4" /></Link>
+            <Link href="/docs" prefetch={false} className="bridge-button bridge-button-secondary">Read the docs</Link>
+          </div>
         </section>
-        {waitlistEnabled ? <WaitlistForm endpoint={waitlistEndpoint} /> : null}
-
         <EcosystemShowcase />
       </main>
       <SiteFooter />

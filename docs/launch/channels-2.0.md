@@ -1,6 +1,6 @@
 ---
 title: 2.0 launch channels plan
-description: Launch drafts for the published 2.0.0 release (Show HN, tutorial outline, community post, awesome-list entries); human-posted only, after the waitlist form is live.
+description: Launch drafts for 2.0.0 (Show HN, tutorial, community post, awesome-lists); posted by humans once the waitlist is live.
 owner: maintainers
 lifecycle: active
 sourceOfTruth: docs/launch/channels-2.0.md

@@ -1,6 +1,6 @@
 ---
 title: Release checklist
-description: Reproducible package, documentation, and registry checks for a Doc Bridge release.
+description: Package, documentation, and registry checks for a Doc Bridge release.
 ---
 
 # Release checklist — `@agentskit/doc-bridge`

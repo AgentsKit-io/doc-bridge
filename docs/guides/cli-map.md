@@ -1,6 +1,6 @@
 ---
 title: CLI map
-description: Every ak-docs command with copy-paste examples — Layer 0 core and optional Layer 1 intelligence.
+description: Every ak-docs command with copy-paste examples, for Layer 0 and Layer 1.
 ---
 
 # CLI map

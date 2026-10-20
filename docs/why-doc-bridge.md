@@ -1,6 +1,6 @@
 ---
 title: Why doc-bridge
-description: Evidence for documentation drift and useful repository handoffs, with explicit limits.
+description: Evidence for documentation drift and useful handoffs, with explicit limits.
 ---
 
 # Why doc-bridge

@@ -1,6 +1,6 @@
 ---
 title: Gate and CI
-description: Fail stale documentation context in pull requests with Doc Bridge gates and the Marketplace Action.
+description: Fail stale documentation context in pull requests with gates and the Marketplace Action.
 ---
 
 # Gate and CI

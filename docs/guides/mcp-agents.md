@@ -1,6 +1,6 @@
 ---
 title: MCP for agents
-description: Expose Doc Bridge handoffs to Cursor, Claude Desktop, and other MCP clients.
+description: Expose handoffs to Cursor, Claude Desktop, and other MCP clients.
 ---
 
 # MCP for agents

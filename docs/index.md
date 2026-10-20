@@ -1,6 +1,6 @@
 ---
 title: Documentation
-description: Practical Doc Bridge paths for humans, agents, PR gates, and MCP — one repository, two audiences.
+description: Doc Bridge paths for humans, agents, PR gates, and MCP.
 ---
 
 # Documentation

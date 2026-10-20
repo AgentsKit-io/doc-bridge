@@ -1,6 +1,6 @@
 ---
 title: GitHub Marketplace
-description: Run independent index gates and optional deterministic pull request advisories with the Doc Bridge composite Action.
+description: Run index gates and optional pull request advisories with the Doc Bridge composite Action.
 ---
 
 # GitHub Marketplace
