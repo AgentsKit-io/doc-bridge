@@ -1,0 +1,9 @@
+{
+  "id": "doc-bridge",
+  "name": "Doc Bridge",
+  "version": "0.1.0",
+  "minAppVersion": "1.8.7",
+  "description": "Refresh doc-bridge vault exports and review drift findings.",
+  "author": "AgentsKit",
+  "isDesktopOnly": true
+}
