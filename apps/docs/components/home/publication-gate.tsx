@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useMemo, useRef, useState } from 'react'
 import { advisory, agentAnswerFixed, blocked, fixed, toLines } from './demo-recordings'
-import { FULL, TerminalScript, highlight, highlightCode, useInView, useReducedMotion, useTypedScript, type TermEntry } from './terminal-typing'
+import { FULL, TerminalScript, highlight, highlightCode, useAfterLoad, useInView, useReducedMotion, useTypedScript, type TermEntry } from './terminal-typing'
 
 const CONFIG: { text: string; gate?: boolean }[] = [
   { text: '{' },
@@ -48,11 +48,12 @@ export function PublicationGate() {
   const ref = useRef<HTMLDivElement>(null)
   const inView = useInView(ref)
   const reduced = useReducedMotion()
+  const afterLoad = useAfterLoad()
   const [gateOn, setGateOn] = useState(true)
   const [isFixed, setIsFixed] = useState(false)
   const state: GateState = !gateOn ? 'advisory' : isFixed ? 'passed' : 'blocked'
   const entries = useMemo(() => SCRIPTS[state], [state])
-  const progress = useTypedScript(entries, state, inView && !reduced)
+  const progress = useTypedScript(entries, state, afterLoad && inView && !reduced)
   const status = STATUS[state]
 
   return (

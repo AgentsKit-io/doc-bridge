@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { agentAnswerStale, driftDiff, guideAfter, guideLines, toLines } from './demo-recordings'
-import { highlight, highlightCode, useInView, useReducedMotion } from './terminal-typing'
+import { highlight, highlightCode, useAfterLoad, useInView, useReducedMotion } from './terminal-typing'
 
 const STEPS = [
   { id: 'before', label: 'Before', hold: 2600 },
@@ -62,9 +62,10 @@ export function DriftFindings() {
   const ref = useRef<HTMLDivElement>(null)
   const inView = useInView(ref)
   const reduced = useReducedMotion()
+  const afterLoad = useAfterLoad()
   const [step, setStep] = useState(0)
   const [playing, setPlaying] = useState(true)
-  const animate = inView && playing && !reduced
+  const animate = afterLoad && inView && playing && !reduced
 
   useEffect(() => { if (reduced) setStep(2) }, [reduced])
   useEffect(() => {

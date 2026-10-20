@@ -16,17 +16,17 @@ export function Measured() {
           <p className="bridge-eyebrow">MEASURED</p>
           <h2 id="measured-title">Real numbers.<br /><span>Limits attached.</span></h2>
         </div>
-        <dl className="bridge-principle-list bridge-measured-list">
+        <ul className="bridge-principle-list bridge-measured-list">
           {stats.map(([Icon, value, label, source], index) => (
-            <div className="bridge-principle" key={label}>
+            <li className="bridge-principle" key={label}>
               <span className="bridge-principle-index">0{index + 1}</span>
               <Icon aria-hidden className="bridge-principle-icon" />
-              <dt>{value}</dt>
-              <dd>{label}</dd>
-              <dd className="bridge-principle-source">{source}</dd>
-            </div>
+              <p className="bridge-principle-value">{value}</p>
+              <p className="bridge-principle-label">{label}</p>
+              <p className="bridge-principle-source">{source}</p>
+            </li>
           ))}
-        </dl>
+        </ul>
         <p className="bridge-measured-limits">The Layer-1 benchmark uses purposive controls, not general semantic accuracy. The agent study is minimal: 6 tasks, 3 public repos, claude-haiku-5-5, and 18 attempts per scenario per run. An agent adjudicated answers without human review; the repository-only arm moved by about 0.1 between runs. In the run where the model never called doc-bridge tools, there was no gain (0.61 vs 0.72).</p>
         <a href="https://github.com/AgentsKit-io/doc-bridge/blob/main/docs/study/minimal-study-results-v1.md" rel="noopener noreferrer" className="bridge-text-link">Read the study <ArrowRight aria-hidden className="size-4" /></a>
       </div>

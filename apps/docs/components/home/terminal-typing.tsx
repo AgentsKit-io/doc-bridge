@@ -25,6 +25,33 @@ export function useReducedMotion(): boolean {
   return reduced
 }
 
+/** Defer nonessential demos until the page is loaded and the browser is idle. */
+export function useAfterLoad(): boolean {
+  const [ready, setReady] = useState(false)
+  useEffect(() => {
+    let idleId: number | undefined
+    let timer: ReturnType<typeof setTimeout> | undefined
+    let cancelled = false
+    const schedule = () => {
+      if (cancelled) return
+      if ('requestIdleCallback' in window) {
+        idleId = window.requestIdleCallback(() => setReady(true))
+      } else {
+        timer = setTimeout(() => setReady(true), 1200)
+      }
+    }
+    if (document.readyState === 'complete') schedule()
+    else window.addEventListener('load', schedule, { once: true })
+    return () => {
+      cancelled = true
+      window.removeEventListener('load', schedule)
+      if (idleId !== undefined && 'cancelIdleCallback' in window) window.cancelIdleCallback(idleId)
+      if (timer !== undefined) clearTimeout(timer)
+    }
+  }, [])
+  return ready
+}
+
 export function useInView(ref: RefObject<Element | null>): boolean {
   const [inView, setInView] = useState(false)
   useEffect(() => {
@@ -156,11 +183,12 @@ export function TerminalPlayer({ title, flows, ariaLabel, className, minHeight, 
   const ref = useRef<HTMLElement>(null)
   const inView = useInView(ref)
   const reduced = useReducedMotion()
+  const afterLoad = useAfterLoad()
   const [active, setActive] = useState(0)
   const [playing, setPlaying] = useState(true)
   const [round, setRound] = useState(0)
   const flow = flows[active]!
-  const animate = inView && playing && !reduced
+  const animate = afterLoad && inView && playing && !reduced
   const progress = useTypedScript(flow.entries, `${flow.id}:${round}`, animate, () => {
     if (flows.length > 1) setActive((current) => (current + 1) % flows.length)
     else if (loop) setRound((current) => current + 1)
