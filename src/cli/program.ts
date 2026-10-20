@@ -87,6 +87,7 @@ import { PACKAGE_VERSION } from '../version.js'
 import { auditDocumentation, formatDocumentationAuditText } from '../audit/documentation.js'
 import { diffVault } from '../vault/diff.js'
 import { exportVault, safePath } from '../vault/export.js'
+import { loadReferenceBase, pendingReferenceFindings, referenceComparabilityFailure, referenceHeadConfig } from '../gates/reference-findings.js'
 import { exportStudioGraph, type StudioExportOptions } from '../studio/export.js'
 import { renderArtifact, writeRenderedPages } from '../render/render.js'
 import { CLI_COMMAND_USAGE } from './usage.js'
@@ -1763,7 +1764,7 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
   })()
   if (command === 'vault') return (async () => {
     try {
-      if (!['export', 'diff'].includes(positional[1] ?? '') || positional.length !== 2) throw new Error('Usage: ak-docs vault export|diff [--pr] [--config <path>] [--text|--json]')
+      if (!['export', 'diff'].includes(positional[1] ?? '') || positional.length !== 2 || (flags.has('--findings') && positional[1] !== 'export')) throw new Error('Usage: ak-docs vault export [--findings] | diff [--pr] [--config <path>] [--text|--json]')
       const { config, root } = loadProject(configPath)
       if (positional[1] === 'diff') {
         const result = await diffVault(root, config)
@@ -1773,8 +1774,21 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
         else writeJson({ ok: true, ...result, ...(pr ? { pr } : {}) })
         return 0
       }
-      const result = await exportVault(root, config)
-      if (wantsTextOutput(flags, config)) writeLines([`Vault: ${result.output}`, `Notes: ${result.notes}`, `Removed: ${result.removed}`])
+      const includeFindings = flags.has('--findings') || config.vault?.findings === true
+      let pending
+      let findingsSnapshot
+      if (includeFindings) {
+        const loaded = loadReferenceBase(root, config)
+        if (!loaded.ok) throw new Error(`Vault findings unavailable: ${loaded.reason}`)
+        findingsSnapshot = discoverRepository({ root, config: referenceHeadConfig(loaded.base, config) })
+        const incomparable = referenceComparabilityFailure(loaded.base, findingsSnapshot)
+        if (incomparable) throw new Error(`Vault findings unavailable: ${incomparable.reason}`)
+        const check = pendingReferenceFindings(loaded.base, diffSnapshots(loaded.base, findingsSnapshot, { headRoot: root }))
+        if (!check.ok && !('findings' in check)) throw new Error(`Vault findings unavailable: ${check.reason}`)
+        pending = check.findings
+      }
+      const result = await exportVault(root, config, pending ? { findings: pending, ...(findingsSnapshot ? { snapshot: findingsSnapshot } : {}) } : includeFindings ? { findings: [], ...(findingsSnapshot ? { snapshot: findingsSnapshot } : {}) } : {})
+      if (wantsTextOutput(flags, config)) writeLines([`Vault: ${result.output}`, `Notes: ${result.notes}`, `Removed: ${result.removed}`, ...(result.findings === undefined ? [] : [`Findings: ${result.findings}`]), ...(result.warnings ?? [])])
       else writeJson({ ok: true, ...result })
       return 0
     } catch (error) {

@@ -165,7 +165,8 @@ export const computeScore = (coverage: DoctorCoverage): number => {
   return Math.min(100, Math.max(0, score))
 }
 
-const pct = (part: number, whole: number): number => (whole > 0 ? Math.round((part / whole) * 100) : 0)
+// 100% only when nothing is missing: with hundreds of documents one gap would otherwise round up to 100.
+const pct = (part: number, whole: number): number => (whole > 0 ? Math.min(Math.round((part / whole) * 100), part < whole ? 99 : 100) : 0)
 
 /**
  * An A requires all three measured dimensions, whatever the score says. A repository with no

@@ -636,6 +636,10 @@ export const DocBridgeConfigV1Schema = z
       output: z.string().min(1).max(512).optional(),
       humanNotes: z.string().min(1).max(512).optional(),
       templates: z.record(z.string().min(1).max(128), z.string().min(1).max(512)).optional(),
+      fileNames: z.enum(['hash', 'readable']).optional(),
+      indexBacklinks: z.boolean().optional(),
+      findings: z.boolean().optional(),
+      obsidian: z.boolean().optional(),
     }).strict().optional(),
   })
   .strict()

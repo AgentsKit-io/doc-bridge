@@ -23,7 +23,7 @@ const fixture = async () => {
   await exportVault(root, config)
   const output = join(root, '.doc-bridge/vault')
   const entity = discoverRepository({ root, config }).entities.find(entity => entity.path === 'docs/guide.md')!
-  const note = join(output, `${createHash('sha256').update(entity.id).digest('hex')}.md`)
+  const note = config.vault?.fileNames === 'readable' ? join(output, 'docs', 'guide.md') : join(output, `${createHash('sha256').update(entity.id).digest('hex')}.md`)
   return { root, config, output, note }
 }
 it('persists deterministic pending proposals with exact edits and source regions, preserves decisions and never changes source', async () => {
@@ -46,6 +46,15 @@ it('persists deterministic pending proposals with exact edits and source regions
   expect(readEnrichmentOverlay(root)!.pending).toHaveLength(0)
   expect(readFileSync(join(root, 'docs/guide.md'), 'utf8')).toBe('# Guide\n\nOriginal source.\n')
   expect(readFileSync(note, 'utf8')).toBe(proposal.payload.edited)
+})
+it('reviews edits in readable-name vaults through the manifest paths', async () => {
+  const { root, config } = await fixture()
+  const readable = { ...config, vault: { fileNames: 'readable' as const } }
+  await exportVault(root, readable)
+  const name = discoverRepository({ root, config }).entities.find(entity => entity.path === 'docs/guide.md')!.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+  const note = join(root, '.doc-bridge/vault/docs', `${name}.md`)
+  writeFileSync(note, `${readFileSync(note, 'utf8')}\nAn edit.\n`)
+  expect((await diffVault(root, readable)).proposals).toHaveLength(1)
 })
 it('reports added/deleted and unbound notes, excludes human notes, and fails closed on stale source bindings', async () => {
   const { root, config, output, note } = await fixture()

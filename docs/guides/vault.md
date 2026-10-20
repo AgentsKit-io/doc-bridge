@@ -54,6 +54,18 @@ of version control and do not copy it over the source corpus.
 See the [export contract](../spec/vault-export-v1.md) for filenames, hashes,
 containment and recovery limits.
 
+## Open in Obsidian
+
+Set `vault.fileNames: 'readable'` for graph labels such as
+`docs/sending-notifications`, and `vault.indexBacklinks: false` to keep the
+navigation index from becoming a graph hub. Set `vault.obsidian: true` to add
+type tags and write the graph preset; `vault.findings: true` or
+`ak-docs vault export --findings` highlights pending reference drift. Configure
+`gates.referenceFindings.base` first. The preset colors drift amber and document,
+symbol, package, module and area tags by type. Open the export directory as a
+vault and use Graph view; the preset hides `index`, `graph-signals` and commit (`changes/`) notes from the
+graph search. Obsidian settings already present or edited by a person are kept.
+
 Enable `index.knowledgeEntities.enabled` to include decision, concept and change
 notes with source-region or local commit evidence and links to observed facts.
 These notes use the same stable IDs and template registry. See the
