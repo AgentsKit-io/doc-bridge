@@ -166,7 +166,6 @@ const follow = (x, target, dt, tau, calm) => {
   return Math.abs(target - next) < 0.002 ? target : next;
 };
 const smooth = (t) => t * t * (3 - 2 * t);
-const clamp01 = (t) => Math.max(0, Math.min(1, t));
 const shiftOf = (by) => {
   const m = translateAlong(P, by).match(/translate\(([-\d.e]+)[ ,]+([-\d.e]+)\)/);
   return m ? [Number(m[1]), Number(m[2])] : [0, 0];

@@ -22,7 +22,7 @@ const G = await load("kit/lathe.mjs");
 const A = await load("kit/audit.mjs");
 const { kitScript } = await load("scripts/inline-kit.mjs");
 const { MODEL, verdict, initial } = await import(pathToFileURL(join(HERE, "model.mjs")).href);
-const { leafSvg, leafPose } = await import(pathToFileURL(join(HERE, "leaf.mjs")).href);
+const { leafSvg } = await import(pathToFileURL(join(HERE, "leaf.mjs")).href);
 
 const W = 1200;
 const H = 500;
