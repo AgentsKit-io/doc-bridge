@@ -1,0 +1,11 @@
+.nav-file-title.doc-bridge-drift::after {
+  content: "";
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  margin-left: 0.45rem;
+  border-radius: 50%;
+  background: var(--color-orange);
+}
+.doc-bridge-finding-title { display: block; margin-top: 0.75rem; font-weight: 600; }
+.doc-bridge-finding-item { padding-left: 0.75rem; color: var(--text-muted); }

@@ -1,0 +1,7 @@
+{
+  "name": "doc-bridge-obsidian",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": { "build": "node esbuild.config.mjs", "test": "vitest run" },
+  "devDependencies": { "esbuild": "0.28.2", "obsidian": "1.8.7", "vitest": "4.1.11" }
+}

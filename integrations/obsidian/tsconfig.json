@@ -1,0 +1,4 @@
+{
+  "compilerOptions": { "baseUrl": ".", "inlineSourceMap": true, "inlineSources": true, "module": "ESNext", "target": "ES2022", "allowJs": true, "noImplicitAny": true, "moduleResolution": "bundler", "skipLibCheck": true, "lib": ["DOM", "ES2022"], "types": ["obsidian"] },
+  "include": ["main.ts", "src/**/*.ts", "test/**/*.ts"]
+}
