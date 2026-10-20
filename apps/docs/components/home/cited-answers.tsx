@@ -1,10 +1,10 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { ask, agentAnswerFixed } from './demo-recordings'
+import { ask, agentAnswerFixed, toLines } from './demo-recordings'
 import { FULL, TerminalScript, highlight, highlightCode, useInView, useReducedMotion, useTypedScript, type TermLine } from './terminal-typing'
 
-const lines: TermLine[] = ask.output.split('\n').map((text) => ({
+const lines: TermLine[] = toLines(ask.output).map((text) => ({
   text,
   tone: text.startsWith('Best match:') ? 'ok' : text.startsWith('Next commands:') || text.startsWith('ak-docs ') ? 'muted' : 'out',
 }))

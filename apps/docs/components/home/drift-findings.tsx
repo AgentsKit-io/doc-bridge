@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { agentAnswerStale, driftDiff, guideAfter, guideLines } from './demo-recordings'
+import { agentAnswerStale, driftDiff, guideAfter, guideLines, toLines } from './demo-recordings'
 import { highlight, highlightCode, useInView, useReducedMotion } from './terminal-typing'
 
 const STEPS = [
@@ -12,7 +12,7 @@ const STEPS = [
 ] as const
 
 const FINDING = 'CHANGED_REFERENCE docs/guides/sending-notifications.md:8 → send'
-const fixedCall = guideAfter.split('\n').slice(2)
+const fixedCall = toLines(guideAfter).slice(2)
 // Lines 14–16 sit inside the guide's ```ts fence; the rest is prose and stays uncoloured.
 const CODE_LINES = new Set([14, 15, 16])
 

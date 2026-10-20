@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useMemo, useRef, useState } from 'react'
-import { advisory, agentAnswerFixed, blocked, fixed } from './demo-recordings'
+import { advisory, agentAnswerFixed, blocked, fixed, toLines } from './demo-recordings'
 import { FULL, TerminalScript, highlight, highlightCode, useInView, useReducedMotion, useTypedScript, type TermEntry } from './terminal-typing'
 
 const CONFIG: { text: string; gate?: boolean }[] = [
@@ -21,7 +21,7 @@ type GateState = 'advisory' | 'blocked' | 'passed'
 
 const SCRIPTS: Record<GateState, TermEntry[]> = {
   advisory: [{ command: advisory.index.command, lines: [{ text: advisory.index.output, tone: 'out' }] }],
-  blocked: [{ command: blocked.command, lines: blocked.output.split('\n').map((text) => ({ text, tone: text.startsWith('  ') ? 'out' : 'muted' })) }],
+  blocked: [{ command: blocked.command, lines: toLines(blocked.output).map((text) => ({ text, tone: text.startsWith('  ') ? 'out' : 'muted' })) }],
   passed: [
     { command: fixed.gate.command, lines: [{ text: fixed.gate.output, tone: 'out' }] },
     { command: fixed.index.command, lines: [{ text: fixed.index.output, tone: 'out' }] },

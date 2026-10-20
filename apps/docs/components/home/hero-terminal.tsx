@@ -1,10 +1,10 @@
 'use client'
 
-import { ask, blocked, driftDiff } from './demo-recordings'
+import { ask, blocked, driftDiff, toLines } from './demo-recordings'
 import { TerminalPlayer, type TermFlow, type TermLine } from './terminal-typing'
 
-const askLines: TermLine[] = ask.output.split('\n').slice(1, 6).map((text, index) => ({ text, tone: index === 0 ? 'ok' : 'out' }))
-const blockedLines: TermLine[] = blocked.output.split('\n').map((text) => ({ text, tone: text.startsWith('  ') ? 'out' : 'muted' }))
+const askLines: TermLine[] = toLines(ask.output).slice(1, 6).map((text, index) => ({ text, tone: index === 0 ? 'ok' : 'out' }))
+const blockedLines: TermLine[] = toLines(blocked.output).map((text) => ({ text, tone: text.startsWith('  ') ? 'out' : 'muted' }))
 
 const flows: TermFlow[] = [
   { id: 'ask', label: 'Ask', entries: [{ command: ask.command, lines: askLines }] },

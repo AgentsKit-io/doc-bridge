@@ -1,6 +1,9 @@
 // Recorded from a demo repository walkthrough with ak-docs 2.1.0 and claude-haiku-5-5; outputs are verbatim.
 export type DemoRecording = { command: string; exitCode: number; output: string }
 
+/** Splits recorded text into lines, tolerating CRLF line endings. */
+export const toLines = (text: string): string[] => text.split(/\r?\n/)
+
 export const ask: DemoRecording = {
   command: 'ak-docs ask "How do I send a notification?"',
   exitCode: 0,
@@ -68,7 +71,7 @@ Nothing was written: the index and llms.txt stay as they were.`,
 export const gateBlocked: DemoRecording = {
   command: 'ak-docs gate run reference-findings',
   exitCode: 1,
-  output: blocked.output.split('\n').slice(0, 5).join('\n'),
+  output: toLines(blocked.output).slice(0, 5).join('\n'),
 }
 
 export const fixed = {
@@ -95,7 +98,7 @@ export const agentAnswerStale = {
 }
 export const agentAnswerFixed = {
   model: 'claude-haiku-5-5',
-  code: guideAfter.split('\n').slice(2).join('\n'),
+  code: toLines(guideAfter).slice(2).join('\n'),
   note: '`channel`: one of "email", "sms", or "push"',
   citations: ['docs/guides/sending-notifications.md:8', 'docs/guides/sending-notifications.md:23'],
 }
