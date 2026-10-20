@@ -28,7 +28,7 @@ Generated output stays excluded from discovery.
 
 ## Layout and identity
 
-The flat output directory contains:
+The default flat output directory contains:
 
 - `<sha256(entity-id)>.md` for each discovered package, area and document;
 - `graph-signals.md`, containing existing canonicality, centrality, bounded import
@@ -44,6 +44,30 @@ Incoming and outgoing relations retain their kind, direction and provenance.
 Document notes link to source documents with relative Markdown links; source body
 text is not copied. The vault must remain at its configured project location for
 those links to resolve. Display titles are headings, not filename identities.
+
+`vault.fileNames` defaults to `hash`, preserving the flat layout byte-for-byte.
+Opt-in `readable` names use `<type-folder>/<slug>.md`; folders are `packages/`,
+`areas/`, `docs/`, `symbols/`, `modules/`, `decisions/`, `concepts/` and
+`changes/`. Slugs lowercase the display name, strip `[ ] | # ^ / \\ :` and
+control characters, replace other non-alphanumeric runs with `-`, trim `-`, and
+limit the result to 60 characters (`untitled` if empty). Duplicate folder/slug
+pairs get `-<first six hex digits of sha256(entity-id)>`. Readable links include
+an explicit display label, for example `[[docs/sending-notifications|Sending
+notifications]]`; paths and labels are sanitized so they cannot traverse or
+inject wikilink syntax. IDs never change.
+
+`vault.indexBacklinks` defaults to true. When false, entity notes and graph
+signals omit links back to the index; the index still links every entity.
+Readable naming or `vault.obsidian: true` adds sorted `doc-bridge/<type>` tags.
+`vault.findings: true` or `ak-docs vault export --findings` adds pending
+reference findings from the configured gate base. It fails closed if the base
+cannot be checked. Affected document notes receive `drift/<code-lower-kebab>`
+tags and a Findings section; resolved findings disappear on re-export.
+
+`vault.obsidian: true` requests `.obsidian/graph.json` and
+`.obsidian/app.json` under manifest ownership. Existing unowned or user-edited
+settings are kept and reported. The graph preset colors drift and entity-type
+tags and filters the navigation index and graph-signals note.
 
 ## Frontmatter and source binding
 

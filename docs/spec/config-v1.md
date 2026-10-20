@@ -1160,9 +1160,11 @@ See [Marketplace](../MARKETPLACE.md) for permissions and the self-CI exception.
 (default `docs/notes`); discovery remains explicit through
 `corpus.human: { plugin: 'obsidian', options: { root: 'docs/notes' } }`.
 `vault.templates` maps note types (`package`, `area`, `document`, `index`,
-`graph-signals`) to project-relative knap template files. Required identity and
-source-hash frontmatter remains outside template overrides. Paths reject traversal
-and symlinks. See [vault export v1](./vault-export-v1.md) for the full contract.
+`graph-signals`) to project-relative knap template files. `vault.fileNames` is
+`hash` by default or opt-in `readable`; `indexBacklinks` defaults true, while
+`findings` and `obsidian` default false. Readable names and Obsidian mode add
+type tags. Required identity and source-hash frontmatter remains outside template
+overrides. Paths reject traversal and symlinks. See [vault export v1](./vault-export-v1.md).
 
 The default MCP tool set includes `knowledge.decision`, `knowledge.concept` and
 `knowledge.whyChanged`; explicit tool allowlists remain restrictive. See

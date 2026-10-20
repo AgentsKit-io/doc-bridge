@@ -87,6 +87,31 @@ it('renders config overrides through knap while retaining required frontmatter',
   expect(readFileSync(join(output, 'index.md'), 'utf8')).toContain('id: vault:index')
 })
 
+it('exports readable, safe names, optional backlinks, tags and an owned Obsidian preset', async () => {
+  const { root, config, output } = fixture()
+  const snapshot = discoverRepository({ root, config })
+  const readable = { ...config, vault: { fileNames: 'readable' as const, indexBacklinks: false, obsidian: true } }
+  await exportVault(root, readable)
+  const first = readdirSync(join(output, 'docs')).sort()
+  await exportVault(root, readable)
+  expect(readdirSync(join(output, 'docs')).sort()).toEqual(first)
+  const doc = snapshot.entities.find(entity => entity.kind === 'document' && entity.path === 'docs/notes/human.md')!
+  const expectedName = doc.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+  const notePath = join(output, 'docs', `${expectedName}.md`)
+  const content = readFileSync(notePath, 'utf8')
+  expect(content).toContain('doc-bridge/document')
+  expect(content).not.toContain('[[index]]')
+  expect(content).toContain('[[docs/other-md|other.md]]')
+  expect(readFileSync(join(output, 'graph-signals.md'), 'utf8')).not.toContain('[[')
+  expect(doc.id).toBeTruthy()
+  const graph = join(output, '.obsidian/graph.json')
+  const graphBytes = readFileSync(graph, 'utf8')
+  expect(JSON.parse(graphBytes).colorGroups[0].query).toBe('tag:#drift')
+  writeFileSync(graph, '{}')
+  expect((await exportVault(root, readable)).warnings?.join(' ')).toContain('user edit')
+  expect(readFileSync(graph, 'utf8')).toBe('{}')
+})
+
 it('honors a custom ignored output and denies symlink notes and template paths', async () => {
   const { root, config } = fixture()
   writeFileSync(join(root, '.gitignore'), 'generated/\n')
