@@ -34,7 +34,7 @@ export const diffVault = async (rootPath: string, config: DocBridgeConfigV1) => 
   const manifest = ManifestSchema.parse(JSON.parse(readFileSync(safePath(root, toPosix(relative(root, resolve(output, MANIFEST)))), 'utf8')))
   const snapshot = discoverRepository({ root, config })
   const baseline = renderVault(root, output, config, snapshot)
-  const names = readdirSync(output).filter(name => name.endsWith('.md')).sort()
+  const names = readdirSync(output, { recursive: true }).filter((name): name is string => typeof name === 'string' && name.endsWith('.md')).map(name => toPosix(name)).sort()
   const added = names.filter(name => !Object.hasOwn(manifest.files, name))
   const deleted = Object.keys(manifest.files).filter(name => !names.includes(name)).sort()
   const unproposed: { note: string; reason: string }[] = []
