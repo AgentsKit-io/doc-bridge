@@ -4,6 +4,12 @@
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "lib": ["ES2022"],
+    "jsx": "react-jsx",
+    "baseUrl": ".",
+    "paths": {
+      "ink": ["node_modules/.pnpm/ink@7.1.1_@types+react@19.3.0_react@19.3.0/node_modules/ink/build/index.d.ts"],
+      "react": ["node_modules/@types/react/index.d.ts"]
+    },
     "types": ["node"],
     "strict": true,
     "noUncheckedIndexedAccess": true,
@@ -16,6 +22,6 @@
     "outDir": "dist",
     "rootDir": "src"
   },
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
   "exclude": ["node_modules", "dist"]
 }
