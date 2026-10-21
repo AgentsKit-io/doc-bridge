@@ -1,6 +1,6 @@
 import { createContext, useContext, type ReactElement, type ReactNode } from 'react'
 import { isAbsolute, relative } from 'node:path'
-import { Box, Text, render } from 'ink'
+import { Box, Text, renderToString } from 'ink'
 import { InkThemeProvider, StatusHeader } from '@agentskit/ink'
 import { splitLines, toPosix } from '@agentskit/cross-platform'
 
@@ -415,10 +415,11 @@ export const RICH_VIEWS = {
 
 export type RichCommand = keyof typeof RICH_VIEWS
 
-/** Renders once and exits: a static frame, no input, left in the scrollback. */
+/**
+ * Renders once into the scrollback at the terminal's width: a static frame, no input, no live
+ * region, so nothing is redrawn or duplicated when the process exits.
+ */
 export const printRich = async (element: ReactElement, options: { readonly stdout?: NodeJS.WriteStream } = {}): Promise<void> => {
-  const instance = render(element, { ...(options.stdout ? { stdout: options.stdout } : {}), patchConsole: false, exitOnCtrlC: false })
-  await instance.waitUntilRenderFlush()
-  instance.unmount()
-  await instance.waitUntilExit()
+  const stdout = options.stdout ?? process.stdout
+  stdout.write(`${renderToString(element, { columns: stdout.columns || 100 })}\n`)
 }
