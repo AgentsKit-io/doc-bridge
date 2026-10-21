@@ -90,7 +90,7 @@ import { exportVault, safePath } from '../vault/export.js'
 import { loadReferenceBase, pendingReferenceFindings, referenceComparabilityFailure, referenceHeadConfig } from '../gates/reference-findings.js'
 import { exportStudioGraph, type StudioExportOptions } from '../studio/export.js'
 import { renderArtifact, writeRenderedPages } from '../render/render.js'
-import { CLI_COMMAND_USAGE } from './usage.js'
+import { COMMAND_NAMES, writeCommandHelp } from './commands.js'
 import { checkPublicParity, formatPublicParityText } from '../parity/check.js'
 import { parsePublicClaims } from '../parity/claims.js'
 import { resolveTemplateSource } from '../render/template-source.js'
@@ -119,50 +119,8 @@ import { calculateStudyMetrics, formatStudyMetricsText } from '../study/metrics.
 import { formatStudyVerificationText, parseStudyVerificationBinding } from '../study/verification.js'
 import { checkIndexReproducibility } from '../discovery/reproducibility.js'
 
-type Command =
-  | 'help'
-  | 'version'
-  | 'validate-config'
-  | 'validate-handoff'
-  | 'init'
-  | 'bootstrap'
-  | 'memory'
-  | 'playbook'
-  | 'registry'
-  | 'diff'
-  | 'discover'
-  | 'benchmark'
-  | 'bench'
-  | 'study'
-  | 'scan'
-  | 'reconcile'
-  | 'check'
-  | 'map'
-  | 'fix'
-  | 'suggest'
-  | 'enrich'
-  | 'index'
-  | 'gate'
-  | 'rules'
-  | 'mcp'
-  | 'doctor'
-  | 'demo'
-  | 'query'
-  | 'search'
-  | 'retrieve'
-  | 'why'
-  | 'ask'
-  | 'chat'
-  | 'rag'
-  | 'list'
-  | 'conformance'
-  | 'audit'
-  | 'parity'
-  | 'render'
-  | 'vault'
-  | 'studio'
-
-const usage = `${CLI_COMMAND_USAGE}\nOptional remediation:\n  ak-docs fix --llm --base <snapshot.json> [--responses <script.json>] [--dry-run] [--pr]\n`
+/** `help` and `version` are flags; every other value is a name from COMMAND_NAMES. */
+type Command = 'help' | 'version' | string
 
 const QUERY_KINDS = new Set<QueryKind>(['package', 'ownership', 'intent', 'change', 'search'])
 const LIST_KINDS = new Set(['packages', 'intents', 'changes', 'knowledge'])
@@ -204,45 +162,7 @@ const parseArgs = (argv: readonly string[]) => {
   let command: Command = 'help'
   if (flags.has('--version') || flags.has('-V')) command = 'version'
   else if (flags.has('--help') || flags.has('-h')) command = 'help'
-  else if (positional[0] === 'validate-config') command = 'validate-config'
-  else if (positional[0] === 'validate-handoff') command = 'validate-handoff'
-  else if (positional[0] === 'init') command = 'init'
-  else if (positional[0] === 'bootstrap') command = 'bootstrap'
-  else if (positional[0] === 'memory') command = 'memory'
-  else if (positional[0] === 'playbook') command = 'playbook'
-  else if (positional[0] === 'registry') command = 'registry'
-  else if (positional[0] === 'diff') command = 'diff'
-  else if (positional[0] === 'discover') command = 'discover'
-  else if (positional[0] === 'benchmark') command = 'benchmark'
-  else if (positional[0] === 'bench') command = 'bench'
-  else if (positional[0] === 'study') command = 'study'
-  else if (positional[0] === 'scan') command = 'scan'
-  else if (positional[0] === 'reconcile') command = 'reconcile'
-  else if (positional[0] === 'check') command = 'check'
-  else if (positional[0] === 'map') command = 'map'
-  else if (positional[0] === 'fix') command = 'fix'
-  else if (positional[0] === 'suggest') command = 'suggest'
-  else if (positional[0] === 'enrich') command = 'enrich'
-  else if (positional[0] === 'index') command = 'index'
-  else if (positional[0] === 'gate') command = 'gate'
-  else if (positional[0] === 'rules') command = 'rules'
-  else if (positional[0] === 'mcp') command = 'mcp'
-  else if (positional[0] === 'doctor') command = 'doctor'
-  else if (positional[0] === 'demo') command = 'demo'
-  else if (positional[0] === 'query') command = 'query'
-  else if (positional[0] === 'search') command = 'search'
-  else if (positional[0] === 'retrieve') command = 'retrieve'
-  else if (positional[0] === 'why') command = 'why'
-  else if (positional[0] === 'ask') command = 'ask'
-  else if (positional[0] === 'chat') command = 'chat'
-  else if (positional[0] === 'rag') command = 'rag'
-  else if (positional[0] === 'list') command = 'list'
-  else if (positional[0] === 'conformance') command = 'conformance'
-  else if (positional[0] === 'audit') command = 'audit'
-  else if (positional[0] === 'parity') command = 'parity'
-  else if (positional[0] === 'render') command = 'render'
-  else if (positional[0] === 'studio') command = 'studio'
-  else if (positional[0] === 'vault') command = 'vault'
+  else if (positional[0] !== undefined && COMMAND_NAMES.has(positional[0])) command = positional[0]
 
   return { command, flags, configPath, positional }
 }
@@ -1578,7 +1498,8 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
   if (['discover', 'index', 'diff'].includes(command) && (argv.includes('--max-duration') || argv.includes('--progress'))) return runOperationCli(argv, command)
 
   if (command === 'help') {
-    process.stdout.write(usage)
+    // `<command> --help` gets that command's help; anything else gets the top-level help, as before.
+    writeCommandHelp(flags.has('--help') || flags.has('-h') ? positional[0] : undefined)
     return 0
   }
 
@@ -2398,6 +2319,6 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
     }
   }
 
-  process.stdout.write(usage)
+  writeCommandHelp()
   return 1
 }
