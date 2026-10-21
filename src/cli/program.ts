@@ -1191,7 +1191,7 @@ const runSuggestCommand = async (flags: ReadonlySet<string>, configPath: string 
     const documentation = flags.has('--documentation') ? buildDocumentationAuditReport(root, config) : undefined
     const proposal = await adapter.run(snapshot, report, undefined, documentation)
     const proposalPath = persistRegistryAgentProposal(stateDir, proposal)
-    if (flags.has('--text')) writeLines([`Agent: ${adapter.metadata.id}`, ...(documentation ? [`Documentation audit: ${documentation.contentHash}`] : []), `Proposal: ${proposal.proposalId}`, `Hash: ${proposal.contentHash}`, `Saved: ${proposalPath}`])
+    if (flags.has('--text')) writeLines([`Agent: ${adapter.metadata.id}`, ...(documentation ? [`Documentation audit: ${documentation.contentHash}`] : []), `Proposal: ${proposal.proposalId}`, `Hash: ${proposal.contentHash}`, `Saved: ${displayPath(root, proposalPath)}`])
     else writeJson({ ok: true, ...(documentation ? { documentationAuditHash: documentation.contentHash } : {}), proposal, proposalPath })
     return 0
   } catch (error) {
