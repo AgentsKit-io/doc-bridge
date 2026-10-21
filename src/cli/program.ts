@@ -119,6 +119,16 @@ import { formatStudyProviderCliText, parseStudyProviderCliConfig } from '../stud
 import { calculateStudyMetrics, formatStudyMetricsText } from '../study/metrics.js'
 import { formatStudyVerificationText, parseStudyVerificationBinding } from '../study/verification.js'
 import { checkIndexReproducibility } from '../discovery/reproducibility.js'
+import { richOutput } from './ui/mode.js'
+
+/** True when a person at a terminal gets the Ink views; pipes, CI, agents and --json/--text stay plain. */
+const wantsRich = (flags: ReadonlySet<string>): boolean => richOutput({ stdout: process.stdout, flags, env: process.env })
+/** Loads Ink only for rich output, so plain runs (agents, CI) never pay for it. */
+const showRich = async (pick: (ui: typeof import('./ui/index.js')) => Parameters<typeof import('./ui/index.js')['printRich']>[0], code: number): Promise<number> => {
+  const ui = await import('./ui/index.js')
+  await ui.printRich(pick(ui))
+  return code
+}
 
 /** `help` and `version` are flags; every other value is a name from COMMAND_NAMES. */
 type Command = 'help' | 'version' | string
@@ -1744,6 +1754,7 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
         pending = check.findings
       }
       const result = await exportVault(root, config, pending ? { findings: pending, ...(findingsSnapshot ? { snapshot: findingsSnapshot } : {}) } : includeFindings ? { findings: [], ...(findingsSnapshot ? { snapshot: findingsSnapshot } : {}) } : {})
+      if (wantsRich(flags)) return showRich((ui) => ui.RICH_VIEWS.vault({ ok: true, ...result }, { root }), 0)
       if (wantsTextOutput(flags, config)) writeLines([`Vault: ${result.output}`, `Notes: ${result.notes}`, `Removed: ${result.removed}`, ...(result.findings === undefined ? [] : [`Findings: ${result.findings}`]), ...(result.warnings ?? [])])
       else writeJson({ ok: true, ...result })
       return 0
@@ -1917,6 +1928,7 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
       }
       const decision = publicationDecision(root, config, { allowPendingFindings })
       if (!decision.allowed) {
+        if (wantsRich(flags)) return showRich((ui) => ui.RICH_VIEWS.index({ ok: false, blockedBy: decision.gate.id, gate: decision.gate }, { root }), 1)
         process.stderr.write(`${decision.gate.message}\nNothing was written: the index and llms.txt stay as they were.\n`)
         writeJson({ ok: false, blockedBy: decision.gate.id, gate: decision.gate })
         return 1
@@ -1938,8 +1950,8 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
         ])
         return 0
       }
-      writeJson({
-        ok: true,
+      const published = {
+        ok: true as const,
         ...(result.index.publication ? { publication: result.index.publication } : {}),
         indexPath: result.indexPath,
         ...(result.llmsTxtPath ? { llmsTxtPath: result.llmsTxtPath } : {}),
@@ -1950,7 +1962,9 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
         handoffCount,
         ...(diagnostics.length ? { diagnostics } : {}),
         nextCommands: diagnosticNextCommands(config, result),
-      })
+      }
+      if (wantsRich(flags)) return showRich((ui) => ui.RICH_VIEWS.index(published, { root }), 0)
+      writeJson(published)
       return 0
     } catch (error) {
       process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`)
@@ -1974,6 +1988,7 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
     try {
       const { config, root } = loadProject(configPath)
       const result = runGates(root, config, gateId ? [gateId] : undefined)
+      if (wantsRich(flags)) return showRich((ui) => ui.RICH_VIEWS.gate(result), result.ok ? 0 : 1)
       // The JSON carries every finding; the terminal gets the short list.
       for (const gate of result.results) if (gate.id === 'reference-findings' && !gate.ok) process.stderr.write(`${gate.message}\n`)
       if (wantsTextOutput(flags, config)) writeLines(formatGateText(result))
@@ -2072,6 +2087,7 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
         writeLines([formatDoctorBadgeMarkdown(report.badge)])
         return 0
       }
+      if (wantsRich(flags)) return showRich((ui) => ui.RICH_VIEWS.doctor(report), report.ok ? 0 : 1)
       if (wantsTextOutput(flags, config)) writeLines(formatDoctorText(report))
       else writeJson(report)
       return report.ok ? 0 : 1
@@ -2079,6 +2095,24 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
       process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`)
       return 1
     }
+  }
+
+  if (command === 'ui') {
+    if (!process.stdin.isTTY || !process.stdout.isTTY) {
+      process.stderr.write('ak-docs ui needs an interactive terminal; use ak-docs ask, gate run or index in scripts.\n')
+      return 1
+    }
+    return (async () => {
+      try {
+        const { config, root } = loadProject(configPath)
+        const ui = await import('./ui/index.js')
+        await ui.runUi({ root, config })
+        return 0
+      } catch (error) {
+        process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`)
+        return 1
+      }
+    })()
   }
 
   if (command === 'demo') {
@@ -2313,6 +2347,7 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
         return 1
       }
       const index = loadAnswerIndex(root, config, flags)
+      if (wantsRich(flags)) return showRich((ui) => ui.RICH_VIEWS.ask(ui.buildAskResult(index, config, question, 8), { root }), 0)
       writeAsk(question, searchIndex(index, question, 8), index, config)
       return 0
     } catch (error) {

@@ -83,6 +83,7 @@ const COMMANDS: readonly CommandSpec[] = [
   { name: 'retrieve', usage: '<query>', description: 'Hybrid local and federated retrieval chunks' },
   { name: 'why', usage: '<path|symbol|concept> [--json]', description: 'Explain the indexed rationale for a path, symbol, or concept' },
   { name: 'ask', usage: '[question] [--chat] [--no-refresh]', description: 'Local consult with no LLM; an interactive REPL in a terminal' },
+  { name: 'ui', description: 'Interactive terminal app: ask, findings, publish and doctor' },
   { name: 'chat', description: 'Interactive terminal chat (Ink and RAG)' },
   { name: 'rag', usage: 'ingest|search <query>', description: 'Ingest the agent corpus or search its vectors', subcommands: [
     { name: 'ingest', description: 'Ingest the agent corpus into the vector store' },

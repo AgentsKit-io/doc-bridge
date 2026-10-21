@@ -47,6 +47,7 @@ Core (no API key):
   ak-docs search <term> [--agent] [--explain] [--mode=<mode>] [--context-budget=<tokens>] [--text]
   ak-docs list <packages|intents|changes|knowledge> [--text]
   ak-docs ask [question]          local consult (no LLM)
+  ak-docs ui                      interactive terminal app (ask, findings, publish, doctor)
   ak-docs gate run [gate-id]
   ak-docs rules run <report.json> [--preset default|recommended|strict] [--severity rule=level] [--ignore rule]
   ak-docs conformance run documentation-standard-v1 [--text|--json]

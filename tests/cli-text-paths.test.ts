@@ -1,4 +1,4 @@
-import { cpSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
+import { cpSync, mkdtempSync, readFileSync, realpathSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -55,7 +55,7 @@ describe('ak-docs text output paths', () => {
 
   it('index keeps JSON with absolute paths when --text is not passed', async () => {
     const result = await run(['index'])
-    expect(JSON.parse(result.out)).toMatchObject({ indexPath: join(workdir, '.doc-bridge', 'index.json') })
+    expect(JSON.parse(result.out)).toMatchObject({ indexPath: join(realpathSync(workdir), '.doc-bridge', 'index.json') })
   })
 
   it('a configured text default does not turn index JSON into text', async () => {
