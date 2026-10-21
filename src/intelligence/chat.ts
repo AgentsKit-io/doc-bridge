@@ -128,7 +128,7 @@ export const startInkChat = async (
       return React.createElement(
         agentskitInk.ChatContainer as never,
         null,
-        ...chat.messages.map((msg) =>
+        ...chat.messages.map((msg: { id: string; role: string; content: string }) =>
           React.createElement(agentskitInk.Message as never, {
             key: msg.id,
             message: msg,
