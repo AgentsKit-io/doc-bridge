@@ -88,7 +88,7 @@ import { PACKAGE_VERSION } from '../version.js'
 import { auditDocumentation, formatDocumentationAuditText } from '../audit/documentation.js'
 import { diffVault } from '../vault/diff.js'
 import { exportVault, safePath } from '../vault/export.js'
-import { loadReferenceBase, pendingReferenceFindings, referenceComparabilityFailure, referenceHeadConfig } from '../gates/reference-findings.js'
+import { formatPendingReferenceFindings, loadReferenceBase, pendingReferenceFindings, referenceComparabilityFailure, referenceHeadConfig } from '../gates/reference-findings.js'
 import { exportStudioGraph, type StudioExportOptions } from '../studio/export.js'
 import { renderArtifact, writeRenderedPages } from '../render/render.js'
 import { COMMAND_NAMES, writeCommandHelp } from './commands.js'
@@ -291,6 +291,13 @@ const writeTextSearch = (
     ...(matches.length ? matches.map(formatSearchMatch) : ['  (none)']),
   ])
 }
+
+/** One line per gate, then the pending reference findings a person has to read. */
+const formatGateText = (result: ReturnType<typeof runGates>): string[] => [
+  ...result.results.map((gate) => `${gate.ok ? '✓' : '✗'} ${gate.id} — ${gate.message}`),
+  ...result.results.flatMap((gate) => (gate.findings?.length ? ['Pending reference findings:', ...formatPendingReferenceFindings(gate.findings)] : [])),
+  result.ok ? 'All gates passed.' : 'One or more gates failed.',
+]
 
 const handoffSummaryLines = (
   index: DocBridgeIndexV1,
@@ -1952,7 +1959,8 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
       const result = runGates(root, config, gateId ? [gateId] : undefined)
       // The JSON carries every finding; the terminal gets the short list.
       for (const gate of result.results) if (gate.id === 'reference-findings' && !gate.ok) process.stderr.write(`${gate.message}\n`)
-      writeJson(result)
+      if (wantsTextOutput(flags, config)) writeLines(formatGateText(result))
+      else writeJson(result)
       return result.ok ? 0 : 1
     } catch (error) {
       process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`)

@@ -67,8 +67,8 @@ const COMMANDS: readonly CommandSpec[] = [
     { name: 'reject', usage: '<proposalId> --by <name> [--reason <text>]', description: 'Reject an enrichment proposal' },
   ] },
   { name: 'index', usage: '[--watch] [--allow-pending-findings]', description: 'Build the documentation index and optional llms.txt' },
-  { name: 'gate', usage: 'run [gate-id]', description: 'Run the configured documentation gates', subcommands: [
-    { name: 'run', usage: '[gate-id]', description: 'Run every resolved gate, or one by id' },
+  { name: 'gate', usage: 'run [gate-id] [--text|--json]', description: 'Run the configured documentation gates', subcommands: [
+    { name: 'run', usage: '[gate-id] [--text|--json]', description: 'Run every resolved gate, or one by id' },
   ] },
   { name: 'rules', usage: 'run <report.json> [--preset default|recommended|strict] [--severity rule=level] [--ignore rule]', description: 'Evaluate rules over a reconciliation report', subcommands: [
     { name: 'run', usage: '<report.json> [--preset default|recommended|strict] [--severity rule=level] [--ignore rule]', description: 'Evaluate rules over a reconciliation report' },
