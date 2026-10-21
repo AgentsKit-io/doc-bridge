@@ -79,6 +79,17 @@ No proposal is approved or applied. See [StudioGraphV1](../schemas/studio-graph-
 for limits, metrics, status and search/why shapes. This package ships no UI;
 the [local design brief](../design/studio-brief.md) is reference material for external consumers.
 
+## Terminal output
+
+At a terminal (stdout is a TTY), `ask`, `gate run`, `index`, `doctor` and `vault export` render rich
+Ink views: a status header, ✓/✗ steps with durations, coloured `path:line`, amber reference findings
+and a red "Publication blocked". Output stays plain — exactly as documented below — when stdout is a
+pipe or file, under `CI`, with `--json`, `--text` or `--agent`, or with `NO_COLOR` / `AK_DOCS_PLAIN=1`.
+Exit codes never depend on the output mode. Ink is loaded only for rich output.
+
+`ak-docs ui` opens an interactive app (Ask, Findings, Publish, Doctor tabs; ←/→ to move, Enter to
+act, `q` to quit). It needs an interactive terminal and exits 1 otherwise.
+
 ## Commands (v1)
 
 ### Layer 0 — no API key
