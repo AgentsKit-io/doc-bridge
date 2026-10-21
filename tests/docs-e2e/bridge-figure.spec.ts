@@ -13,6 +13,8 @@ test('home page renders the bridge figure with a lazy iframe and theme still ima
     await expect(image).toHaveAttribute('width', '2552')
     await expect(image).toHaveAttribute('height', '1234')
     await expect(image).toHaveAttribute('alt', /.+/)
+    // Below the fold and only one theme shows: neither still image may compete with the hero.
+    await expect(image).toHaveAttribute('loading', 'lazy')
   }
   await figure.scrollIntoViewIfNeeded()
   if (isMobile) {
