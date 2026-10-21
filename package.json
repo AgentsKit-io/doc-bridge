@@ -136,6 +136,7 @@
     "@agentskit/harness": "0.22.3",
     "@agentskit/net": "^0.2.0",
     "@flowershow/remark-wiki-link": "3.4.0",
+    "commander": "^14.0.3",
     "github-slugger": "^2.0.0",
     "graphology": "~0.26.0",
     "graphology-communities-louvain": "~2.0.2",
