@@ -4,7 +4,7 @@ import { executionContext } from '../execution/profile.js'
 import { runServiceCli } from './service.js'
 import { runActionCli, runAdvisoryDiff } from './action.js'
 import { closeSync, existsSync, mkdirSync, openSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs'
-import { dirname, relative, resolve } from 'node:path'
+import { dirname, isAbsolute, relative, resolve } from 'node:path'
 import { createInterface } from 'node:readline/promises'
 import { splitFrontmatter, toPosix } from '@agentskit/cross-platform'
 
@@ -51,7 +51,8 @@ import { startMcpStdioServer } from '../mcp/server.js'
 import { measureOverlayRetrievalDelta, formatOverlayRetrievalDeltaText } from '../bench/overlay-delta.js'
 import { enrichmentCost } from '../enrich/stats.js'
 import { checkStudyExpectations, formatStudyExpectationsText, parseStudyExpectations } from '../study/expectations.js'
-import { IndexNotFoundError, loadFreshDocBridgeIndex } from '../query/load-index.js'
+import { IndexNotFoundError, IndexStaleError, loadDocBridgeIndex, loadFreshDocBridgeIndex } from '../query/load-index.js'
+import { withoutDisabledKnowledgeEntities } from '../config/defaults.js'
 import { runQuery, type QueryKind } from '../query/query.js'
 import { searchIndex } from '../query/search.js'
 import type { DocBridgeIndexV1 } from '../schemas/doc-bridge-index.js'
@@ -87,10 +88,10 @@ import { PACKAGE_VERSION } from '../version.js'
 import { auditDocumentation, formatDocumentationAuditText } from '../audit/documentation.js'
 import { diffVault } from '../vault/diff.js'
 import { exportVault, safePath } from '../vault/export.js'
-import { loadReferenceBase, pendingReferenceFindings, referenceComparabilityFailure, referenceHeadConfig } from '../gates/reference-findings.js'
+import { formatPendingReferenceFindings, loadReferenceBase, pendingReferenceFindings, referenceComparabilityFailure, referenceHeadConfig } from '../gates/reference-findings.js'
 import { exportStudioGraph, type StudioExportOptions } from '../studio/export.js'
 import { renderArtifact, writeRenderedPages } from '../render/render.js'
-import { CLI_COMMAND_USAGE } from './usage.js'
+import { COMMAND_NAMES, writeCommandHelp } from './commands.js'
 import { checkPublicParity, formatPublicParityText } from '../parity/check.js'
 import { parsePublicClaims } from '../parity/claims.js'
 import { resolveTemplateSource } from '../render/template-source.js'
@@ -118,51 +119,19 @@ import { formatStudyProviderCliText, parseStudyProviderCliConfig } from '../stud
 import { calculateStudyMetrics, formatStudyMetricsText } from '../study/metrics.js'
 import { formatStudyVerificationText, parseStudyVerificationBinding } from '../study/verification.js'
 import { checkIndexReproducibility } from '../discovery/reproducibility.js'
+import { richOutput } from './ui/mode.js'
 
-type Command =
-  | 'help'
-  | 'version'
-  | 'validate-config'
-  | 'validate-handoff'
-  | 'init'
-  | 'bootstrap'
-  | 'memory'
-  | 'playbook'
-  | 'registry'
-  | 'diff'
-  | 'discover'
-  | 'benchmark'
-  | 'bench'
-  | 'study'
-  | 'scan'
-  | 'reconcile'
-  | 'check'
-  | 'map'
-  | 'fix'
-  | 'suggest'
-  | 'enrich'
-  | 'index'
-  | 'gate'
-  | 'rules'
-  | 'mcp'
-  | 'doctor'
-  | 'demo'
-  | 'query'
-  | 'search'
-  | 'retrieve'
-  | 'why'
-  | 'ask'
-  | 'chat'
-  | 'rag'
-  | 'list'
-  | 'conformance'
-  | 'audit'
-  | 'parity'
-  | 'render'
-  | 'vault'
-  | 'studio'
+/** True when a person at a terminal gets the Ink views; pipes, CI, agents and --json/--text stay plain. */
+const wantsRich = (flags: ReadonlySet<string>): boolean => richOutput({ stdout: process.stdout, flags, env: process.env })
+/** Loads Ink only for rich output, so plain runs (agents, CI) never pay for it. */
+const showRich = async (pick: (ui: typeof import('./ui/index.js')) => Parameters<typeof import('./ui/index.js')['printRich']>[0], code: number): Promise<number> => {
+  const ui = await import('./ui/index.js')
+  await ui.printRich(pick(ui))
+  return code
+}
 
-const usage = `${CLI_COMMAND_USAGE}\nOptional remediation:\n  ak-docs fix --llm --base <snapshot.json> [--responses <script.json>] [--dry-run] [--pr]\n`
+/** `help` and `version` are flags; every other value is a name from COMMAND_NAMES. */
+type Command = 'help' | 'version' | string
 
 const QUERY_KINDS = new Set<QueryKind>(['package', 'ownership', 'intent', 'change', 'search'])
 const LIST_KINDS = new Set(['packages', 'intents', 'changes', 'knowledge'])
@@ -204,45 +173,7 @@ const parseArgs = (argv: readonly string[]) => {
   let command: Command = 'help'
   if (flags.has('--version') || flags.has('-V')) command = 'version'
   else if (flags.has('--help') || flags.has('-h')) command = 'help'
-  else if (positional[0] === 'validate-config') command = 'validate-config'
-  else if (positional[0] === 'validate-handoff') command = 'validate-handoff'
-  else if (positional[0] === 'init') command = 'init'
-  else if (positional[0] === 'bootstrap') command = 'bootstrap'
-  else if (positional[0] === 'memory') command = 'memory'
-  else if (positional[0] === 'playbook') command = 'playbook'
-  else if (positional[0] === 'registry') command = 'registry'
-  else if (positional[0] === 'diff') command = 'diff'
-  else if (positional[0] === 'discover') command = 'discover'
-  else if (positional[0] === 'benchmark') command = 'benchmark'
-  else if (positional[0] === 'bench') command = 'bench'
-  else if (positional[0] === 'study') command = 'study'
-  else if (positional[0] === 'scan') command = 'scan'
-  else if (positional[0] === 'reconcile') command = 'reconcile'
-  else if (positional[0] === 'check') command = 'check'
-  else if (positional[0] === 'map') command = 'map'
-  else if (positional[0] === 'fix') command = 'fix'
-  else if (positional[0] === 'suggest') command = 'suggest'
-  else if (positional[0] === 'enrich') command = 'enrich'
-  else if (positional[0] === 'index') command = 'index'
-  else if (positional[0] === 'gate') command = 'gate'
-  else if (positional[0] === 'rules') command = 'rules'
-  else if (positional[0] === 'mcp') command = 'mcp'
-  else if (positional[0] === 'doctor') command = 'doctor'
-  else if (positional[0] === 'demo') command = 'demo'
-  else if (positional[0] === 'query') command = 'query'
-  else if (positional[0] === 'search') command = 'search'
-  else if (positional[0] === 'retrieve') command = 'retrieve'
-  else if (positional[0] === 'why') command = 'why'
-  else if (positional[0] === 'ask') command = 'ask'
-  else if (positional[0] === 'chat') command = 'chat'
-  else if (positional[0] === 'rag') command = 'rag'
-  else if (positional[0] === 'list') command = 'list'
-  else if (positional[0] === 'conformance') command = 'conformance'
-  else if (positional[0] === 'audit') command = 'audit'
-  else if (positional[0] === 'parity') command = 'parity'
-  else if (positional[0] === 'render') command = 'render'
-  else if (positional[0] === 'studio') command = 'studio'
-  else if (positional[0] === 'vault') command = 'vault'
+  else if (positional[0] !== undefined && COMMAND_NAMES.has(positional[0])) command = positional[0]
 
   return { command, flags, configPath, positional }
 }
@@ -371,6 +302,13 @@ const writeTextSearch = (
   ])
 }
 
+/** One line per gate, then the pending reference findings a person has to read. */
+const formatGateText = (result: ReturnType<typeof runGates>): string[] => [
+  ...result.results.map((gate) => `${gate.ok ? '✓' : '✗'} ${gate.id} — ${gate.message}`),
+  ...result.results.flatMap((gate) => (gate.findings?.length ? ['Pending reference findings:', ...formatPendingReferenceFindings(gate.findings)] : [])),
+  result.ok ? 'All gates passed.' : 'One or more gates failed.',
+]
+
 const handoffSummaryLines = (
   index: DocBridgeIndexV1,
   config: DocBridgeConfigV1,
@@ -444,8 +382,7 @@ const writeAsk = (
   ])
 }
 
-const readIndexedDoc = (root: string, config: DocBridgeConfigV1, idOrPath: string): string => {
-  const index = loadFreshDocBridgeIndex(root, config)
+const readIndexedDoc = (root: string, index: DocBridgeIndexV1, idOrPath: string): string => {
   const entry = index.knowledge.find((doc) => doc.id === idOrPath || doc.path === idOrPath)
   if (!entry) throw new Error(`Unknown indexed doc "${idOrPath}". Try: search ${idOrPath}`)
 
@@ -457,8 +394,30 @@ const readIndexedDoc = (root: string, config: DocBridgeConfigV1, idOrPath: strin
   return readFileSync(abs, 'utf8')
 }
 
-const runAskRepl = async (root: string, config: DocBridgeConfigV1): Promise<number> => {
-  const index = loadFreshDocBridgeIndex(root, config)
+/*
+ * Answers come from the docs on disk, not from an index that no longer matches them. A stale index
+ * is rebuilt in memory and never written, so `ak-docs index` stays the only publisher. If the
+ * rebuild throws, the stale index on disk answers with a warning. `--no-refresh` keeps the strict
+ * failure.
+ */
+const loadAnswerIndex = (root: string, config: DocBridgeConfigV1, flags: ReadonlySet<string>): DocBridgeIndexV1 => {
+  try {
+    return loadFreshDocBridgeIndex(root, config)
+  } catch (error) {
+    if (!(error instanceof IndexStaleError) || flags.has('--no-refresh')) throw error
+    try {
+      const index = buildDocBridgeIndex({ root, config: withoutDisabledKnowledgeEntities(config), write: false }).index
+      process.stderr.write('note: index was stale; answered from the current docs (run ak-docs index to publish)\n')
+      return index
+    } catch {
+      process.stderr.write('warning: index was stale and could not be rebuilt; answered from the stale index on disk\n')
+      return loadDocBridgeIndex(root, config)
+    }
+  }
+}
+
+const runAskRepl = async (root: string, config: DocBridgeConfigV1, flags: ReadonlySet<string>): Promise<number> => {
+  const index = loadAnswerIndex(root, config, flags)
   const rl = createInterface({ input: process.stdin, output: process.stdout, terminal: true })
   try {
     for (;;) {
@@ -472,7 +431,7 @@ const runAskRepl = async (root: string, config: DocBridgeConfigV1): Promise<numb
         if (command === 'search') {
           writeTextSearch(value, searchIndex(index, value))
         } else if (command === 'read' || command === 'open') {
-          process.stdout.write(`${readIndexedDoc(root, config, value).slice(0, 8000)}\n`)
+          process.stdout.write(`${readIndexedDoc(root, index, value).slice(0, 8000)}\n`)
         } else if (command === 'resolve') {
           writeJson(runQuery(index, config, { kind: 'ownership', id: value, agent: true }))
         } else if (command === 'gate') {
@@ -488,6 +447,12 @@ const runAskRepl = async (root: string, config: DocBridgeConfigV1): Promise<numb
   } finally {
     rl.close()
   }
+}
+
+/** Text output shows a path relative to the project root; a path outside it stays absolute. */
+const displayPath = (root: string, path: string): string => {
+  const rel = relative(root, path)
+  return rel && !rel.startsWith('..') && !isAbsolute(rel) ? rel : path
 }
 
 const wantsTextOutput = (flags: ReadonlySet<string>, config: DocBridgeConfigV1): boolean =>
@@ -1236,7 +1201,7 @@ const runSuggestCommand = async (flags: ReadonlySet<string>, configPath: string 
     const documentation = flags.has('--documentation') ? buildDocumentationAuditReport(root, config) : undefined
     const proposal = await adapter.run(snapshot, report, undefined, documentation)
     const proposalPath = persistRegistryAgentProposal(stateDir, proposal)
-    if (flags.has('--text')) writeLines([`Agent: ${adapter.metadata.id}`, ...(documentation ? [`Documentation audit: ${documentation.contentHash}`] : []), `Proposal: ${proposal.proposalId}`, `Hash: ${proposal.contentHash}`, `Saved: ${proposalPath}`])
+    if (flags.has('--text')) writeLines([`Agent: ${adapter.metadata.id}`, ...(documentation ? [`Documentation audit: ${documentation.contentHash}`] : []), `Proposal: ${proposal.proposalId}`, `Hash: ${proposal.contentHash}`, `Saved: ${displayPath(root, proposalPath)}`])
     else writeJson({ ok: true, ...(documentation ? { documentationAuditHash: documentation.contentHash } : {}), proposal, proposalPath })
     return 0
   } catch (error) {
@@ -1578,7 +1543,8 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
   if (['discover', 'index', 'diff'].includes(command) && (argv.includes('--max-duration') || argv.includes('--progress'))) return runOperationCli(argv, command)
 
   if (command === 'help') {
-    process.stdout.write(usage)
+    // `<command> --help` gets that command's help; anything else gets the top-level help, as before.
+    writeCommandHelp(flags.has('--help') || flags.has('-h') ? positional[0] : undefined)
     return 0
   }
 
@@ -1788,6 +1754,7 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
         pending = check.findings
       }
       const result = await exportVault(root, config, pending ? { findings: pending, ...(findingsSnapshot ? { snapshot: findingsSnapshot } : {}) } : includeFindings ? { findings: [], ...(findingsSnapshot ? { snapshot: findingsSnapshot } : {}) } : {})
+      if (wantsRich(flags)) return showRich((ui) => ui.RICH_VIEWS.vault({ ok: true, ...result }, { root }), 0)
       if (wantsTextOutput(flags, config)) writeLines([`Vault: ${result.output}`, `Notes: ${result.notes}`, `Removed: ${result.removed}`, ...(result.findings === undefined ? [] : [`Findings: ${result.findings}`]), ...(result.warnings ?? [])])
       else writeJson({ ok: true, ...result })
       return 0
@@ -1888,7 +1855,7 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
         if (flags.has('--text')) {
           writeLines([
             pr.message,
-            ...(pr.draftPath ? [`Draft: ${pr.draftPath}`] : []),
+            ...(pr.draftPath ? [`Draft: ${displayPath(root, pr.draftPath)}`] : []),
             ...(pr.prUrl ? [`PR: ${pr.prUrl}`] : []),
             ...(pr.commands.length ? ['', 'Commands:', ...pr.commands.map((cmd) => `  ${cmd}`)] : []),
           ])
@@ -1961,6 +1928,7 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
       }
       const decision = publicationDecision(root, config, { allowPendingFindings })
       if (!decision.allowed) {
+        if (wantsRich(flags)) return showRich((ui) => ui.RICH_VIEWS.index({ ok: false, blockedBy: decision.gate.id, gate: decision.gate }, { root }), 1)
         process.stderr.write(`${decision.gate.message}\nNothing was written: the index and llms.txt stay as they were.\n`)
         writeJson({ ok: false, blockedBy: decision.gate.id, gate: decision.gate })
         return 1
@@ -1971,8 +1939,19 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
       const result = buildDocBridgeIndex({ root, config, ...(decision.publication ? { publication: decision.publication } : {}) })
       const diagnostics = indexDiagnostics(root, config, result)
       const handoffCount = Object.keys(result.index.handoffs ?? {}).length
-      writeJson({
-        ok: true,
+      // Only an explicit --text changes the output: a config default never turns index JSON into text.
+      if (flags.has('--text')) {
+        writeLines([
+          `Index: ${displayPath(root, result.indexPath)}`,
+          `Knowledge: ${result.index.knowledge.length}  Packages: ${result.index.lookup?.packages.length ?? 0}  Handoffs: ${handoffCount}`,
+          ...(result.llmsTxtPath ? [`llms.txt: ${displayPath(root, result.llmsTxtPath)}`] : []),
+          ...(result.capabilitiesPath ? [`Capabilities: ${displayPath(root, result.capabilitiesPath)}`] : []),
+          ...diagnostics,
+        ])
+        return 0
+      }
+      const published = {
+        ok: true as const,
         ...(result.index.publication ? { publication: result.index.publication } : {}),
         indexPath: result.indexPath,
         ...(result.llmsTxtPath ? { llmsTxtPath: result.llmsTxtPath } : {}),
@@ -1983,7 +1962,9 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
         handoffCount,
         ...(diagnostics.length ? { diagnostics } : {}),
         nextCommands: diagnosticNextCommands(config, result),
-      })
+      }
+      if (wantsRich(flags)) return showRich((ui) => ui.RICH_VIEWS.index(published, { root }), 0)
+      writeJson(published)
       return 0
     } catch (error) {
       process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`)
@@ -2007,9 +1988,11 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
     try {
       const { config, root } = loadProject(configPath)
       const result = runGates(root, config, gateId ? [gateId] : undefined)
+      if (wantsRich(flags)) return showRich((ui) => ui.RICH_VIEWS.gate(result), result.ok ? 0 : 1)
       // The JSON carries every finding; the terminal gets the short list.
       for (const gate of result.results) if (gate.id === 'reference-findings' && !gate.ok) process.stderr.write(`${gate.message}\n`)
-      writeJson(result)
+      if (wantsTextOutput(flags, config)) writeLines(formatGateText(result))
+      else writeJson(result)
       return result.ok ? 0 : 1
     } catch (error) {
       process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`)
@@ -2051,7 +2034,7 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
         if (wantsTextOutput(flags, config)) {
           writeLines([
             `Installed MCP server "${result.serverName}" for ${result.target}`,
-            `Config: ${result.configPath}`,
+            `Config: ${displayPath(root, result.configPath)}`,
             ...(result.created ? ['Created new config file'] : ['Merged into existing config']),
             '',
             'Next steps:',
@@ -2104,6 +2087,7 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
         writeLines([formatDoctorBadgeMarkdown(report.badge)])
         return 0
       }
+      if (wantsRich(flags)) return showRich((ui) => ui.RICH_VIEWS.doctor(report), report.ok ? 0 : 1)
       if (wantsTextOutput(flags, config)) writeLines(formatDoctorText(report))
       else writeJson(report)
       return report.ok ? 0 : 1
@@ -2111,6 +2095,24 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
       process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`)
       return 1
     }
+  }
+
+  if (command === 'ui') {
+    if (!process.stdin.isTTY || !process.stdout.isTTY) {
+      process.stderr.write('ak-docs ui needs an interactive terminal; use ak-docs ask, gate run or index in scripts.\n')
+      return 1
+    }
+    return (async () => {
+      try {
+        const { config, root } = loadProject(configPath)
+        const ui = await import('./ui/index.js')
+        await ui.runUi({ root, config })
+        return 0
+      } catch (error) {
+        process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`)
+        return 1
+      }
+    })()
   }
 
   if (command === 'demo') {
@@ -2164,7 +2166,7 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
     }
     try {
       const { config, root } = loadProject(configPath)
-      const index = loadFreshDocBridgeIndex(root, config)
+      const index = loadAnswerIndex(root, config, flags)
       const result = runQuery(index, config, { kind, id, agent: flags.has('--agent') }, { root })
       if (wantsTextOutput(flags, config)) writeTextQuery(result)
       else if (flags.has('--agent')) writeAgentJson(result)
@@ -2184,7 +2186,7 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
     }
     try {
       const { config, root } = loadProject(configPath)
-        const index = loadFreshDocBridgeIndex(root, config)
+      const index = loadAnswerIndex(root, config, flags)
       const explain = flags.has('--explain')
       if (flags.has('--agent')) {
         const mode = optionValues(argv, '--mode')[0]
@@ -2340,11 +2342,12 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
         })()
       }
       if (!question) {
-        if (process.stdin.isTTY) return runAskRepl(root, config)
+        if (process.stdin.isTTY) return runAskRepl(root, config, flags)
         process.stderr.write('Usage: ak-docs ask <question>, or run ak-docs ask in an interactive terminal.\n')
         return 1
       }
-      const index = loadFreshDocBridgeIndex(root, config)
+      const index = loadAnswerIndex(root, config, flags)
+      if (wantsRich(flags)) return showRich((ui) => ui.RICH_VIEWS.ask(ui.buildAskResult(index, config, question, 8), { root }), 0)
       writeAsk(question, searchIndex(index, question, 8), index, config)
       return 0
     } catch (error) {
@@ -2398,6 +2401,6 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
     }
   }
 
-  process.stdout.write(usage)
+  writeCommandHelp()
   return 1
 }

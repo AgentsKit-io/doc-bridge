@@ -75,7 +75,8 @@ describe('ak-docs CLI', () => {
   it('prints help and fallback usage', () => {
     const help = captureStdout(() => runCli(['--help']))
     expect(help.code).toBe(0)
-    expect(help.out).toContain('Core (no API key)')
+    expect(help.out).toContain('Commands:')
+    expect(help.out).toContain('validate-config')
     expect(captureStdout(() => runCli(['unknown-command'])).out).toContain('ak-docs')
   })
 
