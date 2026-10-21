@@ -59,28 +59,3 @@ declare module '@agentskit/core' {
   export function formatRetrievedDocuments(docs: unknown[]): string
   export function createStaticRetriever(docs: unknown[]): unknown
 }
-
-declare module '@agentskit/ink' {
-  export function useChat(config: Record<string, unknown>): {
-    messages: ReadonlyArray<{ id: string; role: string; content: string }>
-    send: (input: string) => Promise<void>
-    isStreaming?: boolean
-  }
-  export const ChatContainer: unknown
-  export const Message: unknown
-  export const InputBar: unknown
-}
-
-declare module 'ink' {
-  export function render(node: unknown): { unmount: () => void; waitUntilExit: () => Promise<void> }
-}
-
-declare module 'react' {
-  export function createElement(
-    type: unknown,
-    props?: Record<string, unknown> | null,
-    ...children: unknown[]
-  ): unknown
-  const React: { createElement: typeof createElement }
-  export default React
-}
