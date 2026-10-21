@@ -51,7 +51,8 @@ import { startMcpStdioServer } from '../mcp/server.js'
 import { measureOverlayRetrievalDelta, formatOverlayRetrievalDeltaText } from '../bench/overlay-delta.js'
 import { enrichmentCost } from '../enrich/stats.js'
 import { checkStudyExpectations, formatStudyExpectationsText, parseStudyExpectations } from '../study/expectations.js'
-import { IndexNotFoundError, loadFreshDocBridgeIndex } from '../query/load-index.js'
+import { IndexNotFoundError, IndexStaleError, loadDocBridgeIndex, loadFreshDocBridgeIndex } from '../query/load-index.js'
+import { withoutDisabledKnowledgeEntities } from '../config/defaults.js'
 import { runQuery, type QueryKind } from '../query/query.js'
 import { searchIndex } from '../query/search.js'
 import type { DocBridgeIndexV1 } from '../schemas/doc-bridge-index.js'
@@ -364,8 +365,7 @@ const writeAsk = (
   ])
 }
 
-const readIndexedDoc = (root: string, config: DocBridgeConfigV1, idOrPath: string): string => {
-  const index = loadFreshDocBridgeIndex(root, config)
+const readIndexedDoc = (root: string, index: DocBridgeIndexV1, idOrPath: string): string => {
   const entry = index.knowledge.find((doc) => doc.id === idOrPath || doc.path === idOrPath)
   if (!entry) throw new Error(`Unknown indexed doc "${idOrPath}". Try: search ${idOrPath}`)
 
@@ -377,8 +377,30 @@ const readIndexedDoc = (root: string, config: DocBridgeConfigV1, idOrPath: strin
   return readFileSync(abs, 'utf8')
 }
 
-const runAskRepl = async (root: string, config: DocBridgeConfigV1): Promise<number> => {
-  const index = loadFreshDocBridgeIndex(root, config)
+/*
+ * Answers come from the docs on disk, not from an index that no longer matches them. A stale index
+ * is rebuilt in memory and never written, so `ak-docs index` stays the only publisher. If the
+ * rebuild throws, the stale index on disk answers with a warning. `--no-refresh` keeps the strict
+ * failure.
+ */
+const loadAnswerIndex = (root: string, config: DocBridgeConfigV1, flags: ReadonlySet<string>): DocBridgeIndexV1 => {
+  try {
+    return loadFreshDocBridgeIndex(root, config)
+  } catch (error) {
+    if (!(error instanceof IndexStaleError) || flags.has('--no-refresh')) throw error
+    try {
+      const index = buildDocBridgeIndex({ root, config: withoutDisabledKnowledgeEntities(config), write: false }).index
+      process.stderr.write('note: index was stale; answered from the current docs (run ak-docs index to publish)\n')
+      return index
+    } catch {
+      process.stderr.write('warning: index was stale and could not be rebuilt; answered from the stale index on disk\n')
+      return loadDocBridgeIndex(root, config)
+    }
+  }
+}
+
+const runAskRepl = async (root: string, config: DocBridgeConfigV1, flags: ReadonlySet<string>): Promise<number> => {
+  const index = loadAnswerIndex(root, config, flags)
   const rl = createInterface({ input: process.stdin, output: process.stdout, terminal: true })
   try {
     for (;;) {
@@ -392,7 +414,7 @@ const runAskRepl = async (root: string, config: DocBridgeConfigV1): Promise<numb
         if (command === 'search') {
           writeTextSearch(value, searchIndex(index, value))
         } else if (command === 'read' || command === 'open') {
-          process.stdout.write(`${readIndexedDoc(root, config, value).slice(0, 8000)}\n`)
+          process.stdout.write(`${readIndexedDoc(root, index, value).slice(0, 8000)}\n`)
         } else if (command === 'resolve') {
           writeJson(runQuery(index, config, { kind: 'ownership', id: value, agent: true }))
         } else if (command === 'gate') {
@@ -2085,7 +2107,7 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
     }
     try {
       const { config, root } = loadProject(configPath)
-      const index = loadFreshDocBridgeIndex(root, config)
+      const index = loadAnswerIndex(root, config, flags)
       const result = runQuery(index, config, { kind, id, agent: flags.has('--agent') }, { root })
       if (wantsTextOutput(flags, config)) writeTextQuery(result)
       else if (flags.has('--agent')) writeAgentJson(result)
@@ -2105,7 +2127,7 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
     }
     try {
       const { config, root } = loadProject(configPath)
-        const index = loadFreshDocBridgeIndex(root, config)
+      const index = loadAnswerIndex(root, config, flags)
       const explain = flags.has('--explain')
       if (flags.has('--agent')) {
         const mode = optionValues(argv, '--mode')[0]
@@ -2261,11 +2283,11 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
         })()
       }
       if (!question) {
-        if (process.stdin.isTTY) return runAskRepl(root, config)
+        if (process.stdin.isTTY) return runAskRepl(root, config, flags)
         process.stderr.write('Usage: ak-docs ask <question>, or run ak-docs ask in an interactive terminal.\n')
         return 1
       }
-      const index = loadFreshDocBridgeIndex(root, config)
+      const index = loadAnswerIndex(root, config, flags)
       writeAsk(question, searchIndex(index, question, 8), index, config)
       return 0
     } catch (error) {
