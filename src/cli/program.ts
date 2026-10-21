@@ -4,7 +4,7 @@ import { executionContext } from '../execution/profile.js'
 import { runServiceCli } from './service.js'
 import { runActionCli, runAdvisoryDiff } from './action.js'
 import { closeSync, existsSync, mkdirSync, openSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs'
-import { dirname, relative, resolve } from 'node:path'
+import { dirname, isAbsolute, relative, resolve } from 'node:path'
 import { createInterface } from 'node:readline/promises'
 import { splitFrontmatter, toPosix } from '@agentskit/cross-platform'
 
@@ -437,6 +437,12 @@ const runAskRepl = async (root: string, config: DocBridgeConfigV1, flags: Readon
   } finally {
     rl.close()
   }
+}
+
+/** Text output shows a path relative to the project root; a path outside it stays absolute. */
+const displayPath = (root: string, path: string): string => {
+  const rel = relative(root, path)
+  return rel && !rel.startsWith('..') && !isAbsolute(rel) ? rel : path
 }
 
 const wantsTextOutput = (flags: ReadonlySet<string>, config: DocBridgeConfigV1): boolean =>
@@ -1838,7 +1844,7 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
         if (flags.has('--text')) {
           writeLines([
             pr.message,
-            ...(pr.draftPath ? [`Draft: ${pr.draftPath}`] : []),
+            ...(pr.draftPath ? [`Draft: ${displayPath(root, pr.draftPath)}`] : []),
             ...(pr.prUrl ? [`PR: ${pr.prUrl}`] : []),
             ...(pr.commands.length ? ['', 'Commands:', ...pr.commands.map((cmd) => `  ${cmd}`)] : []),
           ])
@@ -1921,6 +1927,17 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
       const result = buildDocBridgeIndex({ root, config, ...(decision.publication ? { publication: decision.publication } : {}) })
       const diagnostics = indexDiagnostics(root, config, result)
       const handoffCount = Object.keys(result.index.handoffs ?? {}).length
+      // Only an explicit --text changes the output: a config default never turns index JSON into text.
+      if (flags.has('--text')) {
+        writeLines([
+          `Index: ${displayPath(root, result.indexPath)}`,
+          `Knowledge: ${result.index.knowledge.length}  Packages: ${result.index.lookup?.packages.length ?? 0}  Handoffs: ${handoffCount}`,
+          ...(result.llmsTxtPath ? [`llms.txt: ${displayPath(root, result.llmsTxtPath)}`] : []),
+          ...(result.capabilitiesPath ? [`Capabilities: ${displayPath(root, result.capabilitiesPath)}`] : []),
+          ...diagnostics,
+        ])
+        return 0
+      }
       writeJson({
         ok: true,
         ...(result.index.publication ? { publication: result.index.publication } : {}),
@@ -2002,7 +2019,7 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
         if (wantsTextOutput(flags, config)) {
           writeLines([
             `Installed MCP server "${result.serverName}" for ${result.target}`,
-            `Config: ${result.configPath}`,
+            `Config: ${displayPath(root, result.configPath)}`,
             ...(result.created ? ['Created new config file'] : ['Merged into existing config']),
             '',
             'Next steps:',
