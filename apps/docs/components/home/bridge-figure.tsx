@@ -30,8 +30,8 @@ export function BridgeFigure() {
         <iframe ref={frameRef} className="bridge-figure-frame" src={src} title="Interactive isometric illustration of documentation and code moving through doc-bridge to produce cited context and drift findings." loading="lazy" />
         {/* The site theme (not the OS preference) picks the still image, so both are rendered and CSS shows one. */}
         <div className="bridge-figure-fallback">
-          <img className="bridge-figure-static bridge-figure-static-light" src={FALLBACK_LIGHT} alt="Isometric illustration of documentation and code moving through doc-bridge to produce cited context and drift findings." width={2552} height={1234} />
-          <img className="bridge-figure-static bridge-figure-static-dark" src={FALLBACK_DARK} alt="Isometric illustration of documentation and code moving through doc-bridge to produce cited context and drift findings." width={2552} height={1234} />
+          <img className="bridge-figure-static bridge-figure-static-light" src={FALLBACK_LIGHT} alt="Isometric illustration of documentation and code moving through doc-bridge to produce cited context and drift findings." width={2552} height={1234} loading="lazy" decoding="async" />
+          <img className="bridge-figure-static bridge-figure-static-dark" src={FALLBACK_DARK} alt="Isometric illustration of documentation and code moving through doc-bridge to produce cited context and drift findings." width={2552} height={1234} loading="lazy" decoding="async" />
         </div>
       </div>
     </figure>
