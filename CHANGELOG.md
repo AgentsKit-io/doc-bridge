@@ -109,6 +109,12 @@
 
 - Precompute semantic hash ordering keys once per entry and bound syntax-tree retention for index-only scans and reuse parsed trees in discovery, reducing index-build cost without changing artifact bytes or hash identity.
 
+## 2.4.1
+
+### Patch Changes
+
+- 0e3b212: Align `@agentskit/*` dependencies with the latest releases: cross-platform 0.3, ink 0.10.16 and net 0.2.3.
+
 ## 2.4.0
 
 ### Minor Changes
