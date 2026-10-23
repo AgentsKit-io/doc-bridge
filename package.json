@@ -132,10 +132,10 @@
     "access": "public"
   },
   "dependencies": {
-    "@agentskit/cross-platform": "^0.2.1",
+    "@agentskit/cross-platform": "^0.3.0",
     "@agentskit/harness": "0.22.3",
-    "@agentskit/ink": "0.10.15",
-    "@agentskit/net": "^0.2.0",
+    "@agentskit/ink": "0.10.16",
+    "@agentskit/net": "^0.2.3",
     "@flowershow/remark-wiki-link": "3.4.0",
     "commander": "^14.0.3",
     "github-slugger": "^2.0.0",
@@ -189,9 +189,9 @@
     }
   },
   "devDependencies": {
-    "@agentskit/chat": "0.4.1",
-    "@agentskit/core": "1.14.1",
-    "@agentskit/react": "0.8.9",
+    "@agentskit/chat": "0.6.0",
+    "@agentskit/core": "1.15.0",
+    "@agentskit/react": "0.8.10",
     "@anthropic-ai/mcpb": "2.1.2",
     "@changesets/cli": "^3.0.3",
     "@lhci/cli": "^0.15.1",
