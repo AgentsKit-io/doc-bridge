@@ -1,7 +1,7 @@
 {
   "name": "doc-bridge",
   "description": "Resolve repository handoffs and prepare region remediations; human approval and application use the local CLI.",
-  "version": "2.4.1",
+  "version": "2.4.2",
   "author": {
     "name": "AgentsKit"
   },
