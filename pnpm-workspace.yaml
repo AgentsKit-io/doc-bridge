@@ -12,7 +12,7 @@ overrides:
   '@puppeteer/browsers': 3.2.1
   framer-motion: 13.3.0
   brace-expansion: 5.0.12
-  dompurify: 3.4.16
+  dompurify: 3.4.17
   esbuild: ^0.28.2
   ip-address: 10.7.2
   katex: 0.18.11
