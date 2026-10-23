@@ -109,6 +109,12 @@
 
 - Precompute semantic hash ordering keys once per entry and bound syntax-tree retention for index-only scans and reuse parsed trees in discovery, reducing index-build cost without changing artifact bytes or hash identity.
 
+## 2.4.2
+
+### Patch Changes
+
+- 8adfa52: Update third-party dependencies to their newest in-major versions: zod 4.6, yaml 2.9.1, mermaid 12.2, ignore 7.0.13 and react 19.3.1.
+
 ## 2.4.1
 
 ### Patch Changes
