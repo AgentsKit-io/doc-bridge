@@ -1,0 +1,16 @@
+{
+  "ranAt": "2026-10-24T19:30:00Z",
+  "command": "pnpm install --frozen-lockfile && pnpm run typecheck && pnpm run test && pnpm run build",
+  "exitCode": 0,
+  "outcomes": [
+    { "id": "o1", "status": "passed", "evidence": "vercel.json removed via git rm; no .vercelignore or .vercel present" },
+    { "id": "o2", "status": "passed", "evidence": "git grep vercel.json finds nothing; no vercel in scripts/cloudflare-headers.mjs or wrangler.toml" },
+    { "id": "o3", "status": "passed", "evidence": "git diff --no-index of _headers generated before vs after: empty output (identical)" },
+    { "id": "o4", "status": "passed", "evidence": "@vercel/analytics and @vercel/speed-insights never present" },
+    { "id": "o5", "status": "passed", "evidence": "grep -rniE vercel .github/workflows scripts package.json wrangler.toml: no matches" },
+    { "id": "o6", "status": "passed", "evidence": "frozen install, typecheck, test, build all exited 0" },
+    { "id": "o7", "status": "passed", "evidence": "check:readme-standard PASS, test:readme-standard 2/2, test:docs-artifacts 8/8 after docs:build; git status shows no drift in generated files" },
+    { "id": "o8", "status": "passed", "evidence": "single commit 'chore: remove Vercel deploy configuration', no changeset" },
+    { "id": "o9", "status": "passed", "evidence": "no workflow references any VERCEL secret; none become unused" }
+  ]
+}

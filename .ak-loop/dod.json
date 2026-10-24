@@ -1,0 +1,13 @@
+{
+  "proofs": [
+    { "id": "o1", "proof": "vercel.json deleted" },
+    { "id": "o2", "proof": "headers inlined in scripts/cloudflare-headers.mjs; comments updated in wrangler.toml" },
+    { "id": "o3", "proof": "generated _headers byte-identical before/after (empty diff)" },
+    { "id": "o4", "proof": "Vercel analytics packages never present" },
+    { "id": "o5", "proof": "no Vercel deploy/preview steps exist in workflows or scripts" },
+    { "id": "o6", "proof": "install, typecheck, test, build pass" },
+    { "id": "o7", "proof": "readme-standard and docs-artifact checks pass, no generated-file drift" },
+    { "id": "o8", "proof": "single conventional commit, no changeset" },
+    { "id": "o9", "proof": "no VERCEL secrets referenced by workflows; none unused" }
+  ]
+}
