@@ -1,0 +1,15 @@
+{
+  "ranAt": "2026-10-24T19:30:00Z",
+  "command": "pnpm install --frozen-lockfile && pnpm run typecheck && pnpm run build",
+  "exitCode": 0,
+  "outcomes": [
+    {"id": "o1", "status": "passed", "evidence": "vercel.json removed via git rm; no .vercelignore/.vercel present"},
+    {"id": "o2", "status": "passed", "evidence": "git grep vercel.json empty; no 'vercel' in scripts/cloudflare-headers.mjs or wrangler.toml"},
+    {"id": "o3", "status": "passed", "evidence": "git diff --no-index of _headers generated before vs after: empty (byte-identical)"},
+    {"id": "o4", "status": "passed", "evidence": "git grep @vercel/(analytics|speed-insights): no matches (never present)"},
+    {"id": "o5", "status": "passed", "evidence": "no vercel match in .github/workflows, scripts, package.json, wrangler.toml"},
+    {"id": "o6", "status": "in-progress", "evidence": "frozen install, typecheck, build passed; full test run could not be confirmed: host was overloaded and vitest runs timed out"},
+    {"id": "o7", "status": "in-progress", "evidence": "check:readme-standard and other CI steps timed out under host load; no generated files touched"},
+    {"id": "o8", "status": "passed", "evidence": "single commit 'chore: remove Vercel deploy configuration', no changeset"}
+  ]
+}
