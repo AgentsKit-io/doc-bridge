@@ -1,0 +1,7 @@
+{
+  "proofs": [
+    { "id": "o3", "proof": "old vs new _headers diff is empty (single /* rule, 5 headers)" },
+    { "id": "o7", "proof": "readme-standard PASS; no reviewedOn/reviewDueOn or generated-file changes" },
+    { "id": "o9", "proof": "Kept: no out-of-scope Vercel references remained in tracked files. Unused secrets: none (no workflow referenced VERCEL secrets)." }
+  ]
+}
