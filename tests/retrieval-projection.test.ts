@@ -197,7 +197,8 @@ describe('the projection is a function of the snapshot', () => {
     expect([...projectable].filter((id) => !projected.has(id))).toEqual([])
     expect([...projected].filter((id) => !projectable.has(id))).toEqual([])
     expect(projectable.size).toBeGreaterThan(300)
-  })
+    // This test pays for the first whole-repository scan and then a second one; budget for both.
+  }, 300_000)
 
   it('carries the entity content hash, and hydrates a body only when it still matches', () => {
     const { root, config } = fixture()
