@@ -1,0 +1,12 @@
+{
+  "issue": "AgentsKit-io/doc-bridge#403",
+  "contractDigest": "5430694f71f9",
+  "outcomes": [
+    { "id": "o1", "status": "passed", "proof": "retrieval-corpus file passes; target test 8.4s plain, 16.3s under coverage, assertions unchanged" },
+    { "id": "o2", "status": "passed", "proof": "bench-retrieval file passes (21/21); no timeout reproduced locally, file unchanged" },
+    { "id": "o3", "status": "passed", "proof": "study-minimal file passes (42/42); 45.2s to 31.8s plain" },
+    { "id": "o4", "status": "passed", "proof": "shared setup in retrieval-corpus and study-minimal; no timeouts added or raised; vitest.config.ts unchanged" },
+    { "id": "o5", "status": "passed", "proof": "report includes profiling cause and before/after table; base 472143a used since origin/main is absent in this clone" },
+    { "id": "o6", "status": "passed", "proof": "typecheck, test (1319 tests), build and coverage all exit 0; no reviewedOn/reviewDueOn changes" }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "ranAt": "2026-10-25T15:20:00Z",
+  "command": "pnpm run typecheck; pnpm run test; pnpm run build; pnpm coverage (run as separate commands, each exit 0 where noted)",
+  "exitCode": 0,
+  "outcomes": [
+    {
+      "id": "o1",
+      "status": "passed",
+      "evidence": "pnpm vitest run tests/retrieval-corpus.test.ts: Tests 23 passed (23); 'projects every document the discovery snapshot observed' 8424ms (was 17878ms); under coverage 16279ms (was 40798ms)"
+    },
+    {
+      "id": "o2",
+      "status": "passed",
+      "evidence": "pnpm vitest run tests/bench-retrieval.test.ts: Tests 21 passed (21). Not reproduced as a timeout locally; the file was already built once per file, so no code change was made to it"
+    },
+    {
+      "id": "o3",
+      "status": "passed",
+      "evidence": "pnpm vitest run tests/study-minimal.test.ts: Tests 42 passed (42); file 45.2s before, 31.8s after (plain); under coverage test time 41.3s before, 30.4s after"
+    },
+    {
+      "id": "o4",
+      "status": "passed",
+      "evidence": "Manual review of the two commits: retrieval-corpus shares one discoverRepository snapshot via a module-level cache (no beforeAll, no timeouts added); study-minimal shares one pinned checkout built lazily inside the first pilot test; no timeout values added or changed; vitest.config.ts untouched; test names and assertion text unchanged"
+    },
+    {
+      "id": "o5",
+      "status": "passed",
+      "evidence": "Final report and .ak-loop/plan.md contain the profiling cause, the before/after table for all three files (plain and coverage), and the origin/main note: no origin/main ref exists in this clone, so base 472143a was used; no failures occurred to compare"
+    },
+    {
+      "id": "o6",
+      "status": "passed",
+      "evidence": "pnpm run typecheck exit 0; pnpm run test: vitest 293 files, 1319 tests passed, 0 failed; five contract scripts pass; pnpm run build exit 0; pnpm coverage exit 0; the diff against the base touches only tests/retrieval-corpus.test.ts and tests/study-minimal.test.ts, with no reviewedOn or reviewDueOn lines"
+    }
+  ]
+}
