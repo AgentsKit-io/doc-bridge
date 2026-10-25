@@ -2,6 +2,7 @@
 title: Opt-in deterministic knowledge entities
 status: proposed
 date: 2026-10-08
+sourceOfTruth: src/entities/extract.ts
 ---
 
 # Opt-in deterministic knowledge entities

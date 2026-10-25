@@ -1,0 +1,14 @@
+{
+  "ranAt": "2026-10-25T02:30:00Z",
+  "command": "pnpm run typecheck && pnpm run test && pnpm run build",
+  "exitCode": 0,
+  "outcomes": [
+    { "id": "o1", "status": "passed", "evidence": "Connectivity: 50/50 areas documented · 120/203 documents link to code (80%); grading.unmet empty; reachability 203/203" },
+    { "id": "o2", "status": "passed", "evidence": "Score: 96/100 (A), was 95 (B)" },
+    { "id": "o3", "status": "passed", "evidence": "bench retrieval: 60 cases, hitAt3 0.883333, MRR 0.783889 (was hitAt3 0.883333, MRR 0.786111)" },
+    { "id": "o4", "status": "passed", "evidence": "Each covers/sourceOfTruth edge names code the doc describes; no exclusions added" },
+    { "id": "o5", "status": "passed", "evidence": "ak-docs index regenerated; llms.txt unchanged; no reviewedOn/reviewDueOn edits" },
+    { "id": "o6", "status": "passed", "evidence": "typecheck, test and build exit 0" },
+    { "id": "o7", "status": "passed", "evidence": "Conventional commit, unpushed, no .github changes" }
+  ]
+}

@@ -3,6 +3,7 @@ title: Generated vault edit review
 authority: human-approved scope
 status: accepted
 date: 2026-10-08
+sourceOfTruth: src/vault/diff.ts
 ---
 
 # Generated vault edit review

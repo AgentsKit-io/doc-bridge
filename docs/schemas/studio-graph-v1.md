@@ -5,6 +5,9 @@ owner: maintainers
 lifecycle: active
 sourceOfTruth: src/schemas/studio-graph.ts
 validationPath: pnpm vitest run tests/studio.test.ts --maxWorkers=2
+docbridge:
+  covers:
+    - area:src/studio
 ---
 
 # StudioGraphV1

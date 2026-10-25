@@ -3,6 +3,7 @@ title: Readable vault filenames
 authority: maintainer decision
 status: accepted
 date: 2026-10-20
+sourceOfTruth: src/vault/export.ts
 ---
 
 # Readable vault filenames

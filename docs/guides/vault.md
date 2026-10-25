@@ -1,6 +1,10 @@
 ---
 title: Export a knowledge vault
 description: Navigate generated repository notes alongside committed team knowledge.
+sourceOfTruth: src/vault/export.ts
+docbridge:
+  covers:
+    - area:src/vault
 ---
 
 # Export a knowledge vault

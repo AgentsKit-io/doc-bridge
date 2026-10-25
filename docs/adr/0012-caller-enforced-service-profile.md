@@ -2,6 +2,10 @@
 title: Caller-enforced service profile
 status: accepted
 date: 2026-10-06
+sourceOfTruth: src/execution/profile.ts
+docbridge:
+  covers:
+    - area:src/execution
 ---
 
 # Caller-enforced service profile

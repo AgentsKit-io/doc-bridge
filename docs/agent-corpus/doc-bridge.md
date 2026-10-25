@@ -7,6 +7,9 @@ owner: doc-bridge-maintainers
 lifecycle: active
 sourceOfTruth: src
 validationPath: pnpm test && pnpm typecheck
+docbridge:
+  covers:
+    - area:src/workflow
 ---
 
 # Doc Bridge core
@@ -55,3 +58,10 @@ unchanged or improve it; it may not lower hit@3, and `measureOverlayRetrievalDel
 (`src/bench/overlay-delta.ts`) projects both indexes from one snapshot so the only difference
 between the two runs is the overlay. A drop is a finding about the agent, never a new baseline.
 See [Measured enrichment v1](../spec/measured-enrichment-v1.md).
+
+The staged workflow lives in `src/workflow/engine.ts`. `runWorkflow` drives the stages in the order of
+`WORKFLOW_STAGES` (`collect`, `normalize`, `reconcile`, `enrich`, `evaluate`, `report`) through the handler a
+caller supplies for each, and records the run in a manifest under the state directory. A stage's persisted
+output is keyed by its input hash, so an unchanged input is reused and reported in `reusedStages`. `enrich` is
+the only optional stage (`OPTIONAL_WORKFLOW_STAGES`): without a handler it is skipped and the next stage reads
+the last output that did run, so a caller that never heard of enrichment drives the workflow unchanged.

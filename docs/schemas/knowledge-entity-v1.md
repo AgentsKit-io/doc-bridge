@@ -1,6 +1,10 @@
 ---
 title: Knowledge entity contract v1
 description: Deterministic decisions, concepts and changes with bounded source evidence.
+sourceOfTruth: src/entities/extract.ts
+docbridge:
+  covers:
+    - area:src/entities
 ---
 
 # Knowledge entity v1

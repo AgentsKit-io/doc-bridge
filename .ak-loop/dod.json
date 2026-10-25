@@ -1,0 +1,11 @@
+{
+  "outcomes": [
+    { "id": "o1", "done": true, "proof": "doctor connectivity 80%, reachability 100%, unmet empty" },
+    { "id": "o2", "done": true, "proof": "grade A (96)" },
+    { "id": "o3", "done": true, "proof": "hit@3 0.883333, no cases changed" },
+    { "id": "o4", "done": true, "proof": "docs/ front matter diff" },
+    { "id": "o5", "done": true, "proof": "index regenerated, llms.txt unchanged" },
+    { "id": "o6", "done": true, "proof": "typecheck/test/build pass" },
+    { "id": "o7", "done": true, "proof": "single unpushed conventional commit" }
+  ]
+}
