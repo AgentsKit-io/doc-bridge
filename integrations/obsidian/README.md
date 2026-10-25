@@ -26,3 +26,7 @@ In this mode the plugin never edits notes. It shows drift as:
 - the findings view, one entry per stale note with its changed paths and `recorded → current`; click to open the note;
 - explorer markers on stale notes;
 - graph colouring: one amber (`#e3b341`) colour group, placed first in `.obsidian/graph.json`. The plugin only edits its own group, identified by a marker term in its query; every other key and group is kept, the file is written atomically, and the group is removed when nothing is stale. Open Graph views are reopened after a change. At most 400 notes are coloured; a notice says when the list was capped.
+
+## Source
+
+This plugin lives under `integrations/`. The plugin entry point is `integrations/obsidian/main.ts`, its command splitting and export-result parsing are in `integrations/obsidian/src/core.ts`, and `integrations/obsidian/scripts/install.mjs` copies the build into a vault.

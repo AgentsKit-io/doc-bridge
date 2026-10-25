@@ -34,3 +34,7 @@ Old readers require default-off output; opt-in readers must support
 Local freshness is more expensive only when enabled. Tests exercise real history,
 exact evidence, compatibility, ambiguity and resource limits; extraction cost
 must also be measured on repository corpora before delivery.
+
+## Implementation
+
+The `src/entities` directory owns extraction, which is implemented in `src/entities/extract.ts`.

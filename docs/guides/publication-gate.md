@@ -222,3 +222,7 @@ You can use either one, both, or neither.
 - [Diff and findings](./diff-and-findings.md)
 - [CLI: publication gate](../spec/cli.md#publication-gate)
 - [Config: `reference-findings`](../spec/config-v1.md#reference-findings-opt-in-publication-gate)
+
+## Implementation
+
+The `reference-findings` gate is implemented in `src/gates/reference-findings.ts` and run through `src/gates/run-gates.ts`.

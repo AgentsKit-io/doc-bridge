@@ -96,7 +96,7 @@ either way it is no longer evidence of a decision.
 ## The stage
 
 `enrich` is a workflow stage between `reconcile` and `evaluate`, run only by `ak-docs enrich` or
-`ak-docs check --enrich`. A plain `check` leaves its step pending and `evaluate` reads a null
+`ak-docs check --enrich`. The workflow runner is `src/workflow/engine.ts`, in the `src/workflow` directory. A plain `check` leaves its step pending and `evaluate` reads a null
 previous output. A missing, failed, timed-out or stale enrichment never changes a `check` result:
 `check --enrich` reports `enrichment.status: failed` with the error and carries on.
 
