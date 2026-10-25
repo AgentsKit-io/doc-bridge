@@ -3,7 +3,8 @@ import { readFileSync } from 'node:fs'
 import { splitFrontmatter } from '@agentskit/cross-platform'
 
 import type { DocBridgeConfigV1 } from '../config/schema.js'
-import type { IndexPublication } from '../schemas/doc-bridge-index.js'
+import type { DocBridgeIndexV1, IndexPublication } from '../schemas/doc-bridge-index.js'
+import type { DiscoverySnapshotV1 } from '../schemas/knowledge.js'
 import {
   runDocumentationStandardV1,
   type DocumentationConformanceReportV1,
@@ -52,10 +53,22 @@ export type GateRunResult = {
   readonly results: GateResult[]
 }
 
+/**
+ * What a caller that already observed `root` in this process hands the gates, so they do not
+ * discover and rebuild the whole repository a second time. Doctor passes both.
+ */
+export type GateContext = {
+  /** A discovery snapshot of `root`; gates that rebuild the index project it instead of scanning. */
+  readonly snapshot?: DiscoverySnapshotV1
+  /** The index rebuilt from that snapshot; `index-freshness` compares against it when the hash algorithms match. */
+  readonly rebuilt?: DocBridgeIndexV1
+}
+
 export const runGate = (
   root: string,
   config: DocBridgeConfigV1,
   id: GateId,
+  context: GateContext = {},
 ): GateResult => {
   if (id === 'documentation-standard-v1') {
     const details = runDocumentationStandardV1(root, config)
@@ -71,7 +84,7 @@ export const runGate = (
     }
   }
   if (id === 'reference-findings') return runReferenceFindingsGate(root, config)
-  if (id === 'human-guide-links') return runHumanGuideLinksGate(root, config)
+  if (id === 'human-guide-links') return runHumanGuideLinksGate(root, config, context)
   if (id === 'okf-type') return runOkfTypeGate(root, config)
   if (id === 'docs-style') return runDocsStyleGate(root, config)
   if (id === 'index-reproducible') {
@@ -118,7 +131,7 @@ export const runGate = (
 
   if (id !== 'index-freshness') throw new Error(`Unsupported gate "${id}"`)
 
-  let current: import('../schemas/doc-bridge-index.js').DocBridgeIndexV1
+  let current: DocBridgeIndexV1
   try {
     current = loadDocBridgeIndex(root, config)
   } catch (error) {
@@ -130,7 +143,9 @@ export const runGate = (
 
   if (current.contentHashAlgo === LEGACY_HASH_ALGORITHM) return { id, ok: false, message: 'Legacy index is migration-only. Run: ak-docs index to regenerate with sha256-semantic-v1.' }
 
-  const next = buildDocBridgeIndex({ root, config, write: false, hashAlgorithm: current.contentHashAlgo }).index
+  const next = context.rebuilt?.contentHashAlgo === current.contentHashAlgo
+    ? context.rebuilt
+    : buildDocBridgeIndex({ root, config, write: false, ...(context.snapshot ? { snapshot: context.snapshot } : {}), hashAlgorithm: current.contentHashAlgo }).index
   if (!sameHashIdentity(current, next)) {
     return {
       id,
@@ -215,9 +230,9 @@ export const decidePublication = (gate: GateResult, options: { readonly allowPen
   }
 }
 
-const runHumanGuideLinksGate = (root: string, config: DocBridgeConfigV1): GateResult => {
+const runHumanGuideLinksGate = (root: string, config: DocBridgeConfigV1, context: GateContext): GateResult => {
   const urls = new Set(scanHumanDocRecords(root, config).map((doc) => doc.url))
-  const index = buildDocBridgeIndex({ root, config, write: false }).index
+  const index = context.rebuilt ?? buildDocBridgeIndex({ root, config, write: false, ...(context.snapshot ? { snapshot: context.snapshot } : {}) }).index
   const localHumanDocs = Object.values(index.handoffs ?? {})
     .map((handoff) => handoff.humanDoc)
     .filter((url): url is string => typeof url === 'string' && url.length > 0)
@@ -401,8 +416,9 @@ export const runGates = (
   root: string,
   config: DocBridgeConfigV1,
   ids?: readonly GateId[],
+  context: GateContext = {},
 ): GateRunResult => {
-  const results = (ids ?? resolveGateIds(config)).map((id) => runGate(root, config, id))
+  const results = (ids ?? resolveGateIds(config)).map((id) => runGate(root, config, id, context))
   return { ok: results.every((result) => result.ok), results }
 }
 
