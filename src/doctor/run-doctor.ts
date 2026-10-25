@@ -1,6 +1,8 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
+import { minimatch } from 'minimatch'
+
 import type { DocBridgeConfigV1 } from '../config/schema.js'
 import { parseRetrievalSuite, runRetrievalBench } from '../bench/retrieval.js'
 import { discoverRepository } from '../discovery/repository.js'
@@ -56,8 +58,14 @@ export type DoctorConnectivity = {
   readonly documentsTotal: number
   readonly documentsLinked: number
   readonly unlinkedDocuments: readonly string[]
+  /** Documents left out of `documentsTotal` by `analysis.documents.exclude`. */
+  readonly documentsExcluded: number
+  readonly exclusions: readonly (DocumentExclusion & { readonly matched: number })[]
   readonly pct: number
 }
+
+/** A declared statement that the documents matching `pattern` are not about this repository's code. */
+export type DocumentExclusion = { readonly pattern: string; readonly reason: string }
 
 export type DoctorBenchmark =
   | {
@@ -203,12 +211,23 @@ export const measureReachability = (snapshot: DiscoverySnapshotV1, index: DocBri
 }
 
 /** Both directions of the documentation graph, from the projection's own edges. */
-export const measureConnectivity = (index: DocBridgeIndexV1): DoctorConnectivity => {
+export const measureConnectivity = (index: DocBridgeIndexV1, exclude: readonly DocumentExclusion[] = []): DoctorConnectivity => {
   const entries = index.projection?.entries ?? []
   const byId = new Map(entries.map((entry) => [entry.id, entry]))
   const areas = entries.filter((entry) => entry.kind === 'area').sort((a, b) => a.id.localeCompare(b.id))
   const undocumentedAreas = areas.filter((entry) => !entry.graph.coveredBy.length && !entry.graph.mentionedBy.length).map((entry) => entry.id)
-  const documents = entries.filter((entry) => entry.kind === 'document').sort((a, b) => a.id.localeCompare(b.id))
+  const allDocuments = entries.filter((entry) => entry.kind === 'document').sort((a, b) => a.id.localeCompare(b.id))
+  /*
+   * Exclusions apply to the document share only. `entries`, `byId` and the areas above stay whole,
+   * so an excluded document that covers or mentions an area still documents it.
+   */
+  const matchers = exclude.map((rule) => ({ rule, matches: (path: string) => minimatch(path, rule.pattern, { dot: true }) }))
+  const exclusions = matchers.map(({ rule, matches }) => ({
+    pattern: rule.pattern,
+    reason: rule.reason,
+    matched: allDocuments.filter((entry) => matches(entry.path)).length,
+  }))
+  const documents = allDocuments.filter((entry) => !matchers.some(({ matches }) => matches(entry.path)))
   const linksToCode = (entry: (typeof entries)[number]): boolean =>
     entry.graph.outbound.some((edge) => {
       const target = byId.get(edge.id)
@@ -216,7 +235,13 @@ export const measureConnectivity = (index: DocBridgeIndexV1): DoctorConnectivity
     })
   const unlinkedDocuments = documents.filter((entry) => !linksToCode(entry)).map((entry) => entry.id)
   const areaShare = areas.length ? (areas.length - undocumentedAreas.length) / areas.length : 0
+  /*
+   * When every document is excluded the document share has no population, so it leaves the mean
+   * rather than counting as 0% or NaN: the grade then rests on area coverage alone. Without any
+   * exclusion an empty set of documents keeps its historical share of 0.
+   */
   const documentShare = documents.length ? (documents.length - unlinkedDocuments.length) / documents.length : 0
+  const shares = documents.length === 0 && allDocuments.length > 0 ? [areaShare] : [areaShare, documentShare]
   return {
     areasTotal: areas.length,
     areasDocumented: areas.length - undocumentedAreas.length,
@@ -224,7 +249,9 @@ export const measureConnectivity = (index: DocBridgeIndexV1): DoctorConnectivity
     documentsTotal: documents.length,
     documentsLinked: documents.length - unlinkedDocuments.length,
     unlinkedDocuments: unlinkedDocuments.slice(0, MAX_LISTED),
-    pct: Math.round(((areaShare + documentShare) / 2) * 100),
+    documentsExcluded: allDocuments.length - documents.length,
+    exclusions,
+    pct: Math.round((shares.reduce((sum, share) => sum + share, 0) / shares.length) * 100),
   }
 }
 
@@ -337,6 +364,22 @@ const buildIssues = (coverage: DoctorCoverage): DoctorIssue[] => {
       action: 'ak-docs audit documentation',
     })
   }
+  for (const exclusion of connectivity.exclusions.filter((entry) => entry.matched === 0)) {
+    issues.push({
+      severity: 'warn',
+      code: 'document-exclusion-stale',
+      message: `analysis.documents.exclude pattern "${exclusion.pattern}" matches no document (${exclusion.reason}).`,
+      action: 'edit doc-bridge.config.json  # remove or fix the pattern in analysis.documents.exclude',
+    })
+  }
+  const documentsAll = connectivity.documentsTotal + connectivity.documentsExcluded
+  if (connectivity.documentsExcluded * 2 > documentsAll) {
+    issues.push({
+      severity: 'info',
+      code: 'documents-mostly-excluded',
+      message: `${connectivity.documentsExcluded} of ${documentsAll} documents are excluded from connectivity by policy; review analysis.documents.exclude.`,
+    })
+  }
   if (benchmark.status === 'not-analyzed') {
     issues.push({
       severity: 'info',
@@ -423,7 +466,7 @@ export const runDoctor = (root: string, config: DocBridgeConfigV1): DoctorReport
 
   const coverage: DoctorCoverage = {
     reachability: measureReachability(snapshot, index),
-    connectivity: measureConnectivity(index),
+    connectivity: measureConnectivity(index, config.analysis?.documents?.exclude ?? []),
     benchmark: measureBenchmark(root, config, index),
     packages: {
       total: ownership.length,
@@ -496,6 +539,9 @@ export const formatDoctorText = (report: DoctorReport): string[] => {
     'Retrieval',
     `  Reachability:    ${coverage.reachability.documentsReachable}/${coverage.reachability.documentsTotal} documents in the retrieval projection (${coverage.reachability.pct}%)`,
     `  Connectivity:    ${coverage.connectivity.areasDocumented}/${coverage.connectivity.areasTotal} areas documented · ${coverage.connectivity.documentsLinked}/${coverage.connectivity.documentsTotal} documents link to code (${coverage.connectivity.pct}%)`,
+    ...(coverage.connectivity.documentsExcluded > 0
+      ? [`  Excluded:        ${coverage.connectivity.documentsExcluded} documents by policy (${coverage.connectivity.exclusions.filter((entry) => entry.matched > 0).map((entry) => `${entry.pattern} — ${entry.reason}`).join('; ')})`]
+      : []),
     `  Benchmark:       ${
       coverage.benchmark.status === 'measured'
         ? `hit@3 ${(coverage.benchmark.hitAt3 * 100).toFixed(1)}% · hit@1 ${(coverage.benchmark.hitAt1 * 100).toFixed(1)}% over ${coverage.benchmark.caseCount} case(s) (${coverage.benchmark.suite})`
