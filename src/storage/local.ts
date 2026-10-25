@@ -2,7 +2,7 @@ import { constants } from 'node:fs'
 import { lstat, open, opendir, realpath } from 'node:fs/promises'
 import { join, relative, resolve, sep, isAbsolute } from 'node:path'
 import { createHash } from 'node:crypto'
-import { minimatch } from 'minimatch'
+import { globMatch } from '../lib/glob.js'
 import { z } from 'zod'
 import { createIgnoreFilter } from '../lib/ignore-filter.js'
 import { DEFAULT_SAFETY_EXCLUDES } from '../safety/repository.js'
@@ -113,7 +113,7 @@ export const createLocalRepositoryRead = async (options: LocalRepositoryReadOpti
   // Caller setup only: reuse the repository's existing Git/nested-ignore policy.
   const ignored = createIgnoreFilter(root)
   const excludes = Object.freeze(z.array(z.string().min(1).max(512)).max(128).parse(options.excludes ?? DEFAULT_SAFETY_EXCLUDES))
-  const excluded = (path: string) => excludes.some(pattern => minimatch(path, pattern, { dot: true }))
+  const excluded = (path: string) => excludes.some(pattern => globMatch(path, pattern))
   const verify = async (request: StorageRequest, path: string, expected?: ContentRef) => {
     if (excluded(path)) fail('denied', 'PATH_DENIED')
     const pinned = inventory[path]
@@ -170,7 +170,7 @@ export const createLocalRepositoryRead = async (options: LocalRepositoryReadOpti
             if (!stat.isFile()) continue
             if (!inventory[path]) fail('mismatch', 'REVISION_MISMATCH')
             observed.add(path)
-            if ((request.include.length === 0 || request.include.some(pattern => minimatch(path, pattern, { dot: true }))) && !request.exclude.some(pattern => minimatch(path, pattern, { dot: true }))) {
+            if ((request.include.length === 0 || request.include.some(pattern => globMatch(path, pattern))) && !request.exclude.some(pattern => globMatch(path, pattern))) {
               ledger.charge(request, stat.size)
               entries.push({ path, kind: 'file', bytes: stat.size, content: inventory[path] })
             }
