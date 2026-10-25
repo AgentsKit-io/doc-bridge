@@ -1,0 +1,35 @@
+{
+  "ranAt": "2026-10-25T15:05:00Z",
+  "outcomes": [
+    {
+      "id": "o1",
+      "status": "passed",
+      "evidence": "Manual review: src/doctor/run-doctor.ts calls checkIndexFreshness (src/gates/run-gates.ts); its own hash comparison and freshness discovery were removed"
+    },
+    {
+      "id": "o2",
+      "status": "passed",
+      "evidence": "tests/doctor.test.ts 'agrees with the index-freshness gate on the same tree right after indexing' passes; the test does not show failure on the pre-change code"
+    },
+    {
+      "id": "o3",
+      "status": "passed",
+      "evidence": "Test Files 5 passed, Tests 166 passed"
+    },
+    {
+      "id": "o4",
+      "status": "passed",
+      "evidence": ".changeset/doctor-freshness-gate-parity.md"
+    },
+    {
+      "id": "o5",
+      "status": "passed",
+      "evidence": "pnpm run typecheck && pnpm run test && pnpm run build exited 0"
+    },
+    {
+      "id": "o6",
+      "status": "passed",
+      "evidence": "Fixes #395 in commit body; reviewedOn/reviewDueOn and .github/workflows untouched"
+    }
+  ]
+}
