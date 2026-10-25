@@ -1,0 +1,12 @@
+{
+  "ranAt": "2026-10-25T01:15:00Z",
+  "command": "pnpm run typecheck && pnpm run test && pnpm run build",
+  "exitCode": 137,
+  "outcomes": [
+    { "id": "o1", "status": "passed", "evidence": "doctor: Score 97/100 (A); Connectivity: 50/50 areas documented, 137/201 documents link to code (84%); Reachability 100%; no unmet" },
+    { "id": "o2", "status": "passed", "evidence": "bench retrieval: Cases 60, hit@1 70.0%, hit@3 88.3%, MRR 0.783 (unchanged, no cases touched)" },
+    { "id": "o3", "status": "passed", "evidence": "Only Implementation/Source lines citing code each document describes; no exclusions added" },
+    { "id": "o4", "status": "passed", "evidence": "git status clean after ak-docs index; llms.txt unchanged; no reviewedOn/reviewDueOn, baseline or workflow edits" },
+    { "id": "o5", "status": "failed", "evidence": "pnpm run build exits 137: the tsup DTS step is OOM-killed in this sandbox (it also was killed once during install and succeeded on retry), so the combined command did not complete here. typecheck ok; vitest 1319 tests pass (one study-minimal failure was caused by a concurrent build and passes alone, 42/42); plugin contract scripts pass; tsup DTS step is OOM-killed in this sandbox (exit 137) independent of this docs-only change, JS build succeeds" }
+  ]
+}
