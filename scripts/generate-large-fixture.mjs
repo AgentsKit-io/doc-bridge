@@ -2,8 +2,9 @@
 // Deterministic large-repository fixture: N packages x M docs, no external inputs.
 // Usage: node scripts/generate-large-fixture.mjs <outDir> [packages=100] [docsPerPackage=20]
 // The same arguments always produce the same files (no clocks, no randomness).
-import { mkdirSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 export const generateLargeFixture = (outDir, packages = 100, docsPerPackage = 20) => {
   const root = resolve(outDir)
@@ -45,7 +46,8 @@ export const generateLargeFixture = (outDir, packages = 100, docsPerPackage = 20
   return root
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+// Compare real paths: a symlinked argv[1] (macOS /tmp) would otherwise skip the CLI entry.
+if (process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url))) {
   const [out, n, m] = process.argv.slice(2)
   if (!out) { console.error('usage: generate-large-fixture.mjs <outDir> [packages] [docsPerPackage]'); process.exit(2) }
   console.log(generateLargeFixture(out, Number(n ?? 100), Number(m ?? 20)))
