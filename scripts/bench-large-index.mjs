@@ -4,7 +4,7 @@
 //          [--packages 100] [--docs 20] [--cpu-prof <dir>] [--save-index f | --seed-index f]
 // Compare two builds by passing each build's bin/ak-docs.js as --cli; identical sha256 values
 // for index.json and capabilities.json prove the output did not change.
-import { spawnSync } from 'node:child_process'
+import { runCommand } from '@agentskit/cross-platform'
 import { createHash } from 'node:crypto'
 import { copyFileSync, mkdirSync, readFileSync, rmSync } from 'node:fs'
 import { join, resolve } from 'node:path'
@@ -24,9 +24,9 @@ const times = []
 for (let i = 0; i < runs; i++) {
   rmSync(join(root, '.doc-bridge'), { recursive: true, force: true })
   const started = performance.now()
-  const res = spawnSync(process.execPath, [...(prof ? ['--cpu-prof', `--cpu-prof-dir=${resolve(prof)}`] : []), cli, 'index'], { cwd: root, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 })
+  const res = await runCommand(process.execPath, [...(prof ? ['--cpu-prof', `--cpu-prof-dir=${resolve(prof)}`] : []), cli, 'index'], { cwd: root, maxOutputBytes: 64 * 1024 * 1024 })
   times.push(performance.now() - started)
-  if (res.status !== 0) { console.error(res.stderr); process.exit(1) }
+  if (res.code !== 0) { console.error(res.stderr); process.exit(1) }
 }
 const sorted = [...times].sort((a, b) => a - b)
 // generatedAt is a wall-clock stamp that `index` keeps while contentHash is unchanged. To compare
@@ -36,8 +36,8 @@ const seed = flag('seed-index')
 if (seed) {
   mkdirSync(join(root, '.doc-bridge'), { recursive: true })
   copyFileSync(resolve(seed), join(root, '.doc-bridge/index.json'))
-  const res = spawnSync(process.execPath, [cli, 'index'], { cwd: root, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 })
-  if (res.status !== 0) { console.error(res.stderr); process.exit(1) }
+  const res = await runCommand(process.execPath, [cli, 'index'], { cwd: root, maxOutputBytes: 64 * 1024 * 1024 })
+  if (res.code !== 0) { console.error(res.stderr); process.exit(1) }
 }
 const save = flag('save-index')
 if (save) copyFileSync(join(root, '.doc-bridge/index.json'), resolve(save))
