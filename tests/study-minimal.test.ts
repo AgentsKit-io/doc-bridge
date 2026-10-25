@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { afterAll, describe, expect, it, vi } from 'vitest'
 import { mkdtempSync, writeFileSync, readFileSync, openSync, fstatSync, closeSync, symlinkSync, rmSync, mkdirSync, chmodSync, existsSync, readdirSync, statSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { resolve, join, relative } from 'node:path'
@@ -13,6 +13,23 @@ import { MCP_TOOLS } from '../src/mcp/server.js'
 const config = { model: 'fixture-model', key: 'fixture-key', inputPrice: 1, outputPrice: 2 }
 const task = { question: 'Find the public contract', expected: ['Never send this rubric'] }
 const reply = (input_tokens = 100, output_tokens = 20, extra = {}) => ({ ok: true, json: async () => ({ usage: { input_tokens, output_tokens }, stop_reason: 'end_turn', content: [{ type: 'text', text: 'Answer with source:1' }], ...extra }) })
+
+// A checkout of this repository at HEAD, cloned and indexed once per file. The pilot tests only read it, and cloning
+// and indexing it is what each of them spends most of its time on.
+let checkoutDirectory: string | undefined
+let checkout: { readonly root: string; readonly pin: string } | undefined
+const pinnedCheckout = (): { readonly root: string; readonly pin: string } => {
+  if (checkout) return checkout
+  checkoutDirectory ??= mkdtempSync(join(tmpdir(), 'study-checkout-'))
+  const root = join(checkoutDirectory, 'corpus')
+  const pin = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim()
+  execFileSync('git', ['clone', '--quiet', '--depth', '1', '--no-local', '--no-checkout', resolve('.'), root], { stdio: 'pipe' })
+  execFileSync('git', ['-C', root, 'checkout', '--quiet', '--detach', pin], { stdio: 'pipe' })
+  execFileSync(process.execPath, [resolve('bin/ak-docs.js'), 'index'], { cwd: root, stdio: 'pipe', timeout: 60000 })
+  checkout = { root, pin }
+  return checkout
+}
+afterAll(() => { if (checkoutDirectory) rmSync(checkoutDirectory, { recursive: true, force: true }) })
 
 describe('minimal study without network or a real credential', () => {
   it('validates the six-task paired matrix, pins and pilot', () => {
@@ -178,17 +195,14 @@ describe('minimal study without network or a real credential', () => {
 
   it('runs the complete pilot with mocked HTTP, real frozen corpus/MCP, private ledger and extrapolation', async () => {
     const temporary = mkdtempSync(join(tmpdir(), 'study-pilot-'))
-    const root = join(temporary, 'corpus')
     const output = join(temporary, 'private.json')
     const log = vi.spyOn(console, 'log').mockImplementation(() => {})
     const http = vi.fn(async () => reply())
     vi.stubGlobal('fetch', http)
     try {
       const protocol = loadProtocol()
-      protocol.repositories['doc-bridge'] = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim()
-      execFileSync('git', ['clone', '--quiet', '--depth', '1', '--no-local', '--no-checkout', resolve('.'), root], { stdio: 'pipe' })
-      execFileSync('git', ['-C', root, 'checkout', '--quiet', '--detach', protocol.repositories['doc-bridge']], { stdio: 'pipe' })
-      execFileSync(process.execPath, [resolve('bin/ak-docs.js'), 'index'], { cwd: root, stdio: 'pipe', timeout: 60000 })
+      const { root, pin } = pinnedCheckout()
+      protocol.repositories['doc-bridge'] = pin
       const args = ['--pilot', '--approve-budget', '--root', `doc-bridge=${root}`, '--output', output]
       const env = { STUDY_MODEL: config.model, ANTHROPIC_API_KEY: config.key, STUDY_BUDGET_USD: '1', STUDY_INPUT_USD_PER_MILLION: '1', STUDY_OUTPUT_USD_PER_MILLION: '2' }
       const link = join(temporary, 'output-link')
@@ -704,16 +718,13 @@ describe('CLI transport: headless Claude Code without an API key', () => {
 
   it('runs the pilot end to end through the CLI transport: clean export, private ledger, no API key', async () => {
     const temporary = mkdtempSync(join(tmpdir(), 'study-cli-pilot-'))
-    const root = join(temporary, 'corpus')
     const output = join(temporary, 'private.json')
     const fake = cliFake()
     const log = vi.spyOn(console, 'log').mockImplementation(() => {})
     try {
       const protocol = loadProtocol()
-      protocol.repositories['doc-bridge'] = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim()
-      execFileSync('git', ['clone', '--quiet', '--depth', '1', '--no-local', '--no-checkout', resolve('.'), root], { stdio: 'pipe' })
-      execFileSync('git', ['-C', root, 'checkout', '--quiet', '--detach', protocol.repositories['doc-bridge']], { stdio: 'pipe' })
-      execFileSync(process.execPath, [engine, 'index'], { cwd: root, stdio: 'pipe', timeout: 60000 })
+      const { root, pin } = pinnedCheckout()
+      protocol.repositories['doc-bridge'] = pin
       const args = ['--pilot', '--approve-budget', '--transport', 'cli', '--claude-bin', fake.bin, '--attempt-budget-usd', '0.5', '--root', `doc-bridge=${root}`, '--output', output]
       const env = { STUDY_MODEL: 'claude-haiku-5-5', STUDY_BUDGET_USD: '1' }
       await main(args, env, protocol)
@@ -741,16 +752,13 @@ describe('CLI transport: headless Claude Code without an API key', () => {
 
   it('stops the pilot at the first invalid setup and keeps the private ledger', async () => {
     const temporary = mkdtempSync(join(tmpdir(), 'study-cli-stop-'))
-    const root = join(temporary, 'corpus')
     const output = join(temporary, 'private.json')
     const fake = cliFake({ init: { tools: ['Read', 'Grep', 'Glob', 'Bash'] } })
     const log = vi.spyOn(console, 'log').mockImplementation(() => {})
     try {
       const protocol = loadProtocol()
-      protocol.repositories['doc-bridge'] = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim()
-      execFileSync('git', ['clone', '--quiet', '--depth', '1', '--no-local', '--no-checkout', resolve('.'), root], { stdio: 'pipe' })
-      execFileSync('git', ['-C', root, 'checkout', '--quiet', '--detach', protocol.repositories['doc-bridge']], { stdio: 'pipe' })
-      execFileSync(process.execPath, [engine, 'index'], { cwd: root, stdio: 'pipe', timeout: 60000 })
+      const { root, pin } = pinnedCheckout()
+      protocol.repositories['doc-bridge'] = pin
       const args = ['--pilot', '--approve-budget', '--transport', 'cli', '--claude-bin', fake.bin, '--root', `doc-bridge=${root}`, '--output', output]
       await expect(main(args, { STUDY_MODEL: 'claude-haiku-5-5', STUDY_BUDGET_USD: '1' }, protocol)).resolves.toBeUndefined()
       const ledger = JSON.parse(readFileSync(output, 'utf8'))
