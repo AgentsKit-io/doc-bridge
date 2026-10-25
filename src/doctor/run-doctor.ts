@@ -430,21 +430,22 @@ export const runDoctor = (root: string, config: DocBridgeConfigV1): DoctorReport
   let hasIndex = true
   let freshnessOk = false
   let freshnessMessage: string
+  let rebuilt: DocBridgeIndexV1
 
-  // One discovery serves both the freshness rebuild and the reachability denominator.
+  // One discovery and one rebuild serve the freshness check, the gates and the reachability denominator.
   const snapshot = discoverRepository({ root, config })
 
   try {
     index = loadDocBridgeIndex(root, config)
-    const next = buildDocBridgeIndex({ root, config, write: false, snapshot, hashAlgorithm: index.contentHashAlgo }).index.contentHash
-    freshnessOk = index.contentHash === next
+    rebuilt = buildDocBridgeIndex({ root, config, write: false, snapshot, hashAlgorithm: index.contentHashAlgo }).index
+    freshnessOk = index.contentHash === rebuilt.contentHash
     freshnessMessage = freshnessOk ? 'Index is fresh' : 'Index is stale. Run: ak-docs index'
   } catch (error) {
     if (error instanceof IndexNotFoundError) {
       hasIndex = false
       freshnessOk = false
       freshnessMessage = error.message
-      index = buildDocBridgeIndex({ root, config, write: false, snapshot }).index
+      index = rebuilt = buildDocBridgeIndex({ root, config, write: false, snapshot }).index
     } else {
       throw error
     }
@@ -462,7 +463,7 @@ export const runDoctor = (root: string, config: DocBridgeConfigV1): DoctorReport
     (doc) => doc.path !== config.corpus.agent.index,
   )
 
-  const gates = runGates(root, config)
+  const gates = runGates(root, config, undefined, { snapshot, rebuilt })
 
   const coverage: DoctorCoverage = {
     reachability: measureReachability(snapshot, index),
