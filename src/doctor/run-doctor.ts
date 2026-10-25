@@ -6,7 +6,7 @@ import { parseRetrievalSuite, runRetrievalBench } from '../bench/retrieval.js'
 import { discoverRepository } from '../discovery/repository.js'
 import { buildDocBridgeIndex } from '../index-builder/build-index.js'
 import { scanAgentCorpus } from '../index-builder/scan-corpus.js'
-import { runGates, type GateRunResult } from '../gates/run-gates.js'
+import { checkIndexFreshness, runGates, type GateRunResult } from '../gates/run-gates.js'
 import { IndexNotFoundError, loadDocBridgeIndex } from '../query/load-index.js'
 import { checkIndexReproducibility, type IndexReproducibility } from '../discovery/reproducibility.js'
 import type { DocBridgeIndexV1 } from '../schemas/doc-bridge-index.js'
@@ -383,29 +383,21 @@ const buildNextActions = (issues: readonly DoctorIssue[], coverage: DoctorCovera
 }
 
 export const runDoctor = (root: string, config: DocBridgeConfigV1): DoctorReport => {
-  let index: DocBridgeIndexV1 | undefined
-  let hasIndex = true
-  let freshnessOk = false
-  let freshnessMessage: string
-
-  // One discovery serves both the freshness rebuild and the reachability denominator.
+  // One discovery serves the reachability denominator and the index built when none is stored.
   const snapshot = discoverRepository({ root, config })
 
+  let stored: DocBridgeIndexV1 | undefined
+  let missingMessage = ''
   try {
-    index = loadDocBridgeIndex(root, config)
-    const next = buildDocBridgeIndex({ root, config, write: false, snapshot, hashAlgorithm: index.contentHashAlgo }).index.contentHash
-    freshnessOk = index.contentHash === next
-    freshnessMessage = freshnessOk ? 'Index is fresh' : 'Index is stale. Run: ak-docs index'
+    stored = loadDocBridgeIndex(root, config)
   } catch (error) {
-    if (error instanceof IndexNotFoundError) {
-      hasIndex = false
-      freshnessOk = false
-      freshnessMessage = error.message
-      index = buildDocBridgeIndex({ root, config, write: false, snapshot }).index
-    } else {
-      throw error
-    }
+    if (!(error instanceof IndexNotFoundError)) throw error
+    missingMessage = error.message
   }
+  const hasIndex = stored !== undefined
+  // The gate's own computation, so doctor and `gate run` report the same freshness for the same tree.
+  const freshness = stored ? checkIndexFreshness(root, config, stored) : { ok: false, message: missingMessage }
+  const index = stored ?? buildDocBridgeIndex({ root, config, write: false, snapshot }).index
 
   const ownership = Object.entries(index.lookup?.ownership ?? {})
   const missingAgentDoc = ownership
@@ -438,8 +430,8 @@ export const runDoctor = (root: string, config: DocBridgeConfigV1): DoctorReport
       unindexed: corpusDocs.filter((doc) => !indexedPaths.has(doc.path)).map((doc) => doc.path),
     },
     freshness: {
-      ok: freshnessOk,
-      message: freshnessMessage,
+      ok: freshness.ok,
+      message: freshness.message,
       hasIndex,
     },
     gates,

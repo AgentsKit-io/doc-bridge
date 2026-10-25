@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs'
 import { splitFrontmatter } from '@agentskit/cross-platform'
 
 import type { DocBridgeConfigV1 } from '../config/schema.js'
-import type { IndexPublication } from '../schemas/doc-bridge-index.js'
+import type { DocBridgeIndexV1, IndexPublication } from '../schemas/doc-bridge-index.js'
 import {
   runDocumentationStandardV1,
   type DocumentationConformanceReportV1,
@@ -118,7 +118,7 @@ export const runGate = (
 
   if (id !== 'index-freshness') throw new Error(`Unsupported gate "${id}"`)
 
-  let current: import('../schemas/doc-bridge-index.js').DocBridgeIndexV1
+  let current: DocBridgeIndexV1
   try {
     current = loadDocBridgeIndex(root, config)
   } catch (error) {
@@ -128,6 +128,18 @@ export const runGate = (
     return { id, ok: false, message: error instanceof Error ? error.message : String(error) }
   }
 
+  return checkIndexFreshness(root, config, current)
+}
+
+/**
+ * Whether a stored index is what a fresh build of the same tree produces.
+ *
+ * The one freshness computation: the `index-freshness` gate reports it, and `doctor` reports its
+ * freshness dimension from it too. Doctor used to keep a second comparison with its own discovery;
+ * sharing this function means the two reports cannot drift apart on the same tree.
+ */
+export const checkIndexFreshness = (root: string, config: DocBridgeConfigV1, current: DocBridgeIndexV1): GateResult => {
+  const id = 'index-freshness'
   if (current.contentHashAlgo === LEGACY_HASH_ALGORITHM) return { id, ok: false, message: 'Legacy index is migration-only. Run: ak-docs index to regenerate with sha256-semantic-v1.' }
 
   const next = buildDocBridgeIndex({ root, config, write: false, hashAlgorithm: current.contentHashAlgo }).index
