@@ -46,3 +46,7 @@ and apply functions. A passing deterministic check does not prove semantic inten
 and does not resolve the original finding.
 
 See the [contract](../spec/llm-remediation-v1.md) for limits and rejection reasons.
+
+## Implementation
+
+The command is implemented in `src/fixes/llm-cli.ts` on top of the L2 remediation in `src/fixes/llm.ts` and the providers in `src/fixes/llm-provider.ts`.

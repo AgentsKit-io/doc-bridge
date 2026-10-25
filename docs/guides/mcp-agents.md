@@ -61,3 +61,7 @@ Prefer `handoff.resolve` **before** any multi-file edit.
 - [Index and query](./index-and-query.md)  
 - [MCP deep dive](../mcp.md)  
 - [Chat and RAG](../chat-and-rag.md) — optional intelligence plane  
+
+## Implementation
+
+The MCP server is `src/mcp/server.ts` and the client installer behind `ak-docs mcp install` is `src/mcp/install.ts`.

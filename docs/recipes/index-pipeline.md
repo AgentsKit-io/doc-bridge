@@ -97,3 +97,7 @@ pnpm coverage:badge
 ```
 
 Paste the shields.io line from `.doc-bridge/coverage-badge.json` → `markdown` field.
+
+## Implementation
+
+The index build is `src/index-builder/build-index.ts`; `ak-docs index --watch` is `src/index-builder/watch-index.ts`.

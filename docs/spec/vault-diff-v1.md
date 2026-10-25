@@ -62,3 +62,7 @@ ignored review draft and prints suggested git/gh commands. It never opens a PR,
 pushes, commits, changes branches or writes source docs itself. Inspect the draft
 and select an appropriate review artifact location before running those commands;
 the default draft directory is ignored. No helper runs when there are no proposals.
+
+## Implementation
+
+The diff code lives in `src/vault` and its proposals are stored by `src/enrich`. It is implemented in `src/vault/diff.ts`. It stores proposals through `src/enrich/overlay.ts` and refuses to run under the service profile, which is defined in `src/execution/profile.ts`, in the `src/execution` directory.

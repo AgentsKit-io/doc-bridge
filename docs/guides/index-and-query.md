@@ -73,3 +73,7 @@ resolve ownership  →  read startHere  →  edit only editRoots  →  run check
 - [MCP](./mcp-agents.md)  
 - [AgentHandoff schema](../schemas/agent-handoff-v1.md)  
 - [CLI reference](../spec/cli.md)  
+
+## Implementation
+
+Indexing is implemented in `src/index-builder/build-index.ts` and querying in `src/query/query.ts`.
