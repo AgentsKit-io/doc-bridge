@@ -53,3 +53,7 @@ Native and fixture controls, frozen v1 comparisons and hand-reviewed historical
 cases must expose coverage changes and remaining mismatches. Mention suppression
 is not semantic prose validation. Unknown cases cannot be discarded to improve
 precision, and a passing sample does not establish repository-wide readiness.
+
+## Implementation
+
+The `src/diff` directory owns change sets. Changed citation claims are computed in `src/discovery/changed-claims.ts` and consumed by the change set in `src/diff/change-set.ts`.

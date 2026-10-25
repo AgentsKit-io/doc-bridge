@@ -49,3 +49,7 @@ review. The exact payload, limits and recovery boundary are specified in
 [vault diff v1](../spec/vault-diff-v1.md). Acceptance exercises real export/diff,
 multi-document bindings, stable replay/decisions, added/deleted/stale reports,
 source preservation and the built CLI draft preview.
+
+## Implementation
+
+The review path lives in `src/vault` and `src/enrich`. It is implemented in `src/vault/diff.ts`, which validates proposals with `src/enrich/validate.ts`.

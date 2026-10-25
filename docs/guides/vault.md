@@ -76,3 +76,7 @@ Enable `index.knowledgeEntities.enabled` to include decision, concept and change
 notes with source-region or local commit evidence and links to observed facts.
 These notes use the same stable IDs and template registry. See the
 [diff contract](../spec/vault-diff-v1.md) for review boundaries and stale bindings.
+
+## Implementation
+
+The vault code lives in `src/vault`. Export is implemented in `src/vault/export.ts`, note content is built in `src/vault/content.ts`, and `ak-docs vault diff` is `src/vault/diff.ts`.
