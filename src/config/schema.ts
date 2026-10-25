@@ -269,6 +269,32 @@ export const AnalysisConfigSchema = z
       })
       .strict()
       .optional(),
+    /**
+     * Documents that are not about this repository's code, such as published guides written for
+     * readers elsewhere. Each exclusion is a declared, reviewable statement: a glob over
+     * repository-relative document paths and the reason it holds. Excluded documents leave the
+     * connectivity document share only; they still count for reachability, retrieval, gates and
+     * area coverage, and the doctor reports every exclusion.
+     */
+    documents: z
+      .object({
+        exclude: z
+          .array(
+            z
+              .object({
+                pattern: z.string().min(1, 'documents.exclude pattern must not be empty').max(256),
+                reason: z
+                  .string({ error:'documents.exclude reason is required: say why the documents are not about this code' })
+                  .min(1, 'documents.exclude reason must not be empty: say why the documents are not about this code')
+                  .max(200, 'documents.exclude reason must be at most 200 characters'),
+              })
+              .strict(),
+          )
+          .max(32, 'documents.exclude allows at most 32 entries')
+          .optional(),
+      })
+      .strict()
+      .optional(),
   })
   .strict()
 
