@@ -202,7 +202,7 @@
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "@types/semver": "7.8.0",
-    "@vitest/coverage-v8": "4.1.11",
+    "@vitest/coverage-v8": "5.0.5",
     "esbuild": "^0.28.2",
     "fumadocs-core": "16.16.1",
     "fumadocs-mdx": "15.4.6",
@@ -214,7 +214,7 @@
     "react-dom": "19.3.0",
     "tailwindcss": "4.3.3",
     "tsup": "^8.5.0",
-    "vitest": "^4.1.11"
+    "vitest": "^5.0.5"
   },
   "directories": {
     "doc": "docs",
