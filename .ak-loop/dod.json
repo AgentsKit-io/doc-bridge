@@ -1,0 +1,12 @@
+{
+  "proofs": [
+    { "id": "o1", "status": "passed", "evidence": "pnpm vitest run tests/config" },
+    { "id": "o2", "status": "passed", "evidence": "pnpm vitest run tests/doctor" },
+    { "id": "o3", "status": "passed", "evidence": "pnpm vitest run tests/doctor" },
+    { "id": "o4", "status": "passed", "evidence": "pnpm vitest run tests/doctor" },
+    { "id": "o5", "status": "passed", "evidence": "docs/spec/config-v1.md section analysis.documents" },
+    { "id": "o6", "status": "passed", "evidence": ".changeset/document-connectivity-exclusions.md" },
+    { "id": "o7", "status": "passed", "evidence": "typecheck, test, build all exit 0" },
+    { "id": "o8", "status": "passed", "evidence": "readme-standard, docs:typecheck, docs:build, test:docs-artifacts all exit 0" }
+  ]
+}

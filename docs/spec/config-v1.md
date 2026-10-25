@@ -581,6 +581,34 @@ An ownership path that no observed module or document lives under is reported as
 invisible: the handoff still resolves, it just points an agent somewhere that no longer holds what
 it claims.
 
+## `analysis.documents` (optional)
+
+```ts
+documents?: {
+  /** Documents that are not about this repository's code. At most 32 entries. */
+  exclude?: { pattern: string; reason: string }[]
+}
+```
+
+Sits next to `analysis.areas`. Connectivity averages the share of areas some document covers or
+mentions and the share of documents with an edge into code. A repository that ships guides written
+for readers elsewhere has documents that describe none of its code, and the only other way to
+raise the second share is to fake edges. `exclude` is the honest alternative: each entry is a glob
+over repository-relative document paths (`content/**`) and a required `reason` of 1 to 200
+characters, so the exclusion is a declared, reviewable statement rather than a silent filter.
+
+A matching document leaves the document share, numerator and denominator alike, and
+`coverage.connectivity.documentsTotal` counts the rest. It still counts everywhere else:
+reachability, retrieval, gates, indexing, and area coverage — an excluded document that covers or
+mentions an area still documents it. When every document is excluded the document share has no
+population and drops out of the mean, so connectivity rests on area coverage alone.
+
+The doctor reports what it excluded. `coverage.connectivity.documentsExcluded` and
+`coverage.connectivity.exclusions` (`pattern`, `reason`, `matched`) carry it in the JSON, and the text
+output prints `Excluded: 110 documents by policy (content/** — published guides for readers)`. A
+pattern that matches no document is a `document-exclusion-stale` warning, and excluding more than
+half of all documents adds a `documents-mostly-excluded` info issue so a reviewer notices.
+
 ## `retrieval` (optional)
 
 ```ts

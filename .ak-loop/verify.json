@@ -1,0 +1,15 @@
+{
+  "ranAt": "2026-10-25T02:30:00Z",
+  "command": "pnpm run typecheck && pnpm run test && pnpm run build",
+  "exitCode": 0,
+  "outcomes": [
+    { "id": "o1", "status": "passed", "evidence": "tests/config-documents-exclude.test.ts (3 tests) passed" },
+    { "id": "o2", "status": "passed", "evidence": "tests/doctor-documents-exclude.test.ts (8 tests) passed; doctor-measured unchanged" },
+    { "id": "o3", "status": "passed", "evidence": "text and JSON output asserted in tests/doctor-documents-exclude.test.ts" },
+    { "id": "o4", "status": "passed", "evidence": "document-exclusion-stale (warn) and documents-mostly-excluded (info) asserted" },
+    { "id": "o5", "status": "passed", "evidence": "docs/spec/config-v1.md documents analysis.documents.exclude; no generated config schema exists; docs:build produced no tracked diff" },
+    { "id": "o6", "status": "passed", "evidence": ".changeset/document-connectivity-exclusions.md: '@agentskit/doc-bridge': minor" },
+    { "id": "o7", "status": "passed", "evidence": "typecheck, full vitest run, plugin tests and tsup build all succeeded" },
+    { "id": "o8", "status": "passed", "evidence": "README Standard v1 — PASS; docs:typecheck, docs:build and test:docs-artifacts (8/8) passed" }
+  ]
+}
