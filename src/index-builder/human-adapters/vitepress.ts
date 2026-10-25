@@ -1,4 +1,4 @@
-import { minimatch } from 'minimatch'
+import { globMatch } from '../../lib/glob.js'
 
 import { optionString, routeSlug, scanMarkdownDocs, type HumanAdapter } from './core.js'
 
@@ -19,7 +19,7 @@ const srcExcludePatterns = (value: unknown): readonly string[] => {
 }
 
 const isExcluded = (relPath: string, patterns: readonly string[]): boolean =>
-  patterns.some((pattern) => minimatch(relPath, pattern, { dot: true }))
+  patterns.some((pattern) => globMatch(relPath, pattern))
 
 const vitepressSlug = (relPath: string, cleanUrls: boolean): string => {
   const slug = routeSlug(relPath)

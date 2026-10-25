@@ -2,7 +2,7 @@ import { lstatSync, readdirSync, realpathSync, statSync } from 'node:fs'
 import { isAbsolute, relative, resolve, sep } from 'node:path'
 import { toPosix } from '@agentskit/cross-platform'
 
-import { minimatch } from 'minimatch'
+import { globMatch } from '../lib/glob.js'
 
 import { createIgnoreFilter } from '../lib/ignore-filter.js'
 
@@ -55,7 +55,7 @@ export const safeWalkFiles = (root: string, options: SafeWalkOptions = {}): Safe
   let bytes = 0
   let reason: string | undefined
   const started = Date.now()
-  const matchesExclude = (path: string): boolean => excludes.some((pattern) => minimatch(path, pattern, { dot: true }))
+  const matchesExclude = (path: string): boolean => excludes.some((pattern) => globMatch(path, pattern))
   const ignored = options.respectIgnore === false ? undefined : createIgnoreFilter(projectRoot)
   const visit = (directory: string): void => {
     if (reason) return

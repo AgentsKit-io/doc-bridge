@@ -1,5 +1,5 @@
 import { posix } from 'node:path'
-import { minimatch } from 'minimatch'
+import { globMatch } from '../lib/glob.js'
 import { unified } from 'unified'
 import remarkParse from 'remark-parse'
 import remarkFrontmatter from 'remark-frontmatter'
@@ -24,9 +24,9 @@ export const obsidianCorpusPath = (path: string, corpus: HumanCorpusConfig): str
   const relative = root === '.' ? path : path.startsWith(`${root}/`) ? path.slice(root.length + 1) : undefined
   if (relative === undefined) return undefined
   const patterns = (value: unknown): string[] => Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : []
-  if (patterns(options?.exclude).some(pattern => minimatch(relative, pattern, { dot: true }))) return undefined
+  if (patterns(options?.exclude).some(pattern => globMatch(relative, pattern))) return undefined
   const include = patterns(options?.include)
-  return !include.length || include.some(pattern => minimatch(relative, pattern, { dot: true })) ? relative : undefined
+  return !include.length || include.some(pattern => globMatch(relative, pattern)) ? relative : undefined
 }
 
 type Reference = { target: string; embed: boolean; alias?: string; line: number }

@@ -649,6 +649,31 @@ const pathShaped = (value: string): boolean => /[/.]/.test(value) && !/\s/.test(
  */
 const BARE_WORD = /^[a-z]+$/
 
+/**
+ * Lookups derived from the resolution universe alone. They were rebuilt for every document —
+ * modules x documents map entries and a package-list sort per analysis — so they are built once
+ * per resolution object instead.
+ */
+const lookupsByResolution = new WeakMap<MarkdownResolution, {
+  readonly modulePathById: ReadonlyMap<string, string>
+  readonly packagePaths: readonly { readonly id: string; readonly path: string }[]
+  readonly packageNamesById: ReadonlyMap<string, readonly string[]>
+}>()
+const resolutionLookups = (resolution: MarkdownResolution) => {
+  let lookups = lookupsByResolution.get(resolution)
+  if (!lookups) {
+    const packageNamesById = new Map<string, string[]>()
+    for (const [name, id] of resolution.packages) packageNamesById.set(id, [...(packageNamesById.get(id) ?? []), name])
+    lookups = {
+      modulePathById: new Map([...resolution.modules].map(([path, id]) => [id, path])),
+      packagePaths: [...(resolution.packagePaths ?? [])].sort((a, b) => b.path.length - a.path.length),
+      packageNamesById,
+    }
+    lookupsByResolution.set(resolution, lookups)
+  }
+  return lookups
+}
+
 export const analyzeMarkdownDocument = (
   document: MarkdownDocumentV1,
   documentId: string,
@@ -711,8 +736,7 @@ export const analyzeMarkdownDocument = (
    * among owners that could plausibly be meant.
    */
   const entrypoints = resolution.entrypoints ?? new Set<string>()
-  const modulePathById = new Map([...resolution.modules].map(([path, id]) => [id, path]))
-  const packagePaths = [...(resolution.packagePaths ?? [])].sort((a, b) => b.path.length - a.path.length)
+  const { modulePathById, packagePaths, packageNamesById } = resolutionLookups(resolution)
   const citedAround = new Map<string, Set<string>>()
   const citedNear = (line: number): Set<string> => {
     const region = (document.citationRegions ?? []).filter(item => item.lineStart <= line && item.lineEnd >= line).sort((a, b) => (a.lineEnd - a.lineStart) - (b.lineEnd - b.lineStart))[0]
@@ -736,7 +760,7 @@ export const analyzeMarkdownDocument = (
     if (path === undefined) return false
     if (cited.has(path)) return true
     const pkg = packagePaths.find(item => item.path === '.' || path.startsWith(`${item.path}/`))
-    return !!pkg && [...resolution.packages.entries()].some(([name, id]) => id === pkg.id && cited.has(name))
+    return !!pkg && (packageNamesById.get(pkg.id) ?? []).some(name => cited.has(name))
   }
   /** Owners a bare-word citation may resolve to; every other span is returned unchanged. */
   const citableOwners = (owners: readonly string[], value: string, line: number, exempt: boolean): readonly string[] => {

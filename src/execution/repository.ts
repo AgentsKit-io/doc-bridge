@@ -1,4 +1,4 @@
-import { minimatch } from 'minimatch'
+import { globMatch } from '../lib/glob.js'
 import { StorageLedger, storageFailure } from '../storage/local.js'
 import type { RepositoryReadV1, StorageLimits } from '../storage/contract.js'
 import type { DocBridgeConfigV1 } from '../config/schema.js'
@@ -8,7 +8,7 @@ export const restrictServiceRead = (read: RepositoryReadV1, config: DocBridgeCon
   const limits = Object.freeze(Object.fromEntries(Object.entries(read.limits).map(([key, limit]) => [key, Math.min(limit, config.safety?.[key as keyof NonNullable<DocBridgeConfigV1['safety']>] as number ?? limit)])) as StorageLimits)
   const ledger = new StorageLedger(read.partition, limits)
   const excludes = config.safety?.exclude ?? []
-  const excluded = (path: string) => excludes.some(pattern => minimatch(path, pattern, { dot: true }))
+  const excluded = (path: string) => excludes.some(pattern => globMatch(path, pattern))
   const restricted: RepositoryReadV1 = { version: read.version, partition: read.partition, limits,
     async list(request) {
       try {

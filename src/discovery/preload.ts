@@ -1,7 +1,7 @@
 import { basename, dirname, extname, join, relative, resolve } from 'node:path'
 import { toPosix } from '@agentskit/cross-platform'
 import * as ts from 'typescript'
-import { minimatch } from 'minimatch'
+import { globMatch } from '../lib/glob.js'
 import { PartitionSchema, StorageLimitsSchema, FileMetaSchema, RepositoryListingSchema, type RepositoryReadV1 } from '../storage/contract.js'
 import { StorageLedger, contentRef, StorageFault } from '../storage/local.js'
 import type { SafeWalkOptions, SafeWalkResult } from '../safety/repository.js'
@@ -57,7 +57,7 @@ export const createScanMap = (root: string, files: ReadonlyMap<string, { readonl
         if (rel === '..' || rel.startsWith('../') || rel.startsWith('/')) return false
         if (depth !== undefined && rel.split('/').length > depth) return false
         if (extensions?.length && !extensions.includes(extname(path))) return false
-        const matches = (pattern: string) => minimatch(rel, pattern, { dot: true }) || minimatch(rel, `${pattern.replace(/\/$/, '')}/**/*`, { dot: true })
+        const matches = (pattern: string) => globMatch(rel, pattern) || globMatch(rel, `${pattern.replace(/\/$/, '')}/**/*`)
         return !(excludes ?? []).some(matches) && (!includes?.length || includes.some(matches))
       }).sort()
     },
@@ -89,7 +89,11 @@ export const createScanMap = (root: string, files: ReadonlyMap<string, { readonl
       let bytes = 0
       let reason = listingComplete ? undefined : `Repository scan exceeded storage ${listingLimitation}.`
       for (const [path, file] of [...files].sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0)) {
-        if (!extensions.some(extension => basename(path).endsWith(extension)) || options.exclude?.some(pattern => minimatch(pathOf(path), pattern, { dot: true }))) continue
+        if (!extensions.some(extension => basename(path).endsWith(extension))) continue
+        if (options.exclude?.length) {
+          const relativePath = pathOf(path)
+          if (options.exclude.some(pattern => globMatch(relativePath, pattern))) continue
+        }
         if (selected.length >= (options.maxFiles ?? 10_000)) { reason = `Repository scan exceeded the ${options.maxFiles ?? 10_000} file limit.`; break }
         bytes += file.bytes
         if (options.maxBytes !== undefined && bytes > options.maxBytes) { reason = `Repository scan exceeded the ${options.maxBytes} byte limit.`; break }
