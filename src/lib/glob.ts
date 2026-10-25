@@ -1,5 +1,7 @@
 import { Minimatch } from 'minimatch'
 
+/** Patterns come from configuration and requests; the bound keeps long-lived servers from growing it. */
+const MAX_COMPILED = 1024
 const compiled = new Map<string, Minimatch | null>()
 
 /**
@@ -12,6 +14,7 @@ export const globMatch = (path: string, pattern: string): boolean => {
   if (matcher === undefined) {
     // minimatch() treats a leading `#` as a comment that matches nothing.
     matcher = pattern.charAt(0) === '#' ? null : new Minimatch(pattern, { dot: true })
+    if (compiled.size >= MAX_COMPILED) compiled.clear()
     compiled.set(pattern, matcher)
   }
   return matcher ? matcher.match(path) : false
