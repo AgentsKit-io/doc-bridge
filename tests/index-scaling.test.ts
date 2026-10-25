@@ -25,6 +25,7 @@ import { loadCliConfig } from '../src/config/load-config.js'
 import { deriveAreas } from '../src/discovery/areas.js'
 import { MARKDOWN_ANALYZER_VERSION, analyzeMarkdownDocument, parseMarkdownDocument, type MarkdownResolution } from '../src/discovery/markdown.js'
 import { buildDocBridgeIndex } from '../src/index-builder/build-index.js'
+import { createFuzzyCandidateIndex, resolveFuzzyReference } from '../src/lib/fuzzy-match.js'
 // @ts-expect-error The generator is a plain ES module under scripts/.
 import { generateLargeFixture } from '../scripts/generate-large-fixture.mjs'
 
@@ -74,6 +75,38 @@ describe('index scaling guards', () => {
     }
     expect(MARKDOWN_ANALYZER_VERSION).toBeTruthy()
     expect(iterations).toBeLessThanOrEqual(2)
+  })
+
+  it('scans the path universe once per distinct fuzzy reference, not once per mention', () => {
+    let scans = 0
+    class CountingMap<K, V> extends Map<K, V> {
+      override [Symbol.iterator](): MapIterator<[K, V]> {
+        scans++
+        return super[Symbol.iterator]()
+      }
+    }
+    const paths = [
+      'docs/guides/getting-started.md',
+      'docs/guides/configuration-reference.md',
+      'docs/architecture/overview.md',
+      'src/lib/fuzzy-match.ts',
+    ]
+    const built = createFuzzyCandidateIndex(paths)
+    const index = { ...built, byLength: new CountingMap(built.byLength) }
+    const queries = ['docs/guides/getting-startd.md', 'src/lib/fuzzy-matc.ts']
+    const expected = queries.map(query => resolveFuzzyReference(query, paths))
+    expect(expected.every(match => match !== undefined)).toBe(true)
+    for (let i = 0; i < 25; i++) {
+      const query = queries[i % 2]!
+      expect(resolveFuzzyReference(query, index)).toEqual(expected[i % 2])
+    }
+    expect(scans).toBe(2)
+    // Plain arrays are never memoized, and a rebuilt index starts with no memoized results.
+    expect(resolveFuzzyReference(queries[0]!, paths)).toEqual(expected[0])
+    expect(scans).toBe(2)
+    const rebuilt = { ...built, byLength: new CountingMap(built.byLength) }
+    expect(resolveFuzzyReference(queries[0]!, rebuilt)).toEqual(expected[0])
+    expect(scans).toBe(3)
   })
 
   it('assigns modules to the most specific area exactly as an exhaustive search would', () => {

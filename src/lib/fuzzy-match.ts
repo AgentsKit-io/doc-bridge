@@ -157,15 +157,21 @@ export const createFuzzyCandidateIndex = (candidates: readonly string[]): FuzzyC
  * is the cheap half of the test, and it is exact in the direction that matters: it only ever
  * over-estimates `m`, and therefore only ever keeps a candidate that might have passed.
  */
-const sharedCharacterBound = (a: Uint16Array, b: Uint16Array): number => {
+const sharedCharacterBound = (a: Uint16Array, slots: readonly number[], b: Uint16Array): number => {
   let shared = 0
-  for (let slot = 0; slot < ALPHABET; slot += 1) {
+  for (const slot of slots) {
     const left = a[slot] ?? 0
-    if (left === 0) continue
     const right = b[slot] ?? 0
     shared += left < right ? left : right
   }
   return shared
+}
+
+/** The slots a query uses: the bound only ever reads those, so it skips the rest of the alphabet. */
+const occupiedSlots = (counts: Uint16Array): number[] => {
+  const slots: number[] = []
+  for (let slot = 0; slot < ALPHABET; slot += 1) if (counts[slot]) slots.push(slot)
+  return slots
 }
 
 const candidatesWithin = (
@@ -178,12 +184,13 @@ const candidatesWithin = (
   const jaroFloor = Math.max(0, (threshold - 0.4) / 0.6)
   const required = 3 * jaroFloor - 1
   const queryCounts = countsOf(form)
+  const querySlots = occupiedSlots(queryCounts)
   const within: IndexedCandidate[] = []
   for (const [length, bucket] of index.byLength) {
     if (length < min || length > max) continue
     for (const candidate of bucket) {
       if (required > 1) {
-        const bound = sharedCharacterBound(queryCounts, candidate.counts)
+        const bound = sharedCharacterBound(queryCounts, querySlots, candidate.counts)
         if (bound / form.length + bound / candidate.length < required) continue
       }
       within.push(candidate)
@@ -225,11 +232,29 @@ export const fuzzyMatchList = (
  */
 export const FUZZY_RESOLUTION_THRESHOLD = 0.92
 
+type FuzzyResolution = { readonly candidate: string; readonly score: number } | undefined
+
+/**
+ * Resolutions already computed against an index. An index is immutable once built and the result
+ * depends only on it, the query and the threshold, so a repository that repeats the same unresolved
+ * reference across thousands of documents scans the universe once per distinct reference.
+ */
+const resolvedByIndex = new WeakMap<FuzzyCandidateIndex, Map<string, FuzzyResolution>>()
+
 export const resolveFuzzyReference = (
   query: string,
   candidates: readonly string[] | FuzzyCandidateIndex,
   threshold = FUZZY_RESOLUTION_THRESHOLD,
-): { readonly candidate: string; readonly score: number } | undefined => {
-  const matches = fuzzyMatchList(query, candidates, { threshold, topK: 2 })
-  return matches.length === 1 ? matches[0] : undefined
+): FuzzyResolution => {
+  const resolve = (): FuzzyResolution => {
+    const matches = fuzzyMatchList(query, candidates, { threshold, topK: 2 })
+    return matches.length === 1 ? matches[0] : undefined
+  }
+  if (Array.isArray(candidates)) return resolve()
+  const index = candidates as FuzzyCandidateIndex
+  let resolved = resolvedByIndex.get(index)
+  if (!resolved) resolvedByIndex.set(index, (resolved = new Map()))
+  const key = `${threshold}\0${query}`
+  if (!resolved.has(key)) resolved.set(key, resolve())
+  return resolved.get(key)
 }
