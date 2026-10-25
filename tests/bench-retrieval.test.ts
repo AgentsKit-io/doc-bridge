@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
 import { validateEvalSuite } from '@agentskit/core/eval-format'
-import { beforeAll, describe, expect, it } from 'vitest'
+import { beforeAll, describe, expect, it, vi } from 'vitest'
 
 import { runCli } from '../src/cli/program.js'
 import { applyConfigDefaults } from '../src/config/defaults.js'
@@ -252,6 +252,46 @@ describe('retrieval baseline gate', () => {
     expect(comparison.blocking).toBe(true)
     expect(comparison.regressions.join(' ')).toContain('--update-baseline')
   })
+})
+
+describe('cold versus warm bench', () => {
+  /*
+   * Indexing keeps module-level caches (compiled globs, fuzzy resolutions, markdown lookups). A
+   * cache must only make the second run faster: the same repository has to rank identically
+   * whether the process is fresh or has already indexed it.
+   */
+  it('ranks every case identically on a cold and on a warm run in one process', async () => {
+    const config = applyConfigDefaults(
+      DocBridgeConfigV1Schema.parse(JSON.parse(readFileSync('doc-bridge.config.json', 'utf8')) as unknown),
+    )
+    const parsedSuite = parseRetrievalSuite(JSON.parse(readFileSync(SUITE_PATH, 'utf8')) as unknown)
+
+    // A fresh module graph is the cold state: no cache has been filled yet.
+    vi.resetModules()
+    const cold = await import('../src/index-builder/build-index.js')
+    const coldBench = await import('../src/bench/retrieval.js')
+    const coldResult = coldBench.runRetrievalBench({
+      index: cold.buildDocBridgeIndex({ root: process.cwd(), config, write: false }).index,
+      suite: parsedSuite,
+    })
+
+    // The same module instances again: every cache the first build filled is now warm.
+    const warmResult = coldBench.runRetrievalBench({
+      index: cold.buildDocBridgeIndex({ root: process.cwd(), config, write: false }).index,
+      suite: parsedSuite,
+    })
+
+    expect(warmResult.cases.map((entry) => entry.id)).toEqual(coldResult.cases.map((entry) => entry.id))
+    for (const [position, entry] of coldResult.cases.entries()) {
+      const warm = warmResult.cases[position]
+      expect(warm?.hitAt1, entry.id).toBe(entry.hitAt1)
+      expect(warm?.hitAt3, entry.id).toBe(entry.hitAt3)
+      expect(warm?.rank, entry.id).toBe(entry.rank)
+      expect(warm?.rankedTargets, entry.id).toEqual(entry.rankedTargets)
+    }
+    expect(warmResult.metrics).toEqual(coldResult.metrics)
+    expect(warmResult.index.contentHash).toBe(coldResult.index.contentHash)
+  }, 180_000)
 })
 
 describe('bench CLI', () => {
