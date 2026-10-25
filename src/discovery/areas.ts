@@ -1,4 +1,4 @@
-import { minimatch } from 'minimatch'
+import { globMatch } from '../lib/glob.js'
 
 import { toPosix } from '../lib/paths.js'
 import { entityId } from './identity.js'
@@ -137,7 +137,7 @@ export const deriveAreas = (options: DeriveAreasOptions): readonly DerivedArea[]
 
   const excluded = options.exclude ?? []
   const isExcluded = (path: string): boolean =>
-    excluded.some((pattern) => minimatch(path, pattern, { dot: true }))
+    excluded.some((pattern) => globMatch(path, pattern))
 
   /** Candidate path to the package it belongs to. */
   const candidates = new Map<string, string>()
@@ -153,19 +153,28 @@ export const deriveAreas = (options: DeriveAreasOptions): readonly DerivedArea[]
   }
 
   const paths = [...candidates.keys()].sort()
-  const byLength = [...paths].sort((a, b) => b.length - a.length || a.localeCompare(b))
   const moduleIds = new Map<string, string[]>(paths.map((path) => [path, []]))
+  const pathSet = new Set(paths)
+  /** The most specific candidate enclosing `path`: its own path, else its nearest ancestor directory. */
+  const enclosing = (path: string, strict: boolean): string | undefined => {
+    if (!strict && pathSet.has(path)) return path
+    for (let slash = path.lastIndexOf('/'); slash >= 0; slash = path.lastIndexOf('/', slash - 1)) {
+      const ancestor = path.slice(0, slash)
+      if (pathSet.has(ancestor)) return ancestor
+      if (slash === 0) break
+    }
+    return undefined
+  }
 
   for (const module of options.modules) {
-    const modulePath = normalize(module.path)
-    const area = byLength.find((candidate) => encloses(candidate, modulePath))
+    const area = enclosing(normalize(module.path), false)
     if (area) moduleIds.get(area)?.push(module.moduleId)
   }
 
   const ownershipByPath = new Map(ownership.map((record) => [record.path, record.id]))
 
   return paths.map((path) => {
-    const parent = byLength.find((candidate) => candidate !== path && encloses(candidate, path))
+    const parent = enclosing(path, true)
     const ownershipId = ownershipByPath.get(path)
     return {
       id: entityId('area', path),

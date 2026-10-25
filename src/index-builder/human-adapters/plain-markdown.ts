@@ -1,5 +1,5 @@
 import { toPosix } from '@agentskit/cross-platform'
-import { minimatch } from 'minimatch'
+import { globMatch } from '../../lib/glob.js'
 
 import { optionString, scanMarkdownDocs, type HumanAdapter } from './core.js'
 
@@ -10,8 +10,8 @@ const matchesConfiguredPath = (relPath: string, options: Record<string, unknown>
   const normalize = (pattern: string): string => toPosix(pattern).replace(/^\.\//, '')
   const include = stringPatterns(options?.include).map(normalize)
   const exclude = stringPatterns(options?.exclude).map(normalize)
-  if (exclude.some((pattern) => minimatch(relPath, pattern, { dot: true }))) return false
-  return include.length === 0 || include.some((pattern) => minimatch(relPath, pattern, { dot: true }))
+  if (exclude.some((pattern) => globMatch(relPath, pattern))) return false
+  return include.length === 0 || include.some((pattern) => globMatch(relPath, pattern))
 }
 
 export const plainMarkdownAdapter: HumanAdapter = {

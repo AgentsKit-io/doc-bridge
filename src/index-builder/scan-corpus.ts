@@ -1,6 +1,6 @@
 import { repositoryWalk, repositoryBoundedText, repositoryContainedPath, type RepositoryFiles } from './repository-io.js'
 import type { DocBridgeConfigV1 } from '../config/schema.js'
-import { minimatch } from 'minimatch'
+import { globMatch } from '../lib/glob.js'
 import { readBoundedText } from '../lib/bounded-text.js'
 import {
   extractSearchBody,
@@ -41,8 +41,8 @@ const configuredPathMatches = (
   const normalize = (pattern: string): string => toPosix(pattern).replace(/^\.\//, '')
   const included = include?.filter(Boolean).map(normalize) ?? []
   const excluded = exclude?.filter(Boolean).map(normalize) ?? []
-  if (excluded.some((pattern) => minimatch(relPath, pattern, { dot: true }))) return false
-  return included.length === 0 || included.some((pattern) => minimatch(relPath, pattern, { dot: true }))
+  if (excluded.some((pattern) => globMatch(relPath, pattern))) return false
+  return included.length === 0 || included.some((pattern) => globMatch(relPath, pattern))
 }
 
 export const scanAgentCorpus = (root: string, config: DocBridgeConfigV1, files?: RepositoryFiles): CorpusDoc[] => {
