@@ -7,3 +7,7 @@ doc-bridge needs corpus classification before indexing
 
 ## Output
 Scan report typed: paths, doc types, staleness
+
+## Source
+
+This agent lives under `agents/`. The agent factory `createEcosystemDocBridgeCorpusScannerAgent` is in `agents/ecosystem-doc-bridge-corpus-scanner/agent.ts`; its eval suite is `agents/ecosystem-doc-bridge-corpus-scanner/eval.ts`.
