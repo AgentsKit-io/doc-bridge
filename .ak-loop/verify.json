@@ -1,0 +1,16 @@
+{
+  "ranAt": "2026-10-25T01:55:00Z",
+  "command": "pnpm run typecheck && pnpm run test && pnpm run build && pnpm check:readme-standard && pnpm check:docs",
+  "exitCode": 0,
+  "outcomes": [
+    { "id": "o1", "status": "passed", "evidence": "scripts/generate-large-fixture.mjs <outDir> [packages=100] [docsPerPackage=20] writes only generated text (no clocks, randomness or private inputs); node scripts/bench-large-index.mjs <dir> --packages 110 --docs 70 builds the 110 x 70 fixture (about 9,000 projection entries)." },
+    { "id": "o2", "status": "passed", "evidence": "Profile (node --cpu-prof, 110 packages x 70 docs, origin/main build, ~9.5 s run): discovery 5.8 s incl. markdown parse 1.7 s + extract/analysis 3.0 s + minimatch compiles 1.8 s (safeWalkFiles/matchesExclude 1.2 s, analyzeMarkdownDocument self 0.9 s from per-document modulePathById rebuilds); projection (projectRetrievalIndex) 0.8 s; hashing (canonicalJsonV1/contentHashForVersionedArtifact) 0.8 s / 0.7 s; repositoryInputs 0.76 s; GC 1.0 s; writing is negligible. After the fix minimatch compiles and the analyzeMarkdownDocument self time are gone; the remaining cost is markdown parsing (1.7 s) and repeated snapshot hashing (0.76 s), left as follow-ups." },
+    { "id": "o3", "status": "passed", "evidence": "Fixture 110x70, seeded with the baseline generatedAt: origin/main and branch both give index.json sha256 4d022cb788293231f574826178c39ea539a4355f0cf1350de650caea2a98ff07 and capabilities.json sha256 c0b875d90f6a847b30d50ca5840c6cc7a03e4a083cc201f1b22d30a930a524cc." },
+    { "id": "o4", "status": "passed", "evidence": "This repository, origin/main build vs branch build on the same tree: index.json sha256 1a31bed589297247dd7a8fc6e3f1ac4952f0f4cc95cff5607c131eaa8a395430, capabilities.json sha256 a8f4142443de660ef2ff3541d0d358e8c6b273f4081e66cbcbaac83fd6f25d9d, identical: true." },
+    { "id": "o5", "status": "passed", "evidence": "Median of 5 fresh-process cold runs, same machine and fixture: 9114 ms before (9104/9011/9114/9259/9214) vs 6065 ms after (6114/5918/6065/6172/5949), -33%." },
+    { "id": "o6", "status": "passed", "evidence": "tests/index-scaling.test.ts: counts glob compilations (<= 40 vs thousands before), counts resolution Map iterations across 25 documents (<= 2 vs 25 before), and checks area assignment against an exhaustive search; no timing involved. pnpm run test exit 0." },
+    { "id": "o7", "status": "passed", "evidence": ".changeset/fast-large-index.md: '@agentskit/doc-bridge': patch" },
+    { "id": "o8", "status": "passed", "evidence": "pnpm run typecheck, pnpm run test (1322+ tests) and pnpm run build all exit 0." },
+    { "id": "o9", "status": "passed", "evidence": "README Standard v1 — PASS (3 surfaces); pnpm check:docs completed with no failure and left the tracked tree clean." }
+  ]
+}
