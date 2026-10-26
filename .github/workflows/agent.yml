@@ -57,19 +57,16 @@ jobs:
                      "NO_PROXY": "127.0.0.1,localhost,::1"}}
           claude_args: >-
             --model sonnet --max-turns 80
-            --allowedTools "Edit,MultiEdit,Write,Read,Glob,Grep,LS,Bash(pnpm:*),Bash(node:*),Bash(npx vitest:*),Bash(git:*),Bash(ls:*),Bash(cat:*),Bash(mkdir:*)"
-            --append-system-prompt "Follow AGENTS.md (changesets, commit rules). Before finishing: pnpm typecheck and the tests of the files you changed must pass; commit everything on this branch and push it."
-      - name: Open the PR and enable auto-merge
+            --allowedTools "Edit,MultiEdit,Write,Read,Glob,Grep,LS,Bash(pnpm:*),Bash(node:*),Bash(npx vitest:*),Bash(git:*),Bash(ls:*),Bash(cat:*),Bash(mkdir:*),Bash(gh pr create:*),Bash(gh pr merge:*),Bash(gh pr list:*),Bash(gh pr view:*),Bash(gh pr edit:*)"
+            --append-system-prompt "Follow AGENTS.md (changesets, commit rules). Before finishing: pnpm typecheck and the tests of the files you changed must pass; commit everything on this branch and push it. Then, for work started from an issue, open the pull request yourself: gh pr create --base main --title <the issue title> --body Closes #<issue number>; then, unless the issue has the label risco, run gh pr merge <number> --auto --squash. If a PR for this branch already exists, push to it instead of opening another."
+      - name: Check that the work reached a PR
         if: github.event_name == 'issues' && steps.claude.outputs.branch_name != ''
         env:
-          GH_TOKEN: ${{ steps.claude.outputs.github_token }}
+          GH_TOKEN: ${{ github.token }}
           BRANCH: ${{ steps.claude.outputs.branch_name }}
-          ISSUE: ${{ github.event.issue.number }}
-          TITLE: ${{ github.event.issue.title }}
-          RISK: ${{ contains(github.event.issue.labels.*.name, 'risco') }}
         run: |
-          git fetch origin "$BRANCH" 2>/dev/null || { echo "no branch pushed: nothing to open"; exit 0; }
+          git fetch origin "$BRANCH" 2>/dev/null || { echo "no branch pushed: nothing to deliver"; exit 0; }
           [ "$(git rev-list --count "origin/main..origin/$BRANCH")" -gt 0 ] || { echo "branch has no commits"; exit 0; }
-          pr=$(gh pr list --head "$BRANCH" --json number --jq '.[0].number')
-          [ -n "$pr" ] || pr=$(gh pr create --head "$BRANCH" --base main --title "$TITLE" --body "Closes #$ISSUE. Implemented by the factory pilot (agent.yml)." | grep -oE '[0-9]+$')
-          if [ "$RISK" = "true" ]; then gh pr edit "$pr" --add-label risco; echo "risk: waits for a human merge"; else gh pr merge "$pr" --auto --squash; fi
+          pr=$(gh pr list --head "$BRANCH" --state all --json number --jq '.[0].number')
+          [ -n "$pr" ] || { echo "::error::branch $BRANCH has commits but no PR: the agent did not open it"; exit 1; }
+          echo "PR #$pr"
