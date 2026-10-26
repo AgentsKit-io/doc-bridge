@@ -25,7 +25,9 @@ import { loadCliConfig } from '../src/config/load-config.js'
 import { deriveAreas } from '../src/discovery/areas.js'
 import { MARKDOWN_ANALYZER_VERSION, analyzeMarkdownDocument, parseMarkdownDocument, type MarkdownResolution } from '../src/discovery/markdown.js'
 import { buildDocBridgeIndex } from '../src/index-builder/build-index.js'
-import { createFuzzyCandidateIndex, resolveFuzzyReference } from '../src/lib/fuzzy-match.js'
+import { createFuzzyCandidateIndex, fuzzyMatchList, resolveFuzzyReference } from '../src/lib/fuzzy-match.js'
+import { globMatch } from '../src/lib/glob.js'
+import { minimatch } from 'minimatch'
 // @ts-expect-error The generator is a plain ES module under scripts/.
 import { generateLargeFixture } from '../scripts/generate-large-fixture.mjs'
 
@@ -128,5 +130,63 @@ describe('index scaling guards', () => {
       }
     }
     expect(areas.flatMap(area => area.moduleIds).length).toBeGreaterThan(0)
+  })
+})
+
+// These live here rather than in files of their own: the retrieval benchmark and its ranking tests
+// index this repository, and each extra test module shifts the ranking they pin.
+describe('globMatch', () => {
+  it('matches like minimatch with dot files, and treats a leading # as a comment', () => {
+    for (const [path, pattern] of [
+      ['src/a.ts', 'src/**/*.ts'],
+      ['.github/x.yml', '.github/**'],
+      ['src/a.ts', 'docs/**'],
+      ['#a', '#a'],
+    ] as const) {
+      expect(globMatch(path, pattern)).toBe(pattern.startsWith('#') ? false : minimatch(path, pattern, { dot: true }))
+    }
+  })
+
+  it('keeps answering correctly once the compiled-pattern cache has filled and been cleared', () => {
+    for (let i = 0; i < 2500; i++) expect(globMatch(`dir${i}/file.md`, `dir${i}/*.md`)).toBe(true)
+    expect(globMatch('dir0/file.md', 'dir0/*.md')).toBe(true)
+    expect(globMatch('dir0/file.md', 'dir1/*.md')).toBe(false)
+  })
+})
+
+const fuzzyPaths = [
+  'docs/guides/getting-started.md',
+  'docs/guides/configuration-reference.md',
+  'docs/architecture/overview.md',
+  'src/lib/fuzzy-match.ts',
+  'src/lib/fuzzy-matcher.ts',
+  'src/ünïcode/日本語.md',
+]
+
+describe('fuzzy candidate index', () => {
+  it('ranks exactly like a plain list, including non-ASCII characters', () => {
+    const index = createFuzzyCandidateIndex(fuzzyPaths)
+    for (const query of ['docs/guides/getting-startd.md', 'src/lib/fuzzy-match.ts', 'src/ünïcode/日本語.mdx', 'zzz']) {
+      for (const threshold of [0.7, 0.85, 0.92]) {
+        expect(fuzzyMatchList(query, index, { threshold })).toEqual(fuzzyMatchList(query, fuzzyPaths, { threshold }))
+      }
+    }
+  })
+
+  it('resolves like the unmemoized search, and a repeat returns the same result', () => {
+    const index = createFuzzyCandidateIndex(fuzzyPaths)
+    const query = 'docs/guides/getting-startd.md'
+    const first = resolveFuzzyReference(query, index)
+    expect(first).toEqual(resolveFuzzyReference(query, fuzzyPaths))
+    expect(first?.candidate).toBe('docs/guides/getting-started.md')
+    expect(resolveFuzzyReference(query, index)).toBe(first)
+  })
+
+  it('keeps an ambiguous or missing reference unresolved, per threshold', () => {
+    const index = createFuzzyCandidateIndex(fuzzyPaths)
+    expect(resolveFuzzyReference('src/lib/fuzzy-match', index, 0.8)).toBeUndefined()
+    expect(resolveFuzzyReference('nothing/like/this.md', index)).toBeUndefined()
+    expect(resolveFuzzyReference('docs/guides/getting-startd.md', index, 0.999)).toBeUndefined()
+    expect(resolveFuzzyReference('docs/guides/getting-startd.md', index)).toBeDefined()
   })
 })
