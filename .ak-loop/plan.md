@@ -1,0 +1,1 @@
+Add deploy-docs-cloudflare.yml (ci.yml pinned setup, creds gate, docs:build, cf:headers, `npx -y wrangler@4 deploy` as in cf:deploy, retrying smoke), document in CONTRIBUTING.md and wrangler.toml. Departure: wrangler-action SHA could not be resolved offline and wrangler is not in the lockfile, so the deploy mirrors cf:deploy's npx call.
