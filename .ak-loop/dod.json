@@ -1,0 +1,10 @@
+{
+  "proofs": [
+    { "outcome": "o1", "proof": "doctor: grade A, score 96, reachability 100%, connectivity 81% (before: B 95, 70%)" },
+    { "outcome": "o2", "proof": "every covers entry maps to an existing src area; docs cite only existing exports" },
+    { "outcome": "o3", "proof": "hit@3 0.8667, MRR 0.7788, 60 cases, suite unchanged" },
+    { "outcome": "o4", "proof": "no baseline or review date changes" },
+    { "outcome": "o5", "proof": "typecheck and build pass" },
+    { "outcome": "o6", "proof": "small conventional commits, no protected paths" }
+  ]
+}

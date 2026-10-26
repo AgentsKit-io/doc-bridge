@@ -1,0 +1,13 @@
+{
+  "ranAt": "2026-10-26T06:30:00Z",
+  "command": "node bin/ak-docs.js index && node bin/ak-docs.js doctor --text; pnpm run typecheck && pnpm run build",
+  "exitCode": 0,
+  "outcomes": [
+    { "id": "o1", "status": "passed", "evidence": "Score: 96/100 (A); Reachability 210/210 (100%); Connectivity: 50/50 areas documented · 129/210 documents link to code (81%); no unmet criteria. Before: 95/B, 70%." },
+    { "id": "o2", "status": "passed", "evidence": "9 new docs in docs/agent-corpus name only exports and files read in src/{enrich,workflow,vault,diff,execution,studio,entities}, agents/ and integrations/obsidian; 6 spec/ADR docs gained covers for the area they describe." },
+    { "id": "o3", "status": "passed", "evidence": "bench retrieval: hitAt3 0.866667, MRR 0.77877 over 60 cases; suite file untouched." },
+    { "id": "o4", "status": "passed", "evidence": "No baseline written; no reviewedOn/reviewDueOn changes." },
+    { "id": "o5", "status": "passed", "evidence": "typecheck and build exit 0; test run reported separately by the harness." },
+    { "id": "o6", "status": "passed", "evidence": "Two conventional commits, headers under 72 chars; no protected paths touched." }
+  ]
+}
