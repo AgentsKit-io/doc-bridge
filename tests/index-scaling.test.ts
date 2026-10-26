@@ -21,11 +21,14 @@ vi.mock('minimatch', async () => {
   return { ...actual, Minimatch: CountingMinimatch, minimatch: counted }
 })
 
+import { minimatch as actualMinimatch } from 'minimatch'
 import { loadCliConfig } from '../src/config/load-config.js'
 import { deriveAreas } from '../src/discovery/areas.js'
 import { MARKDOWN_ANALYZER_VERSION, analyzeMarkdownDocument, parseMarkdownDocument, type MarkdownResolution } from '../src/discovery/markdown.js'
 import { buildDocBridgeIndex } from '../src/index-builder/build-index.js'
-import { createFuzzyCandidateIndex, resolveFuzzyReference } from '../src/lib/fuzzy-match.js'
+import { createFuzzyCandidateIndex, fuzzyMatchList, resolveFuzzyReference } from '../src/lib/fuzzy-match.js'
+import { globMatch } from '../src/lib/glob.js'
+import { searchIndex } from '../src/query/search.js'
 // @ts-expect-error The generator is a plain ES module under scripts/.
 import { generateLargeFixture } from '../scripts/generate-large-fixture.mjs'
 
@@ -128,5 +131,46 @@ describe('index scaling guards', () => {
       }
     }
     expect(areas.flatMap(area => area.moduleIds).length).toBeGreaterThan(0)
+  })
+})
+
+describe('reused query-time and build-time state', () => {
+  it('matches globs like minimatch, including a leading # and a refilled pattern cache', () => {
+    for (const [path, pattern] of [['src/a.ts', 'src/**/*.ts'], ['.github/x.yml', '.github/**'], ['src/a.ts', 'docs/**'], ['#a', '#a']] as const) {
+      expect(globMatch(path, pattern)).toBe(pattern.startsWith('#') ? false : actualMinimatch(path, pattern, { dot: true }))
+    }
+    for (let i = 0; i < 2500; i++) expect(globMatch(`dir${i}/file.md`, `dir${i}/*.md`)).toBe(true)
+    expect(globMatch('dir0/file.md', 'dir1/*.md')).toBe(false)
+  })
+
+  it('ranks an index like a plain list, and a repeated fuzzy reference like the first', () => {
+    const paths = ['docs/guides/getting-started.md', 'docs/architecture/overview.md', 'src/ünïcode/日本語.md']
+    const index = createFuzzyCandidateIndex(paths)
+    for (const query of ['docs/guides/getting-startd.md', 'src/ünïcode/日本語.mdx', 'zzz']) {
+      expect(fuzzyMatchList(query, index, { threshold: 0.85 })).toEqual(fuzzyMatchList(query, paths, { threshold: 0.85 }))
+    }
+    const first = resolveFuzzyReference('docs/guides/getting-startd.md', index)
+    expect(first?.candidate).toBe('docs/guides/getting-started.md')
+    expect(resolveFuzzyReference('docs/guides/getting-startd.md', index)).toBe(first)
+  })
+
+  it('ranks identically cold and warm in one process', () => {
+    const root = mkdtempSync(join(tmpdir(), 'doc-bridge-cold-warm-'))
+    temporary.push(root)
+    generateLargeFixture(root, 4, 8)
+    const { config } = loadCliConfig({ cwd: root })
+    const queries = ['guide', 'package', 'overview of the first package', 'docs', 'module']
+    const ranked = (index: ReturnType<typeof buildDocBridgeIndex>['index']) =>
+      queries.map(query => searchIndex(index, query, 20, { explain: true }).map(match => [match.id, match.score]))
+
+    // Cold: the first build and query of the process fill the glob cache, the fuzzy memo and the
+    // prepared-index cache. Warm: the same build and query again over everything they left behind.
+    const cold = buildDocBridgeIndex({ root, config, write: false }).index
+    const coldRanking = ranked(cold)
+    const warm = buildDocBridgeIndex({ root, config, write: false }).index
+    expect(warm.contentHash).toBe(cold.contentHash)
+    expect(ranked(warm)).toEqual(coldRanking)
+    expect(ranked(cold)).toEqual(coldRanking)
+    expect(coldRanking.some(list => list.length > 0)).toBe(true)
   })
 })
