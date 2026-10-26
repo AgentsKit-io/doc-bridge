@@ -2,12 +2,23 @@
 // Deterministic large-repository fixture: N packages x M docs, no external inputs.
 // Usage: node scripts/generate-large-fixture.mjs <outDir> [packages=100] [docsPerPackage=20]
 // The same arguments always produce the same files (no clocks, no randomness).
-import { mkdirSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+// Only a missing, empty, or previously generated fixture directory may be replaced.
+const assertReplaceable = (root) => {
+  if (!existsSync(root)) return
+  if (readdirSync(root).length === 0) return
+  try {
+    if (JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')).name === 'large-fixture') return
+  } catch {}
+  throw new Error(`refusing to delete ${root}: not empty and not a generated large fixture`)
+}
+
 export const generateLargeFixture = (outDir, packages = 100, docsPerPackage = 20) => {
   const root = resolve(outDir)
+  assertReplaceable(root)
   rmSync(root, { recursive: true, force: true })
   const write = (rel, text) => {
     const file = join(root, rel)
