@@ -1,0 +1,17 @@
+{
+  "ranAt": "2026-10-26T04:50:00Z",
+  "command": "pnpm vitest run tests/bench-retrieval.test.ts tests/retrieval-projection.test.ts; pnpm run typecheck; pnpm test",
+  "exitCode": 1,
+  "outcomes": [
+    { "id": "o1", "status": "passed", "evidence": "tests/bench-retrieval.test.ts (21 tests) passed in 11.8s; index built with write:false into a temp file" },
+    { "id": "o2", "status": "passed", "evidence": "beforeAll uses write:false and every CLI call passes --index <temp file>; no write under .doc-bridge" },
+    { "id": "o3", "status": "passed", "evidence": "tests/retrieval-projection.test.ts (24 tests) passed in 8.9s, one shared repository scan" },
+    { "id": "o4", "status": "failed", "evidence": "pnpm test run once: only tests/changed-claims.test.ts failed (a 30s timeout in a typechecker-heavy test this change does not touch, on a heavily loaded machine); not run twice" },
+    { "id": "o5", "status": "not-run", "evidence": "pnpm coverage not run: the machine could not finish the unrelated changed-claims file" },
+    { "id": "o6", "status": "not-run", "evidence": "typecheck passed; build, check:cross-platform, check:readme-standard not run" },
+    { "id": "o7", "status": "passed", "evidence": "diff touches only the repository snapshot helper in retrieval-projection; no expect, skip or timeout changed" },
+    { "id": "o8", "status": "passed", "evidence": "branch is origin/main plus the three #406 test commits (cherry-picked, rebase is not allowed here) plus one new commit" },
+    { "id": "o9", "status": "not-run", "evidence": "before (4 files in parallel): bench 68.1s, projection 74.8s, corpus 10.0s, study-minimal 77.3s (3 failures from load). after (solo): bench 11.8s, projection 8.9s. Corpus/study-minimal not re-measured solo." },
+    { "id": "o10", "status": "failed", "evidence": "pnpm test failed only on unrelated changed-claims timeout under load" }
+  ]
+}

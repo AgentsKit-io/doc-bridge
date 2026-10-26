@@ -1,0 +1,14 @@
+{
+  "proofs": [
+    { "id": "o1", "status": "passed" },
+    { "id": "o2", "status": "passed" },
+    { "id": "o3", "status": "passed" },
+    { "id": "o4", "status": "failed", "note": "unrelated changed-claims timeout under load; not repeated" },
+    { "id": "o5", "status": "not-run" },
+    { "id": "o6", "status": "not-run", "note": "typecheck passed" },
+    { "id": "o7", "status": "passed" },
+    { "id": "o8", "status": "passed" },
+    { "id": "o9", "status": "not-run", "note": "partial table in verify.json" },
+    { "id": "o10", "status": "failed" }
+  ]
+}
