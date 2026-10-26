@@ -1,0 +1,12 @@
+{
+  "ranAt": "2026-10-26T00:00:00Z",
+  "command": "node bin/ak-docs.js index && node bin/ak-docs.js doctor --json",
+  "exitCode": 0,
+  "outcomes": [
+    { "id": "o1", "status": "passed", "evidence": "doctor --text: Score 96/100 (A); Connectivity: 50/50 areas documented, 125/209 documents link to code (80%); Reachability 209/209 (100%)" },
+    { "id": "o2", "status": "passed", "evidence": "bench retrieval: hitAt3 0.866667, meanReciprocalRank 0.77877, 60 cases; no baseline written" },
+    { "id": "o3", "status": "passed", "evidence": "8 new docs/agent-corpus pages, each describes only exports/files read from its src area" },
+    { "id": "o4", "status": "failed", "evidence": "pnpm run build exited 0. typecheck and test did not finish within the timeout in this slow environment (typecheck once hit FLEET_CAPACITY host queue busy). Only markdown was added; no code changed. Harness must re-run." },
+    { "id": "o5", "status": "passed", "evidence": "one conventional commit, header under 72, not pushed" }
+  ]
+}

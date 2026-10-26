@@ -1,0 +1,9 @@
+{
+  "outcomes": [
+    { "id": "o1", "status": "passed" },
+    { "id": "o2", "status": "passed" },
+    { "id": "o3", "status": "passed" },
+    { "id": "o4", "status": "unverified" },
+    { "id": "o5", "status": "passed" }
+  ]
+}
