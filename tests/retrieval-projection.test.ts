@@ -47,9 +47,19 @@ const write = (root: string, path: string, content: string): void => {
 const repositoryConfig = (): DocBridgeConfigV1 =>
   applyConfigDefaults(DocBridgeConfigV1Schema.parse(JSON.parse(readFileSync(join(repositoryRoot, 'doc-bridge.config.json'), 'utf8')) as unknown))
 
+/*
+ * The repository's observed snapshot, and the index projected from it, each built once per file. A
+ * scan of the whole repository is the expensive step, so the index takes this snapshot rather than
+ * scanning again: the file pays for one scan, and the index describes the very observation the
+ * set comparison is made against.
+ */
+let cachedRepositorySnapshot: DiscoverySnapshotV1 | undefined
+const repositorySnapshot = (): DiscoverySnapshotV1 =>
+  (cachedRepositorySnapshot ??= discoverRepository({ root: repositoryRoot, config: repositoryConfig() }))
+
 let cachedRepositoryIndex: DocBridgeIndexV1 | undefined
 const repositoryIndex = (): DocBridgeIndexV1 =>
-  (cachedRepositoryIndex ??= buildDocBridgeIndex({ root: repositoryRoot, config: repositoryConfig(), write: false }).index)
+  (cachedRepositoryIndex ??= buildDocBridgeIndex({ root: repositoryRoot, config: repositoryConfig(), write: false, snapshot: repositorySnapshot() }).index)
 
 /**
  * One package with two areas, an ownership record on one of them, a sidecar that covers it, a
@@ -186,7 +196,7 @@ describe('the projection is a function of the snapshot', () => {
 
   it('projects every observed entity of the repository, as a set', () => {
     const index = repositoryIndex()
-    const snapshot = discoverRepository({ root: repositoryRoot, config: repositoryConfig() })
+    const snapshot = repositorySnapshot()
     const projectable = new Set(
       snapshot.entities
         .filter((entity) => entity.provenance === 'observed' && ['document', 'module', 'area', 'package'].includes(entity.kind) && entity.path)
