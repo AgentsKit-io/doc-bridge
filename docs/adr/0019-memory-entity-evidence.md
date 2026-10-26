@@ -2,6 +2,9 @@
 title: Configurable memory source and exact entity evidence
 status: proposed
 date: 2026-10-08
+docbridge:
+  covers:
+    - area:src/memory
 ---
 
 # Configurable memory source and exact entity evidence

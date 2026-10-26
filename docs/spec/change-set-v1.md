@@ -5,6 +5,9 @@ owner: maintainers
 lifecycle: active
 sourceOfTruth: src/diff/change-set.ts
 validationPath: pnpm vitest run tests/change-set.test.ts tests/render.test.ts
+docbridge:
+  covers:
+    - area:src/diff
 ---
 
 # Deterministic change sets

@@ -1,6 +1,9 @@
 ---
 title: Vault diff contract v1
 description: Deterministic generated-note edits as human-reviewed enrichment proposals.
+docbridge:
+  covers:
+    - area:src/vault
 ---
 
 # Vault diff v1

@@ -1,6 +1,9 @@
 ---
 title: Vault export contract v1
 description: Deterministic generated Markdown notes, source bindings and ownership.
+docbridge:
+  covers:
+    - area:src/vault
 ---
 
 # Vault export v1

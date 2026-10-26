@@ -5,6 +5,9 @@ owner: maintainers
 lifecycle: active
 sourceOfTruth: docs/adr/0012-caller-enforced-service-profile.md
 validationPath: pnpm vitest run tests/service-profile.test.ts --maxWorkers=2
+docbridge:
+  covers:
+    - area:src/execution
 ---
 
 # Service profile v1

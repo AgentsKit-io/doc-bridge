@@ -1,6 +1,9 @@
 ---
 title: Enrichment overlay v1
 description: Typed agent proposals, the deterministic validators that decide them, the overlay that stores the decisions, and how little of it the deterministic layer is allowed to feel.
+docbridge:
+  covers:
+    - area:src/enrich
 ---
 
 # Enrichment overlay v1
