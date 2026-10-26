@@ -1,0 +1,10 @@
+{
+  "proofs": [
+    { "id": "o1", "status": "passed", "evidence": "grade A, connectivity 80%, reachability 100%" },
+    { "id": "o2", "status": "passed", "evidence": "hit@3 0.8833, MRR 0.7833" },
+    { "id": "o3", "status": "passed", "evidence": "eight new docs/agent-corpus pages plus covers on runbook, ADR 0018, ADR 0020" },
+    { "id": "o4", "status": "failed", "evidence": "build DTS step OOM-killed in this sandbox; one study-minimal test failure not confirmed against origin/main" },
+    { "id": "o5", "status": "passed", "evidence": "markdown-only diff" },
+    { "id": "o6", "status": "passed", "evidence": "reported in final message" }
+  ]
+}
