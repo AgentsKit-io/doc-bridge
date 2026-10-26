@@ -1,13 +1,13 @@
 {
-  "ranAt": "2026-10-26T06:30:00Z",
-  "command": "node bin/ak-docs.js index && node bin/ak-docs.js doctor --text; pnpm run typecheck && pnpm run build",
+  "ranAt": "2026-10-26T07:30:00Z",
+  "command": "node bin/ak-docs.js index && node bin/ak-docs.js doctor --text; pnpm run typecheck && pnpm run build; vitest run + plugin contract scripts",
   "exitCode": 0,
   "outcomes": [
-    { "id": "o1", "status": "passed", "evidence": "Score: 96/100 (A); Reachability 210/210 (100%); Connectivity: 50/50 areas documented · 129/210 documents link to code (81%); no unmet criteria. Before: 95/B, 70%." },
-    { "id": "o2", "status": "passed", "evidence": "9 new docs in docs/agent-corpus name only exports and files read in src/{enrich,workflow,vault,diff,execution,studio,entities}, agents/ and integrations/obsidian; 6 spec/ADR docs gained covers for the area they describe." },
-    { "id": "o3", "status": "passed", "evidence": "bench retrieval: hitAt3 0.866667, MRR 0.77877 over 60 cases; suite file untouched." },
+    { "id": "o1", "status": "passed", "evidence": "Score: 96/100 (A); Reachability 209/209 (100%); Connectivity: 50/50 areas documented, 128/209 documents link to code (81%); no unmet criteria. Before: 95/B, 70%." },
+    { "id": "o2", "status": "passed", "evidence": "8 new docs in docs/agent-corpus name only exports and files read in their areas; 7 existing spec/ADR/runbook docs gained covers for the area they describe; the runbook also names src/workflow/engine.ts, which writes the artifacts it lists." },
+    { "id": "o3", "status": "passed", "evidence": "bench retrieval: hit@3 0.883333, MRR 0.780159 over 60 cases; suite file untouched; baseline comparison: pass." },
     { "id": "o4", "status": "passed", "evidence": "No baseline written; no reviewedOn/reviewDueOn changes." },
-    { "id": "o5", "status": "passed", "evidence": "typecheck and build exit 0; test run reported separately by the harness." },
-    { "id": "o6", "status": "passed", "evidence": "Two conventional commits, headers under 72 chars; no protected paths touched." }
+    { "id": "o5", "status": "passed", "evidence": "typecheck, build exit 0; vitest 1319 passed, 0 failed; all five plugin/skill/upstream node tests pass." },
+    { "id": "o6", "status": "passed", "evidence": "Conventional commits, headers under 72 chars; no protected paths touched." }
   ]
 }
