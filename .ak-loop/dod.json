@@ -1,9 +1,0 @@
-{
-  "proofs": [
-    { "id": "o1", "kind": "test", "command": "pnpm vitest run tests/bench-retrieval.test.ts", "result": "passed" },
-    { "id": "o2", "kind": "test", "command": "pnpm vitest run tests/retrieval-projection.test.ts", "result": "passed" },
-    { "id": "o3", "kind": "test", "command": "pnpm vitest run tests/index-scaling.test.ts", "result": "passed" },
-    { "id": "o4", "kind": "command", "command": "git diff --quiet origin/main -- index.json capabilities.json docs/bench", "result": "passed" },
-    { "id": "o5", "kind": "command", "command": "pnpm run typecheck && pnpm run test && pnpm run build", "result": "failed", "note": "build OOM-killed in sandbox (137); study-minimal CLI-transport tests fail; not compared against main" }
-  ]
-}
