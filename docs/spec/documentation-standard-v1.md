@@ -151,3 +151,7 @@ Target-only declarations are valid documentation declarations. This does not
 add a required frontmatter field or replace owner/lifecycle/source-of-truth/
 validation metadata. Unresolved targets require review; they do not establish
 release applicability or permit lower-priority fallback.
+
+## Implementation
+
+The conformance checks are implemented in `src/conformance/documentation-standard-v1.ts`.

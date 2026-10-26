@@ -51,7 +51,8 @@ hostile process with permission to mutate its root concurrently.
 `maxTimeMs`, and `maxMemoryMb`. `intersectStorageLimits` freezes the per-field
 minimum across caller/repository/plugin limits. A capability has one cumulative
 ledger for its lifetime: actual traversal entries and descriptor/stat operations,
-read bytes, listed file sizes, elapsed time and current process heap memory.
+read bytes, listed file sizes, elapsed time and heap growth since the ledger
+was created (memory the caller already held is not charged).
 Repeated operations consume the same budget; create a new capability for a new
 run. Setup of caller-owned visibility policy is outside this operation ledger.
 Memory/time enforcement is cooperative at asynchronous checkpoints, not process

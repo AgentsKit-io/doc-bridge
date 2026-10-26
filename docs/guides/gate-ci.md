@@ -123,3 +123,7 @@ refuses to publish `llms.txt` and the index while they exist, opt into the
 `reference-findings` gate: see [Publication gate](./publication-gate.md). Once it is
 selected, the Action fails until the job provides the base snapshot at the
 configured path; the CI section of that guide creates it from the PR base revision.
+
+## Implementation
+
+Gates are resolved and run by `src/gates/run-gates.ts`; the reference-findings gate is `src/gates/reference-findings.ts`.

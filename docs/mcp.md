@@ -118,3 +118,7 @@ add these tools only if intended. The same evidence is available through
 `ak-docs why <path|symbol|concept>`. Empty observations are not proof of absent
 rationale; service queries omit commit history and report that coverage.
 See [knowledge query](./spec/knowledge-query-v1.md).
+
+## Implementation
+
+The MCP server is `src/mcp/server.ts` and the client installer behind `ak-docs mcp install` is `src/mcp/install.ts`.

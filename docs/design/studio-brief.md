@@ -100,3 +100,7 @@ evidence is for interaction design; the real samples do not claim analyzed
 reference drift when no finding artifact was supplied. Check light/dark,
 keyboard-only use, reduced motion, long paths, loading/errors and narrow layouts
 before requesting visual review. These data artifacts are not rendered UI evidence.
+
+## Implementation
+
+The `src/studio` directory owns the graph data, which is produced by `src/studio/export.ts`.

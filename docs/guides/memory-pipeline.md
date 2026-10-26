@@ -149,3 +149,7 @@ ak-docs playbook pattern    # published Doc Bridge pattern (OKF)
 - [MemoryCandidate schema](../schemas/memory-candidate-v1.md)  
 - [Chat and RAG](../chat-and-rag.md) — optional Layer 1 after handoffs  
 - [Getting started](../getting-started.md)  
+
+## Implementation
+
+Ingestion is implemented in `src/memory/ingest.ts` and the classify and promote steps in `src/memory/pipeline.ts`.

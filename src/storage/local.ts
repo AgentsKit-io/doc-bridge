@@ -22,12 +22,14 @@ export class StorageLedger {
   private entries = 0
   private bytes = 0
   private readonly started = performance.now()
+  // Growth since the ledger opened, so memory the caller already holds is not charged to it.
+  private readonly heapAtStart = process.memoryUsage().heapUsed
   constructor(readonly partition: Partition, readonly limits: StorageLimits) {}
   check(request: StorageRequest): void {
     if (!samePartition(this.partition, request.partition)) fail('denied', 'PARTITION_MISMATCH')
     if (request.signal.aborted) fail('cancelled', 'ABORTED')
     if (performance.now() - this.started >= this.limits.maxTimeMs) fail('limit', 'TIME_LIMIT')
-    if (process.memoryUsage().heapUsed > this.limits.maxMemoryMb * 1024 * 1024) fail('limit', 'MEMORY_LIMIT')
+    if (process.memoryUsage().heapUsed - this.heapAtStart > this.limits.maxMemoryMb * 1024 * 1024) fail('limit', 'MEMORY_LIMIT')
   }
   entry(request: StorageRequest): void {
     this.check(request)
