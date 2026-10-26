@@ -1,0 +1,15 @@
+{
+  "ranAt": "2026-10-26T11:00:00Z",
+  "command": "pnpm run typecheck && pnpm run test && pnpm run build",
+  "exitCode": 137,
+  "outcomes": [
+    { "id": "o1", "status": "passed", "evidence": "workflow has workflow_dispatch, branches: [main], paths:; actionlint not installed, skipped" },
+    { "id": "o2", "status": "passed", "evidence": "all uses: lines pinned to 40-char SHAs copied from ci.yml; pnpm install --frozen-lockfile present" },
+    { "id": "o3", "status": "passed", "evidence": "docs:build, cf:headers, secrets.CLOUDFLARE_API_TOKEN and secrets.CLOUDFLARE_ACCOUNT_ID present" },
+    { "id": "o4", "status": "passed", "evidence": "permissions: contents: read; concurrency group with cancel-in-progress: false" },
+    { "id": "o5", "status": "passed", "evidence": "creds step sets present output and emits ::notice::; checkout, build, deploy and smoke steps gated on steps.creds.outputs.present == 'true'" },
+    { "id": "o6", "status": "passed", "evidence": "smoke step curls SMOKE_URL with 5 retries, asserts 200 and the three security headers" },
+    { "id": "o7", "status": "passed", "evidence": "CONTRIBUTING.md and wrangler.toml document the workflow and both secrets" },
+    { "id": "o8", "status": "partial", "evidence": "single commit 'ci: deploy the docs site to Cloudflare on main'; typecheck passed; vitest rerun green after one load-induced failure; pnpm run build was killed (exit 137) in this sandbox and is NOT verified here" }
+  ]
+}

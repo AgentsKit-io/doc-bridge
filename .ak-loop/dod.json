@@ -1,0 +1,5 @@
+{
+  "proofs": [
+    { "id": "o5", "claim": "Missing Cloudflare secrets skip deploy and smoke with a notice, run succeeds", "evidence": ".github/workflows/deploy-docs-cloudflare.yml: 'Check Cloudflare credentials' step" }
+  ]
+}

@@ -86,6 +86,18 @@ The npm package must have a GitHub Actions trusted publisher configured for
 `AgentsKit-io/doc-bridge`, workflow `changesets.yml`, and environment `npm`.
 Do not publish from a dirty worktree or run `pnpm release` locally.
 
+### Docs site deploy
+
+The docs site (Cloudflare Worker `ak-doc-bridge`) deploys from CI: the
+`deploy-docs-cloudflare.yml` workflow runs on pushes to `main` that touch the docs
+site, and on manual `workflow_dispatch` (main only). It runs what `pnpm cf:deploy`
+runs (`pnpm docs:build`, `pnpm cf:headers`, `wrangler deploy`), then smoke-checks the
+public URL for HTTP 200 and the security headers. The URL defaults to
+`https://doc-bridge.agentskit.io`; set the repository variable `DOCS_SMOKE_URL` to
+override it. Maintainers must add the repository secrets `CLOUDFLARE_API_TOKEN` and
+`CLOUDFLARE_ACCOUNT_ID`; without them the run skips with a notice. `pnpm cf:deploy`
+stays available for manual deploys.
+
 Project decisions and maintainer responsibilities are documented in
 [GOVERNANCE.md](GOVERNANCE.md). By participating, you agree to follow the
 [Code of Conduct](CODE_OF_CONDUCT.md). Report vulnerabilities through the
