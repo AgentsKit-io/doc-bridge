@@ -1,6 +1,11 @@
 # Cloudflare Workers static assets (migration off Vercel). Serves the static export of
 # `pnpm docs:build`; _headers (written by scripts/cloudflare-headers.mjs) mirrors vercel.json.
 # Deploy: pnpm cf:deploy   (needs CLOUDFLARE_API_TOKEN / CLOUDFLARE_ACCOUNT_ID)
+# CI: the "Cloudflare deploy" GitHub Actions workflow (.github/workflows/cloudflare-deploy.yml) runs
+# the same steps on pushes to main that change the docs site, or on demand via workflow_dispatch
+# (Actions tab > Cloudflare deploy > Run workflow). It reads the repository secrets
+# CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID, skips with a notice when either is missing, and
+# finishes with a curl smoke check (HTTP 200 + security headers).
 name = "ak-doc-bridge"
 compatibility_date = "2026-10-01"
 workers_dev = true
