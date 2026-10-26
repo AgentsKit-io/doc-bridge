@@ -37,3 +37,5 @@ loop.config.yaml
 loop.config.local.yaml
 .codex/loop/
 .claude/figure-shots/
+# Harness loop state: per-run, never committed.
+.ak-loop/

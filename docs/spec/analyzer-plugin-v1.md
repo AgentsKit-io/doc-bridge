@@ -40,3 +40,7 @@ only the enumerated leaves; ignored options retain path-only diagnostics and
 watch and legacy writes are denied. Service library calls use injected storage;
 service CLI writes require `--artifact-root`. MCP mutating/agent operations and
 filesystem fallbacks are refused. Ordinary local calls remain unchanged.
+
+## Implementation
+
+The contract is defined in `src/plugins/contract.ts`.
