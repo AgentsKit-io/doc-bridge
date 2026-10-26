@@ -3,7 +3,7 @@ type: module
 id: doc-bridge-entities
 title: Knowledge entity extraction
 editRoot: src/entities
-humanDoc: /docs/adr/0018-opt-in-knowledge-entities
+humanDoc: /docs/spec/knowledge-query-v1
 owner: doc-bridge-maintainers
 lifecycle: active
 sourceOfTruth: src/entities

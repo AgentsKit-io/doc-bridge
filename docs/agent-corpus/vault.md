@@ -3,7 +3,7 @@ type: module
 id: doc-bridge-vault
 title: Vault export and vault diff
 editRoot: src/vault
-humanDoc: /docs/spec/vault-export-v1
+humanDoc: /docs/guides/vault
 owner: doc-bridge-maintainers
 lifecycle: active
 sourceOfTruth: src/vault

@@ -3,7 +3,7 @@ type: module
 id: doc-bridge-enrich
 title: Enrichment overlay, context packs and approvals
 editRoot: src/enrich
-humanDoc: /docs/PRD-knowledge-retrieval-and-enrichment
+humanDoc: /docs/spec/knowledge-query-v1
 owner: doc-bridge-maintainers
 lifecycle: active
 sourceOfTruth: src/enrich
