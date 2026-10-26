@@ -16,6 +16,7 @@ import {
   repositoryInputs,
 } from '../src/index-builder/project-corpus.js'
 import type { DocBridgeIndexV1 } from '../src/schemas/doc-bridge-index.js'
+import type { DiscoverySnapshotV1 } from '../src/schemas/knowledge.js'
 import { IndexStaleError, loadFreshDocBridgeIndex } from '../src/query/load-index.js'
 import { searchIndex } from '../src/query/search.js'
 import {
@@ -47,10 +48,19 @@ const repositoryConfig = (): DocBridgeConfigV1 =>
     ),
   )
 
-/** The repository's own index, built once per file: a scan and a projection of everything here. */
+/*
+ * The repository's observed snapshot, and the index projected from it, each built once per file. A
+ * scan of the whole repository is the expensive step, so the index takes this snapshot rather than
+ * scanning again: the file pays for one scan, and the index describes the very observation the
+ * comparison is made against.
+ */
+let cachedRepositorySnapshot: DiscoverySnapshotV1 | undefined
+const repositorySnapshot = (): DiscoverySnapshotV1 =>
+  (cachedRepositorySnapshot ??= discoverRepository({ root: repositoryRoot, config: repositoryConfig() }))
+
 let cachedRepositoryIndex: DocBridgeIndexV1 | undefined
 const repositoryIndex = (): DocBridgeIndexV1 =>
-  (cachedRepositoryIndex ??= buildDocBridgeIndex({ root: repositoryRoot, config: repositoryConfig(), write: false }).index)
+  (cachedRepositoryIndex ??= buildDocBridgeIndex({ root: repositoryRoot, config: repositoryConfig(), write: false, snapshot: repositorySnapshot() }).index)
 
 const temporary: string[] = []
 
@@ -195,9 +205,9 @@ describe('search lexicon', () => {
 })
 
 describe('repository corpus projection', () => {
-  // Discovery parses every source file in the repository; that is the point of the comparison.
+  // Discovery parses every source file in the repository; the projection must keep every document it observed.
   it('projects every document the discovery snapshot observed', () => {
-    const snapshot = discoverRepository({ root: repositoryRoot, config: repositoryConfig() })
+    const snapshot = repositorySnapshot()
     const index = repositoryIndex()
     const indexed = new Set(index.knowledge.map((entry) => entry.path))
 

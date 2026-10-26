@@ -55,12 +55,18 @@ export const safeWalkFiles = (root: string, options: SafeWalkOptions = {}): Safe
   let bytes = 0
   let reason: string | undefined
   const started = Date.now()
+  /*
+   * The memory limit bounds what this scan grows the heap by, like the time limit bounds what it
+   * spends. The absolute heap would charge the scan for memory its caller already holds, so a
+   * second scan in one process (doctor rebuilding for its gates) came back partial.
+   */
+  const heapAtStart = process.memoryUsage().heapUsed
   const matchesExclude = (path: string): boolean => excludes.some((pattern) => globMatch(path, pattern))
   const ignored = options.respectIgnore === false ? undefined : createIgnoreFilter(projectRoot)
   const visit = (directory: string): void => {
     if (reason) return
     if (options.maxTimeMs !== undefined && Date.now() - started >= options.maxTimeMs) { reason = `Repository scan exceeded the ${options.maxTimeMs} ms time limit.`; return }
-    if (options.maxMemoryMb !== undefined && process.memoryUsage().heapUsed > options.maxMemoryMb * 1024 * 1024) { reason = `Repository scan exceeded the ${options.maxMemoryMb} MiB memory limit.`; return }
+    if (options.maxMemoryMb !== undefined && process.memoryUsage().heapUsed - heapAtStart > options.maxMemoryMb * 1024 * 1024) { reason = `Repository scan exceeded the ${options.maxMemoryMb} MiB memory limit.`; return }
     let entries: string[]
     try { entries = readdirSync(directory) } catch { return }
     for (const name of entries.sort()) {

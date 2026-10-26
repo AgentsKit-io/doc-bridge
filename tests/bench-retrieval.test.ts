@@ -256,24 +256,25 @@ describe('retrieval baseline gate', () => {
 
 describe('bench CLI', () => {
   /*
-   * The benchmark measures the index, and the index now projects every document and module in the
-   * repository — so editing any file makes it stale. CI runs `ak-docs index` before the gate for
-   * the same reason; these tests build it themselves so they do not depend on what ran before.
+   * The benchmark measures the index, and the index projects every document and module in the
+   * repository — so any concurrent edit under the working tree (other test files run in parallel)
+   * makes a freshness check fail mid-file. The repository is scanned and projected once here, into
+   * a private file, and every run below measures that fixed index through `--index`. Freshness
+   * gating is covered by its own tests; these tests are about ranking, baselines and exit codes.
+   * Building the index scans the whole repository, so the hook's budget is for the machine.
    */
-  /*
-   * Building the index scans and projects the whole repository. The budget is for the machine, not
-   * for a slow assertion: a two-core CI runner under coverage instrumentation exceeded 30s once the
-   * corpus passed a hundred documents, and `vi.setConfig({ testTimeout })` does not raise a hook's.
-   */
+  let indexPath = ''
   beforeAll(() => {
     const config = applyConfigDefaults(
       DocBridgeConfigV1Schema.parse(JSON.parse(readFileSync('doc-bridge.config.json', 'utf8')) as unknown),
     )
-    buildDocBridgeIndex({ root: process.cwd(), config })
+    const { index } = buildDocBridgeIndex({ root: process.cwd(), config, write: false })
+    indexPath = join(mkdtempSync(join(tmpdir(), 'doc-bridge-bench-index-')), 'index.json')
+    writeFileSync(indexPath, `${JSON.stringify(index)}\n`, 'utf8')
   }, 180_000)
 
   it('measures the committed suite against the committed baseline and exits zero', () => {
-    const run = capture(() => runCli(['bench', 'retrieval', SUITE_PATH, '--baseline', BASELINE_PATH, '--json']))
+    const run = capture(() => runCli(['bench', 'retrieval', SUITE_PATH, '--index', indexPath, '--baseline', BASELINE_PATH, '--json']))
     expect(run.code).toBe(0)
     const payload = JSON.parse(run.out) as { ok: boolean; comparison: { status: string }; result: { metrics: { caseCount: number } } }
     expect(payload.ok).toBe(true)
@@ -291,7 +292,7 @@ describe('bench CLI', () => {
     const rehashed = { ...stronger, contentHash: contentHashForArtifactV1(stronger) }
     writeFileSync(path, `${JSON.stringify(rehashed, null, 2)}\n`, 'utf8')
 
-    const run = capture(() => runCli(['bench', 'retrieval', SUITE_PATH, '--baseline', path, '--json']))
+    const run = capture(() => runCli(['bench', 'retrieval', SUITE_PATH, '--index', indexPath, '--baseline', path, '--json']))
     expect(run.code).toBe(1)
     const payload = JSON.parse(run.out) as { ok: boolean; comparison: { status: string; regressions: string[]; warnings: string[] } }
     expect(payload.ok).toBe(false)
@@ -306,7 +307,7 @@ describe('bench CLI', () => {
     const baseline = parseRetrievalBaseline(JSON.parse(readFileSync(BASELINE_PATH, 'utf8')) as unknown)
     // Same edit, original hash: the gate cannot be relaxed by editing the file.
     writeFileSync(path, `${JSON.stringify({ ...baseline, metrics: { ...baseline.metrics, hitAt3: 0.95 } }, null, 2)}\n`, 'utf8')
-    const run = capture(() => runCli(['bench', 'retrieval', SUITE_PATH, '--baseline', path, '--json']))
+    const run = capture(() => runCli(['bench', 'retrieval', SUITE_PATH, '--index', indexPath, '--baseline', path, '--json']))
     expect(run.code).toBe(2)
     expect(run.err).toContain('content hash')
   })
@@ -315,11 +316,11 @@ describe('bench CLI', () => {
     const directory = mkdtempSync(join(tmpdir(), 'doc-bridge-bench-approve-'))
     const path = join(directory, 'baseline.json')
 
-    const refused = capture(() => runCli(['bench', 'retrieval', SUITE_PATH, '--baseline', path, '--update-baseline', '--json']))
+    const refused = capture(() => runCli(['bench', 'retrieval', SUITE_PATH, '--index', indexPath, '--baseline', path, '--update-baseline', '--json']))
     expect(refused.code).toBe(2)
     expect(refused.err).toContain('--by')
 
-    const approved = capture(() => runCli(['bench', 'retrieval', SUITE_PATH, '--baseline', path, '--update-baseline', '--by', 'tester', '--json']))
+    const approved = capture(() => runCli(['bench', 'retrieval', SUITE_PATH, '--index', indexPath, '--baseline', path, '--update-baseline', '--by', 'tester', '--json']))
     expect(approved.code).toBe(0)
     const written = parseRetrievalBaseline(JSON.parse(readFileSync(path, 'utf8')) as unknown)
     expect(written.approval.approvedBy).toBe('tester')
@@ -327,7 +328,7 @@ describe('bench CLI', () => {
 
   it('explains a missing baseline instead of failing obscurely', () => {
     const directory = mkdtempSync(join(tmpdir(), 'doc-bridge-bench-missing-'))
-    const run = capture(() => runCli(['bench', 'retrieval', SUITE_PATH, '--baseline', join(directory, 'absent.json'), '--json']))
+    const run = capture(() => runCli(['bench', 'retrieval', SUITE_PATH, '--index', indexPath, '--baseline', join(directory, 'absent.json'), '--json']))
     expect(run.code).toBe(2)
     expect(run.err).toContain('--update-baseline')
   })

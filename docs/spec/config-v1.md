@@ -688,6 +688,7 @@ type RepositorySafetyConfig = {
   maxFiles?: number
   maxBytes?: number
   maxTimeMs?: number
+  /** Heap MiB a repository scan may grow by, measured from the scan's start, not the process total. */
   maxMemoryMb?: number
   redactSecrets?: boolean
 }
