@@ -1,6 +1,7 @@
 [
   "agent-corpus/INDEX.md",
   "agent-corpus/OVERVIEW.md",
+  "agent-corpus/agents.md",
   "agent-corpus/audit.md",
   "agent-corpus/bin.md",
   "agent-corpus/budget.md",
@@ -8,12 +9,17 @@
   "agent-corpus/cli.md",
   "agent-corpus/config.md",
   "agent-corpus/conformance.md",
+  "agent-corpus/diff.md",
   "agent-corpus/doc-bridge.md",
   "agent-corpus/doctor.md",
+  "agent-corpus/enrich.md",
+  "agent-corpus/entities.md",
+  "agent-corpus/execution.md",
   "agent-corpus/federation.md",
   "agent-corpus/findings.md",
   "agent-corpus/fixes.md",
   "agent-corpus/gates.md",
+  "agent-corpus/integrations.md",
   "agent-corpus/lib.md",
   "agent-corpus/mcp.md",
   "agent-corpus/memory.md",
@@ -28,5 +34,7 @@
   "agent-corpus/safety.md",
   "agent-corpus/schemas.md",
   "agent-corpus/scripts.md",
-  "agent-corpus/shims.md"
+  "agent-corpus/shims.md",
+  "agent-corpus/studio.md",
+  "agent-corpus/vault.md"
 ]

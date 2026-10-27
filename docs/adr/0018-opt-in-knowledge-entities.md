@@ -2,6 +2,9 @@
 title: Opt-in deterministic knowledge entities
 status: proposed
 date: 2026-10-08
+docbridge:
+  covers:
+    - area:src/entities
 ---
 
 # Opt-in deterministic knowledge entities

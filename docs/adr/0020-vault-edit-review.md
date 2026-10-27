@@ -3,6 +3,9 @@ title: Generated vault edit review
 authority: human-approved scope
 status: accepted
 date: 2026-10-08
+docbridge:
+  covers:
+    - area:src/vault
 ---
 
 # Generated vault edit review
