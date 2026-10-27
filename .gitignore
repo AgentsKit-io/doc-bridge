@@ -37,3 +37,8 @@ loop.config.yaml
 loop.config.local.yaml
 .codex/loop/
 .claude/figure-shots/
+
+# Loop worker bookkeeping (plan, run log, handoff evidence) is worktree-local, never repository
+# content. The repository scan walks every file Git would list, so an unignored `.ak-loop/` lets one
+# worker's notes change the index, and with it the ranking every other test reads.
+.ak-loop/
