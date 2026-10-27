@@ -1,0 +1,7 @@
+chore: remove Vercel deploy configuration
+
+Cloudflare is the only deploy target. Inline the header rules and output
+directory into scripts/cloudflare-headers.mjs (generated _headers stays
+byte-identical) and drop vercel.json.
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
