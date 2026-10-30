@@ -263,7 +263,7 @@ export const measureBenchmark = (root: string, config: DocBridgeConfigV1, index:
   if (!index.projection) return { status: 'not-analyzed', suite, reason: 'The index carries no retrieval projection. Run: ak-docs index' }
   try {
     const parsed = parseRetrievalSuite(JSON.parse(readFileSync(suitePath, 'utf8')) as unknown)
-    const result = runRetrievalBench({ index, suite: parsed })
+    const result = runRetrievalBench({ index, suite: parsed, ...(config.retrieval?.benchmark?.exclude ? { exclude: config.retrieval.benchmark.exclude } : {}) })
     return {
       status: 'measured',
       suite,

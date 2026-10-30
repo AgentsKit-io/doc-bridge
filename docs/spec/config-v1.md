@@ -629,6 +629,12 @@ type RetrievalConfig = {
   }
   /** BM25 parameters: `k1` term-frequency saturation, `b` length-normalization strength (0–1). */
   params?: { k1?: number; b?: number }
+  benchmark?: {
+    /** The golden retrieval suite. Default: `docs/bench/retrieval-suite-v1.json`. */
+    suite?: string
+    /** Globs over entry paths left out of the corpus the suite is measured against. */
+    exclude?: string[]
+  }
 }
 ```
 
@@ -655,6 +661,14 @@ and re-approve the [retrieval benchmark](../bench/README.md) baseline if you gat
 smaller and builds faster, at the cost of the retrieval it exists for: an exported-symbol or
 file-path query has nothing to resolve against. Turn it off only for a repository whose source is
 not the thing agents ask about.
+
+`benchmark.exclude` scopes what `ak-docs bench retrieval` and the doctor's hit@3 measure, and
+nothing else: search, MCP tools and the index are unchanged. BM25 corpus statistics (IDF and the
+average length of each field) span every entry ranked, so files the suite never asks about still
+move the files it does. A test module exports no symbols, so each new test file lowers the average
+`symbols` length and shifts near-ties between source modules. Excluding `tests/**` keeps the
+measurement a function of the corpus the suite is about, and the result records the exclusions it
+was measured under.
 
 ## `render` (optional)
 

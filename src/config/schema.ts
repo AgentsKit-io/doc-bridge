@@ -601,6 +601,13 @@ export const RetrievalConfigSchema = z
       .object({
         /** The golden retrieval suite the doctor measures hit@3 against. `docs/bench/retrieval-suite-v1.json` by default. */
         suite: z.string().min(1).max(512).optional(),
+        /**
+         * Globs over repository-relative entry paths left out of the corpus the suite is measured
+         * against. BM25 corpus statistics (IDF, average field length) are computed over every
+         * entry, so files the suite never asks about, such as tests, would otherwise shift the
+         * ranking of the files it does. Retrieval itself is unchanged.
+         */
+        exclude: z.array(z.string().min(1).max(256)).max(32).optional(),
       })
       .strict()
       .optional(),
