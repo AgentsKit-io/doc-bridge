@@ -1,5 +1,6 @@
 import { foldAccents, hasSearchToken, searchTokens } from '../query/text.js'
 import type { Confidence, RetrievalEdge, RetrievalEntry, RetrievalIndexV1 } from '../schemas/retrieval-index.js'
+import { IMPORT_EDGE_KINDS } from '../graph/build.js'
 import { bm25Idf, buildBm25Index, bm25Search, type Bm25Hit, type Bm25Index } from './bm25.js'
 import { weakerConfidence } from './project.js'
 
@@ -285,6 +286,8 @@ const prepare = (index: RetrievalIndexV1): Prepared => {
   return value
 }
 
+const IMPORT_KINDS: ReadonlySet<string> = new Set(IMPORT_EDGE_KINDS)
+
 type Reach = { readonly hops: number; readonly via: RetrievalEdge; readonly anchorShare: number }
 
 /**
@@ -293,16 +296,25 @@ type Reach = { readonly hops: number; readonly via: RetrievalEdge; readonly anch
  * Nearest wins: an entry reachable in one hop from one anchor and two from another is one hop
  * away. The edge recorded is the one that made the shortest reach, so the explanation names a
  * real relation and the result's confidence can be no better than that relation's.
+ *
+ * An anchor is reachable one hop from a stronger anchor, never from itself or a weaker one, and
+ * only over a documentation edge: a page that covers, mentions or links to what the query found is
+ * the place to read about it. Excluding every anchor let a body-only mention next to the best hit
+ * outrank the weaker anchors, which matched the query in their own title or path, by the
+ * proximity they were denied. An import is left out: it would lift a module's importers, its
+ * tests first, above the module the query asked for.
  */
 const reachable = (ready: Prepared, anchors: readonly Bm25Hit[]): ReadonlyMap<string, Reach> => {
   const reach = new Map<string, Reach>()
   const anchored = new Set(anchors.map((anchor) => anchor.ref))
   const best = anchors[0]?.score ?? 0
   // Anchors are visited strongest first, so the first reach recorded is the strongest one.
+  const stronger = new Set<string>()
   for (const anchor of anchors) {
+    stronger.add(anchor.ref)
     const anchorShare = best > 0 ? anchor.score / best : 0
     for (const first of ready.neighbours.get(anchor.ref) ?? []) {
-      if (anchored.has(first.id)) continue
+      if (stronger.has(first.id) || (anchored.has(first.id) && IMPORT_KINDS.has(first.kind))) continue
       const known = reach.get(first.id)
       if (!known || known.hops > 1) reach.set(first.id, { hops: 1, via: { kind: first.kind, id: anchor.ref, confidence: first.confidence }, anchorShare })
       for (const second of ready.neighbours.get(first.id) ?? []) {
