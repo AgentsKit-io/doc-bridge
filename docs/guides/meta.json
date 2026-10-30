@@ -17,6 +17,7 @@
     "action-advisory",
     "injected-storage",
     "vault",
-    "llm-remediation"
+    "llm-remediation",
+    "production-line-brief"
   ]
 }
