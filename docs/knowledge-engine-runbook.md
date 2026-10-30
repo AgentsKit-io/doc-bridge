@@ -3,6 +3,9 @@ owner: doc-bridge-maintainers
 lifecycle: active
 sourceOfTruth: src
 validationPath: pnpm test && pnpm typecheck
+docbridge:
+  covers:
+    - area:src/workflow
 ---
 
 # Knowledge Engine Runbook
