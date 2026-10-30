@@ -293,6 +293,12 @@ type Reach = { readonly hops: number; readonly via: RetrievalEdge; readonly anch
  * Nearest wins: an entry reachable in one hop from one anchor and two from another is one hop
  * away. The edge recorded is the one that made the shortest reach, so the explanation names a
  * real relation and the result's confidence can be no better than that relation's.
+ *
+ * An anchor next to another anchor is reached too, in one hop: two strong hits that import or
+ * cite each other corroborate each other. Without it, two hits saturated on the same term tie on
+ * BM25 alone, and the tie is decided by the corpus' average field lengths — so a file that matches
+ * nothing in the query could reorder them. Two hops are never walked through an anchor: what an
+ * anchor is next to is already reached from that anchor directly.
  */
 const reachable = (ready: Prepared, anchors: readonly Bm25Hit[]): ReadonlyMap<string, Reach> => {
   const reach = new Map<string, Reach>()
@@ -302,9 +308,10 @@ const reachable = (ready: Prepared, anchors: readonly Bm25Hit[]): ReadonlyMap<st
   for (const anchor of anchors) {
     const anchorShare = best > 0 ? anchor.score / best : 0
     for (const first of ready.neighbours.get(anchor.ref) ?? []) {
-      if (anchored.has(first.id)) continue
+      if (first.id === anchor.ref) continue
       const known = reach.get(first.id)
       if (!known || known.hops > 1) reach.set(first.id, { hops: 1, via: { kind: first.kind, id: anchor.ref, confidence: first.confidence }, anchorShare })
+      if (anchored.has(first.id)) continue
       for (const second of ready.neighbours.get(first.id) ?? []) {
         if (anchored.has(second.id) || second.id === anchor.ref) continue
         if (!reach.has(second.id)) {
