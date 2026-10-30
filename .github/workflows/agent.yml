@@ -23,7 +23,7 @@ concurrency:
 jobs:
   agent:
     if: >-
-      (github.event_name == 'issues' && github.event.label.name == 'agent:go') ||
+      (github.event_name == 'issues' && github.event.label.name == 'agent:go' && vars.FACTORY_LINE != 'on') ||
       (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude') &&
        contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association))
     runs-on: [self-hosted, agent-pilot]
