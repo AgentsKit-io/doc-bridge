@@ -123,7 +123,9 @@ score = lexical × prior × aboutness
   sentence does not name a thing by containing one of its tokens.
 - **graphProximity** — within two hops of one of the ten strongest lexical hits, over covers,
   mentions, links and imports. Scaled by the anchor's share of the best score, so a hub page that
-  barely matched cannot lift everything it links to.
+  barely matched cannot lift everything it links to. An anchor one hop from another anchor earns
+  it too, so two strong hits that import or cite each other corroborate each other rather than
+  tying on BM25 saturation; two hops are never walked through an anchor.
 - **canonicality** — log-scaled PageRank over `links-to` and `covers`, measured above the corpus
   floor (the smallest positive PageRank in the index): the page other pages point at outranks the
   leaf that mentions the same thing, and a record nothing links to earns nothing for being a
