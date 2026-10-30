@@ -74,16 +74,19 @@ const format = (metric: keyof RetrievalMetrics, value: number): string =>
  */
 export const measureOverlayRetrievalDelta = (options: MeasureOverlayRetrievalDeltaOptions): OverlayRetrievalDelta => {
   const { root, config, snapshot, overlay, suite } = options
-  const limit = options.limit === undefined ? {} : { limit: options.limit }
+  const measured = {
+    ...(options.limit === undefined ? {} : { limit: options.limit }),
+    ...(config.retrieval?.benchmark?.exclude ? { exclude: config.retrieval.benchmark.exclude } : {}),
+  }
   const baseline = runRetrievalBench({
     index: buildDocBridgeIndex({ root, config, write: false, snapshot, overlay: 'ignore' }).index,
     suite,
-    ...limit,
+    ...measured,
   })
   const enriched = runRetrievalBench({
     index: buildDocBridgeIndex({ root, config, write: false, snapshot, overlay }).index,
     suite,
-    ...limit,
+    ...measured,
   })
 
   const deltas = OVERLAY_DELTA_METRICS.map((metric): OverlayMetricDelta => {

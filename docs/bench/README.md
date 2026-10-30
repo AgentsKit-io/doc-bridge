@@ -59,6 +59,16 @@ node bin/ak-docs.js bench retrieval docs/bench/retrieval-suite-v1.json \
   --update-baseline --by "<your name>" --reason "Added three cases for the area entities"
 ```
 
+### The measured corpus
+
+The suite asks about source and documentation, never about tests, so this repository measures it
+without them: `retrieval.benchmark.exclude: ["tests/**"]` in `doc-bridge.config.json`. Ranking
+computes its BM25 statistics (IDF, average field length) from the entries it ranks, and a test
+module, which exports nothing, lowers the average `symbols` length. Before the exclusion, every
+new test file shifted near-ties between source modules, and a coverage pull request could fail
+the gate without touching retrieval. The exclusions are part of the result (`index.exclude`), and
+search, MCP and the index itself still include tests.
+
 ## The baseline and the gate
 
 [`retrieval-baseline-v1.json`](./retrieval-baseline-v1.json) holds the approved figures plus an approval record: who approved them, when, why, and the hashes of the result and index they were measured from. Three properties make it a gate rather than a suggestion:

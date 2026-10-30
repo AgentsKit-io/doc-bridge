@@ -874,6 +874,7 @@ const runBenchCommand = (
       index,
       suite,
       ...(limit === undefined ? {} : { limit }),
+      ...(config.retrieval?.benchmark?.exclude ? { exclude: config.retrieval.benchmark.exclude } : {}),
     })
 
     const baselineOption = optionValues(argv, '--baseline')[0]
