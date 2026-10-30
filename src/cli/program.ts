@@ -55,6 +55,7 @@ import { IndexNotFoundError, IndexStaleError, loadDocBridgeIndex, loadFreshDocBr
 import { withoutDisabledKnowledgeEntities } from '../config/defaults.js'
 import { runQuery, type QueryKind } from '../query/query.js'
 import { searchIndex } from '../query/search.js'
+import { buildBrief } from '../brief/brief.js'
 import type { DocBridgeIndexV1 } from '../schemas/doc-bridge-index.js'
 import { parseAgentHandoff, parseDocBridgeConfig, parseDocBridgeIndex, parseReconciliationReport } from '../validate.js'
 import { parseDiscoverySnapshot } from '../validate.js'
@@ -154,6 +155,10 @@ const parseArgs = (argv: readonly string[]) => {
     if (!arg) continue
     if (arg === '--config') {
       configPath = argv[i + 1]
+      i += 1
+      continue
+    }
+    if (positional[0] === 'brief' && (arg === '--ticket-file' || arg === '--title' || arg === '--out' || arg === '--record' || arg === '--context')) {
       i += 1
       continue
     }
@@ -2171,6 +2176,39 @@ export const runCli = (argv: readonly string[]): number | undefined | Promise<nu
       if (wantsTextOutput(flags, config)) writeTextQuery(result)
       else if (flags.has('--agent')) writeAgentJson(result)
       else writeJson(result)
+      return 0
+    } catch (error) {
+      process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`)
+      return 1
+    }
+  }
+
+  if (command === 'brief') {
+    const ticketFile = optionValues(argv, '--ticket-file')[0]
+    const title = optionValues(argv, '--title')[0]
+    const out = optionValues(argv, '--out')[0]
+    const recordPath = optionValues(argv, '--record')[0]
+    const context = optionValues(argv, '--context')
+    try {
+      const { config, root } = loadProject(configPath)
+      const ticket = ticketFile ? readFileSync(ticketFile, 'utf8') : positional.slice(1).join(' ')
+      if (!ticket.trim()) {
+        process.stderr.write('Usage: ak-docs brief <ticket text> | --ticket-file <file> [--title <t>] [--context <path>]... [--out <file>] [--record <file>] [--no-refresh]\n')
+        return 1
+      }
+      // A fresh checkout has no published index; the brief answers from the current docs.
+      let index: DocBridgeIndexV1
+      try {
+        index = loadAnswerIndex(root, config, flags)
+      } catch (error) {
+        if (!(error instanceof IndexNotFoundError)) throw error
+        index = buildDocBridgeIndex({ root, config: withoutDisabledKnowledgeEntities(config), write: false }).index
+      }
+      const result = buildBrief(index, config, { root, ticket, ...(title ? { title } : {}), ...(context.length ? { context } : {}) })
+      if (out) writeFileSync(out, result.markdown)
+      else process.stdout.write(result.markdown)
+      if (recordPath) writeFileSync(recordPath, `${JSON.stringify(result.record, null, 2)}\n`)
+      else if (out) writeJson(result.record)
       return 0
     } catch (error) {
       process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`)
