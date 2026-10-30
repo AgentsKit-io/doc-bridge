@@ -19,7 +19,7 @@ jobs:
     if: >-
       (github.event_name == 'issues' && github.event.label.name == 'agent:go') ||
       (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude'))
-    uses: AgentsKit-io/.github/.github/workflows/agent.yml@main
+    uses: AgentsKit-io/.github/.github/workflows/agent.yml@378b8406ff151a47e37fdae08a17bdc10812266d  # main
     with:
       hosted: true  # public repository: GitHub-hosted runner joins Tailscale (tag:ci) to reach the pool
     secrets: inherit
