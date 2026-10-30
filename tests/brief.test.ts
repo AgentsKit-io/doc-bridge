@@ -58,4 +58,30 @@ describe('brief', () => {
       expect(result.out).not.toContain('### ../outside')
     } finally { process.chdir(previous) }
   })
+
+  it('keeps a CRLF ticket file title free of a trailing carriage return', () => {
+    const root = nox()
+    const previous = process.cwd()
+    process.chdir(root)
+    try {
+      writeFileSync(join(root, 'ticket.md'), 'Fix the checkout payment receipt\r\nSecond line\r\n')
+      const result = capture(() => runCli(['brief', '--ticket-file', 'ticket.md', '--out', 'brief.md', '--record', 'record.json']))
+      expect(result.code).toBe(0)
+      expect(readFileSync(join(root, 'brief.md'), 'utf8')).toContain('Ticket: Fix the checkout payment receipt\n')
+      const record = JSON.parse(readFileSync(join(root, 'record.json'), 'utf8')) as { ticket: string }
+      expect(record.ticket).toBe('Fix the checkout payment receipt')
+    } finally { process.chdir(previous) }
+  })
+
+  it('prints the markdown to stdout without --out or --record', () => {
+    const root = nox()
+    const previous = process.cwd()
+    process.chdir(root)
+    try {
+      const result = capture(() => runCli(['brief', 'Fix the checkout payment receipt']))
+      expect(result.code).toBe(0)
+      expect(result.out).toContain('## Repository context (doc-bridge)')
+      expect(result.out).toContain('### docs/mvp.yaml')
+    } finally { process.chdir(previous) }
+  })
 })

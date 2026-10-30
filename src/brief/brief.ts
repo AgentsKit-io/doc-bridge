@@ -1,5 +1,7 @@
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
-import { join, relative, resolve, sep } from 'node:path'
+import { join, resolve, sep } from 'node:path'
+
+import { relativePosix, splitLines } from '@agentskit/cross-platform'
 
 import type { DocBridgeConfigV1 } from '../config/schema.js'
 import { handoffForEntity } from '../query/handoff.js'
@@ -64,7 +66,7 @@ const collect = (root: string, requested: readonly string[]): string[] => {
       files.push(...names)
     } else files.push(absolute)
   }
-  return [...new Set(files)].slice(0, MAX_CONTEXT_FILES).map((file) => relative(root, file).split(sep).join('/'))
+  return [...new Set(files)].slice(0, MAX_CONTEXT_FILES).map((file) => relativePosix(root, file))
 }
 
 const handoffLines = (handoff: AgentHandoffV1): string[] => [
@@ -108,7 +110,7 @@ export const buildBrief = (index: DocBridgeIndexV1, config: DocBridgeConfigV1, o
   const lines = [
     '## Repository context (doc-bridge)',
     '',
-    `Ticket: ${options.title ?? options.ticket.split('\n')[0] ?? ''}`,
+    `Ticket: ${options.title ?? splitLines(options.ticket)[0] ?? ''}`,
     '',
     '### Handoffs',
     ...(handoffs.length ? handoffs.flatMap((handoff) => [...handoffLines(handoff), '']) : ['No indexed unit matches this ticket; start from AGENTS.md.', '']),
@@ -121,7 +123,7 @@ export const buildBrief = (index: DocBridgeIndexV1, config: DocBridgeConfigV1, o
     record: {
       type: 'doc-bridge-brief-record',
       schemaVersion: 1,
-      ticket: options.title ?? options.ticket.split('\n')[0] ?? '',
+      ticket: options.title ?? splitLines(options.ticket)[0] ?? '',
       durationMs: Math.max(0, now() - started),
       cost: { llmCalls: 0, tokens: 0, usd: 0 },
       handoffs: handoffs.map((handoff) => handoff.target.id),
