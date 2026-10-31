@@ -106,6 +106,7 @@ act, `q` to quit). It needs an interactive terminal and exits 1 otherwise.
 | `ak-docs index --watch` | Debounced rebuild on agent/human doc changes |
 | `ak-docs index --allow-pending-findings` | Publish even though the opt-in `reference-findings` gate fails; the index and capabilities record the override. See [Publication gate](#publication-gate) |
 | `ak-docs query <target> [--agent] [--text]` | Resolve package/area/module/document/intent/change → handoff JSON or text |
+| `ak-docs brief <ticket text> [--context <path>]... [--out <file>] [--record <file>]` | Build the brief a production line attaches to an agent ticket: handoffs for the matching units, product context files, and a run record (duration, zero model cost) |
 | `ak-docs search <term> [--agent] [--explain] [--mode=<mode>] [--context-budget=<tokens>] [--text]` | Ranked search over the retrieval projection; `--explain` names every scoring component and the matched terms, and agent mode bounds the context it returns to a task-specific budget (default 128 tokens; an oversized default result is returned truncated, while a declared budget that cannot fit one grounded match fails) |
 | `ak-docs ask <question>` | Human-readable local consult mode: search + best match + next handoff commands; no LLM |
 | `ak-docs ask` | Interactive local REPL in a TTY; commands: `search <term>`, `read <id-or-path>`, `open <id-or-path>`, `resolve <id>`, `gate [id]`, `exit` |
