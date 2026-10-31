@@ -296,12 +296,12 @@ if (mode === 'success') {
     }
     try {
       const adapter = createRegistryAgentAdapter(root, config(true, {
-        timeoutMs: 250,
+        timeoutMs: 1500,
         deterministic: false,
         maxResponseBytes: 64,
         cli: { command: process.execPath, args: [cliPath] },
       }))
-      await expect(adapter.enrich('curate', [])).rejects.toMatchObject({ code: NetErrorCodes.AK_NET_TIMEOUT, message: 'Registry agent CLI timed out after 250ms.' })
+      await expect(adapter.enrich('curate', [])).rejects.toMatchObject({ code: NetErrorCodes.AK_NET_TIMEOUT, message: 'Registry agent CLI timed out after 1500ms.' })
       childPids.push(Number(readFileSync(childPidPath, 'utf8')))
 
       writeFileSync(modePath, 'large')
