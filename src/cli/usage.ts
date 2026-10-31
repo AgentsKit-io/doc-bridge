@@ -56,6 +56,7 @@ Core (no API key):
   ak-docs studio export [--output <file>] [--json] [--config <path>]
   ak-docs vault export|diff [--pr] [--config <path>] [--text|--json]
   ak-docs render <llms.txt|area|ownership|change-digest|overlay-review> [--data <artifact>] [--output <path>] [--print-template] [--json]
+  ak-docs brief <ticket text> | --ticket-file <file> [--context <path>]... [--out <file>] [--record <file>]
   ak-docs mcp
   ak-docs mcp install --cursor | --claude
   ak-docs memory ingest|classify|promote [--pr] [--dry-run]
