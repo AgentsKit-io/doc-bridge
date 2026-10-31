@@ -1,4 +1,4 @@
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
@@ -44,6 +44,22 @@ describe('brief', () => {
       expect(record.cost).toEqual({ llmCalls: 0, tokens: 0, usd: 0 })
       expect(record.durationMs).toBeGreaterThanOrEqual(0)
       expect(record.contextFiles.map((file) => file.path)).toEqual(['docs/finalizacao/checkout.md', 'docs/mvp.yaml'])
+    } finally { process.chdir(previous) }
+  })
+
+  it('does not quote files reached through a symlink that leaves the repository', () => {
+    const root = nox()
+    const outside = mkdtempSync(join(tmpdir(), 'doc-bridge-outside-'))
+    writeFileSync(join(outside, 'secret.md'), '# Secret\n\nOUTSIDE-CONTENT checkout\n')
+    symlinkSync(join(outside, 'secret.md'), join(root, 'docs/link.md'))
+    symlinkSync(outside, join(root, 'docs/linkdir'))
+    const previous = process.cwd()
+    process.chdir(root)
+    try {
+      const result = capture(() => runCli(['brief', 'checkout', '--context', 'docs/link.md', '--context', 'docs/linkdir', '--out', 'brief.md']))
+      expect(result.code).toBe(0)
+      const brief = readFileSync(join(root, 'brief.md'), 'utf8')
+      expect(brief).not.toContain('OUTSIDE-CONTENT')
     } finally { process.chdir(previous) }
   })
 

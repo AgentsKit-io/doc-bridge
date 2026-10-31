@@ -1,4 +1,4 @@
-import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync, realpathSync, statSync } from 'node:fs'
 import { join, resolve, sep } from 'node:path'
 
 import { relativePosix, splitLines } from '@agentskit/cross-platform'
@@ -55,13 +55,17 @@ const inside = (root: string, candidate: string): boolean => candidate === root 
 
 const collect = (root: string, requested: readonly string[]): string[] => {
   const files: string[] = []
+  const realRoot = realpathSync(root)
   for (const entry of requested) {
     const absolute = resolve(root, entry)
     if (!inside(root, absolute) || !existsSync(absolute)) continue
+    // A symlink inside the repository must not lead the brief to quote files outside it.
+    if (!inside(realRoot, realpathSync(absolute))) continue
     if (statSync(absolute).isDirectory()) {
       const names = readdirSync(absolute, { recursive: true, withFileTypes: true })
         .filter((item) => item.isFile() && CONTEXT_EXTENSIONS.test(item.name))
         .map((item) => join(item.parentPath, item.name))
+        .filter((file) => inside(realRoot, realpathSync(file)))
         .sort()
       files.push(...names)
     } else files.push(absolute)
