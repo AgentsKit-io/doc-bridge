@@ -1,0 +1,106 @@
+# MVP do doc-bridge (lista aprovada pelo dono em 01/11/2026): lista curta, só o que os produtos consumidores precisam antes de
+# lançar. Não é uma lista de 1.0 nem de 3.0.
+# Decisão do dono: as bibliotecas de base não ganham lista completa; cada uma lista de 5 a 12 itens.
+# Base: um produto consumidor incorpora a Camada 1 (determinística, sem LLM) como serviço: descobre o repositório na
+# base e na cabeça de uma mudança, faz o diff (ChangeSetV1) e propõe correções de docs. O piloto roda sobre três
+# repositórios públicos do ecossistema: doc-bridge, agentskit-chat e agentskit.
+# Fora da lista (um por linha):
+#   - Camada 2 (LLM) e remediação com LLM;
+#   - Obsidian/vault, grafo de conhecimento, studio;
+#   - estudos e benchmark de contexto para agentes (fora o de precisão da Camada 1);
+#   - TypeScript 7 (#409) e otimizações de CI (#434) e de índice (#394);
+#   - cruzamento entre repositórios.
+# Aprovação: approval.digest é o digest desta lista (ak-harness mvp digest / mvp_manifest.py digest); mudou a lista, precisa aprovar de novo.
+version: 1
+product: doc-bridge
+repo: AgentsKit-io/doc-bridge
+source: uso de @agentskit/doc-bridge como motor da Camada 1 num produto consumidor + decisão do dono (lista curta)
+approval:
+  by: EmersonBraun
+  at: "2026-11-01T02:00:00Z"
+  digest: 642bbeb89fbbd913
+requirements:
+- id: RF-01
+  title: Versão publicada com o conserto do ranking
+  done_when: >-
+    O workflow de release (Changesets) fica verde na main e o npm tem uma versão acima de 2.5.1 com o conserto do
+    ranking de busca (#441) e as mudanças pendentes
+  weight: 2
+  acceptance: []
+  homolog: []
+  issues: []
+  prs: []
+- id: RF-02
+  title: Camada 1 de ponta a ponta no perfil de serviço
+  done_when: >-
+    Pela API pública (discoverRepositoryWithRead e diffSnapshotsWithRead com profile service e limites maxFiles,
+    maxBytes e maxTimeMs), um teste descobre a base e a cabeça de um repositório de exemplo e gera o ChangeSetV1 sem
+    git, sem rede e sem executar código do repositório, com segredos redigidos
+  # já pronto em parte: perfil de serviço (ADR 0012) e IO plugável (ADR 0014); falta o teste de ponta a ponta do diff
+  weight: 2
+  acceptance: []
+  homolog: []
+  issues: []
+  prs: []
+- id: RF-03
+  title: Repositório hostil termina em falha explícita
+  done_when: >-
+    Um repositório de teste hostil (arquivo grande demais, config com chaves de execução ou rede, .git forjado,
+    instruções embutidas em docs) roda pelo perfil de serviço e termina em erro tipado ou em cobertura parcial
+    declarada, nunca em sucesso silencioso nem em código executado
+  weight: 2
+  acceptance: []
+  homolog: []
+  issues: []
+  prs: []
+- id: RF-04
+  title: Diff entre dois checkouts sem depender do nome da pasta
+  done_when: >-
+    Quem chama informa a identidade do projeto para a base e a cabeça; o diff funciona com pastas de nomes
+    diferentes e identidades diferentes dão um erro tipado; teste para os dois casos
+  weight: 1
+  acceptance: []
+  homolog: []
+  issues: []
+  prs: []
+- id: RF-05
+  title: Resultado determinístico
+  done_when: >-
+    A mesma base, cabeça e configuração geram o mesmo contentHash do ChangeSetV1 em duas execuções e em Linux e
+    macOS; teste no CI
+  weight: 1
+  acceptance: []
+  homolog: []
+  issues: []
+  prs: []
+- id: RF-06
+  title: Precisão da Camada 1 medida por tipo de achado
+  done_when: >-
+    Um benchmark com mutações sintéticas (remoção e renome de símbolos, flags e chaves) sobre cópias dos três
+    repositórios públicos do piloto publica a precisão por tipo; só os tipos com 95% ou mais ficam marcados como
+    elegíveis para correção automática
+  weight: 2
+  acceptance: []
+  homolog: []
+  issues: []
+  prs: []
+- id: RF-07
+  title: API pública da Camada 1 estável na 2.x
+  done_when: >-
+    Uma checagem no CI falha se defineConfig, discoverRepositoryWithRead, diffSnapshotsWithRead, parseChangeSet ou o
+    esquema ChangeSetV1 mudarem de forma incompatível sem versão major
+  weight: 1
+  acceptance: []
+  homolog: []
+  issues: []
+  prs: []
+- id: RF-08
+  title: Guia para incorporar a Camada 1 num serviço
+  done_when: >-
+    A doc mostra, com exemplo testado no CI, como um serviço roda a Camada 1 no perfil de serviço com limites, lê o
+    ChangeSetV1 e trata cobertura parcial e erros
+  weight: 1
+  acceptance: []
+  homolog: []
+  issues: []
+  prs: []
