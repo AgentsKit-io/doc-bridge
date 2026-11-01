@@ -85,6 +85,18 @@ const totals = results => {
   const fn = passed.flatMap(item => item.score.fn)
   return { tp, fp: fp.length, fn: fn.length, precision: tp + fp.length ? tp / (tp + fp.length) : null, coverage: tp + fn.length ? tp / (tp + fn.length) : null }
 }
+export const AUTO_FIX_PRECISION = 0.95
+export const PILOT_REPOSITORIES = ['doc-bridge', 'chat', 'agentskit']
+/** Precision per finding type over the synthetic mutations of the pilot repositories; only types at or above the threshold are eligible for automatic correction. */
+export const typePrecision = results => {
+  const measured = results.filter(item => item.status === 'measured' && item.origin === 'native' && PILOT_REPOSITORIES.includes(item.repository))
+  const kinds = [...new Set(measured.flatMap(item => [...item.expected, ...item.observed].filter(unit => unit.channel === 'finding').map(unit => unit.kind)))].sort()
+  return kinds.map(kind => {
+    const matches = unit => unit.channel === 'finding' && unit.kind === kind
+    const total = totals(measured.map(item => ({ ...item, score: score(item.expected.filter(matches), item.observed.filter(matches)) })))
+    return { kind, ...total, eligible: total.precision !== null && total.precision >= AUTO_FIX_PRECISION }
+  })
+}
 const cause = (result, unit, label) => {
   if (result.review?.mismatch) return result.review.mismatch
 
@@ -145,6 +157,8 @@ export const renderReport = report => {
       if (kind.endsWith('-overall') || total.tp + total.fp + total.fn) lines.push(`| ${origin}: ${kind} | ${total.tp} | ${total.fp} | ${total.fn} | ${percent(total.precision)} | ${percent(total.coverage)} |`)
     }
   }
+  lines.push('', '## Precision by finding type and auto-fix eligibility', '', `Synthetic mutations (removed and renamed symbols, flags, commands and configuration keys) over the pilot repositories (${PILOT_REPOSITORIES.join(', ')}), default included findings. A type is eligible for automatic correction only at ${percent(AUTO_FIX_PRECISION)} precision or more; a type with no emitted finding is never eligible.`, '', '| Finding type | TP | FP | FN | Precision | Auto-fix eligible |', '| --- | ---: | ---: | ---: | ---: | --- |')
+  for (const row of typePrecision(report.results)) lines.push(`| ${row.kind} | ${row.tp} | ${row.fp} | ${row.fn} | ${percent(row.precision)} | ${row.eligible ? 'yes' : 'no'} |`)
   if (version === 2) {
     lines.push('', '## Historical assertion controls', '', '| Label | Cases | Finding TP | FP | FN |', '| --- | ---: | ---: | ---: | ---: |')
     for (const label of ['positive', 'negative']) {
@@ -183,6 +197,9 @@ async function main() {
     assert.throws(() => assertAcquisition({ entities: [{ kind: 'module' }], coverage: [{ scope: 'limits:source', status: 'partial' }] }), /resource limit/)
     assertAcquisition({ entities: [{ kind: 'module' }], coverage: [] })
     assert.equal(score([], [one]).precision, 0)
+    const mk = (repository, kind, observed) => ({ id: kind + repository, repository, origin: 'native', status: 'measured', expected: [{ ...one, kind }], observed })
+    const rows = typePrecision([mk('doc-bridge', 'BROKEN_REFERENCE', [{ ...one, kind: 'BROKEN_REFERENCE' }]), mk('chat', 'CHANGED_REFERENCE', [{ ...one, kind: 'CHANGED_REFERENCE' }, { ...one, name: 'extra', kind: 'CHANGED_REFERENCE' }]), mk('playbook', 'OTHER', [])])
+    assert.deepEqual(rows.map(row => [row.kind, row.eligible]), [['BROKEN_REFERENCE', true], ['CHANGED_REFERENCE', false]])
     const report = { engineRevision: 'test', engineHash: 'test', caseHash: 'test', historicalCount: 0, historyLimit: 'Not analyzed.', limits: 'Test.', results: [{ id: 'negative', origin: 'native', status: 'measured', expected: [], observed: [], rawObserved: [one], score: score([], []), rawScore: score([], [one]), policy: [{ assertion: { document: one.path, key: one.name }, routing: 'excluded', coverage: [{ reason: 'Historical documentation' }] }] }] }
     const rendered = renderReport(report)
     assert(rendered.includes('| native | 0 | 0 | 1 | 0 |'))
@@ -279,7 +296,7 @@ async function main() {
             : item.scope.facts.some(target => target.kind === unit.kind && target.names.includes(unit.name))
           const rawObserved = observations(raw, base, head).filter(inScope)
           const observed = observations(diff, base, head).filter(inScope)
-          results.push({ id: item.id, origin: item.origin, status: 'measured', expected: item.expected, observed,
+          results.push({ id: item.id, repository: item.repository, origin: item.origin, status: 'measured', expected: item.expected, observed,
             score: score(item.expected, observed), rawObserved, rawExpected: item.rawExpected ?? item.expected, rawScore: score(item.rawExpected ?? item.expected, rawObserved),
             policy: diff.policy.findings.filter(finding => !item.scope.documents.length || item.scope.documents.includes(finding.assertion.document)).map(({ id, routing, assertion, coverage }) => ({ id, routing, assertion, coverage })),
             findingCause: item.findingCause, factCause: item.factCause, review: item.review,
