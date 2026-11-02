@@ -26,10 +26,15 @@ requirements:
     O workflow de release (Changesets) fica verde na main e o npm tem uma versão acima de 2.5.1 com o conserto do
     ranking de busca (#441) e as mudanças pendentes
   weight: 2
-  acceptance: []
-  homolog: []
-  issues: []
-  prs: []
+  acceptance:
+    - tests/retrieval-projection.test.ts > explainable ranking > lets the strongest lexical hits corroborate each other through their relations
+    - tests/retrieval-projection.test.ts > explainable ranking > answers the workflow question within the top three, and says why
+    - tests/bench-retrieval.test.ts > bench CLI > measures the committed suite against the committed baseline and exits zero
+  homolog:
+    - npm @agentskit/doc-bridge@2.6.0 (latest, publicado em 2026-11-02) com o conserto do ranking (#441) no CHANGELOG
+    - workflow "Changesets release" verde na main em f4bd3b0 (#457) e "Release stable package" verde em v2.6.0
+  issues: [445]
+  prs: [441, 454, 457]
 - id: RF-02
   title: Camada 1 de ponta a ponta no perfil de serviço
   done_when: >-
