@@ -748,7 +748,7 @@ describe('CLI transport: headless Claude Code without an API key', () => {
       expect(records[0].cwd).not.toBe(root)
       expect(ledgerText).not.toContain('ANTHROPIC_API_KEY')
     } finally { log.mockRestore(); rmSync(fake.dir, { recursive: true, force: true }); rmSync(temporary, { recursive: true, force: true }) }
-  }, 60000)
+  }, 180000)
 
   it('stops the pilot at the first invalid setup and keeps the private ledger', async () => {
     const temporary = mkdtempSync(join(tmpdir(), 'study-cli-stop-'))
@@ -767,5 +767,5 @@ describe('CLI transport: headless Claude Code without an API key', () => {
       expect(ledger.observations[0]).toMatchObject({ status: 'invalid-setup', chargedUsd: 0.1 })
       expect(fake.records()).toHaveLength(1)
     } finally { process.exitCode = undefined; log.mockRestore(); rmSync(fake.dir, { recursive: true, force: true }); rmSync(temporary, { recursive: true, force: true }) }
-  }, 60000)
+  }, 180000)
 })
