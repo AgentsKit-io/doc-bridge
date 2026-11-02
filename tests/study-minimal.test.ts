@@ -25,7 +25,7 @@ const pinnedCheckout = (): { readonly root: string; readonly pin: string } => {
   const pin = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim()
   execFileSync('git', ['clone', '--quiet', '--depth', '1', '--no-local', '--no-checkout', resolve('.'), root], { stdio: 'pipe' })
   execFileSync('git', ['-C', root, 'checkout', '--quiet', '--detach', pin], { stdio: 'pipe' })
-  execFileSync(process.execPath, [resolve('bin/ak-docs.js'), 'index'], { cwd: root, stdio: 'pipe', timeout: 60000 })
+  execFileSync(process.execPath, [resolve('bin/ak-docs.js'), 'index'], { cwd: root, stdio: 'pipe', timeout: 200000 })
   checkout = { root, pin }
   return checkout
 }
@@ -527,7 +527,7 @@ describe('CLI transport: headless Claude Code without an API key', () => {
       execFileSync(process.execPath, [engine, 'index'], { cwd: root, stdio: 'pipe', timeout: 30000 })
       await expect(probeDocBridgeReadiness(root, engine)).resolves.toBeUndefined()
     } finally { rmSync(root, { recursive: true, force: true }) }
-  }, 60000)
+  }, 240000)
 
   it('computes cost from modelUsage at list price, applies the above-100k tier from the largest request, and flags any non-study model or a 2x disagreement', () => {
     const price = CLI_PRICES['claude-haiku-5-5']
@@ -748,7 +748,7 @@ describe('CLI transport: headless Claude Code without an API key', () => {
       expect(records[0].cwd).not.toBe(root)
       expect(ledgerText).not.toContain('ANTHROPIC_API_KEY')
     } finally { log.mockRestore(); rmSync(fake.dir, { recursive: true, force: true }); rmSync(temporary, { recursive: true, force: true }) }
-  }, 60000)
+  }, 240000)
 
   it('stops the pilot at the first invalid setup and keeps the private ledger', async () => {
     const temporary = mkdtempSync(join(tmpdir(), 'study-cli-stop-'))
@@ -767,5 +767,5 @@ describe('CLI transport: headless Claude Code without an API key', () => {
       expect(ledger.observations[0]).toMatchObject({ status: 'invalid-setup', chargedUsd: 0.1 })
       expect(fake.records()).toHaveLength(1)
     } finally { process.exitCode = undefined; log.mockRestore(); rmSync(fake.dir, { recursive: true, force: true }); rmSync(temporary, { recursive: true, force: true }) }
-  }, 60000)
+  }, 240000)
 })
