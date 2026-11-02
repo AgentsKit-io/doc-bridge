@@ -80,7 +80,8 @@ requirements:
     repositórios públicos do piloto publica a precisão por tipo; só os tipos com 95% ou mais ficam marcados como
     elegíveis para correção automática
   weight: 2
-  acceptance: []
+  acceptance:
+  - "scripts/bench-layer1.mjs (autoteste typePrecision: só tipos com precisão >= 95% (AUTO_FIX_PRECISION) elegíveis; mergeado no PR #455, commit fc39f77)"
   homolog: []
   issues: []
   prs: []
