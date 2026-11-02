@@ -86,7 +86,7 @@ requirements:
     elegíveis para correção automática
   weight: 2
   acceptance:
-  - "scripts/bench-layer1.mjs (autoteste typePrecision: só tipos com precisão >= 95% (AUTO_FIX_PRECISION) elegíveis; mergeado no PR #455, commit fc39f77)"
+  - "docs/bench/layer1-results-v2.md, seção 'Precision by finding type and auto-fix eligibility': precisão medida por tipo sobre os repositórios do piloto (doc-bridge, chat, agentskit) com mutações sintéticas — BROKEN_REFERENCE 7 TP / 0 FP / 0 FN (100,00%) e CHANGED_REFERENCE 4 TP / 0 FP / 0 FN (100,00%), ambos elegíveis (>= 95%, AUTO_FIX_PRECISION); gerado por scripts/bench-layer1.mjs --cases docs/bench/layer1-cases-v2.json (renderer e autoteste typePrecision no PR #455)"
   homolog: []
   issues: []
   prs: []
