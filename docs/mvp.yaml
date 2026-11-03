@@ -64,7 +64,8 @@ requirements:
     Quem chama informa a identidade do projeto para a base e a cabeça; o diff funciona com pastas de nomes
     diferentes e identidades diferentes dão um erro tipado; teste para os dois casos
   weight: 1
-  acceptance: []
+  acceptance:
+    - tests/change-set.test.ts (diffs checkouts in differently named folders when the caller declares the same identity; throws a typed error when the declared identities differ)
   homolog: []
   issues: []
   prs: []
