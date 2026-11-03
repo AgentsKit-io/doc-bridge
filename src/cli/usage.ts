@@ -18,7 +18,7 @@ Core (no API key):
   ak-docs discover [--text|--json]
   ak-docs diff --base <snapshot.json> [--head <snapshot.json>] [--root <dir>] [--output <file>] [--json]   verify frozen local head bytes
   ak-docs benchmark <fixture.json> <observation.json> [--text|--json]
-  ak-docs bench retrieval <suite.json> [--index <file>] [--baseline <file>] [--limit <n>] [--text|--json]
+  ak-docs bench retrieval <suite.json> [--index <file>] [--baseline <file>] [--limit <n>] [--exclude <glob>]... [--text|--json]
   ak-docs bench retrieval <suite.json> --update-baseline --by <name> [--reason <text>]
   ak-docs study protocol <protocol.json> [--text|--json]
   ak-docs study history <registry.json> [--protocol <protocol.json>] [--text|--json]

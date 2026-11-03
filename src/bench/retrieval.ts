@@ -1,4 +1,5 @@
 import { toPosix } from '@agentskit/cross-platform'
+import { minimatch } from 'minimatch'
 import { z } from 'zod'
 
 import { contentHashForArtifactV1, sha256NormalizedV1 } from '../index-builder/content-hash.js'
@@ -140,6 +141,8 @@ export const RetrievalBenchResultV1Schema = z
       .object({
         contentHash: z.string().regex(/^[a-f0-9]{64}$/),
         entryCount: z.number().int().nonnegative(),
+        /** Globs left out of the measured corpus; absent when the whole index is measured. */
+        exclude: z.array(z.string().min(1).max(256)).max(32).optional(),
       })
       .strict(),
     limit: z.number().int().positive().max(1_000),
@@ -239,6 +242,26 @@ export type RunRetrievalBenchOptions = {
   readonly index: DocBridgeIndexV1
   readonly suite: RetrievalSuite
   readonly limit?: number
+  /** Globs over entry paths left out of the measured corpus (`retrieval.benchmark.exclude`). */
+  readonly exclude?: readonly string[]
+}
+
+/**
+ * The index the suite is measured against: every entry whose path no exclusion matches.
+ *
+ * Ranking derives its BM25 corpus statistics (IDF, average field length) from the entries it is
+ * given, so dropping an entry here removes it from those statistics too, not just from the
+ * results. That is the point: a file the suite never asks about, such as a new test, must not
+ * move the files it does ask about.
+ */
+export const benchCorpus = (index: DocBridgeIndexV1, exclude: readonly string[] = []): DocBridgeIndexV1 => {
+  if (!exclude.length) return index
+  const kept = (path: string | undefined): boolean => !path || !exclude.some((pattern) => minimatch(path, pattern, { dot: true }))
+  return {
+    ...index,
+    knowledge: index.knowledge.filter((entry) => kept(entry.path)),
+    ...(index.projection ? { projection: { ...index.projection, entries: index.projection.entries.filter((entry) => kept(entry.path)) } } : {}),
+  }
 }
 
 /**
@@ -250,8 +273,10 @@ export type RunRetrievalBenchOptions = {
  */
 export const runRetrievalBench = (options: RunRetrievalBenchOptions): RetrievalBenchResultV1 => {
   const limit = options.limit ?? DEFAULT_LIMIT
+  const exclude = [...new Set(options.exclude ?? [])].sort()
+  const corpus = benchCorpus(options.index, exclude)
   const outcomes: RetrievalCaseOutcome[] = options.suite.cases.map((entry) => {
-    const matches = searchIndex(options.index, entry.input, limit)
+    const matches = searchIndex(corpus, entry.input, limit)
     const expectedTargets = entry.metadata.expectedTargets.map(normalizeTarget)
     const expected = new Set(expectedTargets)
     const rankedTargets = matches.map((match) => matchTargets(match).join(' '))
@@ -291,7 +316,8 @@ export const runRetrievalBench = (options: RunRetrievalBenchOptions): RetrievalB
     },
     index: {
       contentHash: options.index.contentHash,
-      entryCount: options.index.knowledge.length,
+      entryCount: corpus.knowledge.length,
+      ...(exclude.length ? { exclude } : {}),
     },
     limit,
     metrics: aggregate(outcomes),
@@ -308,7 +334,7 @@ export const formatRetrievalBenchText = (result: RetrievalBenchResultV1): readon
   const misses = result.cases.filter((outcome) => !outcome.hitAt3)
   return [
     `Retrieval benchmark: ${result.suite.name}`,
-    `Cases: ${result.metrics.caseCount} | Index entries: ${result.index.entryCount}`,
+    `Cases: ${result.metrics.caseCount} | Index entries: ${result.index.entryCount}${result.index.exclude ? ` (excluding ${result.index.exclude.join(', ')})` : ''}`,
     `hit@1: ${percent(result.metrics.hitAt1)} | hit@3: ${percent(result.metrics.hitAt3)} | MRR: ${result.metrics.meanReciprocalRank.toFixed(3)}`,
     `Zero results: ${percent(result.metrics.zeroResultRate)} | Mean context: ${result.metrics.meanContextBytes} bytes (~${result.metrics.meanApproxTokens} tokens, approximate)`,
     ...Object.entries(result.byLang).map(([lang, metrics]) => `  ${lang}: hit@3 ${percent(metrics.hitAt3)} over ${metrics.caseCount} case(s)`),

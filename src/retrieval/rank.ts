@@ -1,5 +1,6 @@
 import { foldAccents, hasSearchToken, searchTokens } from '../query/text.js'
 import type { Confidence, RetrievalEdge, RetrievalEntry, RetrievalIndexV1 } from '../schemas/retrieval-index.js'
+import { IMPORT_EDGE_KINDS } from '../graph/build.js'
 import { bm25Idf, buildBm25Index, bm25Search, type Bm25Hit, type Bm25Index } from './bm25.js'
 import { weakerConfidence } from './project.js'
 
@@ -245,10 +246,14 @@ type Prepared = {
   readonly bm25: Bm25Index
   /** Undirected one-hop neighbourhood over documentation and import edges, by entry id. */
   readonly neighbours: ReadonlyMap<string, readonly RetrievalEdge[]>
+  /** The modules each entry imports or re-exports, by entry id: the direction of an import edge. */
+  readonly imports: ReadonlyMap<string, ReadonlySet<string>>
   readonly entryCount: number
   /** The smallest positive PageRank in the index: the share every linked-to-nothing node gets. */
   readonly pagerankFloor: number
 }
+
+const IMPORT_KINDS: ReadonlySet<string> = new Set(IMPORT_EDGE_KINDS)
 
 const prepared = new WeakMap<RetrievalIndexV1, Prepared>()
 
@@ -266,9 +271,16 @@ const prepare = (index: RetrievalIndexV1): Prepared => {
     if (list) list.push(edge)
     else neighbours.set(from, [edge])
   }
+  const imports = new Map<string, Set<string>>()
   for (const entry of index.entries) {
     for (const edge of entry.graph.inbound) link(entry.id, edge)
-    for (const edge of entry.graph.outbound) link(entry.id, edge)
+    for (const edge of entry.graph.outbound) {
+      link(entry.id, edge)
+      if (!IMPORT_KINDS.has(edge.kind)) continue
+      const targets = imports.get(entry.id)
+      if (targets) targets.add(edge.id)
+      else imports.set(entry.id, new Set([edge.id]))
+    }
   }
   let pagerankFloor = Number.POSITIVE_INFINITY
   for (const entry of index.entries) {
@@ -278,6 +290,7 @@ const prepare = (index: RetrievalIndexV1): Prepared => {
     byId: new Map(index.entries.map((entry) => [entry.id, entry])),
     bm25: buildBm25Index(index.entries.map((entry) => ({ ref: entry.id, fields: entry.fields })), index.weights, index.params),
     neighbours,
+    imports,
     entryCount: index.entries.length,
     pagerankFloor: Number.isFinite(pagerankFloor) ? pagerankFloor : 0,
   }
@@ -294,21 +307,41 @@ type Reach = { readonly hops: number; readonly via: RetrievalEdge; readonly anch
  * away. The edge recorded is the one that made the shortest reach, so the explanation names a
  * real relation and the result's confidence can be no better than that relation's.
  *
- * An anchor next to another anchor is reached too, in one hop: two strong hits that import or
- * cite each other corroborate each other. Without it, two hits saturated on the same term tie on
- * BM25 alone, and the tie is decided by the corpus' average field lengths — so a file that matches
- * nothing in the query could reorder them. Two hops are never walked through an anchor: what an
- * anchor is next to is already reached from that anchor directly.
+ * An anchor next to another anchor is reached too, in one hop, never from itself. Excluding every
+ * anchor let a body-only mention next to the best hit outrank the weaker anchors, which matched the
+ * query in their own title or path, by the proximity they were denied; and two hits saturated on
+ * the same term tied on BM25 alone, so a file that matches nothing in the query could reorder them
+ * through the corpus' average field lengths.
+ *
+ * - Over a documentation edge, an anchor is reached from a stronger anchor only: a page that
+ *   covers, mentions or links to what the query found is the place to read about it, and the best
+ *   hit is not lifted by what it points at.
+ * - Over an import, two anchors corroborate each other only when the importer is the stronger: a
+ *   module and the dependency that also matched support each other, but a weaker importer — a
+ *   module's tests first — neither rises above the module the query asked for nor lifts it.
+ *
+ * Two hops are never walked through an anchor: what an anchor is next to is already reached from
+ * that anchor directly.
  */
 const reachable = (ready: Prepared, anchors: readonly Bm25Hit[]): ReadonlyMap<string, Reach> => {
   const reach = new Map<string, Reach>()
   const anchored = new Set(anchors.map((anchor) => anchor.ref))
   const best = anchors[0]?.score ?? 0
   // Anchors are visited strongest first, so the first reach recorded is the strongest one.
+  const strength = new Map(anchors.map((anchor, position) => [anchor.ref, position]))
+  const weakerThan = (id: string, than: string): boolean => (strength.get(id) ?? Infinity) > (strength.get(than) ?? Infinity)
+  const corroborates = (anchor: string, next: RetrievalEdge): boolean => {
+    if (next.id === anchor) return false
+    if (!anchored.has(next.id)) return true
+    if (!IMPORT_KINDS.has(next.kind)) return weakerThan(next.id, anchor)
+    const importer = ready.imports.get(anchor)?.has(next.id) ? anchor : next.id
+    const imported = importer === anchor ? next.id : anchor
+    return weakerThan(imported, importer)
+  }
   for (const anchor of anchors) {
     const anchorShare = best > 0 ? anchor.score / best : 0
     for (const first of ready.neighbours.get(anchor.ref) ?? []) {
-      if (first.id === anchor.ref) continue
+      if (!corroborates(anchor.ref, first)) continue
       const known = reach.get(first.id)
       if (!known || known.hops > 1) reach.set(first.id, { hops: 1, via: { kind: first.kind, id: anchor.ref, confidence: first.confidence }, anchorShare })
       if (anchored.has(first.id)) continue

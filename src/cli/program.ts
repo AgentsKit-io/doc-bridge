@@ -825,7 +825,7 @@ const buildDocumentationAuditReport = (root: string, config: DocBridgeConfigV1) 
 }
 
 const BENCH_USAGE = [
-  'Usage: ak-docs bench retrieval <suite.json> [--index <file>] [--baseline <file>] [--limit <n>] [--text|--json]',
+  'Usage: ak-docs bench retrieval <suite.json> [--index <file>] [--baseline <file>] [--limit <n>] [--exclude <glob>]... [--text|--json]',
   '       ak-docs bench retrieval <suite.json> --baseline <file> --update-baseline --by <name> [--reason <text>]',
 ].join('\n')
 
@@ -848,6 +848,13 @@ const runBenchCommand = (
     if (limit !== undefined && (!Number.isInteger(limit) || limit <= 0)) {
       throw new Error('--limit must be a positive integer.')
     }
+    // `--exclude` adds to `retrieval.benchmark.exclude`: a repository can scope its own gate
+    // without a config key an older pinned release would reject.
+    const exclude = [...(config.retrieval?.benchmark?.exclude ?? []), ...optionValues(argv, '--exclude')]
+    const measured = {
+      ...(limit === undefined ? {} : { limit }),
+      ...(exclude.length ? { exclude } : {}),
+    }
 
     if (flags.has('--overlay')) {
       /*
@@ -864,7 +871,7 @@ const runBenchCommand = (
         try { return parseDiscoverySnapshot(loadWorkflowStepOutput(stateDir, 'normalize')) }
         catch { return discoverRepository({ root, config }) }
       })()
-      const delta = measureOverlayRetrievalDelta({ root, config, snapshot, overlay, suite, ...(limit === undefined ? {} : { limit }) })
+      const delta = measureOverlayRetrievalDelta({ root, config, snapshot, overlay, suite, ...measured })
       if (wantsTextOutput(flags, config)) writeLines(formatOverlayRetrievalDeltaText(delta))
       else writeJson({ ok: !delta.regression, overlayDelta: delta })
       return delta.regression ? 1 : 0
@@ -878,7 +885,7 @@ const runBenchCommand = (
     const result: RetrievalBenchResultV1 = runRetrievalBench({
       index,
       suite,
-      ...(limit === undefined ? {} : { limit }),
+      ...measured,
     })
 
     const baselineOption = optionValues(argv, '--baseline')[0]
