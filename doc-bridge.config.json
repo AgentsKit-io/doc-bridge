@@ -20,7 +20,7 @@
   },
   "safety": {
     "exclude": ["**/.source/**",
-      "**/examples/**", "**/public/raw/**", ".changeset/**", ".impeccable.md", "**/CLAUDE.md"]
+      "**/examples/**", "scripts/verification-harness.mjs", "**/public/raw/**", ".changeset/**", ".impeccable.md", "**/CLAUDE.md"]
   },
   "audit": {
     "documentation": {

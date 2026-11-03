@@ -7,7 +7,13 @@ const HASH = 'a'.repeat(64)
 
 type Edge = { readonly kind: string; readonly id: string }
 
-const entry = (path: string, fields: Partial<RetrievalEntry['fields']>, edges: readonly Edge[], kind: 'document' | 'module' = 'document'): RetrievalEntry => ({
+const entry = (
+  path: string,
+  fields: Partial<RetrievalEntry['fields']>,
+  edges: readonly Edge[],
+  kind: 'document' | 'module' = 'document',
+  inbound: readonly Edge[] = [],
+): RetrievalEntry => ({
   id: `${kind}:${path}`,
   kind,
   path,
@@ -20,7 +26,7 @@ const entry = (path: string, fields: Partial<RetrievalEntry['fields']>, edges: r
     inboundLinks: 0,
     coveredBy: [],
     mentionedBy: [],
-    inbound: [],
+    inbound: inbound.map((edge) => ({ ...edge, confidence: 'observed' as const })),
     outbound: edges.map((edge) => ({ ...edge, confidence: 'observed' as const })),
   },
   contentHash: HASH,
@@ -47,14 +53,19 @@ const projection = (): RetrievalIndexV1 => ({
   params: { k1: 1.2, b: 0.75 },
   lexical: { version: 1, documentCount: 4, fieldNames: [], averageFieldLength: {} },
   entries: [
-    entry('docs/hub.md', { title: 'Widget hub', headings: 'Widget', summary: 'Widget', body: 'widget widget widget' }, [
-      { kind: 'links-to', id: 'document:docs/guides/widget.md' },
-      { kind: 'links-to', id: 'document:docs/mention.md' },
-      { kind: 'imports', id: 'module:tests/widget.test.ts' },
-    ]),
+    entry(
+      'docs/hub.md',
+      { title: 'Widget hub', headings: 'Widget', summary: 'Widget', body: 'widget widget widget' },
+      [
+        { kind: 'links-to', id: 'document:docs/guides/widget.md' },
+        { kind: 'links-to', id: 'document:docs/mention.md' },
+      ],
+      'document',
+      [{ kind: 'imports', id: 'module:tests/widget.test.ts' }],
+    ),
     entry('docs/guides/widget.md', { title: 'Widget guide' }, []),
     entry('docs/mention.md', { title: 'Mention', body: 'a passing widget mention among many other words here' }, []),
-    entry('tests/widget.test.ts', { title: 'widget.test.ts' }, [], 'module'),
+    entry('tests/widget.test.ts', { title: 'widget.test.ts' }, [{ kind: 'imports', id: 'document:docs/hub.md' }], 'module'),
   ],
 })
 

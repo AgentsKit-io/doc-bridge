@@ -109,6 +109,17 @@
 
 - Precompute semantic hash ordering keys once per entry and bound syntax-tree retention for index-only scans and reuse parsed trees in discovery, reducing index-build cost without changing artifact bytes or hash identity.
 
+## 2.6.0
+
+### Minor Changes
+
+- 4faea9d: feat: `ak-docs brief` builds the ticket context brief for a production line (handoffs plus `docs/finalizacao` and `docs/mvp.yaml` context) with a run record of duration and zero model cost.
+
+### Patch Changes
+
+- 6d10241: Add a launch backlog with per-channel angles, drafts, required assets, and staggering rules.
+- 9fba71f: Fix search ranking that an unrelated file could reorder. Graph proximity skipped every one of the ten strongest lexical hits, so two strong hits that import or cite each other got no support from each other and tied at the BM25 saturation ceiling; the tie was then decided by corpus-wide field lengths, and adding a file that matches nothing in the query pushed the answer out of the top three. An anchor one hop from another anchor now earns proximity too. Retrieval benchmark: hit@3 86.7% → 88.3%, hit@1 70.0% → 71.7%, MRR 0.779 → 0.791.
+
 ## 2.5.1
 
 ### Patch Changes

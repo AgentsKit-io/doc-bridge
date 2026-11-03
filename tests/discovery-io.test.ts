@@ -147,7 +147,9 @@ describe('bounded discovery acquisition', () => {
   })
 
   it('matches every on-disk discovery fixture in both modes', async () => {
-    const root = resolve('tests/fixtures/sample-project')
+    // Snapshot the fixture outside the repository so the revision never depends on the checkout's git state (other suites write under tests/fixtures).
+    const root = fs.mkdtempSync(join(tmpdir(), 'doc-bridge-discovery-io-')); roots.push(root)
+    fs.cpSync(resolve('tests/fixtures/sample-project'), root, { recursive: true })
     const cold = discoverRepository({ root })
     const read = memory(root, cold.sourceRevision)
     expect(JSON.stringify(await injected(read, { root, sourceRevisionKind: cold.sourceRevisionKind }))).toBe(JSON.stringify(cold))

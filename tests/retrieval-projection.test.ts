@@ -311,6 +311,23 @@ describe('explainable ranking', () => {
     expect(weakerConfidence('proposed', 'fuzzy')).toBe('proposed')
   })
 
+  it('lets the strongest lexical hits corroborate each other through their relations', () => {
+    const { root, config } = fixture()
+    const projection = projectRetrievalIndex({ snapshot: discoverRepository({ root, config }), config, readDocument: (path) => readFileSync(join(root, path), 'utf8') })
+    // Both modules match the sentence, and `search.ts` imports `bm25.ts`: each is next to the other.
+    const ranked = rankRetrieval(projection, 'how does search rank results', { floor: 0 })
+    const search = ranked.find((item) => item.entry.id === 'module:src/query/search.ts')
+    const ranking = ranked.find((item) => item.entry.id === 'module:src/ranking/bm25.ts')
+
+    expect(search?.explanation.components.lexical).toBeGreaterThan(0)
+    expect(ranking?.explanation.components.lexical).toBeGreaterThan(0)
+    expect(ranking?.explanation.components.graphProximity).toBeGreaterThan(0)
+    expect(ranking?.explanation.surfacedBy).toMatchObject({ kind: 'imports', hops: 1 })
+    expect(search?.explanation.components.graphProximity).toBeGreaterThan(0)
+    // A lexical hit keeps its own confidence, whatever else it is next to.
+    expect(ranking?.confidence).toBe(ranking?.entry.confidence)
+  })
+
   it('still resolves identifiers, paths and non-ASCII text over the projection', () => {
     const { root, config } = fixture()
     write(root, 'docs/autenticacao.md', '# Autenticação\n\nAutenticação e autorização do sistema. 認証と認可の境界を確認する。\n')

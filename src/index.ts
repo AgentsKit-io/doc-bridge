@@ -1058,6 +1058,7 @@ export { readJsonArtifact } from './index-builder/artifact-io.js'
 export { writeJsonArtifact } from './index-builder/artifact-io.js'
 
 /** Compare snapshots using verified head citation bytes from an exact partition. */
+export { ProjectIdentityMismatchError, type DiffProjectIdentity } from './diff/change-set.js'
 export { diffSnapshotsWithRead } from './diff/change-set.js'
 
 /** Encode language-neutral surface and package facts in knowledge entities. */

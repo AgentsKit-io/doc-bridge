@@ -78,6 +78,7 @@ const COMMANDS: readonly CommandSpec[] = [
   ] },
   { name: 'doctor', usage: '[--text] [--badge] [--write-badge]', description: 'Report coverage, gaps, gates, and the badge' },
   { name: 'demo', usage: '[--fixture example|monorepo] [--text] [--in-project]', description: 'Run the bundled walk-through: handoff, gate red to green, MCP snippet' },
+  { name: 'brief', usage: '<ticket text> | --ticket-file <file> [--context <path>]... [--out <file>] [--record <file>]', description: 'Build the context brief a production line attaches to an agent ticket' },
   { name: 'query', usage: '[package|ownership|intent|change] <id> [--agent] [--text] [--no-refresh]', description: 'Resolve a package, area, intent, or change to a handoff' },
   { name: 'search', usage: '<term> [--agent] [--explain] [--mode=<mode>] [--context-budget=<tokens>] [--text] [--no-refresh]', description: 'Ranked search over the retrieval projection' },
   { name: 'retrieve', usage: '<query>', description: 'Hybrid local and federated retrieval chunks' },

@@ -103,3 +103,14 @@ automatically correct, and an unchanged example that still accepts a compatible
 API is not automatically stale. Unsupported citation syntax/extraction remains
 visible as an FN. Every remaining FP/FN must be explained against source and
 document evidence; gold cannot be rewritten to fit the engine.
+
+## Precision by finding type and auto-fix eligibility
+
+The rendered results include a table of precision per finding type (for example
+`BROKEN_REFERENCE`, `CHANGED_REFERENCE`) over the native synthetic mutations
+(removed and renamed symbols, flags, commands and configuration keys) of the three
+public pilot repositories (`doc-bridge`, `chat`, `agentskit`), scoring default
+included findings. Only a type with precision of 95% or more (`AUTO_FIX_PRECISION`
+in the runner) is marked `Auto-fix eligible: yes`; a type that emitted no finding is
+never eligible. Fixture-backed and historical cases do not count towards
+eligibility. Regenerate the table with the v2 command above.
