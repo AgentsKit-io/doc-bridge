@@ -1,0 +1,527 @@
+{
+  "major": 2,
+  "signatures": {
+    "defineConfig": [
+      "(config: { schemaVersion: 1; corpus: { agent: { root: string; index?: string | undefined; include?: string[] | undefined; exclude?: string[] | undefined; okf?: { requireType?: boolean | undefined; allowedTypes?: string[] | undefined; } | undefined; }; human?: { plugin: \"custom\" | \"plain-markdown\" | \"obsidian\" | \"fumadocs\" | \"docusaurus\" | \"mkdocs\" | \"vitepress\" | \"starlight\" | \"nextra\"; options?: Record<string, unknown> | undefined; } | { plugin: \"custom\" | \"plain-markdown\" | \"obsidian\" | \"fumadocs\" | \"docusaurus\" | \"mkdocs\" | \"vitepress\" | \"starlight\" | \"nextra\"; options?: Record<string, unknown> | undefined; }[] | undefined; }; project?: { name?: string | undefined; root?: string | undefined; } | undefined; index?: { outFile?: string | undefined; knowledgeEntities?: { enabled?: boolean | undefined; maxCommits?: number | undefined; sinceTag?: string | undefined; } | undefined; llmsTxt?: { enabled?: boolean | undefined; outFile?: string | undefined; preamble?: string | undefined; urlPrefix?: string | undefined; pathPrefix?: string | undefined; } | undefined; capabilities?: { enabled?: boolean | undefined; outFile?: string | undefined; } | undefined; contentHash?: \"sha256-semantic-v1\" | undefined; } | undefined; routing?: { plugin?: \"custom\" | \"pnpm-monorepo\" | \"npm-workspaces\" | \"yarn-workspaces\" | \"nx\" | \"pattern-files\" | undefined; options?: { packages?: string[] | undefined; ownershipFromCorpus?: boolean | undefined; ownership?: Record<string, { path: string; group?: string | undefined; layer?: string | undefined; purpose?: string | undefined; checks?: string[] | undefined; agentDoc?: string | undefined; humanDoc?: string | undefined; }> | undefined; intents?: { id: string; title: string; paths: string[]; }[] | undefined; changes?: { id: string; title: string; startHere: string; relatedPackages?: string[] | undefined; }[] | undefined; } | undefined; } | undefined; gates?: { preset?: \"minimal\" | \"standard\" | \"strict\" | \"playbook\" | undefined; include?: (\"index-freshness\" | \"index-reproducible\" | \"human-guide-links\" | \"link-rot\" | \"okf-type\" | \"docs-style\" | \"routing-currency\" | \"bootstrap-size\" | \"documentation-standard-v1\" | \"reference-findings\")[] | undefined; exclude?: (\"index-freshness\" | \"index-reproducible\" | \"human-guide-links\" | \"link-rot\" | \"okf-type\" | \"docs-style\" | \"routing-currency\" | \"bootstrap-size\" | \"documentation-standard-v1\" | \"reference-findings\")[] | undefined; options?: Record<string, unknown> | undefined; referenceFindings?: { base?: string | undefined; } | undefined; } | undefined; reconciliation?: { scope?: \"file\" | \"module\" | \"area\" | \"package\" | undefined; requiredRelationKinds?: string[] | undefined; requiredRelationTargets?: \"all\" | \"internal\" | undefined; includeOrphanedDocuments?: boolean | undefined; } | undefined; audit?: { documentation?: { criticalPaths?: string[] | undefined; generatedPaths?: string[] | undefined; exclude?: string[] | undefined; minWords?: number | undefined; requiredSections?: string[] | undefined; requireExamples?: boolean | undefined; exactDuplicates?: boolean | undefined; defaultTier?: \"tier-0\" | \"tier-1\" | \"tier-2\" | undefined; tierRules?: { pattern: string; tier: \"tier-0\" | \"tier-1\" | \"tier-2\"; critical?: boolean | undefined; }[] | undefined; requiredCriticalMetadata?: (\"owner\" | \"lifecycle\" | \"sourceOfTruth\" | \"validationPath\")[] | undefined; } | undefined; } | undefined; analysis?: { plugins?: { id: string; enabled?: boolean | undefined; order?: number | undefined; options?: Record<string, unknown> | undefined; reason?: string | undefined; }[] | undefined; jsTs?: { runtimeWiringMethods?: string[] | undefined; runtimeWiringAdapters?: { id: string; methods: string[]; }[] | undefined; includeTestRuntimeWiring?: boolean | undefined; } | undefined; areas?: { depth?: number | undefined; roots?: string[] | undefined; exclude?: string[] | undefined; } | undefined; documents?: { exclude?: { pattern: string; reason: string; }[] | undefined; } | undefined; } | undefined; rules?: { mode?: \"default\" | \"strict\" | \"recommended\" | undefined; severity?: Partial<Record<\"ownership\" | \"documentation-quality\" | \"graph-undocumented-relation\" | \"declared-unobserved-relation\" | \"unresolved-reference\" | \"conflicting-declaration\" | \"not-analyzed-coverage\" | \"stale-documentation\" | \"centrality-risk\" | \"critical-path-risk\" | \"freshness\", \"error\" | \"off\" | \"info\" | \"warn\">> | undefined; ignore?: (\"ownership\" | \"documentation-quality\" | \"graph-undocumented-relation\" | \"declared-unobserved-relation\" | \"unresolved-reference\" | \"conflicting-declaration\" | \"not-analyzed-coverage\" | \"stale-documentation\" | \"centrality-risk\" | \"critical-path-risk\" | \"freshness\")[] | undefined; criticalEntities?: string[] | undefined; criticalPaths?: string[] | undefined; warningThresholds?: Partial<Record<\"ownership\" | \"documentation-quality\" | \"graph-undocumented-relation\" | \"declared-unobserved-relation\" | \"unresolved-reference\" | \"conflicting-declaration\" | \"not-analyzed-coverage\" | \"stale-documentation\" | \"centrality-risk\" | \"critical-path-risk\" | \"freshness\", number>> | undefined; } | undefined; workflow?: { stateDir?: string | undefined; } | undefined; safety?: { exclude?: string[] | undefined; maxFiles?: number | undefined; maxBytes?: number | undefined; maxTimeMs?: number | undefined; maxMemoryMb?: number | undefined; redactSecrets?: boolean | undefined; } | undefined; report?: { privacy?: \"private\" | \"anonymized\" | undefined; } | undefined; surfaces?: { cli?: { bin?: string | undefined; defaultFormat?: \"json\" | \"text\" | undefined; } | undefined; mcp?: { enabled?: boolean | undefined; tools?: (\"handoff.resolve\" | \"doc.search\" | \"doc.get\" | \"gate.status\" | \"playbook.pattern.get\" | \"retriever.query\" | \"memory.classify\" | \"memory.promoteDraft\" | \"registry.topology\" | \"docbridge.snapshot\" | \"docbridge.report\" | \"docbridge.diagnostics\" | \"docbridge.relations\" | \"docbridge.run\" | \"docbridge.proposals\" | \"knowledge.search\" | \"knowledge.lookup\" | \"knowledge.decision\" | \"knowledge.concept\" | \"knowledge.whyChanged\")[] | undefined; transport?: \"stdio\" | \"http\" | undefined; http?: { port?: number | undefined; path?: string | undefined; } | undefined; } | undefined; } | undefined; intelligence?: { enabled?: boolean | undefined; adapter?: { provider: \"custom\" | \"openai\" | \"anthropic\" | \"ollama\" | \"openrouter\"; model?: string | undefined; apiKeyEnv?: string | undefined; baseUrl?: string | undefined; options?: Record<string, unknown> | undefined; } | undefined; chat?: { enabled?: boolean | undefined; sources?: (\"agent\" | \"human\" | \"federation\")[] | undefined; handoffFirst?: boolean | undefined; } | undefined; retriever?: { enabled?: boolean | undefined; mode?: \"local\" | \"remote\" | \"bm25\" | \"agentskit-rag\" | undefined; embedModel?: string | undefined; chunkSize?: number | undefined; options?: Record<string, unknown> | undefined; } | undefined; memory?: { enabled?: boolean | undefined; adapters?: (\"playbook-memory\" | \"cursor-rules\")[] | undefined; ingestDir?: string | string[] | undefined; rulesDir?: string | string[] | undefined; classify?: boolean | undefined; promote?: { enabled?: boolean | undefined; targets?: (\"agent\" | \"human\" | \"agents-md\")[] | undefined; requireApproval?: boolean | undefined; } | undefined; } | undefined; runtime?: \"custom\" | \"agentskit\" | undefined; runtimeModule?: string | undefined; registry?: { enabled?: boolean | undefined; agentId?: string | undefined; agentRoot?: string | undefined; runnerModule?: string | undefined; cli?: { command: string; args?: string[] | undefined; } | undefined; deterministic?: boolean | undefined; timeoutMs?: number | undefined; maxInputBytes?: number | undefined; maxTokens?: number | undefined; maxResponseBytes?: number | undefined; maxConcurrency?: number | undefined; maxPackBytes?: number | undefined; roles?: { curator?: { enabled?: boolean | undefined; agentId?: string | undefined; promptVersion?: string | undefined; } | undefined; reviewer?: { enabled?: boolean | undefined; agentId?: string | undefined; promptVersion?: string | undefined; } | undefined; adjudicator?: { enabled?: boolean | undefined; agentId?: string | undefined; promptVersion?: string | undefined; } | undefined; } | undefined; } | undefined; } | undefined; federation?: { enabled?: boolean | undefined; sources?: { id: string; llmsTxt?: string | undefined; rawBaseUrl?: string | undefined; includeInRetriever?: boolean | undefined; includeInChat?: boolean | undefined; }[] | undefined; } | undefined; conformance?: { documentationStandardV1?: { rawSources?: string[] | undefined; contributionPaths?: string[] | undefined; metadata?: { path: string; contains: string[]; }[] | undefined; links?: { url: string; paths: string[]; }[] | undefined; quickstarts?: { id: string; doc: string; test: string; command: string; testContains: string[]; }[] | undefined; visuals?: string[] | undefined; diagrams?: { path: string; contains: string[]; }[] | undefined; ecosystemContract?: { manifest: string; claims: string; productId: string; } | undefined; exceptions?: { ruleId: \"metadata\" | \"human-docs\" | \"llms-and-raw-source\" | \"agent-handoffs\" | \"contribution\" | \"cross-links\" | \"tested-quickstarts\" | \"visual-explanations\" | \"structured-diagrams\"; reason: string; approvedBy: string; trackingUrl: string; }[] | undefined; } | undefined; } | undefined; retrieval?: { corpus?: { enabled?: boolean | undefined; } | undefined; weights?: Record<string, number> | undefined; params?: { k1?: number | undefined; b?: number | undefined; } | undefined; benchmark?: { suite?: string | undefined; } | undefined; } | undefined; render?: { templates?: Partial<Record<\"ownership\" | \"area\" | \"llms.txt\" | \"change-digest\" | \"overlay-review\", string>> | undefined; } | undefined; vault?: { output?: string | undefined; humanNotes?: string | undefined; templates?: Record<string, string> | undefined; fileNames?: \"hash\" | \"readable\" | undefined; indexBacklinks?: boolean | undefined; findings?: boolean | undefined; obsidian?: boolean | undefined; content?: \"links\" | \"summary\" | undefined; exclude?: string[] | undefined; } | undefined; }): { schemaVersion: 1; corpus: { agent: { root: string; index?: string | undefined; include?: string[] | undefined; exclude?: string[] | undefined; okf?: { requireType?: boolean | undefined; allowedTypes?: string[] | undefined; } | undefined; }; human?: { plugin: \"custom\" | \"plain-markdown\" | \"obsidian\" | \"fumadocs\" | \"docusaurus\" | \"mkdocs\" | \"vitepress\" | \"starlight\" | \"nextra\"; options?: Record<string, unknown> | undefined; } | { plugin: \"custom\" | \"plain-markdown\" | \"obsidian\" | \"fumadocs\" | \"docusaurus\" | \"mkdocs\" | \"vitepress\" | \"starlight\" | \"nextra\"; options?: Record<string, unknown> | undefined; }[] | undefined; }; project?: { name?: string | undefined; root?: string | undefined; } | undefined; index?: { outFile?: string | undefined; knowledgeEntities?: { enabled?: boolean | undefined; maxCommits?: number | undefined; sinceTag?: string | undefined; } | undefined; llmsTxt?: { enabled?: boolean | undefined; outFile?: string | undefined; preamble?: string | undefined; urlPrefix?: string | undefined; pathPrefix?: string | undefined; } | undefined; capabilities?: { enabled?: boolean | undefined; outFile?: string | undefined; } | undefined; contentHash?: \"sha256-semantic-v1\" | undefined; } | undefined; routing?: { plugin?: \"custom\" | \"pnpm-monorepo\" | \"npm-workspaces\" | \"yarn-workspaces\" | \"nx\" | \"pattern-files\" | undefined; options?: { packages?: string[] | undefined; ownershipFromCorpus?: boolean | undefined; ownership?: Record<string, { path: string; group?: string | undefined; layer?: string | undefined; purpose?: string | undefined; checks?: string[] | undefined; agentDoc?: string | undefined; humanDoc?: string | undefined; }> | undefined; intents?: { id: string; title: string; paths: string[]; }[] | undefined; changes?: { id: string; title: string; startHere: string; relatedPackages?: string[] | undefined; }[] | undefined; } | undefined; } | undefined; gates?: { preset?: \"minimal\" | \"standard\" | \"strict\" | \"playbook\" | undefined; include?: (\"index-freshness\" | \"index-reproducible\" | \"human-guide-links\" | \"link-rot\" | \"okf-type\" | \"docs-style\" | \"routing-currency\" | \"bootstrap-size\" | \"documentation-standard-v1\" | \"reference-findings\")[] | undefined; exclude?: (\"index-freshness\" | \"index-reproducible\" | \"human-guide-links\" | \"link-rot\" | \"okf-type\" | \"docs-style\" | \"routing-currency\" | \"bootstrap-size\" | \"documentation-standard-v1\" | \"reference-findings\")[] | undefined; options?: Record<string, unknown> | undefined; referenceFindings?: { base?: string | undefined; } | undefined; } | undefined; reconciliation?: { scope?: \"file\" | \"module\" | \"area\" | \"package\" | undefined; requiredRelationKinds?: string[] | undefined; requiredRelationTargets?: \"all\" | \"internal\" | undefined; includeOrphanedDocuments?: boolean | undefined; } | undefined; audit?: { documentation?: { criticalPaths?: string[] | undefined; generatedPaths?: string[] | undefined; exclude?: string[] | undefined; minWords?: number | undefined; requiredSections?: string[] | undefined; requireExamples?: boolean | undefined; exactDuplicates?: boolean | undefined; defaultTier?: \"tier-0\" | \"tier-1\" | \"tier-2\" | undefined; tierRules?: { pattern: string; tier: \"tier-0\" | \"tier-1\" | \"tier-2\"; critical?: boolean | undefined; }[] | undefined; requiredCriticalMetadata?: (\"owner\" | \"lifecycle\" | \"sourceOfTruth\" | \"validationPath\")[] | undefined; } | undefined; } | undefined; analysis?: { plugins?: { id: string; enabled?: boolean | undefined; order?: number | undefined; options?: Record<string, unknown> | undefined; reason?: string | undefined; }[] | undefined; jsTs?: { runtimeWiringMethods?: string[] | undefined; runtimeWiringAdapters?: { id: string; methods: string[]; }[] | undefined; includeTestRuntimeWiring?: boolean | undefined; } | undefined; areas?: { depth?: number | undefined; roots?: string[] | undefined; exclude?: string[] | undefined; } | undefined; documents?: { exclude?: { pattern: string; reason: string; }[] | undefined; } | undefined; } | undefined; rules?: { mode?: \"default\" | \"strict\" | \"recommended\" | undefined; severity?: Partial<Record<\"ownership\" | \"documentation-quality\" | \"graph-undocumented-relation\" | \"declared-unobserved-relation\" | \"unresolved-reference\" | \"conflicting-declaration\" | \"not-analyzed-coverage\" | \"stale-documentation\" | \"centrality-risk\" | \"critical-path-risk\" | \"freshness\", \"error\" | \"off\" | \"info\" | \"warn\">> | undefined; ignore?: (\"ownership\" | \"documentation-quality\" | \"graph-undocumented-relation\" | \"declared-unobserved-relation\" | \"unresolved-reference\" | \"conflicting-declaration\" | \"not-analyzed-coverage\" | \"stale-documentation\" | \"centrality-risk\" | \"critical-path-risk\" | \"freshness\")[] | undefined; criticalEntities?: string[] | undefined; criticalPaths?: string[] | undefined; warningThresholds?: Partial<Record<\"ownership\" | \"documentation-quality\" | \"graph-undocumented-relation\" | \"declared-unobserved-relation\" | \"unresolved-reference\" | \"conflicting-declaration\" | \"not-analyzed-coverage\" | \"stale-documentation\" | \"centrality-risk\" | \"critical-path-risk\" | \"freshness\", number>> | undefined; } | undefined; workflow?: { stateDir?: string | undefined; } | undefined; safety?: { exclude?: string[] | undefined; maxFiles?: number | undefined; maxBytes?: number | undefined; maxTimeMs?: number | undefined; maxMemoryMb?: number | undefined; redactSecrets?: boolean | undefined; } | undefined; report?: { privacy?: \"private\" | \"anonymized\" | undefined; } | undefined; surfaces?: { cli?: { bin?: string | undefined; defaultFormat?: \"json\" | \"text\" | undefined; } | undefined; mcp?: { enabled?: boolean | undefined; tools?: (\"handoff.resolve\" | \"doc.search\" | \"doc.get\" | \"gate.status\" | \"playbook.pattern.get\" | \"retriever.query\" | \"memory.classify\" | \"memory.promoteDraft\" | \"registry.topology\" | \"docbridge.snapshot\" | \"docbridge.report\" | \"docbridge.diagnostics\" | \"docbridge.relations\" | \"docbridge.run\" | \"docbridge.proposals\" | \"knowledge.search\" | \"knowledge.lookup\" | \"knowledge.decision\" | \"knowledge.concept\" | \"knowledge.whyChanged\")[] | undefined; transport?: \"stdio\" | \"http\" | undefined; http?: { port?: number | undefined; path?: string | undefined; } | undefined; } | undefined; } | undefined; intelligence?: { enabled?: boolean | undefined; adapter?: { provider: \"custom\" | \"openai\" | \"anthropic\" | \"ollama\" | \"openrouter\"; model?: string | undefined; apiKeyEnv?: string | undefined; baseUrl?: string | undefined; options?: Record<string, unknown> | undefined; } | undefined; chat?: { enabled?: boolean | undefined; sources?: (\"agent\" | \"human\" | \"federation\")[] | undefined; handoffFirst?: boolean | undefined; } | undefined; retriever?: { enabled?: boolean | undefined; mode?: \"local\" | \"remote\" | \"bm25\" | \"agentskit-rag\" | undefined; embedModel?: string | undefined; chunkSize?: number | undefined; options?: Record<string, unknown> | undefined; } | undefined; memory?: { enabled?: boolean | undefined; adapters?: (\"playbook-memory\" | \"cursor-rules\")[] | undefined; ingestDir?: string | string[] | undefined; rulesDir?: string | string[] | undefined; classify?: boolean | undefined; promote?: { enabled?: boolean | undefined; targets?: (\"agent\" | \"human\" | \"agents-md\")[] | undefined; requireApproval?: boolean | undefined; } | undefined; } | undefined; runtime?: \"custom\" | \"agentskit\" | undefined; runtimeModule?: string | undefined; registry?: { enabled?: boolean | undefined; agentId?: string | undefined; agentRoot?: string | undefined; runnerModule?: string | undefined; cli?: { command: string; args?: string[] | undefined; } | undefined; deterministic?: boolean | undefined; timeoutMs?: number | undefined; maxInputBytes?: number | undefined; maxTokens?: number | undefined; maxResponseBytes?: number | undefined; maxConcurrency?: number | undefined; maxPackBytes?: number | undefined; roles?: { curator?: { enabled?: boolean | undefined; agentId?: string | undefined; promptVersion?: string | undefined; } | undefined; reviewer?: { enabled?: boolean | undefined; agentId?: string | undefined; promptVersion?: string | undefined; } | undefined; adjudicator?: { enabled?: boolean | undefined; agentId?: string | undefined; promptVersion?: string | undefined; } | undefined; } | undefined; } | undefined; } | undefined; federation?: { enabled?: boolean | undefined; sources?: { id: string; llmsTxt?: string | undefined; rawBaseUrl?: string | undefined; includeInRetriever?: boolean | undefined; includeInChat?: boolean | undefined; }[] | undefined; } | undefined; conformance?: { documentationStandardV1?: { rawSources?: string[] | undefined; contributionPaths?: string[] | undefined; metadata?: { path: string; contains: string[]; }[] | undefined; links?: { url: string; paths: string[]; }[] | undefined; quickstarts?: { id: string; doc: string; test: string; command: string; testContains: string[]; }[] | undefined; visuals?: string[] | undefined; diagrams?: { path: string; contains: string[]; }[] | undefined; ecosystemContract?: { manifest: string; claims: string; productId: string; } | undefined; exceptions?: { ruleId: \"metadata\" | \"human-docs\" | \"llms-and-raw-source\" | \"agent-handoffs\" | \"contribution\" | \"cross-links\" | \"tested-quickstarts\" | \"visual-explanations\" | \"structured-diagrams\"; reason: string; approvedBy: string; trackingUrl: string; }[] | undefined; } | undefined; } | undefined; retrieval?: { corpus?: { enabled?: boolean | undefined; } | undefined; weights?: Record<string, number> | undefined; params?: { k1?: number | undefined; b?: number | undefined; } | undefined; benchmark?: { suite?: string | undefined; } | undefined; } | undefined; render?: { templates?: Partial<Record<\"ownership\" | \"area\" | \"llms.txt\" | \"change-digest\" | \"overlay-review\", string>> | undefined; } | undefined; vault?: { output?: string | undefined; humanNotes?: string | undefined; templates?: Record<string, string> | undefined; fileNames?: \"hash\" | \"readable\" | undefined; indexBacklinks?: boolean | undefined; findings?: boolean | undefined; obsidian?: boolean | undefined; content?: \"links\" | \"summary\" | undefined; exclude?: string[] | undefined; } | undefined; }"
+    ],
+    "discoverRepositoryWithRead": [
+      "(read: RepositoryReadV1, opts?: DiscoveryReadOptions): Promise<Readonly<{ snapshot: { contentHashAlgo: \"sha256-semantic-v1\" | \"sha256-normalized-v1\"; entities: { id: string; kind: string; name: string; provenance: \"observed\" | \"declared\" | \"proposed\"; evidence: { source: \"agent\" | \"documentation\" | \"code\" | \"configuration\" | \"derived\"; path: string; lineStart?: number | undefined; lineEnd?: number | undefined; contentHash?: string | undefined; context?: string | undefined; }[]; path?: string | undefined; aliases?: string[] | undefined; metadata?: Record<string, unknown> | undefined; }[]; relations: { id: string; kind: string; from: string; to: string; provenance: \"observed\" | \"declared\" | \"proposed\"; evidence: { source: \"agent\" | \"documentation\" | \"code\" | \"configuration\" | \"derived\"; path: string; lineStart?: number | undefined; lineEnd?: number | undefined; contentHash?: string | undefined; context?: string | undefined; }[]; discriminator?: string | undefined; metadata?: Record<string, unknown> | undefined; }[]; coverage: { analyzer: string; scope: string; status: \"complete\" | \"partial\" | \"not-analyzed\" | \"not-applicable\"; analyzerVersion?: string | undefined; reason?: string | undefined; evidence?: { source: \"agent\" | \"documentation\" | \"code\" | \"configuration\" | \"derived\"; path: string; lineStart?: number | undefined; lineEnd?: number | undefined; contentHash?: string | undefined; context?: string | undefined; }[] | undefined; }[]; schemaVersion: 1; contentHash: string; project: { name: string; root?: string | undefined; }; sourceRevision: string; sourceRevisionKind: \"content\" | \"git\"; configurationHash: string; pipelineVersion: string; analyzerVersions: Record<string, string>; type: \"discovery-snapshot\"; }; status?: \"partial\" | \"cancelled\" | undefined; metrics?: Readonly<{ durationMs: number; stages: Readonly<Record<string, number>>; filesRead: number; bytesRead: number; peakHeapBytes: number; }> | undefined; binding: Readonly<{ partition: Readonly<{ repositoryId: string; revision: string; }>; snapshotHash: string; visibilityPolicyHash: string; }>; }>>"
+    ],
+    "diffSnapshotsWithRead": [
+      "(base: { contentHashAlgo: \"sha256-semantic-v1\" | \"sha256-normalized-v1\"; entities: { id: string; kind: string; name: string; provenance: \"observed\" | \"declared\" | \"proposed\"; evidence: { source: \"agent\" | \"documentation\" | \"code\" | \"configuration\" | \"derived\"; path: string; lineStart?: number | undefined; lineEnd?: number | undefined; contentHash?: string | undefined; context?: string | undefined; }[]; path?: string | undefined; aliases?: string[] | undefined; metadata?: Record<string, unknown> | undefined; }[]; relations: { id: string; kind: string; from: string; to: string; provenance: \"observed\" | \"declared\" | \"proposed\"; evidence: { source: \"agent\" | \"documentation\" | \"code\" | \"configuration\" | \"derived\"; path: string; lineStart?: number | undefined; lineEnd?: number | undefined; contentHash?: string | undefined; context?: string | undefined; }[]; discriminator?: string | undefined; metadata?: Record<string, unknown> | undefined; }[]; coverage: { analyzer: string; scope: string; status: \"complete\" | \"partial\" | \"not-analyzed\" | \"not-applicable\"; analyzerVersion?: string | undefined; reason?: string | undefined; evidence?: { source: \"agent\" | \"documentation\" | \"code\" | \"configuration\" | \"derived\"; path: string; lineStart?: number | undefined; lineEnd?: number | undefined; contentHash?: string | undefined; context?: string | undefined; }[] | undefined; }[]; schemaVersion: 1; contentHash: string; project: { name: string; root?: string | undefined; }; sourceRevision: string; sourceRevisionKind: \"content\" | \"git\"; configurationHash: string; pipelineVersion: string; analyzerVersions: Record<string, string>; type: \"discovery-snapshot\"; }, head: { contentHashAlgo: \"sha256-semantic-v1\" | \"sha256-normalized-v1\"; entities: { id: string; kind: string; name: string; provenance: \"observed\" | \"declared\" | \"proposed\"; evidence: { source: \"agent\" | \"documentation\" | \"code\" | \"configuration\" | \"derived\"; path: string; lineStart?: number | undefined; lineEnd?: number | undefined; contentHash?: string | undefined; context?: string | undefined; }[]; path?: string | undefined; aliases?: string[] | undefined; metadata?: Record<string, unknown> | undefined; }[]; relations: { id: string; kind: string; from: string; to: string; provenance: \"observed\" | \"declared\" | \"proposed\"; evidence: { source: \"agent\" | \"documentation\" | \"code\" | \"configuration\" | \"derived\"; path: string; lineStart?: number | undefined; lineEnd?: number | undefined; contentHash?: string | undefined; context?: string | undefined; }[]; discriminator?: string | undefined; metadata?: Record<string, unknown> | undefined; }[]; coverage: { analyzer: string; scope: string; status: \"complete\" | \"partial\" | \"not-analyzed\" | \"not-applicable\"; analyzerVersion?: string | undefined; reason?: string | undefined; evidence?: { source: \"agent\" | \"documentation\" | \"code\" | \"configuration\" | \"derived\"; path: string; lineStart?: number | undefined; lineEnd?: number | undefined; contentHash?: string | undefined; context?: string | undefined; }[] | undefined; }[]; schemaVersion: 1; contentHash: string; project: { name: string; root?: string | undefined; }; sourceRevision: string; sourceRevisionKind: \"content\" | \"git\"; configurationHash: string; pipelineVersion: string; analyzerVersions: Record<string, string>; type: \"discovery-snapshot\"; }, read: RepositoryReadV1, options?: Readonly<{ collectMetrics?: boolean | undefined; signal?: AbortSignal | undefined; limits?: Partial<Readonly<{ maxFiles: number; maxBytes: number; maxFileBytes: number; maxTimeMs: number; maxMemoryMb: number; }>> | undefined; maxDurationMs?: number | undefined; onProgress?: ((event: Readonly<{ stage: string; processed: number; total?: number | undefined; elapsedMs: number; }>) => void) | undefined; }> & Omit<DiffOptions, \"headRoot\"> & { profile?: ExecutionProfile | undefined; }): Promise<{ metrics?: Readonly<{ durationMs: number; stages: Readonly<Record<string, number>>; filesRead: number; bytesRead: number; peakHeapBytes: number; }> | undefined; status?: \"partial\" | \"cancelled\" | undefined; changeSet: { type: \"change-set\"; schemaVersion: 1; repository: { name: string; root?: string | undefined; }; analysis: { base: { configurationHash: string; pipelineVersion: string; analyzerVersions: Record<string, string>; }; head: { configurationHash: string; pipelineVersion: string; analyzerVersions: Record<string, string>; }; }; baseRevision: string; headRevision: string; release: { state: \"unreleased\"; } | { state: \"released\"; version: string; eventId: string; purl: string; }; packages: { id: string; purl: string; version?: string | undefined; }[]; contentHash: string; contentHashAlgo: \"sha256-semantic-v1\"; coverage: { analyzer: string; scope: string; status: \"complete\" | \"partial\" | \"not-analyzed\" | \"not-applicable\"; analyzerVersion?: string | undefined; reason?: string | undefined; evidence?: { source: \"agent\" | \"documentation\" | \"code\" | \"configuration\" | \"derived\"; path: string; lineStart?: number | undefined; lineEnd?: number | undefined; contentHash?: string | undefined; context?: string | undefined; }[] | undefined; }[]; changes: { kind: \"symbol\" | \"module\" | \"package\" | \"doc-path\" | \"cli-command\" | \"cli-flag\" | \"config-key\" | \"signature\"; op: \"added\" | \"removed\" | \"renamed\" | \"changed\"; compatibility?: \"compatible\" | undefined; before?: { id: string; name: string; evidence: { source: \"agent\" | \"documentation\" | \"code\" | \"configuration\" | \"derived\"; path: string; lineStart?: number | undefined; lineEnd?: number | undefined; contentHash?: string | undefined; context?: string | undefined; }[]; ownerId?: string | undefined; valueHash?: string | undefined; } | undefined; after?: { id: string; name: string; evidence: { source: \"agent\" | \"documentation\" | \"code\" | \"configuration\" | \"derived\"; path: string; lineStart?: number | undefined; lineEnd?: number | undefined; contentHash?: string | undefined; context?: string | undefined; }[]; ownerId?: string | undefined; valueHash?: string | undefined; } | undefined; }[]; branch?: string | undefined; }; impact: ChangeImpact; findings: { id: string; code: string; status: \"not-analyzed\" | \"confirmed\" | \"undocumented\" | \"stale-or-unverified\" | \"conflict\" | \"unresolved\"; severity: \"error\" | \"off\" | \"info\" | \"warn\"; message: string; evidence: { source: \"agent\" | \"documentation\" | \"code\" | \"configuration\" | \"derived\"; path: string; lineStart?: number | undefined; lineEnd?: number | undefined; contentHash?: string | undefined; context?: string | undefined; }[]; entityIds?: string[] | undefined; relationIds?: string[] | undefined; documentationUpdate?: \"updated-in-this-change\" | undefined; priority?: \"low\" | undefined; changedDescendantPaths?: string[] | undefined; remediation?: string | undefined; }[]; groups: { pending: { id: string; code: string; status: \"not-analyzed\" | \"confirmed\" | \"undocumented\" | \"stale-or-unverified\" | \"conflict\" | \"unresolved\"; severity: \"error\" | \"off\" | \"info\" | \"warn\"; message: string; evidence: { source: \"agent\" | \"documentation\" | \"code\" | \"configuration\" | \"derived\"; path: string; lineStart?: number | undefined; lineEnd?: number | undefined; contentHash?: string | undefined; context?: string | undefined; }[]; entityIds?: string[] | undefined; relationIds?: string[] | undefined; documentationUpdate?: \"updated-in-this-change\" | undefined; priority?: \"low\" | undefined; changedDescendantPaths?: string[] | undefined; remediation?: string | undefined; }[]; updatedInThisChange: { id: string; code: string; status: \"not-analyzed\" | \"confirmed\" | \"undocumented\" | \"stale-or-unverified\" | \"conflict\" | \"unresolved\"; severity: \"error\" | \"off\" | \"info\" | \"warn\"; message: string; evidence: { source: \"agent\" | \"documentation\" | \"code\" | \"configuration\" | \"derived\"; path: string; lineStart?: number | undefined; lineEnd?: number | undefined; contentHash?: string | undefined; context?: string | undefined; }[]; entityIds?: string[] | undefined; relationIds?: string[] | undefined; documentationUpdate?: \"updated-in-this-change\" | undefined; priority?: \"low\" | undefined; changedDescendantPaths?: string[] | undefined; remediation?: string | undefined; }[]; }; policy: { enabled: boolean; findings: { type: \"finding\"; schemaVersion: 1; id: string; category: string; assertion: { document: string; key: string; }; evidenceHash: string; status: \"not-analyzed\" | \"confirmed\" | \"undocumented\" | \"stale-or-unverified\" | \"conflict\" | \"unresolved\"; layer: \"L0\" | \"L1\" | \"L2\"; confidence: number; severity: \"error\" | \"off\" | \"info\" | \"warn\"; entities: string[]; evidence: { source: \"agent\" | \"documentation\" | \"code\" | \"configuration\" | \"derived\"; path: string; lineStart?: number | undefined; lineEnd?: number | undefined; contentHash?: string | undefined; context?: string | undefined; }[]; routing: \"proposed\" | \"excluded\" | \"routed-to-L2\" | \"pending-version\"; coverage: { analyzer: string; scope: string; status: \"complete\" | \"partial\" | \"not-analyzed\" | \"not-applicable\"; analyzerVersion?: string | undefined; reason?: string | undefined; evidence?: { source: \"agent\" | \"documentation\" | \"code\" | \"configuration\" | \"derived\"; path: string; lineStart?: number | undefined; lineEnd?: number | undefined; contentHash?: string | undefined; context?: string | undefined; }[] | undefined; }[]; provenance: { repository: string; revision: string; configurationHash: string; }; documentationUpdate?: \"updated-in-this-change\" | undefined; priority?: \"low\" | undefined; changedDescendantPaths?: string[] | undefined; generator?: string | undefined; }[]; counts: { proposed: number; excluded: number; 'routed-to-L2': number; 'pending-version': number; generator: number; }; }; }>"
+    ],
+    "parseChangeSet": [
+      "(input: unknown): { type: \"change-set\"; schemaVersion: 1; repository: { name: string; root?: string | undefined; }; analysis: { base: { configurationHash: string; pipelineVersion: string; analyzerVersions: Record<string, string>; }; head: { configurationHash: string; pipelineVersion: string; analyzerVersions: Record<string, string>; }; }; baseRevision: string; headRevision: string; release: { state: \"unreleased\"; } | { state: \"released\"; version: string; eventId: string; purl: string; }; packages: { id: string; purl: string; version?: string | undefined; }[]; contentHash: string; contentHashAlgo: \"sha256-semantic-v1\"; coverage: { analyzer: string; scope: string; status: \"complete\" | \"partial\" | \"not-analyzed\" | \"not-applicable\"; analyzerVersion?: string | undefined; reason?: string | undefined; evidence?: { source: \"agent\" | \"documentation\" | \"code\" | \"configuration\" | \"derived\"; path: string; lineStart?: number | undefined; lineEnd?: number | undefined; contentHash?: string | undefined; context?: string | undefined; }[] | undefined; }[]; changes: { kind: \"symbol\" | \"module\" | \"package\" | \"doc-path\" | \"cli-command\" | \"cli-flag\" | \"config-key\" | \"signature\"; op: \"added\" | \"removed\" | \"renamed\" | \"changed\"; compatibility?: \"compatible\" | undefined; before?: { id: string; name: string; evidence: { source: \"agent\" | \"documentation\" | \"code\" | \"configuration\" | \"derived\"; path: string; lineStart?: number | undefined; lineEnd?: number | undefined; contentHash?: string | undefined; context?: string | undefined; }[]; ownerId?: string | undefined; valueHash?: string | undefined; } | undefined; after?: { id: string; name: string; evidence: { source: \"agent\" | \"documentation\" | \"code\" | \"configuration\" | \"derived\"; path: string; lineStart?: number | undefined; lineEnd?: number | undefined; contentHash?: string | undefined; context?: string | undefined; }[]; ownerId?: string | undefined; valueHash?: string | undefined; } | undefined; }[]; branch?: string | undefined; }"
+    ]
+  },
+  "changeSetV1JsonSchema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+      "type": {
+        "type": "string",
+        "const": "change-set"
+      },
+      "schemaVersion": {
+        "type": "number",
+        "const": 1
+      },
+      "repository": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "root": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "additionalProperties": false
+      },
+      "analysis": {
+        "type": "object",
+        "properties": {
+          "base": {
+            "type": "object",
+            "properties": {
+              "configurationHash": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "pipelineVersion": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64
+              },
+              "analyzerVersions": {
+                "type": "object",
+                "propertyNames": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "additionalProperties": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 64
+                }
+              }
+            },
+            "required": [
+              "configurationHash",
+              "pipelineVersion",
+              "analyzerVersions"
+            ],
+            "additionalProperties": false
+          },
+          "head": {
+            "type": "object",
+            "properties": {
+              "configurationHash": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "pipelineVersion": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64
+              },
+              "analyzerVersions": {
+                "type": "object",
+                "propertyNames": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "additionalProperties": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 64
+                }
+              }
+            },
+            "required": [
+              "configurationHash",
+              "pipelineVersion",
+              "analyzerVersions"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "base",
+          "head"
+        ],
+        "additionalProperties": false
+      },
+      "branch": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256
+      },
+      "baseRevision": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128
+      },
+      "headRevision": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128
+      },
+      "release": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "state": {
+                "type": "string",
+                "const": "unreleased"
+              }
+            },
+            "required": [
+              "state"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "state": {
+                "type": "string",
+                "const": "released"
+              },
+              "version": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "eventId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "purl": {
+                "type": "string",
+                "minLength": 5,
+                "maxLength": 512
+              }
+            },
+            "required": [
+              "state",
+              "version",
+              "eventId",
+              "purl"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      },
+      "packages": {
+        "maxItems": 50000,
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            "purl": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512
+            },
+            "version": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          },
+          "required": [
+            "id",
+            "purl"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "changes": {
+        "maxItems": 100000,
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": [
+                "module",
+                "doc-path",
+                "symbol",
+                "package",
+                "cli-command",
+                "cli-flag",
+                "config-key",
+                "signature"
+              ]
+            },
+            "op": {
+              "type": "string",
+              "enum": [
+                "added",
+                "removed",
+                "renamed",
+                "changed"
+              ]
+            },
+            "compatibility": {
+              "type": "string",
+              "const": "compatible"
+            },
+            "before": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 256
+                },
+                "ownerId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 256
+                },
+                "name": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 256
+                },
+                "valueHash": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "evidence": {
+                  "maxItems": 64,
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "source": {
+                        "type": "string",
+                        "enum": [
+                          "code",
+                          "configuration",
+                          "documentation",
+                          "agent",
+                          "derived"
+                        ]
+                      },
+                      "path": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 512
+                      },
+                      "lineStart": {
+                        "type": "integer",
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      "lineEnd": {
+                        "type": "integer",
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      "contentHash": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{64}$"
+                      },
+                      "context": {
+                        "type": "string",
+                        "maxLength": 1024
+                      }
+                    },
+                    "required": [
+                      "source",
+                      "path"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "required": [
+                "id",
+                "name",
+                "evidence"
+              ],
+              "additionalProperties": false
+            },
+            "after": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 256
+                },
+                "ownerId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 256
+                },
+                "name": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 256
+                },
+                "valueHash": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "evidence": {
+                  "maxItems": 64,
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "source": {
+                        "type": "string",
+                        "enum": [
+                          "code",
+                          "configuration",
+                          "documentation",
+                          "agent",
+                          "derived"
+                        ]
+                      },
+                      "path": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 512
+                      },
+                      "lineStart": {
+                        "type": "integer",
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      "lineEnd": {
+                        "type": "integer",
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      "contentHash": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{64}$"
+                      },
+                      "context": {
+                        "type": "string",
+                        "maxLength": 1024
+                      }
+                    },
+                    "required": [
+                      "source",
+                      "path"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "required": [
+                "id",
+                "name",
+                "evidence"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "kind",
+            "op"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "contentHash": {
+        "type": "string",
+        "pattern": "^[a-f0-9]{64}$"
+      },
+      "contentHashAlgo": {
+        "type": "string",
+        "const": "sha256-semantic-v1"
+      },
+      "coverage": {
+        "maxItems": 2100,
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "analyzer": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "analyzerVersion": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "scope": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "complete",
+                "partial",
+                "not-analyzed",
+                "not-applicable"
+              ]
+            },
+            "reason": {
+              "type": "string",
+              "maxLength": 1024
+            },
+            "evidence": {
+              "maxItems": 32,
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "source": {
+                    "type": "string",
+                    "enum": [
+                      "code",
+                      "configuration",
+                      "documentation",
+                      "agent",
+                      "derived"
+                    ]
+                  },
+                  "path": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 512
+                  },
+                  "lineStart": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "lineEnd": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "contentHash": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  },
+                  "context": {
+                    "type": "string",
+                    "maxLength": 1024
+                  }
+                },
+                "required": [
+                  "source",
+                  "path"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": [
+            "analyzer",
+            "scope",
+            "status"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": [
+      "type",
+      "schemaVersion",
+      "repository",
+      "analysis",
+      "baseRevision",
+      "headRevision",
+      "release",
+      "packages",
+      "changes",
+      "contentHash",
+      "contentHashAlgo",
+      "coverage"
+    ],
+    "additionalProperties": false,
+    "$id": "https://agentskit.io/schemas/doc-bridge/change-set-v1.schema.json",
+    "title": "ChangeSet v1"
+  }
+}

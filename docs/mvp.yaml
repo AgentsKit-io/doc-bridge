@@ -54,9 +54,13 @@ requirements:
     instruções embutidas em docs) roda pelo perfil de serviço e termina em erro tipado ou em cobertura parcial
     declarada, nunca em sucesso silencioso nem em código executado
   weight: 2
-  acceptance: []
+  acceptance:
+    - "tests/service-hostile-repository.test.ts > hostile repository under the service profile (RF-03) > ends in declared partial coverage, never silent success, and runs no repository code"
+    - "tests/service-hostile-repository.test.ts > hostile repository under the service profile (RF-03) > treats instructions embedded in docs as data: deterministic findings, declared coverage, nothing executed or fetched"
+    - "tests/service-hostile-repository.test.ts > hostile repository under the service profile (RF-03) > never reads the forged .git: a direct read is a typed denial and no git process starts"
+    - "tests/service-hostile-repository.test.ts > hostile repository under the service profile (RF-03) > ends in a typed error when the checkout holds a file the caller did not pin"
   homolog: []
-  issues: []
+  issues: [447]
   prs: []
 - id: RF-04
   title: Diff entre dois checkouts sem depender do nome da pasta
