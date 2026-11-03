@@ -193,7 +193,18 @@ const extractionComplete = (base: DiscoverySnapshotV1, head: DiscoverySnapshotV1
   }) && !head.coverage.some(entry => entry.status !== 'complete' && entry.scope.startsWith('limits:'))
 }
 
-type DiffOptions = { headRoot?: string; branch?: string; policy?: boolean }
+/** Caller-declared project identity for each side; makes the diff independent of the checkout folder name. */
+export type DiffProjectIdentity = { base: string; head: string }
+type DiffOptions = { headRoot?: string; branch?: string; policy?: boolean; identity?: DiffProjectIdentity }
+
+/** Typed error: the base and the head were declared as different projects. */
+export class ProjectIdentityMismatchError extends Error {
+  readonly code = 'PROJECT_IDENTITY_MISMATCH'
+  constructor(readonly base: string, readonly head: string) {
+    super(`Cannot diff different project identities: base is "${base}", head is "${head}".`)
+    this.name = 'ProjectIdentityMismatchError'
+  }
+}
 type VerifiedDocuments = ReadonlyMap<string, string>
 
 const referenceFacts = (snapshot: SnapshotForChanges) => [...factsOf(snapshot), ...packagesOf(snapshot).map(pkg => ({ kind: 'package' as const, id: pkg.id, ownerId: pkg.id, name: pkg.purl, evidence: pkg.evidence }))]
@@ -342,7 +353,7 @@ export const diffSnapshotsWithRead = async (base: DiscoverySnapshotV1, head: Dis
     if (!(error instanceof StorageFault) || !['limit', 'cancelled'].includes(error.failure.status)) throw error
     limitation = error.failure
   }
-  const result = diffWithDocuments(base, head, { ...(options.branch ? { branch: options.branch } : {}), ...(options.policy === undefined ? {} : { policy: options.policy }) }, texts)
+  const result = diffWithDocuments(base, head, { ...(options.branch ? { branch: options.branch } : {}), ...(options.policy === undefined ? {} : { policy: options.policy }), ...(options.identity ? { identity: options.identity } : {}) }, texts)
   try { operation.check() } catch (error) {
     if (!(error instanceof StorageFault)) throw error
     limitation ??= error.failure
@@ -360,6 +371,13 @@ export const diffSnapshots = (base: DiscoverySnapshotV1, head: DiscoverySnapshot
   diffWithDocuments(base, head, options, options.headRoot ? verifiedLocalDocuments(base, head, options.headRoot) : new Map())
 
 const diffWithDocuments = (base: DiscoverySnapshotV1, head: DiscoverySnapshotV1, options: DiffOptions, texts: VerifiedDocuments) => {
+  if (options.identity) {
+    if (options.identity.base !== options.identity.head) throw new ProjectIdentityMismatchError(options.identity.base, options.identity.head)
+    // The declared identity replaces the folder-derived name and root.
+    const project = { name: options.identity.base }
+    base = { ...base, project }
+    head = { ...head, project }
+  }
   if (canonicalJsonV1(base.project) !== canonicalJsonV1(head.project)) throw new Error('Cannot diff different project identities; provide snapshots from the same repository.')
   const changes = snapshotChanges(base, head)
   const coverage: ChangeSetV1['coverage'] = [

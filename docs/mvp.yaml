@@ -26,10 +26,15 @@ requirements:
     O workflow de release (Changesets) fica verde na main e o npm tem uma versão acima de 2.5.1 com o conserto do
     ranking de busca (#441) e as mudanças pendentes
   weight: 2
-  acceptance: []
-  homolog: []
-  issues: []
-  prs: []
+  acceptance:
+    - tests/retrieval-projection.test.ts > explainable ranking > lets the strongest lexical hits corroborate each other through their relations
+    - tests/retrieval-projection.test.ts > explainable ranking > answers the workflow question within the top three, and says why
+    - tests/bench-retrieval.test.ts > bench CLI > measures the committed suite against the committed baseline and exits zero
+  homolog:
+    - npm @agentskit/doc-bridge@2.6.0 (latest, publicado em 2026-11-02) com o conserto do ranking (#441) no CHANGELOG
+    - workflow "Changesets release" verde na main em f4bd3b0 (#457) e "Release stable package" verde em v2.6.0
+  issues: [445]
+  prs: [441, 454, 457]
 - id: RF-02
   title: Camada 1 de ponta a ponta no perfil de serviço
   done_when: >-
@@ -59,7 +64,8 @@ requirements:
     Quem chama informa a identidade do projeto para a base e a cabeça; o diff funciona com pastas de nomes
     diferentes e identidades diferentes dão um erro tipado; teste para os dois casos
   weight: 1
-  acceptance: []
+  acceptance:
+    - tests/change-set.test.ts (diffs checkouts in differently named folders when the caller declares the same identity; throws a typed error when the declared identities differ)
   homolog: []
   issues: []
   prs: []
@@ -80,7 +86,8 @@ requirements:
     repositórios públicos do piloto publica a precisão por tipo; só os tipos com 95% ou mais ficam marcados como
     elegíveis para correção automática
   weight: 2
-  acceptance: []
+  acceptance:
+  - "docs/bench/layer1-results-v2.md, seção 'Precision by finding type and auto-fix eligibility': precisão medida por tipo sobre os repositórios do piloto (doc-bridge, chat, agentskit) com mutações sintéticas — BROKEN_REFERENCE 7 TP / 0 FP / 0 FN (100,00%) e CHANGED_REFERENCE 4 TP / 0 FP / 0 FN (100,00%), ambos elegíveis (>= 95%, AUTO_FIX_PRECISION); gerado por scripts/bench-layer1.mjs --cases docs/bench/layer1-cases-v2.json (renderer e autoteste typePrecision no PR #455)"
   homolog: []
   issues: []
   prs: []

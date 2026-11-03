@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
-import { diffSnapshots, parseChangeSet } from '../src/diff/change-set.js'
+import { diffSnapshots, parseChangeSet, ProjectIdentityMismatchError } from '../src/diff/change-set.js'
 import { discoverRepository } from '../src/discovery/repository.js'
 import { changeDigestView } from '../src/render/data.js'
 import { ChangeSetV1Schema } from '../src/schemas/change-set.js'
@@ -186,6 +186,27 @@ describe('ChangeSetV1 real snapshot acceptance', () => {
     expect(parseChangeSet(first.changeSet)).toEqual(first.changeSet)
     expect(() => parseChangeSet({ ...first.changeSet, contentHash: 'f'.repeat(64) })).toThrow(/hash/)
     expect(diffSnapshots(base, { ...head, coverage: [...head.coverage, { analyzer: 'fixture', scope: 'new', status: 'not-analyzed' }] }).changeSet.contentHash).not.toBe(first.changeSet.contentHash)
+  })
+
+  it('diffs checkouts in differently named folders when the caller declares the same identity', () => {
+    const { root, base } = fixture()
+    write(root, 'src/api.ts', 'export const second = 2\n')
+    const head = discoverRepository({ root })
+    const renamedBase = { ...base, project: { name: 'checkout-a', root: '/tmp/checkout-a' } }
+    const renamedHead = { ...head, project: { name: 'checkout-b', root: '/tmp/checkout-b' } }
+    expect(() => diffSnapshots(renamedBase, renamedHead)).toThrow(/different project identities/)
+    const result = diffSnapshots(renamedBase, renamedHead, { identity: { base: 'acme', head: 'acme' } })
+    expect(result.changeSet.repository).toEqual({ name: 'acme' })
+    expect(result.changeSet.changes.length).toBeGreaterThan(0)
+  })
+
+  it('throws a typed error when the declared identities differ', () => {
+    const { root, base } = fixture()
+    const head = discoverRepository({ root })
+    let error: unknown
+    try { diffSnapshots(base, head, { identity: { base: 'acme', head: 'other' } }) } catch (e) { error = e }
+    expect(error).toBeInstanceOf(ProjectIdentityMismatchError)
+    expect(error).toMatchObject({ code: 'PROJECT_IDENTITY_MISMATCH', base: 'acme', head: 'other' })
   })
 
   it('snapshot-only, mismatched text and partial discovery cannot claim conflict', () => {

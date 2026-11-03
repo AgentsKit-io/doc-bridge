@@ -99,6 +99,15 @@ Policy counts use diagnostic identities; scores deduplicate assertion units, so 
 | historical: finding-overall | 10 | 5 | 0 | 66.67% | 100.00% |
 | historical: fact-overall | 55 | 0 | 0 | 100.00% | 100.00% |
 
+## Precision by finding type and auto-fix eligibility
+
+Synthetic mutations (removed and renamed symbols, flags, commands and configuration keys) over the pilot repositories (doc-bridge, chat, agentskit), default included findings. A type is eligible for automatic correction only at 95.00% precision or more; a type with no emitted finding is never eligible.
+
+| Finding type | TP | FP | FN | Precision | Auto-fix eligible |
+| --- | ---: | ---: | ---: | ---: | --- |
+| BROKEN_REFERENCE | 7 | 0 | 0 | 100.00% | yes |
+| CHANGED_REFERENCE | 4 | 0 | 0 | 100.00% | yes |
+
 ## Historical assertion controls
 
 | Label | Cases | Finding TP | FP | FN |
