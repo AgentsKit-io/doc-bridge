@@ -26,6 +26,8 @@ import {
 import { DocBridgeIndexV1Schema, type DocBridgeIndexV1 } from '../src/schemas/doc-bridge-index.js'
 
 const SUITE_PATH = 'docs/bench/retrieval-suite-v1.json'
+/** What this repository's gate leaves out of the measured corpus (CI and `pnpm bench:retrieval`). */
+const GATE_EXCLUDE = ['tests/**']
 const BASELINE_PATH = 'docs/bench/retrieval-baseline-v1.json'
 
 const capture = (fn: () => number | undefined): { readonly code: number | undefined; readonly out: string; readonly err: string } => {
@@ -285,7 +287,7 @@ describe('bench CLI', () => {
   }, 180_000)
 
   it('measures the committed suite against the committed baseline and exits zero', () => {
-    const run = capture(() => runCli(['bench', 'retrieval', SUITE_PATH, '--index', indexPath, '--baseline', BASELINE_PATH, '--json']))
+    const run = capture(() => runCli(['bench', 'retrieval', SUITE_PATH, '--index', indexPath, '--baseline', BASELINE_PATH, ...GATE_EXCLUDE.flatMap((glob) => ['--exclude', glob]), '--json']))
     expect(run.code).toBe(0)
     const payload = JSON.parse(run.out) as { ok: boolean; comparison: { status: string }; result: { metrics: { caseCount: number } } }
     expect(payload.ok).toBe(true)
@@ -350,9 +352,7 @@ describe('bench CLI', () => {
      * used to move near-ties between the source files the suite asks about. The repository
      * excludes tests from the measured corpus; adding test modules must not change one case.
      */
-    const config = DocBridgeConfigV1Schema.parse(JSON.parse(readFileSync('doc-bridge.config.json', 'utf8')) as unknown)
-    const exclude = config.retrieval?.benchmark?.exclude ?? []
-    expect(exclude).toContain('tests/**')
+    const exclude = GATE_EXCLUDE
     const index = DocBridgeIndexV1Schema.parse(JSON.parse(readFileSync(indexPath, 'utf8')) as unknown)
     const projection = index.projection
     const template = projection?.entries.find((entry) => entry.kind === 'module' && entry.path.startsWith('tests/'))
@@ -369,6 +369,23 @@ describe('bench CLI', () => {
     const before = cases(0)
     expect(cases(2)).toEqual(before)
     expect(cases(10)).toEqual(before)
+  })
+
+  it('runs the gate with the exclusions in CI and in the package script', () => {
+    const flags = GATE_EXCLUDE.map((glob) => `--exclude '${glob}'`)
+    const script = (JSON.parse(readFileSync('package.json', 'utf8')) as { scripts: Record<string, string> }).scripts['bench:retrieval']
+    const ci = readFileSync('.github/workflows/ci.yml', 'utf8')
+    for (const flag of flags) {
+      expect(script).toContain(flag)
+      expect(ci).toContain(flag)
+    }
+  })
+
+  it('adds --exclude to the configured exclusions and records them in the result', () => {
+    const run = capture(() => runCli(['bench', 'retrieval', SUITE_PATH, '--index', indexPath, '--exclude', 'tests/**', '--exclude', 'scripts/**', '--json']))
+    expect(run.code).toBe(0)
+    const payload = JSON.parse(run.out) as { result: { index: { exclude?: string[] } } }
+    expect(payload.result.index.exclude).toEqual(['scripts/**', 'tests/**'])
   })
 
   it('rejects an invalid limit and an unknown subcommand', () => {

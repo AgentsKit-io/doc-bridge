@@ -58,6 +58,8 @@ export type MeasureOverlayRetrievalDeltaOptions = {
   readonly overlay: EnrichmentOverlayV1
   readonly suite: RetrievalSuite
   readonly limit?: number
+  /** Globs left out of the measured corpus. Default: `retrieval.benchmark.exclude`. */
+  readonly exclude?: readonly string[]
 }
 
 const round = (value: number): number => Math.round(value * 1_000_000) / 1_000_000
@@ -74,9 +76,10 @@ const format = (metric: keyof RetrievalMetrics, value: number): string =>
  */
 export const measureOverlayRetrievalDelta = (options: MeasureOverlayRetrievalDeltaOptions): OverlayRetrievalDelta => {
   const { root, config, snapshot, overlay, suite } = options
+  const exclude = options.exclude ?? config.retrieval?.benchmark?.exclude
   const measured = {
     ...(options.limit === undefined ? {} : { limit: options.limit }),
-    ...(config.retrieval?.benchmark?.exclude ? { exclude: config.retrieval.benchmark.exclude } : {}),
+    ...(exclude ? { exclude } : {}),
   }
   const baseline = runRetrievalBench({
     index: buildDocBridgeIndex({ root, config, write: false, snapshot, overlay: 'ignore' }).index,

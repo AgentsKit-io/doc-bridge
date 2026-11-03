@@ -669,6 +669,7 @@ move the files it does. A test module exports no symbols, so each new test file 
 `symbols` length and shifts near-ties between source modules. Excluding `tests/**` keeps the
 measurement a function of the corpus the suite is about, and the result records the exclusions it
 was measured under.
+`ak-docs bench retrieval --exclude <glob>` (repeatable) adds exclusions for a single run.
 
 ## `render` (optional)
 

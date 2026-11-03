@@ -62,7 +62,9 @@ node bin/ak-docs.js bench retrieval docs/bench/retrieval-suite-v1.json \
 ### The measured corpus
 
 The suite asks about source and documentation, never about tests, so this repository measures it
-without them: `retrieval.benchmark.exclude: ["tests/**"]` in `doc-bridge.config.json`. Ranking
+without them: `--exclude 'tests/**'` on the gate in CI and in `pnpm bench:retrieval`. A repository
+on a release that has it can set `retrieval.benchmark.exclude` in its config instead; the doctor
+and `--overlay` read that key, and `--exclude` adds to it. Ranking
 computes its BM25 statistics (IDF, average field length) from the entries it ranks, and a test
 module, which exports nothing, lowers the average `symbols` length. Before the exclusion, every
 new test file shifted near-ties between source modules, and a coverage pull request could fail
