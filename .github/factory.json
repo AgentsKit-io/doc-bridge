@@ -1,0 +1,4 @@
+{
+  "install": "pnpm install --frozen-lockfile",
+  "verify": "pnpm check:no-legacy-chat-imports && pnpm typecheck && pnpm test && pnpm build"
+}
