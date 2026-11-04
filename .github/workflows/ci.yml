@@ -36,8 +36,14 @@ jobs:
       - run: pnpm check:ecosystem-upstream
       - run: pnpm check:marketplace
       - run: pnpm test:marketplace
-      - run: pnpm test
+      # `pnpm coverage` runs the vitest suite once; the contract tests below are the rest of
+      # `pnpm test`, called explicitly so the suite does not run twice.
       - run: pnpm coverage
+      - run: pnpm test:cursor-plugin
+      - run: pnpm test:claude-plugin
+      - run: pnpm test:copilot-plugin
+      - run: pnpm test:portable-skill
+      - run: pnpm test:ecosystem-upstream
       - run: pnpm build
       - run: pnpm check:readme-standard
       - run: pnpm test:readme-standard
@@ -129,16 +135,71 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # Lighthouse and e2e run on pushes to main and whenever the PR (or merge group) changes
+      # the docs site or its build inputs; otherwise they are skipped steps, so `docs` still reports.
+      - name: Detect docs site changes
+        id: docs-changes
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          MERGE_GROUP_BASE_SHA: ${{ github.event.merge_group.base_sha }}
+        run: |
+          case "$EVENT_NAME" in
+            pull_request) base="$PR_BASE_SHA" ;;
+            merge_group) base="$MERGE_GROUP_BASE_SHA" ;;
+            *) echo "changed=true" >> "$GITHUB_OUTPUT"; exit 0 ;;
+          esac
+          git fetch --no-tags --depth=1 origin "$base"
+          git diff --name-only "$base" HEAD > "$RUNNER_TEMP/changed-files.txt"
+          cat "$RUNNER_TEMP/changed-files.txt"
+          CHANGED_FILES="$RUNNER_TEMP/changed-files.txt" node --input-type=module >> "$GITHUB_OUTPUT" <<'NODE'
+          // Reads changed paths (one per line) from CHANGED_FILES and prints `changed=true|false`: true when a
+          // path is an input of the docs site build, Lighthouse or the docs e2e suite. Only the
+          // docs/ files the site publishes count, so spec or roadmap edits do not run browser checks.
+          import { readFileSync } from 'node:fs'
+
+          const published = new Set(
+            ['apps/docs/public-docs.json', 'apps/docs/public-agent-docs.json'].flatMap((list) =>
+              JSON.parse(readFileSync(list, 'utf8')).map((file) => `docs/${file}`),
+            ),
+          )
+          const prefixes = ['apps/docs/', 'docs/landing/', 'tests/docs-e2e/', 'scripts/lib/']
+          const files = new Set([
+            'scripts/build-docs-artifacts.mjs',
+            'ecosystem.json',
+            'lighthouserc.json',
+            'playwright.config.ts',
+            'package.json',
+            'pnpm-lock.yaml',
+            'pnpm-workspace.yaml',
+            '.github/workflows/ci.yml',
+          ])
+
+          const changed = readFileSync(process.env.CHANGED_FILES, 'utf8').split('\n').map((line) => line.trim()).filter(Boolean)
+          const hit = changed.find(
+            (path) =>
+              files.has(path) ||
+              published.has(path) ||
+              prefixes.some((prefix) => path.startsWith(prefix)) ||
+              (path.startsWith('docs/') && path.endsWith('/meta.json')),
+          )
+          if (!hit) console.error('::notice::No docs site inputs changed; skipping Lighthouse and docs e2e.')
+          else console.error(`Docs site input changed: ${hit}`)
+          console.log(`changed=${Boolean(hit)}`)
+          NODE
       - run: pnpm docs:typecheck
       - run: pnpm docs:build
       - run: pnpm test:docs-artifacts
-      - run: pnpm docs:lighthouse
+      - if: steps.docs-changes.outputs.changed == 'true'
+        run: pnpm docs:lighthouse
       - name: Upload Lighthouse reports
-        if: always()
+        if: always() && steps.docs-changes.outputs.changed == 'true'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: lighthouse-reports
           path: .lighthouseci
           include-hidden-files: true
-      - run: pnpm exec playwright install --with-deps chromium
-      - run: pnpm docs:e2e
+      - if: steps.docs-changes.outputs.changed == 'true'
+        run: pnpm exec playwright install --with-deps chromium
+      - if: steps.docs-changes.outputs.changed == 'true'
+        run: pnpm docs:e2e
