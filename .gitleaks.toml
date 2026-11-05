@@ -1,0 +1,10 @@
+title = "doc-bridge gitleaks config"
+
+[extend]
+useDefault = true
+
+# Allowlist only synthetic test fixtures; every entry needs a reason.
+[[allowlists]]
+description = "Synthetic placeholder 'api_key=12345' used to test the memory safety scan; not a credential"
+paths = ['''tests/memory-pipeline\.test\.ts''']
+regexes = ['''api_key=12345''']
