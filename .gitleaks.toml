@@ -1,0 +1,7 @@
+title = "doc-bridge gitleaks config"
+
+[extend]
+useDefault = true
+
+# Allowlist only synthetic test fixtures; every entry needs a reason.
+# (none needed yet: add [[allowlists]] entries with a `description` when a fixture trips the scan)
