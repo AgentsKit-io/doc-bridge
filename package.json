@@ -4,6 +4,7 @@
   "mcpName": "io.github.AgentsKit-io/doc-bridge",
   "description": "Human↔agent documentation bridge — deterministic handoffs, doc-site links, memory→docs, optional AgentsKit RAG/chat.",
   "type": "module",
+  "packageManager": "pnpm@11.19.0",
   "bin": {
     "ak-docs": "bin/ak-docs.js",
     "ak-verify": "bin/ak-verify.js"
