@@ -28,7 +28,5 @@ jobs:
         pnpm test:portable-skill && pnpm test:ecosystem-upstream
       build-command: bash scripts/ci/build.sh
       light-paths: |
-        docs/*
-        *.md
         changelog.d/*
       job-timeout-minutes: 25
