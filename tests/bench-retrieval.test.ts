@@ -374,7 +374,7 @@ describe('bench CLI', () => {
   it('runs the gate with the exclusions in CI and in the package script', () => {
     const flags = GATE_EXCLUDE.map((glob) => `--exclude '${glob}'`)
     const script = (JSON.parse(readFileSync('package.json', 'utf8')) as { scripts: Record<string, string> }).scripts['bench:retrieval']
-    const ci = readFileSync('.github/workflows/ci.yml', 'utf8')
+    const ci = readFileSync('scripts/ci/build.sh', 'utf8')
     for (const flag of flags) {
       expect(script).toContain(flag)
       expect(ci).toContain(flag)
