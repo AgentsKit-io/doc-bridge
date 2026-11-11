@@ -10,6 +10,8 @@ export default defineConfig({
     // budgets on repository-scale tests still apply.
     testTimeout: pullRequest ? Math.min(10_000, 30_000) : 30_000,
     slowTestThreshold: 2_000,
+    // The shared pipeline exports FORCE_COLOR; frame assertions expect plain text.
+    env: { FORCE_COLOR: '0' },
     exclude: pullRequest ? [...configDefaults.exclude, '**/*.slow.test.*'] : configDefaults.exclude,
     coverage: {
       provider: 'v8',
