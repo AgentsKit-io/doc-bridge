@@ -238,12 +238,12 @@ test('missing base object stays advisory-only; capture rejects ref names and cle
 }))
 
 test('repository CI generates an ignored index before dogfood gates and Action smoke', () => {
-  const ci = readFileSync(resolve(root, '.github/workflows/ci.yml'), 'utf8')
+  const ci = readFileSync(resolve(root, 'scripts/ci/build.sh'), 'utf8')
   const ignore = readFileSync(resolve(root, '.gitignore'), 'utf8')
   assert.match(ignore, /\*\*\/\.doc-bridge\/\*/u)
   assert.doesNotMatch(ignore, /!\/\.doc-bridge\/index\.json/u)
-  const build = ci.indexOf('name: Build deterministic repository index')
-  const gates = ci.indexOf('name: Dogfood gate and documentation conformance')
+  const build = ci.indexOf('node bin/ak-docs.js index')
+  const gates = ci.indexOf('# Dogfood gate and documentation conformance')
   assert.ok(build >= 0 && gates > build)
   assert.match(ci.slice(build, gates), /node bin\/ak-docs\.js index[\s\S]*node bin\/ak-docs\.js index[\s\S]*cmp/u)
   assert.doesNotMatch(ci, /run: node bin\/ak-docs\.js gate run index-freshness/u)

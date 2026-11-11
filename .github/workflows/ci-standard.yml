@@ -1,28 +1,32 @@
 name: CI standard
 
-permissions:
-  contents: read
+# This repository's settings for the organization's reusable CI pipeline
+# (AgentsKit-io/.github, docs/ci.md). Called by ci.yml.
 
 on:
-  pull_request:
-  merge_group:
+  workflow_call:
+    outputs:
+      mode:
+        description: Pipeline mode (draft, light, pr, full, seed or skip).
+        value: ${{ jobs.standard.outputs.mode }}
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+permissions: {}
 
 jobs:
-  verify:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v4
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version: 22
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm typecheck
-      - run: pnpm build
+  standard:
+    uses: AgentsKit-io/.github/.github/workflows/ci.yml@c624db48051670469618d9c74854f3a1affc0138
+    permissions:
+      actions: write
+      contents: read
+    with:
+      installer: auto
+      typecheck-command: bash scripts/ci/check.sh
+      test-command: pnpm test
+      affected-test-command: >-
+        pnpm vitest run --changed "$BASE_REF" --passWithNoTests &&
+        pnpm test:cursor-plugin && pnpm test:claude-plugin && pnpm test:copilot-plugin &&
+        pnpm test:portable-skill && pnpm test:ecosystem-upstream
+      build-command: bash scripts/ci/build.sh
+      light-paths: |
+        changelog.d/*
+      job-timeout-minutes: 25
