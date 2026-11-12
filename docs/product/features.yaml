@@ -1,0 +1,149 @@
+product: Doc Bridge
+project: Doc Bridge
+version_url: null
+repos:
+  - name: AgentsKit-io/doc-bridge
+features:
+  # estado: publicada (@agentskit/doc-bridge 2.5.1 em 25/10; README "Five loops: Act")
+  - key: handoff-para-agente
+    group: produto
+    phase: A
+    name: "Dizer ao agente onde mexer"
+    description: "Para um pacote ou área, o agente recebe por onde começar, o que ler, onde editar e quais checks rodar (AgentHandoff)."
+    milestone: null
+    tickets: []
+    acceptance: null
+    how_to_test: "Rodar `ak-docs demo` e depois `ak-docs query package <nome> --agent`."
+    blocked_reason: null
+  # estado: publicada (README tabela "Doc adapters": fumadocs, docusaurus, vitepress, starlight, nextra, markdown; "Bridge" bootstrap agent-docs)
+  - key: ponte-docs-humanas
+    group: produto
+    phase: A
+    name: "Ligar o site de docs às docs de agente"
+    description: "Ler sites Fumadocs, Docusaurus, VitePress, Starlight, Nextra ou markdown e gerar rascunhos de docs para agentes ligados à página humana."
+    milestone: null
+    tickets: []
+    acceptance: null
+    how_to_test: "Num repo com Fumadocs, `ak-docs bootstrap agent-docs` e conferir `bridge.humanDoc` no handoff."
+    blocked_reason: null
+  # estado: publicada (README "MCP server", handoff.resolve; #344 instruções no initialize; plugins Cursor/Copilot/Claude Desktop bundle)
+  - key: mcp-nos-editores
+    group: produto
+    phase: A
+    name: "Usar dentro do Claude Code, Cursor e Copilot"
+    description: "Servidor MCP e plugins para que o agente consulte o handoff sozinho antes de editar."
+    milestone: null
+    tickets: ["gh:#344", "gh:#359"]
+    acceptance: null
+    how_to_test: "Adicionar `ak-docs mcp` ao Claude Code e pedir ao agente para resolver o handoff de um pacote."
+    blocked_reason: null
+  # estado: publicada (KR-01..KR-11 Done; ADR-0018 knowledge entities; `ak-docs why`, `ask`)
+  - key: perguntar-ao-repositorio
+    group: produto
+    phase: A
+    name: "Perguntar ao repositório e entender o porquê"
+    description: "Buscar e perguntar em linguagem natural com ranking explicável, e consultar decisões e motivos de uma mudança (`why`)."
+    milestone: Knowledge retrieval (KR)
+    tickets: ["AGE-1661", "AGE-1666", "AGE-1667", "AGE-1665", "gh:#349", "gh:#431"]
+    acceptance: null
+    how_to_test: "`ak-docs ask \"auth is broken in staging\"` e `ak-docs why <caminho>`."
+    blocked_reason: null
+  # estado: publicada mas com regressão no main (CI vermelho desde 26/10: tests/bench-retrieval e retrieval-projection "top three")
+  - key: qualidade-da-busca-medida
+    group: confianca
+    phase: A
+    name: "Qualidade da busca medida no CI"
+    description: "Benchmark de recuperação com baseline versionada; o CI falha se as respostas pioram."
+    milestone: Knowledge retrieval (KR)
+    tickets: ["AGE-1660", "AGE-1670", "gh:#394"]
+    acceptance: null
+    how_to_test: "Rodar `pnpm test tests/bench-retrieval.test.ts` no main e esperar zero regressões."
+    blocked_reason: null
+  # estado: publicada (README "GitHub Action / CI", action.yml; ADR-0015, ADR-0025; #363 gate de publicação)
+  - key: gate-docs-no-ci
+    group: confianca
+    phase: A
+    name: "Barrar PR com docs desatualizadas"
+    description: "GitHub Action que falha quando o índice está velho ou as docs não seguem o padrão configurado, com modo consultivo e estilo OKF opcional."
+    milestone: null
+    tickets: ["gh:#363"]
+    acceptance: null
+    how_to_test: "Num PR que muda código sem reindexar, conferir o check \"Doc Bridge gates\" falhando com o motivo."
+    blocked_reason: null
+  # estado: publicada (README "Verify divergence", `ak-docs diff`, `audit documentation`, `conformance run`; ADR-0023 CHANGED_REFERENCE)
+  - key: divergencia-docs-codigo
+    group: confianca
+    phase: A
+    name: "Detectar docs que contradizem o código"
+    description: "Comparar revisões e apontar trechos de docs que falam do que mudou; medir a qualidade das docs com nota A–F."
+    milestone: null
+    tickets: ["gh:#410"]
+    acceptance: null
+    how_to_test: "`ak-docs doctor` e `ak-docs audit documentation --json` num repo do ecossistema."
+    blocked_reason: null
+  # estado: publicada (README "Agent memory → docs", memory ingest/classify/promote --pr; ADR-0019)
+  - key: memoria-vira-doc
+    group: produto
+    phase: A
+    name: "Transformar notas do agente em documentação"
+    description: "Ler memórias e regras do agente, classificar o que deveria virar doc e abrir um rascunho revisado por humano."
+    milestone: null
+    tickets: []
+    acceptance: null
+    how_to_test: "Criar `.agent-memory/x.md` e rodar `ak-docs memory classify` e `promote --pr --dry-run`."
+    blocked_reason: null
+  # estado: publicada (#366, #369, #370 mergeados; ADR-0020/0026)
+  - key: obsidian-vault
+    group: produto
+    phase: A
+    name: "Navegar as docs no Obsidian"
+    description: "Exportar um vault Obsidian com notas legíveis e um plugin desktop; edições voltam como propostas."
+    milestone: null
+    tickets: ["gh:#366", "gh:#369", "gh:#370"]
+    acceptance: null
+    how_to_test: "`ak-docs vault export`, abrir no Obsidian, editar uma nota e rodar `ak-docs vault diff`."
+    blocked_reason: null
+  # estado: publicada (#372 CLI com help do commander, saída Ink e `ak-docs ui`)
+  - key: cli-interativa
+    group: produto
+    phase: A
+    name: "CLI amigável e interface interativa"
+    description: "Ajuda clara, saída formatada e um modo interativo no terminal."
+    milestone: null
+    tickets: ["gh:#372"]
+    acceptance: null
+    how_to_test: "Rodar `ak-docs --help` e `ak-docs ui`."
+    blocked_reason: null
+  # estado: publicada (README "Remediation": `ak-docs fix --llm`, ADR-0011/0022)
+  - key: corrigir-docs-com-ia
+    group: produto
+    phase: B
+    name: "Propor correções de docs com IA"
+    description: "Gerar propostas de correção para docs com problema, sempre rechecadas e revisadas por humano."
+    milestone: null
+    tickets: []
+    acceptance: null
+    how_to_test: "Seguir o guia key-free `docs/guides/llm-remediation.md` com o provedor fake."
+    blocked_reason: null
+  # estado: bloqueada (CI e "Changesets release" vermelhos no main desde 26/10, último run 27/10 do PR #415/#387; nenhuma release depois de 2.5.1)
+  - key: release-continua
+    group: prontidao
+    phase: A
+    name: "Publicar novas versões sem intervenção"
+    description: "Cada merge no main passa no CI e gera a versão no npm automaticamente."
+    milestone: null
+    tickets: ["gh:#434", "gh:#433", "gh:#420"]
+    acceptance: null
+    how_to_test: "Merge no main e conferir CI verde e nova versão em `npm view @agentskit/doc-bridge version`."
+    blocked_reason: "testes de ranking (bench-retrieval baseline e retrieval-projection top-3) falham no main desde 26/10"
+  # estado: não começada (docs/launch, launch-backlog-channels.md em .changeset, #429 backlog de lançamento; #350 waitlist)
+  - key: lancamento-publico
+    group: prontidao
+    phase: B
+    name: "Lançamento público nos canais"
+    description: "Divulgar o 2.x nos canais escolhidos depois da validação, com landing e lista de espera."
+    milestone: null
+    tickets: ["gh:#429", "gh:#350", "gh:#365"]
+    acceptance: null
+    how_to_test: "Abrir doc-bridge.agentskit.io e conferir landing e formulário de espera."
+    blocked_reason: null
