@@ -1,0 +1,3 @@
+#!/usr/bin/env sh
+# Pre-push gate: the same typecheck CI runs (the repo has no separate lint step).
+pnpm typecheck
