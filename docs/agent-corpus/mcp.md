@@ -7,6 +7,9 @@ owner: doc-bridge-maintainers
 lifecycle: active
 sourceOfTruth: src/mcp
 validationPath: pnpm test && pnpm typecheck && pnpm smoke:packaged
+docbridge:
+  covers:
+    - area:src/mcp
 ---
 
 # MCP

@@ -7,6 +7,9 @@ owner: doc-bridge-maintainers
 lifecycle: active
 sourceOfTruth: src/cli
 validationPath: pnpm test && pnpm typecheck
+docbridge:
+  covers:
+    - area:src/cli
 ---
 
 # CLI

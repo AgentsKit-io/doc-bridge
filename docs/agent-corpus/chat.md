@@ -7,6 +7,9 @@ owner: doc-bridge-maintainers
 lifecycle: active
 sourceOfTruth: src/intelligence
 validationPath: pnpm test && pnpm typecheck && pnpm docs:typecheck
+docbridge:
+  covers:
+    - area:src/intelligence
 ---
 
 # Chat and RAG
