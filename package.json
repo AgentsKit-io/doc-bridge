@@ -63,6 +63,7 @@
     "check:no-legacy-chat-imports": "node scripts/check-no-legacy-chat-imports.mjs",
     "check:cross-platform": "agentskit-cross-platform check",
     "typecheck": "tsc --noEmit",
+    "lint:biome": "npx --yes @biomejs/biome@2.6.4 format --changed --since=main --no-errors-on-unmatched --files-ignore-unknown=true .",
     "smoke:packaged": "node scripts/smoke-packaged.mjs",
     "smoke:docsites": "node scripts/smoke-docsites.mjs",
     "smoke:real-docsites": "node scripts/smoke-real-docsites.mjs",
