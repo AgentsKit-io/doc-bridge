@@ -123,40 +123,15 @@
       "path": "README.md",
       "profileId": "top-level-repository",
       "dimensions": {
-        "promise": [
-          "Turn your docs into executable handoffs"
-        ],
-        "proof": [
-          "## 60-second proof",
-          "Gate: red → green"
-        ],
-        "examples": [
-          "### Verify the real handoff path",
-          "<!-- readme-example:verify-handoff -->"
-        ],
-        "visuals": [
-          "docs/landing/assets/doc-bridge-hero.webp"
-        ],
-        "maturity": [
-          "v1.7.45 stable"
-        ],
-        "compatibility": [
-          "node >=22",
-          "TypeScript"
-        ],
-        "contribution": [
-          "## Contributing",
-          "CONTRIBUTING.md"
-        ],
-        "metadata": [
-          "**Topics:**",
-          "`developer-experience`"
-        ],
-        "ecosystem": [
-          "## AgentsKit ecosystem",
-          "AgentsKit Chat",
-          "Code Review"
-        ]
+        "promise": ["Turn your docs into executable handoffs"],
+        "proof": ["## 60-second proof", "Gate: red → green"],
+        "examples": ["### Verify the real handoff path", "<!-- readme-example:verify-handoff -->"],
+        "visuals": ["docs/landing/assets/doc-bridge-hero.webp"],
+        "maturity": ["v1.7.45 stable"],
+        "compatibility": ["node >=22", "TypeScript"],
+        "contribution": ["## Contributing", "CONTRIBUTING.md"],
+        "metadata": ["**Topics:**", "`developer-experience`"],
+        "ecosystem": ["## AgentsKit ecosystem", "AgentsKit Chat", "Code Review"]
       },
       "visuals": [
         {
@@ -200,16 +175,10 @@
           "examples/verify-handoff.mjs",
           {
             "path": "package.json",
-            "fields": [
-              "name",
-              "description",
-              "bin",
-              "exports",
-              "engines"
-            ]
+            "fields": ["name", "description", "bin", "exports", "engines"]
           }
         ],
-        "sourceHash": "sha256:96ef73f14b41197173871eebfbac17b21a9cf226fc4fc467df9a14795e452110"
+        "sourceHash": "sha256:02ae61440b74a4115c547f2dfcc9e246220a74e27c77821c8d4c00ce26d3d02d"
       },
       "exceptions": []
     },
@@ -218,33 +187,15 @@
       "path": "README.md",
       "profileId": "public-app",
       "dimensions": {
-        "promise": [
-          "Turn your docs into executable handoffs"
-        ],
-        "proof": [
-          "## 60-second proof"
-        ],
-        "examples": [
-          "<!-- readme-example:verify-handoff -->"
-        ],
-        "visuals": [
-          "doc-bridge-two-way.webp"
-        ],
-        "maturity": [
-          "v1.7.45 stable"
-        ],
-        "compatibility": [
-          "node >=22"
-        ],
-        "contribution": [
-          "## Contributing"
-        ],
-        "metadata": [
-          "**Topics:**"
-        ],
-        "ecosystem": [
-          "## AgentsKit ecosystem"
-        ]
+        "promise": ["Turn your docs into executable handoffs"],
+        "proof": ["## 60-second proof"],
+        "examples": ["<!-- readme-example:verify-handoff -->"],
+        "visuals": ["doc-bridge-two-way.webp"],
+        "maturity": ["v1.7.45 stable"],
+        "compatibility": ["node >=22"],
+        "contribution": ["## Contributing"],
+        "metadata": ["**Topics:**"],
+        "ecosystem": ["## AgentsKit ecosystem"]
       },
       "visuals": [
         {
@@ -288,16 +239,10 @@
           "examples/verify-handoff.mjs",
           {
             "path": "package.json",
-            "fields": [
-              "name",
-              "description",
-              "bin",
-              "exports",
-              "engines"
-            ]
+            "fields": ["name", "description", "bin", "exports", "engines"]
           }
         ],
-        "sourceHash": "sha256:96ef73f14b41197173871eebfbac17b21a9cf226fc4fc467df9a14795e452110"
+        "sourceHash": "sha256:02ae61440b74a4115c547f2dfcc9e246220a74e27c77821c8d4c00ce26d3d02d"
       },
       "exceptions": []
     },
@@ -306,33 +251,15 @@
       "path": "README.md",
       "profileId": "major-package",
       "dimensions": {
-        "promise": [
-          "Turn your docs into executable handoffs"
-        ],
-        "proof": [
-          "## What ships"
-        ],
-        "examples": [
-          "<!-- readme-example:verify-handoff -->"
-        ],
-        "visuals": [
-          "doc-bridge-surfaces.webp"
-        ],
-        "maturity": [
-          "v1.7.45 stable"
-        ],
-        "compatibility": [
-          "node >=22"
-        ],
-        "contribution": [
-          "## Contributing"
-        ],
-        "metadata": [
-          "**Topics:**"
-        ],
-        "ecosystem": [
-          "## AgentsKit ecosystem"
-        ]
+        "promise": ["Turn your docs into executable handoffs"],
+        "proof": ["## What ships"],
+        "examples": ["<!-- readme-example:verify-handoff -->"],
+        "visuals": ["doc-bridge-surfaces.webp"],
+        "maturity": ["v1.7.45 stable"],
+        "compatibility": ["node >=22"],
+        "contribution": ["## Contributing"],
+        "metadata": ["**Topics:**"],
+        "ecosystem": ["## AgentsKit ecosystem"]
       },
       "visuals": [
         {
@@ -376,16 +303,10 @@
           "examples/verify-handoff.mjs",
           {
             "path": "package.json",
-            "fields": [
-              "name",
-              "description",
-              "bin",
-              "exports",
-              "engines"
-            ]
+            "fields": ["name", "description", "bin", "exports", "engines"]
           }
         ],
-        "sourceHash": "sha256:96ef73f14b41197173871eebfbac17b21a9cf226fc4fc467df9a14795e452110"
+        "sourceHash": "sha256:02ae61440b74a4115c547f2dfcc9e246220a74e27c77821c8d4c00ce26d3d02d"
       },
       "exceptions": []
     }
