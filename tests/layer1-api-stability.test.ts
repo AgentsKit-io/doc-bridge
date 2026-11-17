@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import ts from 'typescript'
+import ts from 'typescript-api'
 import { describe, expect, it } from 'vitest'
 import { ChangeSetV1JsonSchema } from '../src/schemas/change-set.js'
 

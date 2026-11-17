@@ -1,5 +1,5 @@
 import { cliFactExtractor } from './cli.js'
-import * as ts from 'typescript'
+import * as ts from 'typescript-api'
 import { signatureExtractor } from './signatures.js'
 import { relative, resolve } from 'node:path'
 import { toPosix } from '../../lib/paths.js'

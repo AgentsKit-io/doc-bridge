@@ -1,6 +1,6 @@
 import { basename, dirname, extname, join, relative, resolve } from 'node:path'
 import { toPosix } from '@agentskit/cross-platform'
-import * as ts from 'typescript'
+import * as ts from 'typescript-api'
 import { minimatch } from 'minimatch'
 import { PartitionSchema, StorageLimitsSchema, FileMetaSchema, RepositoryListingSchema, type RepositoryReadV1 } from '../storage/contract.js'
 import { StorageLedger, contentRef, StorageFault } from '../storage/local.js'

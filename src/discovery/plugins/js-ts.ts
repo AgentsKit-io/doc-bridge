@@ -8,7 +8,7 @@ import { CONFIG_EXTENSIONS, safeWalkOptions } from '../inputs.js'
 import type { SafeWalkOptions, SafeWalkResult } from '../../safety/repository.js'
 
 import { basename, dirname, extname, join, relative, resolve, sep } from 'node:path'
-import * as ts from 'typescript'
+import * as ts from 'typescript-api'
 import type { DocBridgeConfigV1 } from '../../config/schema.js'
 import type { DiscoveryOptions } from '../repository.js'
 import { PIPELINE_VERSION, ANALYZER_VERSIONS } from '../repository.js'

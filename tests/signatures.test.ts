@@ -1,4 +1,4 @@
-import * as ts from 'typescript'
+import * as ts from 'typescript-api'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'

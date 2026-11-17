@@ -1,5 +1,5 @@
 import { relative, resolve } from 'node:path'
-import * as ts from 'typescript'
+import * as ts from 'typescript-api'
 import type { PackageInfo, ModuleInfo } from '../plugins/js-ts.js'
 import type { ScanIO } from '../scan-io.js'
 import type { DiscoverySnapshotV1, Evidence } from '../../schemas/knowledge.js'

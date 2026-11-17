@@ -1,4 +1,4 @@
-import * as ts from 'typescript'
+import * as ts from 'typescript-api'
 import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { join, relative } from 'node:path'
 import { tmpdir } from 'node:os'

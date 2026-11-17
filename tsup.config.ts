@@ -15,5 +15,5 @@ export default defineConfig({
   // Splitting keeps the Ink views in their own chunk: plain runs (agents, CI) never load them.
   splitting: true,
   target: 'node22',
-  external: ['typescript', '@agentskit/adapters', '@agentskit/core'],
+  external: ['typescript-api', '@agentskit/adapters', '@agentskit/core'],
 })
