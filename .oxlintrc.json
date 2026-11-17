@@ -1,0 +1,60 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "unicorn", "oxc", "import"],
+  "categories": {
+    "correctness": "error"
+  },
+  "rules": {
+    "no-unused-vars": [
+      "error",
+      {
+        "ignoreRestSiblings": true,
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_",
+        "caughtErrorsIgnorePattern": "^_",
+        "destructuredArrayIgnorePattern": "^_"
+      }
+    ],
+    "prefer-const": "error",
+    "prefer-template": "error",
+    "typescript/no-explicit-any": "error",
+    "typescript/no-non-null-assertion": "error",
+    "typescript/consistent-type-imports": [
+      "error",
+      {
+        "disallowTypeAnnotations": false
+      }
+    ],
+    "import/namespace": "off"
+  },
+  "ignorePatterns": [
+    "docs/openapi.json",
+    "**/migrations/**",
+    "docs/qa/**",
+    "apps/api/test/fixtures/**",
+    ".changeset/**",
+    "dist/**"
+    // Adoption baseline (ci-standard/scripts/oxlint-baseline.mjs): files that failed oxlint when the repo moved its lint
+    // to oxlint. Generated, only shrinks; a new file is linted strict.
+    // baseline:start
+    // baseline:end
+  ],
+  "overrides": [
+    {
+      "files": [
+        "**/test/**",
+        "**/tests/**",
+        "**/__tests__/**",
+        "**/*.test.*",
+        "**/*.spec.*",
+        "**/fixtures/**",
+        "**/vitest.setup.*"
+      ],
+      "rules": {
+        "typescript/no-explicit-any": "off",
+        "typescript/no-non-null-assertion": "off",
+        "no-unsafe-optional-chaining": "off"
+      }
+    }
+  ]
+}

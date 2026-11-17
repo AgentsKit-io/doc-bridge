@@ -1,0 +1,1 @@
+node ci-standard/scripts/pre-push.mjs

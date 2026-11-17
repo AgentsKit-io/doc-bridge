@@ -23,10 +23,23 @@ jobs:
     permissions:
       actions: write
       contents: read
+    with:
+      base-branch: main
+      package-manager: pnpm
+      linter: oxlint
+      format-command: none
+      typecheck-command: bash scripts/ci/check.sh
+      test-command: pnpm test
+      affected-test-command: >-
+        pnpm vitest run --changed "$BASE_REF" --passWithNoTests &&
+        pnpm test:cursor-plugin && pnpm test:claude-plugin && pnpm test:copilot-plugin &&
+        pnpm test:portable-skill && pnpm test:ecosystem-upstream
+      build-command: bash scripts/ci/build.sh
+      job-timeout-minutes: 25
 
   action-smoke:
     needs: pipeline
-    if: contains(fromJSON('["pr","full"]'), needs.pipeline.outputs.mode)
+    if: contains(fromJSON('["pr","full","nightly"]'), needs.pipeline.outputs.mode)
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
@@ -41,7 +54,6 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 22
-          cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
       - name: Build repository index
@@ -62,7 +74,7 @@ jobs:
   determinism:
     name: ChangeSet determinism (${{ matrix.os }})
     needs: pipeline
-    if: contains(fromJSON('["pr","full"]'), needs.pipeline.outputs.mode)
+    if: contains(fromJSON('["pr","full","nightly"]'), needs.pipeline.outputs.mode)
     timeout-minutes: 15
     strategy:
       fail-fast: true
@@ -79,13 +91,12 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 22
-          cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm vitest run tests/change-set-determinism.test.ts
 
   docs:
     needs: pipeline
-    if: github.actor != 'dependabot[bot]' && contains(fromJSON('["pr","full"]'), needs.pipeline.outputs.mode)
+    if: github.actor != 'dependabot[bot]' && contains(fromJSON('["pr","full","nightly"]'), needs.pipeline.outputs.mode)
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -98,7 +109,6 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 22
-          cache: pnpm
       - run: pnpm install --frozen-lockfile
       # Lighthouse and e2e run on pushes to main and whenever the PR (or merge group) changes
       # the docs site or its build inputs; otherwise they are skipped steps, so `docs` still reports.

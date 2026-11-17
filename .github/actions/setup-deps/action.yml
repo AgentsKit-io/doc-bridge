@@ -1,0 +1,302 @@
+# CI standard v3 (source: NoxCodeSolutions/platform-template, ci-standard/manifest.json): Node + package manager +
+# dependency cache RESTORE + install. Never saves the cache: only ci-standard's seed-cache job (base branch push) runs
+# actions/cache/save, with the path and key this action outputs. Synced to products by the manifest (copy): never edit it
+# in a product repo.
+#
+# Installer: `auto` installs with `bun install --frozen-lockfile` over the repo's OWN lockfile (npm package-lock.json or a
+# pnpm v9 lockfile; bun reads it in memory and writes nothing: a bun.lock the repo did not have is removed, the manifests
+# are restored), unless the repo has patches, a pnpmfile or `"bun": false` in .github/factory.json. pnpm overrides go to
+# bun too: when they trip bun's frozen check (a false positive on some repos), the fallback below installs. The build
+# scripts pnpm runs (`allowBuilds`/`onlyBuiltDependencies`) and bun blocked run with `bun pm trust`; one still blocked
+# sends the install to the fallback. If bun fails, its node_modules is removed and the native install runs in the same
+# step (`installer: native` skips bun for good in a repo where bun does not give the same tree).
+# Cache: the store of whatever installs (bun's ~/.bun/install/cache, ~/.npm or the pnpm store), keyed by the lockfile;
+# every restore leaves a `deps-cache` notice (hit | partial | miss) that the factory reads to measure the hit rate.
+name: setup-deps
+description: Set up Node and npm, pnpm or bun, restore the dependency cache seeded by the base branch, install
+inputs:
+  node-version:
+    default: "22"
+  package-manager:
+    description: npm | pnpm | bun
+    default: npm
+  installer:
+    description: auto | native | bun
+    default: auto
+  cache:
+    description: actions (restore the Actions cache) | none (self-hosted host with a persistent store)
+    default: actions
+  working-directory:
+    default: .
+  install:
+    description: "true: install the dependencies"
+    default: "true"
+  registry-url:
+    description: Private registry for setup-node (token = npm-token, as NODE_AUTH_TOKEN)
+    default: ""
+  registry-scope:
+    default: ""
+  npm-token:
+    description: Token for registry-url
+    default: ""
+  extra-install-dirs:
+    description: Extra directories (one per line) with their own lockfile, installed after the root (part of the cache key)
+    default: ""
+  install-extra:
+    description: "false: keep extra-install-dirs in the cache key and path but install only the root (the plan job)"
+    default: "true"
+outputs:
+  cache-path:
+    description: Dependency cache path (~/.npm or the pnpm store)
+    value: ${{ steps.key.outputs.path }}
+  cache-key:
+    description: Exact cache key (lockfile hash)
+    value: ${{ steps.key.outputs.key }}
+  installer:
+    description: What installed the tree (bun, pnpm, npm), after any fallback
+    value: ${{ steps.install.outputs.installer }}
+runs:
+  using: composite
+  steps:
+    - name: Check inputs
+      shell: bash
+      env:
+        PM: ${{ inputs.package-manager }}
+        CACHE: ${{ inputs.cache }}
+        INSTALLER: ${{ inputs.installer }}
+      run: |
+        case "$PM" in npm|pnpm|bun) ;; *) echo "::error::package-manager must be npm, pnpm or bun (got $PM)"; exit 1;; esac
+        case "$CACHE" in actions|none) ;; *) echo "::error::cache must be actions or none (got $CACHE)"; exit 1;; esac
+        case "$INSTALLER" in auto|native|bun) ;; *) echo "::error::installer must be auto, native or bun (got $INSTALLER)"; exit 1;; esac
+    - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      with:
+        node-version: ${{ inputs.node-version }}
+        registry-url: ${{ inputs.registry-url }}
+        scope: ${{ inputs.registry-scope }}
+    # Corepack into this job's temp dir, not pnpm/action-setup: that one self-installs into ~/setup-pnpm, shared by every
+    # runner of a host, and two jobs starting together on one host fail ("Worker pnpm#1 exited with code 1").
+    - name: pnpm (corepack, per job; version from package.json packageManager)
+      if: inputs.package-manager == 'pnpm'
+      shell: bash
+      env:
+        COREPACK_ENABLE_DOWNLOAD_PROMPT: "0"
+      run: |
+        mkdir -p "$RUNNER_TEMP/bin"
+        corepack enable --install-directory "$RUNNER_TEMP/bin"
+        echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+        echo "COREPACK_ENABLE_DOWNLOAD_PROMPT=0" >> "$GITHUB_ENV"
+    - name: Installer (auto picks bun only where it is the same tree)
+      id: choose
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        PM: ${{ inputs.package-manager }}
+        INSTALLER: ${{ inputs.installer }}
+      run: |
+        use=native; why="installer=$INSTALLER"
+        if [ "$PM" = bun ] || [ "$INSTALLER" = bun ]; then use=bun; why="asked for bun"
+        elif [ "$INSTALLER" = auto ]; then
+          if grep -qs '"bun"[[:space:]]*:[[:space:]]*false' .github/factory.json; then why='"bun": false in .github/factory.json'
+          elif [ "$PM" = npm ]; then
+            if [ -f package-lock.json ]; then use=bun; why="npm lockfile"; else why="no package-lock.json"; fi
+          elif ! grep -q "^lockfileVersion: '9" pnpm-lock.yaml 2>/dev/null; then why="pnpm lockfile is not v9"
+          elif ls .pnpmfile.* >/dev/null 2>&1; then why="pnpmfile"
+          elif grep -qs '"patchedDependencies"' package.json || grep -qs '^patchedDependencies:' pnpm-workspace.yaml; then why="pnpm patchedDependencies"
+          # npm's top-level `overrides` in package.json: pnpm ignores the field, bun applies it, so bun's tree differs from
+          # the lockfile and its frozen check always fails (a wasted bun attempt + an uncached native install every job).
+          elif node -e 'process.exit(require("./package.json").overrides ? 0 : 1)' 2>/dev/null; then why="npm overrides in package.json (pnpm ignores them, bun applies them)"
+          else use=bun; why="pnpm v9 lockfile"; fi
+        fi
+        echo "use=$use" >> "$GITHUB_OUTPUT"
+        echo "installer: $use ($why)"
+    - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+      if: steps.choose.outputs.use == 'bun' && inputs.install == 'true'
+      with:
+        bun-version: 1.4.4
+        # Its own binary cache would be saved on every PR ref (cache-guard); the download takes ~1 s.
+        no-cache: true
+    - name: Cache path and key
+      id: key
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        PM: ${{ inputs.package-manager }}
+        USE: ${{ steps.choose.outputs.use }}
+        NPM_HASH: ${{ hashFiles(format('{0}/package-lock.json', inputs.working-directory)) }}
+        PNPM_HASH: ${{ hashFiles(format('{0}/pnpm-lock.yaml', inputs.working-directory)) }}
+        # bun.lockb: the binary lockfile of repos that never moved to the text one (without it the key had no hash at all).
+        BUN_HASH: ${{ hashFiles(format('{0}/bun.lock', inputs.working-directory), format('{0}/bun.lockb', inputs.working-directory)) }}
+        EXTRA: ${{ inputs.extra-install-dirs }}
+      run: |
+        case "$PM" in pnpm) hash="$PNPM_HASH" ;; bun) hash="$BUN_HASH" ;; *) hash="$NPM_HASH" ;; esac
+        # extra-install-dirs keep their own lockfiles (often most of the tree): they are part of the key, so a change there
+        # gets a new entry from seed-cache instead of a stale one forever.
+        if [ -n "$EXTRA" ]; then
+          extra=$(while IFS= read -r dir; do
+            [ -n "$dir" ] || continue
+            for f in pnpm-lock.yaml package-lock.json bun.lock; do if [ -f "$dir/$f" ]; then sha256sum "$dir/$f"; fi; done
+          done <<< "$EXTRA" | sha256sum | cut -c1-16)
+          hash="${hash}-x${extra}"
+        fi
+        # The cache holds the store of what installs, so the key a PR restores is the one seed-cache saved with the same
+        # installer. Literal ~ on purpose: the cache version hashes the path string, and runners differ in $HOME.
+        if [ "$USE" = bun ]; then
+          if [ -n "$EXTRA" ] && [ "$PM" != bun ]; then
+            # The extra dirs install natively (pnpm or npm): cache that store next to bun's.
+            native_store="~/.npm"
+            if [ "$PM" = pnpm ]; then
+              echo "npm_config_store_dir=$GITHUB_WORKSPACE/.pnpm-store" >> "$GITHUB_ENV"
+              native_store=".pnpm-store"
+            fi
+            { echo "path<<CACHE_PATHS"; echo "~/.bun/install/cache"; echo "$native_store"; echo "CACHE_PATHS"; } >> "$GITHUB_OUTPUT"
+          else
+            echo "path=~/.bun/install/cache" >> "$GITHUB_OUTPUT"
+          fi
+          prefix="bun-${RUNNER_OS}-${PM}-"
+        elif [ "$PM" = pnpm ]; then
+          # Relative path on purpose: the cache version hashes the path string, and each runner has its own store.
+          echo "npm_config_store_dir=$GITHUB_WORKSPACE/.pnpm-store" >> "$GITHUB_ENV"
+          echo "path=.pnpm-store" >> "$GITHUB_OUTPUT"
+          prefix="pnpm-${RUNNER_OS}-"
+        else
+          echo "path=~/.npm" >> "$GITHUB_OUTPUT"
+          prefix="npm-${RUNNER_OS}-"
+        fi
+        echo "prefix=$prefix" >> "$GITHUB_OUTPUT"
+        echo "key=${prefix}${hash}" >> "$GITHUB_OUTPUT"
+    - name: Restore dependency cache (seeded by the base branch; never saved here)
+      id: restore
+      if: inputs.cache == 'actions' && inputs.install == 'true'
+      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+      with:
+        path: ${{ steps.key.outputs.path }}
+        key: ${{ steps.key.outputs.key }}
+        restore-keys: ${{ steps.key.outputs.prefix }}
+    - name: Cache hit (measured by the factory)
+      if: inputs.cache == 'actions' && inputs.install == 'true'
+      shell: bash
+      env:
+        HIT: ${{ steps.restore.outputs.cache-hit }}
+        MATCHED: ${{ steps.restore.outputs.cache-matched-key }}
+        KEY: ${{ steps.key.outputs.key }}
+      run: |
+        if [ "$HIT" = true ]; then r=hit; elif [ -n "$MATCHED" ]; then r=partial; else r=miss; fi
+        echo "::notice title=deps-cache::$r $KEY"
+    # pnpm 11 ignores ${VAR} in the project .npmrc token line (401). With AGENTSKIT_NPM_READ_TOKEN in the env, write the
+    # token to a user npmrc in $RUNNER_TEMP and point npm, pnpm and bun at it. Without the token: nothing.
+    - name: Authenticate the @noxcode registry (only when the read token exists)
+      shell: bash
+      env:
+        AGENTSKIT_NPM_READ_TOKEN: ${{ env.AGENTSKIT_NPM_READ_TOKEN }}
+      run: |
+        if [ -n "$AGENTSKIT_NPM_READ_TOKEN" ]; then
+          rc="$RUNNER_TEMP/noxcode-npmrc"
+          ( umask 077; printf '//npm.agentskit.io/:_authToken=%s\n' "$AGENTSKIT_NPM_READ_TOKEN" > "$rc" )
+          echo "::add-mask::$AGENTSKIT_NPM_READ_TOKEN"
+          echo "NPM_CONFIG_USERCONFIG=$rc" >> "$GITHUB_ENV"
+          echo "npm_config_userconfig=$rc" >> "$GITHUB_ENV"
+        fi
+    - name: Install
+      id: install
+      if: inputs.install == 'true'
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        PM: ${{ inputs.package-manager }}
+        USE: ${{ steps.choose.outputs.use }}
+        EXTRA: ${{ inputs.install-extra == 'true' && inputs.extra-install-dirs || '' }}
+        NODE_AUTH_TOKEN: ${{ inputs.npm-token }}
+      run: |
+        native() {
+          case "$PM" in
+            pnpm) pnpm install --frozen-lockfile --prefer-offline ;;
+            bun) bun install --frozen-lockfile ;;
+            *) npm ci --prefer-offline ;;
+          esac
+        }
+        # The build scripts pnpm runs: pnpm 11 `allowBuilds` (true), `onlyBuiltDependencies` (workspace yaml or package.json
+        # "pnpm"); `*` = all (dangerouslyAllowAllBuilds). bun reads none of them, only its own trusted list.
+        pnpm_builds() {
+          node <<'JS'
+        const fs = require('fs');
+        const read = (f) => { try { return fs.readFileSync(f, 'utf8'); } catch { return ''; } };
+        const unq = (s) => s.trim().replace(/^['"]|['"]$/g, '');
+        const out = new Set();
+        let cur = null;
+        for (const raw of read('pnpm-workspace.yaml').split('\n')) {
+          const l = raw.replace(/(^|\s)#.*$/, '').replace(/\s+$/, '');
+          if (!l.trim()) continue;
+          const top = /^([A-Za-z][\w-]*):\s*(.*)$/.exec(l);
+          if (top) {
+            cur = top[1];
+            if (cur === 'dangerouslyAllowAllBuilds' && unq(top[2]) === 'true') out.add('*');
+            const flow = /^\[(.*)\]$/.exec(top[2].trim());
+            if (cur === 'onlyBuiltDependencies' && flow) for (const s of flow[1].split(',')) if (unq(s)) out.add(unq(s));
+            continue;
+          }
+          const kv = /^\s+(.+?):\s*(.+)$/.exec(l);
+          if (cur === 'allowBuilds' && kv && unq(kv[2]) === 'true') out.add(unq(kv[1]));
+          const item = /^\s*-\s*(.+)$/.exec(l);
+          if (cur === 'onlyBuiltDependencies' && item) out.add(unq(item[1]));
+        }
+        let pnpm = {};
+        try { pnpm = JSON.parse(read('package.json') || '{}').pnpm || {}; } catch {}
+        for (const s of pnpm.onlyBuiltDependencies || []) out.add(s);
+        for (const [k, v] of Object.entries(pnpm.allowBuilds || {})) if (v === true) out.add(k);
+        if (pnpm.dangerouslyAllowAllBuilds === true) out.add('*');
+        process.stdout.write([...out].join('\n'));
+        JS
+        }
+        # Packages bun blocked that pnpm would build (`bun pm untrusted`: `./node_modules/x @1.2.3`).
+        blocked_builds() {
+          local want="$1"
+          bun pm untrusted 2>/dev/null | sed -nE 's#^\./([^ ]*/)?node_modules/((@[^/ ]+/)?[^/ ]+) @.*#\2#p' | sort -u |
+            while IFS= read -r p; do
+              if printf '%s\n' "$want" | grep -qxF -e '*' -e "$p"; then echo "$p"; fi
+            done
+        }
+        trust_builds() {
+          [ "$PM" = pnpm ] || return 0
+          local want todo left
+          want=$(pnpm_builds) || return 1
+          [ -n "$want" ] || return 0
+          todo=$(blocked_builds "$want")
+          [ -n "$todo" ] || return 0
+          echo "bun pm trust (pnpm builds them):" $todo
+          # shellcheck disable=SC2086
+          bun pm trust $todo || return 1
+          # Once package.json lists trustedDependencies bun drops its default trusted list, so `bun pm untrusted` now lists
+          # packages its default list already built: check again only the ones trusted here.
+          left=$(blocked_builds "$todo")
+          if [ -n "$left" ]; then echo "::warning::still blocked after bun pm trust:" $left; return 1; fi
+        }
+        installed="$PM"
+        if [ "$USE" = bun ] && [ "$PM" != bun ]; then
+          had_lock=""; [ -f bun.lock ] && had_lock=1
+          # npm trees are hoisted; pnpm trees are isolated unless the repo hoists them.
+          linker=isolated
+          if [ "$PM" = npm ] || grep -qs '^shamefully-hoist=true\|^node-linker=hoisted' .npmrc; then linker=hoisted; fi
+          if bun install --frozen-lockfile --linker "$linker" && trust_builds; then installed=bun
+          else
+            echo "::warning::bun install failed; removing its tree and installing with $PM (set installer: native to skip bun)"
+            find . -name node_modules -type d -prune -exec rm -rf {} +
+            native
+          fi
+          # bun --frozen-lockfile writes nothing; make sure no bun.lock the repo did not have, and no changed manifest or
+          # lockfile, leaks into a later step (or a commit).
+          [ -n "$had_lock" ] || rm -f bun.lock bun.lockb
+          for f in package.json package-lock.json pnpm-lock.yaml pnpm-workspace.yaml; do
+            if [ -f "$f" ]; then git checkout -- "$f" 2>/dev/null || true; fi
+          done
+        else
+          native
+        fi
+        if [ -n "$EXTRA" ]; then
+          while IFS= read -r dir; do
+            [ -n "$dir" ] || continue
+            echo "install $dir"
+            ( cd "$dir" && native )
+          done <<< "$EXTRA"
+        fi
+        echo "installer=$installed" >> "$GITHUB_OUTPUT"
+        echo "installed with $installed"
