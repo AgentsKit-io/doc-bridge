@@ -7,6 +7,9 @@ owner: doc-bridge-maintainers
 lifecycle: active
 sourceOfTruth: src/memory
 validationPath: pnpm test && pnpm typecheck
+docbridge:
+  covers:
+    - area:src/memory
 ---
 
 # Memory

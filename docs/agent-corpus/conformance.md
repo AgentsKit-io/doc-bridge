@@ -7,6 +7,9 @@ owner: doc-bridge-maintainers
 lifecycle: active
 sourceOfTruth: src/conformance
 validationPath: pnpm test && node bin/ak-docs.js conformance run documentation-standard-v1 --text
+docbridge:
+  covers:
+    - area:src/conformance
 ---
 
 # Conformance

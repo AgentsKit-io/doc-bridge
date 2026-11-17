@@ -7,6 +7,9 @@ owner: doc-bridge-maintainers
 lifecycle: active
 sourceOfTruth: src/index-builder
 validationPath: pnpm test && pnpm typecheck && node bin/ak-docs.js index
+docbridge:
+  covers:
+    - area:src/index-builder
 ---
 
 # Index builder

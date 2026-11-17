@@ -7,6 +7,9 @@ owner: doc-bridge-maintainers
 lifecycle: active
 sourceOfTruth: src/query
 validationPath: pnpm test && pnpm typecheck
+docbridge:
+  covers:
+    - area:src/query
 ---
 
 # Query

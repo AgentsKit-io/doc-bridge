@@ -7,6 +7,9 @@ owner: doc-bridge-maintainers
 lifecycle: active
 sourceOfTruth: src/doctor
 validationPath: pnpm test && node bin/ak-docs.js doctor --text
+docbridge:
+  covers:
+    - area:src/doctor
 ---
 
 # Doctor
