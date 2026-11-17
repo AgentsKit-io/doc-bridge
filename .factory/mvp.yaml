@@ -1,0 +1,12 @@
+# Dogfood declaration read by the readiness sensor.
+dogfood:
+  summary: doc-bridge runs on its own repository in every PR (self-dogfood in CI).
+  workflow: .github/workflows/ci.yml
+  job: test
+  commands:
+    - ak-docs index (built twice, byte-compared)
+    - ak-docs gate run
+    - ak-docs conformance run documentation-standard-v1
+    - ak-docs bench retrieval (hit@3 >= baseline)
+  metric: "CI job test green on main"
+  decision: "Factory PM decision: technical, no owner approval needed"

@@ -1,1 +1,5 @@
+#!/usr/bin/env sh
+# Pre-push gate: the synced ci-standard checks, then the same typecheck CI runs
+# (the repo has no separate lint step).
 node ci-standard/scripts/pre-push.mjs
+pnpm typecheck
