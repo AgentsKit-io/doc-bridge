@@ -211,7 +211,7 @@
     "fumadocs-ui": "16.17.7",
     "ink-testing-library": "^4.0.0",
     "lucide-react": "1.61.0",
-    "next": "16.4.2",
+    "next": "16.4.5",
     "proxy-agent": "8.0.2",
     "react-dom": "19.3.1",
     "tailwindcss": "4.3.3",
