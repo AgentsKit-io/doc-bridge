@@ -1,4 +1,4 @@
-import * as ts from 'typescript'
+import * as ts from 'typescript-api'
 import { basename, dirname, resolve } from 'node:path'
 import { canonicalJsonV1 } from '../../index-builder/content-hash.js'
 import type { SurfaceFact } from '../../storage/facts.js'

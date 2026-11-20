@@ -1,4 +1,4 @@
-import * as ts from 'typescript'
+import * as ts from 'typescript-api'
 import { posix } from 'node:path'
 import type { KnowledgeEntity } from '../schemas/knowledge.js'
 import type { SurfaceFact } from '../storage/facts.js'

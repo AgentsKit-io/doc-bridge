@@ -1,32 +1,672 @@
-name: CI standard
-
-# This repository's settings for the organization's reusable CI pipeline
-# (AgentsKit-io/.github, docs/ci.md). Called by ci.yml.
-
+# CI standard v3 (source: NoxCodeSolutions/platform-template, ci-standard/manifest.json; docs/ci-standard.md).
+# Synced to every product repo by PR (factory-line ci-template-sync, mode copy): never edit this file in a product repo;
+# adjust it with the inputs below in the repo's own ci.yml. A product that needs something the inputs do not cover asks
+# for a new input here.
+#
+# What runs (only what is essential, every minute counts):
+#   pull_request, draft      -> plan (affected set + secret scan) + lint (oxlint, Biome format, typecheck). Nothing else.
+#   pull_request, ready      -> + tests of what changed + build (+ contract when its paths changed).
+#   docs/changelog-only PR   -> plan only (scope=none: the heavy jobs never take a runner).
+#   push to the base branch  -> plan + seed-cache (only when the lockfile's cache entry is missing). The PR already ran.
+#   nightly (schedule)       -> everything, only when the base branch changed since the last nightly.
+#   production / manual      -> everything (the production deploy calls the standard with full = true).
+# Fail fast (owner, 10/11): no runner minute after the first red. The jobs run in a chain, the cheap ones first:
+# plan -> lint (oxlint, format, typecheck) -> test (what changed) -> build -> contract. On a PR, a red job skips every
+# later one; vitest stops at the first failing test and a test above 10 s fails (`*.slow.test.*` run nightly:
+# ci-standard/scripts/test-budget.mjs); cancel-on-failure then cancels the product's own jobs still running beside the
+# standard. The gate names the job that went red first. Nightly and production run every job and every test, so all
+# failures show.
+# Runner: inputs.runner, else the repo variable RUNS_ON that the factory writes from its runner policy (Depot; GitHub-
+# hosted after 10 min of queue, then the factory runners; back by itself when the queue drains), else ORG_RUNS_ON, else
+# Depot. Leave `runner` empty in the product's ci.yml.
+name: ci-standard
 on:
   workflow_call:
+    inputs:
+      runner:
+        description: 'JSON runs-on value. Empty (default) = the route: vars.RUNS_ON (per repo), vars.ORG_RUNS_ON, else "depot-ubuntu-24.04"'
+        type: string
+        default: ""
+      full:
+        description: Run everything (no affected cut). The production deploy calls the standard with full = true.
+        type: boolean
+        default: false
+      tool:
+        description: Affected tool - paths (workspaces from ci-standard/affected.config.json), turbo or nx
+        type: string
+        default: paths
+      base-branch:
+        description: Branch that seeds the cache and is the diff base for PRs (develop in most products)
+        type: string
+        default: develop
+      node-version:
+        type: string
+        default: "22"
+      package-manager:
+        description: npm | pnpm | bun (the lockfile the repo commits; pnpm reads its version from package.json `packageManager`)
+        type: string
+        default: npm
+      installer:
+        description: >-
+          auto (default) = bun install --frozen-lockfile over the repo's own npm or pnpm v9 lockfile (no bun.lock is ever
+          written), falling back to the native install in the same step; native = npm ci / pnpm install (a repo where bun
+          does not give the same tree); bun = always bun
+        type: string
+        default: auto
+      cache:
+        description: actions = restore the Actions cache seeded by the base branch (PRs never save); none = skip it
+        type: string
+        default: actions
+      linter:
+        description: oxlint (default, with the repo's .oxlintrc.json) | biome (lint-command) | both
+        type: string
+        default: oxlint
+      lint-command:
+        description: The Biome lint command (only when linter is biome or both)
+        type: string
+        default: npm run lint:biome
+      format-command:
+        description: Format check (Biome formats, it does not lint). "none" skips it
+        type: string
+        default: npx --no-install biome format .
+      typecheck-command:
+        description: >-
+          Typecheck with TypeScript 7 (the native compiler, tsgo), in the lint job. "none" skips it. Env: $SCOPE
+          (none | affected | full), $AFFECTED_PACKAGES, $BASE_REF, to cut it to what changed
+        type: string
+        default: npm run typecheck
+      extra-lint-command:
+        description: Extra repo-specific lint (e.g. architecture boundaries), run after the linter
+        type: string
+        default: ""
+      build-command:
+        description: >-
+          The build. Env, as in typecheck-command: $SCOPE, $AFFECTED_PACKAGES, $BASE_REF. "none" = no build job (a repo
+          that builds nothing: scripts, infra helpers)
+        type: string
+        default: npm run build
+      extra-build-command:
+        description: Extra step after the build. On pull_request, $BASE_SHA holds the PR base commit; it is empty otherwise.
+        type: string
+        default: ""
+      build-artifact-name:
+        description: Name of the artifact uploaded after the build (empty = no upload)
+        type: string
+        default: ""
+      build-artifact-path:
+        description: Paths (one per line) of the build artifact
+        type: string
+        default: ""
+      build-artifact-retention-days:
+        description: Days the build artifact is kept (an org near its artifact storage quota lowers it)
+        type: number
+        default: 7
+      test-command:
+        description: >-
+          The whole suite (nightly, full, and PRs whose plan says scope=full or that have no affected-test-command). "none"
+          = no test job (a repo with no tests yet: the minimal v3 is plan + lint, plus the build if it builds)
+        type: string
+        default: npm run test:unit
+      affected-test-command:
+        description: >-
+          Tests of what changed, on a ready PR whose plan says scope=affected. Env: $BASE_REF (origin/<base>),
+          $AFFECTED_PACKAGES (comma list). Vitest: `npx vitest run --changed "$BASE_REF"`; a pnpm workspace with one vitest
+          config per app: `pnpm -r --workspace-concurrency=1 --filter "./apps/*" exec vitest run --changed "$BASE_REF"
+          --passWithNoTests`; Turbo:
+          `pnpm exec turbo run test:unit --filter="...[$BASE_REF]"`; Nx: `npx nx affected -t test --base="$BASE_REF"`.
+          Empty = test-command.
+        type: string
+        default: ""
+      extra-test-command:
+        description: Extra repo-specific checks after the tests in the test job (e.g. schema drift)
+        type: string
+        default: ""
+      contract-command:
+        description: Optional product contract/e2e suite in its own parallel job (empty = no job)
+        type: string
+        default: ""
+      contract-paths:
+        description: >-
+          On a ready PR the contract job runs only when the affected workspaces contain this text (empty = never on a PR:
+          nightly and production only)
+        type: string
+        default: ""
+      security:
+        description: Run the full security job (audit of production deps + security-extra-command) on nightly and full runs
+        type: boolean
+        default: true
+      audit-command:
+        description: Empty = by package-manager (npm audit --omit=dev --audit-level=high | pnpm audit --prod --audit-level high | bun audit --audit-level=high)
+        type: string
+        default: ""
+      security-extra-command:
+        description: Extra repo-specific security check, in the security job
+        type: string
+        default: ""
+      gitleaks-config:
+        description: gitleaks config path (empty = gitleaks defaults). The secret scan runs in plan on every run.
+        type: string
+        default: .gitleaks.toml
+      registry-url:
+        description: Private registry for setup-node (token = secret npm-token)
+        type: string
+        default: ""
+      registry-scope:
+        type: string
+        default: ""
+      extra-install-dirs:
+        description: Extra directories (one per line) with their own lockfile, installed after the root
+        type: string
+        default: ""
+      job-timeout-minutes:
+        description: >-
+          Hang guard of the lint, build and test jobs (and of plan when turbo/nx needs the install). Raise it for a
+          suite that is slow on a loaded runner; it is never a budget the checks must meet.
+        type: number
+        default: 20
     outputs:
       mode:
-        description: Pipeline mode (draft, light, pr, full, seed or skip).
-        value: ${{ jobs.standard.outputs.mode }}
-
-permissions: {}
-
+        description: draft | pr | seed | nightly | full | skip (what this run is for); product-only jobs gate on it
+        value: ${{ jobs.plan.outputs.mode }}
+      scope:
+        description: none | affected | full
+        value: ${{ jobs.plan.outputs.scope }}
+    secrets:
+      AGENTSKIT_NPM_READ_TOKEN:
+        description: Optional. Read token of the private @noxcode registry (npm.agentskit.io); products pass it with secrets inherit
+        required: false
+      npm-token:
+        description: Optional. Token for registry-url (NODE_AUTH_TOKEN during install)
+        required: false
+# Permissions per job, never at the top: a called workflow asking more than its caller grants fails to start, and a job
+# with no `permissions` gets what the caller grants. The jobs that install or run the repo's code get `contents: read`
+# only; plan reads the last nightly (`actions: read`, every v3 ci.yml grants it); gate and cancel-on-failure get the
+# caller's grant (cancel-on-failure needs `actions: write` on the caller's `standard` job to cancel; without it, a notice).
+# One run per PR: a new push cancels the run of the old one. Base branch, nightly and production runs never cancel.
+concurrency:
+  group: ci-standard-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+env:
+  HUSKY: "0"
+  AGENTSKIT_NPM_READ_TOKEN: ${{ secrets.AGENTSKIT_NPM_READ_TOKEN }}
+  OXLINT_VERSION: 1.93.0
 jobs:
-  standard:
-    uses: AgentsKit-io/.github/.github/workflows/ci.yml@c624db48051670469618d9c74854f3a1affc0138
+  plan:
     permissions:
-      actions: write
       contents: read
-    with:
-      installer: auto
-      typecheck-command: bash scripts/ci/check.sh
-      test-command: pnpm test
-      affected-test-command: >-
-        pnpm vitest run --changed "$BASE_REF" --passWithNoTests &&
-        pnpm test:cursor-plugin && pnpm test:claude-plugin && pnpm test:copilot-plugin &&
-        pnpm test:portable-skill && pnpm test:ecosystem-upstream
-      build-command: bash scripts/ci/build.sh
-      light-paths: |
-        changelog.d/*
-      job-timeout-minutes: 25
+      actions: read
+    runs-on: ${{ fromJSON(inputs.runner || vars.RUNS_ON || vars.ORG_RUNS_ON || '"depot-ubuntu-24.04"') }}
+    timeout-minutes: ${{ inputs.tool == 'paths' && 10 || inputs.job-timeout-minutes }}
+    outputs:
+      mode: ${{ steps.mode.outputs.mode }}
+      scope: ${{ steps.affected.outputs.scope }}
+      packages: ${{ steps.affected.outputs.packages }}
+      cores: ${{ steps.cores.outputs.cores }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          filter: blob:none
+      - name: What this run is for
+        id: mode
+        uses: ./.github/actions/ci-mode
+        with:
+          full: ${{ inputs.full }}
+          base-branch: ${{ inputs.base-branch }}
+      # The secret scan runs on every run that has new code, here (no extra job): a docs-only change can leak a secret too.
+      # Before the install, on the checkout only: with turbo/nx the install below fills node_modules and the pnpm store
+      # (`.pnpm-store` in the workspace), and gitleaks then scanned every dependency (agentskit-os: 970 MB, 68 findings).
+      # Binary pinned by sha256 instead of the Docker image: self-hosted runners give jobs no Docker.
+      - name: Install gitleaks
+        if: steps.mode.outputs.mode != 'seed' && steps.mode.outputs.mode != 'skip'
+        env:
+          GITLEAKS_VERSION: 8.30.1
+          GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
+        run: |
+          archive="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          mkdir -p "$RUNNER_TEMP/bin"
+          # Outer loop: curl's own --retry gives up on a CDN flake (exit 22); wait only between attempts.
+          url="https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/$archive"
+          for attempt in 1 2 3 4 5; do
+            curl -sSfL --retry 5 --retry-delay 5 --retry-all-errors -o "$RUNNER_TEMP/$archive" "$url" && break
+            if [ "$attempt" -eq 5 ]; then echo "gitleaks download failed after 5 attempts" >&2; exit 1; fi
+            sleep 10
+          done
+          echo "$GITLEAKS_SHA256  $RUNNER_TEMP/$archive" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/$archive" -C "$RUNNER_TEMP/bin" gitleaks
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+      - name: Secret scan (code and docs, redacted)
+        if: steps.mode.outputs.mode != 'seed' && steps.mode.outputs.mode != 'skip'
+        env:
+          CONFIG: ${{ inputs.gitleaks-config }}
+        run: |
+          if [ -n "$CONFIG" ] && [ -f "$CONFIG" ]; then gitleaks dir . --config "$CONFIG" --redact --no-banner
+          else gitleaks dir . --redact --no-banner; fi
+      # turbo and nx live in the repo's node_modules: their affected set needs the install (paths needs none). Without it,
+      # `npx turbo`/`npx nx` fetches whatever version the registry has (or fails on the workspace plugins).
+      - name: Node${{ inputs.tool != 'paths' && format(', {0} and the install ({1} needs it)', inputs.package-manager, inputs.tool) || '' }}
+        uses: ./.github/actions/setup-deps
+        with:
+          node-version: ${{ inputs.node-version }}
+          package-manager: ${{ inputs.package-manager }}
+          installer: ${{ inputs.installer }}
+          cache: ${{ inputs.cache }}
+          install: ${{ inputs.tool != 'paths' && (steps.mode.outputs.mode == 'pr' || steps.mode.outputs.mode == 'draft') }}
+          # Same cache key and path as the other jobs (a hit), but turbo/nx need only the root.
+          extra-install-dirs: ${{ inputs.extra-install-dirs }}
+          install-extra: "false"
+          registry-url: ${{ inputs.registry-url }}
+          registry-scope: ${{ inputs.registry-scope }}
+          npm-token: ${{ secrets.npm-token }}
+      - id: cores
+        run: echo "cores=$(nproc)" >> "$GITHUB_OUTPUT"
+      - name: Affected set (PR), everything (nightly, manual, full) or nothing (base push, unchanged nightly)
+        id: affected
+        env:
+          MODE: ${{ steps.mode.outputs.mode }}
+          BASE: origin/${{ inputs.base-branch }}
+          TOOL: ${{ inputs.tool }}
+        run: |
+          case "$MODE" in
+            pr|draft)
+              git fetch --no-tags --filter=blob:none origin "${BASE#origin/}:refs/remotes/$BASE" || true
+              node ci-standard/scripts/affected.mjs --base "$BASE" --tool "$TOOL" ;;
+            seed|skip) printf 'scope=none\npackages=\n' | tee -a "$GITHUB_OUTPUT" ;;
+            *) node ci-standard/scripts/affected.mjs --full ;;
+          esac
+      # The skip proof lives in the plan job (one checkout, no extra runner minute): a change hidden from the tool MUST fail.
+      - name: Skip logic test
+        run: node --test ci-standard/test/affected.test.mjs
+      # The probe path can be no repo's workspace (`tools/` is one in some repos: the probe passed there and the plan failed).
+      - name: Hidden change must fail the affected step (never green)
+        run: |
+          if node ci-standard/scripts/affected.mjs --files __ci_hidden_probe__/unmapped.ts > /dev/null; then
+            echo "::error::skip logic let a hidden change pass green"; exit 1
+          fi
+          echo "hidden change failed the affected step, as required"
+  seed-cache:
+    # The ONLY place that writes the dependency cache: a push to the base branch, and only when the lockfile's entry is
+    # missing (a hit costs one lookup, no install). Same installer as the PR jobs, so the key they restore is the one saved.
+    if: github.event_name == 'push' && github.ref_name == inputs.base-branch && inputs.cache == 'actions'
+    permissions:
+      contents: read
+    runs-on: ${{ fromJSON(inputs.runner || vars.RUNS_ON || vars.ORG_RUNS_ON || '"depot-ubuntu-24.04"') }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - id: key
+        name: Cache key (no install)
+        uses: ./.github/actions/setup-deps
+        with:
+          node-version: ${{ inputs.node-version }}
+          package-manager: ${{ inputs.package-manager }}
+          installer: ${{ inputs.installer }}
+          cache: none
+          install: "false"
+          # Part of the key (their lockfiles), so the lookup matches what the PR jobs restore.
+          extra-install-dirs: ${{ inputs.extra-install-dirs }}
+      - id: lookup
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: ${{ steps.key.outputs.cache-path }}
+          key: ${{ steps.key.outputs.cache-key }}
+          lookup-only: true
+      - id: deps
+        if: steps.lookup.outputs.cache-hit != 'true'
+        uses: ./.github/actions/setup-deps
+        with:
+          node-version: ${{ inputs.node-version }}
+          package-manager: ${{ inputs.package-manager }}
+          installer: ${{ inputs.installer }}
+          cache: actions
+          registry-url: ${{ inputs.registry-url }}
+          registry-scope: ${{ inputs.registry-scope }}
+          npm-token: ${{ secrets.npm-token }}
+          extra-install-dirs: ${{ inputs.extra-install-dirs }}
+      - if: steps.lookup.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: ${{ steps.deps.outputs.cache-path }}
+          key: ${{ steps.deps.outputs.cache-key }}
+  lint:
+    # Drafts too: lint + typecheck is all a draft gets. The first link of the chain: test and build wait for it.
+    needs: plan
+    if: needs.plan.outputs.scope != 'none'
+    permissions:
+      contents: read
+    runs-on: ${{ fromJSON(inputs.runner || vars.RUNS_ON || vars.ORG_RUNS_ON || '"depot-ubuntu-24.04"') }}
+    timeout-minutes: ${{ inputs.job-timeout-minutes }}
+    # A repo may cut its typecheck to the plan's set (e.g. `turbo run typecheck --filter="...[$BASE_REF]"` when
+    # SCOPE=affected): blobless full history so the base ref resolves.
+    env:
+      SCOPE: ${{ needs.plan.outputs.scope }}
+      AFFECTED_PACKAGES: ${{ needs.plan.outputs.packages }}
+      BASE_REF: origin/${{ inputs.base-branch }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          filter: blob:none
+      - name: Node, ${{ inputs.package-manager }}, restore the cache seeded by ${{ inputs.base-branch }}, install
+        uses: ./.github/actions/setup-deps
+        with:
+          node-version: ${{ inputs.node-version }}
+          package-manager: ${{ inputs.package-manager }}
+          installer: ${{ inputs.installer }}
+          cache: ${{ inputs.cache }}
+          registry-url: ${{ inputs.registry-url }}
+          registry-scope: ${{ inputs.registry-scope }}
+          npm-token: ${{ secrets.npm-token }}
+          extra-install-dirs: ${{ inputs.extra-install-dirs }}
+      - name: Hook is versioned and executable (mandatory pre-push)
+        run: test -x .husky/pre-push && grep -q pre-push.mjs .husky/pre-push
+      - name: Cache policy (no PR writes the Actions cache)
+        run: node ci-standard/scripts/cache-guard.mjs
+      - name: Contract/e2e without fixed ports, flock or fixed dates
+        run: node ci-standard/scripts/no-fixed-ports.mjs
+      - name: oxlint
+        if: inputs.linter == 'oxlint' || inputs.linter == 'both'
+        run: npx --yes "oxlint@${OXLINT_VERSION}"
+      - name: Biome lint
+        if: inputs.linter == 'biome' || inputs.linter == 'both'
+        run: ${{ inputs.lint-command }}
+      - name: Biome format
+        if: inputs.format-command != 'none'
+        run: ${{ inputs.format-command }}
+      - name: TypeScript version (7.0.x stable, the native compiler)
+        # Fails if another package's `tsc` bin shadows TS 7 (e.g. an npm alias of typescript@5).
+        if: inputs.typecheck-command != 'none'
+        run: npx tsc --version | tee /dev/stderr | grep -q '^Version 7\.0\.'
+      - name: Typecheck
+        if: inputs.typecheck-command != 'none'
+        run: ${{ inputs.typecheck-command }}
+      - name: Extra lint
+        if: inputs.extra-lint-command != ''
+        run: ${{ inputs.extra-lint-command }}
+  test:
+    # After lint (a red lint on a PR never starts the tests). Nightly and production run it even after a red lint.
+    needs: [plan, lint]
+    if: >-
+      ${{ !cancelled() && needs.plan.result == 'success' && inputs.test-command != 'none' && needs.plan.outputs.scope != 'none' && needs.plan.outputs.mode != 'draft' &&
+      (needs.lint.result == 'success' || needs.plan.outputs.mode == 'nightly' || needs.plan.outputs.mode == 'full') }}
+    permissions:
+      contents: read
+    runs-on: ${{ fromJSON(inputs.runner || vars.RUNS_ON || vars.ORG_RUNS_ON || '"depot-ubuntu-24.04"') }}
+    timeout-minutes: ${{ inputs.job-timeout-minutes }}
+    env:
+      TEST_CONCURRENCY: ${{ needs.plan.outputs.cores }}
+      SCOPE: ${{ needs.plan.outputs.scope }}
+      AFFECTED_PACKAGES: ${{ needs.plan.outputs.packages }}
+      BASE_REF: origin/${{ inputs.base-branch }}
+      # The PR path bails at the first failing test, fails a test above 10 s and skips `*.slow.test.*`; nightly and
+      # production run them all (ci-standard/scripts/test-budget.mjs, spread into the repo's vitest.config).
+      CI_TEST_PROFILE: ${{ needs.plan.outputs.mode == 'pr' && 'pr' || 'full' }}
+      TEST_BAIL: ${{ needs.plan.outputs.mode == 'pr' && '1' || '0' }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          filter: blob:none
+      - name: Node, ${{ inputs.package-manager }}, restore the cache seeded by ${{ inputs.base-branch }}, install
+        uses: ./.github/actions/setup-deps
+        with:
+          node-version: ${{ inputs.node-version }}
+          package-manager: ${{ inputs.package-manager }}
+          installer: ${{ inputs.installer }}
+          cache: ${{ inputs.cache }}
+          registry-url: ${{ inputs.registry-url }}
+          registry-scope: ${{ inputs.registry-scope }}
+          npm-token: ${{ secrets.npm-token }}
+          extra-install-dirs: ${{ inputs.extra-install-dirs }}
+      - name: Test reports (vitest JSON and the test output, read for the slowest tests)
+        run: mkdir -p "$RUNNER_TEMP/test-reports" && echo "CI_TEST_REPORT_DIR=$RUNNER_TEMP/test-reports" >> "$GITHUB_ENV"
+      - name: Tests of what changed (PR, scope=affected)
+        if: needs.plan.outputs.mode == 'pr' && needs.plan.outputs.scope == 'affected' && inputs.affected-test-command != ''
+        run: |
+          set -o pipefail
+          git fetch --no-tags --filter=blob:none origin "${BASE_REF#origin/}:refs/remotes/$BASE_REF" || true
+          { ${{ inputs.affected-test-command }}
+          } 2>&1 | tee -a "$CI_TEST_REPORT_DIR/test-output.log"
+      - name: Whole suite
+        if: ${{ !(needs.plan.outputs.mode == 'pr' && needs.plan.outputs.scope == 'affected' && inputs.affected-test-command != '') }}
+        run: |
+          set -o pipefail
+          { ${{ inputs.test-command }}
+          } 2>&1 | tee -a "$CI_TEST_REPORT_DIR/test-output.log"
+      - name: Extra test command
+        if: inputs.extra-test-command != ''
+        run: ${{ inputs.extra-test-command }}
+      - name: Slowest tests (job summary and the `slow-tests` notice the factory reads)
+        if: ${{ !cancelled() }}
+        run: node ci-standard/scripts/slow-tests.mjs --summary "$CI_TEST_REPORT_DIR"
+  build:
+    # After the tests (the most expensive of the three last). Nightly and production build even after a red.
+    needs: [plan, lint, test]
+    # test-command "none": no test job, the build follows the lint.
+    if: >-
+      ${{ !cancelled() && needs.plan.result == 'success' && inputs.build-command != 'none' && needs.plan.outputs.scope != 'none' && needs.plan.outputs.mode != 'draft' &&
+      ((needs.lint.result == 'success' && (needs.test.result == 'success' || inputs.test-command == 'none')) || needs.plan.outputs.mode == 'nightly' || needs.plan.outputs.mode == 'full') }}
+    permissions:
+      contents: read
+    runs-on: ${{ fromJSON(inputs.runner || vars.RUNS_ON || vars.ORG_RUNS_ON || '"depot-ubuntu-24.04"') }}
+    timeout-minutes: ${{ inputs.job-timeout-minutes }}
+    env:
+      TEST_CONCURRENCY: ${{ needs.plan.outputs.cores }}
+      # A repo may cut its build to the plan's set, as in lint.
+      SCOPE: ${{ needs.plan.outputs.scope }}
+      AFFECTED_PACKAGES: ${{ needs.plan.outputs.packages }}
+      BASE_REF: origin/${{ inputs.base-branch }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          filter: blob:none
+      - name: Node, ${{ inputs.package-manager }}, restore the cache seeded by ${{ inputs.base-branch }}, install
+        uses: ./.github/actions/setup-deps
+        with:
+          node-version: ${{ inputs.node-version }}
+          package-manager: ${{ inputs.package-manager }}
+          installer: ${{ inputs.installer }}
+          cache: ${{ inputs.cache }}
+          registry-url: ${{ inputs.registry-url }}
+          registry-scope: ${{ inputs.registry-scope }}
+          npm-token: ${{ secrets.npm-token }}
+          extra-install-dirs: ${{ inputs.extra-install-dirs }}
+      - run: ${{ inputs.build-command }}
+      - name: Extra build step
+        if: inputs.extra-build-command != ''
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: ${{ inputs.extra-build-command }}
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        if: inputs.build-artifact-name != ''
+        with:
+          name: ${{ inputs.build-artifact-name }}
+          path: ${{ inputs.build-artifact-path }}
+          retention-days: ${{ inputs.build-artifact-retention-days }}
+  contract:
+    # Optional product contract/e2e suite, the last link of the chain (the most expensive): nightly and production always
+    # (even after a red, so all failures show); on a ready PR only after a green lint, test and build, and only when the
+    # affected workspaces contain contract-paths (never on a draft, never with contract-paths empty).
+    needs: [plan, lint, test, build]
+    if: >-
+      ${{ !cancelled() && needs.plan.result == 'success' && inputs.contract-command != '' && ((needs.plan.outputs.scope == 'full' &&
+      (needs.plan.outputs.mode == 'nightly' || needs.plan.outputs.mode == 'full' || (needs.lint.result == 'success' && (needs.test.result == 'success' || inputs.test-command == 'none') &&
+      (needs.build.result == 'success' || inputs.build-command == 'none')))) ||
+      (needs.plan.outputs.mode == 'pr' && needs.plan.outputs.scope == 'affected' && inputs.contract-paths != '' &&
+      contains(needs.plan.outputs.packages, inputs.contract-paths) && needs.lint.result == 'success' &&
+      (needs.test.result == 'success' || inputs.test-command == 'none') && (needs.build.result == 'success' || inputs.build-command == 'none'))) }}
+    permissions:
+      contents: read
+    runs-on: ${{ fromJSON(inputs.runner || vars.RUNS_ON || vars.ORG_RUNS_ON || '"depot-ubuntu-24.04"') }}
+    timeout-minutes: 30
+    env:
+      TEST_CONCURRENCY: ${{ needs.plan.outputs.cores }}
+      SCOPE: ${{ needs.plan.outputs.scope }}
+      CONTRACT_DATABASE_SERVER: "1"
+      TEST_DB_SUFFIX: contract
+      # Contract suites keep their own timeouts (never the 10 s unit budget); a PR still stops at the first failure.
+      CI_TEST_PROFILE: full
+      TEST_BAIL: ${{ needs.plan.outputs.mode == 'pr' && '1' || '0' }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Node, ${{ inputs.package-manager }}, restore the cache seeded by ${{ inputs.base-branch }}, install
+        uses: ./.github/actions/setup-deps
+        with:
+          node-version: ${{ inputs.node-version }}
+          package-manager: ${{ inputs.package-manager }}
+          installer: ${{ inputs.installer }}
+          cache: ${{ inputs.cache }}
+          registry-url: ${{ inputs.registry-url }}
+          registry-scope: ${{ inputs.registry-scope }}
+          npm-token: ${{ secrets.npm-token }}
+          extra-install-dirs: ${{ inputs.extra-install-dirs }}
+      - name: Contract
+        run: ${{ inputs.contract-command }}
+      - name: Drop this job's databases (also on a cancelled run)
+        if: always()
+        run: node ci-standard/scripts/test-env.mjs cleanup --job
+  security:
+    # Full security: nightly and production (and manual). The secret scan of every run is in plan.
+    # No install: the audit reads the lockfile.
+    needs: plan
+    if: inputs.security && (needs.plan.outputs.mode == 'full' || needs.plan.outputs.mode == 'nightly')
+    permissions:
+      contents: read
+    runs-on: ${{ fromJSON(inputs.runner || vars.RUNS_ON || vars.ORG_RUNS_ON || '"depot-ubuntu-24.04"') }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with: { node-version: "${{ inputs.node-version }}" }
+      - if: inputs.package-manager == 'pnpm'
+        name: pnpm (corepack, per job; version from package.json packageManager)
+        run: mkdir -p "$RUNNER_TEMP/bin" && corepack enable --install-directory "$RUNNER_TEMP/bin" && echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+        env:
+          COREPACK_ENABLE_DOWNLOAD_PROMPT: "0"
+      # Same as setup-deps: a product audit-command may resolve or install private @noxcode/* packages.
+      - name: Authenticate the @noxcode registry (only when the read token exists)
+        run: |
+          if [ -n "${AGENTSKIT_NPM_READ_TOKEN:-}" ]; then
+            rc="$RUNNER_TEMP/noxcode-npmrc"
+            ( umask 077; printf '//npm.agentskit.io/:_authToken=%s\n' "$AGENTSKIT_NPM_READ_TOKEN" > "$rc" )
+            echo "::add-mask::$AGENTSKIT_NPM_READ_TOKEN"
+            echo "NPM_CONFIG_USERCONFIG=$rc" >> "$GITHUB_ENV"
+            echo "npm_config_userconfig=$rc" >> "$GITHUB_ENV"
+          fi
+      - name: Audit production dependencies
+        env:
+          AUDIT: ${{ inputs.audit-command }}
+          PM: ${{ inputs.package-manager }}
+        run: |
+          if [ -z "$AUDIT" ]; then
+            # bun.lock has no npm audit endpoint (npm audit needs package-lock.json); bun audit reads bun.lock.
+            if [ "$PM" = pnpm ]; then AUDIT="pnpm audit --prod --audit-level high"
+            elif [ "$PM" = bun ]; then AUDIT="bun audit --audit-level=high"
+            else AUDIT="npm audit --omit=dev --audit-level=high"; fi
+          fi
+          echo "$AUDIT"
+          bash -c "$AUDIT"
+      - name: Extra security check
+        if: ${{ !cancelled() && inputs.security-extra-command != '' }}
+        run: ${{ inputs.security-extra-command }}
+  gate:
+    # Single required check. A skipped job is green on GitHub, so this fails unless plan succeeded and every other job
+    # passed or was skipped for a reason the plan gave: scope=none (all), draft (build, test, contract), not selected
+    # (contract), not a nightly/full run or security off (security). On a red run it names the job that went red first
+    # and the jobs the chain did not start after it (fail fast). Not on a cancelled run (a newer push replaced it): no
+    # runner for a verdict nobody reads.
+    if: ${{ !cancelled() }}
+    needs: [plan, lint, test, build, contract, security]
+    runs-on: ${{ fromJSON(inputs.runner || vars.RUNS_ON || vars.ORG_RUNS_ON || '"depot-ubuntu-24.04"') }}
+    # A gate job takes seconds: 3 min caps what a dead runner (a runner that never starts a step) can bill; the factory's
+    # runner route (ci-runs-on) also moves the repo and re-runs the run on the next step after 3 min without a step.
+    timeout-minutes: 3
+    outputs:
+      others: ${{ steps.others.outputs.running }}
+    steps:
+      # Red PR run: what still runs beside the standard (one API read, here, so cancel-on-failure takes a runner only
+      # when there is something to cancel).
+      - id: others
+        if: ${{ github.event_name == 'pull_request' && contains(toJSON(needs.*.result), 'failure') }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          running=$(curl -fsS --retry 3 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID/jobs?filter=latest&per_page=100" \
+            | node -e 'let s="";process.stdin.on("data",(d)=>(s+=d)).on("end",()=>{const jobs=JSON.parse(s).jobs??[];
+                process.stdout.write(jobs.filter((j)=>j.status!=="completed"&&!/(^|\/ )(gate|cancel-on-failure)$/.test(j.name)).map((j)=>j.name).join(", "))})') || running=""
+          echo "running=$running" >> "$GITHUB_OUTPUT"
+          echo "still running beside the standard: ${running:-nothing}"
+      - env:
+          RESULTS: ${{ toJSON(needs) }}
+          SECURITY_ON: ${{ inputs.security }}
+          CONTRACT_ON: ${{ inputs.contract-command != '' }}
+          TEST_ON: ${{ inputs.test-command != 'none' }}
+          BUILD_ON: ${{ inputs.build-command != 'none' }}
+        run: |
+          # The node -e program is JavaScript: its ${...} are template literals, not shell expansions. Repos that run
+          # actionlint on their workflows (design-system) get SC2016 here without the directive below.
+          # shellcheck disable=SC2016
+          echo "$RESULTS" | node -e '
+            const fs = require("fs");
+            const needs = JSON.parse(fs.readFileSync(0, "utf8"));
+            const mode = needs.plan.outputs?.mode;
+            const none = needs.plan.outputs?.scope === "none";
+            const draft = mode === "draft";
+            const fullRun = mode === "full" || mode === "nightly";
+            const SECURITY = process.env.SECURITY_ON === "true";
+            // test-command / build-command "none": the repo has no such job (minimal v3), its skip is expected.
+            const TEST_ON = process.env.TEST_ON !== "false";
+            const BUILD_ON = process.env.BUILD_ON !== "false";
+            const ok = (n) => n.result === "success";
+            const skipped = (n) => n.result === "skipped";
+            const say = (line) => { if (process.env.GITHUB_STEP_SUMMARY) fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, line + "\n"); };
+            // The chain order: the first red is the cause; the skipped jobs after it are the fail-fast cut, not a fault.
+            const order = ["plan", "lint", "test", "build", "contract", "security"].filter((n) => needs[n]);
+            const red = order.filter((n) => !ok(needs[n]) && !skipped(needs[n]));
+            if (red.length) {
+              const first = red[0];
+              // Only the jobs this run would have started: never security (nightly/full) nor an unset contract.
+              const chain = [...(TEST_ON ? ["test"] : []), ...(BUILD_ON ? ["build"] : []), ...(process.env.CONTRACT_ON === "true" ? ["contract"] : [])];
+              const cut = chain.filter((n) => order.indexOf(n) > order.indexOf(first) && skipped(needs[n]));
+              const why = `${first} failed first` + (red.length > 1 ? ` (also red: ${red.slice(1).map((n) => n + "=" + needs[n].result).join(", ")})` : "") +
+                (cut.length ? `; not run after it (fail fast): ${cut.join(", ")}` : "");
+              console.log(`::error title=CI red::${why}`);
+              say(`### CI red\n\n${why}. Open the \`${first}\` job for the error.`);
+              process.exit(1);
+            }
+            const bad = Object.entries(needs).filter(([name, n]) =>
+              name === "plan" ? !ok(n)
+                : name === "security" ? !(ok(n) || (skipped(n) && !(SECURITY && fullRun)))
+                : name === "contract" ? !(ok(n) || skipped(n))
+                : name === "lint" ? !(ok(n) || (none && skipped(n)))
+                : name === "test" && !TEST_ON ? !skipped(n)
+                : name === "build" && !BUILD_ON ? !skipped(n)
+                : !(ok(n) || ((none || draft) && skipped(n))));
+            if (bad.length) { console.error("failed or unexpectedly skipped: " + bad.map(([n, v]) => n + "=" + v.result).join(", ")); process.exit(1); }
+            console.log(`mode=${mode} scope=${needs.plan.outputs?.scope}: ok`);'
+  cancel-on-failure:
+    # Fail fast across the whole run (owner, 10/11): inside the standard the `needs` chain already skips every later
+    # job; this cancels what still runs beside it (the product's own jobs, e.g. test shards on `needs: scope`). Red PR
+    # runs only, after the gate (so the gate reports the real cause first), and only when the gate saw another job
+    # still queued or running (else no runner: the run stays `failure`). Cancelling needs `actions: write`, granted by
+    # the caller on its `standard` job; without it this is a notice, never a red.
+    needs: gate
+    if: ${{ failure() && github.event_name == 'pull_request' && needs.gate.outputs.others != '' }}
+    runs-on: ${{ fromJSON(inputs.runner || vars.RUNS_ON || vars.ORG_RUNS_ON || '"depot-ubuntu-24.04"') }}
+    timeout-minutes: 3
+    steps:
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          api="$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID"
+          running=$(curl -fsS --retry 3 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" "$api/jobs?filter=latest&per_page=100" \
+            | node -e 'let s="";process.stdin.on("data",(d)=>(s+=d)).on("end",()=>{const jobs=JSON.parse(s).jobs??[];
+                process.stdout.write(jobs.filter((j)=>j.status!=="completed"&&!/(^|\/ )cancel-on-failure$/.test(j.name)).map((j)=>j.name).join(", "))})') || running="?"
+          if [ -z "$running" ]; then echo "nothing else is running: the run stays failure"; exit 0; fi
+          code=$(curl -sS -o /dev/null -w '%{http_code}' -X POST -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" "$api/cancel")
+          if [ "$code" = 202 ]; then echo "::notice title=fail fast::red run: cancelled what was still running ($running)"
+          else echo "::notice title=fail fast::could not cancel ($running still running, HTTP $code): grant \`permissions: { contents: read, actions: write }\` on the standard job of ci.yml"; fi

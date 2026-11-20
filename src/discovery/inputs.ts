@@ -1,6 +1,6 @@
 import { classifyDocument } from '../findings/classification.js'
 import { extname } from 'node:path'
-import * as ts from 'typescript'
+import * as ts from 'typescript-api'
 
 import type { DocBridgeConfigV1 } from '../config/schema.js'
 import { DEFAULT_SAFETY_EXCLUDES, type SafeWalkOptions } from '../safety/repository.js'

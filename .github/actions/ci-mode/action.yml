@@ -1,0 +1,46 @@
+# CI standard v3 (source: NoxCodeSolutions/platform-template, ci-standard/manifest.json): what this run is for, the same
+# answer in ci-standard's plan and in a product's own `scope` job (product-only jobs gate on it side by side with the
+# standard; a job that `needs: standard` waits for its lint, build and test). Synced by the manifest (copy): never edit it
+# in a product repo. Needs `actions: read` (the last nightly); a read error runs the nightly (never skip blind).
+name: ci-mode
+description: draft | pr | seed | nightly | skip | full for this run
+inputs:
+  full:
+    description: "true = full (the production deploy)"
+    default: "false"
+  base-branch:
+    default: develop
+outputs:
+  mode:
+    description: draft | pr | seed | nightly | skip | full
+    value: ${{ steps.mode.outputs.mode }}
+runs:
+  using: composite
+  steps:
+    - id: mode
+      shell: bash
+      env:
+        EVENT: ${{ github.event_name }}
+        FULL: ${{ inputs.full }}
+        DRAFT: ${{ github.event.pull_request.draft }}
+        BASE: ${{ inputs.base-branch }}
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        if [ "$FULL" = true ]; then mode=full
+        elif [ "$EVENT" = pull_request ] || [ "$EVENT" = merge_group ]; then
+          if [ "$DRAFT" = true ]; then mode=draft; else mode=pr; fi
+        elif [ "$EVENT" = push ]; then mode=seed
+        elif [ "$EVENT" = schedule ]; then
+          mode=nightly
+          # Nightly only when the base branch changed since the last nightly (a read error runs it: never skip blind).
+          wf="${GITHUB_WORKFLOW_REF%@*}"; wf="${wf##*/}"
+          last=$(curl -fsS --retry 3 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/actions/workflows/$wf/runs?event=schedule&status=completed&branch=$BASE&per_page=1" \
+            | node -e 'let s="";process.stdin.on("data",(d)=>(s+=d)).on("end",()=>{const r=JSON.parse(s).workflow_runs?.[0];process.stdout.write(r?.head_sha??"")})') || last=""
+          if [ -n "$last" ] && [ "$last" = "$GITHUB_SHA" ]; then
+            mode=skip
+            echo "::notice title=nightly::$BASE did not change since the last nightly ($last): skipped"
+          fi
+        else mode=full; fi
+        echo "mode=$mode" >> "$GITHUB_OUTPUT"
+        echo "mode: $mode"

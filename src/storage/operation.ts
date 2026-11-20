@@ -15,10 +15,10 @@ export type RunMetrics = Readonly<{ durationMs: number; stages: Readonly<Record<
 /** One run budget; telemetry stays outside semantic artifacts. */
 export const createOperation = (reader: RepositoryReadV1, options: OperationOptions) => {
   const started = performance.now()
-  const signal = options.signal ?? new AbortController().signal
+  const signal: AbortSignal = options.signal ?? new AbortController().signal
   const limits = intersectStorageLimits(reader.limits, { ...reader.limits, ...options.limits, ...(options.maxDurationMs === undefined ? {} : { maxTimeMs: Math.min(options.maxDurationMs, options.limits?.maxTimeMs ?? reader.limits.maxTimeMs) }) })
   const ledger = new StorageLedger(reader.partition, limits)
-  const request = { partition: reader.partition, signal }
+  const request: { partition: typeof reader.partition; signal: AbortSignal } = { partition: reader.partition, signal }
   let stage = 'acquisition'
   let stageStarted = started
   let processed = 0

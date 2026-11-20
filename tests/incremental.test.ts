@@ -29,8 +29,8 @@ import type { DiscoverySnapshotV1, KnowledgeEntity } from '../src/schemas/knowle
  */
 const parses = vi.hoisted(() => ({ files: [] as string[] }))
 
-vi.mock('typescript', async (importOriginal) => {
-  const actual = (await importOriginal()) as { readonly default?: typeof import('typescript') } & typeof import('typescript')
+vi.mock('typescript-api', async (importOriginal) => {
+  const actual = (await importOriginal()) as { readonly default?: typeof import('typescript-api') } & typeof import('typescript-api')
   const real = actual.default ?? actual
   const wrapped = {
     ...real,

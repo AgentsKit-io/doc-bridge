@@ -1,4 +1,4 @@
-import * as ts from 'typescript'
+import * as ts from 'typescript-api'
 import { sha256NormalizedV1 } from '../../index-builder/content-hash.js'
 import { surfaceFactEntityId, SignatureProofSchema, type SurfaceFact } from '../../storage/facts.js'
 import type { DiscoverySnapshotV1, Evidence } from '../../schemas/knowledge.js'

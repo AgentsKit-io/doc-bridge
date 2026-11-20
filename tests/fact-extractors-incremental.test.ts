@@ -4,8 +4,8 @@ import { tmpdir } from 'node:os'
 import { expect, it, vi } from 'vitest'
 
 const state = vi.hoisted(() => ({ parses: [] as string[], extractions: 0 }))
-vi.mock('typescript', async importOriginal => {
-  const real = await importOriginal<typeof import('typescript')>()
+vi.mock('typescript-api', async importOriginal => {
+  const real = await importOriginal<typeof import('typescript-api')>()
   return { ...real, createSourceFile: (...args: Parameters<typeof real.createSourceFile>) => { state.parses.push(args[0]); return real.createSourceFile(...args) } }
 })
 vi.mock('../src/discovery/facts/index.js', async importOriginal => {

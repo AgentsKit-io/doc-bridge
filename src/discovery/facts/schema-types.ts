@@ -1,4 +1,4 @@
-import * as ts from 'typescript'
+import * as ts from 'typescript-api'
 
 /** Bounded schema syntax to declared output types; never evaluate an initializer. */
 export const schemaOutputTypes = (node: ts.TypeAliasDeclaration | ts.InterfaceDeclaration, source: ts.SourceFile, resolve?: (source: ts.SourceFile, name: string) => ts.Expression | undefined, schemaOutputs = false): string | undefined => {

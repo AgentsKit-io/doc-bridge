@@ -1,5 +1,5 @@
 import { dirname, resolve, extname } from 'node:path'
-import type * as ts from 'typescript'
+import type * as ts from 'typescript-api'
 import { safeWalkFiles, type SafeWalkOptions, type SafeWalkResult } from '../safety/repository.js'
 import type { DiscoveryOptions } from './repository.js'
 import { createScanMap } from './preload.js'

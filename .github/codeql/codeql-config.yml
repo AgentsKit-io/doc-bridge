@@ -4,3 +4,6 @@ name: doc-bridge CodeQL config
 # and inlines a vendored drawing kit, so findings there duplicate or come from vendored code.
 paths-ignore:
   - apps/docs/public/figures/**
+# ci-standard/** is the platform CI template, synced verbatim (ci-template-sync);
+# edits belong upstream, so it stays out of this repo's code scanning.
+  - ci-standard/**

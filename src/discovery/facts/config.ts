@@ -1,4 +1,4 @@
-import * as ts from 'typescript'
+import * as ts from 'typescript-api'
 import { dirname, posix, relative } from 'node:path'
 import { toPosix } from '../../lib/paths.js'
 import type { FactExtractor } from './index.js'
