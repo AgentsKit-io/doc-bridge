@@ -5,7 +5,7 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  '@puppeteer/browsers': 3.2.1
+  '@puppeteer/browsers': 3.2.7
   framer-motion: 13.3.0
   brace-expansion: 5.0.12
   dompurify: 3.4.17
@@ -1062,8 +1062,8 @@ packages:
     resolution: {integrity: sha512-pOr5+q1fLYKwFN3LAJuGZEnfXDcQ73zqgDHMtGy+K+uIoUqyY+6MeDCWFwfu+4EFuq76I5EPFofoNAI+Bmmq4A==}
     engines: {node: '>=22.13'}
 
-  '@puppeteer/browsers@3.2.1':
-    resolution: {integrity: sha512-KDz+3qDRdBAlRlMjmKyj6dEs33YHTk/xRHEENSXq6TNnhgoU15ruSHtEBeVF6OZ9tBDY55Se4P0nFMNsipzU9A==}
+  '@puppeteer/browsers@3.2.7':
+    resolution: {integrity: sha512-B3C/v8OEEaJYcN1IzzgbPmt+GbFANr4Mf/NrqNuGk/dIchrv6quNqxgT+A6qE0Ge0MN95NjKUddcR1JMpYRMWA==}
     engines: {node: '>=22.12.0'}
     hasBin: true
     peerDependencies:
@@ -5897,7 +5897,7 @@ snapshots:
 
   '@pnpm/deps.graph-sequencer@1100.0.1': {}
 
-  '@puppeteer/browsers@3.2.1(proxy-agent@8.0.2(supports-color@7.2.0))(yauzl@2.10.0)':
+  '@puppeteer/browsers@3.2.7(proxy-agent@8.0.2(supports-color@7.2.0))(yauzl@2.10.0)':
     dependencies:
       modern-tar: 0.8.6
       yargs: 18.2.0
@@ -9280,7 +9280,7 @@ snapshots:
 
   puppeteer-core@24.43.1(proxy-agent@8.0.2(supports-color@7.2.0))(supports-color@7.2.0)(yauzl@2.10.0):
     dependencies:
-      '@puppeteer/browsers': 3.2.1(proxy-agent@8.0.2(supports-color@7.2.0))(yauzl@2.10.0)
+      '@puppeteer/browsers': 3.2.7(proxy-agent@8.0.2(supports-color@7.2.0))(yauzl@2.10.0)
       chromium-bidi: 14.0.0(devtools-protocol@0.0.1608973)
       debug: 4.4.3(supports-color@7.2.0)
       devtools-protocol: 0.0.1608973
