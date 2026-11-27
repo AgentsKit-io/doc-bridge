@@ -9,7 +9,7 @@ minimumReleaseAgeExclude:
   - '@agentskit/net@0.2.0'
 
 overrides:
-  '@puppeteer/browsers': 3.2.1
+  '@puppeteer/browsers': 3.3.0
   framer-motion: 13.3.0
   brace-expansion: 5.0.12
   dompurify: 3.4.17
